@@ -1,3 +1,11 @@
+# Shamiri Digital Hub
+
+# Quickstart
+
+- Install [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) globally: `npm i -g dotenv-cli`
+
+# Next.js
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
