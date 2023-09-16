@@ -8,8 +8,45 @@ datasource db {
 }
 
 model User {
-  id    Int    @id @default(autoincrement())
-  email String @unique
+  id              Int              @id @default(autoincrement())
+  email           String           @unique
+  userRoles       UserRole[]
+  userPermissions UserPermission[]
 
   @@map("users")
+}
+
+model Role {
+  id           Int        @id @default(autoincrement())
+  roleName     String     @unique @map("role_name") @db.VarChar(255)
+  parentRoleId Int?       @map("parent_role_id") @db.SmallInt
+  parentRole   Role?      @relation("hierarchical_roles", fields: [parentRoleId], references: [id])
+  childRoles   Role[]     @relation("hierarchical_roles")
+  users        UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+  roleId Int  @map("role_id")
+  role   Role @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Permission {
+  id              Int    @id @default(autoincrement()) @db.SmallInt
+  permissionLabel String @unique @map("permission_label") @db.VarChar(255)
+
+  @@map("permissions")
+}
+
+model UserPermission {
+  userId Int  @id @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+
+  @@map("user_permissions")
 }
