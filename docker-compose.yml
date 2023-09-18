@@ -1,0 +1,10 @@
+services:
+  db:
+    image: postgres:15.3
+    environment:
+      POSTGRES_USER: youth
+      POSTGRES_PASSWORD: thriving
+      POSTGRES_DB: shamiri_db
+    ports:
+      - 5432:5432
+    command: postgres -c log_destination=stderr -c log_min_duration_statement=0

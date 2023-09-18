@@ -1,5 +1,13 @@
 ## Authentication
 
+To support other implementer's (i.e. AMHRT) ability to log into SDH and perform key workflows, we need to support password based logins as well.
+
+Both of these are powered by next-auth.
+
+### Google login
+
+### Password based login
+
 ## Authorization
 
 ### Alternatives Considered
@@ -38,31 +46,51 @@ RBAC fits with the tiered model of care at Shamiri Institute.
 ```
 Superadmins
 └── Implementors (Shamiri, AFRAM, etc.)
+    └── Admins (e.g. dmndetei@amhf.or.ke)
     └── Clinicians
     │   ├── Supervisors
     │   │   ├── Fellows
     │   │   │   └── Students
     │   └── Deliver
     └─── Research
+    └─── External (no permissions by default, for external collaborators with invited granular permissions)
 ```
 
 In code, lets call implementors organizations as that fits more with terms used in SaaS.
 
-### Permissions
+#### Roles
 
-#### Permission groups
+Roles are for convenient buckets of permissions
 
-Permission groups can encoded in the label syntax implementors:read-dashboard
+#### Permissions
+
+Permissions are the actual things that are allowed or disallowed. They can be granually granted to roles (`RolePermission`) or coarsely to users in an organization (`MemberPermission`) .
 
 ## Data
 
-## Migration flow
+### Modeling
+
+#### Multi-tenancy
+
+Multiple implementers will be using SDH. We need to support this in the data model.
+
+#### IDs
+
+IDs for public facing resources used throughout SDH are prefixed ids (more readable version of UUIDs, similiar to [format of Stripe ids]), which allow us to encode the type of the entity in the id itself (e.g. `stud\_` for Students). This allows us to implement polymorphic relationships in the database. This also improves readability of logs and stacktraces.
+
+[format of Stripe ids]: https://gist.github.com/fnky/76f533366f75cf75802c8052b577e2a5
+
+From security point of view, this also prevents enumeration attacks.
+
+### Migration flow
 
 To counter the previous workflow of making adhoc changes to Airtable, we need a process to introduce changes that the research team or implementers or superadmins want into the SDH.
 
 ### Seeding data
 
 We seed that is crucial for SDH to operate in both development and production environments.
+
+Its important to seed the default roles and role permissions as well.
 
 ## Object storage
 

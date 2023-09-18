@@ -8,19 +8,24 @@ datasource db {
 }
 
 model Organization {
-  id          Int                      @id @default(autoincrement())
-  name        String                   @unique
+  id           String    @id
+  name         String    @unique
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  archivedAt   DateTime? @map("archived_at")
+  contactEmail String    @map("contact_email")
+
   logos       OrganizationLogo[]
-  memberships OrganizationMembership[]
+  memberships OrganizationMember[]
 
   @@map("organizations")
 }
 
 model OrganizationLogo {
   id             Int          @id @default(autoincrement())
-  organizationId Int          @map("organization_id")
+  organizationId String       @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
-  fileId         Int          @unique @map("file_id")
+  fileId         String       @unique @map("file_id")
   file           File         @relation(fields: [fileId], references: [id])
 
   @@map("organization_logos")
@@ -42,10 +47,10 @@ enum ServiceType {
 }
 
 model File {
-  id          Int         @id @default(autoincrement())
-  publicId    String      @unique @map("public_id")
+  id          String      @id
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
+  archivedAt  DateTime?   @map("archived_at")
   serviceType ServiceType @map("service_type")
   fileKey     String      @map("file_key")
   fileName    String      @map("file_name")
@@ -63,56 +68,72 @@ model File {
 }
 
 model User {
-  id                      Int                      @id @default(autoincrement())
-  email                   String                   @unique
-  userRoles               UserRole[]
-  userPermissions         UserPermission[]
-  organizationMemberships OrganizationMembership[]
+  id          String               @id
+  email       String               @unique
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+  archivedAt  DateTime?            @map("archived_at")
+  memberships OrganizationMember[]
 
   @@map("users")
 }
 
-model OrganizationMembership {
-  id             Int          @id @default(autoincrement())
-  organizationId Int          @map("organization_id")
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  userId         Int          @map("user_id")
-  user           User         @relation(fields: [userId], references: [id])
+model OrganizationMember {
+  id             Int                @id @default(autoincrement())
+  organizationId String             @map("organization_id")
+  organization   Organization       @relation(fields: [organizationId], references: [id])
+  userId         String             @map("user_id")
+  user           User               @relation(fields: [userId], references: [id])
+  roles          MemberRole[]
+  permissions    MemberPermission[]
 
-  @@map("organization_memberships")
+  @@map("organization_members")
 }
 
 model Role {
-  id           Int        @id @default(autoincrement())
-  roleName     String     @unique @map("role_name") @db.VarChar(255)
-  parentRoleId Int?       @map("parent_role_id") @db.SmallInt
-  parentRole   Role?      @relation("hierarchical_roles", fields: [parentRoleId], references: [id])
-  childRoles   Role[]     @relation("hierarchical_roles")
-  users        UserRole[]
+  id          Int              @id @default(autoincrement())
+  roleName    String           @unique @map("role_name") @db.VarChar(255)
+  members     MemberRole[]
+  permissions RolePermission[]
 
   @@map("roles")
 }
 
-model UserRole {
-  userId Int  @map("user_id")
-  user   User @relation(fields: [userId], references: [id])
-  roleId Int  @map("role_id")
-  role   Role @relation(fields: [roleId], references: [id])
+model MemberRole {
+  id       Int                @id @default(autoincrement())
+  memberId Int                @map("member_id")
+  member   OrganizationMember @relation(fields: [memberId], references: [id])
+  roleId   Int                @map("role_id")
+  role     Role               @relation(fields: [roleId], references: [id])
 
-  @@id([userId, roleId])
-  @@map("user_roles")
+  @@map("member_roles")
 }
 
 model Permission {
-  id              Int    @id @default(autoincrement()) @db.SmallInt
-  permissionLabel String @unique @map("permission_label") @db.VarChar(255)
+  id                Int                @id @default(autoincrement()) @db.SmallInt
+  permissionLabel   String             @unique @map("permission_label") @db.VarChar(255)
+  memberPermissions MemberPermission[]
+  rolePermissions   RolePermission[]
 
   @@map("permissions")
 }
 
-model UserPermission {
-  userId Int  @id @map("user_id")
-  user   User @relation(fields: [userId], references: [id])
+model RolePermission {
+  id           Int        @id @default(autoincrement())
+  roleId       Int        @map("role_id")
+  role         Role       @relation(fields: [roleId], references: [id])
+  permissionId Int        @map("permission_id")
+  permission   Permission @relation(fields: [permissionId], references: [id])
 
-  @@map("user_permissions")
+  @@map("role_permissions")
+}
+
+model MemberPermission {
+  id           Int                @id @default(autoincrement())
+  memberId     Int                @map("member_id")
+  member       OrganizationMember @relation(fields: [memberId], references: [id])
+  permissionId Int                @map("permission_id")
+  permission   Permission         @relation(fields: [permissionId], references: [id])
+
+  @@map("member_permissions")
 }
