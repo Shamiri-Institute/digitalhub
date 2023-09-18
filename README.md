@@ -1,8 +1,14 @@
 # Shamiri Digital Hub
 
-# Quickstart
+## Quickstart
 
-- Install [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) globally: `npm i -g dotenv-cli`
+- Install [docker compose](https://docs.docker.com/compose/install/)
+
+## Database
+
+### Creating and running migrations
+
+- After making changes to the [`prisma/schema.prisma`](prisma/schema.prisma) file, run `npm run db:migrate:dev` to generate a migration file.
 
 # Next.js
 

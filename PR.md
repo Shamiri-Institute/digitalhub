@@ -46,7 +46,7 @@ RBAC fits with the tiered model of care at Shamiri Institute.
 ```
 Superadmins
 └── Implementors (Shamiri, AFRAM, etc.)
-    └── Admins (e.g. dmndetei@amhf.or.ke)
+    └── Admins (e.g. dmndetei@amhf.or.ke for AFRAM)
     └── Clinicians
     │   ├── Supervisors
     │   │   ├── Fellows
@@ -76,11 +76,18 @@ Multiple implementers will be using SDH. We need to support this in the data mod
 
 #### IDs
 
-IDs for public facing resources used throughout SDH are prefixed ids (more readable version of UUIDs, similiar to [format of Stripe ids]), which allow us to encode the type of the entity in the id itself (e.g. `stud\_` for Students). This allows us to implement polymorphic relationships in the database. This also improves readability of logs and stacktraces.
+IDs for public facing resources used throughout SDH are prefixed ids (more readable version of UUIDs, similiar to [format of Stripe ids]), which allow us to encode the type of the entity in the id itself (e.g. `stud\_` for Students). This allows us to implement polymorphic relationships in the database [^2][^3]. This also improves readability of logs and stacktraces.
 
 [format of Stripe ids]: https://gist.github.com/fnky/76f533366f75cf75802c8052b577e2a5
 
 From security point of view, this also prevents enumeration attacks.
+
+[^2]: https://dev.to/stripe/designing-apis-for-humans-object-ids-3o5a
+[^3]: https://clerk.com/blog/generating-sortable-stripe-like-ids-with-segment-ksuids?utm_source=www.google.com&utm_medium=referral&utm_campaign=none
+
+#### Repository pattern
+
+In order to enable better testability and separation of concerns, we use the repository pattern to encapsulate database access. The
 
 ### Migration flow
 
@@ -97,3 +104,9 @@ Its important to seed the default roles and role permissions as well.
 To support [clinician workflows], we will need some kind of object storage anyway. Since SDH is supporting multiple tenants / organizations (i.e. implementers), we started the implementation with supporting organization logos and user avatars (copied over from Google Social Login flow).
 
 [clinician workflows]: https://www.notion.so/shamiri/Supervisor-Requirements-964e7210654845468e24d623f2e75b3d?pvs=4#e6adb7e1e1da4b708b83bc663b2a5a0c
+
+## Invite flow
+
+### Organization
+
+To create a new implementer, a superadmin will need to go to `/admin/organizations/new` and fill in the form with the contact email of the organization as a whole. They will also specify the actual user emails of the new organization to invite.

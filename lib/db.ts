@@ -17,3 +17,8 @@ if (process.env.NODE_ENV === "production") {
 export const db = prisma;
 
 export type Database = typeof prisma;
+
+export type DatabaseCursor = Database;
+
+// TODO: get actual transaction cursor type
+export type TransactionCursor = Database;

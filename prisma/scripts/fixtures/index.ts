@@ -1,12 +1,12 @@
 const fixtures = {
-  organization: [
+  organizations: [
     {
-      id: 1,
       name: "Shamiri Institute",
+      contactEmail: "team@shamiri.institute",
     },
     {
-      id: 2,
       name: "Africa Mental Health Training and Research Foundation (AMHTRF)",
+      contactEmail: "info@amhf.or.ke",
     },
   ],
   users: [

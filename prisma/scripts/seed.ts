@@ -1,11 +1,16 @@
+import { OnboardOrganization } from "#/commands/onboarding/onboard-organization";
 import { db } from "#/lib/db";
 
 import fixtures from "./fixtures";
 
 async function seedDatabase() {
-  await db.user.createMany({
-    data: fixtures.users,
-  });
+  const onboard = new OnboardOrganization(db);
+  for (let organization of fixtures.organizations) {
+    await onboard.run({
+      name: organization.name,
+      contactEmail: organization.contactEmail,
+    });
+  }
 }
 
 seedDatabase()

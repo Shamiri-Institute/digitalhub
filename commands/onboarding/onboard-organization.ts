@@ -1,5 +1,8 @@
-import { Command } from "#/commands";
+import { z } from "zod";
+
 import { db as database, Database } from "#/lib/db";
+import { Command } from "#/commands";
+import { OrganizationRepository } from "#/repositories/organization";
 
 interface OnboardOrganizationInput {
   name: string;
@@ -7,7 +10,7 @@ interface OnboardOrganizationInput {
 }
 
 interface OnboardOrganizationOutput {
-  id: number;
+  id: string;
 }
 
 export class OnboardOrganization extends Command<
@@ -22,11 +25,25 @@ export class OnboardOrganization extends Command<
   }
 
   protected async perform(input: OnboardOrganizationInput) {
-    // - validate input
-    // - save organization to database
-    // - return url to upload logo from browser
-    // - send email to contact email with onboarding steps
+    const { name, contactEmail } = this.validate(input);
 
-    return { id: 1 };
+    const repo = new OrganizationRepository(this.db);
+    const organization = await repo.create({
+      name,
+      contactEmail,
+    });
+
+    // TODO: send email to contact email with onboarding steps
+
+    return { id: organization.id };
+  }
+
+  private validate(input: OnboardOrganizationInput) {
+    const schema = z.object({
+      name: z.string().min(1).max(255),
+      contactEmail: z.string().email(),
+    });
+
+    return schema.parse(input);
   }
 }
