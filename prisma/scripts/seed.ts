@@ -1,16 +1,22 @@
-import { OnboardOrganization } from "#/commands/onboarding/onboard-organization";
-import { db } from "#/lib/db";
+import { db, Database } from "#/lib/db";
+import { OnboardOrganizationCommand } from "#/commands/onboard-organization";
 
 import fixtures from "./fixtures";
+import { sendEmail } from "#/emails";
+import OrganizationWelcomer from "#/emails/organization-welcomer";
 
 async function seedDatabase() {
-  const onboard = new OnboardOrganization(db);
-  for (let organization of fixtures.organizations) {
-    await onboard.run({
-      name: organization.name,
-      contactEmail: organization.contactEmail,
-    });
-  }
+  // await createSystemUser(db);
+  // await createOrganizations(db);
+
+  await sendEmail({
+    email: "edmund@agency.fund",
+    subject: `Africa Mental Health Research & Training Foundation on Shamiri Digital Hub`,
+    react: OrganizationWelcomer({
+      name: "Africa Mental Health Research & Training Foundation",
+      email: "info@amhf.or.ke",
+    }),
+  });
 }
 
 seedDatabase()
@@ -22,3 +28,23 @@ seedDatabase()
     await db.$disconnect();
     process.exit(1);
   });
+
+async function createSystemUser(db: Database) {
+  await db.user.create({
+    data: {
+      id: "system",
+      email: "tech+system@shamiri.institute",
+    },
+  });
+}
+
+async function createOrganizations(db: Database) {
+  const onboard = new OnboardOrganizationCommand(db);
+  for (let organization of fixtures.organizations) {
+    await onboard.run({
+      name: organization.name,
+      contactEmail: organization.contactEmail,
+      inviterId: "system",
+    });
+  }
+}

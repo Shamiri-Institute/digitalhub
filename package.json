@@ -9,10 +9,13 @@
     "lint": "next lint",
     "db:dev": "docker-compose up db",
     "db:dev:seed": "dotenv -c development -- tsx prisma/scripts/seed.ts",
-    "db:dev:migrate": "dotenv -c development -- npx prisma migrate dev"
+    "db:dev:migrate": "dotenv -c development -- npx prisma migrate dev",
+    "email:dev": "email dev -p 4444"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.414.0",
     "@prisma/client": "^5.3.1",
+    "@react-email/components": "^0.0.7",
     "@types/node": "20.5.7",
     "@types/react": "18.2.21",
     "@types/react-dom": "18.2.7",
@@ -25,6 +28,7 @@
     "postcss": "8.4.29",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-email": "^1.9.4",
     "tailwind-merge": "^1.14.0",
     "tailwindcss": "3.3.3",
     "typeid-js": "^0.3.0",

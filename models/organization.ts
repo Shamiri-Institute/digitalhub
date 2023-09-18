@@ -1,19 +1,14 @@
 import { Prisma } from "@prisma/client";
 
-import { Repository } from "#/repositories";
+import { Model } from "#/models";
 import type { db } from "#/lib/db";
-import { objectId } from "#/lib/crypto";
 
 type OrganizationCreateOutput = Prisma.PromiseReturnType<
   typeof db.organization.create
 >;
 
-export class OrganizationRepository extends Repository {
+export class OrganizationModel extends Model {
   prefix = "org";
-
-  generateId() {
-    return objectId(this.prefix);
-  }
 
   async create(
     data: Omit<Prisma.OrganizationCreateInput, "id">

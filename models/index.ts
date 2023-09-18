@@ -1,3 +1,4 @@
+import { objectId } from "#/lib/crypto";
 import type { DatabaseCursor, TransactionCursor } from "#/lib/db";
 
 export class SoleRecordExpectedError extends Error {
@@ -12,10 +13,12 @@ export class ReturningRecordsExpectedError extends Error {
   }
 }
 
-export abstract class Repository {
+export abstract class Model {
   public abstract prefix: Readonly<string>;
 
-  public abstract generateId(): string;
+  generateId() {
+    return objectId(this.prefix);
+  }
 
   protected cursor: TransactionCursor | DatabaseCursor;
 

@@ -99,6 +99,24 @@ We seed that is crucial for SDH to operate in both development and production en
 
 Its important to seed the default roles and role permissions as well.
 
+## Emails
+
+~~Was trying to create AWS SES email service in Cape Town, but SMPT settings not available at that location [^4]. Will create it in generally reliable `us-east-1` as this process is async and should not affect UX too much.~~
+
+~~[^4]: https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html~~
+
+### Sandbox restrictions
+
+We have a cap of 200 emails per day in sandbox mode. This is fine for development and testing purposes.
+
+When we are ready for production, we will need to request a sending limit increase and to be removed from sandbox mode.
+
+During sandbox, we can only send to verified domains and emails.
+
+### Previews
+
+![Organization onboarding welcomer email preview](PR-org-onboarding-preview.png)
+
 ## Object storage
 
 To support [clinician workflows], we will need some kind of object storage anyway. Since SDH is supporting multiple tenants / organizations (i.e. implementers), we started the implementation with supporting organization logos and user avatars (copied over from Google Social Login flow).
