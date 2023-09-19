@@ -18,7 +18,11 @@ export const db = prisma;
 
 export type Database = typeof prisma;
 
-export type DatabaseCursor = Database;
+export type DefaultCursor = Database;
 
-// TODO: get actual transaction cursor type
-export type TransactionCursor = Database;
+export type TransactionCursor = Omit<
+  Database,
+  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
+>;
+
+export type DatabaseCursor = DefaultCursor | TransactionCursor;

@@ -16,13 +16,15 @@ import {
 import { SDH_HERO_IMAGE, SDH_LOGO_BANNER } from "../lib/constants";
 import Footer from "./components/footer";
 
-export default function OrganizationWelcomer({
+export default function UserWelcomer({
   email = "dmndetei@amhf.or.ke",
-  name = "Africa Mental Health Training and Research Foundation",
-  preview = "Africa Mental Health Training and Research Foundation joins Shamiri Digital Hub!",
+  userName = "Prof. David M. Ndetei",
+  organizationName = "Africa Mental Health Training and Research Foundation",
+  preview = "Welcome to the Shamiri Digital Hub, Prof. David M. Ndetei!",
 }: {
   email: string;
-  name: string;
+  userName: string;
+  organizationName: string;
   preview: string;
 }) {
   return (
@@ -47,8 +49,12 @@ export default function OrganizationWelcomer({
             <Section className="my-8">
               <Img src={SDH_HERO_IMAGE} alt="Dub" className="max-w-[500px]" />
             </Section>
+            <Text>
+              Hello <span className="font-medium">{userName}</span> 👋🏾,
+            </Text>
             <Text className="text-sm leading-6 text-black">
-              Let&apos;s get you started on the key operations platform that
+              <span className="font-medium">{organizationName}</span> has
+              invited you to get you started on the key operations platform that
               powers the{" "}
               <Link
                 href="https://www.shamiri.institute/the-shamiri-intervention"
@@ -59,17 +65,14 @@ export default function OrganizationWelcomer({
               .
             </Text>
             <Text className="text-sm leading-6 text-black">
-              This email (<span className="font-medium">{email}</span>) is
-              marked as the contact email for your organization,{" "}
-              <span className="font-medium">{name}</span>.{" "}
               <Link
                 href="https://shamiridigitalhub.vercel.app" // TODO: update this link to be env specific (local, preview, prod)
                 className="font-medium text-sky-600 no-underline"
               >
                 Log into
               </Link>{" "}
-              the Shamiri Digital Hub to get started and further setup your
-              organization.
+              the Shamiri Digital Hub to get started and continue setting up
+              your account.
             </Text>
             <Text className="text-sm font-light leading-6 text-gray-400">
               Shamiri Technology

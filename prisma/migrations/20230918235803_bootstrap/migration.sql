@@ -6,7 +6,7 @@ CREATE TYPE "ServiceType" AS ENUM ('S3', 'GCS', 'R2');
 
 -- CreateTable
 CREATE TABLE "organizations" (
-    "id" TEXT NOT NULL,
+    "id" VARCHAR(255) NOT NULL,
     "name" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
@@ -18,16 +18,16 @@ CREATE TABLE "organizations" (
 
 -- CreateTable
 CREATE TABLE "organization_logos" (
-    "id" SERIAL NOT NULL,
+    "id" VARCHAR(255) NOT NULL,
     "organization_id" TEXT NOT NULL,
-    "file_id" TEXT NOT NULL,
+    "file_id" INTEGER NOT NULL,
 
     CONSTRAINT "organization_logos_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "files" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "archived_at" TIMESTAMP(3),
@@ -47,8 +47,9 @@ CREATE TABLE "files" (
 
 -- CreateTable
 CREATE TABLE "users" (
-    "id" TEXT NOT NULL,
+    "id" VARCHAR(255) NOT NULL,
     "email" TEXT NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "archived_at" TIMESTAMP(3),
@@ -59,8 +60,8 @@ CREATE TABLE "users" (
 -- CreateTable
 CREATE TABLE "organization_members" (
     "id" SERIAL NOT NULL,
-    "organization_id" TEXT NOT NULL,
-    "user_id" TEXT NOT NULL,
+    "organization_id" VARCHAR(255) NOT NULL,
+    "user_id" VARCHAR(255) NOT NULL,
 
     CONSTRAINT "organization_members_pkey" PRIMARY KEY ("id")
 );

@@ -13,7 +13,7 @@ interface OnboardOrgInput {
 }
 
 interface OnboardOrgOutput {
-  id: string;
+  orgId: string;
 }
 
 export class OnboardOrganizationCommand extends Command<
@@ -30,22 +30,23 @@ export class OnboardOrganizationCommand extends Command<
   protected async perform(input: OnboardOrgInput) {
     const validInput = this.validate(input);
 
-    const model = new OrganizationModel(this.db);
-    const organization = await model.create({
+    const organization = await new OrganizationModel(this.db).create({
       name: validInput.name,
       contactEmail: validInput.contactEmail,
     });
 
+    const subject = `${organization.name} joins Shamiri Digital Hub!`;
     await sendEmail({
-      email: organization.contactEmail,
-      subject: `${organization.name} on Shamiri Digital Hub`,
+      to: organization.contactEmail,
+      subject: subject,
       react: OrganizationWelcomer({
         name: organization.name,
         email: organization.contactEmail,
+        preview: subject,
       }),
     });
 
-    return { id: organization.id };
+    return { orgId: organization.id };
   }
 
   private validate(input: OnboardOrgInput) {

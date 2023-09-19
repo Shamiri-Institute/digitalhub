@@ -68,6 +68,7 @@ model File {
 model User {
   id          String               @id @db.VarChar(255)
   email       String               @unique
+  name        String               @db.VarChar(100)
   createdAt   DateTime             @default(now()) @map("created_at")
   updatedAt   DateTime             @updatedAt @map("updated_at")
   archivedAt  DateTime?            @map("archived_at")

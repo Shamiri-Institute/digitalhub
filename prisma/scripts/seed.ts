@@ -1,22 +1,13 @@
 import { db, Database } from "#/lib/db";
 import { OnboardOrganizationCommand } from "#/commands/onboard-organization";
+import { OnboardUserCommand } from "#/commands/onboard-user";
 
 import fixtures from "./fixtures";
-import { sendEmail } from "#/emails";
-import OrganizationWelcomer from "#/emails/organization-welcomer";
 
 async function seedDatabase() {
-  // await createSystemUser(db);
-  // await createOrganizations(db);
-
-  await sendEmail({
-    email: "edmund@agency.fund",
-    subject: `Africa Mental Health Research & Training Foundation on Shamiri Digital Hub`,
-    react: OrganizationWelcomer({
-      name: "Africa Mental Health Research & Training Foundation",
-      email: "info@amhf.or.ke",
-    }),
-  });
+  await createSystemUser(db);
+  await createOrganizations(db);
+  await createUsers(db);
 }
 
 seedDatabase()
@@ -34,6 +25,7 @@ async function createSystemUser(db: Database) {
     data: {
       id: "system",
       email: "tech+system@shamiri.institute",
+      name: "Shamiri System",
     },
   });
 }
@@ -44,6 +36,21 @@ async function createOrganizations(db: Database) {
     await onboard.run({
       name: organization.name,
       contactEmail: organization.contactEmail,
+      inviterId: "system",
+    });
+  }
+}
+
+async function createUsers(db: Database) {
+  const onboard = new OnboardUserCommand(db);
+  for (let { organizationByEmail, ...user } of fixtures.users) {
+    const organization = await db.organization.findFirstOrThrow({
+      where: { contactEmail: organizationByEmail },
+    });
+
+    await onboard.run({
+      email: user.email,
+      organizationId: organization.id,
       inviterId: "system",
     });
   }

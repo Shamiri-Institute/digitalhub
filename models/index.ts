@@ -1,5 +1,5 @@
 import { objectId } from "#/lib/crypto";
-import type { DatabaseCursor, TransactionCursor } from "#/lib/db";
+import type { DefaultCursor, TransactionCursor } from "#/lib/db";
 
 export class SoleRecordExpectedError extends Error {
   constructor() {
@@ -20,9 +20,9 @@ export abstract class Model {
     return objectId(this.prefix);
   }
 
-  protected cursor: TransactionCursor | DatabaseCursor;
+  protected cursor: TransactionCursor | DefaultCursor;
 
-  constructor(cursor: TransactionCursor | DatabaseCursor) {
+  constructor(cursor: TransactionCursor | DefaultCursor) {
     this.cursor = cursor;
   }
 }

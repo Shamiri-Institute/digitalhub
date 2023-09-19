@@ -10,36 +10,40 @@ const ses = new SES({
   },
 });
 
-// TODO: Verification email for tech@shamiri.institute not working for some reason
-const SDH_FROM = "edmund@shamiri.institute";
+const SDH_FROM = "tech@shamiri.institute";
 
 export const sendEmail = async ({
-  email,
+  to,
   subject,
   react,
 }: {
-  email: string;
+  to: string;
   subject: string;
   react: React.ReactElement;
 }) => {
   const html = render(react);
 
-  await ses.sendEmail({
-    Source: SDH_FROM,
-    Destination: {
-      ToAddresses: [email],
-    },
-    Message: {
-      Body: {
-        Html: {
+  if (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview"
+  ) {
+    await ses.sendEmail({
+      Source: SDH_FROM,
+      Destination: {
+        ToAddresses: [to],
+      },
+      Message: {
+        Body: {
+          Html: {
+            Charset: "UTF-8",
+            Data: html,
+          },
+        },
+        Subject: {
           Charset: "UTF-8",
-          Data: html,
+          Data: subject,
         },
       },
-      Subject: {
-        Charset: "UTF-8",
-        Data: subject,
-      },
-    },
-  });
+    });
+  }
 };
