@@ -33,16 +33,19 @@
     --ring: 240 10% 3.9%;
 
     --radius: 0.5rem;
+
+    --brand: 203 96% 38%;
+    --canvas: 0 0% 98%;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
+    --background: 240 10% 6.9%;
     --foreground: 0 0% 98%;
 
-    --card: 240 10% 3.9%;
+    --card: 240 10% 9.9%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 3.9%;
+    --popover: 240 10% 9.9%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 0 0% 98%;
@@ -63,6 +66,9 @@
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
     --ring: 240 4.9% 83.9%;
+
+    --brand: 0 0% 100%;
+    --canvas: 240 10% 6.9%;
   }
 }
 

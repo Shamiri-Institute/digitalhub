@@ -11,7 +11,7 @@ export function Providers({
   session,
   children,
 }: {
-  session: Session;
+  session: Session | null;
   children: React.ReactNode;
 }) {
   return (

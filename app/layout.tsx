@@ -5,7 +5,7 @@ import { getServerSession } from "next-auth";
 
 import { cn } from "#/lib/utils";
 import { Providers } from "#/components/providers";
-import { SessionProvider } from "#/components/session-provider";
+import { AppLayout } from "#/components/app-layout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,8 +27,10 @@ export default async function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className={cn(inter.className, "flex min-h-full antialiased")}>
-        <Providers>
-          <div className="w-full">{children}</div>
+        <Providers session={session}>
+          <div className="w-full">
+            <AppLayout>{children}</AppLayout>
+          </div>
         </Providers>
       </body>
     </html>
