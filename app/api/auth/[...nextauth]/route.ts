@@ -9,7 +9,7 @@ const config = z
   })
   .parse(process.env);
 
-export const authOptions = {
+const authOptions = {
   providers: [
     GoogleProvider({
       clientId: config.GOOGLE_ID,
@@ -18,6 +18,6 @@ export const authOptions = {
   ],
 };
 
-export const handler = NextAuth(authOptions);
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
