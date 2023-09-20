@@ -1,9 +1,11 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { getServerSession } from "next-auth";
 
 import { cn } from "#/lib/utils";
 import { Providers } from "#/components/providers";
+import { SessionProvider } from "#/components/session-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,6 +22,8 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getServerSession();
+
   return (
     <html lang="en" className="h-full">
       <body className={cn(inter.className, "flex min-h-full antialiased")}>

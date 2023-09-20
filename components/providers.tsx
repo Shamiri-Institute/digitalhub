@@ -1,14 +1,21 @@
 "use client";
 
 import * as React from "react";
+import { Session } from "next-auth";
+import { SessionProvider } from "next-auth/react";
 
 import { TooltipProvider } from "#/components/ui/tooltip";
 import { ThemeProvider } from "#/components/theme-provider";
-import { SessionProvider } from "#/components/session-provider";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  session,
+  children,
+}: {
+  session: Session;
+  children: React.ReactNode;
+}) {
   return (
-    <SessionProvider>
+    <SessionProvider session={session}>
       <ThemeProvider
         attribute="class"
         defaultTheme="system"
