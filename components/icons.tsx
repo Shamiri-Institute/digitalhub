@@ -7,6 +7,7 @@ import {
   Twitter,
   type LucideIcon,
 } from "lucide-react";
+import { cn } from "#/lib/utils";
 
 export type Icon = LucideIcon;
 
@@ -14,10 +15,11 @@ export const Icons = {
   sun: SunMedium,
   moon: Moon,
   twitter: Twitter,
-  logo: (props: LucideProps) => (
+  logo: ({ className, ...props }: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 608.82 76.82"
+      className={cn("fill-brand", className)}
       {...props}
     >
       <g>

@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 
-// import { Footer } from '#/components/Footer'
-// import { Header } from '#/components/Header'
+import { Footer } from "#/components/footer";
+import { Header } from "#/components/header";
 import { Icons } from "#/components/icons";
-// import { Navigation } from '#/components/Navigation'
+import { Navigation } from "#/components/navigation";
 // import { type Section, SectionProvider } from '#/components/SectionProvider'
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -22,16 +22,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="contents lg:pointer-events-auto lg:block lg:w-72 lg:overflow-y-auto lg:border-r lg:border-zinc-900/10 lg:px-6 lg:pb-8 lg:pt-4 lg:dark:border-white/10 xl:w-80 bg-canvas">
           <div className="hidden lg:flex">
             <Link href="/" aria-label="Home">
-              <Icons.logo className="h-6 fill-brand" />
+              <Icons.logo className="h-6" />
             </Link>
           </div>
-          {/* <Header />
-            <Navigation className="hidden lg:mt-10 lg:block" /> */}
+          <Header />
+          <Navigation className="hidden lg:mt-10 lg:block" />
         </div>
       </motion.header>
       <div className="relative flex h-full flex-col px-4 pt-14 sm:px-6 lg:px-8">
         <main className="flex-auto">{children}</main>
-        {/* <Footer /> */}
+        <Footer />
       </div>
     </div>
   );
