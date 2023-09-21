@@ -87,19 +87,9 @@ function MobileNavigationDialog({
       </Dialog>
       <Sheet open={isOpen}>
         <SheetContent side="left" className="left-0 w-full">
-          {/* <div
-          className={cn(
-            "fixed inset-0 top-14 backdrop-blur-sm",
-            "duration-300 group-data-[state=open]:animate-in group-data-[state=closed]:animate-out",
-            "group-data-[state=open]:fade-in group-data-[state=closed]:fade-out"
-          )}
-        /> */}
-
           <div
             className={cn(
-              "fixed bottom-0 left-0 top-14 w-full overflow-y-auto bg-white px-4 pb-4 pt-6 shadow-lg shadow-zinc-900/10 ring-1 ring-zinc-900/7.5 dark:bg-zinc-900 dark:ring-zinc-800 min-[416px]:max-w-sm sm:px-6 sm:pb-10"
-              // "duration-300 group-data-[state=open]:animate-in group-data-[state=closed]:animate-out",
-              // "group-data-[state=open]:slide-in-from-left group-data-[state=closed]:slide-out-to-left"
+              "fixed bottom-0 left-0 top-12 w-full overflow-y-auto bg-white px-4 pb-4 pt-6 shadow-lg shadow-zinc-900/10 ring-1 ring-zinc-900/7.5 dark:bg-zinc-900 dark:ring-zinc-800 min-[416px]:max-w-sm sm:px-6 sm:pb-10"
             )}
           >
             <Navigation />

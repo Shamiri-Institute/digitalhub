@@ -64,7 +64,7 @@ const SheetContent = React.forwardRef<
   SheetContentProps
 >(({ side = "left", className, children, ...props }, ref) => (
   <SheetPortal>
-    {side !== "left" && <SheetOverlay />}
+    <SheetOverlay className={side === "left" ? "top-14" : ""} />
     <SheetPrimitive.Content
       ref={ref}
       className={cn(sheetVariants({ side }), className)}
