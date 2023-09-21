@@ -26,7 +26,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
           <Header />
-          <Navigation className="hidden lg:mt-6 lg:block" />
+          <Navigation className="hidden lg:flex" />
         </div>
       </motion.header>
       <div className="relative flex h-full flex-col px-4 pt-14 sm:px-6 lg:px-8">

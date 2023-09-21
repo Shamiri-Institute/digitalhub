@@ -9,8 +9,8 @@ import {
   useIsInsideMobileNavigation,
   useMobileNavigationStore,
 } from "#/components/mobile-navigation";
-// import { MobileSearch, Search } from "#/components/Search";
-// import { ThemeToggle } from "#/components/ThemeToggle";
+import { ThemeToggle } from "#/components/theme-provider";
+// import { MobileSearch, Search } from "#/components/search";
 
 function TopLevelNavItem({
   href,
@@ -68,9 +68,7 @@ export const Header = forwardRef<
         )}
       />
       {/* <Search /> */}
-      <div className="search-placeholder hidden lg:block lg:max-w-md lg:flex-auto">
-        search
-      </div>
+      <div className="search-placeholder hidden lg:block lg:max-w-md lg:flex-auto"></div>
       <div className="flex items-center gap-5 lg:hidden">
         <MobileNavigation />
         <Link href="/" aria-label="Home">
@@ -86,7 +84,7 @@ export const Header = forwardRef<
         <div className="hidden md:block md:h-5 md:w-px md:bg-border" />
         <div className="flex gap-4">
           {/* <MobileSearch /> */}
-          {/* <ThemeToggle /> */}
+          <ThemeToggle />
         </div>
         {/* <div className="hidden min-[416px]:contents">
           <Button>Sign in</Button>
