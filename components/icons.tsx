@@ -5,6 +5,10 @@ import {
   SunMedium,
   Check,
   ChevronsUpDown,
+  GraduationCap,
+  Users2,
+  ListTodo,
+  Backpack,
   type LucideIcon,
 } from "lucide-react";
 
@@ -17,6 +21,10 @@ export const Icons = {
   moon: Moon,
   check: Check,
   chevronsUpDown: ChevronsUpDown,
+  graduationCap: GraduationCap,
+  backpack: Backpack,
+  users2: Users2,
+  listTodo: ListTodo,
   logo: ({ className, ...props }: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"

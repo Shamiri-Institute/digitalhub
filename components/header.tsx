@@ -3,7 +3,6 @@ import Link from "next/link";
 import clsx from "clsx";
 import { motion, useScroll, useTransform } from "framer-motion";
 
-import { Button } from "#/components/ui/button";
 import { Icons } from "#/components/icons";
 import {
   MobileNavigation,
@@ -50,7 +49,6 @@ export const Header = forwardRef<
         "fixed inset-x-0 top-0 z-50 flex h-14 items-center justify-between gap-12 px-4 transition sm:px-6 lg:left-72 lg:z-30 lg:px-8 xl:left-80",
         // !isInsideMobileNavigation &&
         //   "backdrop-blur-sm dark:backdrop-blur lg:left-72 xl:left-80",
-        "bg-card",
         className
         // isInsideMobileNavigation
         //   ? "bg-white dark:bg-zinc-900"
@@ -81,14 +79,11 @@ export const Header = forwardRef<
       </div>
       <div className="flex items-center gap-5">
         <nav className="hidden md:block">
-          <ul role="list" className="flex items-center gap-8">
-            <TopLevelNavItem href="/">Students</TopLevelNavItem>
-            <TopLevelNavItem href="#">Fellows</TopLevelNavItem>
-            <TopLevelNavItem href="#">Screenings</TopLevelNavItem>
-            <TopLevelNavItem href="#">Schools</TopLevelNavItem>
-          </ul>
+          {/* <ul role="list" className="flex items-center gap-8">
+            <TopLevelNavItem href="/">Support</TopLevelNavItem>
+          </ul> */}
         </nav>
-        <div className="hidden md:block md:h-5 md:w-px md:bg-zinc-900/10 md:dark:bg-white/15" />
+        <div className="hidden md:block md:h-5 md:w-px md:bg-border" />
         <div className="flex gap-4">
           {/* <MobileSearch /> */}
           {/* <ThemeToggle /> */}

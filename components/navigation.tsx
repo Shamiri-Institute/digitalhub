@@ -1,47 +1,72 @@
+import Link from "next/link";
+
 import { Avatar, AvatarFallback, AvatarImage } from "#/components/ui/avatar";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
-import { Icons } from "./icons";
-import { Button } from "./ui/button";
+import { type Icon, Icons } from "#/components/icons";
+import { usePathname } from "next/navigation";
 
-export const navigation: Array<any> = [
-  {
-    title: "Students",
-    links: [{ title: "List students", href: "/students" }],
-  },
-  {
-    title: "Fellows",
-    links: [{ title: "List fellows", href: "/fellows" }],
-  },
-  {
-    title: "Supervisors",
-    links: [{ title: "List supervisors", href: "/supervisors" }],
-  },
-  {
-    title: "Screening",
-    links: [{ title: "List screenings", href: "/screenings" }],
-  },
-];
+export const navigation: Array<any> = [];
+
+function NavItem({
+  href,
+  Icon,
+  children,
+}: {
+  href: string;
+  Icon: Icon;
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  return (
+    <li>
+      <Link
+        href={href}
+        className={cn(
+          "flex items-center gap-4 lg:gap-2 p-1.5 rounded-sm",
+          "text-base lg:text-sm leading-5 lg:font-medium",
+          "dark:hover:bg-foreground/[0.025] hover:bg-foreground/[0.05]",
+          {
+            "dark:bg-foreground/[0.025] bg-foreground/[0.05]":
+              pathname === href,
+          }
+        )}
+      >
+        <Icon className="h-6 lg:h-4" strokeWidth={1.5} />
+        {children}
+      </Link>
+    </li>
+  );
+}
 
 export function Navigation(props: React.ComponentPropsWithoutRef<"nav">) {
   return (
     <div className="flex flex-col justify-between h-full">
       <div className="flex-1">
-        <div className="md:my-6">
-          <ProfileSwitcher />
-        </div>
         <nav {...props}>
-          <ul role="list">
-            <div>Students</div>
-            <div>Fellows</div>
-            <div>Screenings</div>
-            <div>Schools</div>
+          <ul role="list" className="">
+            <NavItem href="/students" Icon={Icons.backpack}>
+              Students
+            </NavItem>
+            <NavItem href="/fellows" Icon={Icons.users2}>
+              Fellows
+            </NavItem>
+            <NavItem href="/screenings" Icon={Icons.listTodo}>
+              Screenings
+            </NavItem>
+            <NavItem href="/schools" Icon={Icons.graduationCap}>
+              Schools
+            </NavItem>
           </ul>
         </nav>
       </div>
       <div>
         <Separator />
-        <div>Profile</div>
+        <div>
+          <div className="m-4 md:mx-0">
+            <ProfileSwitcher />
+          </div>
+        </div>
       </div>
     </div>
   );
