@@ -76,6 +76,9 @@ const config: Config = {
       zIndex: {
         "100": "100",
       },
+      opacity: {
+        "3": "0.03",
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

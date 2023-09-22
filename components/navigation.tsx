@@ -25,10 +25,9 @@ function NavItem({
         className={cn(
           "flex items-center gap-4 lg:gap-2 p-1.5 rounded-sm",
           "text-base lg:text-sm leading-5 lg:font-medium",
-          "dark:hover:bg-foreground/[0.025] hover:bg-foreground/[0.05]",
+          "hover:bg-foreground/[0.025]",
           {
-            "dark:bg-foreground/[0.025] bg-foreground/[0.05]":
-              pathname === href,
+            "bg-foreground/[0.025]": pathname === href,
           }
         )}
       >
@@ -50,7 +49,7 @@ export function Navigation({
     >
       <div className="flex-1 flex flex-col">
         <nav className="flex-1 lg:pt-6">
-          <ul role="list" className="">
+          <ul role="list" className="space-y-2">
             <NavItem href="/students" Icon={Icons.backpack}>
               Students
             </NavItem>

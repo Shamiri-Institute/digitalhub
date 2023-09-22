@@ -44,16 +44,15 @@ Postgres has a robust set of features for authorization and row-level security. 
 RBAC fits with the tiered model of care at Shamiri Institute.
 
 ```
-Superadmins
-└── Implementors (Shamiri, AFRAM, etc.)
-    └── Admins (e.g. dmndetei@amhf.or.ke for AFRAM)
-    └── Clinicians
-    │   ├── Supervisors
-    │   │   ├── Fellows
-    │   │   │   └── Students
-    │   └── Deliver
-    └─── Research
-    └─── External (no permissions by default, for external collaborators with invited granular permissions)
+Superadmins (SDH owner) Rahim / Tom
+└── Organizations / Implementors (Shamiri, AMHRTF, etc.)
+    └── Admins / Hub Coordinators (e.g. dmndetei@amhf.or.ke for AMHRTF) — e.g. Afra
+        ├── Supervisors
+        │   │   ├── Fellows
+        │   │   │   └── Students
+        │   └── Deliver
+    └─── Researcher (e.g. view all students data for research purposes, Shamiri researches can be invited into AMH tenant)
+    └─── External (no permissions by default, for external collaborators / clinicians with invited granular permissions)
 ```
 
 In code, lets call implementors organizations as that fits more with terms used in SaaS.
@@ -87,7 +86,7 @@ From security point of view, this also prevents enumeration attacks.
 
 #### Repository pattern
 
-In order to enable better testability and separation of concerns, we use the repository pattern to encapsulate database access. The
+In order to enable better testability and separation of concerns, we use the repository pattern to encapsulate database access.
 
 ### Migration flow
 
@@ -128,3 +127,29 @@ To support [clinician workflows], we will need some kind of object storage anywa
 ### Organization
 
 To create a new implementer, a superadmin will need to go to `/admin/organizations/new` and fill in the form with the contact email of the organization as a whole. They will also specify the actual user emails of the new organization to invite.
+
+## Notes
+
+(new table, wouldn't track intervention sessions)
+
+sessions:
+
+- id
+- session_type
+- session_date
+- school_id
+- supervisor_id
+- project_id
+
+reimbursement_requests:
+
+- id
+- supervisor_id
+- status (pending, approved, denied)
+- amount
+- session_id
+- notes
+
+hub coordinator or head of clinical ops is approving / rejecting reimbursement requests
+
+fellows (1k for transport, 500 per session)

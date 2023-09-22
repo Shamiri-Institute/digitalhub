@@ -81,16 +81,24 @@ function OrganizationDialog({
           <div className="text-sm">
             <Separator />
             <div className="flex flex-col p-1.5">
-              <Link href="/organization/settings" className="p-2">
+              <Link
+                href="/organization/settings"
+                className="p-2 hover:bg-foreground/3 rounded-md"
+              >
                 Organization settings
               </Link>
-              <Link href="/organization/members" className="p-2">
+              <Link
+                href="/organization/members"
+                className="p-2 hover:bg-foreground/3 rounded-md"
+              >
                 Invite & manage members
               </Link>
             </div>
             <Separator />
             <div className="flex flex-col p-1.5">
-              <button className="p-2 flex flex-start">Log out</button>
+              <button className="p-2 flex flex-start hover:bg-foreground/3 rounded-md">
+                Log out
+              </button>
             </div>
           </div>
         </div>
