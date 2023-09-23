@@ -11,6 +11,7 @@ const buttonVariants = cva(
       variant: {
         default:
           "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        brand: "bg-shamiri-blue hover:bg-[#045e96] shadow text-white",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
@@ -26,10 +27,15 @@ const buttonVariants = cva(
         lg: "h-10 rounded-md px-8",
         icon: "h-9 w-9",
       },
+      active: {
+        default: "",
+        scale: "transition active:scale-95",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      active: "default",
     },
   }
 );

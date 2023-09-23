@@ -46,6 +46,7 @@ import {
   TableHeader,
   TableRow,
 } from "#/components/ui/table";
+import { Icons } from "#/components/icons";
 
 const data: Payment[] = [
   {
@@ -88,25 +89,25 @@ export type Payment = {
 };
 
 export const columns: ColumnDef<Payment>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  // {
+  //   id: "select",
+  //   header: ({ table }) => (
+  //     <Checkbox
+  //       checked={table.getIsAllPageRowsSelected()}
+  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //       aria-label="Select all"
+  //     />
+  //   ),
+  //   cell: ({ row }) => (
+  //     <Checkbox
+  //       checked={row.getIsSelected()}
+  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //       aria-label="Select row"
+  //     />
+  //   ),
+  //   enableSorting: false,
+  //   enableHiding: false,
+  // },
   {
     accessorKey: "status",
     header: "Status",
@@ -204,49 +205,65 @@ export function CardsDataTable() {
   });
 
   return (
-    <Card className="border-none shadow-none">
+    <Card className="bg-transparent border-none shadow-none">
       <CardHeader className="p-0">
         <CardTitle className="text-base">Manage members</CardTitle>
-        <CardDescription>Manage your payments.</CardDescription>
       </CardHeader>
-      <CardContent className="p-0">
-        <div className="mb-4 flex items-center gap-4">
-          <Input
-            placeholder="Filter emails..."
-            value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("email")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+      <CardContent className="p-0 bg-transparent">
+        <div className="mb-4 pt-2 flex items-center gap-4">
+          <div className="max-w-sm flex w-full relative">
+            <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
+              <Icons.search className="h-4 w-4 text-foreground/50" />
+            </div>
+            <Input
+              placeholder="Search by name or email"
+              value={
+                (table.getColumn("email")?.getFilterValue() as string) ?? ""
+              }
+              onChange={(event) =>
+                table.getColumn("email")?.setFilterValue(event.target.value)
+              }
+              className="pl-8 max-w-sm bg-card"
+            />
+            <div className="ml-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="ml-auto">
+                    All <ChevronDownIcon className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => {
+                      return (
+                        <DropdownMenuItem
+                          key={column.id}
+                          className="capitalize"
+                        >
+                          {column.id}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          <div className="flex w-full justify-end">
+            <Button
+              active="scale"
+              variant="brand"
+              className="h-9 px-4 font-medium"
+            >
+              Add member
+            </Button>
+          </div>
         </div>
-        <div className="rounded-md border">
+        <div className="mt-8">
+          <div className="my-2 flex-1 font-medium text-sm text-foreground">
+            {data.length} members
+          </div>
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

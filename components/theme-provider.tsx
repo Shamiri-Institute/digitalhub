@@ -22,17 +22,18 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   );
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ children }: { children: React.ReactNode }) {
   const { setTheme } = useTheme();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="link" size="icon">
+        {/* <Button variant="link" size="icon">
           <SunIcon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <MoonIcon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Toggle theme</span>
-        </Button>
+        </Button> */}
+        {children}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setTheme("light")}>

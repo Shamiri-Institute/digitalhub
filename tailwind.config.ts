@@ -23,7 +23,11 @@ const config: Config = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        brand: "hsl(var(--brand))",
+        brand: {
+          DEFAULT: "hsl(var(--brand))",
+          foreground: "hsl(var(--brand-foreground))",
+        },
+        "shamiri-blue": "#0474bc",
         canvas: "hsl(var(--canvas))",
         primary: {
           DEFAULT: "hsl(var(--primary))",

@@ -8,9 +8,8 @@ import { Footer } from "#/components/footer";
 import { Header } from "#/components/header";
 import { Icons } from "#/components/icons";
 import { Navigation } from "#/components/navigation";
-// import { type Section, SectionProvider } from '#/components/SectionProvider'
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: React.ReactNode }) {
   let pathname = usePathname();
 
   return (

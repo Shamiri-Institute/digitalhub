@@ -9,6 +9,10 @@ import {
   Users2,
   ListTodo,
   Backpack,
+  Settings,
+  ChevronDown,
+  ChevronRight,
+  Search,
   type LucideIcon,
 } from "lucide-react";
 
@@ -25,6 +29,10 @@ export const Icons = {
   backpack: Backpack,
   users2: Users2,
   listTodo: ListTodo,
+  settings: Settings,
+  chevronDown: ChevronDown,
+  chevronRight: ChevronRight,
+  search: Search,
   logo: ({ className, ...props }: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
