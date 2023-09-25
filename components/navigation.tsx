@@ -69,6 +69,7 @@ export function Navigation({
       </div>
       <div>
         <div className="mb-4">
+          {/* TODO: https://ui.shadcn.com/docs/components/accordion */}
           <button
             className={cn(
               "w-full flex items-center gap-6 lg:gap-2 p-1.5 rounded-sm",

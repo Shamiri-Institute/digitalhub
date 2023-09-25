@@ -1,11 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  CaretSortIcon,
-  ChevronDownIcon,
-  DotsHorizontalIcon,
-} from "@radix-ui/react-icons";
+import { ChevronDownIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -20,17 +16,9 @@ import {
 } from "@tanstack/react-table";
 
 import { Button } from "#/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "#/components/ui/card";
-import { Checkbox } from "#/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -38,145 +26,137 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "#/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "#/components/ui/table";
 import { Icons } from "#/components/icons";
+import { UserAvatar } from "#/components/ui/avatar";
+import { cn } from "#/lib/utils";
 
-const data: Payment[] = [
+const MemberRolesOrStateList = [
+  "Admin",
+  "Hub coordinator",
+  "Fellow",
+  "Operations",
+  "Research",
+  "External",
+  "Pending invite",
+];
+
+interface Member {
+  name: string;
+  email: string;
+  role: string;
+  avatarUrl: string | null;
+}
+
+const data: Member[] = [
   {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@yahoo.com",
+    email: "osborn@shamiri.institute",
+    name: "Tom Osborn",
+    role: "Admin",
+    avatarUrl:
+      "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
   },
   {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@gmail.com",
+    email: "mmbone@shamiri.institute",
+    name: "Wendy Mmbone",
+    role: "Research",
+    avatarUrl:
+      "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3043&q=80",
   },
   {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@gmail.com",
+    email: "benny@shamiri.institute",
+    name: "Benny H. Otieno",
+    role: "Admin",
+    avatarUrl:
+      "https://images.unsplash.com/photo-1596005554384-d293674c91d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=5396&q=80",
   },
   {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@gmail.com",
+    email: "linus@shamiri.institute",
+    name: "Linus Wong",
+    role: "Admin",
+    avatarUrl: null,
   },
   {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@hotmail.com",
+    email: "edmund@shamiri.institute",
+    name: "Edmund Korley",
+    role: "Admin",
+    avatarUrl: null,
   },
 ];
 
-export type Payment = {
-  id: string;
-  amount: number;
-  status: "pending" | "processing" | "success" | "failed";
-  email: string;
-};
-
-export const columns: ColumnDef<Payment>[] = [
-  // {
-  //   id: "select",
-  //   header: ({ table }) => (
-  //     <Checkbox
-  //       checked={table.getIsAllPageRowsSelected()}
-  //       onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-  //       aria-label="Select all"
-  //     />
-  //   ),
-  //   cell: ({ row }) => (
-  //     <Checkbox
-  //       checked={row.getIsSelected()}
-  //       onCheckedChange={(value) => row.toggleSelected(!!value)}
-  //       aria-label="Select row"
-  //     />
-  //   ),
-  //   enableSorting: false,
-  //   enableHiding: false,
-  // },
+const columns: ColumnDef<Member>[] = [
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
-    ),
-  },
-  {
-    accessorKey: "email",
-    header: ({ column }) => {
+    id: "display",
+    header: "Display",
+    cell: ({ row }) => {
+      const { email, name, avatarUrl } = row.original;
       return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Email
-          <CaretSortIcon className="ml-2 h-4 w-4" />
-        </Button>
+        <div className="whitespace-nowrap py-5 pr-3 text-sm flex">
+          <div className="flex items-center overflow-hidden text-ellipsis">
+            <div className="h-[18px] w-[18px] sm:h-11 sm:w-11 flex-shrink-0">
+              <UserAvatar
+                className="h-[18px] w-[18px] sm:h-11 sm:w-11 text-xs sm:text-"
+                src={avatarUrl || ""}
+                fallback={name}
+                fallbackClasses="text-[8px] sm:text-sm"
+              />
+            </div>
+            <div className="ml-4 md:ml-5 overflow-hidden text-ellipsis">
+              <div className="font-medium hidden sm:block">{name}</div>
+              <div className="overflow-hidden text-ellipsis sm:mt-1 sm:w-auto font-medium sm:font-normal sm:text-muted-foreground text-xs sm:text-sm">
+                {email}
+              </div>
+            </div>
+          </div>
+        </div>
       );
     },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
   },
   {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
+    accessorKey: "role",
+    header: "Role",
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"));
-
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount);
-
-      return <div className="text-right font-medium">{formatted}</div>;
+      const { role } = row.original;
+      return <div className="text-primary/80 text-xs sm:text-sm">{role}</div>;
     },
   },
   {
     id: "actions",
-    enableHiding: false,
+    header: "Actions",
     cell: ({ row }) => {
       const payment = row.original;
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <DotsHorizontalIcon className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
-            >
-              Copy payment ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="h-8 w-8 p-0 text-muted-foreground"
+              >
+                <span className="sr-only">Open menu</span>
+                <DotsHorizontalIcon className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(payment.email)}
+              >
+                Copy member email
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>View customer</DropdownMenuItem>
+              <DropdownMenuItem>View payment details</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       );
     },
   },
 ];
 
-export function CardsDataTable() {
+export function MembersTable() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -204,6 +184,10 @@ export function CardsDataTable() {
     },
   });
 
+  const [roleFilter, setRoleFilter] = React.useState<string>("All");
+
+  const tableCount = table.getRowModel().rows?.length ?? 0;
+
   return (
     <Card className="bg-transparent border-none shadow-none">
       <CardHeader className="p-0">
@@ -211,92 +195,85 @@ export function CardsDataTable() {
       </CardHeader>
       <CardContent className="p-0 bg-transparent">
         <div className="mb-4 pt-2 flex items-center gap-4">
-          <div className="max-w-sm flex w-full relative">
+          <div className="md:max-w-sm flex w-full relative">
             <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-              <Icons.search className="h-4 w-4 text-foreground/50" />
+              <Icons.search className="h-3 w-3 md:h-4 md:w-4 text-foreground/50" />
             </div>
             <Input
               placeholder="Search by name or email"
               value={
-                (table.getColumn("email")?.getFilterValue() as string) ?? ""
+                (table.getColumn("display")?.getFilterValue() as string) ?? ""
               }
               onChange={(event) =>
-                table.getColumn("email")?.setFilterValue(event.target.value)
+                table.getColumn("display")?.setFilterValue(event.target.value)
               }
-              className="pl-8 max-w-sm bg-card"
+              className="pl-6 md:pl-8 max-w-sm bg-card text-[0.8125rem] md:text-sm"
             />
             <div className="ml-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="ml-auto">
-                    All <ChevronDownIcon className="ml-2 h-4 w-4" />
+                  <Button
+                    variant="outline"
+                    className="ml-auto whitespace-nowrap text-[0.8125rem] md:text-sm px-2 py-1.5 md:px-4 md:py-2 font-medium"
+                  >
+                    {roleFilter}{" "}
+                    <ChevronDownIcon className="ml-1 md:ml-2 h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => {
-                      return (
-                        <DropdownMenuItem
-                          key={column.id}
-                          className="capitalize"
-                        >
-                          {column.id}
-                        </DropdownMenuItem>
-                      );
-                    })}
+                  {["All", ...MemberRolesOrStateList].map((role) => {
+                    return (
+                      <DropdownMenuItem
+                        key={role}
+                        className="relative flex justify-between pr-10"
+                        onSelect={() => {
+                          setRoleFilter(role);
+                          table
+                            .getColumn("role")
+                            ?.setFilterValue(role === "All" ? "" : role);
+                        }}
+                      >
+                        {role}
+                        {role === roleFilter && (
+                          <div className="absolute inset-y-0 right-1 flex flex-col justify-center">
+                            <Icons.check className="h-5 text-brand" />
+                          </div>
+                        )}
+                      </DropdownMenuItem>
+                    );
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
-          <div className="flex w-full justify-end">
+          <div className="flex md:w-full justify-end">
             <Button
               active="scale"
               variant="brand"
-              className="h-9 px-4 font-medium"
+              className="h-9 px-3.5 md:px-4 font-medium whitespace-nowrap text-[0.8125rem] md:text-md"
             >
               Add member
             </Button>
           </div>
         </div>
         <div className="mt-8">
-          <div className="my-2 flex-1 font-medium text-sm text-foreground">
-            {data.length} members
+          <div className="my-2 flex-1 font-medium text-sm text-foreground lowercase">
+            {tableCount} {getOptionDisplayName(roleFilter, tableCount)}
           </div>
           <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead
-                        key={header.id}
-                        className="[&:has([role=checkbox])]:pl-3"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
+                    className="grid grid-cols-[7fr_3fr_2fr] gap-x-4 items-center"
                   >
-                    {row.getVisibleCells().map((cell) => (
+                    {row.getVisibleCells().map((cell, idx) => (
                       <TableCell
                         key={cell.id}
-                        className="[&:has([role=checkbox])]:pl-3"
+                        className={cn("p-0 flex-1", {
+                          "overflow-hidden text-ellipsis": idx === 0,
+                        })}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
@@ -312,38 +289,36 @@ export function CardsDataTable() {
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    No results.
+                    No {getOptionDisplayName(roleFilter, tableCount)}.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-end space-x-2 pt-4">
-          <div className="flex-1 text-sm text-muted-foreground">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
-          </div>
-          <div className="space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
+}
+
+function getOptionDisplayName(
+  name: (typeof MemberRolesOrStateList)[number],
+  count: number
+) {
+  let displayName = name.toLowerCase();
+  if (displayName === "all") {
+    displayName = "member";
+  }
+  if (displayName === "external" || displayName === "opertions") {
+    displayName = `${displayName} member`;
+  }
+
+  if (count > 1 || count === 0) {
+    if (displayName.endsWith("s")) {
+      return displayName;
+    }
+    return `${displayName}s`;
+  }
+
+  return displayName;
 }

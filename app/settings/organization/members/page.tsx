@@ -1,22 +1,21 @@
 import { Breadcrumbs } from "#/components/breadcrumbs";
 import { Separator } from "#/components/ui/separator";
 
-import { CardsDataTable } from "./members-table";
+import { MembersTable } from "./members-table";
 
 export default function OrganizationMembers() {
   return (
-    <main>
+    <main className="mt-10 md:mt-0">
       <Breadcrumbs crumbs={["Settings", "Organization", "Members"]} />
-      <div className="mt-4">
-        <div className="text-base py-2">
+      <div className="md:mt-4">
+        <div className="text-sm md:text-base text-muted-foreground py-2">
           Manage who has access to this organization.
         </div>
         <Separator className="my-4" />
         <div>
-          <CardsDataTable />
+          <MembersTable />
         </div>
       </div>
-      <Separator />
     </main>
   );
 }
