@@ -21,8 +21,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
@@ -36,9 +34,10 @@ const MemberRolesOrStateList = [
   "Hub coordinator",
   "Fellow",
   "Operations",
-  "Research",
+  "Researcher",
   "External",
   "Pending invite",
+  "Disabled",
 ];
 
 interface Member {
@@ -59,7 +58,7 @@ const data: Member[] = [
   {
     email: "mmbone@shamiri.institute",
     name: "Wendy Mmbone",
-    role: "Research",
+    role: "Researcher",
     avatarUrl:
       "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3043&q=80",
   },
@@ -88,6 +87,7 @@ const columns: ColumnDef<Member>[] = [
   {
     id: "display",
     header: "Display",
+    accessorFn: (row) => row.name + row.email,
     cell: ({ row }) => {
       const { email, name, avatarUrl } = row.original;
       return (
@@ -123,9 +123,7 @@ const columns: ColumnDef<Member>[] = [
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
-      const payment = row.original;
-
+    cell: () => {
       return (
         <div className="flex justify-end">
           <DropdownMenu>
@@ -139,15 +137,8 @@ const columns: ColumnDef<Member>[] = [
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(payment.email)}
-              >
-                Copy member email
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>View customer</DropdownMenuItem>
-              <DropdownMenuItem>View payment details</DropdownMenuItem>
+              <DropdownMenuItem>Change role</DropdownMenuItem>
+              <DropdownMenuItem>Disable user</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -305,11 +296,15 @@ function getOptionDisplayName(
   name: (typeof MemberRolesOrStateList)[number],
   count: number
 ) {
-  let displayName = name.toLowerCase();
+  let displayName: (typeof MemberRolesOrStateList)[number] = name.toLowerCase();
   if (displayName === "all") {
     displayName = "member";
   }
-  if (displayName === "external" || displayName === "opertions") {
+  if (
+    displayName === "external" ||
+    displayName === "opertions" ||
+    displayName === "disabled"
+  ) {
     displayName = `${displayName} member`;
   }
 
