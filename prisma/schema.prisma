@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id           String               @id @db.VarChar(255)
+  name         String               @unique
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
+  archivedAt   DateTime?            @map("archived_at")
+  contactEmail String               @map("contact_email")
+  logos        OrganizationLogo[]
+  memberships  OrganizationMember[]
+
+  @@map("organizations")
+}
+
+model OrganizationLogo {
+  id             String       @id @db.VarChar(255)
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  fileId         Int          @unique @map("file_id")
+  file           File         @relation(fields: [fileId], references: [id])
+
+  @@map("organization_logos")
+}
+
+enum ContentType {
+  JPEG
+  PNG
+  WEBP
+  AVIF
+  GIF
+  PDF
+}
+
+enum ServiceType {
+  S3
+  GCS
+  R2
+}
+
+model File {
+  id               Int               @id @default(autoincrement())
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+  archivedAt       DateTime?         @map("archived_at")
+  serviceType      ServiceType       @map("service_type")
+  fileKey          String            @map("file_key")
+  fileName         String            @map("file_name")
+  byteSize         Int               @map("byte_size")
+  contentUrl       String            @map("content_url")
+  contentType      ContentType       @map("content_type")
+  width            Int?
+  height           Int?
+  signedUrl        String?           @map("signed_url") @db.VarChar(2048)
+  expiresAt        DateTime?         @map("expires_at")
+  organizationLogo OrganizationLogo?
+
+  @@map("files")
+}
+
+model User {
+  id          String               @id @db.VarChar(255)
+  email       String               @unique
+  name        String               @db.VarChar(100)
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+  archivedAt  DateTime?            @map("archived_at")
+  memberships OrganizationMember[]
+
+  @@map("users")
+}
+
+model OrganizationMember {
+  id             Int                @id @default(autoincrement())
+  organizationId String             @map("organization_id") @db.VarChar(255)
+  organization   Organization       @relation(fields: [organizationId], references: [id])
+  userId         String             @map("user_id") @db.VarChar(255)
+  user           User               @relation(fields: [userId], references: [id])
+  roles          MemberRole[]
+  permissions    MemberPermission[]
+
+  @@map("organization_members")
+}
+
+model Role {
+  id          Int              @id @default(autoincrement())
+  roleName    String           @unique @map("role_name") @db.VarChar(255)
+  members     MemberRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model MemberRole {
+  id       Int                @id @default(autoincrement())
+  memberId Int                @map("member_id")
+  member   OrganizationMember @relation(fields: [memberId], references: [id])
+  roleId   Int                @map("role_id")
+  role     Role               @relation(fields: [roleId], references: [id])
+
+  @@map("member_roles")
+}
+
+model Permission {
+  id                Int                @id @default(autoincrement()) @db.SmallInt
+  permissionLabel   String             @unique @map("permission_label") @db.VarChar(255)
+  memberPermissions MemberPermission[]
+  rolePermissions   RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           Int        @id @default(autoincrement())
+  roleId       Int        @map("role_id")
+  role         Role       @relation(fields: [roleId], references: [id])
+  permissionId Int        @map("permission_id")
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@map("role_permissions")
+}
+
+model MemberPermission {
+  id           Int                @id @default(autoincrement())
+  memberId     Int                @map("member_id")
+  member       OrganizationMember @relation(fields: [memberId], references: [id])
+  permissionId Int                @map("permission_id")
+  permission   Permission         @relation(fields: [permissionId], references: [id])
+
+  @@map("member_permissions")
+}
