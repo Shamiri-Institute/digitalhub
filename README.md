@@ -1,3 +1,17 @@
+# Shamiri Digital Hub
+
+## Quickstart
+
+- Install [docker compose](https://docs.docker.com/compose/install/)
+
+## Database
+
+### Creating and running migrations
+
+- After making changes to the [`prisma/schema.prisma`](prisma/schema.prisma) file, run `npm run db:migrate:dev` to generate a migration file.
+
+# Next.js
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
