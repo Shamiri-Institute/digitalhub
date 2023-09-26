@@ -306,7 +306,7 @@ function getOptionDisplayName(
   }
   if (
     displayName === "external" ||
-    displayName === "opertions" ||
+    displayName === "operations" ||
     displayName === "disabled"
   ) {
     displayName = `${displayName} member`;

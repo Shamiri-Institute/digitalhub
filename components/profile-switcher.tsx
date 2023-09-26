@@ -91,7 +91,7 @@ function OrganizationDialog({
                 href="/settings/organization/members"
                 className="p-2 hover:bg-foreground/3 rounded-md"
               >
-                Invite & manage members
+                Add & manage members
               </Link>
             </div>
             <Separator />
