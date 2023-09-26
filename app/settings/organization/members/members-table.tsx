@@ -28,13 +28,15 @@ import { Table, TableBody, TableCell, TableRow } from "#/components/ui/table";
 import { Icons } from "#/components/icons";
 import { UserAvatar } from "#/components/ui/avatar";
 import { cn } from "#/lib/utils";
+import { AddMemberDialog } from "./add-member-dialog";
 
 const MemberRolesOrStateList = [
   "Admin",
   "Hub coordinator",
-  "Fellow",
+  "Supervisor",
   "Operations",
   "Researcher",
+  "Fellow",
   "External",
   "Pending invite",
   "Disabled",
@@ -238,13 +240,15 @@ export function MembersTable() {
             </div>
           </div>
           <div className="flex md:w-full justify-end">
-            <Button
-              active="scale"
-              variant="brand"
-              className="h-9 px-3.5 md:px-4 font-medium whitespace-nowrap text-[0.8125rem] md:text-md"
-            >
-              Add member
-            </Button>
+            <AddMemberDialog>
+              <Button
+                active="scale"
+                variant="brand"
+                className="h-9 px-3.5 md:px-4 font-medium whitespace-nowrap text-[0.8125rem] md:text-md"
+              >
+                Add member
+              </Button>
+            </AddMemberDialog>
           </div>
         </div>
         <div className="mt-8">

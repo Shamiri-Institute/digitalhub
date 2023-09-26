@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react";
 
 import { TooltipProvider } from "#/components/ui/tooltip";
 import { ThemeProvider } from "#/components/theme-provider";
+import { Toaster } from "#/components/ui/toaster";
 
 export function Providers({
   session,
@@ -22,7 +23,10 @@ export function Providers({
         enableSystem
         disableTransitionOnChange
       >
-        <TooltipProvider>{children}</TooltipProvider>
+        <TooltipProvider>
+          {children}
+          <Toaster />
+        </TooltipProvider>
       </ThemeProvider>
     </SessionProvider>
   );

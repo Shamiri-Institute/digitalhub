@@ -6,9 +6,9 @@ import { create } from "zustand";
 
 import { Header } from "#/components/header";
 import { Navigation } from "#/components/navigation";
-import { cn } from "#/lib/utils";
 import { Sheet, SheetContent } from "#/components/ui/sheet";
-import { Dialog, DialogBaseContent } from "./ui/dialog";
+import { Dialog, DialogBaseContent } from "#/components/ui/dialog";
+import { cn } from "#/lib/utils";
 
 function MenuIcon(props: React.ComponentPropsWithoutRef<"svg">) {
   return (

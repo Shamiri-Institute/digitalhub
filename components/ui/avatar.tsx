@@ -73,4 +73,28 @@ const UserAvatar = React.forwardRef<
 ));
 UserAvatar.displayName = "UserAvatar";
 
-export { UserAvatar };
+const OrganizationAvatar = React.forwardRef<
+  React.ElementRef<typeof AvatarPrimitive.Fallback>,
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback> & {
+    src: string;
+    fallback: string;
+    fallbackClasses?: string;
+  }
+>(({ className, src, fallback, fallbackClasses, ...props }, ref) => (
+  <Avatar
+    ref={ref}
+    className={cn(
+      "bg-foreground/5 dark:bg-foreground/10 h-11 w-11 rounded-lg",
+      className
+    )}
+    {...props}
+  >
+    <AvatarImage src={src} />
+    <AvatarFallback className={cn("rounded-lg", fallbackClasses)}>
+      {getInitials(fallback)}
+    </AvatarFallback>
+  </Avatar>
+));
+OrganizationAvatar.displayName = "OrganizationAvatar";
+
+export { UserAvatar, OrganizationAvatar };
