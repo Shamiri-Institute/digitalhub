@@ -7,6 +7,8 @@ import fixtures from "./fixtures";
 async function seedDatabase() {
   await createSystemUser(db);
   await createOrganizations(db);
+  await createPermissions(db);
+  await createRoles(db);
   await createUsers(db);
 }
 
@@ -41,6 +43,39 @@ async function createOrganizations(db: Database) {
   }
 }
 
+async function createPermissions(db: Database) {
+  for (let permission of fixtures.permissions) {
+    await db.permission.create({
+      data: {
+        permissionLabel: permission,
+      },
+    });
+  }
+}
+
+async function createRoles(db: Database) {
+  for (let roleFixture of fixtures.roles) {
+    const role = await db.role.create({
+      data: {
+        roleName: roleFixture.roleName,
+      },
+    });
+
+    for (let permissionFixture of roleFixture.permissions) {
+      const permission = await db.permission.findFirstOrThrow({
+        where: { permissionLabel: permissionFixture },
+      });
+
+      await db.rolePermission.create({
+        data: {
+          roleId: role.id,
+          permissionId: permission.id,
+        },
+      });
+    }
+  }
+}
+
 async function createUsers(db: Database) {
   const onboard = new OnboardUserCommand(db);
   for (let { organizationByEmail, ...user } of fixtures.users) {
@@ -50,8 +85,10 @@ async function createUsers(db: Database) {
 
     await onboard.run({
       email: user.email,
+      name: user.name,
       organizationId: organization.id,
       inviterId: "system",
+      roleName: user.organizationRole,
     });
   }
 }

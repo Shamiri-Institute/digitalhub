@@ -3,15 +3,16 @@ import { z } from "zod";
 import { Command } from "#/commands";
 import { db as database, Database } from "#/lib/db";
 import { UserModel } from "#/models/user";
-import { JoinOrganizationCommand } from "./join-organization";
 import { sendEmail } from "#/emails";
 import UserWelcomer from "#/emails/user-welcomer";
 import { OrganizationModel } from "#/models/organization";
 
 interface OnboardUserInput {
   email: string;
+  name: string;
   organizationId: string;
   inviterId: string;
+  roleName: string;
 }
 
 interface OnboardUserOutput {
@@ -35,7 +36,7 @@ export class OnboardUserCommand extends Command<
   protected async perform(input: OnboardUserInput) {
     const validInput = this.validate(input);
 
-    const user = await this.db.$transaction(async (tx) => {
+    const { user, organization } = await this.db.$transaction(async (tx) => {
       const inviter = await new UserModel(tx).findUnique(validInput.inviterId);
       if (!inviter) {
         throw new InviterNotFoundError();
@@ -53,25 +54,40 @@ export class OnboardUserCommand extends Command<
         throw new OrganizationNotFoundError();
       }
 
-      await new JoinOrganizationCommand(tx).run({
-        organizationId: validInput.organizationId,
-        userId: user.id,
-        inviterId: inviter.id,
+      const role = await tx.role.findFirst({
+        where: { roleName: input.roleName },
+      });
+      if (!role) {
+        throw new Error(`Role ${input.roleName} not found`);
+      }
+
+      const membership = await tx.organizationMember.create({
+        data: {
+          organizationId: organization.id,
+          userId: user.id,
+        },
       });
 
-      const subject = `Welcome to Shamiri, ${user.name}!`;
-      await sendEmail({
-        to: user.email,
-        subject: subject,
-        react: UserWelcomer({
-          email: user.email,
-          userName: user.name,
-          organizationName: organization.name,
-          preview: subject,
-        }),
+      await tx.memberRole.create({
+        data: {
+          memberId: membership.id,
+          roleId: role.id,
+        },
       });
 
-      return user;
+      return { user, organization };
+    });
+
+    const subject = `Welcome to Shamiri, ${user.name}!`;
+    await sendEmail({
+      to: user.email,
+      subject: subject,
+      react: UserWelcomer({
+        email: user.email,
+        userName: user.name,
+        organizationName: organization.name,
+        preview: subject,
+      }),
     });
 
     return { userId: user.id };
@@ -83,6 +99,7 @@ export class OnboardUserCommand extends Command<
       name: z.string().min(1).max(100),
       organizationId: z.string(),
       inviterId: z.string(),
+      roleName: z.string(),
     });
 
     return schema.parse(input);

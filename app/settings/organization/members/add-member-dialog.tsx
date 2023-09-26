@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Button } from "#/components/ui/button";
+import { RoleTypes } from "#/models/role";
 
 const organization = {
   name: "Team Shamri",
@@ -43,25 +44,6 @@ const FormSchema = z.object({
     required_error: "Please select the role to invite as.",
   }),
 });
-
-const Roles = [
-  { name: "Admin", description: "Full administrative access" },
-  {
-    name: "Operations",
-    description: "Full access optimized for the operations team",
-  },
-  {
-    name: "Hub coordinator",
-    description: "Full access for data within a hub",
-  },
-  { name: "Supervisor", description: "Full access optimized for supervisors" },
-  { name: "Researcher", description: "Full access optimized for researchers" },
-  { name: "Fellow", description: "Limited access for fellows" },
-  {
-    name: "External",
-    description: "Fine grained access for external collaborators",
-  },
-];
 
 export function AddMemberDialog({ children }: { children: React.ReactNode }) {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -137,9 +119,9 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-card">
-                        {Roles.map((role) => (
+                        {RoleTypes.map((role) => (
                           <SelectItem
-                            key={role.name}
+                            key={role.slug}
                             value={role.name}
                             className="transition hover:bg-foreground/3"
                           >
