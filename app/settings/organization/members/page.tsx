@@ -9,7 +9,7 @@ export default function OrganizationMembers() {
       <Breadcrumbs crumbs={["Settings", "Organization", "Members"]} />
       <div className="md:mt-4">
         <div className="text-sm md:text-base text-muted-foreground py-2">
-          Manage who has access to this organization.
+          Manage who is a member of this organization.
         </div>
         <Separator className="my-4" />
         <div>
