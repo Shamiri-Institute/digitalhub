@@ -5,7 +5,6 @@ import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 import { type Icon, Icons } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
-import { Button } from "#/components/ui/button";
 import { ThemeToggle } from "./theme-provider";
 
 export const navigation: Array<any> = [];
@@ -52,6 +51,9 @@ export function Navigation({
       <div className="flex-1 flex flex-col">
         <nav className="flex-1 lg:pt-6">
           <ul role="list" className="space-y-0">
+            <NavItem href="/" Icon={Icons.layoutDashboard}>
+              Home
+            </NavItem>
             <NavItem href="/students" Icon={Icons.backpack}>
               Students
             </NavItem>

@@ -20,7 +20,6 @@ export const RoleTypes = [
     name: "Researcher",
     description: "Full access optimized for researchers",
   },
-  { slug: "fellow", name: "Fellow", description: "Limited access for fellows" },
   {
     slug: "external",
     name: "External",

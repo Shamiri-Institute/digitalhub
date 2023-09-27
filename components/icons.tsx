@@ -13,6 +13,7 @@ import {
   ChevronDown,
   ChevronRight,
   Search,
+  LayoutDashboard,
   type LucideIcon,
 } from "lucide-react";
 
@@ -33,6 +34,7 @@ export const Icons = {
   chevronDown: ChevronDown,
   chevronRight: ChevronRight,
   search: Search,
+  layoutDashboard: LayoutDashboard,
   logo: ({ className, ...props }: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"

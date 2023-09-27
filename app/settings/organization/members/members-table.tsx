@@ -29,15 +29,10 @@ import { Icons } from "#/components/icons";
 import { UserAvatar } from "#/components/ui/avatar";
 import { cn } from "#/lib/utils";
 import { AddMemberDialog } from "./add-member-dialog";
+import { RoleTypes } from "#/models/role";
 
 const MemberRolesOrStateList = [
-  "Admin",
-  "Hub coordinator",
-  "Supervisor",
-  "Operations",
-  "Researcher",
-  "Fellow",
-  "External",
+  ...RoleTypes.map((role) => role.name),
   "Pending invite",
   "Disabled",
 ];
