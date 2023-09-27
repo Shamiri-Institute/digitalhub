@@ -28,6 +28,7 @@ const config: Config = {
           foreground: "hsl(var(--brand-foreground))",
         },
         "shamiri-blue": "#0474bc",
+        "shamiri-blue-darker": "#045e96",
         canvas: "hsl(var(--canvas))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -82,6 +83,9 @@ const config: Config = {
       },
       opacity: {
         "3": "0.03",
+      },
+      screens: {
+        xs: "375px",
       },
     },
   },

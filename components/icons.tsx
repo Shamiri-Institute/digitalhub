@@ -76,4 +76,22 @@ export const Icons = {
       </g>
     </svg>
   ),
+  school: ({ className, ...props }: LucideProps) => (<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <circle cx="20" cy="20" r="19.75" stroke="currentColor" strokeWidth="0.5" />
+    <path stroke="currentColor" d="M20 15.9586L25.3333 18.6069V29.2H14.6667V18.6069L20 15.9586ZM20 15.9586V10M10 29.2H30M12 29.2V21.2552H14.6667M28 29.2V21.2552H25.3333M18.6667 29.2V25.2276H21.3333V29.2M20 10.6621H24V13.3103H20M20 22.5793C19.6464 22.5793 19.3072 22.4398 19.0572 22.1915C18.8071 21.9432 18.6667 21.6064 18.6667 21.2552C18.6667 20.904 18.8071 20.5672 19.0572 20.3189C19.3072 20.0705 19.6464 19.931 20 19.931C20.3536 19.931 20.6928 20.0705 20.9428 20.3189C21.1929 20.5672 21.3333 20.904 21.3333 21.2552C21.3333 21.6064 21.1929 21.9432 20.9428 22.1915C20.6928 22.4398 20.3536 22.5793 20 22.5793Z" />
+  </svg>
+  ),
+  users: ({ className, ...props }: LucideProps) => (<svg width="15" height="14" viewBox="0 0 15 14" fill="none" xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    {...props}
+  >
+    <path stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" d="M9.83317 12.25V11.0833C9.83317 10.4645 9.58734 9.871 9.14975 9.43342C8.71217 8.99583 8.11868 8.75 7.49984 8.75H3.99984C3.381 8.75 2.78751 8.99583 2.34992 9.43342C1.91234 9.871 1.6665 10.4645 1.6665 11.0833V12.25" />
+    <path stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" d="M5.74984 6.41667C7.0385 6.41667 8.08317 5.372 8.08317 4.08333C8.08317 2.79467 7.0385 1.75 5.74984 1.75C4.46117 1.75 3.4165 2.79467 3.4165 4.08333C3.4165 5.372 4.46117 6.41667 5.74984 6.41667Z" />
+    <path stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" d="M13.3335 12.25V11.0833C13.3331 10.5663 13.161 10.0641 12.8443 9.65549C12.5275 9.24689 12.0841 8.95505 11.5835 8.82581" />
+    <path stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" d="M9.8335 1.82581C10.3354 1.95431 10.7803 2.24621 11.098 2.65549C11.4156 3.06476 11.5881 3.56812 11.5881 4.08622C11.5881 4.60432 11.4156 5.10769 11.098 5.51696C10.7803 5.92623 10.3354 6.21813 9.8335 6.34664" />
+  </svg>
+  )
 };

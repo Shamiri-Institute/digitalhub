@@ -43,9 +43,9 @@ function GoogleIcon() {
       <g
         id="Icons"
         stroke="none"
-        stroke-width="1"
+        strokeWidth="1"
         fill="none"
-        fill-rule="evenodd"
+        fillRule="evenodd"
       >
         {" "}
         <g id="Color-" transform="translate(-401.000000, -860.000000)">
