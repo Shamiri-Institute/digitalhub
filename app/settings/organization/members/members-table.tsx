@@ -30,6 +30,7 @@ import { UserAvatar } from "#/components/ui/avatar";
 import { cn } from "#/lib/utils";
 import { AddMemberDialog } from "./add-member-dialog";
 import { RoleTypes } from "#/models/role";
+import { constants } from "#/tests/constants";
 
 const MemberRolesOrStateList = [
   ...RoleTypes.map((role) => role.name),
@@ -240,6 +241,7 @@ export function MembersTable() {
                 active="scale"
                 variant="brand"
                 className="h-9 px-3.5 md:px-4 font-medium whitespace-nowrap text-[0.8125rem] md:text-md"
+                data-testid={constants.ADD_MEMBERS_BUTTON}
               >
                 Add member
               </Button>

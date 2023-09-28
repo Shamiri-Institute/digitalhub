@@ -30,6 +30,7 @@ import {
 } from "#/components/ui/select";
 import { Button } from "#/components/ui/button";
 import { RoleTypes } from "#/models/role";
+import { constants } from "#/tests/constants";
 
 const organization = {
   name: "Team Shamri",
@@ -97,6 +98,7 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                         defaultValue={field.value}
                         placeholder="email@example.com, email2@example.com..."
                         className="mt-1.5 resize-none bg-card"
+                        data-testid={constants.ADD_MEMBERS_EMAILS}
                         data-1p-ignore="true"
                       />
                     </div>
@@ -114,7 +116,10 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-card">
+                        <SelectTrigger
+                          className="bg-card"
+                          data-testid={constants.ADD_MEMBERS_ROLE}
+                        >
                           <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                       </FormControl>
@@ -124,6 +129,7 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                             key={role.slug}
                             value={role.name}
                             className="transition hover:bg-foreground/3"
+                            data-testid={`${constants.ADD_MEMBERS_ROLE}-${role.slug}`}
                           >
                             <div className="flex gap-1 text-sm">
                               <span className="font-medium">{role.name}</span>
@@ -141,7 +147,11 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
               />
             </div>
             <div className="px-6 pb-6 flex justify-end">
-              <Button variant="brand" type="submit">
+              <Button
+                variant="brand"
+                type="submit"
+                data-testid={constants.ADD_MEMBERS_SUBMIT}
+              >
                 Submit
               </Button>
             </div>
