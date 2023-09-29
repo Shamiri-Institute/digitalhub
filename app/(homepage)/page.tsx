@@ -79,7 +79,7 @@ function OverviewCards() {
           <div>
             <div className="flex justify-between  border-b border-border/50 pb-1">
               <p className="text-white text-sm font-medium">Active</p>
-              <div className="bg-muted-green  bg-destructive px-3 rounded-md">
+              <div className="bg-muted-green  px-3 rounded-md">
                 <p className="text-white text-sm font-medium">03</p>
               </div>
             </div>
