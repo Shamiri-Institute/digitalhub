@@ -18,11 +18,13 @@ export default function HomePage() {
 function SupervisorHomepage() {
   return (
     <div>
+
       <Header />
       <OverviewCards />
       <Separator />
-      <div className="mt-4">
 
+      <h3 className="font-semibold text-base text-brand mt-4">Recently opened</h3>
+      <div className="mt-4">
         <SchoolsList />
       </div>
     </div>
@@ -31,12 +33,63 @@ function SupervisorHomepage() {
 
 function Header() {
   return (
-    <h1> Hello Header</h1>
+    <header className="mb-4">
+      <div className="flex items-center">
+        <h1 className="font-semibold text-[20px] text-brand pr-3">Hello, Netsanet</h1>
+        <Icons.smileyface className="h-4 w-4 text-brand" />
+      </div>
+      <p className="text-muted-foreground">Have a nice day!</p>
+    </header>
+
   )
 }
+
+
+
+
 function OverviewCards() {
   return (
-    <h1>Overview Cards</h1>
+    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 mb-4">
+
+      <Card className="p-5 pr-3.5 flex flex-col gap-5 bg-brand pt-3.5 pl-3.5">
+        <div className="flex justify-between">
+          <div className="flex align-middle bg-green items-center">
+            <Icons.users className="h-4 w-4 text-white mr-4 align-baseline" />
+            <h3 className="font-semibold text-base text-brand text-white">Fellows</h3>
+          </div>
+          <p className="text-white text-5xl">09</p>
+        </div>
+      </Card>
+
+      <Card className="p-5 pr-3.5 flex flex-col gap-5 bg-brand pt-3.5 pl-3.5">
+        <div className="flex justify-between">
+          <div className="flex align-middle bg-green items-center">
+            <Icons.schoolMinusOutline className="h-4 w-4 text-white mr-4 align-baseline" />
+            <h3 className="font-semibold text-base text-brand text-white">Schools</h3>
+          </div>
+          <p className="text-white text-5xl">04</p>
+        </div>
+      </Card>
+
+      <Card className="p-5 pr-3.5 flex flex-col gap-5 bg-brand pt-3.5 pl-3.5 w-full">
+        {/* todo: add title and card */}
+        <div className="flex justify-between">
+          <div className="h-24 w-24 rounded-full bg-black">
+          </div>
+          <div>
+            <div className="flex justify-between  border-b border-border/50 pb-1">
+              <p className="text-white text-sm font-medium">Active</p>
+              <div className="bg-muted-green  bg-destructive px-3 rounded-md">
+                <p className="text-white text-sm font-medium">03</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </Card>
+
+    </div>
   )
 }
 
@@ -53,7 +106,8 @@ function SchoolsList() {
   const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"]
 
   return (
-    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xl:grid-cols-3  sm:gap-6">
+      {/* <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6"> */}
       {
         schools.map((school) => (
           <Card key={school.name} className="p-5 pr-3.5 flex flex-col gap-5">
