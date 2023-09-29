@@ -38,6 +38,11 @@
     --brand-foreground: 240 10% 0%;
 
     --canvas: 0 0% 98%;
+
+    --muted-green: 99 22% 53%;
+    --destructive-yellow: 42 95% 57%;
+    --pink: 319 40% 70%;
+    --shamiri-light: 202 58% 80%;
   }
 
   .dark {
