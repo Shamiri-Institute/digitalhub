@@ -23,11 +23,13 @@ const config: Config = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        "muted-green": "hsl(var(--muted-green))",
         brand: {
           DEFAULT: "hsl(var(--brand))",
           foreground: "hsl(var(--brand-foreground))",
         },
         "shamiri-blue": "#0474bc",
+        "shamiri-blue-darker": "#045e96",
         canvas: "hsl(var(--canvas))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -82,6 +84,9 @@ const config: Config = {
       },
       opacity: {
         "3": "0.03",
+      },
+      screens: {
+        xs: "375px",
       },
     },
   },
