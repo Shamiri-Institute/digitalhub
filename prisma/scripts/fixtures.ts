@@ -63,18 +63,24 @@ const fixtures = {
     {
       email: "osborn@shamiri.institute",
       name: "Tom Osborn",
+      avatarUrl:
+        "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/tom-osborn-headshot.jpeg",
       organizationByEmail: "team@shamiri.institute",
       organizationRole: "admin",
     },
     {
       email: "mmbone@shamiri.institute",
       name: "Wendy Mmbone",
+      avatarUrl:
+        "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/wendy-mmbone-headshot.jpeg",
       organizationByEmail: "team@shamiri.institute",
       organizationRole: "researcher",
     },
     {
       email: "benny@shamiri.institute",
       name: "Benny H. Otieno",
+      avatarUrl:
+        "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/benny-h-otieno-headshot.jpeg",
       organizationByEmail: "team@shamiri.institute",
       organizationRole: "admin",
     },
@@ -93,6 +99,8 @@ const fixtures = {
     {
       email: "dmndetei@amhf.or.ke",
       name: "Dennis Mndetei",
+      avatarUrl:
+        "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/david-ndetei-headshot.jpg",
       organizationByEmail: "info@amhf.or.ke",
       organizationRole: "admin",
     },

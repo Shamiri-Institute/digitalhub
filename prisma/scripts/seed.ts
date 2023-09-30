@@ -5,6 +5,7 @@ import { OnboardUserCommand } from "#/commands/onboard-user";
 import fixtures from "./fixtures";
 
 async function seedDatabase() {
+  await truncateTables();
   await createSystemUser(db);
   await createOrganizations(db);
   await createPermissions(db);
@@ -21,6 +22,12 @@ seedDatabase()
     await db.$disconnect();
     process.exit(1);
   });
+
+async function truncateTables() {
+  await db.$executeRaw`
+  TRUNCATE TABLE organizations, organization_avatars, files, users, user_avatars, organization_members, roles, member_roles, permissions, role_permissions, member_permissions;
+  `;
+}
 
 async function createSystemUser(db: Database) {
   await db.user.create({
@@ -89,6 +96,7 @@ async function createUsers(db: Database) {
       organizationId: organization.id,
       inviterId: "system",
       roleName: user.organizationRole,
+      avatarUrl: user.avatarUrl,
     });
   }
 }

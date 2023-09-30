@@ -1,11 +1,13 @@
 import { z } from "zod";
 
-import { Command } from "#/commands";
 import { db as database, Database } from "#/lib/db";
+import { OrganizationModel } from "#/models/organization";
 import { UserModel } from "#/models/user";
+import { Command } from "#/commands";
+import { UploadImageCommand } from "#/commands/upload-image";
 import { sendEmail } from "#/emails";
 import UserWelcomer from "#/emails/user-welcomer";
-import { OrganizationModel } from "#/models/organization";
+import { objectId } from "#/lib/crypto";
 
 interface OnboardUserInput {
   email: string;
@@ -13,6 +15,7 @@ interface OnboardUserInput {
   organizationId: string;
   inviterId: string;
   roleName: string;
+  avatarUrl?: string;
 }
 
 interface OnboardUserOutput {
@@ -34,7 +37,15 @@ export class OnboardUserCommand extends Command<
   }
 
   protected async perform(input: OnboardUserInput) {
-    const validInput = this.validate(input);
+    const validInput = z
+      .object({
+        email: z.string().email(),
+        name: z.string().min(1).max(100),
+        organizationId: z.string(),
+        inviterId: z.string(),
+        roleName: z.string(),
+      })
+      .parse(input);
 
     const { user, organization } = await this.db.$transaction(async (tx) => {
       const inviter = await new UserModel(tx).findUnique(validInput.inviterId);
@@ -78,6 +89,20 @@ export class OnboardUserCommand extends Command<
       return { user, organization };
     });
 
+    if (input.avatarUrl) {
+      const file = await new UploadImageCommand().run({
+        url: input.avatarUrl,
+      });
+
+      await this.db.userAvatar.create({
+        data: {
+          id: objectId("uavatar"),
+          userId: user.id,
+          fileId: file.id,
+        },
+      });
+    }
+
     const subject = `Welcome to Shamiri, ${user.name}!`;
     await sendEmail({
       to: user.email,
@@ -91,17 +116,5 @@ export class OnboardUserCommand extends Command<
     });
 
     return { userId: user.id };
-  }
-
-  private validate(input: OnboardUserInput) {
-    const schema = z.object({
-      email: z.string().email(),
-      name: z.string().min(1).max(100),
-      organizationId: z.string(),
-      inviterId: z.string(),
-      roleName: z.string(),
-    });
-
-    return schema.parse(input);
   }
 }

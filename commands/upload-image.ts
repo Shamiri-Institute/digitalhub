@@ -34,13 +34,16 @@ export class UploadImageCommand extends DatabaseCommand<
     const buffer = Buffer.from(await imageResponse.arrayBuffer());
 
     // Extract image metadata and resize
-    const image = sharp(buffer);
+    let image = sharp(buffer);
     let metadata = await image.metadata();
     if (metadata.width === undefined || metadata.height === undefined) {
       throw new Error("Image metadata could not be extracted.");
     }
     if (metadata.width < ImageSide || metadata.height < ImageSide) {
-      throw new Error("Image is too small.");
+      console.error(input.url);
+      throw new Error(
+        `Image is too small. Minimum size is ${ImageSide}x${ImageSide}. Image size is ${metadata.width}x${metadata.height}.`
+      );
     }
 
     const transformedImage = image.resize({
@@ -59,7 +62,7 @@ export class UploadImageCommand extends DatabaseCommand<
     }
     const fileId = objectId("file");
     const fileIdHash = fileId.slice(5);
-    const objectKey = `${fileIdHash}/${fileName}`;
+    const objectKey = `${fileIdHash}-${fileName}`;
 
     // Upload image to S3
     const uploadResponse = await putObject({
