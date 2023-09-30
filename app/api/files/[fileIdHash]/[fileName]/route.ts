@@ -9,20 +9,20 @@ export async function GET(
     params,
   }: {
     params: {
-      fileId: string;
+      fileIdHash: string;
       fileName: string;
     };
   }
 ) {
   try {
-    const fileId = `file_${params.fileId}`;
+    const fileId = `file_${params.fileIdHash}`;
     const file = await db.file.findUniqueOrThrow({
       where: { id: fileId },
     });
 
     if (params.fileName !== file.fileName) {
       const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = `/api/files/${params.fileId}/${file.fileName}`;
+      redirectUrl.pathname = `/api/files/${params.fileIdHash}/${file.fileName}`;
       return NextResponse.redirect(redirectUrl);
     }
 
