@@ -14,53 +14,37 @@ model Organization {
   updatedAt    DateTime             @updatedAt @map("updated_at")
   archivedAt   DateTime?            @map("archived_at")
   contactEmail String               @map("contact_email")
-  logos        OrganizationLogo[]
   memberships  OrganizationMember[]
+  avatar       OrganizationAvatar?
 
   @@map("organizations")
 }
 
-model OrganizationLogo {
+model OrganizationAvatar {
   id             String       @id @db.VarChar(255)
-  organizationId String       @map("organization_id")
+  organizationId String       @unique @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
-  fileId         Int          @unique @map("file_id")
+  fileId         String       @unique @map("file_id")
   file           File         @relation(fields: [fileId], references: [id])
 
-  @@map("organization_logos")
-}
-
-enum ContentType {
-  JPEG
-  PNG
-  WEBP
-  AVIF
-  GIF
-  PDF
-}
-
-enum ServiceType {
-  S3
-  GCS
-  R2
+  @@map("organization_avatars")
 }
 
 model File {
-  id               Int               @id @default(autoincrement())
-  createdAt        DateTime          @default(now()) @map("created_at")
-  updatedAt        DateTime          @updatedAt @map("updated_at")
-  archivedAt       DateTime?         @map("archived_at")
-  serviceType      ServiceType       @map("service_type")
-  fileKey          String            @map("file_key")
-  fileName         String            @map("file_name")
-  byteSize         Int               @map("byte_size")
-  contentUrl       String            @map("content_url")
-  contentType      ContentType       @map("content_type")
-  width            Int?
-  height           Int?
-  signedUrl        String?           @map("signed_url") @db.VarChar(2048)
-  expiresAt        DateTime?         @map("expires_at")
-  organizationLogo OrganizationLogo?
+  id                 String              @id @db.VarChar(255)
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  archivedAt         DateTime?           @map("archived_at")
+  key                String              @map("key")
+  fileName           String              @map("file_name")
+  byteSize           Int                 @map("byte_size")
+  contentType        String              @map("content_type")
+  width              Int?
+  height             Int?
+  signedUrl          String?             @map("signed_url") @db.VarChar(2048)
+  expiresAt          DateTime?           @map("expires_at")
+  organizationAvatar OrganizationAvatar?
+  userAvatar         UserAvatar?
 
   @@map("files")
 }
@@ -72,9 +56,20 @@ model User {
   createdAt   DateTime             @default(now()) @map("created_at")
   updatedAt   DateTime             @updatedAt @map("updated_at")
   archivedAt  DateTime?            @map("archived_at")
+  avatar      UserAvatar?
   memberships OrganizationMember[]
 
   @@map("users")
+}
+
+model UserAvatar {
+  id     String @id @db.VarChar(255)
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+  fileId String @unique @map("file_id")
+  file   File   @relation(fields: [fileId], references: [id])
+
+  @@map("user_avatars")
 }
 
 model OrganizationMember {
