@@ -1,6 +1,10 @@
+"use client";
+
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { experimental_useFormState as useFormState } from "react-dom";
+import { experimental_useFormStatus as useFormStatus } from "react-dom";
 
 import { OrganizationAvatar } from "#/components/ui/avatar";
 import {
@@ -38,7 +42,7 @@ const organization = {
 };
 
 const FormSchema = z.object({
-  email: z.string({
+  emails: z.string({
     required_error: "Please select the email(s) to invite.",
   }),
   role: z.string({
@@ -88,12 +92,12 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
               <div className="px-6">
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="emails"
                   render={({ field }) => (
                     <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">Emails</Label>
                       <Textarea
-                        id="email"
+                        id="emails"
                         onChange={field.onChange}
                         defaultValue={field.value}
                         placeholder="email@example.com, email2@example.com..."
