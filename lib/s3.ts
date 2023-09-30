@@ -8,10 +8,13 @@ import {
 
 import { env } from "#/env";
 
-const client = new S3Client({ region: process.env.AWS_S3_REGION });
+const client = new S3Client({ region: env.AWS_REGION });
 
-export async function getObject(input: GetObjectCommandInput) {
-  const command = new GetObjectCommand(input);
+export async function getObject(input: Pick<GetObjectCommandInput, "Key">) {
+  const command = new GetObjectCommand({
+    ...input,
+    Bucket: env.AWS_BUCKET_NAME,
+  });
   const response = await client.send(command);
   return response;
 }

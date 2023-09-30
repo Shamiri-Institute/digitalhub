@@ -28,57 +28,16 @@ import { Table, TableBody, TableCell, TableRow } from "#/components/ui/table";
 import { Icons } from "#/components/icons";
 import { UserAvatar } from "#/components/ui/avatar";
 import { cn } from "#/lib/utils";
-import { AddMemberDialog } from "./add-member-dialog";
 import { RoleTypes } from "#/models/role";
 import { constants } from "#/tests/constants";
+import { Member } from "#/app/settings/organization/members/page";
+
+import { AddMemberDialog } from "./add-member-dialog";
 
 const MemberRolesOrStateList = [
   ...RoleTypes.map((role) => role.name),
   "Pending invite",
   "Disabled",
-];
-
-interface Member {
-  name: string;
-  email: string;
-  role: string;
-  avatarUrl: string | null;
-}
-
-const data: Member[] = [
-  {
-    email: "osborn@shamiri.institute",
-    name: "Tom Osborn",
-    role: "Admin",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-  },
-  {
-    email: "mmbone@shamiri.institute",
-    name: "Wendy Mmbone",
-    role: "Researcher",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3043&q=80",
-  },
-  {
-    email: "benny@shamiri.institute",
-    name: "Benny H. Otieno",
-    role: "Admin",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1596005554384-d293674c91d7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=5396&q=80",
-  },
-  {
-    email: "linus@shamiri.institute",
-    name: "Linus Wong",
-    role: "Admin",
-    avatarUrl: null,
-  },
-  {
-    email: "edmund@shamiri.institute",
-    name: "Edmund Korley",
-    role: "Admin",
-    avatarUrl: null,
-  },
 ];
 
 const columns: ColumnDef<Member>[] = [
@@ -115,7 +74,12 @@ const columns: ColumnDef<Member>[] = [
     header: "Role",
     cell: ({ row }) => {
       const { role } = row.original;
-      return <div className="text-primary/80 text-xs sm:text-sm">{role}</div>;
+
+      return (
+        <div className="text-primary/80 text-xs sm:text-sm first-letter:uppercase">
+          {role}
+        </div>
+      );
     },
   },
   {
@@ -145,7 +109,7 @@ const columns: ColumnDef<Member>[] = [
   },
 ];
 
-export function MembersTable() {
+export function MembersTable({ members }: { members: Member[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -155,7 +119,7 @@ export function MembersTable() {
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
-    data,
+    data: members,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,

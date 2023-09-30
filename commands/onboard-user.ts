@@ -55,7 +55,7 @@ export class OnboardUserCommand extends Command<
 
       const user = await new UserModel(tx).create({
         email: validInput.email,
-        name: validInput.email,
+        name: validInput.name,
       });
 
       const organization = await new OrganizationModel(tx).findUnique(
