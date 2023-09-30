@@ -19,7 +19,7 @@ interface UploadImageOutput {
   id: string;
 }
 
-const ImageSide = 400;
+const ImageSize = 400;
 
 export class UploadImageCommand extends DatabaseCommand<
   UploadImageInput,
@@ -34,24 +34,20 @@ export class UploadImageCommand extends DatabaseCommand<
     const buffer = Buffer.from(await imageResponse.arrayBuffer());
 
     // Extract image metadata and resize
-    let image = sharp(buffer);
-    let metadata = await image.metadata();
-    if (metadata.width === undefined || metadata.height === undefined) {
+    const image = sharp(buffer);
+    const metadata = await image.metadata();
+    if (!metadata.width || !metadata.height) {
       throw new Error("Image metadata could not be extracted.");
     }
-    if (metadata.width < ImageSide || metadata.height < ImageSide) {
-      console.error(input.url);
-      throw new Error(
-        `Image is too small. Minimum size is ${ImageSide}x${ImageSide}. Image size is ${metadata.width}x${metadata.height}.`
-      );
-    }
 
-    const transformedImage = image.resize({
-      width: ImageSide,
-      height: ImageSide,
-    });
-    metadata = await transformedImage.metadata();
-    if (!metadata.size || !metadata.format) {
+    const transformedImage = await image
+      .resize({
+        width: ImageSize,
+        height: ImageSize,
+      })
+      .toBuffer();
+    const transformedMetadata = await sharp(transformedImage).metadata();
+    if (!transformedMetadata.size || !transformedMetadata.format) {
       throw new Error("Image metadata could not be extracted.");
     }
 
@@ -66,7 +62,7 @@ export class UploadImageCommand extends DatabaseCommand<
 
     // Upload image to S3
     const uploadResponse = await putObject({
-      Body: await transformedImage.toBuffer(),
+      Body: transformedImage,
       Key: objectKey,
     });
     if (uploadResponse.$metadata.httpStatusCode !== 200) {
@@ -78,10 +74,10 @@ export class UploadImageCommand extends DatabaseCommand<
       id: fileId,
       key: objectKey,
       fileName: fileName,
-      byteSize: metadata.size,
-      contentType: metadata.format,
-      width: metadata.width,
-      height: metadata.height,
+      byteSize: transformedMetadata.size,
+      contentType: transformedMetadata.format,
+      width: transformedMetadata.width,
+      height: transformedMetadata.height,
     });
 
     return { id: file.id };

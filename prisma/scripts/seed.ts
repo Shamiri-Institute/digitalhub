@@ -46,6 +46,7 @@ async function createOrganizations(db: Database) {
       name: organization.name,
       contactEmail: organization.contactEmail,
       inviterId: "system",
+      avatarUrl: organization.avatarUrl,
     });
   }
 }

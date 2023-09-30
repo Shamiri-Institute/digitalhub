@@ -3,10 +3,14 @@ const fixtures = {
     {
       name: "Shamiri Institute",
       contactEmail: "team@shamiri.institute",
+      avatarUrl:
+        "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/shamiri-logo.png",
     },
     {
       name: "Africa Mental Health Training & Research Foundation",
       contactEmail: "info@amhf.or.ke",
+      avatarUrl:
+        "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/amhrtf-logo.png",
     },
   ],
   permissions: [
