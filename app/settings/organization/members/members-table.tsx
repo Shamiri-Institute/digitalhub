@@ -75,11 +75,7 @@ const columns: ColumnDef<Member>[] = [
     cell: ({ row }) => {
       const { role } = row.original;
 
-      return (
-        <div className="text-primary/80 text-xs sm:text-sm first-letter:uppercase">
-          {role}
-        </div>
-      );
+      return <div className="text-primary/80 text-xs sm:text-sm">{role}</div>;
     },
   },
   {

@@ -14,7 +14,7 @@ interface OnboardUserInput {
   name: string;
   organizationId: string;
   inviterId: string;
-  roleName: string;
+  role: string;
   avatarUrl?: string;
 }
 
@@ -43,7 +43,7 @@ export class OnboardUserCommand extends Command<
         name: z.string().min(1).max(100),
         organizationId: z.string(),
         inviterId: z.string(),
-        roleName: z.string(),
+        role: z.string(),
       })
       .parse(input);
 
@@ -66,10 +66,10 @@ export class OnboardUserCommand extends Command<
       }
 
       const role = await tx.role.findFirst({
-        where: { roleName: input.roleName },
+        where: { id: input.role },
       });
       if (!role) {
-        throw new Error(`Role ${input.roleName} not found`);
+        throw new Error(`Role ${input.role} not found`);
       }
 
       const membership = await tx.organizationMember.create({

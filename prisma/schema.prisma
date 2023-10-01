@@ -104,6 +104,7 @@ model OrganizationInvite {
 model Role {
   id          String               @id @db.VarChar(255)
   name        String               @db.VarChar(255)
+  description String               @db.VarChar(255)
   members     MemberRole[]
   permissions RolePermission[]
   invites     OrganizationInvite[]

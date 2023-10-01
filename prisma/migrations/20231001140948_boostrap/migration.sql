@@ -68,9 +68,24 @@ CREATE TABLE "organization_members" (
 );
 
 -- CreateTable
-CREATE TABLE "roles" (
+CREATE TABLE "organization_invites" (
     "id" SERIAL NOT NULL,
-    "role_name" VARCHAR(255) NOT NULL,
+    "email" TEXT NOT NULL,
+    "organization_id" VARCHAR(255) NOT NULL,
+    "sent_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expires_at" TIMESTAMP(3) NOT NULL,
+    "accepted_at" TIMESTAMP(3),
+    "role_id" VARCHAR(255) NOT NULL,
+    "secure_token" TEXT NOT NULL,
+
+    CONSTRAINT "organization_invites_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "roles" (
+    "id" VARCHAR(255) NOT NULL,
+    "name" VARCHAR(255) NOT NULL,
+    "description" VARCHAR(255) NOT NULL,
 
     CONSTRAINT "roles_pkey" PRIMARY KEY ("id")
 );
@@ -79,7 +94,7 @@ CREATE TABLE "roles" (
 CREATE TABLE "member_roles" (
     "id" SERIAL NOT NULL,
     "member_id" INTEGER NOT NULL,
-    "role_id" INTEGER NOT NULL,
+    "role_id" VARCHAR(255) NOT NULL,
 
     CONSTRAINT "member_roles_pkey" PRIMARY KEY ("id")
 );
@@ -95,7 +110,7 @@ CREATE TABLE "permissions" (
 -- CreateTable
 CREATE TABLE "role_permissions" (
     "id" SERIAL NOT NULL,
-    "role_id" INTEGER NOT NULL,
+    "role_id" VARCHAR(255) NOT NULL,
     "permission_id" INTEGER NOT NULL,
 
     CONSTRAINT "role_permissions_pkey" PRIMARY KEY ("id")
@@ -129,7 +144,7 @@ CREATE UNIQUE INDEX "user_avatars_user_id_key" ON "user_avatars"("user_id");
 CREATE UNIQUE INDEX "user_avatars_file_id_key" ON "user_avatars"("file_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "roles_role_name_key" ON "roles"("role_name");
+CREATE UNIQUE INDEX "organization_invites_email_organization_id_secure_token_key" ON "organization_invites"("email", "organization_id", "secure_token");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "permissions_permission_label_key" ON "permissions"("permission_label");
@@ -151,6 +166,12 @@ ALTER TABLE "organization_members" ADD CONSTRAINT "organization_members_organiza
 
 -- AddForeignKey
 ALTER TABLE "organization_members" ADD CONSTRAINT "organization_members_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "organization_invites" ADD CONSTRAINT "organization_invites_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "organizations"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "organization_invites" ADD CONSTRAINT "organization_invites_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "member_roles" ADD CONSTRAINT "member_roles_member_id_fkey" FOREIGN KEY ("member_id") REFERENCES "organization_members"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

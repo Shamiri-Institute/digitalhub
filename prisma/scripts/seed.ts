@@ -25,7 +25,7 @@ seedDatabase()
 
 async function truncateTables() {
   await db.$executeRaw`
-  TRUNCATE TABLE organizations, organization_avatars, files, users, user_avatars, organization_members, roles, member_roles, permissions, role_permissions, member_permissions;
+  TRUNCATE TABLE organizations, organization_avatars, organization_invites, files, users, user_avatars, organization_members, roles, member_roles, permissions, role_permissions, member_permissions;
   `;
 }
 
@@ -65,7 +65,9 @@ async function createRoles(db: Database) {
   for (let roleFixture of fixtures.roles) {
     const role = await db.role.create({
       data: {
-        roleName: roleFixture.roleName,
+        id: roleFixture.roleId,
+        name: roleFixture.roleName,
+        description: roleFixture.roleDescription,
       },
     });
 
@@ -96,7 +98,7 @@ async function createUsers(db: Database) {
       name: user.name,
       organizationId: organization.id,
       inviterId: "system",
-      roleName: user.organizationRole,
+      role: user.organizationRole,
       avatarUrl: user.avatarUrl,
     });
   }

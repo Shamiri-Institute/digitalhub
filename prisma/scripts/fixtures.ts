@@ -29,19 +29,27 @@ const fixtures = {
   ],
   roles: [
     {
-      roleName: "admin",
+      roleId: "admin",
+      roleName: "Admin",
+      roleDescription: "Full administrative access",
       permissions: ["read:*", "create:*", "update:*", "archive:*"],
     },
     {
-      roleName: "operations",
+      roleId: "operations",
+      roleName: "Operations",
+      roleDescription: "Full access optimized for the operations team",
       permissions: ["read:*", "create:*", "update:*", "archive:*"],
     },
     {
-      roleName: "researcher",
+      roleId: "researcher",
+      roleName: "Researcher",
+      roleDescription: "Full access optimized for researchers",
       permissions: ["read:*"],
     },
     {
-      roleName: "supervisor",
+      roleId: "supervisor",
+      roleName: "Supervisor",
+      roleDescription: "Full access optimized for supervisors",
       permissions: [
         "read:schools",
         "read:fellows",
@@ -51,15 +59,15 @@ const fixtures = {
       ],
     },
     {
-      roleName: "hub-coordinator",
+      roleId: "hub-coordinator",
+      roleName: "Hub coordinator",
+      roleDescription: "Full access with a hub",
       permissions: ["read:schools", "update:schools:self"],
     },
     {
-      roleName: "fellow",
-      permissions: ["read:schools", "read:students", "update:students:self"],
-    },
-    {
-      roleName: "external",
+      roleId: "external",
+      roleName: "External",
+      roleDescription: "Fine grained access for external collaborators",
       permissions: [],
     },
   ],

@@ -71,7 +71,7 @@ export default async function OrganizationMembers() {
   const members: Member[] = memberships.map((membership) => ({
     name: membership.user.name,
     email: membership.user.email,
-    role: membership.roles[0]!.role.roleName,
+    role: membership.roles[0]!.role.name,
     avatarUrl: membership.user.avatar
       ? `/api/files/${membership.user.avatar.fileId.slice(5)}/avatar`
       : null,

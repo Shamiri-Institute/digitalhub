@@ -36,6 +36,7 @@ import {
 import { Button } from "#/components/ui/button";
 import { RoleTypes } from "#/models/role";
 import { constants } from "#/tests/constants";
+import { inviteUserToOrganization } from "#/app/actions";
 
 const organization = {
   name: "Team Shamri",
@@ -50,6 +51,10 @@ const FormSchema = z.object({
     required_error: "Please select the role to invite as.",
   }),
 });
+
+const initialState = {
+  message: null,
+};
 
 export function AddMemberDialog({ children }: { children: React.ReactNode }) {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -67,13 +72,19 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
     });
   }
 
+  const [state, formAction] = useFormState(
+    inviteUserToOrganization,
+    initialState
+  );
+
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="p-0 gap-0">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            // onSubmit={form.handleSubmit(onSubmit)}
+            action={formAction}
             className="overflow-hidden text-ellipsis"
           >
             <DialogHeader className="px-6 py-4 space-y-0">
@@ -96,9 +107,10 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                   name="emails"
                   render={({ field }) => (
                     <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="email">Emails</Label>
+                      <Label htmlFor="emails">Emails</Label>
                       <Textarea
                         id="emails"
+                        name="emails"
                         onChange={field.onChange}
                         defaultValue={field.value}
                         placeholder="email@example.com, email2@example.com..."
@@ -118,6 +130,7 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                     <FormLabel>Invite as</FormLabel>
                     <Select
                       onValueChange={field.onChange}
+                      name="role"
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -132,7 +145,7 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                         {RoleTypes.map((role) => (
                           <SelectItem
                             key={role.slug}
-                            value={role.name}
+                            value={role.slug}
                             className="transition hover:bg-foreground/3"
                             data-testid={`${constants.ADD_MEMBERS_ROLE}-${role.slug}`}
                           >
@@ -160,6 +173,9 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                 Submit
               </Button>
             </div>
+            <p aria-live="polite" className="sr-only" role="status">
+              {state?.message}
+            </p>
           </form>
         </Form>
       </DialogContent>
