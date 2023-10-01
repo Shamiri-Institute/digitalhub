@@ -223,7 +223,7 @@ export function MembersTable({ members }: { members: Member[] }) {
                     {row.getVisibleCells().map((cell, idx) => (
                       <TableCell
                         key={cell.id}
-                        className={cn("p-0 flex-1", {
+                        className={cn("p-0 flex-1 md:px-px", {
                           "overflow-hidden text-ellipsis": idx === 0,
                         })}
                       >

@@ -17,6 +17,7 @@ export async function inviteUserToOrganization(prevState: any, formData: any) {
       role: formData.get("role"),
     });
 
+  // TODO: dummy values, use auth/cookies to pull this info
   const currentOrganization = await db.organization.findFirstOrThrow();
   const currentUser = await db.user.findFirstOrThrow();
 
@@ -32,5 +33,5 @@ export async function inviteUserToOrganization(prevState: any, formData: any) {
   });
   await Promise.all(invitations);
 
-  console.log({ data });
+  revalidatePath("/admin/organization/members");
 }

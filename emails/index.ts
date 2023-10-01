@@ -38,5 +38,10 @@ export const sendEmail = async ({
         },
       },
     });
+  } else {
+    console.log("Not sending email in dev mode");
+    console.log("Subject:", subject);
+    console.log("To:", to);
+    console.log("HTML:", html);
   }
 };
