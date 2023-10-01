@@ -4,10 +4,6 @@ import { db as database, Database } from "#/lib/db";
 import { OrganizationModel } from "#/models/organization";
 import { UserModel } from "#/models/user";
 import { Command } from "#/commands";
-import { UploadImageCommand } from "#/commands/upload-image";
-import { sendEmail } from "#/emails";
-import UserWelcomer from "#/emails/user-welcomer";
-import { objectId } from "#/lib/crypto";
 
 interface OnboardUserInput {
   email: string;
@@ -47,7 +43,7 @@ export class OnboardUserCommand extends Command<
       })
       .parse(input);
 
-    const { user, organization } = await this.db.$transaction(async (tx) => {
+    const { user } = await this.db.$transaction(async (tx) => {
       const inviter = await new UserModel(tx).findUnique(validInput.inviterId);
       if (!inviter) {
         throw new InviterNotFoundError();
@@ -89,31 +85,20 @@ export class OnboardUserCommand extends Command<
       return { user, organization };
     });
 
-    if (input.avatarUrl) {
-      const file = await new UploadImageCommand().run({
-        url: input.avatarUrl,
-      });
+    // Run something like this when user signs up and we can pull avatar from google login / etc
+    // if (input.avatarUrl) {
+    //   const file = await new UploadImageCommand().run({
+    //     url: input.avatarUrl,
+    //   });
 
-      await this.db.userAvatar.create({
-        data: {
-          id: objectId("uavatar"),
-          userId: user.id,
-          fileId: file.id,
-        },
-      });
-    }
-
-    const subject = `Welcome to Shamiri, ${user.name}!`;
-    await sendEmail({
-      to: user.email,
-      subject: subject,
-      react: UserWelcomer({
-        email: user.email,
-        userName: user.name,
-        organizationName: organization.name,
-        preview: subject,
-      }),
-    });
+    //   await this.db.userAvatar.create({
+    //     data: {
+    //       id: objectId("uavatar"),
+    //       userId: user.id,
+    //       fileId: file.id,
+    //     },
+    //   });
+    // }
 
     return { userId: user.id };
   }

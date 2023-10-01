@@ -18,12 +18,12 @@ import Footer from "./components/footer";
 
 export default function UserWelcomer({
   email = "dmndetei@amhf.or.ke",
-  userName = "Prof. David M. Ndetei",
+  // userName = "Prof. David M. Ndetei",
   organizationName = "Africa Mental Health Training and Research Foundation",
   preview = "Welcome to the Shamiri Digital Hub, Prof. David M. Ndetei!",
 }: {
   email: string;
-  userName: string;
+  // userName: string;
   organizationName: string;
   preview: string;
 }) {
@@ -50,7 +50,8 @@ export default function UserWelcomer({
               <Img src={SDH_HERO_IMAGE} alt="Dub" className="max-w-[500px]" />
             </Section>
             <Text>
-              Hello <span className="font-medium">{userName}</span> 👋🏾,
+              {/* Hello <span className="font-medium">{userName}</span> 👋🏾, */}
+              Hello 👋🏾,
             </Text>
             <Text className="text-sm leading-6 text-black">
               <span className="font-medium">{organizationName}</span> has
