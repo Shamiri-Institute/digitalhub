@@ -16,6 +16,7 @@ model Organization {
   contactEmail String               @map("contact_email")
   memberships  OrganizationMember[]
   avatar       OrganizationAvatar?
+  invites      OrganizationInvite[]
 
   @@map("organizations")
 }
@@ -84,11 +85,28 @@ model OrganizationMember {
   @@map("organization_members")
 }
 
+model OrganizationInvite {
+  id             Int          @id @default(autoincrement())
+  email          String
+  organizationId String       @map("organization_id") @db.VarChar(255)
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  sentAt         DateTime     @default(now()) @map("sent_at")
+  expiresAt      DateTime     @map("expires_at")
+  acceptedAt     DateTime?    @map("accepted_at")
+  roleId         String       @map("role_id") @db.VarChar(255)
+  role           Role         @relation(fields: [roleId], references: [id])
+  secureToken    String       @map("secure_token")
+
+  @@unique([email, organizationId, secureToken])
+  @@map("organization_invites")
+}
+
 model Role {
-  id          Int              @id @default(autoincrement())
-  roleName    String           @unique @map("role_name") @db.VarChar(255)
+  id          String               @id @db.VarChar(255)
+  name        String               @db.VarChar(255)
   members     MemberRole[]
   permissions RolePermission[]
+  invites     OrganizationInvite[]
 
   @@map("roles")
 }
@@ -97,7 +115,7 @@ model MemberRole {
   id       Int                @id @default(autoincrement())
   memberId Int                @map("member_id")
   member   OrganizationMember @relation(fields: [memberId], references: [id])
-  roleId   Int                @map("role_id")
+  roleId   String             @map("role_id") @db.VarChar(255)
   role     Role               @relation(fields: [roleId], references: [id])
 
   @@map("member_roles")
@@ -114,7 +132,7 @@ model Permission {
 
 model RolePermission {
   id           Int        @id @default(autoincrement())
-  roleId       Int        @map("role_id")
+  roleId       String     @map("role_id") @db.VarChar(255)
   role         Role       @relation(fields: [roleId], references: [id])
   permissionId Int        @map("permission_id")
   permission   Permission @relation(fields: [permissionId], references: [id])
