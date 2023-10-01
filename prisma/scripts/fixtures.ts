@@ -1,7 +1,7 @@
 const fixtures = {
   organizations: [
     {
-      name: "Shamiri Institute",
+      name: "Team Shamiri",
       contactEmail: "team@shamiri.institute",
       avatarUrl:
         "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/shamiri-logo.png",

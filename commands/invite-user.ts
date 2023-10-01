@@ -59,7 +59,7 @@ export class InviteUserCommand extends Command<
       throw new Error("Organization not found");
     }
 
-    const subject = `Welcome to Shamiri!`;
+    const subject = `Welcome to the Shamiri Digital Hub!`;
     await sendEmail({
       to: email,
       subject: subject,

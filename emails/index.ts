@@ -17,6 +17,7 @@ export const sendEmail = async ({
   const html = render(react);
 
   if (
+    process.env.SEND_EMAILS === "1" ||
     process.env.VERCEL_ENV === "production" ||
     process.env.VERCEL_ENV === "preview"
   ) {
