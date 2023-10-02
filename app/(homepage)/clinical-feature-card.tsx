@@ -24,13 +24,13 @@ const cities = [
   },
 ];
 
-export function ClinicalSummaryCard() {
+export function ClinicalFeatureCard() {
   return (
-    <Card className="p-5 pr-3.5 flex flex-col gap-5 pt-3.5 pl-3.5 w-full">
+    <Card className="px-6 py-5 flex flex-col gap-5 bg-active-card">
       <div>
-        <div className="flex items-center gap-1.5 text-base">
-          <Icons.heartHandshake className="h-6 w-6" />
-          <div className="text-lg font-medium">Clinical cases</div>
+        <div className="flex align-middle gap-4 text-base text-active-card-foreground">
+          <Icons.heartHandshake className="align-baseline h-4 w-4 xl:h-7 xl:w-7" />
+          <div className="xl:text-2xl font-medium">Clinical cases</div>
         </div>
       </div>
       <div className="flex justify-between">

@@ -4,7 +4,7 @@ import { Icon, Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
-import { ClinicalSummaryCard } from "#/app/(homepage)/clinical-summary-card";
+import { ClinicalFeatureCard } from "#/app/(homepage)/clinical-feature-card";
 
 export default async function HomePage() {
   return <SupervisorHomepage />;
@@ -37,12 +37,12 @@ async function Header() {
   return (
     <header className="mb-4">
       <div className="flex items-center">
-        <h1 className="font-semibold text-[20px] text-brand pr-3">
+        <h1 className="font-semibold text-2xl text-brand pr-3">
           Hello, {authedUser.name}
         </h1>
-        <Icons.smileyface className="h-4 w-4 text-brand" />
+        <Icons.smileyface className="h-6 w-6 text-brand" />
       </div>
-      <p className="text-muted-foreground">Have a nice day!</p>
+      <p className="text-muted-foreground text-xl">Have a nice day!</p>
     </header>
   );
 }
@@ -52,7 +52,7 @@ function OverviewCards() {
     <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 mb-4">
       <FeatureCard Icon={Icons.users} title="Fellows" stat={621} />
       <FeatureCard Icon={Icons.schoolMinusOutline} title="Schools" stat={341} />
-      <ClinicalSummaryCard />
+      <ClinicalFeatureCard />
     </div>
   );
 }
@@ -70,7 +70,7 @@ function FeatureCard({
     <Card className="px-6 py-3 flex flex-col gap-5 bg-active-card">
       <div className="h-full flex flex-col justify-between py-2">
         <div className="flex align-middle items-center">
-          <Icon className="h-4 w-4 xl:h-7 xl:w-7 text-active-card-foreground mr-4 align-baseline" />
+          <Icon className="h-4 w-4 xl:h-7 xl:w-7 text-active-card-foreground mr-4 self-baseline" />
           <h3 className="font-semibold text-base xl:font-medium xl:text-2xl text-active-card-foreground">
             {title}
           </h3>

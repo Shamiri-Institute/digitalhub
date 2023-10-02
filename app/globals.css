@@ -56,9 +56,9 @@
     --card: 240 10% 9.9%;
     --card-foreground: 0 0% 98%;
 
-    --active-card: 240 10% 9.9%;
+    --active-card: 240 10% 11.9%;
     --active-card-foreground: 0 0% 98%;
-    --active-card-foreground-accent: 0 0% 80%;
+    --active-card-foreground-accent: 0 0% 85%;
 
     --popover: 240 10% 9.9%;
     --popover-foreground: 0 0% 98%;

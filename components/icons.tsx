@@ -15,6 +15,7 @@ import {
   Search,
   LayoutDashboard,
   type LucideIcon,
+  Smile,
 } from "lucide-react";
 
 import { cn } from "#/lib/utils";
@@ -189,24 +190,7 @@ export const Icons = {
       />
     </svg>
   ),
-  smileyface: ({ className, ...props }: LucideProps) => (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      {...props}
-    >
-      <path
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M11.5137 7.34683L11.5003 7.33342M6.51375 7.34683L6.50033 7.33342M5.66699 11.5001C5.66699 11.5001 5.77128 11.7087 6.01674 11.9782C6.46516 12.4707 7.38474 13.1667 9.00033 13.1667C10.6159 13.1667 11.5355 12.4707 11.9839 11.9782C12.2294 11.7087 12.3337 11.5001 12.3337 11.5001M9.00033 17.3334C4.39795 17.3334 0.666992 13.6024 0.666992 9.00008C0.666992 4.39771 4.39795 0.666748 9.00033 0.666748C13.6027 0.666748 17.3337 4.39771 17.3337 9.00008C17.3337 13.6024 13.6027 17.3334 9.00033 17.3334Z"
-      />
-    </svg>
-  ),
+  smileyface: Smile,
   schoolMinusOutline: ({ className, ...props }: LucideProps) => (
     <svg
       width="20"
@@ -219,6 +203,7 @@ export const Icons = {
     >
       <path
         stroke="currentColor"
+        strokeWidth="1.5"
         d="M10 5.95862L15.3333 8.6069V19.2H4.66667V8.6069L10 5.95862ZM10 5.95862V0M0 19.2H20M2 19.2V11.2552H4.66667M18 19.2V11.2552H15.3333M8.66667 19.2V15.2276H11.3333V19.2M10 0.662069H14V3.31034H10M10 12.5793C9.64638 12.5793 9.30724 12.4398 9.05719 12.1915C8.80714 11.9432 8.66667 11.6064 8.66667 11.2552C8.66667 10.904 8.80714 10.5672 9.05719 10.3189C9.30724 10.0705 9.64638 9.93103 10 9.93103C10.3536 9.93103 10.6928 10.0705 10.9428 10.3189C11.1929 10.5672 11.3333 10.904 11.3333 11.2552C11.3333 11.6064 11.1929 11.9432 10.9428 12.1915C10.6928 12.4398 10.3536 12.5793 10 12.5793Z"
       />
     </svg>
@@ -562,30 +547,30 @@ export const Icons = {
       <path
         d="M17.0167 4.53019C16.5986 4.08719 16.1018 3.7357 15.5549 3.49586C15.0079 3.25603 14.4214 3.13257 13.8292 3.13257C13.2369 3.13257 12.6505 3.25603 12.1035 3.49586C11.5565 3.7357 11.0597 4.08719 10.6417 4.53019L10 5.21657L9.35835 4.53019C8.94028 4.08719 8.44351 3.7357 7.89653 3.49586C7.34955 3.25603 6.76311 3.13257 6.17084 3.13257C5.57858 3.13257 4.99214 3.25603 4.44516 3.49586C3.89818 3.7357 3.40141 4.08719 2.98334 4.53019C1.21668 6.39573 1.10834 9.54603 3.33334 11.9396L10 18.9793L16.6667 11.9396C18.8917 9.54603 18.7833 6.39573 17.0167 4.53019Z"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M10 5.21655L7.39168 7.97966C7.06192 8.33072 6.87689 8.80516 6.87689 9.29962C6.87689 9.79409 7.06192 10.2685 7.39168 10.6196C7.72414 10.9678 8.17343 11.1632 8.64168 11.1632C9.10994 11.1632 9.55923 10.9678 9.89168 10.6196L11.775 8.67484C12.2431 8.18583 12.8749 7.91154 13.5333 7.91154C14.1918 7.91154 14.8236 8.18583 15.2917 8.67484L17.2917 10.7868"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M15 13.6996L13.3333 11.9397"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
       <path
         d="M12.5 16.3395L10.8333 14.5796"
         stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   ),
