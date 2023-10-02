@@ -1,6 +1,7 @@
 "use client";
 
-import { PieChart, Pie, Sector, Cell } from "recharts";
+import Link from "next/link";
+import { PieChart, Pie, Cell } from "recharts";
 
 import { Card } from "#/components/ui/card";
 import { Icons } from "#/components/icons";
@@ -29,41 +30,43 @@ const colors = ["#7EA16B", "#FABC2A", "#D295BF", "#B0D5EA"];
 
 export function ClinicalFeatureCard() {
   return (
-    <Card className="px-6 py-5 flex flex-col gap-5 bg-active-card">
-      <div>
-        <div className="flex align-middle gap-4 text-base text-active-card-foreground">
-          <Icons.heartHandshake className="align-baseline h-4 w-4 xl:h-7 xl:w-7" />
-          <div className="xl:text-2xl font-medium">Clinical cases</div>
+    <Link href="/clinical-cases">
+      <Card className="px-6 py-5 flex flex-col gap-5 bg-active-card">
+        <div>
+          <div className="flex align-middle gap-4 text-base text-active-card-foreground">
+            <Icons.heartHandshake className="align-baseline h-4 w-4 xl:h-7 xl:w-7" />
+            <div className="xl:text-2xl font-medium">Clinical cases</div>
+          </div>
         </div>
-      </div>
-      <div className="flex justify-between gap-6">
-        <div className="h-[100px] w-[100px] rounded-full shrink-0">
-          <ClinicalCasesDonutChart />
+        <div className="flex justify-between gap-6">
+          <div className="h-[100px] w-[100px] rounded-full shrink-0">
+            <ClinicalCasesDonutChart />
+          </div>
+          <div className="w-full space-y-1">
+            <LegendItem
+              colorClass="bg-muted-green"
+              label="Active"
+              count={data.find((d) => d.name === "Active")?.value!}
+            />
+            <LegendItem
+              colorClass="bg-muted-yellow"
+              label="Follow-up"
+              count={data.find((d) => d.name === "Follow-up")?.value!}
+            />
+            <LegendItem
+              colorClass="bg-muted-pink"
+              label="Referred"
+              count={data.find((d) => d.name === "Active")?.value!}
+            />
+            <LegendItem
+              colorClass="bg-muted-sky"
+              label="Terminated"
+              count={data.find((d) => d.name === "Active")?.value!}
+            />
+          </div>
         </div>
-        <div className="w-full space-y-1">
-          <LegendItem
-            colorClass="bg-muted-green"
-            label="Active"
-            count={data.find((d) => d.name === "Active")?.value!}
-          />
-          <LegendItem
-            colorClass="bg-muted-yellow"
-            label="Follow-up"
-            count={data.find((d) => d.name === "Follow-up")?.value!}
-          />
-          <LegendItem
-            colorClass="bg-muted-pink"
-            label="Referred"
-            count={data.find((d) => d.name === "Active")?.value!}
-          />
-          <LegendItem
-            colorClass="bg-muted-sky"
-            label="Terminated"
-            count={data.find((d) => d.name === "Active")?.value!}
-          />
-        </div>
-      </div>
-    </Card>
+      </Card>
+    </Link>
   );
 }
 

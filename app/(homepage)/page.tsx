@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { cn } from "#/lib/utils";
 import { fetchAuthedUser } from "#/auth";
 import { Icon, Icons } from "#/components/icons";
@@ -21,7 +23,7 @@ function SupervisorHomepage() {
         <Separator />
       </div>
 
-      <h3 className="font-semibold text-base text-brand mt-4">
+      <h3 className="font-semibold text-base xl:text-2xl text-brand mt-4">
         Recently opened
       </h3>
       <div className="mt-4">
@@ -50,38 +52,52 @@ async function Header() {
 function OverviewCards() {
   return (
     <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 mb-4">
-      <FeatureCard Icon={Icons.users} title="Fellows" stat={621} />
-      <FeatureCard Icon={Icons.schoolMinusOutline} title="Schools" stat={341} />
+      <FeatureCard
+        href="/fellows"
+        title="Fellows"
+        stat={621}
+        Icon={Icons.users}
+      />
+      <FeatureCard
+        href="/schools"
+        title="Schools"
+        stat={341}
+        Icon={Icons.schoolMinusOutline}
+      />
       <ClinicalFeatureCard />
     </div>
   );
 }
 
 function FeatureCard({
-  Icon,
+  href,
   title,
   stat,
+  Icon,
 }: {
-  Icon: Icon;
+  href: string;
   title: string;
   stat: number;
+  Icon: Icon;
 }) {
   return (
-    <Card className="px-6 py-3 flex flex-col gap-5 bg-active-card">
-      <div className="h-full flex flex-col justify-between py-2">
-        <div className="flex align-middle items-center">
-          <Icon className="h-4 w-4 xl:h-7 xl:w-7 text-active-card-foreground mr-4 self-baseline" />
-          <h3 className="font-semibold text-base xl:font-medium xl:text-2xl text-active-card-foreground">
-            {title}
-          </h3>
+    <Link href={href} className="h-full">
+      <Card className="px-6 py-3 flex flex-col gap-5 bg-active-card h-full">
+        <div className="h-full flex flex-col justify-between py-2">
+          <div className="flex align-middle items-center">
+            <Icon className="h-4 w-4 xl:h-7 xl:w-7 text-active-card-foreground mr-4" />
+            <h3 className="font-semibold text-base xl:font-medium xl:text-2xl text-active-card-foreground">
+              {title}
+            </h3>
+          </div>
+          <div>
+            <p className="text-active-card-foreground-accent text-7xl font-bold">
+              {stat}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-active-card-foreground-accent text-7xl font-bold">
-            {stat}
-          </p>
-        </div>
-      </div>
-    </Card>
+      </Card>
+    </Link>
   );
 }
 
