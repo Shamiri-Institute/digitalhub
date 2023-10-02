@@ -77,7 +77,7 @@ function LegendItem({
   count: number;
 }) {
   return (
-    <div className="flex justify-between border-b border-border/40 pb-1">
+    <div className="flex justify-between pb-1 border-b border-border/40 last:border-none">
       <p className="text-white text-sm font-semibold">{label}</p>
       <div className={cn("px-3 rounded-sm", colorClass)}>
         <p className="text-white text-sm font-semibold">
