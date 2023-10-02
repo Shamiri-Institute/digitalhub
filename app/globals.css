@@ -10,6 +10,10 @@
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
 
+    --active-card: 210 100% 13%;
+    --active-card-foreground: 0 0% 100%;
+    --active-card-foreground-accent: 202 58% 80%;
+
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
@@ -51,6 +55,10 @@
 
     --card: 240 10% 9.9%;
     --card-foreground: 0 0% 98%;
+
+    --active-card: 240 10% 9.9%;
+    --active-card-foreground: 0 0% 98%;
+    --active-card-foreground-accent: 0 0% 80%;
 
     --popover: 240 10% 9.9%;
     --popover-foreground: 0 0% 98%;
