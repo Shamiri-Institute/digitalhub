@@ -59,8 +59,20 @@ model User {
   archivedAt  DateTime?            @map("archived_at")
   avatar      UserAvatar?
   memberships OrganizationMember[]
+  recentOpens UserRecentOpen[]
 
   @@map("users")
+}
+
+model UserRecentOpen {
+  id       Int      @id @default(autoincrement())
+  userId   String   @map("user_id") @db.VarChar(255)
+  user     User     @relation(fields: [userId], references: [id])
+  itemId   String   @map("item_id") // TODO: itemId leverages object ids (e.g. school_01hbnsp5eserr939h1v6s1ty5r) and polymorphic associations
+  openedAt DateTime @default(now()) @map("opened_at")
+
+  @@index([userId, itemId])
+  @@map("user_recent_opens")
 }
 
 model UserAvatar {
