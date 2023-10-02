@@ -1,28 +1,31 @@
 "use client";
 
-import { DonutChart } from "@tremor/react";
+import { PieChart, Pie, Sector, Cell } from "recharts";
 
 import { Card } from "#/components/ui/card";
 import { Icons } from "#/components/icons";
+import { useIsServerSide } from "#/lib/hooks/use-is-server-side";
+import { cn } from "#/lib/utils";
 
-const cities = [
+const data = [
   {
     name: "Active",
-    sales: 3,
+    value: 10,
   },
   {
     name: "Follow-up",
-    sales: 7,
+    value: 40,
   },
   {
     name: "Referred",
-    sales: 5,
+    value: 5,
   },
   {
     name: "Terminated",
-    sales: 5,
+    value: 8,
   },
 ];
+const colors = ["#7EA16B", "#FABC2A", "#D295BF", "#B0D5EA"];
 
 export function ClinicalFeatureCard() {
   return (
@@ -33,26 +36,81 @@ export function ClinicalFeatureCard() {
           <div className="xl:text-2xl font-medium">Clinical cases</div>
         </div>
       </div>
-      <div className="flex justify-between">
-        <div className="h-24 w-24 rounded-full">
-          <DonutChart
-            className="h-24"
-            data={cities}
-            category="sales"
-            index="name"
-            valueFormatter={(number: number) => ""}
-            colors={["emerald", "amber", "pink", "sky"]}
-          />
+      <div className="flex justify-between gap-6">
+        <div className="h-[100px] w-[100px] rounded-full shrink-0">
+          <ClinicalCasesDonutChart />
         </div>
-        <div>
-          <div className="flex justify-between  border-b border-border/50 pb-1">
-            <p className="text-white text-sm font-medium">Active</p>
-            <div className="bg-muted-green  px-3 rounded-md">
-              <p className="text-white text-sm font-medium">03</p>
-            </div>
-          </div>
+        <div className="w-full space-y-1">
+          <LegendItem
+            colorClass="bg-muted-green"
+            label="Active"
+            count={data.find((d) => d.name === "Active")?.value!}
+          />
+          <LegendItem
+            colorClass="bg-muted-yellow"
+            label="Follow-up"
+            count={data.find((d) => d.name === "Follow-up")?.value!}
+          />
+          <LegendItem
+            colorClass="bg-muted-pink"
+            label="Referred"
+            count={data.find((d) => d.name === "Active")?.value!}
+          />
+          <LegendItem
+            colorClass="bg-muted-sky"
+            label="Terminated"
+            count={data.find((d) => d.name === "Active")?.value!}
+          />
         </div>
       </div>
     </Card>
+  );
+}
+
+function LegendItem({
+  colorClass,
+  label,
+  count,
+}: {
+  colorClass: string;
+  label: string;
+  count: number;
+}) {
+  return (
+    <div className="flex justify-between border-b border-border/40 pb-1">
+      <p className="text-white text-sm font-semibold">{label}</p>
+      <div className={cn("px-3 rounded-sm", colorClass)}>
+        <p className="text-white text-sm font-semibold">
+          {count.toString().padStart(2, "0")}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ClinicalCasesDonutChart() {
+  const isServerSide = useIsServerSide();
+  if (isServerSide) {
+    return null;
+  }
+
+  return (
+    <PieChart width={100} height={100}>
+      <Pie
+        data={data}
+        cx={50}
+        cy={50}
+        innerRadius={30}
+        outerRadius={45}
+        fill="#8884d8"
+        paddingAngle={3}
+        dataKey="value"
+        stroke="none"
+      >
+        {data.map((entry, index) => (
+          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+        ))}
+      </Pie>
+    </PieChart>
   );
 }

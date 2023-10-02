@@ -24,6 +24,9 @@ const config: Config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         "muted-green": "hsl(var(--muted-green))",
+        "muted-yellow": "hsl(var(--muted-yellow))",
+        "muted-pink": "hsl(var(--muted-pink))",
+        "muted-sky": "hsl(var(--muted-sky))",
         brand: {
           DEFAULT: "hsl(var(--brand))",
           foreground: "hsl(var(--brand-foreground))",
