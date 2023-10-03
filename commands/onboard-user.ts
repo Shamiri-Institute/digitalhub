@@ -1,17 +1,17 @@
 import { z } from "zod";
 
-import { Command } from "#/commands";
 import { db as database, Database } from "#/lib/db";
-import { UserModel } from "#/models/user";
-import { JoinOrganizationCommand } from "./join-organization";
-import { sendEmail } from "#/emails";
-import UserWelcomer from "#/emails/user-welcomer";
 import { OrganizationModel } from "#/models/organization";
+import { UserModel } from "#/models/user";
+import { Command } from "#/commands";
 
 interface OnboardUserInput {
   email: string;
+  name: string;
   organizationId: string;
   inviterId: string;
+  role: string;
+  avatarUrl?: string;
 }
 
 interface OnboardUserOutput {
@@ -33,9 +33,17 @@ export class OnboardUserCommand extends Command<
   }
 
   protected async perform(input: OnboardUserInput) {
-    const validInput = this.validate(input);
+    const validInput = z
+      .object({
+        email: z.string().email(),
+        name: z.string().min(1).max(100),
+        organizationId: z.string(),
+        inviterId: z.string(),
+        role: z.string(),
+      })
+      .parse(input);
 
-    const user = await this.db.$transaction(async (tx) => {
+    const { user } = await this.db.$transaction(async (tx) => {
       const inviter = await new UserModel(tx).findUnique(validInput.inviterId);
       if (!inviter) {
         throw new InviterNotFoundError();
@@ -43,7 +51,7 @@ export class OnboardUserCommand extends Command<
 
       const user = await new UserModel(tx).create({
         email: validInput.email,
-        name: validInput.email,
+        name: validInput.name,
       });
 
       const organization = await new OrganizationModel(tx).findUnique(
@@ -53,38 +61,45 @@ export class OnboardUserCommand extends Command<
         throw new OrganizationNotFoundError();
       }
 
-      await new JoinOrganizationCommand(tx).run({
-        organizationId: validInput.organizationId,
-        userId: user.id,
-        inviterId: inviter.id,
+      const role = await tx.role.findFirst({
+        where: { id: input.role },
+      });
+      if (!role) {
+        throw new Error(`Role ${input.role} not found`);
+      }
+
+      const membership = await tx.organizationMember.create({
+        data: {
+          organizationId: organization.id,
+          userId: user.id,
+        },
       });
 
-      const subject = `Welcome to Shamiri, ${user.name}!`;
-      await sendEmail({
-        to: user.email,
-        subject: subject,
-        react: UserWelcomer({
-          email: user.email,
-          userName: user.name,
-          organizationName: organization.name,
-          preview: subject,
-        }),
+      await tx.memberRole.create({
+        data: {
+          memberId: membership.id,
+          roleId: role.id,
+        },
       });
 
-      return user;
+      return { user, organization };
     });
+
+    // Run something like this when user signs up and we can pull avatar from google login / etc
+    // if (input.avatarUrl) {
+    //   const file = await new UploadImageCommand().run({
+    //     url: input.avatarUrl,
+    //   });
+
+    //   await this.db.userAvatar.create({
+    //     data: {
+    //       id: objectId("uavatar"),
+    //       userId: user.id,
+    //       fileId: file.id,
+    //     },
+    //   });
+    // }
 
     return { userId: user.id };
-  }
-
-  private validate(input: OnboardUserInput) {
-    const schema = z.object({
-      email: z.string().email(),
-      name: z.string().min(1).max(100),
-      organizationId: z.string(),
-      inviterId: z.string(),
-    });
-
-    return schema.parse(input);
   }
 }

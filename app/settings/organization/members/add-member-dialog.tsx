@@ -1,6 +1,11 @@
+"use client";
+
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+// @ts-expect-error
+import { experimental_useFormState as useFormState } from "react-dom";
+import { experimental_useFormStatus as useFormStatus } from "react-dom";
 
 import { OrganizationAvatar } from "#/components/ui/avatar";
 import {
@@ -29,6 +34,9 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Button } from "#/components/ui/button";
+import { RoleTypes } from "#/models/role";
+import { constants } from "#/tests/constants";
+import { inviteUserToOrganization } from "#/app/actions";
 
 const organization = {
   name: "Team Shamri",
@@ -36,7 +44,7 @@ const organization = {
 };
 
 const FormSchema = z.object({
-  email: z.string({
+  emails: z.string({
     required_error: "Please select the email(s) to invite.",
   }),
   role: z.string({
@@ -44,24 +52,9 @@ const FormSchema = z.object({
   }),
 });
 
-const Roles = [
-  { name: "Admin", description: "Full administrative access" },
-  {
-    name: "Operations",
-    description: "Full access optimized for the operations team",
-  },
-  {
-    name: "Hub coordinator",
-    description: "Full access for data within a hub",
-  },
-  { name: "Supervisor", description: "Full access optimized for supervisors" },
-  { name: "Researcher", description: "Full access optimized for researchers" },
-  { name: "Fellow", description: "Limited access for fellows" },
-  {
-    name: "External",
-    description: "Fine grained access for external collaborators",
-  },
-];
+const initialState = {
+  message: null,
+};
 
 export function AddMemberDialog({ children }: { children: React.ReactNode }) {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -79,13 +72,19 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
     });
   }
 
+  const [state, formAction] = useFormState(
+    inviteUserToOrganization,
+    initialState
+  );
+
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="p-0 gap-0">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            // onSubmit={form.handleSubmit(onSubmit)}
+            action={formAction}
             className="overflow-hidden text-ellipsis"
           >
             <DialogHeader className="px-6 py-4 space-y-0">
@@ -105,16 +104,18 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
               <div className="px-6">
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="emails"
                   render={({ field }) => (
                     <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="emails">Emails</Label>
                       <Textarea
-                        id="email"
+                        id="emails"
+                        name="emails"
                         onChange={field.onChange}
                         defaultValue={field.value}
                         placeholder="email@example.com, email2@example.com..."
                         className="mt-1.5 resize-none bg-card"
+                        data-testid={constants.ADD_MEMBERS_EMAILS}
                         data-1p-ignore="true"
                       />
                     </div>
@@ -129,19 +130,24 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                     <FormLabel>Invite as</FormLabel>
                     <Select
                       onValueChange={field.onChange}
+                      name="role"
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-card">
+                        <SelectTrigger
+                          className="bg-card"
+                          data-testid={constants.ADD_MEMBERS_ROLE}
+                        >
                           <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-card">
-                        {Roles.map((role) => (
+                        {RoleTypes.map((role) => (
                           <SelectItem
-                            key={role.name}
-                            value={role.name}
+                            key={role.slug}
+                            value={role.slug}
                             className="transition hover:bg-foreground/3"
+                            data-testid={`${constants.ADD_MEMBERS_ROLE}-${role.slug}`}
                           >
                             <div className="flex gap-1 text-sm">
                               <span className="font-medium">{role.name}</span>
@@ -159,10 +165,17 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
               />
             </div>
             <div className="px-6 pb-6 flex justify-end">
-              <Button variant="brand" type="submit">
+              <Button
+                variant="brand"
+                type="submit"
+                data-testid={constants.ADD_MEMBERS_SUBMIT}
+              >
                 Submit
               </Button>
             </div>
+            <p aria-live="polite" className="sr-only" role="status">
+              {state?.message}
+            </p>
           </form>
         </Form>
       </DialogContent>

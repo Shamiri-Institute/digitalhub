@@ -27,7 +27,11 @@ export const Header = forwardRef<
         className
       )}
     >
-      <div className={cn("absolute inset-x-0 top-full h-px transition")} />
+      <div
+        className={cn(
+          "absolute inset-x-0 top-full h-px transition bg-border/50"
+        )}
+      />
       <div className="search-placeholder hidden lg:block lg:max-w-md lg:flex-auto"></div>
       <div className="flex items-center gap-5 lg:hidden">
         <MobileNavigation />
