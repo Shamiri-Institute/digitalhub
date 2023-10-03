@@ -1,4 +1,3 @@
-import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { getServerSession } from "next-auth";
@@ -6,6 +5,8 @@ import { getServerSession } from "next-auth";
 import { cn } from "#/lib/utils";
 import { Providers } from "#/components/providers";
 import { Layout } from "#/components/layout";
+
+import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 

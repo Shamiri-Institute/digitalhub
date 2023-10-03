@@ -1,4 +1,7 @@
+import Link from "next/link";
+
 import { cn } from "#/lib/utils";
+import { constants } from "#/tests/constants";
 import { OrganizationAvatar, UserAvatar } from "#/components/ui/avatar";
 import { Icons } from "#/components/icons";
 import {
@@ -7,7 +10,6 @@ import {
   PopoverTrigger,
 } from "#/components/ui/popover";
 import { Separator } from "#/components/ui/separator";
-import Link from "next/link";
 
 const demoProfile = {
   organization: {
@@ -26,18 +28,23 @@ const demoProfile = {
 export function ProfileSwitcher() {
   return (
     <div className="flex justify-between -ml-1.5">
-      <OrganizationDialog className="flex items-center gap-1.5 hover:bg-card px-1.5 py-1 rounded-lg transition active:scale-95">
-        <OrganizationAvatar
-          src={demoProfile.organization.avatarUrl}
-          fallback={demoProfile.organization.name}
-        />
-        <div className="text-sm font-medium">
-          {demoProfile.organization.name}
-        </div>
-        <Icons.chevronsUpDown
-          className={cn("h-5 text-foreground/50", "animate-in hover:fade-in")}
-          strokeWidth={1}
-        />
+      <OrganizationDialog>
+        <button
+          className="flex items-center gap-1.5 hover:bg-card px-1.5 py-1 rounded-lg transition active:scale-95"
+          data-testid={constants.ORGANIZATION_SWITCHER}
+        >
+          <OrganizationAvatar
+            src={demoProfile.organization.avatarUrl}
+            fallback={demoProfile.organization.name}
+          />
+          <div className="text-sm font-medium">
+            {demoProfile.organization.name}
+          </div>
+          <Icons.chevronsUpDown
+            className={cn("h-5 text-foreground/50", "animate-in hover:fade-in")}
+            strokeWidth={1}
+          />
+        </button>
       </OrganizationDialog>
       <button className="rounded p-1 hover:bg-card transition active:scale-95">
         <UserAvatar
@@ -49,16 +56,10 @@ export function ProfileSwitcher() {
   );
 }
 
-function OrganizationDialog({
-  className,
-  children,
-}: {
-  className: string;
-  children: React.ReactNode;
-}) {
+function OrganizationDialog({ children }: { children: React.ReactNode }) {
   return (
     <Popover>
-      <PopoverTrigger className={className}>{children}</PopoverTrigger>
+      <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         className="p-0"
         side="right"
@@ -67,11 +68,11 @@ function OrganizationDialog({
         alignOffset={200}
       >
         <div>
-          <button className="p-3 pl-3.5 flex flex-col w-full">
+          <div className="p-3 pl-3.5 flex flex-col w-full">
             <div className="text-sm text-muted-foreground">
               {demoProfile.user.email}
             </div>
-            <div className="flex items-center my-2 py-1 px-1.5 justify-between w-full hover:bg-foreground/[0.025] rounded-md">
+            <button className="flex items-center my-2 py-1 px-1.5 justify-between w-full hover:bg-foreground/[0.025] rounded-md">
               <div className="flex items-center gap-2">
                 <OrganizationAvatar
                   src={demoProfile.organization.avatarUrl}
@@ -82,14 +83,15 @@ function OrganizationDialog({
                 </div>
               </div>
               <Icons.check className="h-5 text-brand" strokeWidth={1} />
-            </div>
-          </button>
+            </button>
+          </div>
           <div className="text-sm">
             <Separator />
             <div className="flex flex-col p-1.5">
               <Link
                 href="/settings/organization/members"
                 className="p-2 hover:bg-foreground/3 rounded-md"
+                data-testid={constants.ORGANIZATION_MEMBERS_LINK}
               >
                 Add & manage members
               </Link>
