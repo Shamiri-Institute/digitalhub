@@ -24,12 +24,16 @@ const config: Config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         "muted-green": "hsl(var(--muted-green))",
+        "muted-yellow": "hsl(var(--muted-yellow))",
+        "muted-pink": "hsl(var(--muted-pink))",
+        "muted-sky": "hsl(var(--muted-sky))",
         brand: {
           DEFAULT: "hsl(var(--brand))",
           foreground: "hsl(var(--brand-foreground))",
         },
         "shamiri-blue": "#0474bc",
         "shamiri-blue-darker": "#045e96",
+        "shamiri-light-blue": "#b0d5ea",
         canvas: "hsl(var(--canvas))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -58,6 +62,11 @@ const config: Config = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        "active-card": {
+          DEFAULT: "hsl(var(--active-card))",
+          foreground: "hsl(var(--active-card-foreground))",
+          "foreground-accent": "hsl(var(--active-card-foreground-accent))",
         },
       },
       borderRadius: {

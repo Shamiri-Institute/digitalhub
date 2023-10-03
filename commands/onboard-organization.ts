@@ -1,19 +1,22 @@
 import { z } from "zod";
 
+import { objectId } from "#/lib/crypto";
 import { db as database, Database } from "#/lib/db";
-import { Command } from "#/commands";
 import { OrganizationModel } from "#/models/organization";
 import { sendEmail } from "#/emails";
 import OrganizationWelcomer from "#/emails/organization-welcomer";
+import { Command } from "#/commands";
+import { UploadImageCommand } from "#/commands/upload-image";
 
 interface OnboardOrgInput {
   name: string;
   contactEmail: string;
   inviterId: string;
+  avatarUrl?: string;
 }
 
 interface OnboardOrgOutput {
-  orgId: string;
+  organizationId: string;
 }
 
 export class OnboardOrganizationCommand extends Command<
@@ -35,6 +38,20 @@ export class OnboardOrganizationCommand extends Command<
       contactEmail: validInput.contactEmail,
     });
 
+    if (input.avatarUrl) {
+      const file = await new UploadImageCommand().run({
+        url: input.avatarUrl,
+      });
+
+      await this.db.organizationAvatar.create({
+        data: {
+          id: objectId("oavatar"),
+          organizationId: organization.id,
+          fileId: file.id,
+        },
+      });
+    }
+
     const subject = `${organization.name} joins Shamiri Digital Hub!`;
     await sendEmail({
       to: organization.contactEmail,
@@ -46,7 +63,7 @@ export class OnboardOrganizationCommand extends Command<
       }),
     });
 
-    return { orgId: organization.id };
+    return { organizationId: organization.id };
   }
 
   private validate(input: OnboardOrgInput) {
