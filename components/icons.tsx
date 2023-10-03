@@ -574,23 +574,70 @@ export const Icons = {
       />
     </svg>
   ),
-  // edit: ({ className, ...props }: LucideProps) => (
-  //   <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-  //     {" "}
-  //     <path
-  //       stroke="currentColor"
-  //       stroke-linecap="round"
-  //       stroke-linejoin="round"
-  //       stroke-width="1.5"
-  //       d="M4.75 19.25L9 18.25L18.2929 8.95711C18.6834 8.56658 18.6834 7.93342 18.2929 7.54289L16.4571 5.70711C16.0666 5.31658 15.4334 5.31658 15.0429 5.70711L5.75 15L4.75 19.25Z"
-  //     />{" "}
-  //     <path
-  //       stroke="currentColor"
-  //       stroke-linecap="round"
-  //       stroke-linejoin="round"
-  //       stroke-width="1.5"
-  //       d="M19.25 19.25H13.75"
-  //     />{" "}
-  //   </svg>
-  // ),
+  calendarDateAppointmentTime: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="21"
+      height="22"
+      viewBox="0 0 21 22"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        d="M6 3H3C1.89543 3 1 3.89543 1 5V8M6 3H14M6 3V1M6 3V5M14 3H17C18.1046 3 19 3.89543 19 5V8H1M14 3V1M14 3V5M1 8V19C1 20.1046 1.89543 21 3 21H8M15 14.25V16L16.25 17.25M20 16C20 18.7614 17.7614 21 15 21C12.2386 21 10 18.7614 10 16C10 13.2386 12.2386 11 15 11C17.7614 11 20 13.2386 20 16Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  paperFileText: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        d="M6 22H18C19.1046 22 20 21.1046 20 20V9.82843C20 9.29799 19.7893 8.78929 19.4142 8.41421L13.5858 2.58579C13.2107 2.21071 12.702 2 12.1716 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M13 2.5V9H19"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 17H15"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 13H15"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 9H9"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
 };

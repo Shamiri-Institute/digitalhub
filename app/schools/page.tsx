@@ -121,6 +121,24 @@ function SchoolCard({
   sessionTypes: any;
   assigned?: boolean;
 }) {
+  const SchoolDetail = ({ label, value }: { label: string; value: string }) => (
+    <p
+      className={cn("text-sm pb-2 font-medium", {
+        "text-white": assigned,
+        "text-brand": !assigned,
+      })}
+    >
+      <span
+        className={cn({
+          "text-[#cccccc]": assigned,
+        })}
+      >
+        {label}:
+      </span>{" "}
+      {value}
+    </p>
+  );
+
   return (
     <Card
       className={cn("p-5 pr-3.5 flex flex-col gap-5 mb-4", {
@@ -208,55 +226,51 @@ function SchoolCard({
           "bg-border/20": assigned,
         })}
       />
-      {/* todo: put items on accordion */}
+      <div className="relative justify-between items-center">
+        <div className="absolute flex gap-5">
+          <button>
+            <Icons.calendarDateAppointmentTime
+              className={cn("h-7 w-7", {
+                "text-shamiri-light-blue": assigned,
+              })}
+            />
+          </button>
+          <button>
+            <Icons.paperFileText
+              className={cn("h-7 w-7", {
+                "text-shamiri-light-blue": assigned,
+              })}
+            />
+          </button>
+        </div>
+        <Accordion type="single" collapsible>
+          <AccordionItem value="item-1">
+            <AccordionTrigger
+              className={cn("items-right py-0 pb-4 border-b border-border/50", {
+                "border-border/20": assigned,
+              })}
+              iconClass={cn("h-7 w-7", {
+                "text-shamiri-light-blue": assigned,
+              })}
+            >
+              <span className="invisible">School Details</span>
+            </AccordionTrigger>
 
-      <Accordion type="single" collapsible>
-        <AccordionItem value="item-1">
-          <AccordionTrigger className="items-right">
-            <span className="invisible">School Details</span>
-          </AccordionTrigger>
-
-          <AccordionContent>
-            <div>
-              <p
-                className={`${
-                  school.assignedTome ? "text-white" : "text-brand"
-                } font-medium text-sm pb-2`}
-              >
-                Type: {school.type}
-              </p>
-              <p
-                className={`${
-                  school.assignedTome ? "text-white" : "text-brand"
-                } font-medium text-sm pb-2`}
-              >
-                County: {school.county}
-              </p>
-              <p
-                className={`${
-                  school.assignedTome ? "text-white" : "text-brand"
-                } font-medium text-sm pb-2`}
-              >
-                Point person: {school.pointPerson}
-              </p>
-              <p
-                className={`${
-                  school.assignedTome ? "text-white" : "text-brand"
-                } font-medium text-sm pb-2`}
-              >
-                Contact number: {school.contactNo}
-              </p>
-              <p
-                className={`${
-                  school.assignedTome ? "text-white" : "text-brand"
-                } font-medium text-sm pb-2`}
-              >
-                School demographics: {school.demographics}
-              </p>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+            <AccordionContent>
+              <div className="pt-4">
+                <SchoolDetail label="Type" value={school.type} />
+                <SchoolDetail label="County" value={school.county} />
+                <SchoolDetail label="Point person" value={school.pointPerson} />
+                <SchoolDetail label="Contact number" value={school.contactNo} />
+                <SchoolDetail
+                  label="School demographics"
+                  value={school.demographics}
+                />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
     </Card>
   );
 }
