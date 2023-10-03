@@ -22,31 +22,30 @@ export default function SchoolsPage() {
 
 function Header() {
   return (
-    <div className="flex justify-between mb-4">
+    <div className="flex justify-between items-center mt-4 lg:mt-0 py-4">
       <div className="flex align-middle bg-green items-center">
-        <Icons.schoolMinusOutline className="h-4 w-4 text-brand mr-4 align-baseline" />
-        <h3 className="font-semibold text-base text-brand">Schools</h3>
+        <Icons.schoolMinusOutline className="h-6 w-6 text-brand mr-4 align-baseline" />
+        <h3 className="font-semibold text-2xl text-brand">Schools</h3>
       </div>
-      <Icons.search className="h-4 w-4 text-brand mr-4 align-baseline" />
+      <Icons.search className="h-6 w-6 text-brand mr-4 align-baseline" />
     </div>
   );
 }
 
 function SchoolsList() {
   const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
-  const schools = [
-    {
-      name: "Maranda Sec School",
-      population: 1400,
-      sessions: ["Pre", "S1"],
-      fellowsCount: 15,
-      type: "Public",
-      county: "Nairobi",
-      pointPerson: "Benny Otieno",
-      contactNo: "+254712342314780",
-      demographics: "Mixed",
-      assignedTome: true,
-    },
+  const assignedSchool = {
+    name: "Maranda Sec School",
+    population: 1400,
+    sessions: ["Pre", "S1"],
+    fellowsCount: 15,
+    type: "Public",
+    county: "Nairobi",
+    pointPerson: "Benny Otieno",
+    contactNo: "+254712342314780",
+    demographics: "Mixed",
+  };
+  const otherSchools = [
     {
       name: "Our Lady of Fatima High School",
       population: 1400,
@@ -57,7 +56,6 @@ function SchoolsList() {
       pointPerson: "Benny Otieno",
       contactNo: "+254712342314780",
       demographics: "Mixed",
-      assignedTome: false,
     },
     {
       name: "Alliance Sec School",
@@ -69,7 +67,6 @@ function SchoolsList() {
       pointPerson: "Benny Otieno",
       contactNo: "+254712342314780",
       demographics: "Mixed",
-      assignedTome: false,
     },
     {
       name: "Maseno Sec School",
@@ -81,19 +78,36 @@ function SchoolsList() {
       pointPerson: "Benny Otieno",
       contactNo: "+254712342314780",
       demographics: "Mixed",
-      assignedTome: false,
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xl:grid-cols-3  sm:gap-6">
-      {schools.map((school) => (
-        <SchoolCard
-          key={school.name}
-          school={school}
-          sessionTypes={sessionTypes}
-        />
-      ))}
+    <div>
+      <div>
+        <h2 className="text-xl font-semibold py-3">My School</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xl:grid-cols-3  sm:gap-6">
+          <SchoolCard
+            key={assignedSchool.name}
+            school={assignedSchool}
+            sessionTypes={sessionTypes}
+            assigned
+          />
+          <div />
+          <div />
+        </div>
+      </div>
+      <div>
+        <h2 className="text-xl font-semibold py-3">Others</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xl:grid-cols-3  sm:gap-6">
+          {otherSchools.map((school) => (
+            <SchoolCard
+              key={school.name}
+              school={school}
+              sessionTypes={sessionTypes}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -101,34 +115,68 @@ function SchoolsList() {
 function SchoolCard({
   school,
   sessionTypes,
+  assigned,
 }: {
   school: any;
   sessionTypes: any;
+  assigned?: boolean;
 }) {
   return (
     <Card
-      className={`p-5 pr-3.5 flex flex-col gap-5 ${
-        school.assignedTome && "bg-brand"
-      } mb-4`}
+      className={cn("p-5 pr-3.5 flex flex-col gap-5 mb-4", {
+        "bg-white": !assigned,
+        "bg-brand": assigned,
+      })}
     >
-      <div className="flex items-center gap-4 border-b border-border/50 pb-3 pr-3 justify-between">
-        <h3
-          className={`font-semibold ${
-            school.assignedTome ? "text-white" : "text-brand"
-          } text-brand`}
-        >
-          {school.name}
-        </h3>
-        <Separator orientation={"vertical"} className="bg-white" />
-        <div className="flex flex-col gap-[1px]">
-          <p
-            className={`font-semibold ${
-              school.assignedTome ? "text-white" : "text-brand"
-            } text-brand`}
+      <div
+        className={cn(
+          "flex items-center gap-4 border-b border-border/50 pb-3 pr-3 justify-between",
+          "grid grid-cols-[15fr,10fr]",
+          {
+            "border-border/20": assigned,
+          }
+        )}
+      >
+        <div>
+          <h3
+            className={cn("font-semibold xl:text-xl", {
+              "text-white": assigned,
+              "text-brand": !assigned,
+            })}
           >
-            {school.population}
-          </p>
-          <p className="text-xs text-muted-foreground font-medium">Students</p>
+            {school.name}
+          </h3>
+        </div>
+        <div
+          className={cn("flex justify-between border-l border-border/50 pl-4", {
+            "border-border/20": assigned,
+          })}
+        >
+          <div className="flex flex-col gap-[1px]">
+            <p
+              className={cn("font-semibold xl:text-2xl", {
+                "text-white": assigned,
+                "text-brand": !assigned,
+              })}
+            >
+              {school.population}
+            </p>
+            <p
+              className={cn(
+                "text-xs xl:text-lg text-muted-foreground font-medium",
+                {
+                  "text-[#cccccc]": assigned,
+                }
+              )}
+            >
+              Students
+            </p>
+          </div>
+          {assigned && (
+            <div className="pt-1">
+              <Icons.edit className="text-shamiri-light-blue" />
+            </div>
+          )}
         </div>
       </div>
 
@@ -155,13 +203,17 @@ function SchoolCard({
           </p>
         </Button>
       </div>
-      <Separator />
+      <Separator
+        className={cn({
+          "bg-border/20": assigned,
+        })}
+      />
       {/* todo: put items on accordion */}
 
       <Accordion type="single" collapsible>
         <AccordionItem value="item-1">
           <AccordionTrigger className="items-right">
-            <span className="invisible">Shool Detials</span>
+            <span className="invisible">School Details</span>
           </AccordionTrigger>
 
           <AccordionContent>

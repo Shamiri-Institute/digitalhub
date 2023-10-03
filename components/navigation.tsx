@@ -32,7 +32,7 @@ function NavItem({
           }
         )}
       >
-        <Icon className="h-6 lg:h-9" strokeWidth={1.5} />
+        <Icon className="h-6 w-6 lg:h-9 lg:w-6" />
         <div>{children}</div>
       </Link>
     </li>
@@ -51,8 +51,11 @@ export function Navigation({
       <div className="flex-1 flex flex-col">
         <nav className="flex-1 lg:pt-6">
           <ul role="list" className="space-y-0">
-            <NavItem href="/" Icon={Icons.layoutDashboard}>
+            <NavItem href="/" Icon={Icons.home}>
               Home
+            </NavItem>
+            <NavItem href="/schools" Icon={Icons.schoolMinusOutline}>
+              Schools
             </NavItem>
             <NavItem href="/students" Icon={Icons.backpack}>
               Students
@@ -62,9 +65,6 @@ export function Navigation({
             </NavItem>
             <NavItem href="/screenings" Icon={Icons.listTodo}>
               Screenings
-            </NavItem>
-            <NavItem href="/schools" Icon={Icons.graduationCap}>
-              Schools
             </NavItem>
           </ul>
         </nav>
