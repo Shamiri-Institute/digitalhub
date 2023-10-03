@@ -14,53 +14,38 @@ model Organization {
   updatedAt    DateTime             @updatedAt @map("updated_at")
   archivedAt   DateTime?            @map("archived_at")
   contactEmail String               @map("contact_email")
-  logos        OrganizationLogo[]
   memberships  OrganizationMember[]
+  avatar       OrganizationAvatar?
+  invites      OrganizationInvite[]
 
   @@map("organizations")
 }
 
-model OrganizationLogo {
+model OrganizationAvatar {
   id             String       @id @db.VarChar(255)
-  organizationId String       @map("organization_id")
+  organizationId String       @unique @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
-  fileId         Int          @unique @map("file_id")
+  fileId         String       @unique @map("file_id")
   file           File         @relation(fields: [fileId], references: [id])
 
-  @@map("organization_logos")
-}
-
-enum ContentType {
-  JPEG
-  PNG
-  WEBP
-  AVIF
-  GIF
-  PDF
-}
-
-enum ServiceType {
-  S3
-  GCS
-  R2
+  @@map("organization_avatars")
 }
 
 model File {
-  id               Int               @id @default(autoincrement())
-  createdAt        DateTime          @default(now()) @map("created_at")
-  updatedAt        DateTime          @updatedAt @map("updated_at")
-  archivedAt       DateTime?         @map("archived_at")
-  serviceType      ServiceType       @map("service_type")
-  fileKey          String            @map("file_key")
-  fileName         String            @map("file_name")
-  byteSize         Int               @map("byte_size")
-  contentUrl       String            @map("content_url")
-  contentType      ContentType       @map("content_type")
-  width            Int?
-  height           Int?
-  signedUrl        String?           @map("signed_url") @db.VarChar(2048)
-  expiresAt        DateTime?         @map("expires_at")
-  organizationLogo OrganizationLogo?
+  id                 String              @id @db.VarChar(255)
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  archivedAt         DateTime?           @map("archived_at")
+  key                String              @map("key")
+  fileName           String              @map("file_name")
+  byteSize           Int                 @map("byte_size")
+  contentType        String              @map("content_type")
+  width              Int?
+  height             Int?
+  signedUrl          String?             @map("signed_url") @db.VarChar(2048)
+  expiresAt          DateTime?           @map("expires_at")
+  organizationAvatar OrganizationAvatar?
+  userAvatar         UserAvatar?
 
   @@map("files")
 }
@@ -72,9 +57,32 @@ model User {
   createdAt   DateTime             @default(now()) @map("created_at")
   updatedAt   DateTime             @updatedAt @map("updated_at")
   archivedAt  DateTime?            @map("archived_at")
+  avatar      UserAvatar?
   memberships OrganizationMember[]
+  recentOpens UserRecentOpen[]
 
   @@map("users")
+}
+
+model UserRecentOpen {
+  id       Int      @id @default(autoincrement())
+  userId   String   @map("user_id") @db.VarChar(255)
+  user     User     @relation(fields: [userId], references: [id])
+  itemId   String   @map("item_id") // TODO: itemId leverages object ids (e.g. school_01hbnsp5eserr939h1v6s1ty5r) and polymorphic associations
+  openedAt DateTime @default(now()) @map("opened_at")
+
+  @@index([userId, itemId])
+  @@map("user_recent_opens")
+}
+
+model UserAvatar {
+  id     String @id @db.VarChar(255)
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+  fileId String @unique @map("file_id")
+  file   File   @relation(fields: [fileId], references: [id])
+
+  @@map("user_avatars")
 }
 
 model OrganizationMember {
@@ -89,11 +97,29 @@ model OrganizationMember {
   @@map("organization_members")
 }
 
+model OrganizationInvite {
+  id             Int          @id @default(autoincrement())
+  email          String
+  organizationId String       @map("organization_id") @db.VarChar(255)
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  sentAt         DateTime     @default(now()) @map("sent_at")
+  expiresAt      DateTime     @map("expires_at")
+  acceptedAt     DateTime?    @map("accepted_at")
+  roleId         String       @map("role_id") @db.VarChar(255)
+  role           Role         @relation(fields: [roleId], references: [id])
+  secureToken    String       @map("secure_token")
+
+  @@unique([email, organizationId, secureToken])
+  @@map("organization_invites")
+}
+
 model Role {
-  id          Int              @id @default(autoincrement())
-  roleName    String           @unique @map("role_name") @db.VarChar(255)
+  id          String               @id @db.VarChar(255)
+  name        String               @db.VarChar(255)
+  description String               @db.VarChar(255)
   members     MemberRole[]
   permissions RolePermission[]
+  invites     OrganizationInvite[]
 
   @@map("roles")
 }
@@ -102,7 +128,7 @@ model MemberRole {
   id       Int                @id @default(autoincrement())
   memberId Int                @map("member_id")
   member   OrganizationMember @relation(fields: [memberId], references: [id])
-  roleId   Int                @map("role_id")
+  roleId   String             @map("role_id") @db.VarChar(255)
   role     Role               @relation(fields: [roleId], references: [id])
 
   @@map("member_roles")
@@ -119,7 +145,7 @@ model Permission {
 
 model RolePermission {
   id           Int        @id @default(autoincrement())
-  roleId       Int        @map("role_id")
+  roleId       String     @map("role_id") @db.VarChar(255)
   role         Role       @relation(fields: [roleId], references: [id])
   permissionId Int        @map("permission_id")
   permission   Permission @relation(fields: [permissionId], references: [id])

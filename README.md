@@ -10,6 +10,11 @@
 
 - After making changes to the [`prisma/schema.prisma`](prisma/schema.prisma) file, run `npm run db:migrate:dev` to generate a migration file.
 
+## Notes
+
+- ## Installing `aws-crt` to get around Next app dir import error referred to in following issue:
+  - https://github.com/aws-amplify/amplify-js/issues/11030
+
 # Next.js
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).

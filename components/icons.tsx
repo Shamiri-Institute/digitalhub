@@ -13,12 +13,14 @@ import {
   ChevronDown,
   ChevronRight,
   Search,
+  LayoutDashboard,
   type LucideIcon,
+  Smile,
 } from "lucide-react";
 
 import { cn } from "#/lib/utils";
 
-export type Icon = LucideIcon;
+export type Icon = LucideIcon | React.FC<LucideProps>;
 
 export const Icons = {
   sun: SunMedium,
@@ -33,6 +35,7 @@ export const Icons = {
   chevronDown: ChevronDown,
   chevronRight: ChevronRight,
   search: Search,
+  layoutDashboard: LayoutDashboard,
   logo: ({ className, ...props }: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -76,155 +79,565 @@ export const Icons = {
       </g>
     </svg>
   ),
-  school: ({ className, ...props }: LucideProps) => (<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <circle cx="20" cy="20" r="19.75" stroke="currentColor" strokeWidth="0.5" />
-    <path stroke="currentColor" d="M20 15.9586L25.3333 18.6069V29.2H14.6667V18.6069L20 15.9586ZM20 15.9586V10M10 29.2H30M12 29.2V21.2552H14.6667M28 29.2V21.2552H25.3333M18.6667 29.2V25.2276H21.3333V29.2M20 10.6621H24V13.3103H20M20 22.5793C19.6464 22.5793 19.3072 22.4398 19.0572 22.1915C18.8071 21.9432 18.6667 21.6064 18.6667 21.2552C18.6667 20.904 18.8071 20.5672 19.0572 20.3189C19.3072 20.0705 19.6464 19.931 20 19.931C20.3536 19.931 20.6928 20.0705 20.9428 20.3189C21.1929 20.5672 21.3333 20.904 21.3333 21.2552C21.3333 21.6064 21.1929 21.9432 20.9428 22.1915C20.6928 22.4398 20.3536 22.5793 20 22.5793Z" />
-  </svg>
+  school: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="40"
+      height="40"
+      viewBox="0 0 40 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <circle
+        cx="20"
+        cy="20"
+        r="19.75"
+        stroke="currentColor"
+        strokeWidth="0.5"
+      />
+      <path
+        stroke="currentColor"
+        d="M20 15.9586L25.3333 18.6069V29.2H14.6667V18.6069L20 15.9586ZM20 15.9586V10M10 29.2H30M12 29.2V21.2552H14.6667M28 29.2V21.2552H25.3333M18.6667 29.2V25.2276H21.3333V29.2M20 10.6621H24V13.3103H20M20 22.5793C19.6464 22.5793 19.3072 22.4398 19.0572 22.1915C18.8071 21.9432 18.6667 21.6064 18.6667 21.2552C18.6667 20.904 18.8071 20.5672 19.0572 20.3189C19.3072 20.0705 19.6464 19.931 20 19.931C20.3536 19.931 20.6928 20.0705 20.9428 20.3189C21.1929 20.5672 21.3333 20.904 21.3333 21.2552C21.3333 21.6064 21.1929 21.9432 20.9428 22.1915C20.6928 22.4398 20.3536 22.5793 20 22.5793Z"
+      />
+    </svg>
   ),
-  users: ({ className, ...props }: LucideProps) => (<svg width="15" height="14" viewBox="0 0 15 14" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" d="M9.83317 12.25V11.0833C9.83317 10.4645 9.58734 9.871 9.14975 9.43342C8.71217 8.99583 8.11868 8.75 7.49984 8.75H3.99984C3.381 8.75 2.78751 8.99583 2.34992 9.43342C1.91234 9.871 1.6665 10.4645 1.6665 11.0833V12.25" />
-    <path stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" d="M5.74984 6.41667C7.0385 6.41667 8.08317 5.372 8.08317 4.08333C8.08317 2.79467 7.0385 1.75 5.74984 1.75C4.46117 1.75 3.4165 2.79467 3.4165 4.08333C3.4165 5.372 4.46117 6.41667 5.74984 6.41667Z" />
-    <path stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" d="M13.3335 12.25V11.0833C13.3331 10.5663 13.161 10.0641 12.8443 9.65549C12.5275 9.24689 12.0841 8.95505 11.5835 8.82581" />
-    <path stroke="currentColor" strokeWidth="0.7" strokeLinecap="round" strokeLinejoin="round" d="M9.8335 1.82581C10.3354 1.95431 10.7803 2.24621 11.098 2.65549C11.4156 3.06476 11.5881 3.56812 11.5881 4.08622C11.5881 4.60432 11.4156 5.10769 11.098 5.51696C10.7803 5.92623 10.3354 6.21813 9.8335 6.34664" />
-  </svg>
+  users: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="15"
+      height="14"
+      viewBox="0 0 15 14"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9.83317 12.25V11.0833C9.83317 10.4645 9.58734 9.871 9.14975 9.43342C8.71217 8.99583 8.11868 8.75 7.49984 8.75H3.99984C3.381 8.75 2.78751 8.99583 2.34992 9.43342C1.91234 9.871 1.6665 10.4645 1.6665 11.0833V12.25"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M5.74984 6.41667C7.0385 6.41667 8.08317 5.372 8.08317 4.08333C8.08317 2.79467 7.0385 1.75 5.74984 1.75C4.46117 1.75 3.4165 2.79467 3.4165 4.08333C3.4165 5.372 4.46117 6.41667 5.74984 6.41667Z"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M13.3335 12.25V11.0833C13.3331 10.5663 13.161 10.0641 12.8443 9.65549C12.5275 9.24689 12.0841 8.95505 11.5835 8.82581"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9.8335 1.82581C10.3354 1.95431 10.7803 2.24621 11.098 2.65549C11.4156 3.06476 11.5881 3.56812 11.5881 4.08622C11.5881 4.60432 11.4156 5.10769 11.098 5.51696C10.7803 5.92623 10.3354 6.21813 9.8335 6.34664"
+      />
+    </svg>
   ),
-  userswithOutline: ({ className, ...props }: LucideProps) => (<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <circle cx="20" cy="20" r="19.75" fill="none" stroke="currentColor" strokeWidth="0.5" />
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M23.6667 27V25.3333C23.6667 24.4493 23.3155 23.6014 22.6904 22.9763C22.0652 22.3512 21.2174 22 20.3333 22H15.3333C14.4493 22 13.6014 22.3512 12.9763 22.9763C12.3512 23.6014 12 24.4493 12 25.3333V27" />
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M17.8333 18.6667C19.6743 18.6667 21.1667 17.1743 21.1667 15.3333C21.1667 13.4924 19.6743 12 17.8333 12C15.9924 12 14.5 13.4924 14.5 15.3333C14.5 17.1743 15.9924 18.6667 17.8333 18.6667Z" />
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M28.667 27.0001V25.3334C28.6664 24.5948 28.4206 23.8774 27.9681 23.2937C27.5156 22.7099 26.8821 22.293 26.167 22.1084" />
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M23.667 12.1084C24.384 12.292 25.0195 12.709 25.4734 13.2937C25.9272 13.8783 26.1735 14.5974 26.1735 15.3376C26.1735 16.0777 25.9272 16.7968 25.4734 17.3815C25.0195 17.9661 24.384 18.3831 23.667 18.5667" />
-  </svg>
+  usersWithOutline: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="40"
+      height="40"
+      viewBox="0 0 40 40"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <circle
+        cx="20"
+        cy="20"
+        r="19.75"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="0.5"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M23.6667 27V25.3333C23.6667 24.4493 23.3155 23.6014 22.6904 22.9763C22.0652 22.3512 21.2174 22 20.3333 22H15.3333C14.4493 22 13.6014 22.3512 12.9763 22.9763C12.3512 23.6014 12 24.4493 12 25.3333V27"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M17.8333 18.6667C19.6743 18.6667 21.1667 17.1743 21.1667 15.3333C21.1667 13.4924 19.6743 12 17.8333 12C15.9924 12 14.5 13.4924 14.5 15.3333C14.5 17.1743 15.9924 18.6667 17.8333 18.6667Z"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M28.667 27.0001V25.3334C28.6664 24.5948 28.4206 23.8774 27.9681 23.2937C27.5156 22.7099 26.8821 22.293 26.167 22.1084"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M23.667 12.1084C24.384 12.292 25.0195 12.709 25.4734 13.2937C25.9272 13.8783 26.1735 14.5974 26.1735 15.3376C26.1735 16.0777 25.9272 16.7968 25.4734 17.3815C25.0195 17.9661 24.384 18.3831 23.667 18.5667"
+      />
+    </svg>
   ),
-  smileyface: ({ className, ...props }: LucideProps) => (<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M11.5137 7.34683L11.5003 7.33342M6.51375 7.34683L6.50033 7.33342M5.66699 11.5001C5.66699 11.5001 5.77128 11.7087 6.01674 11.9782C6.46516 12.4707 7.38474 13.1667 9.00033 13.1667C10.6159 13.1667 11.5355 12.4707 11.9839 11.9782C12.2294 11.7087 12.3337 11.5001 12.3337 11.5001M9.00033 17.3334C4.39795 17.3334 0.666992 13.6024 0.666992 9.00008C0.666992 4.39771 4.39795 0.666748 9.00033 0.666748C13.6027 0.666748 17.3337 4.39771 17.3337 9.00008C17.3337 13.6024 13.6027 17.3334 9.00033 17.3334Z" />
-  </svg>
+  smileyface: Smile,
+  schoolMinusOutline: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        d="M10 5.95862L15.3333 8.6069V19.2H4.66667V8.6069L10 5.95862ZM10 5.95862V0M0 19.2H20M2 19.2V11.2552H4.66667M18 19.2V11.2552H15.3333M8.66667 19.2V15.2276H11.3333V19.2M10 0.662069H14V3.31034H10M10 12.5793C9.64638 12.5793 9.30724 12.4398 9.05719 12.1915C8.80714 11.9432 8.66667 11.6064 8.66667 11.2552C8.66667 10.904 8.80714 10.5672 9.05719 10.3189C9.30724 10.0705 9.64638 9.93103 10 9.93103C10.3536 9.93103 10.6928 10.0705 10.9428 10.3189C11.1929 10.5672 11.3333 10.904 11.3333 11.2552C11.3333 11.6064 11.1929 11.9432 10.9428 12.1915C10.6928 12.4398 10.3536 12.5793 10 12.5793Z"
+      />
+    </svg>
   ),
-  schoolMinusOutline: ({ className, ...props }: LucideProps) => (<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path stroke="currentColor" d="M10 5.95862L15.3333 8.6069V19.2H4.66667V8.6069L10 5.95862ZM10 5.95862V0M0 19.2H20M2 19.2V11.2552H4.66667M18 19.2V11.2552H15.3333M8.66667 19.2V15.2276H11.3333V19.2M10 0.662069H14V3.31034H10M10 12.5793C9.64638 12.5793 9.30724 12.4398 9.05719 12.1915C8.80714 11.9432 8.66667 11.6064 8.66667 11.2552C8.66667 10.904 8.80714 10.5672 9.05719 10.3189C9.30724 10.0705 9.64638 9.93103 10 9.93103C10.3536 9.93103 10.6928 10.0705 10.9428 10.3189C11.1929 10.5672 11.3333 10.904 11.3333 11.2552C11.3333 11.6064 11.1929 11.9432 10.9428 12.1915C10.6928 12.4398 10.3536 12.5793 10 12.5793Z" />
-  </svg>
+  clinicalCase: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="20"
+      height="22"
+      viewBox="0 0 20 22"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M17.0167 4.03019C16.5987 3.58719 16.1019 3.2357 15.5549 2.99586C15.0079 2.75603 14.4215 2.63257 13.8292 2.63257C13.237 2.63257 12.6505 2.75603 12.1036 2.99586C11.5566 3.2357 11.0598 3.58719 10.6417 4.03019L10.0001 4.71657L9.35841 4.03019C8.94034 3.58719 8.44357 3.2357 7.89659 2.99586C7.34961 2.75603 6.76317 2.63257 6.17091 2.63257C5.57864 2.63257 4.9922 2.75603 4.44522 2.99586C3.89824 3.2357 3.40147 3.58719 2.98341 4.03019C1.21674 5.89573 1.10841 9.04603 3.33341 11.4396L10.0001 18.4793L16.6667 11.4396C18.8917 9.04603 18.7834 5.89573 17.0167 4.03019Z"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M10.0001 4.71655L7.39174 7.47966C7.06199 7.83072 6.87695 8.30516 6.87695 8.79962C6.87695 9.29409 7.06199 9.76852 7.39174 10.1196C7.7242 10.4678 8.17349 10.6632 8.64174 10.6632C9.11 10.6632 9.55929 10.4678 9.89174 10.1196L11.7751 8.17484C12.2431 7.68583 12.875 7.41154 13.5334 7.41154C14.1918 7.41154 14.8237 7.68583 15.2917 8.17484L17.2917 10.2868"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M14.9997 13.1996L13.333 11.4397"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12.4997 15.8395L10.833 14.0796"
+      />
+    </svg>
   ),
-  clinicalcase: ({ className, ...props }: LucideProps) => (<svg width="20" height="22" viewBox="0 0 20 22" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M17.0167 4.03019C16.5987 3.58719 16.1019 3.2357 15.5549 2.99586C15.0079 2.75603 14.4215 2.63257 13.8292 2.63257C13.237 2.63257 12.6505 2.75603 12.1036 2.99586C11.5566 3.2357 11.0598 3.58719 10.6417 4.03019L10.0001 4.71657L9.35841 4.03019C8.94034 3.58719 8.44357 3.2357 7.89659 2.99586C7.34961 2.75603 6.76317 2.63257 6.17091 2.63257C5.57864 2.63257 4.9922 2.75603 4.44522 2.99586C3.89824 3.2357 3.40147 3.58719 2.98341 4.03019C1.21674 5.89573 1.10841 9.04603 3.33341 11.4396L10.0001 18.4793L16.6667 11.4396C18.8917 9.04603 18.7834 5.89573 17.0167 4.03019Z" />
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M10.0001 4.71655L7.39174 7.47966C7.06199 7.83072 6.87695 8.30516 6.87695 8.79962C6.87695 9.29409 7.06199 9.76852 7.39174 10.1196C7.7242 10.4678 8.17349 10.6632 8.64174 10.6632C9.11 10.6632 9.55929 10.4678 9.89174 10.1196L11.7751 8.17484C12.2431 7.68583 12.875 7.41154 13.5334 7.41154C14.1918 7.41154 14.8237 7.68583 15.2917 8.17484L17.2917 10.2868" />
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M14.9997 13.1996L13.333 11.4397" />
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12.4997 15.8395L10.833 14.0796" />
-  </svg>
+  edit: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="23"
+      height="24"
+      viewBox="0 0 23 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        d="M2.76611 21H19.3619"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4.14904 13.5L13.3689 3.49998C14.1327 2.67155 15.3711 2.67155 16.1349 3.49998C16.8986 4.32841 16.8986 5.67155 16.1349 6.49998L6.91499 16.5L3.22705 17.5L4.14904 13.5Z"
+      />
+    </svg>
   ),
-  edit: ({ className, ...props }: LucideProps) => (<svg width="23" height="24" viewBox="0 0 23 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path d="M2.76611 21H19.3619" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    <path stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" d="M4.14904 13.5L13.3689 3.49998C14.1327 2.67155 15.3711 2.67155 16.1349 3.49998C16.8986 4.32841 16.8986 5.67155 16.1349 6.49998L6.91499 16.5L3.22705 17.5L4.14904 13.5Z" />
-  </svg>
+  delete: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="23"
+      height="24"
+      viewBox="0 0 23 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3.26611 6H19.8619M5.11009 6V20C5.11009 21.1046 5.93566 22 6.95406 22H16.1739C17.1923 22 18.0179 21.1046 18.0179 20V6M7.87604 6V4C7.87604 2.89543 8.70162 2 9.72001 2H13.408C14.4264 2 15.2519 2.89543 15.2519 4V6"
+      />
+      <path
+        d="M13.4077 11V17"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.71973 11V17"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   ),
-  delete: ({ className, ...props }: LucideProps) => (<svg width="23" height="24" viewBox="0 0 23 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" d="M3.26611 6H19.8619M5.11009 6V20C5.11009 21.1046 5.93566 22 6.95406 22H16.1739C17.1923 22 18.0179 21.1046 18.0179 20V6M7.87604 6V4C7.87604 2.89543 8.70162 2 9.72001 2H13.408C14.4264 2 15.2519 2.89543 15.2519 4V6" />
-    <path d="M13.4077 11V17" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M9.71973 11V17" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+  add: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 7V17M7 12H17"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+      />
+    </svg>
   ),
-  add: ({ className, ...props }: LucideProps) => (<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 7V17M7 12H17" />
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" />
-  </svg>
+  home: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="25"
+      height="24"
+      viewBox="0 0 25 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="M21.8521 9.59985C21.8521 9.28158 21.7256 8.97636 21.5006 8.75131C21.2755 8.52626 20.9703 8.39983 20.6521 8.39983C20.3338 8.39983 20.0286 8.52626 19.8035 8.75131C19.5785 8.97636 19.4521 9.28158 19.4521 9.59985H21.8521ZM5.05205 9.59985C5.05205 9.28158 4.92562 8.97636 4.70058 8.75131C4.47553 8.52626 4.17031 8.39983 3.85205 8.39983C3.53379 8.39983 3.22857 8.52626 3.00352 8.75131C2.77848 8.97636 2.65205 9.28158 2.65205 9.59985H5.05205ZM22.2037 12.8483C22.43 13.0669 22.7331 13.1878 23.0477 13.1851C23.3624 13.1824 23.6633 13.0562 23.8858 12.8337C24.1083 12.6112 24.2345 12.3102 24.2373 11.9956C24.24 11.6809 24.119 11.3778 23.9005 11.1515L22.2037 12.8483ZM12.2521 1.19976L13.1005 0.351347C12.8754 0.12638 12.5702 0 12.2521 0C11.9339 0 11.6287 0.12638 11.4037 0.351347L12.2521 1.19976ZM0.603651 11.1515C0.489038 11.2622 0.39762 11.3946 0.334729 11.541C0.271838 11.6874 0.238735 11.8449 0.23735 12.0042C0.235965 12.1635 0.266327 12.3215 0.326665 12.469C0.387002 12.6165 0.476105 12.7505 0.588777 12.8632C0.701448 12.9758 0.83543 13.0649 0.982906 13.1253C1.13038 13.1856 1.2884 13.216 1.44773 13.2146C1.60707 13.2132 1.76453 13.1801 1.91094 13.1172C2.05734 13.0543 2.18975 12.9629 2.30045 12.8483L0.603651 11.1515ZM6.25205 24H18.2521V21.6H6.25205V24ZM21.8521 20.4V9.59985H19.4521V20.4H21.8521ZM5.05205 20.4V9.59985H2.65205V20.4H5.05205ZM23.9005 11.1515L13.1005 0.351347L11.4037 2.04817L22.2037 12.8483L23.9005 11.1515ZM11.4037 0.351347L0.603651 11.1515L2.30045 12.8483L13.1005 2.04817L11.4037 0.351347ZM18.2521 24C19.2068 24 20.1225 23.6207 20.7976 22.9456C21.4728 22.2704 21.8521 21.3548 21.8521 20.4H19.4521C19.4521 20.7182 19.3256 21.0235 19.1006 21.2485C18.8755 21.4735 18.5703 21.6 18.2521 21.6V24ZM6.25205 21.6C5.93379 21.6 5.62857 21.4735 5.40352 21.2485C5.17848 21.0235 5.05205 20.7182 5.05205 20.4H2.65205C2.65205 21.3548 3.03134 22.2704 3.70647 22.9456C4.3816 23.6207 5.29727 24 6.25205 24V21.6Z"
+      />
+    </svg>
   ),
-  home: ({ className, ...props }: LucideProps) => (<svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path fill="currentColor" d="M21.8521 9.59985C21.8521 9.28158 21.7256 8.97636 21.5006 8.75131C21.2755 8.52626 20.9703 8.39983 20.6521 8.39983C20.3338 8.39983 20.0286 8.52626 19.8035 8.75131C19.5785 8.97636 19.4521 9.28158 19.4521 9.59985H21.8521ZM5.05205 9.59985C5.05205 9.28158 4.92562 8.97636 4.70058 8.75131C4.47553 8.52626 4.17031 8.39983 3.85205 8.39983C3.53379 8.39983 3.22857 8.52626 3.00352 8.75131C2.77848 8.97636 2.65205 9.28158 2.65205 9.59985H5.05205ZM22.2037 12.8483C22.43 13.0669 22.7331 13.1878 23.0477 13.1851C23.3624 13.1824 23.6633 13.0562 23.8858 12.8337C24.1083 12.6112 24.2345 12.3102 24.2373 11.9956C24.24 11.6809 24.119 11.3778 23.9005 11.1515L22.2037 12.8483ZM12.2521 1.19976L13.1005 0.351347C12.8754 0.12638 12.5702 0 12.2521 0C11.9339 0 11.6287 0.12638 11.4037 0.351347L12.2521 1.19976ZM0.603651 11.1515C0.489038 11.2622 0.39762 11.3946 0.334729 11.541C0.271838 11.6874 0.238735 11.8449 0.23735 12.0042C0.235965 12.1635 0.266327 12.3215 0.326665 12.469C0.387002 12.6165 0.476105 12.7505 0.588777 12.8632C0.701448 12.9758 0.83543 13.0649 0.982906 13.1253C1.13038 13.1856 1.2884 13.216 1.44773 13.2146C1.60707 13.2132 1.76453 13.1801 1.91094 13.1172C2.05734 13.0543 2.18975 12.9629 2.30045 12.8483L0.603651 11.1515ZM6.25205 24H18.2521V21.6H6.25205V24ZM21.8521 20.4V9.59985H19.4521V20.4H21.8521ZM5.05205 20.4V9.59985H2.65205V20.4H5.05205ZM23.9005 11.1515L13.1005 0.351347L11.4037 2.04817L22.2037 12.8483L23.9005 11.1515ZM11.4037 0.351347L0.603651 11.1515L2.30045 12.8483L13.1005 2.04817L11.4037 0.351347ZM18.2521 24C19.2068 24 20.1225 23.6207 20.7976 22.9456C21.4728 22.2704 21.8521 21.3548 21.8521 20.4H19.4521C19.4521 20.7182 19.3256 21.0235 19.1006 21.2485C18.8755 21.4735 18.5703 21.6 18.2521 21.6V24ZM6.25205 21.6C5.93379 21.6 5.62857 21.4735 5.40352 21.2485C5.17848 21.0235 5.05205 20.7182 5.05205 20.4H2.65205C2.65205 21.3548 3.03134 22.2704 3.70647 22.9456C4.3816 23.6207 5.29727 24 6.25205 24V21.6Z" />
-  </svg>
+  user: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        d="M1.42969 20.0001C1.42969 18.5856 1.99159 17.229 2.99178 16.2288C3.99198 15.2287 5.34853 14.6667 6.76302 14.6667H17.4297C18.8442 14.6667 20.2007 15.2287 21.2009 16.2288C22.2011 17.229 22.763 18.5856 22.763 20.0001C22.763 20.7073 22.4821 21.3856 21.982 21.8857C21.4819 22.3858 20.8036 22.6667 20.0964 22.6667H4.09635C3.38911 22.6667 2.71083 22.3858 2.21074 21.8857C1.71064 21.3856 1.42969 20.7073 1.42969 20.0001Z"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="2"
+        d="M12.0962 9.33337C14.3053 9.33337 16.0962 7.54251 16.0962 5.33337C16.0962 3.12424 14.3053 1.33337 12.0962 1.33337C9.88705 1.33337 8.09619 3.12424 8.09619 5.33337C8.09619 7.54251 9.88705 9.33337 12.0962 9.33337Z"
+      />
+    </svg>
   ),
-  user: ({ className, ...props }: LucideProps) => (<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path stroke="currentColor" strokeWidth="2" strokeLinejoin="round" d="M1.42969 20.0001C1.42969 18.5856 1.99159 17.229 2.99178 16.2288C3.99198 15.2287 5.34853 14.6667 6.76302 14.6667H17.4297C18.8442 14.6667 20.2007 15.2287 21.2009 16.2288C22.2011 17.229 22.763 18.5856 22.763 20.0001C22.763 20.7073 22.4821 21.3856 21.982 21.8857C21.4819 22.3858 20.8036 22.6667 20.0964 22.6667H4.09635C3.38911 22.6667 2.71083 22.3858 2.21074 21.8857C1.71064 21.3856 1.42969 20.7073 1.42969 20.0001Z" />
-    <path stroke="currentColor" strokeWidth="2" d="M12.0962 9.33337C14.3053 9.33337 16.0962 7.54251 16.0962 5.33337C16.0962 3.12424 14.3053 1.33337 12.0962 1.33337C9.88705 1.33337 8.09619 3.12424 8.09619 5.33337C8.09619 7.54251 9.88705 9.33337 12.0962 9.33337Z" />
-  </svg>
+  notificationBell: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        stroke="white"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4.66667 7.88173V7.00008C4.66667 4.05456 7.05448 1.66675 10 1.66675C12.9455 1.66675 15.3333 4.05456 15.3333 7.00008V7.88173C15.3333 9.79866 15.8874 11.6747 16.9288 13.2842L17.5 14.1667H2.5L3.07116 13.2841C4.1126 11.6747 4.66667 9.79866 4.66667 7.88173Z"
+      />
+      <path
+        stroke="white"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9.1665 17.4075C9.61184 17.9023 10.3878 17.9023 10.8332 17.4075"
+      />
+    </svg>
   ),
-  notificationBell: ({ className, ...props }: LucideProps) => (<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M4.66667 7.88173V7.00008C4.66667 4.05456 7.05448 1.66675 10 1.66675C12.9455 1.66675 15.3333 4.05456 15.3333 7.00008V7.88173C15.3333 9.79866 15.8874 11.6747 16.9288 13.2842L17.5 14.1667H2.5L3.07116 13.2841C4.1126 11.6747 4.66667 9.79866 4.66667 7.88173Z" />
-    <path stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M9.1665 17.4075C9.61184 17.9023 10.3878 17.9023 10.8332 17.4075" />
-  </svg>
+  referral: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M11.6076 7.67886V4.10742L17.5002 9.99996L11.6076 15.8925V11.866M11.6076 7.68582C11.0716 7.56419 10.5137 7.49997 9.9409 7.49997C5.79878 7.49997 2.44092 10.8579 2.44092 15C2.44092 15.7229 2.54319 16.4219 2.73406 17.0833C3.63685 13.9547 6.52168 11.6666 9.9409 11.6666C10.5137 11.6666 11.0716 11.7309 11.6076 11.8525"
+      />
+    </svg>
   ),
-  referral: ({ className, ...props }: LucideProps) => (<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M11.6076 7.67886V4.10742L17.5002 9.99996L11.6076 15.8925V11.866M11.6076 7.68582C11.0716 7.56419 10.5137 7.49997 9.9409 7.49997C5.79878 7.49997 2.44092 10.8579 2.44092 15C2.44092 15.7229 2.54319 16.4219 2.73406 17.0833C3.63685 13.9547 6.52168 11.6666 9.9409 11.6666C10.5137 11.6666 11.0716 11.7309 11.6076 11.8525" />
-  </svg>
+  flagcase: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="20"
+      height="17"
+      viewBox="0 0 20 17"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="M2.08888 13.8603C2.55862 9.56198 2.70835 6.19597 2.00193 2.14752C1.98805 2.06713 2.05084 1.99359 2.12993 2.00044C7.7686 2.45727 13.7345 4.64789 19.9365 8.09492C20.0446 8.15475 20.0065 8.32427 19.884 8.32925C13.2273 8.59101 7.1135 9.91722 2.28571 13.9713C2.20118 14.0423 2.0768 13.9725 2.08888 13.861V13.8603Z"
+      />
+      <path
+        fill="#575756"
+        d="M0.4933 17.0001C0.220973 17.0001 0 16.8968 0 16.7696C0.897121 11.9024 0.992824 6.88006 0 1.6472C0 1.51998 0.220973 1.41675 0.4933 1.41675C0.765626 1.41675 0.986599 1.51998 0.986599 1.6472C1.58883 6.94585 1.53047 11.9617 0.986599 16.7696C0.986599 16.8968 0.765626 17.0001 0.4933 17.0001Z"
+      />
+      <path
+        fill="#575756"
+        d="M1.02276 2.06441C1.58762 2.06441 2.04553 1.60228 2.04553 1.0322C2.04553 0.462134 1.58762 0 1.02276 0C0.457906 0 0 0.462134 0 1.0322C0 1.60228 0.457906 2.06441 1.02276 2.06441Z"
+      />
+    </svg>
   ),
-  flagcase: ({ className, ...props }: LucideProps) => (<svg width="20" height="17" viewBox="0 0 20 17" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path fill="currentColor" d="M2.08888 13.8603C2.55862 9.56198 2.70835 6.19597 2.00193 2.14752C1.98805 2.06713 2.05084 1.99359 2.12993 2.00044C7.7686 2.45727 13.7345 4.64789 19.9365 8.09492C20.0446 8.15475 20.0065 8.32427 19.884 8.32925C13.2273 8.59101 7.1135 9.91722 2.28571 13.9713C2.20118 14.0423 2.0768 13.9725 2.08888 13.861V13.8603Z" />
-    <path fill="#575756" d="M0.4933 17.0001C0.220973 17.0001 0 16.8968 0 16.7696C0.897121 11.9024 0.992824 6.88006 0 1.6472C0 1.51998 0.220973 1.41675 0.4933 1.41675C0.765626 1.41675 0.986599 1.51998 0.986599 1.6472C1.58883 6.94585 1.53047 11.9617 0.986599 16.7696C0.986599 16.8968 0.765626 17.0001 0.4933 17.0001Z" />
-    <path fill="#575756" d="M1.02276 2.06441C1.58762 2.06441 2.04553 1.60228 2.04553 1.0322C2.04553 0.462134 1.58762 0 1.02276 0C0.457906 0 0 0.462134 0 1.0322C0 1.60228 0.457906 2.06441 1.02276 2.06441Z" />
-  </svg>
+  riskIcon: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="15"
+      height="16"
+      viewBox="0 0 15 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M1.37602 12.0434L6.35269 3.00316C6.81381 2.16561 8.18619 2.16561 8.64731 3.00316L13.624 12.0434C14.0277 12.7767 13.4124 13.625 12.4767 13.625H2.52331C1.58764 13.625 0.972319 12.7767 1.37602 12.0434Z"
+      />
+      <path
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7.5 6.125V8.625"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7.5 11.1372V11.125"
+      />
+    </svg>
   ),
-  riskIcon: ({ className, ...props }: LucideProps) => (<svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M1.37602 12.0434L6.35269 3.00316C6.81381 2.16561 8.18619 2.16561 8.64731 3.00316L13.624 12.0434C14.0277 12.7767 13.4124 13.625 12.4767 13.625H2.52331C1.58764 13.625 0.972319 12.7767 1.37602 12.0434Z" />
-    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M7.5 6.125V8.625" />
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M7.5 11.1372V11.125" />
-  </svg>
+  issueIcon: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 15 15"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <g clip-path="url(#clip0_2223_864)">
+        <path
+          d="M7.5 5V7.5"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M7.5 10.0122V10"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M7.5 13.75C10.9518 13.75 13.75 10.9518 13.75 7.5C13.75 4.04822 10.9518 1.25 7.5 1.25C4.04822 1.25 1.25 4.04822 1.25 7.5C1.25 10.9518 4.04822 13.75 7.5 13.75Z"
+        />
+      </g>
+      <defs>
+        <clipPath id="clip0_2223_864">
+          <rect width="15" height="15" fill="white" />
+        </clipPath>
+      </defs>
+    </svg>
   ),
-  issueIcon: ({ className, ...props }: LucideProps) => (<svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <g clip-path="url(#clip0_2223_864)">
-      <path d="M7.5 5V7.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M7.5 10.0122V10" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-      <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M7.5 13.75C10.9518 13.75 13.75 10.9518 13.75 7.5C13.75 4.04822 10.9518 1.25 7.5 1.25C4.04822 1.25 1.25 4.04822 1.25 7.5C1.25 10.9518 4.04822 13.75 7.5 13.75Z" />
-    </g>
-    <defs>
-      <clipPath id="clip0_2223_864">
-        <rect width="15" height="15" fill="white" />
-      </clipPath>
-    </defs>
-  </svg>
+  upload: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="17"
+      height="16"
+      viewBox="0 0 17 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M2.5 9.33325V13.3333C2.5 14.0697 3.09695 14.6666 3.83333 14.6666H13.1667C13.9031 14.6666 14.5 14.0697 14.5 13.3333V9.33325"
+      />
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8.50033 11.3333V2M8.50033 2L5.16699 5.62964M8.50033 2L11.8337 5.62963"
+      />
+    </svg>
   ),
-  upload: ({ className, ...props }: LucideProps) => (<svg width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    {...props}
-  >
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M2.5 9.33325V13.3333C2.5 14.0697 3.09695 14.6666 3.83333 14.6666H13.1667C13.9031 14.6666 14.5 14.0697 14.5 13.3333V9.33325" />
-    <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M8.50033 11.3333V2M8.50033 2L5.16699 5.62964M8.50033 2L11.8337 5.62963" />
-  </svg>
-  )
-
+  heartHandshake: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="20"
+      height="22"
+      viewBox="0 0 20 22"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        d="M17.0167 4.53019C16.5986 4.08719 16.1018 3.7357 15.5549 3.49586C15.0079 3.25603 14.4214 3.13257 13.8292 3.13257C13.2369 3.13257 12.6505 3.25603 12.1035 3.49586C11.5565 3.7357 11.0597 4.08719 10.6417 4.53019L10 5.21657L9.35835 4.53019C8.94028 4.08719 8.44351 3.7357 7.89653 3.49586C7.34955 3.25603 6.76311 3.13257 6.17084 3.13257C5.57858 3.13257 4.99214 3.25603 4.44516 3.49586C3.89818 3.7357 3.40141 4.08719 2.98334 4.53019C1.21668 6.39573 1.10834 9.54603 3.33334 11.9396L10 18.9793L16.6667 11.9396C18.8917 9.54603 18.7833 6.39573 17.0167 4.53019Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10 5.21655L7.39168 7.97966C7.06192 8.33072 6.87689 8.80516 6.87689 9.29962C6.87689 9.79409 7.06192 10.2685 7.39168 10.6196C7.72414 10.9678 8.17343 11.1632 8.64168 11.1632C9.10994 11.1632 9.55923 10.9678 9.89168 10.6196L11.775 8.67484C12.2431 8.18583 12.8749 7.91154 13.5333 7.91154C14.1918 7.91154 14.8236 8.18583 15.2917 8.67484L17.2917 10.7868"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15 13.6996L13.3333 11.9397"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M12.5 16.3395L10.8333 14.5796"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  calendarDateAppointmentTime: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="21"
+      height="22"
+      viewBox="0 0 21 22"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        d="M6 3H3C1.89543 3 1 3.89543 1 5V8M6 3H14M6 3V1M6 3V5M14 3H17C18.1046 3 19 3.89543 19 5V8H1M14 3V1M14 3V5M1 8V19C1 20.1046 1.89543 21 3 21H8M15 14.25V16L16.25 17.25M20 16C20 18.7614 17.7614 21 15 21C12.2386 21 10 18.7614 10 16C10 13.2386 12.2386 11 15 11C17.7614 11 20 13.2386 20 16Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  paperFileText: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        d="M6 22H18C19.1046 22 20 21.1046 20 20V9.82843C20 9.29799 19.7893 8.78929 19.4142 8.41421L13.5858 2.58579C13.2107 2.21071 12.702 2 12.1716 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M13 2.5V9H19"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 17H15"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 13H15"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 9H9"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
 };

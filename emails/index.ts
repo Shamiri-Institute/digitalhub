@@ -1,14 +1,7 @@
 import React from "react";
-import { SES } from "@aws-sdk/client-ses";
 import { render } from "@react-email/render";
 
-const ses = new SES({
-  region: process.env.AWS_SES_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_SES_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SES_SECRET_ACCESS_KEY!,
-  },
-});
+import * as ses from "#/lib/ses";
 
 const SDH_FROM = "tech@shamiri.institute";
 
@@ -24,6 +17,7 @@ export const sendEmail = async ({
   const html = render(react);
 
   if (
+    process.env.SEND_EMAILS === "1" ||
     process.env.VERCEL_ENV === "production" ||
     process.env.VERCEL_ENV === "preview"
   ) {
@@ -45,5 +39,10 @@ export const sendEmail = async ({
         },
       },
     });
+  } else {
+    console.log("Not sending email in dev mode");
+    console.log("Subject:", subject);
+    console.log("To:", to);
+    console.log("HTML:", html);
   }
 };
