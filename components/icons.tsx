@@ -5,6 +5,7 @@ import {
   SunMedium,
   Check,
   ChevronsUpDown,
+  ChevronLeft,
   GraduationCap,
   Users2,
   ListTodo,
@@ -27,6 +28,7 @@ export const Icons = {
   moon: Moon,
   check: Check,
   chevronsUpDown: ChevronsUpDown,
+  chevronLeft: ChevronLeft,
   graduationCap: GraduationCap,
   backpack: Backpack,
   users2: Users2,
@@ -261,13 +263,13 @@ export const Icons = {
       <path
         d="M2.76611 21H19.3619"
         stroke="currentColor"
-        strokeWidth="1.2"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         stroke="currentColor"
-        strokeWidth="1.2"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M4.14904 13.5L13.3689 3.49998C14.1327 2.67155 15.3711 2.67155 16.1349 3.49998C16.8986 4.32841 16.8986 5.67155 16.1349 6.49998L6.91499 16.5L3.22705 17.5L4.14904 13.5Z"
