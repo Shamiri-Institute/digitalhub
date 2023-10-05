@@ -1,0 +1,11 @@
+Name,Phone,Email,National ID,MPESA Name,MPESA Number,County,Sub-county,Date of birth,Gender
+John Doe,1234567890,johndoe@example.com,1234567890,John Doe,1234567890,Nairobi,Westlands,01-01-1980,Male
+Jane Doe,0987654321,janedoe@example.com,0987654321,Jane Doe,0987654321,Mombasa,Mvita,02-02-1985,Female
+Alice Smith,1122334455,alicesmith@example.com,1122334455,Alice Smith,1122334455,Kisumu,Kisumu Central,03-03-1990,Female
+Bob Johnson,2233445566,bobjohnson@example.com,2233445566,Bob Johnson,2233445566,Nakuru,Nakuru Town East,04-04-1995,Male
+Charlie Brown,3344556677,charliebrown@example.com,3344556677,Charlie Brown,3344556677,Uasin Gishu,Ainabkoi,05-05-2000,Male
+Daisy Miller,4455667788,daisymiller@example.com,4455667788,Daisy Miller,4455667788,Kiambu,Kiambaa,06-06-2005,Female
+Edward Morgan,5566778899,edwardmorgan@example.com,5566778899,Edward Morgan,5566778899,Machakos,Machakos Town,07-07-2010,Male
+Fiona White,6677889900,fionawhite@example.com,6677889900,Fiona White,6677889900,Kilifi,Kilifi North,08-08-2015,Female
+George Black,7788990011,georgeblack@example.com,7788990011,George Black,7788990011,Nyeri,Nyeri Town,09-09-2020,Male
+Hannah Green,8899001122,hannahgreen@example.com,8899001122,Hannah Green,8899001122,Meru,Imenti North,10-10-2025,Female

@@ -7,17 +7,14 @@ import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { ClinicalFeatureCard } from "#/app/(homepage)/clinical-feature-card";
+import { HubCoordinatorView } from "#/app/(homepage)/hub-coordinator-view";
 
 export default async function HomePage() {
   const user = await fetchAuthedUser();
 
-  if (user.isRole("hub-coordinator")) return HubCoordinatorHomepage();
+  if (user.isRole("hub-coordinator")) return <HubCoordinatorView />;
 
   return <SupervisorHomepage />;
-}
-
-function HubCoordinatorHomepage() {
-  return <div>Welcome hub coordinator</div>;
 }
 
 function SupervisorHomepage() {
