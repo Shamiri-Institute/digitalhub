@@ -106,7 +106,7 @@ const fixtures = {
       email: "edmund@shamiri.institute",
       name: "Edmund Korley",
       organizationByEmail: "team@shamiri.institute",
-      organizationRole: "admin",
+      organizationRole: "hub-coordinator",
     },
     {
       email: "dmndetei@amhf.or.ke",

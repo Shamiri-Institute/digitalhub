@@ -93,6 +93,7 @@ model OrganizationMember {
   user           User               @relation(fields: [userId], references: [id])
   roles          MemberRole[]
   permissions    MemberPermission[]
+  Hub            Hub[]
 
   @@map("organization_members")
 }
@@ -161,4 +162,65 @@ model MemberPermission {
   permission   Permission         @relation(fields: [permissionId], references: [id])
 
   @@map("member_permissions")
+}
+
+model Student {
+  id         String    @id @db.VarChar(255)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  archivedAt DateTime? @map("archived_at")
+  hubId      String    @map("hub_id") @db.VarChar(255)
+  hub        Hub       @relation(fields: [hubId], references: [id])
+
+  @@map("students")
+}
+
+model Fellow {
+  id           String     @id @db.VarChar(255)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  archivedAt   DateTime?  @map("archived_at")
+  hubId        String     @map("hub_id") @db.VarChar(255)
+  hub          Hub        @relation(fields: [hubId], references: [id])
+  supervisorId String     @map("supervisor_id") @db.VarChar(255)
+  supervisor   Supervisor @relation(fields: [supervisorId], references: [id])
+
+  @@map("fellows")
+}
+
+model Supervisor {
+  id         String    @id @db.VarChar(255)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  archivedAt DateTime? @map("archived_at")
+  hubId      String    @map("hub_id") @db.VarChar(255)
+  hub        Hub       @relation(fields: [hubId], references: [id])
+  fellows    Fellow[]
+
+  @@map("supervisors")
+}
+
+model School {
+  id         String    @id @db.VarChar(255)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  archivedAt DateTime? @map("archived_at")
+  hubId      String    @map("hub_id") @db.VarChar(255)
+  hub        Hub       @relation(fields: [hubId], references: [id])
+}
+
+model Hub {
+  id          String             @id @db.VarChar(255)
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  archivedAt  DateTime?          @map("archived_at")
+  hubName     String             @map("hub_name")
+  memberId    Int                @map("member_id")
+  member      OrganizationMember @relation(fields: [memberId], references: [id])
+  fellows     Fellow[]
+  supervisors Supervisor[]
+  schools     School[]
+  students    Student[]
+
+  @@map("hubs")
 }

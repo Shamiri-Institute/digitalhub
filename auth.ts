@@ -1,6 +1,6 @@
 import { db } from "#/lib/db";
 
-interface CurrentUser {
+export interface CurrentUser {
   email: string;
   name: string;
   activeOrgId: string;
@@ -14,6 +14,7 @@ interface CurrentUser {
     }[];
   }[];
   avatarUrl: string | null;
+  isRole: (role: string) => boolean;
 }
 
 export async function fetchAuthedUser() {
@@ -28,7 +29,7 @@ export async function fetchAuthedUser() {
 // TODO: dummy values, use auth/cookies to pull this info
 async function fetchCurrentUser(): Promise<CurrentUser | null> {
   const user = await db.user.findFirst({
-    where: { email: "osborn@shamiri.institute" },
+    where: { email: "edmund@shamiri.institute" },
     select: {
       email: true,
       name: true,
@@ -70,5 +71,10 @@ async function fetchCurrentUser(): Promise<CurrentUser | null> {
       };
     }),
     avatarUrl,
+    isRole: (roleId: string) => {
+      return user.memberships.some((m) => {
+        return m.roles.some((r) => r.role.id === roleId);
+      });
+    },
   };
 }
