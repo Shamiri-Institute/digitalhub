@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import * as csv from "csv-parse";
 
 import { db } from "#/lib/db";
 import { InviteUserCommand } from "#/commands/invite-user";
@@ -34,4 +35,62 @@ export async function inviteUserToOrganization(prevState: any, formData: any) {
   await Promise.all(invitations);
 
   revalidatePath("/admin/organization/members");
+}
+
+export async function batchUploadFellows(formData: FormData) {
+  const { file }: { file?: File } = z
+    .object({
+      file: z.any(),
+    })
+    .parse({
+      file: formData.get("csv-file"),
+    });
+
+  if (!file) {
+    throw new Error("No file provided");
+  }
+
+  const records = await parseCsvFile(file);
+  console.debug({ records });
+}
+
+const BATCH_FELLOW_CSV_HEADERS = [
+  "Name",
+  "Phone",
+  "Email",
+  "National ID",
+  "MPESA Name",
+  "MPESA Number",
+  "County",
+  "Sub-county",
+  "Date of birth",
+  "Gender",
+];
+
+async function parseCsvFile(file: File) {
+  return new Promise(async (resolve, reject) => {
+    const parser = csv.parse({
+      delimiter: ",",
+      columns: BATCH_FELLOW_CSV_HEADERS,
+    });
+
+    const records: any[] = [];
+    parser.on("readable", function () {
+      let record;
+      while ((record = parser.read())) {
+        records.push(record);
+      }
+    });
+
+    parser.on("error", function (err) {
+      reject(err.message);
+    });
+
+    parser.on("end", function () {
+      resolve(records);
+    });
+
+    parser.write(Buffer.from(await file.arrayBuffer()));
+    parser.end();
+  });
 }

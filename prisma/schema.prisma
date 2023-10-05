@@ -176,14 +176,14 @@ model Student {
 }
 
 model Fellow {
-  id           String     @id @db.VarChar(255)
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
-  archivedAt   DateTime?  @map("archived_at")
-  hubId        String     @map("hub_id") @db.VarChar(255)
-  hub          Hub        @relation(fields: [hubId], references: [id])
-  supervisorId String     @map("supervisor_id") @db.VarChar(255)
-  supervisor   Supervisor @relation(fields: [supervisorId], references: [id])
+  id           String      @id @db.VarChar(255)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  archivedAt   DateTime?   @map("archived_at")
+  hubId        String?     @map("hub_id") @db.VarChar(255)
+  hub          Hub?        @relation(fields: [hubId], references: [id])
+  supervisorId String?     @map("supervisor_id") @db.VarChar(255)
+  supervisor   Supervisor? @relation(fields: [supervisorId], references: [id])
 
   @@map("fellows")
 }
