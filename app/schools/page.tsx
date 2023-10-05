@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
@@ -155,7 +157,7 @@ function SchoolCard({
           }
         )}
       >
-        <div>
+        <Link href={`/schools/demo`}>
           <h3
             className={cn("font-semibold xl:text-xl", {
               "text-white": assigned,
@@ -164,13 +166,16 @@ function SchoolCard({
           >
             {school.name}
           </h3>
-        </div>
+        </Link>
         <div
-          className={cn("flex justify-between border-l border-border/50 pl-4", {
-            "border-border/20": assigned,
-          })}
+          className={cn(
+            "flex justify-between items-start border-l border-border/50 pl-4",
+            {
+              "border-border/20": assigned,
+            }
+          )}
         >
-          <div className="flex flex-col gap-[1px]">
+          <Link href={`/schools/demo`} className="flex flex-col gap-[1px]">
             <p
               className={cn("font-semibold xl:text-2xl", {
                 "text-white": assigned,
@@ -189,11 +194,11 @@ function SchoolCard({
             >
               Students
             </p>
-          </div>
+          </Link>
           {assigned && (
-            <div className="pt-1">
+            <button className="mt-1">
               <Icons.edit className="text-shamiri-light-blue" />
-            </div>
+            </button>
           )}
         </div>
       </div>
@@ -214,12 +219,14 @@ function SchoolCard({
             </div>
           ))}
         </div>
-        <Button className="bg-shamiri-blue text-white flex gap-1 hover:bg-shamiri-blue-darker">
-          <Icons.users className="h-4 w-4" />
-          <p className="text-sm whitespace-nowrap">
-            {school.fellowsCount} Fellows
-          </p>
-        </Button>
+        <Link href={`/schools/demo`}>
+          <Button className="bg-shamiri-blue text-white flex gap-1 hover:bg-shamiri-blue-darker">
+            <Icons.users className="h-4 w-4" />
+            <p className="text-sm whitespace-nowrap">
+              {school.fellowsCount} Fellows
+            </p>
+          </Button>
+        </Link>
       </div>
       <Separator
         className={cn({
@@ -227,29 +234,35 @@ function SchoolCard({
         })}
       />
       <div className="relative justify-between items-center">
-        <div className="absolute flex gap-5">
-          <button>
-            <Icons.calendarDateAppointmentTime
-              className={cn("h-7 w-7", {
-                "text-shamiri-light-blue": assigned,
-              })}
-            />
-          </button>
-          <button>
-            <Icons.paperFileText
-              className={cn("h-7 w-7", {
-                "text-shamiri-light-blue": assigned,
-              })}
-            />
-          </button>
-        </div>
+        {assigned && (
+          <div className="absolute left-5 flex gap-5">
+            <button>
+              <Icons.calendarDateAppointmentTime
+                className={cn("h-7 w-7", {
+                  "text-shamiri-light-blue": assigned,
+                })}
+              />
+            </button>
+            <button>
+              <Icons.paperFileText
+                className={cn("h-7 w-7", {
+                  "text-shamiri-light-blue": assigned,
+                })}
+              />
+            </button>
+          </div>
+        )}
         <Accordion type="single" collapsible>
           <AccordionItem value="item-1">
             <AccordionTrigger
-              className={cn("items-right py-0 pb-4 border-b border-border/50", {
-                "border-border/20": assigned,
-              })}
-              iconClass={cn("h-7 w-7", {
+              className={cn(
+                "items-right px-5 pt-0 pb-6 border-b  border-border/50",
+                {
+                  "-mb-1": assigned,
+                  "border-border/20": assigned,
+                }
+              )}
+              iconClass={cn("h-7 w-7 mr-3", {
                 "text-shamiri-light-blue": assigned,
               })}
             >
