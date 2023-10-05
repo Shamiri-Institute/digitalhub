@@ -114,3 +114,41 @@ export function Navigation({
     </div>
   );
 }
+
+function AdminNavigation() {
+  return (
+    <nav>
+      <ul role="list" className="space-y-0">
+        <NavItem href="/" Icon={Icons.home}>
+          Home
+        </NavItem>
+        <NavItem href="/schools" Icon={Icons.schoolMinusOutline}>
+          Schools
+        </NavItem>
+        <NavItem href="/students" Icon={Icons.backpack}>
+          Students
+        </NavItem>
+        <NavItem href="/fellows" Icon={Icons.users2}>
+          Fellows
+        </NavItem>
+        <NavItem href="/screenings" Icon={Icons.listTodo}>
+          Screenings
+        </NavItem>
+      </ul>
+    </nav>
+  );
+}
+
+function HubCoordinationNavigation() {
+  return (
+    <nav>
+      <ul role="list" className="space-y-0">
+        <NavItem href="/" Icon={Icons.home}>
+          Home
+        </NavItem>
+      </ul>
+    </nav>
+  );
+}
+
+function SupervisorNavigation() {}

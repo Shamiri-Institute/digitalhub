@@ -9,7 +9,15 @@ import { Separator } from "#/components/ui/separator";
 import { ClinicalFeatureCard } from "#/app/(homepage)/clinical-feature-card";
 
 export default async function HomePage() {
+  const user = await fetchAuthedUser();
+
+  if (user.isRole("hub-coordinator")) return HubCoordinatorHomepage();
+
   return <SupervisorHomepage />;
+}
+
+function HubCoordinatorHomepage() {
+  return <div>Welcome hub coordinator</div>;
 }
 
 function SupervisorHomepage() {
