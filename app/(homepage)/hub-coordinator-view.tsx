@@ -5,11 +5,12 @@ import * as React from "react";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { batchUploadFellows } from "#/app/actions";
+import { Header } from "#/app/(homepage)/common";
 
 export function HubCoordinatorView() {
   return (
     <div>
-      <div>Welcome hub coordinators!</div>
+      <Header />
       <div className="max-w-fit my-5 xl:mt-10">
         <FellowsBatchUploader />
       </div>
