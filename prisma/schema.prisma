@@ -207,6 +207,8 @@ model School {
   archivedAt DateTime? @map("archived_at")
   hubId      String    @map("hub_id") @db.VarChar(255)
   hub        Hub       @relation(fields: [hubId], references: [id])
+
+  @@map("schools")
 }
 
 model Hub {
