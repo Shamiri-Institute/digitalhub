@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { cn } from "#/lib/utils";
-import { fetchAuthedUser } from "#/auth";
+import { fetchAuthedUser } from "#/app/auth";
 import { Icon, Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";

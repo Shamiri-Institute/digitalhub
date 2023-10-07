@@ -6,7 +6,7 @@ import { type Icon, Icons } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
 import { ThemeToggle } from "#/components/theme-provider";
 import { Separator } from "#/components/ui/separator";
-import { fetchAuthedUser } from "#/auth";
+import { fetchAuthedUser } from "#/app/auth";
 
 export const navigation: Array<any> = [];
 
