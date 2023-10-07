@@ -50,6 +50,16 @@ CREATE TABLE "users" (
 );
 
 -- CreateTable
+CREATE TABLE "user_recent_opens" (
+    "id" SERIAL NOT NULL,
+    "user_id" VARCHAR(255) NOT NULL,
+    "item_id" TEXT NOT NULL,
+    "opened_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "user_recent_opens_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "user_avatars" (
     "id" VARCHAR(255) NOT NULL,
     "user_id" TEXT NOT NULL,
@@ -125,6 +135,63 @@ CREATE TABLE "member_permissions" (
     CONSTRAINT "member_permissions_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "students" (
+    "id" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "archived_at" TIMESTAMP(3),
+    "hub_id" VARCHAR(255) NOT NULL,
+
+    CONSTRAINT "students_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "fellows" (
+    "id" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "archived_at" TIMESTAMP(3),
+    "hub_id" VARCHAR(255),
+    "supervisor_id" VARCHAR(255),
+
+    CONSTRAINT "fellows_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "supervisors" (
+    "id" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "archived_at" TIMESTAMP(3),
+    "hub_id" VARCHAR(255) NOT NULL,
+
+    CONSTRAINT "supervisors_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "schools" (
+    "id" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "archived_at" TIMESTAMP(3),
+    "hub_id" VARCHAR(255) NOT NULL,
+
+    CONSTRAINT "schools_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "hubs" (
+    "id" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "archived_at" TIMESTAMP(3),
+    "hub_name" TEXT NOT NULL,
+    "member_id" INTEGER NOT NULL,
+
+    CONSTRAINT "hubs_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "organizations_name_key" ON "organizations"("name");
 
@@ -136,6 +203,9 @@ CREATE UNIQUE INDEX "organization_avatars_file_id_key" ON "organization_avatars"
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE INDEX "user_recent_opens_user_id_item_id_idx" ON "user_recent_opens"("user_id", "item_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "user_avatars_user_id_key" ON "user_avatars"("user_id");
@@ -154,6 +224,9 @@ ALTER TABLE "organization_avatars" ADD CONSTRAINT "organization_avatars_organiza
 
 -- AddForeignKey
 ALTER TABLE "organization_avatars" ADD CONSTRAINT "organization_avatars_file_id_fkey" FOREIGN KEY ("file_id") REFERENCES "files"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "user_recent_opens" ADD CONSTRAINT "user_recent_opens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "user_avatars" ADD CONSTRAINT "user_avatars_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -190,3 +263,21 @@ ALTER TABLE "member_permissions" ADD CONSTRAINT "member_permissions_member_id_fk
 
 -- AddForeignKey
 ALTER TABLE "member_permissions" ADD CONSTRAINT "member_permissions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "students" ADD CONSTRAINT "students_hub_id_fkey" FOREIGN KEY ("hub_id") REFERENCES "hubs"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "fellows" ADD CONSTRAINT "fellows_hub_id_fkey" FOREIGN KEY ("hub_id") REFERENCES "hubs"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "fellows" ADD CONSTRAINT "fellows_supervisor_id_fkey" FOREIGN KEY ("supervisor_id") REFERENCES "supervisors"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "supervisors" ADD CONSTRAINT "supervisors_hub_id_fkey" FOREIGN KEY ("hub_id") REFERENCES "hubs"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "schools" ADD CONSTRAINT "schools_hub_id_fkey" FOREIGN KEY ("hub_id") REFERENCES "hubs"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "hubs" ADD CONSTRAINT "hubs_member_id_fkey" FOREIGN KEY ("member_id") REFERENCES "organization_members"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -25,7 +25,7 @@ seedDatabase()
 
 async function truncateTables() {
   await db.$executeRaw`
-  TRUNCATE TABLE organizations, organization_avatars, organization_invites, files, users, user_avatars, organization_members, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions;
+  TRUNCATE TABLE organizations, organization_avatars, organization_invites, files, users, user_avatars, organization_members, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, supervisors, schools;
   `;
 }
 

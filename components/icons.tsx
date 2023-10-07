@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  type LucideIcon,
   LucideProps,
   Moon,
   SunMedium,
@@ -15,8 +16,12 @@ import {
   ChevronRight,
   Search,
   LayoutDashboard,
-  type LucideIcon,
+  ClipboardList,
+  GraduationCapIcon,
+  Banknote,
+  Network,
   Smile,
+  PieChart,
 } from "lucide-react";
 
 import { cn } from "#/lib/utils";
@@ -38,6 +43,11 @@ export const Icons = {
   chevronRight: ChevronRight,
   search: Search,
   layoutDashboard: LayoutDashboard,
+  clipboardList: ClipboardList,
+  graduationCapIcon: GraduationCapIcon,
+  banknote: Banknote,
+  network: Network,
+  pieChart: PieChart,
   logo: ({ className, ...props }: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
