@@ -8,16 +8,17 @@ import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { ClinicalFeatureCard } from "#/app/(homepage)/clinical-feature-card";
 import { HubCoordinatorView } from "#/app/(homepage)/hub-coordinator-view";
+import { Header } from "#/app/(homepage)/common";
 
 export default async function HomePage() {
   const user = await fetchAuthedUser();
 
   if (user.isRole("hub-coordinator")) return <HubCoordinatorView />;
 
-  return <SupervisorHomepage />;
+  return <SupervisorView />;
 }
 
-function SupervisorHomepage() {
+function SupervisorView() {
   return (
     <div>
       <div className="mb-8">
@@ -35,22 +36,6 @@ function SupervisorHomepage() {
         <SchoolsList />
       </div>
     </div>
-  );
-}
-
-async function Header() {
-  const authedUser = await fetchAuthedUser();
-
-  return (
-    <header className="mb-4">
-      <div className="flex items-center">
-        <h1 className="font-semibold text-2xl text-brand pr-3">
-          Hello, {authedUser.name}
-        </h1>
-        <Icons.smileyface className="h-6 w-6 text-brand" />
-      </div>
-      <p className="text-muted-foreground text-xl">Have a nice day!</p>
-    </header>
   );
 }
 

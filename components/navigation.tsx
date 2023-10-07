@@ -1,11 +1,12 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
-import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 import { type Icon, Icons } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
-import { ThemeToggle } from "./theme-provider";
+import { ThemeToggle } from "#/components/theme-provider";
+import { Separator } from "#/components/ui/separator";
+import { fetchAuthedUser } from "#/auth";
 
 export const navigation: Array<any> = [];
 
@@ -49,25 +50,7 @@ export function Navigation({
       {...props}
     >
       <div className="flex-1 flex flex-col">
-        <nav className="flex-1 lg:pt-6">
-          <ul role="list" className="space-y-0">
-            <NavItem href="/" Icon={Icons.home}>
-              Home
-            </NavItem>
-            <NavItem href="/schools" Icon={Icons.schoolMinusOutline}>
-              Schools
-            </NavItem>
-            <NavItem href="/students" Icon={Icons.backpack}>
-              Students
-            </NavItem>
-            <NavItem href="/fellows" Icon={Icons.users2}>
-              Fellows
-            </NavItem>
-            <NavItem href="/screenings" Icon={Icons.listTodo}>
-              Screenings
-            </NavItem>
-          </ul>
-        </nav>
+        <HubCoordinatorNavigation />
       </div>
       <div>
         <div className="mb-4">
@@ -139,16 +122,83 @@ function AdminNavigation() {
   );
 }
 
-function HubCoordinationNavigation() {
+type Role = "admin" | "hub-coordinator" | "supervisor";
+const AllRoles: Role[] = ["admin", "hub-coordinator", "supervisor"];
+const HubCoordinatorAndAboveRoles: Role[] = ["admin", "hub-coordinator"];
+const SupervisorAndAboveRoles: Role[] = [
+  "admin",
+  "hub-coordinator",
+  "supervisor",
+];
+
+interface NavigationItem {
+  path: string;
+  title: string;
+  Icon: Icon;
+  roles: Role[];
+}
+
+const navigationItems: NavigationItem[] = [
+  {
+    path: "/",
+    title: "Dashboard",
+    Icon: Icons.layoutDashboard,
+    roles: AllRoles,
+  },
+  {
+    path: "/supervisors",
+    title: "Supervisors",
+    Icon: Icons.clipboardList,
+    roles: HubCoordinatorAndAboveRoles,
+  },
+  {
+    path: "/fellows",
+    title: "Fellows",
+    Icon: Icons.graduationCapIcon,
+    roles: SupervisorAndAboveRoles,
+  },
+  {
+    path: "/schools",
+    title: "Schools",
+    Icon: Icons.backpack,
+    roles: SupervisorAndAboveRoles,
+  },
+  {
+    path: "/payouts",
+    title: "Payouts",
+    Icon: Icons.banknote,
+    roles: SupervisorAndAboveRoles,
+  },
+  {
+    path: "/hubs",
+    title: "Hubs",
+    Icon: Icons.network,
+    roles: HubCoordinatorAndAboveRoles,
+  },
+  {
+    path: "/reports",
+    title: "Reports",
+    Icon: Icons.pieChart,
+    roles: HubCoordinatorAndAboveRoles,
+  },
+];
+
+function AppNavigation() {
+  const currentUser = fetchAuthedUser();
+}
+
+function HubCoordinatorNavigation() {
   return (
-    <nav>
+    <nav className="flex-1 lg:pt-6">
       <ul role="list" className="space-y-0">
-        <NavItem href="/" Icon={Icons.home}>
-          Home
-        </NavItem>
+        {navigationItems.map((item) => {
+          return (
+            <NavItem key={item.path} href={item.path} Icon={item.Icon}>
+              {item.title}
+            </NavItem>
+          );
+        })}
       </ul>
     </nav>
   );
 }
-
-function SupervisorNavigation() {}
