@@ -57,7 +57,6 @@ async function fetchCurrentUser(): Promise<CurrentUser | null> {
     avatarUrl = `/api/files/${fileIdHash}/${fileName}`;
   }
 
-  console.debug({ user });
   return {
     email: user.email,
     name: user.name,
