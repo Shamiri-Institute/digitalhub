@@ -51,7 +51,8 @@ export async function batchUploadFellows(formData: FormData) {
   }
 
   const records = await parseCsvFile(file);
-  console.debug({ records });
+
+  // TODO: fin
 }
 
 const BATCH_FELLOW_CSV_HEADERS = [

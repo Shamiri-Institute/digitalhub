@@ -3,3 +3,9 @@ export const SDH_LOGO_BANNER =
 
 export const SDH_HERO_IMAGE =
   "https://shamiri-assets.s3.af-south-1.amazonaws.com/shamiri-hero.jpeg";
+
+export const APP_HOSTNAMES = new Set([
+  "shamiridigitalhub.vercel.app",
+  `localhost:${process.env.PORT}`,
+  "localhost",
+]);
