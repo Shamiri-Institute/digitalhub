@@ -1,14 +1,14 @@
 import Link from "next/link";
 
-import { cn } from "#/lib/utils";
+import { ClinicalFeatureCard } from "#/app/(platform)/clinical-feature-card";
+import { Header } from "#/app/(platform)/common";
+import { HubCoordinatorView } from "#/app/(platform)/hub-coordinator-view";
 import { fetchAuthedUser } from "#/app/auth";
 import { Icon, Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
-import { ClinicalFeatureCard } from "#/app/(homepage)/clinical-feature-card";
-import { HubCoordinatorView } from "#/app/(homepage)/hub-coordinator-view";
-import { Header } from "#/app/(homepage)/common";
+import { cn } from "#/lib/utils";
 
 export default async function HomePage() {
   const user = await fetchAuthedUser();
@@ -29,7 +29,7 @@ function SupervisorView() {
         <Separator />
       </div>
 
-      <h3 className="font-semibold text-base xl:text-2xl text-brand mt-4">
+      <h3 className="mt-4 text-base font-semibold text-brand xl:text-2xl">
         Recently opened
       </h3>
       <div className="mt-4">
@@ -41,7 +41,7 @@ function SupervisorView() {
 
 function OverviewCards() {
   return (
-    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 mb-4">
+    <div className="mb-4 grid grid-cols-1 gap-4 xs:grid-cols-2 sm:grid-cols-3 sm:gap-6">
       <FeatureCard
         href="/fellows"
         title="Fellows"
@@ -72,16 +72,16 @@ function FeatureCard({
 }) {
   return (
     <Link href={href} className="h-full">
-      <Card className="px-6 py-3 flex flex-col gap-5 bg-active-card h-full">
-        <div className="h-full flex flex-col justify-between py-2">
-          <div className="flex align-middle items-center">
-            <Icon className="h-4 w-4 xl:h-7 xl:w-7 text-active-card-foreground mr-4" />
-            <h3 className="font-semibold text-base xl:font-medium xl:text-2xl text-active-card-foreground">
+      <Card className="flex h-full flex-col gap-5 bg-active-card px-6 py-3">
+        <div className="flex h-full flex-col justify-between py-2">
+          <div className="flex items-center align-middle">
+            <Icon className="mr-4 h-4 w-4 text-active-card-foreground xl:h-7 xl:w-7" />
+            <h3 className="text-base font-semibold text-active-card-foreground xl:text-2xl xl:font-medium">
               {title}
             </h3>
           </div>
           <div>
-            <p className="text-active-card-foreground-accent text-7xl font-bold">
+            <p className="text-7xl font-bold text-active-card-foreground-accent">
               {stat}
             </p>
           </div>
@@ -134,33 +134,33 @@ function SchoolsList() {
   const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xl:grid-cols-3  sm:gap-6">
+    <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2  xl:grid-cols-3">
       {/* <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6"> */}
       {schools.map((school) => (
-        <Card key={school.name} className="p-5 pr-3.5 flex flex-col gap-5">
+        <Card key={school.name} className="flex flex-col gap-5 p-5 pr-3.5">
           <div>
             <Icons.school className="h-10 text-brand" />
           </div>
           <div className="flex items-center gap-4 border-b border-border/50 pb-3">
-            <h3 className="font-semibold text-base text-brand">
+            <h3 className="text-base font-semibold text-brand">
               {school.name}
             </h3>
             <Separator orientation={"vertical"} />
             <div className="flex flex-col gap-[1px]">
-              <p className="font-semibold text-base text-brand">
+              <p className="text-base font-semibold text-brand">
                 {school.population}
               </p>
-              <p className="text-xs text-muted-foreground font-medium">
+              <p className="text-xs font-medium text-muted-foreground">
                 Students
               </p>
             </div>
           </div>
 
-          <div className="flex gap-2 justify-between">
+          <div className="flex justify-between gap-2">
             <div className="flex gap-3">
               {sessionTypes.map((sessiontype) => (
                 <div key={sessiontype} className="flex flex-col items-center">
-                  <p className="text-xs text-muted-foreground font-medium">
+                  <p className="text-xs font-medium text-muted-foreground">
                     {sessiontype}
                   </p>
                   <div
@@ -172,9 +172,9 @@ function SchoolsList() {
                 </div>
               ))}
             </div>
-            <Button className="bg-shamiri-blue text-white flex gap-1 hover:bg-shamiri-blue-darker">
+            <Button className="flex gap-1 bg-shamiri-blue text-white hover:bg-shamiri-blue-darker">
               <Icons.users className="h-4 w-4" />
-              <p className="text-sm whitespace-nowrap">
+              <p className="whitespace-nowrap text-sm">
                 {school.fellowsCount} Fellows
               </p>
             </Button>

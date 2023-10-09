@@ -1,28 +1,29 @@
-import * as React from "react";
 import {
-  type LucideIcon,
-  LucideProps,
-  Moon,
-  SunMedium,
-  Check,
-  ChevronsUpDown,
-  ChevronLeft,
-  GraduationCap,
-  Users2,
-  ListTodo,
   Backpack,
-  Settings,
-  ChevronDown,
-  ChevronRight,
-  Search,
-  LayoutDashboard,
-  ClipboardList,
-  GraduationCapIcon,
   Banknote,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  ClipboardList,
+  GraduationCap,
+  GraduationCapIcon,
+  LayoutDashboard,
+  ListTodo,
+  LucideProps,
+  Mail,
+  Moon,
   Network,
-  Smile,
   PieChart,
+  Search,
+  Settings,
+  Smile,
+  SunMedium,
+  Users2,
+  type LucideIcon,
 } from "lucide-react";
+import * as React from "react";
 
 import { cn } from "#/lib/utils";
 
@@ -48,11 +49,12 @@ export const Icons = {
   banknote: Banknote,
   network: Network,
   pieChart: PieChart,
+  mail: Mail,
   logo: ({ className, ...props }: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 608.82 76.82"
-      className={cn("fill-brand", className)}
+      className={cn("fill-sky-600", className)}
       {...props}
     >
       <g>
@@ -650,6 +652,17 @@ export const Icons = {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  ),
+  google: ({ className, ...props }: LucideProps) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 488 512"
+      fill="currentColor"
+      {...props}
+      className={className}
+    >
+      <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
     </svg>
   ),
 };

@@ -1,12 +1,11 @@
-import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-import { cn } from "#/lib/utils";
-import { type Icon, Icons } from "#/components/icons";
-import { ProfileSwitcher } from "#/components/profile-switcher";
-import { ThemeToggle } from "#/components/theme-provider";
-import { Separator } from "#/components/ui/separator";
 import { fetchAuthedUser } from "#/app/auth";
+import { Icons, type Icon } from "#/components/icons";
+import { ProfileSwitcher } from "#/components/profile-switcher";
+import { Separator } from "#/components/ui/separator";
+import { cn } from "#/lib/utils";
 
 export const navigation: Array<any> = [];
 
@@ -25,12 +24,12 @@ function NavItem({
       <Link
         href={href}
         className={cn(
-          "flex items-center gap-6 lg:gap-2 p-1.5 rounded-sm",
-          "text-base lg:text-[1rem] leading-5 lg:font-medium",
+          "flex items-center gap-6 rounded-sm p-1.5 lg:gap-2",
+          "text-base leading-5 lg:text-[1rem] lg:font-medium",
           "hover:bg-foreground/[0.025]",
           {
             "bg-foreground/[0.025]": pathname === href,
-          }
+          },
         )}
       >
         <Icon className="h-6 w-6 lg:h-9 lg:w-6" />
@@ -46,10 +45,10 @@ export function Navigation({
 }: React.ComponentPropsWithoutRef<"nav">) {
   return (
     <div
-      className={cn("flex flex-col justify-between h-full", className)}
+      className={cn("flex h-full flex-col justify-between", className)}
       {...props}
     >
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-1 flex-col">
         <HubCoordinatorNavigation />
       </div>
       <div>
@@ -57,22 +56,22 @@ export function Navigation({
           {/* TODO: https://ui.shadcn.com/docs/components/accordion */}
           <button
             className={cn(
-              "w-full flex items-center gap-6 lg:gap-2 p-1.5 rounded-sm",
-              "text-sm leading-5 lg:font-medium text-secondary-foreground",
-              "hover:bg-foreground/[0.025]"
+              "flex w-full items-center gap-6 rounded-sm p-1.5 lg:gap-2",
+              "text-sm leading-5 text-secondary-foreground lg:font-medium",
+              "hover:bg-foreground/[0.025]",
             )}
           >
             <Icons.settings className="h-6 lg:h-9" strokeWidth={1.5} />
-            <div className="flex justify-between items-center w-full">
+            <div className="flex w-full items-center justify-between">
               <span>Settings</span>
               <Icons.chevronDown
-                className="text-foreground/50 h-4 lg:h-5"
+                className="h-4 text-foreground/50 lg:h-5"
                 strokeWidth={1.5}
               />
             </div>
           </button>
 
-          <ThemeToggle>
+          {/* <ThemeToggle>
             <button
               className={cn(
                 "w-full flex items-center gap-6 lg:gap-2 p-1.5 rounded-sm",
@@ -85,7 +84,7 @@ export function Navigation({
                 <span>Light theme</span>
               </div>
             </button>
-          </ThemeToggle>
+          </ThemeToggle> */}
         </div>
         <Separator />
         <div>
