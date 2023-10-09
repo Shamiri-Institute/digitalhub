@@ -1,7 +1,7 @@
-import { db, Database } from "#/lib/db";
 import { OnboardOrganizationCommand } from "#/commands/onboard-organization";
 import { OnboardUserCommand } from "#/commands/onboard-user";
-
+import { objectId } from "#/lib/crypto";
+import { Database, db } from "#/lib/db";
 import fixtures from "./fixtures";
 
 async function seedDatabase() {
@@ -107,10 +107,25 @@ async function createUsers(db: Database) {
 
 async function createHubs(db: Database) {
   for (let hub of fixtures.hubs) {
+    let coordinator: any = null;
+    if (hub.hubCoordinatorByEmail) {
+      coordinator = await db.user.findFirstOrThrow({
+        where: { email: hub.hubCoordinatorByEmail },
+        include: {
+          memberships: true,
+        },
+      });
+    }
     await db.hub.create({
       data: {
+        id: objectId("hub"),
         visibleId: hub.visibleId,
         hubName: hub.hubName,
+        coordinator: hub.hubCoordinatorByEmail
+          ? {
+              connect: { id: coordinator?.memberships[0].id },
+            }
+          : undefined,
       },
     });
   }
