@@ -11,6 +11,7 @@ async function seedDatabase() {
   await createPermissions(db);
   await createRoles(db);
   await createUsers(db);
+  await createHubs(db);
 }
 
 seedDatabase()
@@ -100,6 +101,17 @@ async function createUsers(db: Database) {
       inviterId: "system",
       role: user.organizationRole,
       avatarUrl: user.avatarUrl,
+    });
+  }
+}
+
+async function createHubs(db: Database) {
+  for (let hub of fixtures.hubs) {
+    await db.hub.create({
+      data: {
+        name: hub.name,
+        organizationId: hub.organizationId,
+      },
     });
   }
 }
