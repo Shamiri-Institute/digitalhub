@@ -212,18 +212,18 @@ model School {
 }
 
 model Hub {
-  id          String             @id @db.VarChar(255)
-  createdAt   DateTime           @default(now()) @map("created_at")
-  updatedAt   DateTime           @updatedAt @map("updated_at")
-  archivedAt  DateTime?          @map("archived_at")
-  visibleId   String             @unique @map("visible_id")
-  hubName     String             @map("hub_name")
-  memberId    Int                @map("member_id")
-  member      OrganizationMember @relation(fields: [memberId], references: [id])
-  fellows     Fellow[]
-  supervisors Supervisor[]
-  schools     School[]
-  students    Student[]
+  id            String              @id @db.VarChar(255)
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  archivedAt    DateTime?           @map("archived_at")
+  visibleId     String              @unique @map("visible_id")
+  hubName       String              @map("hub_name")
+  coordinatorId Int?                @map("coordinator_id")
+  coordinator   OrganizationMember? @relation(fields: [coordinatorId], references: [id])
+  fellows       Fellow[]
+  supervisors   Supervisor[]
+  schools       School[]
+  students      Student[]
 
   @@map("hubs")
 }
