@@ -1,5 +1,5 @@
 import { SessionUser } from "#/app/api/auth/[...nextauth]/route";
-import NextAuth from "next-auth";
+import "next-auth";
 
 declare module "next-auth" {
   /**

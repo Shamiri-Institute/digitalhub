@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { getServerSession } from "next-auth";
+import { Inter } from "next/font/google";
 
-import { cn } from "#/lib/utils";
 import { Providers } from "#/components/providers";
-import { Layout } from "#/components/layout";
+import { cn } from "#/lib/utils";
 
 import "./globals.css";
 
@@ -29,9 +28,7 @@ export default async function RootLayout({
     <html lang="en" className="h-full">
       <body className={cn(inter.className, "flex min-h-full antialiased")}>
         <Providers session={session}>
-          <div className="w-full">
-            <Layout>{children}</Layout>
-          </div>
+          <div className="w-full">{children}</div>
         </Providers>
       </body>
     </html>

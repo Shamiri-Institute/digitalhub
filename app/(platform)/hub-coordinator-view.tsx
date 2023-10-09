@@ -1,17 +1,15 @@
 "use client";
 
-import * as React from "react";
-
+import { Header } from "#/app/(platform)/common";
+import { batchUploadFellows } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
-import { batchUploadFellows } from "#/app/actions";
-import { Header } from "#/app/(homepage)/common";
 
 export function HubCoordinatorView() {
   return (
     <div>
       <Header />
-      <div className="max-w-fit my-5 xl:mt-10">
+      <div className="my-5 max-w-fit xl:mt-10">
         <FellowsBatchUploader />
       </div>
     </div>
@@ -21,11 +19,11 @@ export function HubCoordinatorView() {
 function FellowsBatchUploader() {
   return (
     <form action={batchUploadFellows}>
-      <label className="border border-border rounded-xl px-6 py-6 flex flex-col gap-4">
+      <label className="flex flex-col gap-4 rounded-xl border border-border px-6 py-6">
         <div className="text-muted-foreground">
           The file you upload must be a CSV file with exactly the following
           columns:
-          <ul className="list-disc list-inside">
+          <ul className="list-inside list-disc">
             <li>
               <code>Name</code>
             </li>

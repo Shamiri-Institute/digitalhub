@@ -1,8 +1,8 @@
 import { NextFetchEvent, NextRequest } from "next/server";
 
 import { APP_HOSTNAMES } from "#/lib/constants";
-import { parse } from "#/lib/middleware/utils";
 import AppMiddleware from "#/lib/middleware/app";
+import { parse } from "#/lib/middleware/utils";
 
 export const config = {
   matcher: [

@@ -216,8 +216,8 @@ model Hub {
   createdAt     DateTime            @default(now()) @map("created_at")
   updatedAt     DateTime            @updatedAt @map("updated_at")
   archivedAt    DateTime?           @map("archived_at")
-  visibleId     String              @unique @map("visible_id")
-  hubName       String              @map("hub_name")
+  visibleId     String              @unique @map("visible_id") @db.VarChar(10)
+  hubName       String              @map("hub_name") @db.VarChar(255)
   coordinatorId Int?                @map("coordinator_id")
   coordinator   OrganizationMember? @relation(fields: [coordinatorId], references: [id])
   fellows       Fellow[]
