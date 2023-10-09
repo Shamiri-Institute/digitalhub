@@ -26,29 +26,34 @@ const fixtures = {
       hubCoordinatorByEmail: "chrispinus@shamiri.institute",
     },
     {
+      visibleId: "23_HUB_06",
+      hubName: "Kisumu",
+      hubCoordinatorByEmail: "paul@shamiri.institute",
+    },
+    {
       visibleId: "Partner",
       hubName: "Partner",
-      hubCoordinatorByEmail: "paul@shamiri.institute",
+      hubCoordinatorByEmail: null,
     },
     {
       visibleId: "HQ_2022",
       hubName: "All",
-      hubCoordinatorByEmail: "ruiru@shamiri.institute",
+      hubCoordinatorByEmail: null,
     },
     {
       visibleId: "HQ_2021",
       hubName: "All",
-      hubCoordinatorByEmail: "ruiru@shamiri.institute",
+      hubCoordinatorByEmail: null,
     },
     {
       visibleId: "HQ_2019",
       hubName: "All",
-      hubCoordinatorByEmail: "ruiru@shamiri.institute",
+      hubCoordinatorByEmail: null,
     },
     {
       visibleId: "HQ_2018",
       hubName: "All",
-      hubCoordinatorByEmail: "ruiru@shamiri.institute",
+      hubCoordinatorByEmail: null,
     },
   ],
   organizations: [
