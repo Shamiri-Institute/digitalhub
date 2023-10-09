@@ -109,8 +109,8 @@ async function createHubs(db: Database) {
   for (let hub of fixtures.hubs) {
     await db.hub.create({
       data: {
-        name: hub.name,
-        organizationId: hub.organizationId,
+        visibleId: hub.visibleId,
+        hubName: hub.hubName,
       },
     });
   }
