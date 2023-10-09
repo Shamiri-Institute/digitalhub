@@ -1,12 +1,12 @@
 "use client";
 
-import * as React from "react";
 import { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
+import * as React from "react";
 
-import { TooltipProvider } from "#/components/ui/tooltip";
 import { ThemeProvider } from "#/components/theme-provider";
-import { Toaster } from "#/components/ui/toaster";
+import { TooltipProvider } from "#/components/ui/tooltip";
+import { Toaster } from "sonner";
 
 export function Providers({
   session,
@@ -25,7 +25,7 @@ export function Providers({
       >
         <TooltipProvider>
           {children}
-          <Toaster />
+          <Toaster closeButton />
         </TooltipProvider>
       </ThemeProvider>
     </SessionProvider>

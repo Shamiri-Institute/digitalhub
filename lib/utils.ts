@@ -1,4 +1,5 @@
-import { type ClassValue, clsx } from "clsx";
+import { clsx, type ClassValue } from "clsx";
+import { Metadata } from "next";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -10,4 +11,17 @@ export function getInitials(name: string): string {
   const firstInitial = words[0]?.charAt(0).toUpperCase() ?? "";
   const lastInitial = words[words.length - 1]?.charAt(0).toUpperCase() ?? "";
   return firstInitial + lastInitial;
+}
+
+export function constructMetadata({
+  title = "Shamiri Digital Hub ",
+  description = "The Shamiri Digital Hub is a platform for managing the Shamiri Intervention.",
+}: {
+  title?: string;
+  description?: string;
+} = {}): Metadata {
+  return {
+    title,
+    description,
+  };
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { ChevronDownIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
 import {
   ColumnDef,
@@ -14,7 +13,11 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import * as React from "react";
 
+import { Member } from "#/app/(platform)/settings/organization/members/page";
+import { Icons } from "#/components/icons";
+import { UserAvatar } from "#/components/ui/avatar";
 import { Button } from "#/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "#/components/ui/card";
 import {
@@ -25,12 +28,9 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { Input } from "#/components/ui/input";
 import { Table, TableBody, TableCell, TableRow } from "#/components/ui/table";
-import { Icons } from "#/components/icons";
-import { UserAvatar } from "#/components/ui/avatar";
 import { cn } from "#/lib/utils";
 import { RoleTypes } from "#/models/role";
 import { constants } from "#/tests/constants";
-import { Member } from "#/app/settings/organization/members/page";
 
 import { AddMemberDialog } from "./add-member-dialog";
 
@@ -48,19 +48,19 @@ const columns: ColumnDef<Member>[] = [
     cell: ({ row }) => {
       const { email, name, avatarUrl } = row.original;
       return (
-        <div className="whitespace-nowrap py-5 pr-3 text-sm flex">
+        <div className="flex whitespace-nowrap py-5 pr-3 text-sm">
           <div className="flex items-center overflow-hidden text-ellipsis">
-            <div className="h-[18px] w-[18px] sm:h-11 sm:w-11 flex-shrink-0">
+            <div className="h-[18px] w-[18px] flex-shrink-0 sm:h-11 sm:w-11">
               <UserAvatar
-                className="h-[18px] w-[18px] sm:h-11 sm:w-11 text-xs sm:text-"
+                className="sm:text- h-[18px] w-[18px] text-xs sm:h-11 sm:w-11"
                 src={avatarUrl || ""}
                 fallback={name}
                 fallbackClasses="text-[8px] sm:text-sm"
               />
             </div>
-            <div className="ml-4 md:ml-5 overflow-hidden text-ellipsis">
-              <div className="font-medium hidden sm:block">{name}</div>
-              <div className="overflow-hidden text-ellipsis sm:mt-1 sm:w-auto font-medium sm:font-normal sm:text-muted-foreground text-xs sm:text-sm">
+            <div className="ml-4 overflow-hidden text-ellipsis md:ml-5">
+              <div className="hidden font-medium sm:block">{name}</div>
+              <div className="overflow-hidden text-ellipsis text-xs font-medium sm:mt-1 sm:w-auto sm:text-sm sm:font-normal sm:text-muted-foreground">
                 {email}
               </div>
             </div>
@@ -75,7 +75,7 @@ const columns: ColumnDef<Member>[] = [
     cell: ({ row }) => {
       const { role } = row.original;
 
-      return <div className="text-primary/80 text-xs sm:text-sm">{role}</div>;
+      return <div className="text-xs text-primary/80 sm:text-sm">{role}</div>;
     },
   },
   {
@@ -108,7 +108,7 @@ const columns: ColumnDef<Member>[] = [
 export function MembersTable({ members }: { members: Member[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    [],
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -138,15 +138,15 @@ export function MembersTable({ members }: { members: Member[] }) {
   const tableCount = table.getRowModel().rows?.length ?? 0;
 
   return (
-    <Card className="bg-transparent border-none shadow-none">
+    <Card className="border-none bg-transparent shadow-none">
       <CardHeader className="p-0">
         <CardTitle className="text-base">Manage members</CardTitle>
       </CardHeader>
-      <CardContent className="p-0 bg-transparent">
-        <div className="mb-4 pt-2 flex items-center gap-4">
-          <div className="md:max-w-sm flex w-full relative">
-            <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-              <Icons.search className="h-3 w-3 md:h-4 md:w-4 text-foreground/50" />
+      <CardContent className="bg-transparent p-0">
+        <div className="mb-4 flex items-center gap-4 pt-2">
+          <div className="relative flex w-full md:max-w-sm">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
+              <Icons.search className="h-3 w-3 text-foreground/50 md:h-4 md:w-4" />
             </div>
             <Input
               placeholder="Search by name or email"
@@ -156,17 +156,17 @@ export function MembersTable({ members }: { members: Member[] }) {
               onChange={(event) =>
                 table.getColumn("display")?.setFilterValue(event.target.value)
               }
-              className="pl-6 md:pl-8 max-w-sm bg-card text-[0.8125rem] md:text-sm"
+              className="max-w-sm bg-card pl-6 text-[0.8125rem] md:pl-8 md:text-sm"
             />
             <div className="ml-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="ml-auto whitespace-nowrap text-[0.8125rem] md:text-sm px-2 py-1.5 md:px-4 md:py-2 font-medium"
+                    className="ml-auto whitespace-nowrap px-2 py-1.5 text-[0.8125rem] font-medium md:px-4 md:py-2 md:text-sm"
                   >
                     {roleFilter}{" "}
-                    <ChevronDownIcon className="ml-1 md:ml-2 h-4 w-4" />
+                    <ChevronDownIcon className="ml-1 h-4 w-4 md:ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -195,12 +195,12 @@ export function MembersTable({ members }: { members: Member[] }) {
               </DropdownMenu>
             </div>
           </div>
-          <div className="flex md:w-full justify-end">
+          <div className="flex justify-end md:w-full">
             <AddMemberDialog>
               <Button
                 active="scale"
                 variant="brand"
-                className="h-9 px-3.5 md:px-4 font-medium whitespace-nowrap text-[0.8125rem] md:text-md"
+                className="md:text-md h-9 whitespace-nowrap px-3.5 text-[0.8125rem] font-medium md:px-4"
                 data-testid={constants.ADD_MEMBERS_BUTTON}
               >
                 Add member
@@ -209,7 +209,7 @@ export function MembersTable({ members }: { members: Member[] }) {
           </div>
         </div>
         <div className="mt-8">
-          <div className="my-2 flex-1 font-medium text-sm text-foreground lowercase">
+          <div className="my-2 flex-1 text-sm font-medium lowercase text-foreground">
             {tableCount} {getOptionDisplayName(roleFilter, tableCount)}
           </div>
           <Table>
@@ -218,18 +218,18 @@ export function MembersTable({ members }: { members: Member[] }) {
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className="grid grid-cols-[7fr_3fr_2fr] gap-x-4 items-center"
+                    className="grid grid-cols-[7fr_3fr_2fr] items-center gap-x-4"
                   >
                     {row.getVisibleCells().map((cell, idx) => (
                       <TableCell
                         key={cell.id}
-                        className={cn("p-0 flex-1 md:px-px", {
+                        className={cn("flex-1 p-0 md:px-px", {
                           "overflow-hidden text-ellipsis": idx === 0,
                         })}
                       >
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}
@@ -255,7 +255,7 @@ export function MembersTable({ members }: { members: Member[] }) {
 
 function getOptionDisplayName(
   name: (typeof MemberRolesOrStateList)[number],
-  count: number
+  count: number,
 ) {
   let displayName: (typeof MemberRolesOrStateList)[number] = name.toLowerCase();
   if (displayName === "all") {
