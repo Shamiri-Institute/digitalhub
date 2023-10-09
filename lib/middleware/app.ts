@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { NextRequest, NextResponse } from "next/server";
 
 import { parse } from "#/lib/middleware/utils";
 
@@ -10,10 +10,12 @@ export default async function AppMiddleware(req: NextRequest) {
     return NextResponse.redirect(
       new URL(
         `/login${path !== "/" ? `?next=${encodeURIComponent(path)}` : ""}`,
-        req.url
-      )
+        req.url,
+      ),
     );
   } else if (session?.email) {
-    return NextResponse.redirect(new URL("/", req.url));
+    if (path === "/login" || path === "/register") {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
   }
 }

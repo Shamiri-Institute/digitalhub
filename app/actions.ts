@@ -1,11 +1,11 @@
 "use server";
 
+import * as csv from "csv-parse";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import * as csv from "csv-parse";
 
-import { db } from "#/lib/db";
 import { InviteUserCommand } from "#/commands/invite-user";
+import { db } from "#/lib/db";
 
 export async function inviteUserToOrganization(prevState: any, formData: any) {
   const data = z
@@ -32,7 +32,7 @@ export async function inviteUserToOrganization(prevState: any, formData: any) {
       roleId: data.role,
     });
   });
-  await Promise.all(invitations);
+  await Promise.allSettled(invitations);
 
   revalidatePath("/admin/organization/members");
 }

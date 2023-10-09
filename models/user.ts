@@ -1,8 +1,8 @@
 import { Prisma } from "@prisma/client";
 
-import { Model } from "#/models";
-import type { db } from "#/lib/db";
 import { SessionUser } from "#/app/api/auth/[...nextauth]/route";
+import type { db } from "#/lib/db";
+import { Model } from "#/models";
 
 type UserCreateOutput = Prisma.PromiseReturnType<typeof db.user.create>;
 type UserFindUniqueOutput = Prisma.PromiseReturnType<typeof db.user.findUnique>;
@@ -46,7 +46,7 @@ export class UserModel extends Model {
   }
 
   async create(
-    data: Omit<Prisma.UserCreateInput, "id">
+    data: Omit<Prisma.UserCreateInput, "id">,
   ): Promise<UserCreateOutput> {
     return await this.cursor.user.create({
       data: {
