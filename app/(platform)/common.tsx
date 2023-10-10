@@ -5,7 +5,6 @@ import { Icons } from "#/components/icons";
 
 export function Header() {
   const session = useSession();
-  console.log({ session: session.data?.user.name });
 
   return (
     <header className="mb-4">

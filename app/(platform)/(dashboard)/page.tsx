@@ -13,7 +13,7 @@ import { cn } from "#/lib/utils";
 export default async function HomePage() {
   const user = await fetchAuthedUser();
 
-  if (user.isRole("hub-coordinator")) return <HubCoordinatorView />;
+  if (true || user.isRole("hub-coordinator")) return <HubCoordinatorView />;
 
   return <SupervisorView />;
 }
