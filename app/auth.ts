@@ -29,7 +29,7 @@ export async function fetchAuthedUser() {
 // TODO: dummy values, use auth/cookies to pull this info
 async function fetchCurrentUser(): Promise<CurrentUser | null> {
   const user = await db.user.findFirst({
-    where: { email: "edmund@shamiri.institute" },
+    where: { email: "jackline@shamiri.institute" },
     select: {
       email: true,
       name: true,

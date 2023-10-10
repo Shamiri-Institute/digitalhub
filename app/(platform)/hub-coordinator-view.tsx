@@ -20,6 +20,14 @@ function FellowsBatchUploader() {
   return (
     <form action={batchUploadFellows}>
       <label className="flex flex-col gap-4 rounded-xl border border-border px-6 py-6">
+        <div>
+          <h3 className="text-xl font-semibold text-brand">
+            Upload fellows in bulk
+          </h3>
+          <p className="text-muted-foreground">
+            Upload a CSV file to add fellows in bulk.
+          </p>
+        </div>
         <div className="text-muted-foreground">
           The file you upload must be a CSV file with exactly the following
           columns:
