@@ -1,22 +1,22 @@
-import * as React from "react";
 import {
-  Html,
-  Head,
   Body,
   Container,
-  Section,
+  Head,
   Heading,
+  Html,
   Img,
-  Text,
   Link,
-  Tailwind,
   Preview,
+  Section,
+  Tailwind,
+  Text,
 } from "@react-email/components";
+import * as React from "react";
 
 import { SDH_HERO_IMAGE, SDH_LOGO_BANNER } from "../lib/constants";
 import Footer from "./components/footer";
 
-export default function OrganizationWelcomer({
+export default function ImplementorWelcomer({
   email = "dmndetei@amhf.or.ke",
   name = "Africa Mental Health Training and Research Foundation",
   preview = "Africa Mental Health Training and Research Foundation joins Shamiri Digital Hub!",
@@ -24,7 +24,7 @@ export default function OrganizationWelcomer({
   email: string;
   name: string;
   preview: string;
-}) {
+}): React.ReactElement {
   return (
     <Html>
       <Head />
