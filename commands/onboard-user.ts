@@ -1,14 +1,14 @@
 import { z } from "zod";
 
-import { db as database, Database } from "#/lib/db";
-import { OrganizationModel } from "#/models/organization";
-import { UserModel } from "#/models/user";
 import { Command } from "#/commands";
+import { db as database, Database } from "#/lib/db";
+import { ImplementorModel } from "#/models/implementor";
+import { UserModel } from "#/models/user";
 
 interface OnboardUserInput {
   email: string;
   name: string;
-  organizationId: string;
+  implementorId: string;
   inviterId: string;
   role: string;
   avatarUrl?: string;
@@ -19,7 +19,7 @@ interface OnboardUserOutput {
 }
 
 export class InviterNotFoundError extends Error {}
-export class OrganizationNotFoundError extends Error {}
+export class ImplementorNotFoundError extends Error {}
 
 export class OnboardUserCommand extends Command<
   OnboardUserInput,
@@ -37,7 +37,7 @@ export class OnboardUserCommand extends Command<
       .object({
         email: z.string().email(),
         name: z.string().min(1).max(100),
-        organizationId: z.string(),
+        implementorId: z.string(),
         inviterId: z.string(),
         role: z.string(),
       })
@@ -54,11 +54,11 @@ export class OnboardUserCommand extends Command<
         name: validInput.name,
       });
 
-      const organization = await new OrganizationModel(tx).findUnique(
-        validInput.organizationId
+      const implementor = await new ImplementorModel(tx).findUnique(
+        validInput.implementorId,
       );
-      if (!organization) {
-        throw new OrganizationNotFoundError();
+      if (!implementor) {
+        throw new ImplementorNotFoundError();
       }
 
       const role = await tx.role.findFirst({
@@ -68,9 +68,9 @@ export class OnboardUserCommand extends Command<
         throw new Error(`Role ${input.role} not found`);
       }
 
-      const membership = await tx.organizationMember.create({
+      const membership = await tx.implementorMember.create({
         data: {
-          organizationId: organization.id,
+          implementorId: implementor.id,
           userId: user.id,
         },
       });
@@ -82,7 +82,7 @@ export class OnboardUserCommand extends Command<
         },
       });
 
-      return { user, organization };
+      return { user, implementor };
     });
 
     // Run something like this when user signs up and we can pull avatar from google login / etc

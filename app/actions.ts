@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { InviteUserCommand } from "#/commands/invite-user";
 import { db } from "#/lib/db";
+import { redirect } from "next/navigation";
 
 export async function inviteUserToOrganization(prevState: any, formData: any) {
   const data = z
@@ -53,6 +54,7 @@ export async function batchUploadFellows(formData: FormData) {
   const records = await parseCsvFile(file);
 
   // TODO: fin
+  redirect("/supervisors/assignments/fellows");
 }
 
 const BATCH_FELLOW_CSV_HEADERS = [

@@ -7,58 +7,60 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Organization {
-  id           String               @id @db.VarChar(255)
-  name         String               @unique
-  createdAt    DateTime             @default(now()) @map("created_at")
-  updatedAt    DateTime             @updatedAt @map("updated_at")
-  archivedAt   DateTime?            @map("archived_at")
-  contactEmail String               @map("contact_email")
-  memberships  OrganizationMember[]
-  avatar       OrganizationAvatar?
-  invites      OrganizationInvite[]
+model Implementor {
+  id           String              @id @db.VarChar(255)
+  name         String              @unique
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+  archivedAt   DateTime?           @map("archived_at")
+  contactEmail String              @map("contact_email")
+  memberships  ImplementorMember[]
+  avatar       ImplementorAvatar?
+  invites      ImplementorInvite[]
+  fellows      Fellow[]
+  hubs         Hub[]
 
-  @@map("organizations")
+  @@map("implementors")
 }
 
-model OrganizationAvatar {
-  id             String       @id @db.VarChar(255)
-  organizationId String       @unique @map("organization_id")
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  fileId         String       @unique @map("file_id")
-  file           File         @relation(fields: [fileId], references: [id])
+model ImplementorAvatar {
+  id            String      @id @db.VarChar(255)
+  implementorId String      @unique @map("implementor_id")
+  implementor   Implementor @relation(fields: [implementorId], references: [id])
+  fileId        String      @unique @map("file_id")
+  file          File        @relation(fields: [fileId], references: [id])
 
-  @@map("organization_avatars")
+  @@map("implementor_avatars")
 }
 
 model File {
-  id                 String              @id @db.VarChar(255)
-  createdAt          DateTime            @default(now()) @map("created_at")
-  updatedAt          DateTime            @updatedAt @map("updated_at")
-  archivedAt         DateTime?           @map("archived_at")
-  key                String              @map("key")
-  fileName           String              @map("file_name")
-  byteSize           Int                 @map("byte_size")
-  contentType        String              @map("content_type")
-  width              Int?
-  height             Int?
-  signedUrl          String?             @map("signed_url") @db.VarChar(2048)
-  expiresAt          DateTime?           @map("expires_at")
-  organizationAvatar OrganizationAvatar?
-  userAvatar         UserAvatar?
+  id                String             @id @db.VarChar(255)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  archivedAt        DateTime?          @map("archived_at")
+  key               String             @map("key")
+  fileName          String             @map("file_name")
+  byteSize          Int                @map("byte_size")
+  contentType       String             @map("content_type")
+  width             Int?
+  height            Int?
+  signedUrl         String?            @map("signed_url") @db.VarChar(2048)
+  expiresAt         DateTime?          @map("expires_at")
+  implementorAvatar ImplementorAvatar?
+  userAvatar        UserAvatar?
 
   @@map("files")
 }
 
 model User {
-  id          String               @id @db.VarChar(255)
-  email       String               @unique
-  name        String               @db.VarChar(100)
-  createdAt   DateTime             @default(now()) @map("created_at")
-  updatedAt   DateTime             @updatedAt @map("updated_at")
-  archivedAt  DateTime?            @map("archived_at")
+  id          String              @id @db.VarChar(255)
+  email       String              @unique
+  name        String              @db.VarChar(100)
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  archivedAt  DateTime?           @map("archived_at")
   avatar      UserAvatar?
-  memberships OrganizationMember[]
+  memberships ImplementorMember[]
   recentOpens UserRecentOpen[]
 
   @@map("users")
@@ -85,52 +87,53 @@ model UserAvatar {
   @@map("user_avatars")
 }
 
-model OrganizationMember {
-  id             Int                @id @default(autoincrement())
-  organizationId String             @map("organization_id") @db.VarChar(255)
-  organization   Organization       @relation(fields: [organizationId], references: [id])
-  userId         String             @map("user_id") @db.VarChar(255)
-  user           User               @relation(fields: [userId], references: [id])
-  roles          MemberRole[]
-  permissions    MemberPermission[]
-  Hub            Hub[]
+model ImplementorMember {
+  id            Int                @id @default(autoincrement())
+  implementorId String             @map("implementor_id") @db.VarChar(255)
+  implementor   Implementor        @relation(fields: [implementorId], references: [id])
+  userId        String             @map("user_id") @db.VarChar(255)
+  user          User               @relation(fields: [userId], references: [id])
+  roles         MemberRole[]
+  permissions   MemberPermission[]
+  hubs          Hub[]
+  supervisors   Supervisor[]
 
-  @@map("organization_members")
+  @@map("implementor_members")
 }
 
-model OrganizationInvite {
-  id             Int          @id @default(autoincrement())
-  email          String
-  organizationId String       @map("organization_id") @db.VarChar(255)
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  sentAt         DateTime     @default(now()) @map("sent_at")
-  expiresAt      DateTime     @map("expires_at")
-  acceptedAt     DateTime?    @map("accepted_at")
-  roleId         String       @map("role_id") @db.VarChar(255)
-  role           Role         @relation(fields: [roleId], references: [id])
-  secureToken    String       @map("secure_token")
+model ImplementorInvite {
+  id            Int         @id @default(autoincrement())
+  email         String
+  implementorId String      @map("implementor_id") @db.VarChar(255)
+  implementor   Implementor @relation(fields: [implementorId], references: [id])
+  sentAt        DateTime    @default(now()) @map("sent_at")
+  expiresAt     DateTime    @map("expires_at")
+  acceptedAt    DateTime?   @map("accepted_at")
+  roleId        String      @map("role_id") @db.VarChar(255)
+  role          Role        @relation(fields: [roleId], references: [id])
+  secureToken   String      @map("secure_token")
 
-  @@unique([email, organizationId, secureToken])
-  @@map("organization_invites")
+  @@unique([email, implementorId, secureToken])
+  @@map("implementor_invites")
 }
 
 model Role {
-  id          String               @id @db.VarChar(255)
-  name        String               @db.VarChar(255)
-  description String               @db.VarChar(255)
+  id          String              @id @db.VarChar(255)
+  name        String              @db.VarChar(255)
+  description String              @db.VarChar(255)
   members     MemberRole[]
   permissions RolePermission[]
-  invites     OrganizationInvite[]
+  invites     ImplementorInvite[]
 
   @@map("roles")
 }
 
 model MemberRole {
-  id       Int                @id @default(autoincrement())
-  memberId Int                @map("member_id")
-  member   OrganizationMember @relation(fields: [memberId], references: [id])
-  roleId   String             @map("role_id") @db.VarChar(255)
-  role     Role               @relation(fields: [roleId], references: [id])
+  id       Int               @id @default(autoincrement())
+  memberId Int               @map("member_id")
+  member   ImplementorMember @relation(fields: [memberId], references: [id])
+  roleId   String            @map("role_id") @db.VarChar(255)
+  role     Role              @relation(fields: [roleId], references: [id])
 
   @@map("member_roles")
 }
@@ -155,11 +158,11 @@ model RolePermission {
 }
 
 model MemberPermission {
-  id           Int                @id @default(autoincrement())
-  memberId     Int                @map("member_id")
-  member       OrganizationMember @relation(fields: [memberId], references: [id])
-  permissionId Int                @map("permission_id")
-  permission   Permission         @relation(fields: [permissionId], references: [id])
+  id           Int               @id @default(autoincrement())
+  memberId     Int               @map("member_id")
+  member       ImplementorMember @relation(fields: [memberId], references: [id])
+  permissionId Int               @map("permission_id")
+  permission   Permission        @relation(fields: [permissionId], references: [id])
 
   @@map("member_permissions")
 }
@@ -176,26 +179,49 @@ model Student {
 }
 
 model Fellow {
-  id           String      @id @db.VarChar(255)
-  createdAt    DateTime    @default(now()) @map("created_at")
-  updatedAt    DateTime    @updatedAt @map("updated_at")
-  archivedAt   DateTime?   @map("archived_at")
-  hubId        String?     @map("hub_id") @db.VarChar(255)
-  hub          Hub?        @relation(fields: [hubId], references: [id])
-  supervisorId String?     @map("supervisor_id") @db.VarChar(255)
-  supervisor   Supervisor? @relation(fields: [supervisorId], references: [id])
+  id                   String       @id @db.VarChar(255)
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+  archivedAt           DateTime?    @map("archived_at")
+  hubId                String?      @map("hub_id") @db.VarChar(255)
+  hub                  Hub?         @relation(fields: [hubId], references: [id])
+  supervisorId         String?      @map("supervisor_id") @db.VarChar(255)
+  supervisor           Supervisor?  @relation(fields: [supervisorId], references: [id])
+  fellowName           String?      @map("fellow_name") @db.VarChar(255)
+  yearOfImplementation Int?         @map("year_of_implementation")
+  mpesaName            String?      @map("mpesa_name") @db.VarChar(255)
+  idNumber             String?      @map("id_number") @db.VarChar(255)
+  cellNumber           String?      @map("cell_number") @db.VarChar(255)
+  mpesaNumber          String?      @map("mpesa_number") @db.VarChar(255)
+  email                String?      @unique @map("email") @db.VarChar(255)
+  implementorId        String?      @map("implementor_id") @db.VarChar(255)
+  implementor          Implementor? @relation(fields: [implementorId], references: [id])
+  county               String?      @map("county") @db.VarChar(255)
+  subCounty            String?      @map("sub_county") @db.VarChar(255)
+  dateOfBirth          DateTime?    @map("date_of_birth")
+  gender               String?      @map("gender")
+  droppedOut           Boolean?     @map("dropped_out")
+  transferred          Boolean?     @map("transferred")
 
   @@map("fellows")
 }
 
 model Supervisor {
-  id         String    @id @db.VarChar(255)
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  archivedAt DateTime? @map("archived_at")
-  hubId      String    @map("hub_id") @db.VarChar(255)
-  hub        Hub       @relation(fields: [hubId], references: [id])
-  fellows    Fellow[]
+  id             String             @id @db.VarChar(255)
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+  archivedAt     DateTime?          @map("archived_at")
+  hubId          String             @map("hub_id") @db.VarChar(255)
+  hub            Hub                @relation(fields: [hubId], references: [id])
+  supervisorName String             @map("supervisor_name") @db.VarChar(255)
+  visibleId      String             @unique @map("visible_id") @db.VarChar(10)
+  idNumber       String?            @map("id_number") @db.VarChar(255)
+  cellNumber     String?            @map("cell_number") @db.VarChar(255)
+  mpesaNumber    String?            @map("mpesa_number") @db.VarChar(255)
+  email          String?            @unique @map("email") @db.VarChar(255)
+  memberId       Int?               @map("member_id")
+  member         ImplementorMember? @relation(fields: [memberId], references: [id])
+  fellows        Fellow[]
 
   @@map("supervisors")
 }
@@ -207,19 +233,22 @@ model School {
   archivedAt DateTime? @map("archived_at")
   hubId      String    @map("hub_id") @db.VarChar(255)
   hub        Hub       @relation(fields: [hubId], references: [id])
+  schoolName String    @map("school_name") @db.VarChar(255)
 
   @@map("schools")
 }
 
 model Hub {
-  id            String              @id @db.VarChar(255)
-  createdAt     DateTime            @default(now()) @map("created_at")
-  updatedAt     DateTime            @updatedAt @map("updated_at")
-  archivedAt    DateTime?           @map("archived_at")
-  visibleId     String              @unique @map("visible_id") @db.VarChar(10)
-  hubName       String              @map("hub_name") @db.VarChar(255)
-  coordinatorId Int?                @map("coordinator_id")
-  coordinator   OrganizationMember? @relation(fields: [coordinatorId], references: [id])
+  id            String             @id @db.VarChar(255)
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+  archivedAt    DateTime?          @map("archived_at")
+  visibleId     String             @unique @map("visible_id") @db.VarChar(10)
+  hubName       String             @map("hub_name") @db.VarChar(255)
+  coordinatorId Int?               @map("coordinator_id")
+  coordinator   ImplementorMember? @relation(fields: [coordinatorId], references: [id])
+  implementorId String             @map("implementor_id") @db.VarChar(255)
+  implementor   Implementor        @relation(fields: [implementorId], references: [id])
   fellows       Fellow[]
   supervisors   Supervisor[]
   schools       School[]

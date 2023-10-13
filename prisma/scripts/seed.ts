@@ -1,4 +1,4 @@
-import { OnboardOrganizationCommand } from "#/commands/onboard-organization";
+import { OnboardImplementorCommand } from "#/commands/onboard-implementor";
 import { OnboardUserCommand } from "#/commands/onboard-user";
 import { objectId } from "#/lib/crypto";
 import { Database, db } from "#/lib/db";
@@ -7,11 +7,12 @@ import fixtures from "./fixtures";
 async function seedDatabase() {
   await truncateTables();
   await createSystemUser(db);
-  await createOrganizations(db);
+  await createImplementors(db);
   await createPermissions(db);
   await createRoles(db);
   await createUsers(db);
   await createHubs(db);
+  // await createSupervisors(db);
 }
 
 seedDatabase()
@@ -26,7 +27,7 @@ seedDatabase()
 
 async function truncateTables() {
   await db.$executeRaw`
-  TRUNCATE TABLE organizations, organization_avatars, organization_invites, files, users, user_avatars, organization_members, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, supervisors, schools;
+  TRUNCATE TABLE implementors, implementor_avatars, implementor_invites, files, users, user_avatars, implementor_members, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, supervisors, schools;
   `;
 }
 
@@ -40,14 +41,14 @@ async function createSystemUser(db: Database) {
   });
 }
 
-async function createOrganizations(db: Database) {
-  const onboard = new OnboardOrganizationCommand(db);
-  for (let organization of fixtures.organizations) {
+async function createImplementors(db: Database) {
+  const onboard = new OnboardImplementorCommand(db);
+  for (let implementor of fixtures.implementors) {
     await onboard.run({
-      name: organization.name,
-      contactEmail: organization.contactEmail,
+      name: implementor.name,
+      contactEmail: implementor.contactEmail,
       inviterId: "system",
-      avatarUrl: organization.avatarUrl,
+      avatarUrl: implementor.avatarUrl,
     });
   }
 }
@@ -89,17 +90,17 @@ async function createRoles(db: Database) {
 
 async function createUsers(db: Database) {
   const onboard = new OnboardUserCommand(db);
-  for (let { organizationByEmail, ...user } of fixtures.users) {
-    const organization = await db.organization.findFirstOrThrow({
-      where: { contactEmail: organizationByEmail },
+  for (let { implementorByEmail, ...user } of fixtures.users) {
+    const implementor = await db.implementor.findFirstOrThrow({
+      where: { contactEmail: implementorByEmail },
     });
 
     await onboard.run({
       email: user.email,
       name: user.name,
-      organizationId: organization.id,
+      implementorId: implementor.id,
       inviterId: "system",
-      role: user.organizationRole,
+      role: user.implementorRole,
       avatarUrl: user.avatarUrl,
     });
   }
@@ -116,16 +117,51 @@ async function createHubs(db: Database) {
         },
       });
     }
+
+    const implementor = await db.implementor.findFirstOrThrow();
+
+    const coordinatorId = coordinator?.memberships[0].id;
+    const implementorId =
+      coordinator?.memberships[0].implementorId ?? implementor.id;
     await db.hub.create({
       data: {
         id: objectId("hub"),
         visibleId: hub.visibleId,
         hubName: hub.hubName,
-        coordinator: hub.hubCoordinatorByEmail
-          ? {
-              connect: { id: coordinator?.memberships[0].id },
-            }
-          : undefined,
+        coordinatorId: coordinatorId ?? null,
+        implementorId: implementorId ?? null,
+      },
+    });
+  }
+}
+
+async function createSupervisors(db: Database) {
+  for (let supervisor of fixtures.supervisors) {
+    const user = await db.user.findFirstOrThrow({
+      where: { email: supervisor.memberEmail },
+      include: {
+        memberships: {
+          include: { hubs: true },
+        },
+      },
+    });
+
+    console.log({ user: JSON.stringify(user) });
+    await db.supervisor.create({
+      data: {
+        id: objectId("sup"),
+        visibleId: supervisor.visibleId,
+        supervisorName: supervisor.name,
+        idNumber: supervisor.idNumber,
+        cellNumber: supervisor.cellNumber,
+        mpesaNumber: supervisor.mpesaNumber,
+        email: supervisor.email,
+        member: {
+          connect: { id: user.memberships[0]?.id },
+        },
+        hub: {
+          connect: { id: user.memberships[0]?.hubs[0]?.id },
+        },
       },
     });
   }
