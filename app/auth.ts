@@ -38,7 +38,7 @@ async function fetchCurrentUser(): Promise<CurrentUser | null> {
       },
       memberships: {
         select: {
-          organization: true,
+          implementor: true,
           roles: {
             select: { role: true },
           },
@@ -61,11 +61,11 @@ async function fetchCurrentUser(): Promise<CurrentUser | null> {
     email: user.email,
     name: user.name,
     // TODO: pull from separate cookie to allow switching orgs without logging out
-    activeOrgId: user.memberships[0]!.organization.id,
+    activeOrgId: user.memberships[0]!.implementor.id,
     organizations: user.memberships.map((m) => {
       return {
-        id: m.organization.id,
-        name: m.organization.name,
+        id: m.implementor.id,
+        name: m.implementor.name,
         roles: m.roles.map((r) => r.role),
       };
     }),

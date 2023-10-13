@@ -9,7 +9,12 @@ export function HubCoordinatorView() {
   return (
     <div>
       <Header />
-      <div className="my-5 max-w-fit xl:mt-10">
+      <div className="my-5 grid max-w-fit grid-cols-2 xl:mt-10">
+        {/* <div>
+          <Card>
+            <CardHeader>Supervisor Fellow Matching</CardHeader>
+          </Card>
+        </div> */}
         <FellowsBatchUploader />
       </div>
     </div>
