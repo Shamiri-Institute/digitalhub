@@ -1,4 +1,21 @@
-const fixtures = {
+interface Fixtures {
+  hubs: any[];
+  implementors: any[];
+  permissions: string[];
+  roles: any[];
+  users: any[];
+  supervisors: {
+    name: string;
+    visibleId: string;
+    idNumber: string | null;
+    cellNumber: string | null;
+    mpesaNumber: string | null;
+    email: string | null;
+    memberEmail: string;
+  }[];
+}
+
+const fixtures: Fixtures = {
   hubs: [
     {
       visibleId: "23_HUB_01",
@@ -56,7 +73,7 @@ const fixtures = {
       hubCoordinatorByEmail: null,
     },
   ],
-  organizations: [
+  implementors: [
     {
       name: "Team Shamiri",
       contactEmail: "team@shamiri.institute",
@@ -134,80 +151,202 @@ const fixtures = {
       name: "Tom Osborn",
       avatarUrl:
         "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/tom-osborn-headshot.jpeg",
-      organizationByEmail: "team@shamiri.institute",
-      organizationRole: "admin",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "admin",
     },
     {
       email: "mmbone@shamiri.institute",
       name: "Wendy Mmbone",
       avatarUrl:
         "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/wendy-mmbone-headshot.jpeg",
-      organizationByEmail: "team@shamiri.institute",
-      organizationRole: "researcher",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "researcher",
     },
     {
       email: "benny@shamiri.institute",
       name: "Benny H. Otieno",
       avatarUrl:
         "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/benny-h-otieno-headshot.jpeg",
-      organizationByEmail: "team@shamiri.institute",
-      organizationRole: "admin",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "admin",
     },
     {
       email: "linus@shamiri.institute",
       name: "Linus Wong",
-      organizationByEmail: "team@shamiri.institute",
-      organizationRole: "admin",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "admin",
     },
     {
       email: "edmund@shamiri.institute",
       name: "Edmund Korley",
-      organizationByEmail: "team@shamiri.institute",
-      organizationRole: "admin",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "admin",
     },
     {
       email: "dmndetei@amhf.or.ke",
       name: "Dennis Mndetei",
       avatarUrl:
         "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/david-ndetei-headshot.jpg",
-      organizationByEmail: "info@amhf.or.ke",
-      organizationRole: "admin",
+      implementorByEmail: "info@amhf.or.ke",
+      implementorRole: "admin",
     },
     {
       email: "jackline@shamiri.institute",
       name: "Jackline",
-      organizationByEmail: "team@shamiri.institute",
-      organizationRole: "hub-coordinator",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "hub-coordinator",
     },
     {
       email: "dennis@shamiri.institute",
       name: "Dennis",
-      organizationByEmail: "team@shamiri.institute",
-      organizationRole: "hub-coordinator",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "hub-coordinator",
     },
     {
       email: "mcgovarn@shamiri.institute",
       name: "McGovarn",
-      organizationByEmail: "team@shamiri.institute",
-      organizationRole: "hub-coordinator",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "hub-coordinator",
     },
     {
       email: "amanda@shamiri.institute",
       name: "Amanda",
-      organizationByEmail: "team@shamiri.institute",
-      organizationRole: "hub-coordinator",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "hub-coordinator",
     },
     {
       email: "chrispinus@shamiri.institute",
       name: "Chrispinus Misati",
-      organizationByEmail: "team@shamiri.institute",
-      organizationRole: "hub-coordinator",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "hub-coordinator",
     },
     {
       email: "paul@shamiri.institute",
       name: "Paul Okoth",
-      organizationByEmail: "team@shamiri.institute",
-      organizationRole: "hub-coordinator",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "hub-coordinator",
+    },
+    {
+      email: "ruth@shamiri.institute",
+      name: "Ruth Wangari",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "supervisor",
+    },
+    {
+      email: "symon@shamiri.institute",
+      name: "Symon Wangari",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "supervisor",
+    },
+    {
+      email: "veronicah@shamiri.institute",
+      name: "Veronicah Ngatia",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "supervisor",
+    },
+    {
+      email: "beverly@shamiri.institute",
+      name: "Beverly Mshai",
+      implementorByEmail: "team@shamiri.institute",
+      implementorRole: "supervisor",
+    },
+    {
+      email: "edwin@amhf.or.ke",
+      name: "Edwin Omari",
+      implementorByEmail: "info@amhf.or.ke",
+      implementorRole: "supervisor",
+    },
+    {
+      email: "hemstone@amhf.or.ke",
+      name: "Hemstone Mugala",
+      implementorByEmail: "info@amhf.or.ke",
+      implementorRole: "supervisor",
+    },
+    {
+      email: "grace@amhf.or.ke",
+      name: "Grace Mugo",
+      implementorByEmail: "info@amhf.or.ke",
+      implementorRole: "supervisor",
+    },
+    {
+      email: "rachel@amhf.or.ke",
+      name: "Rachel Kamau",
+      implementorByEmail: "info@amhf.or.ke",
+      implementorRole: "supervisor",
+    },
+  ],
+  supervisors: [
+    {
+      name: "Ruth Wangari",
+      visibleId: "SPV_001_21",
+      idNumber: null,
+      cellNumber: null,
+      mpesaNumber: null,
+      email: null,
+      memberEmail: "ruth@shamiri.institute",
+    },
+    {
+      name: "Symon Murage",
+      visibleId: "SPV_002_21",
+      idNumber: null,
+      cellNumber: null,
+      mpesaNumber: null,
+      email: null,
+      memberEmail: "ruth@shamiri.institute",
+    },
+    {
+      name: "Veronicah Ngatia",
+      visibleId: "SPV_003_21",
+      idNumber: null,
+      cellNumber: null,
+      mpesaNumber: null,
+      email: null,
+      memberEmail: "veronicah@shamiri.institute",
+    },
+    {
+      name: "Beverly Mshai",
+      visibleId: "SPV_001_22",
+      idNumber: null,
+      cellNumber: null,
+      mpesaNumber: null,
+      email: null,
+      memberEmail: "beverly@shamiri.institute",
+    },
+    {
+      name: "Edwin Omari",
+      visibleId: "SPV_M_001_22",
+      idNumber: null,
+      cellNumber: "717017355",
+      mpesaNumber: null,
+      email: null,
+      memberEmail: "edwin@amhf.or.ke",
+    },
+    {
+      name: "Hemstone Mugala",
+      visibleId: "SPV_M_002_22",
+      idNumber: null,
+      cellNumber: "726267020",
+      mpesaNumber: null,
+      email: null,
+      memberEmail: "hemstone@amhf.or.ke",
+    },
+    {
+      name: "Grace Mugo",
+      visibleId: "SPV_M_003_22",
+      idNumber: null,
+      cellNumber: "715044566",
+      mpesaNumber: null,
+      email: null,
+      memberEmail: "edwin@amhf.or.ke",
+    },
+    {
+      name: "Rachel Kamau",
+      visibleId: "SPV_M_004_22",
+      idNumber: null,
+      cellNumber: "723326656",
+      mpesaNumber: null,
+      email: null,
+      memberEmail: "edwin@amhf.or.ke",
     },
   ],
 };

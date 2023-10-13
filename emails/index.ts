@@ -1,5 +1,5 @@
-import React from "react";
 import { render } from "@react-email/render";
+import * as React from "react";
 
 import * as ses from "#/lib/ses";
 
@@ -43,6 +43,5 @@ export const sendEmail = async ({
     console.log("Not sending email in dev mode");
     console.log("Subject:", subject);
     console.log("To:", to);
-    console.log("HTML:", html);
   }
 };
