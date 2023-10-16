@@ -2,9 +2,6 @@ import NextAuth, { type AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
 
-import { db } from "#/lib/db";
-import { UserModel } from "#/models/user";
-
 const config = z
   .object({
     GOOGLE_ID: z.string(),
@@ -23,15 +20,15 @@ const authOptions: AuthOptions = {
       clientSecret: config.GOOGLE_SECRET,
     }),
   ],
-  callbacks: {
-    // async session({ session, user: sessionUser }) {
-    //   const user = await new UserModel(db).findCurrentUser(sessionUser.email);
-    //   session.user.email = sessionUser.email;
-    //   session.user.name = sessionUser.name ?? null;
-    //   session.user.avatarUrl = sessionUser.image ?? null;
-    //   return session;
-    // },
-  },
+  // callbacks: {
+  // async session({ session, user: sessionUser }) {
+  //   const user = await new UserModel(db).findCurrentUser(sessionUser.email);
+  //   session.user.email = sessionUser.email;
+  //   session.user.name = sessionUser.name ?? null;
+  //   session.user.avatarUrl = sessionUser.image ?? null;
+  //   return session;
+  // },
+  // },
 };
 
 const handler = NextAuth(authOptions);
