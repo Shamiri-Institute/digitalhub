@@ -27,7 +27,7 @@ seedDatabase()
 
 async function truncateTables() {
   await db.$executeRaw`
-  TRUNCATE TABLE implementors, implementor_avatars, implementor_invites, files, users, user_avatars, implementor_members, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, supervisors, schools;
+  TRUNCATE TABLE implementors, implementor_avatars, implementor_invites, files, users, accounts, sessions, verification_tokens, user_avatars, implementor_members, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, supervisors, schools;
   `;
 }
 
@@ -95,14 +95,25 @@ async function createUsers(db: Database) {
       where: { contactEmail: implementorByEmail },
     });
 
-    await onboard.run({
+    const response = await onboard.run({
       email: user.email,
       name: user.name,
       implementorId: implementor.id,
       inviterId: "system",
       role: user.implementorRole,
-      avatarUrl: user.avatarUrl,
+      avatarUrl: user.avatarUrl ?? undefined,
     });
+
+    if (user.account) {
+      await db.account.create({
+        data: {
+          type: user.account.type,
+          provider: user.account.provider,
+          providerAccountId: user.account.providerAccountId,
+          userId: response.userId,
+        },
+      });
+    }
   }
 }
 
