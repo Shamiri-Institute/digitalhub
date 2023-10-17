@@ -1,7 +1,7 @@
 "use client";
 
-import { Header } from "#/app/(platform)/common";
 import { batchUploadFellows } from "#/app/actions";
+import { useSession } from "#/app/auth.client";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 
@@ -10,14 +10,27 @@ export function HubCoordinatorView() {
     <div>
       <Header />
       <div className="my-5 grid max-w-fit grid-cols-2 xl:mt-10">
-        {/* <div>
-          <Card>
-            <CardHeader>Supervisor Fellow Matching</CardHeader>
-          </Card>
-        </div> */}
         <FellowsBatchUploader />
       </div>
     </div>
+  );
+}
+
+function Header() {
+  const session = useSession();
+  console.log({ clientSession: JSON.stringify(session) });
+
+  return (
+    <header className="mb-4">
+      <div className="flex items-center">
+        <h1 className="pr-3 text-2xl font-semibold text-brand">
+          Kariobangi Hub
+        </h1>
+      </div>
+      <p className="text-xl text-muted-foreground">
+        Hello {session.data?.user.name}, have a nice day!
+      </p>
+    </header>
   );
 }
 

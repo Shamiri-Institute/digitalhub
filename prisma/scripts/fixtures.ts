@@ -3,7 +3,18 @@ interface Fixtures {
   implementors: any[];
   permissions: string[];
   roles: any[];
-  users: any[];
+  users: {
+    email: string;
+    name: string;
+    implementorByEmail: string;
+    implementorRole: string;
+    avatarUrl: string | null;
+    account: {
+      type: string;
+      provider: string;
+      providerAccountId: string;
+    } | null;
+  }[];
   supervisors: {
     name: string;
     visibleId: string;
@@ -153,6 +164,7 @@ const fixtures: Fixtures = {
         "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/tom-osborn-headshot.jpeg",
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "admin",
+      account: null,
     },
     {
       email: "mmbone@shamiri.institute",
@@ -161,6 +173,7 @@ const fixtures: Fixtures = {
         "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/wendy-mmbone-headshot.jpeg",
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "researcher",
+      account: null,
     },
     {
       email: "benny@shamiri.institute",
@@ -169,18 +182,27 @@ const fixtures: Fixtures = {
         "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/benny-h-otieno-headshot.jpeg",
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "admin",
+      account: null,
     },
     {
       email: "linus@shamiri.institute",
       name: "Linus Wong",
+      avatarUrl: null,
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "admin",
+      account: null,
     },
     {
       email: "edmund@shamiri.institute",
       name: "Edmund Korley",
+      avatarUrl: null,
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "admin",
+      account: {
+        type: "oauth",
+        provider: "google",
+        providerAccountId: "108548126092823590386",
+      },
     },
     {
       email: "dmndetei@amhf.or.ke",
@@ -189,90 +211,119 @@ const fixtures: Fixtures = {
         "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/david-ndetei-headshot.jpg",
       implementorByEmail: "info@amhf.or.ke",
       implementorRole: "admin",
+      account: null,
     },
     {
       email: "jackline@shamiri.institute",
       name: "Jackline",
+      avatarUrl: null,
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "hub-coordinator",
+      account: null,
     },
     {
       email: "dennis@shamiri.institute",
       name: "Dennis",
+      avatarUrl: null,
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "hub-coordinator",
+      account: null,
     },
     {
       email: "mcgovarn@shamiri.institute",
       name: "McGovarn",
+      avatarUrl: null,
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "hub-coordinator",
+      account: null,
     },
     {
       email: "amanda@shamiri.institute",
       name: "Amanda",
+      avatarUrl: null,
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "hub-coordinator",
+      account: null,
     },
     {
       email: "chrispinus@shamiri.institute",
       name: "Chrispinus Misati",
+      avatarUrl: null,
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "hub-coordinator",
+      account: null,
     },
     {
       email: "paul@shamiri.institute",
       name: "Paul Okoth",
+      avatarUrl: null,
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "hub-coordinator",
+      account: null,
     },
     {
       email: "ruth@shamiri.institute",
       name: "Ruth Wangari",
+      avatarUrl: null,
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "supervisor",
+      account: null,
     },
     {
       email: "symon@shamiri.institute",
       name: "Symon Wangari",
+      avatarUrl: null,
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "supervisor",
+      account: null,
     },
     {
       email: "veronicah@shamiri.institute",
       name: "Veronicah Ngatia",
+      avatarUrl: null,
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "supervisor",
+      account: null,
     },
     {
       email: "beverly@shamiri.institute",
       name: "Beverly Mshai",
+      avatarUrl: null,
       implementorByEmail: "team@shamiri.institute",
       implementorRole: "supervisor",
+      account: null,
     },
     {
       email: "edwin@amhf.or.ke",
       name: "Edwin Omari",
+      avatarUrl: null,
       implementorByEmail: "info@amhf.or.ke",
       implementorRole: "supervisor",
+      account: null,
     },
     {
       email: "hemstone@amhf.or.ke",
       name: "Hemstone Mugala",
+      avatarUrl: null,
       implementorByEmail: "info@amhf.or.ke",
       implementorRole: "supervisor",
+      account: null,
     },
     {
       email: "grace@amhf.or.ke",
       name: "Grace Mugo",
+      avatarUrl: null,
       implementorByEmail: "info@amhf.or.ke",
       implementorRole: "supervisor",
+      account: null,
     },
     {
       email: "rachel@amhf.or.ke",
       name: "Rachel Kamau",
+      avatarUrl: null,
       implementorByEmail: "info@amhf.or.ke",
       implementorRole: "supervisor",
+      account: null,
     },
   ],
   supervisors: [
