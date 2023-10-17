@@ -1,15 +1,16 @@
 import Link from "next/link";
 
-import { cn } from "#/lib/utils";
-import { constants } from "#/tests/constants";
-import { OrganizationAvatar, UserAvatar } from "#/components/ui/avatar";
 import { Icons } from "#/components/icons";
+import { OrganizationAvatar, UserAvatar } from "#/components/ui/avatar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "#/components/ui/popover";
 import { Separator } from "#/components/ui/separator";
+import { cn } from "#/lib/utils";
+import { constants } from "#/tests/constants";
+import { signOut } from "next-auth/react";
 
 const demoProfile = {
   organization: {
@@ -27,10 +28,10 @@ const demoProfile = {
 
 export function ProfileSwitcher() {
   return (
-    <div className="flex justify-between -ml-1.5">
+    <div className="-ml-1.5 flex justify-between">
       <OrganizationDialog>
         <button
-          className="flex items-center gap-1.5 hover:bg-card px-1.5 py-1 rounded-lg transition active:scale-95"
+          className="flex items-center gap-1.5 rounded-lg px-1.5 py-1 transition hover:bg-card active:scale-95"
           data-testid={constants.ORGANIZATION_SWITCHER}
         >
           <OrganizationAvatar
@@ -46,7 +47,7 @@ export function ProfileSwitcher() {
           />
         </button>
       </OrganizationDialog>
-      <button className="rounded p-1 hover:bg-card transition active:scale-95">
+      <button className="rounded p-1 transition hover:bg-card active:scale-95">
         <UserAvatar
           src={demoProfile.user.avatarUrl}
           fallback={demoProfile.user.name}
@@ -68,11 +69,11 @@ function OrganizationDialog({ children }: { children: React.ReactNode }) {
         alignOffset={200}
       >
         <div>
-          <div className="p-3 pl-3.5 flex flex-col w-full">
+          <div className="flex w-full flex-col p-3 pl-3.5">
             <div className="text-sm text-muted-foreground">
               {demoProfile.user.email}
             </div>
-            <button className="flex items-center my-2 py-1 px-1.5 justify-between w-full hover:bg-foreground/[0.025] rounded-md">
+            <button className="my-2 flex w-full items-center justify-between rounded-md px-1.5 py-1 hover:bg-foreground/[0.025]">
               <div className="flex items-center gap-2">
                 <OrganizationAvatar
                   src={demoProfile.organization.avatarUrl}
@@ -90,7 +91,7 @@ function OrganizationDialog({ children }: { children: React.ReactNode }) {
             <div className="flex flex-col p-1.5">
               <Link
                 href="/settings/organization/members"
-                className="p-2 hover:bg-foreground/3 rounded-md"
+                className="rounded-md p-2 hover:bg-foreground/3"
                 data-testid={constants.ORGANIZATION_MEMBERS_LINK}
               >
                 Add & manage members
@@ -98,7 +99,14 @@ function OrganizationDialog({ children }: { children: React.ReactNode }) {
             </div>
             <Separator />
             <div className="flex flex-col p-1.5">
-              <button className="p-2 flex flex-start hover:bg-foreground/3 rounded-md">
+              <button
+                className="flex-start flex rounded-md p-2 hover:bg-foreground/3"
+                onClick={() => {
+                  signOut({
+                    callbackUrl: "/login",
+                  });
+                }}
+              >
                 Log out
               </button>
             </div>

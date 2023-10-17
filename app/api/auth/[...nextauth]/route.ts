@@ -1,6 +1,9 @@
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import NextAuth, { type AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
+
+import { db } from "#/lib/db";
 
 const config = z
   .object({
@@ -20,15 +23,63 @@ const authOptions: AuthOptions = {
       clientSecret: config.GOOGLE_SECRET,
     }),
   ],
-  // callbacks: {
-  // async session({ session, user: sessionUser }) {
-  //   const user = await new UserModel(db).findCurrentUser(sessionUser.email);
-  //   session.user.email = sessionUser.email;
-  //   session.user.name = sessionUser.name ?? null;
-  //   session.user.avatarUrl = sessionUser.image ?? null;
-  //   return session;
-  // },
-  // },
+  adapter: PrismaAdapter(db),
+  callbacks: {
+    signIn: async ({ user, account, profile }) => {
+      console.log({ user, account, profile });
+      if (!user.email) {
+        return false;
+      }
+      if (account?.provider === "google") {
+        const userExists = await db.user.findUnique({
+          where: { email: user.email },
+          select: { name: true },
+        });
+        if (userExists && !userExists.name) {
+          await db.user.update({
+            where: { email: user.email },
+            data: {
+              name: profile?.name,
+              // @ts-ignore - this is a bug in the types, `picture` is a valid on the `Profile` type
+              image: profile?.picture,
+            },
+          });
+        }
+      }
+      return true;
+    },
+    session: async ({ session, token }) => {
+      const user = await db.user.findUnique({
+        where: {
+          id: token.sub,
+        },
+        select: {
+          email: true,
+          name: true,
+          avatar: {
+            select: { file: true },
+          },
+          memberships: {
+            select: {
+              implementor: true,
+              roles: {
+                select: { role: true },
+              },
+            },
+          },
+        },
+      });
+      session.user = {
+        id: token.sub,
+        name: user?.name,
+        email: user?.email,
+        roles: user?.memberships.map((m) => m.roles.map((r) => r.role.name)),
+        // @ts-ignore
+        ...(token || session).user,
+      };
+      return session;
+    },
+  },
 };
 
 const handler = NextAuth(authOptions);

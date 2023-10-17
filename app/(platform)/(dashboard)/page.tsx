@@ -1,9 +1,9 @@
+import { getServerSession } from "next-auth";
 import Link from "next/link";
 
 import { ClinicalFeatureCard } from "#/app/(platform)/clinical-feature-card";
 import { Header } from "#/app/(platform)/common";
 import { HubCoordinatorView } from "#/app/(platform)/hub-coordinator-view";
-import { fetchAuthedUser } from "#/app/auth";
 import { Icon, Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
@@ -11,9 +11,10 @@ import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 
 export default async function HomePage() {
-  const user = await fetchAuthedUser();
+  const session = await getServerSession();
+  console.log({ session: JSON.stringify(session) });
 
-  if (true || user.isRole("hub-coordinator")) return <HubCoordinatorView />;
+  if (true) return <HubCoordinatorView />;
 
   return <SupervisorView />;
 }
