@@ -2,16 +2,75 @@
 
 import { batchUploadFellows } from "#/app/actions";
 import { useSession } from "#/app/auth.client";
+import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 
 export function HubCoordinatorView() {
   return (
-    <div>
+    <div className="mx-auto max-w-7xl">
       <Header />
-      <div className="my-5 grid max-w-fit grid-cols-2 xl:mt-10">
-        <FellowsBatchUploader />
+      <div>
+        <Tabs defaultValue="schools-schedule" className="w-full">
+          <TabsList>
+            <TabsTrigger value="schools-schedule">Schools Schedule</TabsTrigger>
+            <TabsTrigger value="supervisor-schedule">
+              Supervisor Schedule
+            </TabsTrigger>
+            <TabsTrigger value="fellow-schedule">Fellow Schedule</TabsTrigger>
+            <TabsTrigger value="recent-pages">Recent Pages</TabsTrigger>
+          </TabsList>
+          <TabsContent value="schools-schedule">
+            <SchoolsScheduleView />
+          </TabsContent>
+          <TabsContent value="supervisor-schedule">
+            Supervisor schedule here.
+          </TabsContent>
+          <TabsContent value="fellow-schedule">
+            Fellow schedule here.
+          </TabsContent>
+          <TabsContent value="recent-pages">Recent pages here.</TabsContent>
+        </Tabs>
       </div>
+    </div>
+  );
+}
+
+function SchoolsScheduleView() {
+  return (
+    <div className="grid grid-cols-[1fr,3fr]">
+      <div>
+        <div className="h-40 bg-red-200">
+          <StatCard />
+        </div>
+        <div className="h-40 bg-yellow-200">
+          <StatCard />
+        </div>
+        .
+      </div>
+      <div className="bg-green-200">
+        <div className="flex justify-center text-xl font-semibold">
+          Tuesday, 15th Jan 2024
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatCard() {
+  return (
+    <div className="grid grid-cols-2">
+      <div>
+        <Icons.schoolMinusOutline className="h-14 w-auto text-brand" />
+        <div className="grid grid-cols-[1fr,3fr] gap-2">
+          <div className="whitespace-nowrap">Active</div> <div>6</div>
+        </div>
+        <div className="grid grid-cols-[1fr,3fr] gap-2">
+          <div className="whitespace-nowrap">Dropped out</div> <div>1</div>
+        </div>
+      </div>
+      <div></div>
     </div>
   );
 }
