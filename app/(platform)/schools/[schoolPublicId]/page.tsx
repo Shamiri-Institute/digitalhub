@@ -1,4 +1,5 @@
 import { SchoolDemographics } from "#/app/(platform)/schools/[schoolPublicId]/demographics";
+import { FellowCreationDialog } from "#/app/(platform)/schools/[schoolPublicId]/fellow-creation-dialog";
 import { Icons } from "#/components/icons";
 
 const selectedSchool = {
@@ -70,12 +71,14 @@ export default function SchoolPage({
       <div className="mt-8">
         <div className="mx-4 flex justify-between border-b border-border/50 pb-3">
           <div className="text-2xl font-semibold">My Fellows</div>
-          <button className="transition-transform active:scale-95">
-            <Icons.plusCircle
-              className="h-6 w-6 text-shamiri-blue"
-              strokeWidth={1.5}
-            />
-          </button>
+          <FellowCreationDialog>
+            <button className="transition-transform active:scale-95">
+              <Icons.plusCircle
+                className="h-6 w-6 text-shamiri-blue"
+                strokeWidth={1.5}
+              />
+            </button>
+          </FellowCreationDialog>
         </div>
       </div>
     </main>
