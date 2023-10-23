@@ -1,5 +1,4 @@
-import { PieChart, Pie, Cell } from "recharts";
-
+import { SchoolDemographics } from "#/app/(platform)/schools/[schoolPublicId]/demographics";
 import { Icons } from "#/components/icons";
 
 const selectedSchool = {
@@ -20,9 +19,46 @@ export default function SchoolPage({
 }: {
   params: { schoolPublicId: string };
 }) {
+  const school = {
+    name: "Our Lady of Fatima High School",
+    totalPopulation: 2200,
+    malePopulation: 1000,
+    femalePopulation: 1200,
+  };
+
   return (
-    <main className="pt-8">
+    <main className="pt-2">
       <Header />
+      <div className="relative">
+        <SchoolDemographics
+          totalPopulation={school.totalPopulation}
+          malePopulation={school.malePopulation}
+          femalePopulation={school.femalePopulation}
+        />
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="text-center">
+            <div className="text-sm">Students</div>
+            <div className="text-2xl font-semibold">
+              {school.totalPopulation}
+            </div>
+            <div className="gap flex justify-around">
+              <div className="flex items-center gap-1">
+                <div className="h-1.5 w-1.5 rounded-full bg-[#B7D4E8]" />
+                <div>M</div>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="h-1.5 w-1.5 rounded-full bg-[#092142]" />
+                <div>F</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="my-4">
+        <div className="mx-auto flex max-w-[200px] justify-center text-center text-xl font-semibold">
+          {school.name}
+        </div>
+      </div>
     </main>
   );
 }
@@ -31,34 +67,12 @@ function Header() {
   return (
     <header className="flex justify-between">
       <div>
-        <Icons.chevronLeft className="h-6 w-6 text-brand mr-4 align-baseline" />
+        <Icons.chevronLeft className="mr-4 h-6 w-6 align-baseline text-brand" />
       </div>
       <div className="flex gap-2">
-        <Icons.edit className="h-6 w-6 text-brand mr-4 align-baseline" />
+        <Icons.edit className="mr-4 h-6 w-6 align-baseline text-brand" />
         <Icons.search className="h-6 w-6 text-brand" strokeWidth={1.75} />
       </div>
     </header>
-  );
-}
-
-function DemographicsChart() {
-  return (
-    <PieChart width={100} height={100}>
-      <Pie
-        data={data}
-        cx={50}
-        cy={50}
-        innerRadius={30}
-        outerRadius={45}
-        fill="#8884d8"
-        paddingAngle={3}
-        dataKey="value"
-        stroke="none"
-      >
-        {data.map((entry, index) => (
-          <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-        ))}
-      </Pie>
-    </PieChart>
   );
 }

@@ -1,13 +1,13 @@
 "use client";
 
-import { createContext, Suspense, useContext, useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, createContext, useContext, useEffect, useRef } from "react";
 import { create } from "zustand";
 
 import { Header } from "#/components/header";
 import { Navigation } from "#/components/navigation";
-import { Sheet, SheetContent } from "#/components/ui/sheet";
 import { Dialog, DialogBaseContent } from "#/components/ui/dialog";
+import { Sheet, SheetContent } from "#/components/ui/sheet";
 import { cn } from "#/lib/utils";
 
 function MenuIcon(props: React.ComponentPropsWithoutRef<"svg">) {
@@ -79,17 +79,17 @@ function MobileNavigationDialog({
         <DialogBaseContent
           className={cn(
             "fixed inset-0 z-100",
-            "duration-200 data-[state=open]:animate-in data-[state=closed]:delay-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+            "duration-200 data-[state=closed]:delay-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           )}
         >
-          <Header className="z-100 pointer-events-auto" />
+          <Header className="pointer-events-auto z-100" />
         </DialogBaseContent>
       </Dialog>
       <Sheet open={isOpen}>
         <SheetContent side="left" className="left-0 w-full">
           <div
             className={cn(
-              "fixed bottom-0 left-0 top-14 w-full overflow-y-auto px-4 pb-4 pt-6 min-[416px]:max-w-sm sm:px-6 sm:pb-10"
+              "fixed bottom-0 left-0 top-14 w-full overflow-y-auto px-4 pb-4 pt-6 min-[416px]:max-w-sm sm:px-6 sm:pb-10",
             )}
           >
             <Navigation />
@@ -125,11 +125,11 @@ export function MobileNavigation() {
     <IsInsideMobileNavigationContext.Provider value={true}>
       <button
         type="button"
-        className="flex h-6 w-6 items-center justify-center rounded-md transition hover:bg-zinc-900/5 dark:hover:bg-white/5"
+        className="flex h-6 w-6 items-center justify-center rounded-md transition hover:bg-zinc-900/5"
         aria-label="Toggle navigation"
         onClick={toggle}
       >
-        <ToggleIcon className="w-2.5 stroke-zinc-900 dark:stroke-white" />
+        <ToggleIcon className="w-2.5 stroke-zinc-900" />
       </button>
       {!isInsideMobileNavigation && (
         <Suspense fallback={null}>
