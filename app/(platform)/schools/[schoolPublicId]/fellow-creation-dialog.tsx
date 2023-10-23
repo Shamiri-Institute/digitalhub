@@ -15,9 +15,18 @@ import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Popover, PopoverContent } from "#/components/ui/popover";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
+import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetDescription,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -67,7 +76,7 @@ export function FellowCreationDialog({
   return (
     <Sheet>
       <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetContent>
+      <SheetContent className="overflow-y-scroll">
         <SheetHeader>
           <SheetTitle className="md:text-xl">Create a fellow</SheetTitle>
           <SheetDescription>
@@ -231,6 +240,46 @@ export function FellowCreationDialog({
               )}
             />
           </div>
+          <div>
+            <FormField
+              control={form.control}
+              name="gender"
+              render={({ field }) => (
+                <div className="mt-3 grid w-full gap-1.5">
+                  <Label htmlFor="gender">Gender</Label>
+                  <Select>
+                    <SelectTrigger className="">
+                      <SelectValue
+                        className="text-muted-foreground"
+                        defaultValue={field.value}
+                        onChange={field.onChange}
+                        placeholder={
+                          <span className="text-muted-foreground">
+                            Select gender
+                          </span>
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="light">Male</SelectItem>
+                      <SelectItem value="dark">Female</SelectItem>
+                      <SelectItem value="system">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            />
+          </div>
+          <SheetFooter>
+            <SheetClose asChild>
+              <Button
+                type="submit"
+                className="w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
+              >
+                Submit
+              </Button>
+            </SheetClose>
+          </SheetFooter>
         </div>
       </SheetContent>
     </Sheet>
