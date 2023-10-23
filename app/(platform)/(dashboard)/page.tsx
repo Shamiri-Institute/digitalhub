@@ -12,11 +12,18 @@ import { cn } from "#/lib/utils";
 
 export default async function HomePage() {
   const session = await getServerSession();
-  console.log({ session: JSON.stringify(session) });
 
-  if (true) return <HubCoordinatorView />;
+  let demoRole = "supervisor";
 
-  return <SupervisorView />;
+  if (demoRole === "hub-coordinator") {
+    return <HubCoordinatorView />;
+  }
+
+  if (demoRole === "supervisor") {
+    return <SupervisorView />;
+  }
+
+  return <div>Unknown role</div>;
 }
 
 function SupervisorView() {
