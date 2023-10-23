@@ -59,6 +59,25 @@ export default function SchoolPage({
           {school.name}
         </div>
       </div>
+      <div className="mx-auto my-4 max-w-[200px]">
+        <div className="text-muted-foreground">Sessions</div>
+        <div className="mt-1 flex gap-4">
+          <div className="h-4 w-4 rounded-full bg-[#85A070]" />
+          <div className="h-4 w-4 rounded-full bg-[#85A070]" />
+          <div className="h-4 w-4 rounded-full bg-[#85A070]" />
+        </div>
+      </div>
+      <div className="mt-8">
+        <div className="mx-4 flex justify-between border-b border-border/50 pb-3">
+          <div className="text-2xl font-semibold">My Fellows</div>
+          <button className="transition-transform active:scale-95">
+            <Icons.plusCircle
+              className="h-6 w-6 text-shamiri-blue"
+              strokeWidth={1.5}
+            />
+          </button>
+        </div>
+      </div>
     </main>
   );
 }
