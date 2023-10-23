@@ -1,6 +1,7 @@
 import {
   Backpack,
   Banknote,
+  Calendar,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -33,6 +34,7 @@ export type Icon = LucideIcon | React.FC<LucideProps>;
 export const Icons = {
   sun: SunMedium,
   moon: Moon,
+  calendar: Calendar,
   check: Check,
   chevronsUpDown: ChevronsUpDown,
   chevronLeft: ChevronLeft,
