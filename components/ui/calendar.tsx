@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons"
-import { DayPicker } from "react-day-picker"
+import * as React from "react";
+import { DayPicker } from "react-day-picker";
 
-import { cn } from "#/lib/utils"
-import { buttonVariants } from "#/components/ui/button"
+import { buttonVariants } from "#/components/ui/button";
+import { cn } from "#/lib/utils";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>
+export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
 function Calendar({
   className,
@@ -19,18 +19,28 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
+      captionLayout="dropdown-buttons"
+      fromYear={1980}
+      toYear={new Date().getFullYear()}
+      reverseMonths={true}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
+        caption: "flex justify-between pt-1 relative items-center",
+        caption_label: "hidden text-sm font-medium",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          "h-5 w-5 bg-transparent p-0 opacity-50 hover:opacity-100",
         ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
+        caption_dropdowns: "flex gap-1",
+        dropdown:
+          "bg-white rounded-md border-0 py-1.5 px-1 text-zinc-900 text-sm font-medium sm:leading-6 focus:outline-none",
+        dropdown_month: "w-full",
+        dropdown_year: "w-full",
+        dropdown_icon: "pr-2",
+        nav_button_previous: "",
+        nav_button_next: "",
         table: "w-full border-collapse space-y-1",
         head_row: "flex",
         head_cell:
@@ -40,11 +50,11 @@ function Calendar({
           "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent",
           props.mode === "range"
             ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
-            : "[&:has([aria-selected])]:rounded-md"
+            : "[&:has([aria-selected])]:rounded-md",
         ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-8 w-8 p-0 font-normal aria-selected:opacity-100"
+          "h-8 w-8 p-0 font-normal aria-selected:opacity-100",
         ),
         day_range_start: "day-range-start",
         day_range_end: "day-range-end",
@@ -56,16 +66,17 @@ function Calendar({
         day_range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
+        vhidden: "sr-only",
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ...props }) => <ChevronLeftIcon className="h-4 w-4" />,
-        IconRight: ({ ...props }) => <ChevronRightIcon className="h-4 w-4" />,
+        IconLeft: ({ ...props }) => <ChevronLeftIcon className="h-3 w-3" />,
+        IconRight: ({ ...props }) => <ChevronRightIcon className="h-3 w-3" />,
       }}
       {...props}
     />
-  )
+  );
 }
-Calendar.displayName = "Calendar"
+Calendar.displayName = "Calendar";
 
-export { Calendar }
+export { Calendar };
