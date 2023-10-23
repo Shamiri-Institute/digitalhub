@@ -16,6 +16,7 @@ import {
   Moon,
   Network,
   PieChart,
+  PlusCircle,
   Search,
   Settings,
   Smile,
@@ -50,6 +51,7 @@ export const Icons = {
   network: Network,
   pieChart: PieChart,
   mail: Mail,
+  plusCircle: PlusCircle,
   logo: ({ className, ...props }: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
