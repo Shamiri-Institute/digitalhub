@@ -1,21 +1,28 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PopoverTrigger } from "@radix-ui/react-popover";
+import { format } from "date-fns";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "#/components/ui/dialog";
+import { Icons } from "#/components/icons";
+import { Button } from "#/components/ui/button";
+import { Calendar } from "#/components/ui/calendar";
 import { FormField } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
+import { Popover, PopoverContent } from "#/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "#/components/ui/sheet";
+import { cn } from "#/lib/utils";
 
 const FormSchema = z.object({
   fellowName: z.string({
@@ -36,7 +43,7 @@ const FormSchema = z.object({
   subCounty: z.string({
     required_error: "Please enter the fellow's sub-county.",
   }),
-  dateOfBirth: z.string({
+  dateOfBirth: z.date({
     required_error: "Please enter the fellow's date of birth.",
   }),
   gender: z.string({
@@ -52,17 +59,22 @@ export function FellowCreationDialog({
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
+
+  const school = {
+    name: "Our Lady of Fatima High School",
+  };
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create a fellow</DialogTitle>
-          <DialogDescription>
-            This fellow will be assigned to Our Lady of Fatima High School.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-6">
+    <Sheet>
+      <SheetTrigger asChild>{children}</SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle className="md:text-xl">Create a fellow</SheetTitle>
+          <SheetDescription>
+            This fellow will be assigned to {school.name}
+          </SheetDescription>
+        </SheetHeader>
+        <div className="mt-6 space-y-6">
           <div>
             <FormField
               control={form.control}
@@ -142,6 +154,7 @@ export function FellowCreationDialog({
             />
           </div>
           <div>
+            {/* TODO: combobox */}
             <FormField
               control={form.control}
               name="county"
@@ -161,6 +174,7 @@ export function FellowCreationDialog({
             />
           </div>
           <div>
+            {/* TODO: combobox */}
             <FormField
               control={form.control}
               name="subCounty"
@@ -179,8 +193,46 @@ export function FellowCreationDialog({
               )}
             />
           </div>
+          <div>
+            {/* Draft date picker */}
+            <FormField
+              control={form.control}
+              name="dateOfBirth"
+              render={({ field }) => (
+                <div className="mt-3 grid w-full gap-1.5">
+                  <Label htmlFor="dateOfBirth">Date of birth</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                          !field.value && "text-muted-foreground",
+                        )}
+                      >
+                        <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+            />
+          </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
