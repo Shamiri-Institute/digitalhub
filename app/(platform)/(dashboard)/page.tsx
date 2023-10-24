@@ -30,7 +30,7 @@ async function SupervisorView() {
 
   return (
     <div>
-      <div className="mb-8">
+      <div className="mb-8 mt-8 md:mt-0">
         <Header userName={session?.user.name!} hubName={hub?.hubName!} />
       </div>
       <OverviewCards />
