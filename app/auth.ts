@@ -81,3 +81,12 @@ async function fetchCurrentUser(): Promise<CurrentUser | null> {
 export async function currentHub() {
   return await db.hub.findFirst();
 }
+
+export async function currentSupervisor() {
+  const supervisor = await db.supervisor.findFirst();
+  if (!supervisor) {
+    throw new Error("No supervisor found");
+  }
+
+  return supervisor;
+}

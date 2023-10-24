@@ -7,6 +7,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { DropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -60,28 +61,38 @@ const FormSchema = z.object({
   }),
 });
 
-export function FellowCreationDialog({
+export function FellowModifyDialog({
+  mode,
+  fellow,
   children,
 }: {
+  mode: "create" | "edit";
+  fellow?: any;
   children: React.ReactNode;
 }) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
-  const school = {
-    name: "Our Lady of Fatima High School",
-  };
-
   return (
     <Sheet>
       <SheetTrigger asChild>{children}</SheetTrigger>
-      <SheetContent className="overflow-y-scroll">
+      <SheetContent className="overflow-y-scroll" side="right">
         <SheetHeader>
-          <SheetTitle className="md:text-xl">Create a fellow</SheetTitle>
-          <SheetDescription>
-            This fellow will be assigned to {school.name}
-          </SheetDescription>
+          {mode === "create" && (
+            <SheetTitle className="md:text-xl">Create a fellow</SheetTitle>
+          )}
+          {mode === "edit" && (
+            <SheetTitle className="md:text-xl">{fellow.fellowName}</SheetTitle>
+          )}
+          {mode === "create" && (
+            <SheetDescription>
+              This fellow will be assigned to your hub.
+            </SheetDescription>
+          )}
+          {mode === "edit" && (
+            <SheetDescription>Shamiri ID: {fellow.visibleId}</SheetDescription>
+          )}
         </SheetHeader>
         <div className="mt-6 space-y-6">
           <div>
@@ -95,7 +106,7 @@ export function FellowCreationDialog({
                     id="fellowName"
                     name="fellowName"
                     onChange={field.onChange}
-                    defaultValue={field.value}
+                    defaultValue={fellow?.fellowName || field.value}
                     className="mt-1.5 resize-none bg-card"
                     placeholder="John Kenyatta"
                     data-1p-ignore="true"
@@ -116,7 +127,7 @@ export function FellowCreationDialog({
                     type="tel"
                     name="cellNumber"
                     onChange={field.onChange}
-                    defaultValue={field.value}
+                    defaultValue={fellow?.cellNumber || field.value}
                     placeholder="+254-700-000-000"
                     className="mt-1.5 resize-none bg-card"
                   />
@@ -135,7 +146,7 @@ export function FellowCreationDialog({
                     id="mpesaName"
                     name="mpesaName"
                     onChange={field.onChange}
-                    defaultValue={field.value}
+                    defaultValue={fellow?.mpesaName || field.value}
                     placeholder="John Kenyatta"
                     className="mt-1.5 resize-none bg-card"
                   />
@@ -154,7 +165,7 @@ export function FellowCreationDialog({
                     id="mpesaNumber"
                     name="mpesaNumber"
                     onChange={field.onChange}
-                    defaultValue={field.value}
+                    defaultValue={fellow?.mpesaNumber || field.value}
                     placeholder="+254-700-000-000"
                     className="mt-1.5 resize-none bg-card"
                   />
@@ -174,7 +185,7 @@ export function FellowCreationDialog({
                     id="county"
                     name="county"
                     onChange={field.onChange}
-                    defaultValue={field.value}
+                    defaultValue={fellow?.county || field.value}
                     placeholder="Nairobi"
                     className="mt-1.5 resize-none bg-card"
                   />
@@ -194,7 +205,7 @@ export function FellowCreationDialog({
                     id="subCounty"
                     name="subCounty"
                     onChange={field.onChange}
-                    defaultValue={field.value}
+                    defaultValue={fellow?.subCounty || field.value}
                     placeholder="Westlands"
                     className="mt-1.5 resize-none bg-card"
                   />
@@ -230,7 +241,7 @@ export function FellowCreationDialog({
                     <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
-                        selected={field.value}
+                        selected={fellow?.dateOfBirth || field.value}
                         onSelect={field.onChange}
                         initialFocus
                       />
@@ -251,7 +262,7 @@ export function FellowCreationDialog({
                     <SelectTrigger className="">
                       <SelectValue
                         className="text-muted-foreground"
-                        defaultValue={field.value}
+                        defaultValue={fellow?.gender || field.value}
                         onChange={field.onChange}
                         placeholder={
                           <span className="text-muted-foreground">
@@ -274,12 +285,22 @@ export function FellowCreationDialog({
             <SheetClose asChild>
               <Button
                 type="submit"
-                className="w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
+                className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
               >
                 Submit
               </Button>
             </SheetClose>
           </SheetFooter>
+          {mode === "edit" && (
+            <DropoutDialog>
+              <Button
+                type="submit"
+                className="w-full bg-[#AC2925] py-5 text-white transition-transform  active:scale-95"
+              >
+                Drop Out
+              </Button>
+            </DropoutDialog>
+          )}
         </div>
       </SheetContent>
     </Sheet>
