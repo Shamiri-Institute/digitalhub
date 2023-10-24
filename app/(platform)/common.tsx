@@ -17,7 +17,9 @@ export function Header({
         </h1>
         <Icons.smileyface className="h-6 w-6 text-brand" />
       </div>
-      <p className="text-xl text-muted-foreground">{hubName} Hub</p>
+      <p className="text-xl text-muted-foreground">
+        Supervisor — {hubName} Hub
+      </p>
     </header>
   );
 }

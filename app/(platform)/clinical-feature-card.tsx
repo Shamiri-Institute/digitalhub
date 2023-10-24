@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { PieChart, Pie, Cell } from "recharts";
+import { Cell, Pie, PieChart } from "recharts";
 
-import { Card } from "#/components/ui/card";
 import { Icons } from "#/components/icons";
+import { Card } from "#/components/ui/card";
 import { useIsServerSide } from "#/lib/hooks/use-is-server-side";
 import { cn } from "#/lib/utils";
 
@@ -30,16 +30,16 @@ const colors = ["#7EA16B", "#FABC2A", "#D295BF", "#B0D5EA"];
 
 export function ClinicalFeatureCard() {
   return (
-    <Link href="/clinical-cases">
-      <Card className="px-6 py-5 flex flex-col gap-5 bg-active-card">
+    <Link href="/clinical-cases" className="col-span-2">
+      <Card className="flex flex-col gap-5 bg-active-card px-6 py-5">
         <div>
-          <div className="flex align-middle gap-4 text-base text-active-card-foreground">
-            <Icons.heartHandshake className="align-baseline h-4 w-4 xl:h-7 xl:w-7" />
-            <div className="xl:text-2xl font-medium">Clinical cases</div>
+          <div className="flex gap-4 align-middle text-base text-active-card-foreground">
+            <Icons.heartHandshake className="h-4 w-4 align-baseline xl:h-7 xl:w-7" />
+            <div className="font-medium xl:text-2xl">Clinical cases</div>
           </div>
         </div>
         <div className="flex justify-between gap-6">
-          <div className="h-[100px] w-[100px] rounded-full shrink-0">
+          <div className="h-[100px] w-[100px] shrink-0 rounded-full">
             <ClinicalCasesDonutChart />
           </div>
           <div className="w-full space-y-1">
@@ -80,10 +80,10 @@ function LegendItem({
   count: number;
 }) {
   return (
-    <div className="flex justify-between pb-1 border-b border-border/40 last:border-none">
-      <p className="text-white text-sm font-semibold">{label}</p>
-      <div className={cn("px-3 rounded-sm", colorClass)}>
-        <p className="text-white text-sm font-semibold">
+    <div className="flex justify-between border-b border-border/40 pb-1 last:border-none">
+      <p className="text-sm font-semibold text-white">{label}</p>
+      <div className={cn("rounded-sm px-3", colorClass)}>
+        <p className="text-sm font-semibold text-white">
           {count.toString().padStart(2, "0")}
         </p>
       </div>
