@@ -96,17 +96,17 @@ async function createImplementers(db: Database) {
 
 // async function createUsers(db: Database) {
 //   const onboard = new OnboardUserCommand(db);
-//   for (let { implementorByEmail, ...user } of fixtures.users) {
-//     const implementor = await db.implementor.findFirstOrThrow({
-//       where: { contactEmail: implementorByEmail },
+//   for (let { implementerByEmail, ...user } of fixtures.users) {
+//     const implementer = await db.implementer.findFirstOrThrow({
+//       where: { contactEmail: implementerByEmail },
 //     });
 
 //     const response = await onboard.run({
 //       email: user.email,
 //       name: user.name,
-//       implementorId: implementor.id,
+//       implementerId: implementer.id,
 //       inviterId: "system",
-//       role: user.implementorRole,
+//       role: user.implementerRole,
 //       avatarUrl: user.avatarUrl ?? undefined,
 //     });
 

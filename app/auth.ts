@@ -1,8 +1,8 @@
 import { db } from "#/lib/db";
 
 export interface CurrentUser {
-  email: string;
-  name: string;
+  email: string | null;
+  name: string | null;
   activeOrgId: string;
   organizations: {
     id: string;
@@ -38,7 +38,7 @@ async function fetchCurrentUser(): Promise<CurrentUser | null> {
       },
       memberships: {
         select: {
-          implementor: true,
+          implementer: true,
           roles: {
             select: { role: true },
           },
@@ -61,11 +61,11 @@ async function fetchCurrentUser(): Promise<CurrentUser | null> {
     email: user.email,
     name: user.name,
     // TODO: pull from separate cookie to allow switching orgs without logging out
-    activeOrgId: user.memberships[0]!.implementor.id,
+    activeOrgId: user.memberships[0]!.implementer.id,
     organizations: user.memberships.map((m) => {
       return {
-        id: m.implementor.id,
-        name: m.implementor.name,
+        id: m.implementer.id,
+        name: m.implementer.implementerName,
         roles: m.roles.map((r) => r.role),
       };
     }),
