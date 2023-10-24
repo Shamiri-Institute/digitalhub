@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ClinicalFeatureCard } from "#/app/(platform)/clinical-feature-card";
 import { Header } from "#/app/(platform)/common";
 import { HubCoordinatorView } from "#/app/(platform)/hub-coordinator-view";
+import { currentHub } from "#/app/auth";
 import { Icon, Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
@@ -45,10 +46,6 @@ async function SupervisorView() {
       </div>
     </div>
   );
-}
-
-async function currentHub() {
-  return await db.hub.findFirst();
 }
 
 async function OverviewCards() {

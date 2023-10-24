@@ -77,3 +77,7 @@ async function fetchCurrentUser(): Promise<CurrentUser | null> {
     },
   };
 }
+
+export async function currentHub() {
+  return await db.hub.findFirst();
+}
