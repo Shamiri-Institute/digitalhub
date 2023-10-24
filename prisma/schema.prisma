@@ -86,6 +86,7 @@ model Implementer {
   hubCoordinators    HubCoordinator[]
   // projects           Project[]
   schools            School[]
+  supervisors        Supervisor[]
 
   @@map("implementers")
 }
@@ -261,21 +262,23 @@ model Fellow {
 }
 
 model Supervisor {
-  id             String             @id @db.VarChar(255)
-  createdAt      DateTime           @default(now()) @map("created_at")
-  updatedAt      DateTime           @updatedAt @map("updated_at")
-  archivedAt     DateTime?          @map("archived_at")
-  hubId          String             @map("hub_id") @db.VarChar(255)
-  hub            Hub                @relation(fields: [hubId], references: [id])
-  supervisorName String             @map("supervisor_name") @db.VarChar(255)
-  visibleId      String             @unique @map("visible_id") @db.VarChar(10)
-  idNumber       String?            @map("id_number") @db.VarChar(255)
-  cellNumber     String?            @map("cell_number") @db.VarChar(255)
-  mpesaNumber    String?            @map("mpesa_number") @db.VarChar(255)
-  email          String?            @unique @map("email") @db.VarChar(255)
-  memberId       Int?               @map("member_id")
-  member         ImplementerMember? @relation(fields: [memberId], references: [id])
-  fellows        Fellow[]
+  id              String             @id @db.VarChar(255)
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+  archivedAt      DateTime?          @map("archived_at")
+  hubId           String             @map("hub_id") @db.VarChar(255)
+  hub             Hub                @relation(fields: [hubId], references: [id])
+  visibleId       String             @unique @map("visible_id") @db.VarChar(100)
+  supervisorName  String             @map("supervisor_name") @db.VarChar(255)
+  supervisorEmail String?            @unique @map("supervisor_email") @db.VarChar(255)
+  idNumber        String?            @map("id_number") @db.VarChar(255)
+  cellNumber      String?            @map("cell_number") @db.VarChar(255)
+  mpesaNumber     String?            @map("mpesa_number") @db.VarChar(255)
+  implementerId   String?            @map("implementer_id") @db.VarChar(255)
+  implementer     Implementer?       @relation(fields: [implementerId], references: [id])
+  memberId        Int?
+  member          ImplementerMember? @relation(fields: [memberId], references: [id])
+  fellows         Fellow[]
 
   @@map("supervisors")
 }
