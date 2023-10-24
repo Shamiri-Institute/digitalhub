@@ -45,7 +45,7 @@ RBAC fits with the tiered model of care at Shamiri Institute.
 
 ```
 Superadmins (SDH owner) Rahim / Tom
-└── Organizations / Implementors (Shamiri, AMHRTF, etc.)
+└── Organizations / implementers (Shamiri, AMHRTF, etc.)
     └── Admins / Hub Coordinators (e.g. dmndetei@amhf.or.ke for AMHRTF) — e.g. Afra
         ├── Supervisors
         │   │   ├── Fellows
@@ -55,7 +55,7 @@ Superadmins (SDH owner) Rahim / Tom
     └─── External (no permissions by default, for external collaborators / clinicians with invited granular permissions)
 ```
 
-In code, lets call implementors organizations as that fits more with terms used in SaaS.
+In code, lets call implementers organizations as that fits more with terms used in SaaS.
 
 #### Roles
 

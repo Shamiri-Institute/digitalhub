@@ -16,7 +16,7 @@ import * as React from "react";
 import { SDH_HERO_IMAGE, SDH_LOGO_BANNER } from "../lib/constants";
 import Footer from "./components/footer";
 
-export default function ImplementorWelcomer({
+export default function implementerWelcomer({
   email = "dmndetei@amhf.or.ke",
   name = "Africa Mental Health Training and Research Foundation",
   preview = "Africa Mental Health Training and Research Foundation joins Shamiri Digital Hub!",
