@@ -22,9 +22,9 @@ export default function SchoolPage({
 }) {
   const school = {
     name: "Our Lady of Fatima High School",
-    totalPopulation: 2200,
-    malePopulation: 1000,
-    femalePopulation: 1200,
+    totalPopulation: 1000,
+    malePopulation: 500,
+    femalePopulation: 500,
   };
 
   return (

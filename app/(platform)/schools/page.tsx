@@ -6,12 +6,14 @@ import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 
+import { currentHub } from "#/app/auth";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "#/components/ui/accordion";
+import { db } from "#/lib/db";
 
 export default function SchoolsPage() {
   return (
@@ -24,72 +26,85 @@ export default function SchoolsPage() {
 
 function Header() {
   return (
-    <div className="flex justify-between items-center mt-4 lg:mt-0 py-4">
-      <div className="flex align-middle bg-green items-center">
-        <Icons.schoolMinusOutline className="h-6 w-6 text-brand mr-4 align-baseline" />
-        <h3 className="font-semibold text-2xl text-brand">Schools</h3>
+    <div className="mt-4 flex items-center justify-between py-4 lg:mt-0">
+      <div className="bg-green flex items-center align-middle">
+        <Icons.schoolMinusOutline className="mr-4 h-6 w-6 align-baseline text-brand" />
+        <h3 className="text-2xl font-semibold text-brand">Schools</h3>
       </div>
-      <Icons.search className="h-6 w-6 text-brand mr-4 align-baseline" />
+      <Icons.search className="mr-4 h-6 w-6 align-baseline text-brand" />
     </div>
   );
 }
 
-function SchoolsList() {
+async function SchoolsList() {
   const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
-  const assignedSchool = {
-    name: "Maranda Sec School",
-    population: 1400,
-    sessions: ["Pre", "S1"],
-    fellowsCount: 15,
-    type: "Public",
-    county: "Nairobi",
-    pointPerson: "Benny Otieno",
-    contactNo: "+254712342314780",
-    demographics: "Mixed",
-  };
-  const otherSchools = [
-    {
-      name: "Our Lady of Fatima High School",
-      population: 1400,
-      sessions: ["Pre", "S1", "S2", "S3"],
-      fellowsCount: 15,
-      type: "Public",
-      county: "Nairobi",
-      pointPerson: "Benny Otieno",
-      contactNo: "+254712342314780",
-      demographics: "Mixed",
-    },
-    {
-      name: "Alliance Sec School",
-      population: 124,
-      sessions: ["Pre"],
-      fellowsCount: 9,
-      type: "Public",
-      county: "Nairobi",
-      pointPerson: "Benny Otieno",
-      contactNo: "+254712342314780",
-      demographics: "Mixed",
-    },
-    {
-      name: "Maseno Sec School",
-      population: 124,
-      sessions: [],
-      fellowsCount: 9,
-      type: "Public",
-      county: "Nairobi",
-      pointPerson: "Benny Otieno",
-      contactNo: "+254712342314780",
-      demographics: "Mixed",
-    },
-  ];
+  // const assignedSchool = {
+  //   name: "Maranda Sec School",
+  //   population: 1400,
+  //   sessions: ["Pre", "S1"],
+  //   fellowsCount: 15,
+  //   type: "Public",
+  //   county: "Nairobi",
+  //   pointPerson: "Benny Otieno",
+  //   contactNo: "+254712342314780",
+  //   demographics: "Mixed",
+  // };
+  const hub = await currentHub();
+  const assignedSchoolId = "ANS23_School_17";
+  const assignedSchool = await db.school.findFirst({
+    where: { visibleId: assignedSchoolId, hubId: hub!.id },
+  });
+  if (!assignedSchool) {
+    throw new Error("Assigned school not found");
+  }
+
+  const otherSchools = await db.school.findMany({
+    where: { visibleId: { not: assignedSchoolId }, hubId: hub!.id },
+  });
+
+  // const otherSchools = [
+  //   {
+  //     name: "Our Lady of Fatima High School",
+  //     population: 1400,
+  //     sessions: ["Pre", "S1", "S2", "S3"],
+  //     fellowsCount: 15,
+  //     type: "Public",
+  //     county: "Nairobi",
+  //     pointPerson: "Benny Otieno",
+  //     contactNo: "+254712342314780",
+  //     demographics: "Mixed",
+  //   },
+  //   {
+  //     name: "Alliance Sec School",
+  //     population: 124,
+  //     sessions: ["Pre"],
+  //     fellowsCount: 9,
+  //     type: "Public",
+  //     county: "Nairobi",
+  //     pointPerson: "Benny Otieno",
+  //     contactNo: "+254712342314780",
+  //     demographics: "Mixed",
+  //   },
+  //   {
+  //     name: "Maseno Sec School",
+  //     population: 124,
+  //     sessions: [],
+  //     fellowsCount: 9,
+  //     type: "Public",
+  //     county: "Nairobi",
+  //     pointPerson: "Benny Otieno",
+  //     contactNo: "+254712342314780",
+  //     demographics: "Mixed",
+  //   },
+  // ];
 
   return (
     <div>
       <div>
-        <h2 className="text-xl font-semibold py-3">My School</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xl:grid-cols-3  sm:gap-6">
+        <h2 className="py-3 text-xl font-semibold">My School</h2>
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2  xl:grid-cols-3">
           <SchoolCard
-            key={assignedSchool.name}
+            key={assignedSchool.schoolName}
             school={assignedSchool}
             sessionTypes={sessionTypes}
             assigned
@@ -99,11 +114,11 @@ function SchoolsList() {
         </div>
       </div>
       <div>
-        <h2 className="text-xl font-semibold py-3">Others</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 xl:grid-cols-3  sm:gap-6">
+        <h2 className="py-3 text-xl font-semibold">Others</h2>
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2  xl:grid-cols-3">
           {otherSchools.map((school) => (
             <SchoolCard
-              key={school.name}
+              key={school.schoolName}
               school={school}
               sessionTypes={sessionTypes}
             />
@@ -125,7 +140,7 @@ function SchoolCard({
 }) {
   const SchoolDetail = ({ label, value }: { label: string; value: string }) => (
     <p
-      className={cn("text-sm pb-2 font-medium", {
+      className={cn("pb-2 text-sm font-medium", {
         "text-white": assigned,
         "text-brand": !assigned,
       })}
@@ -143,53 +158,56 @@ function SchoolCard({
 
   return (
     <Card
-      className={cn("p-5 pr-3.5 flex flex-col gap-5 mb-4", {
+      className={cn("mb-4 flex flex-col gap-5 p-5 pr-3.5", {
         "bg-white": !assigned,
         "bg-brand": assigned,
       })}
     >
       <div
         className={cn(
-          "flex items-center gap-4 border-b border-border/50 pb-3 pr-3 justify-between",
+          "flex items-center justify-between gap-4 border-b border-border/50 pb-3 pr-3",
           "grid grid-cols-[15fr,10fr]",
           {
             "border-border/20": assigned,
-          }
+          },
         )}
       >
-        <Link href={`/schools/demo`}>
+        <Link href={`/schools/${school.visibleId}`}>
           <h3
             className={cn("font-semibold xl:text-xl", {
               "text-white": assigned,
               "text-brand": !assigned,
             })}
           >
-            {school.name}
+            {school.schoolName}
           </h3>
         </Link>
         <div
           className={cn(
-            "flex justify-between items-start border-l border-border/50 pl-4",
+            "flex items-start justify-between border-l border-border/50 pl-4",
             {
               "border-border/20": assigned,
-            }
+            },
           )}
         >
-          <Link href={`/schools/demo`} className="flex flex-col gap-[1px]">
+          <Link
+            href={`/schools/${school.visibleId}`}
+            className="flex flex-col gap-[1px]"
+          >
             <p
               className={cn("font-semibold xl:text-2xl", {
                 "text-white": assigned,
                 "text-brand": !assigned,
               })}
             >
-              {school.population}
+              {school.numbersExpected || "N/A"}
             </p>
             <p
               className={cn(
-                "text-xs xl:text-lg text-muted-foreground font-medium",
+                "text-xs font-medium text-muted-foreground xl:text-lg",
                 {
                   "text-[#cccccc]": assigned,
-                }
+                },
               )}
             >
               Students
@@ -203,26 +221,26 @@ function SchoolCard({
         </div>
       </div>
 
-      <div className="flex gap-2 justify-between">
+      <div className="flex justify-between gap-2">
         <div className="flex gap-3">
           {sessionTypes.map((sessiontype: any) => (
             <div key={sessiontype} className="flex flex-col items-center">
-              <p className="text-xs text-muted-foreground font-medium">
+              <p className="text-xs font-medium text-muted-foreground">
                 {sessiontype}
               </p>
               <div
                 className={cn("h-4 w-4 rounded-full", {
-                  "bg-green-600": school.sessions.includes(sessiontype),
-                  "bg-gray-300": !school.sessions.includes(sessiontype),
+                  "bg-green-600": true,
+                  "bg-gray-300": !false,
                 })}
               ></div>
             </div>
           ))}
         </div>
-        <Link href={`/schools/demo`}>
-          <Button className="bg-shamiri-blue text-white flex gap-1 hover:bg-shamiri-blue-darker">
+        <Link href={`/schools/${school.visibleId}`}>
+          <Button className="flex gap-1 bg-shamiri-blue text-white hover:bg-shamiri-blue-darker">
             <Icons.users className="h-4 w-4" />
-            <p className="text-sm whitespace-nowrap">
+            <p className="whitespace-nowrap text-sm">
               {school.fellowsCount} Fellows
             </p>
           </Button>
@@ -233,7 +251,7 @@ function SchoolCard({
           "bg-border/20": assigned,
         })}
       />
-      <div className="relative justify-between items-center">
+      <div className="relative items-center justify-between">
         {assigned && (
           <div className="absolute left-5 flex gap-5">
             <button>
@@ -256,11 +274,11 @@ function SchoolCard({
           <AccordionItem value="item-1">
             <AccordionTrigger
               className={cn(
-                "items-right px-5 pt-0 pb-6 border-b  border-border/50",
+                "items-right border-b border-border/50 px-5 pb-6  pt-0",
                 {
                   "-mb-1": assigned,
                   "border-border/20": assigned,
-                }
+                },
               )}
               iconClass={cn("h-7 w-7 mr-3", {
                 "text-shamiri-light-blue": assigned,
