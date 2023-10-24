@@ -1,18 +1,15 @@
-import { getServerSession } from "next-auth";
 import Link from "next/link";
 
 import { ClinicalFeatureCard } from "#/app/(platform)/clinical-feature-card";
 import { Header } from "#/app/(platform)/common";
 import { HubCoordinatorView } from "#/app/(platform)/hub-coordinator-view";
 import { Icon, Icons } from "#/components/icons";
-import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
-import { cn } from "#/lib/utils";
+import { db } from "#/lib/db";
+import { getServerSession } from "next-auth";
 
 export default async function HomePage() {
-  const session = await getServerSession();
-
   let demoRole = "supervisor";
 
   if (demoRole === "hub-coordinator") {
@@ -26,11 +23,14 @@ export default async function HomePage() {
   return <div>Unknown role</div>;
 }
 
-function SupervisorView() {
+async function SupervisorView() {
+  const session = await getServerSession();
+  const hub = await currentHub();
+
   return (
     <div>
       <div className="mb-8">
-        <Header />
+        <Header userName={session?.user.name!} hubName={hub?.hubName!} />
       </div>
       <OverviewCards />
       <div className="mt-8">
@@ -47,19 +47,32 @@ function SupervisorView() {
   );
 }
 
-function OverviewCards() {
+async function currentHub() {
+  return await db.hub.findFirst();
+}
+
+async function OverviewCards() {
+  const hub = await currentHub();
+
+  const fellowCount = await db.fellow.count({
+    where: { hubId: hub?.id },
+  });
+  const schoolCount = await db.school.count({
+    where: { hubId: hub?.id },
+  });
+
   return (
     <div className="mb-4 grid grid-cols-1 gap-4 xs:grid-cols-2 sm:grid-cols-3 sm:gap-6">
       <FeatureCard
         href="/fellows"
         title="Fellows"
-        stat={621}
+        stat={fellowCount}
         Icon={Icons.users}
       />
       <FeatureCard
         href="/schools"
         title="Schools"
-        stat={341}
+        stat={schoolCount}
         Icon={Icons.schoolMinusOutline}
       />
       <ClinicalFeatureCard />
@@ -144,7 +157,8 @@ function SchoolsList() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2  xl:grid-cols-3">
       {/* <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6"> */}
-      {schools.map((school) => (
+      <div>TODO</div>
+      {/* {schools.map((school) => (
         <Card key={school.name} className="flex flex-col gap-5 p-5 pr-3.5">
           <div>
             <Icons.school className="h-10 text-brand" />
@@ -188,7 +202,7 @@ function SchoolsList() {
             </Button>
           </div>
         </Card>
-      ))}
+      ))} */}
     </div>
   );
 }

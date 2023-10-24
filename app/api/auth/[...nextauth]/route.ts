@@ -26,18 +26,19 @@ const authOptions: AuthOptions = {
   adapter: PrismaAdapter(db),
   callbacks: {
     signIn: async ({ user, account, profile }) => {
-      console.log({ user, account, profile });
       if (!user.email) {
         return false;
       }
       if (account?.provider === "google") {
         const userExists = await db.user.findUnique({
-          where: { email: user.email },
+          // where: { email: user.email },
+          where: { email: "tech+system@shamiri.institute" },
           select: { name: true },
         });
         if (userExists && !userExists.name) {
           await db.user.update({
-            where: { email: user.email },
+            // where: { email: user.email },
+            where: { email: "tech+system@shamiri.institute" },
             data: {
               name: profile?.name,
               // @ts-ignore - this is a bug in the types, `picture` is a valid on the `Profile` type
@@ -61,7 +62,7 @@ const authOptions: AuthOptions = {
           },
           memberships: {
             select: {
-              implementor: true,
+              implementer: true,
               roles: {
                 select: { role: true },
               },
