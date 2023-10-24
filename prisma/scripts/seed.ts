@@ -10,6 +10,7 @@ async function seedDatabase() {
   // await createUsers(db);
   await createHubs(db);
   await createSchools(db);
+  await createFellows(db);
 }
 
 seedDatabase()
@@ -197,6 +198,46 @@ async function createSchools(db: Database) {
         longitude: school["Longitude"] ? parseFloat(school["Longitude"]) : null,
         latitude: school["Latitude"] ? parseFloat(school["Latitude"]) : null,
         droppedOut: Boolean(school["Dropped_Out"]),
+      },
+    });
+  }
+}
+
+async function createFellows(db: Database) {
+  console.log("Creating fellows");
+
+  const fellows = await parseCsvFile("fellow_info");
+  for (let fellow of fellows) {
+    await db.fellow.create({
+      data: {
+        id: objectId("fellow"),
+        visibleId: fellow["Fellow_ID"],
+        fellowName: fellow["Fellow"],
+        fellowEmail: fellow["Email"],
+        yearOfImplementation: parseInt(fellow["Year_of_imp"]),
+        mpesaName: fellow["MPESA Name"],
+        mpesaNumber: fellow["MPESA_No"],
+        idNumber: fellow["ID_No"],
+        cellNumber: fellow["Cell_No"],
+        county: fellow["County"],
+        subCounty: fellow["Sub-County"],
+        dateOfBirth: fellow["DOB"],
+        gender: fellow["Gender"],
+        droppedOut: Boolean(fellow["Drop_out"]),
+        transferred: Boolean(fellow["Transfered"]),
+        hubId: (
+          await db.hub.findFirst({
+            where: { visibleId: fellow["Hub_ID"] },
+          })
+        )?.id,
+        implementerId: (
+          await db.implementer.findFirst({
+            where: { visibleId: fellow["Implementer_ID"] },
+          })
+        )?.id,
+        // supervisorId: (await db.supervisor.findFirstOrThrow({
+        //   where: { visibleId: fellow["Supervisor_ID"] },
+        // })).id,
       },
     });
   }
