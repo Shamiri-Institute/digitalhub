@@ -80,7 +80,7 @@ export function FellowModifyDialog({
       <SheetContent className="overflow-y-scroll" side="right">
         <SheetHeader>
           {mode === "create" && (
-            <SheetTitle className="md:text-xl">Create a fellow</SheetTitle>
+            <SheetTitle className="md:text-xl">Add a fellow</SheetTitle>
           )}
           {mode === "edit" && (
             <SheetTitle className="md:text-xl">{fellow.fellowName}</SheetTitle>
