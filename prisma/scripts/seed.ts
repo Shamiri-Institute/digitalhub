@@ -12,6 +12,7 @@ async function seedDatabase() {
   await createSchools(db);
   await createFellows(db);
   await createSupervisors(db);
+  await createStudents(db);
 }
 
 seedDatabase()
@@ -291,6 +292,74 @@ async function createSupervisors(db: Database) {
   }
 }
 
+async function createStudents(db: Database) {
+  console.log("Creating students");
+
+  const students = await parseCsvFile("student_info");
+  for (let student of students) {
+    await db.student.create({
+      data: {
+        id: objectId("stu"),
+        studentName: student["Name"],
+        visibleId: student["Shamiri_ID"],
+        fellowId: student["Fellow_ID"]
+          ? (
+              await db.fellow.findFirst({
+                where: { visibleId: student["Fellow_ID"] },
+              })
+            )?.id
+          : null,
+        supervisorId: student["Supervisor_ID"]
+          ? (
+              await db.supervisor.findFirst({
+                where: { visibleId: student["Supervisor_ID"] },
+              })
+            )?.id
+          : null,
+        implementerId: (
+          await db.supervisor.findFirst({
+            where: { visibleId: student["Implementer_ID"] },
+          })
+        )?.id,
+        schoolId: (
+          await db.school.findFirst({
+            where: { visibleId: student["School_ID"] },
+          })
+        )?.id,
+        yearOfImplementation: parseInt(student["Year_of_imp"]),
+        admissionNumber: student["Admission_Number"],
+        age: parseInt(student["Age"]),
+        gender: student["Gender"],
+        form: parseInt(student["Form"]),
+        stream: student["Stream"],
+        condition: student["Condition"],
+        intervention: student["intervention"],
+        tribe: student["Tribe"],
+        county: student["County"],
+        financialStatus: student["Financial_Status"],
+        home: student["Home"],
+        siblings: student["Siblings"],
+        religion: student["Religion"],
+        group: student["Group"],
+        survivingParents: student["Surviving_Parents"],
+        parentsDead: student["Parents_Dead"],
+        fathersEducation: student["Fathers_Education"],
+        mothersEducation: student["Mothers_Education"],
+        coCurricular: student["Co_Curricular"],
+        sports: student["Sports"],
+        createScreeningId: Boolean(student["Create_Screening_ID"]),
+        phoneNumber: student["phone_number"],
+        mpesaNumber: student["mpesa_number"],
+        attendanceSession0: Boolean(student["Attendance_Session_0"]),
+        attendanceSession1: Boolean(student["Attendance_Session_1"]),
+        attendanceSession2: Boolean(student["Attendance_Session_2"]),
+        attendanceSession3: Boolean(student["Attendance_Session_3"]),
+        attendanceSession4: Boolean(student["Attendance_Session_4"]),
+      },
+    });
+  }
+}
+
 /**
  * Loads and parse CSV file in ./data/ directory
  * These CSV files are downloaded from Airtable.
@@ -302,6 +371,7 @@ import * as path from "path";
 async function parseCsvFile(fileName: string): Promise<any[]> {
   return new Promise(async (resolve, reject) => {
     let records: any[] = [];
+    const duplicatesDetectorHash = new Set();
     const filePath = path.resolve(`./prisma/scripts/airtable/${fileName}.csv`);
     fs.createReadStream(filePath)
       .pipe(csv.parse({ delimiter: ",", columns: true }))
@@ -338,6 +408,27 @@ async function parseCsvFile(fileName: string): Promise<any[]> {
             );
             dataRow["Supervisor"] = "";
           }
+          if (dataRow["Hub_ID"]?.includes(",")) {
+            console.warn(
+              `Warning: Hub_ID contains multiple values (${dataRow["Hub_ID"]}). Check if this is correct. Truncating to one for now.`,
+            );
+            dataRow["Hub_ID"] = dataRow["Hub_ID"].split(",")[0];
+          }
+        }
+
+        if (fileName === "student_info") {
+          if (duplicatesDetectorHash.has(dataRow["Shamiri_ID"])) {
+            console.warn(
+              `Warning: Duplicate Shamiri_ID (${dataRow["Shamiri_ID"]}). Skipping.`,
+            );
+            return;
+          }
+
+          duplicatesDetectorHash.add(dataRow["Shamiri_ID"]);
+        }
+
+        if (records.length % 1000 === 0) {
+          console.log(`Parsed ${records.length} records`);
         }
 
         records.push(dataRow);
