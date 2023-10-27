@@ -6,12 +6,15 @@ import { format } from "date-fns";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+// @ts-expect-error
+import { experimental_useFormState as useFormState } from "react-dom";
 
 import { DropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
+import { addFellow } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
-import { FormField } from "#/components/ui/form";
+import { Form, FormField } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { Label } from "#/components/ui/label";
 import { Popover, PopoverContent } from "#/components/ui/popover";
@@ -24,7 +27,6 @@ import {
 } from "#/components/ui/select";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
   SheetFooter,
@@ -32,11 +34,15 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "#/components/ui/sheet";
+import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 
 const FormSchema = z.object({
   fellowName: z.string({
     required_error: "Please enter the fellow's name.",
+  }),
+  fellowEmail: z.string({
+    required_error: "Please enter the fellow's email.",
   }),
   cellNumber: z.string({
     required_error: "Please enter the fellow's cell phone number.",
@@ -61,6 +67,10 @@ const FormSchema = z.object({
   }),
 });
 
+const initialState = {
+  message: null,
+};
+
 export function FellowModifyDialog({
   mode,
   fellow,
@@ -73,6 +83,19 @@ export function FellowModifyDialog({
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
+
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    toast({
+      title: "You submitted the following values:",
+      description: (
+        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
+    });
+  }
+
+  const [state, formAction] = useFormState(addFellow, initialState);
 
   return (
     <Sheet>
@@ -94,214 +117,243 @@ export function FellowModifyDialog({
             <SheetDescription>Shamiri ID: {fellow.visibleId}</SheetDescription>
           )}
         </SheetHeader>
-        <div className="mt-6 space-y-6">
-          <div>
-            <FormField
-              control={form.control}
-              name="fellowName"
-              render={({ field }) => (
-                <div className="mt-3 grid w-full gap-1.5">
-                  <Label htmlFor="fellowName">Name</Label>
-                  <Input
-                    id="fellowName"
-                    name="fellowName"
-                    onChange={field.onChange}
-                    defaultValue={fellow?.fellowName || field.value}
-                    className="mt-1.5 resize-none bg-card"
-                    placeholder="John Kenyatta"
-                    data-1p-ignore="true"
-                  />
-                </div>
-              )}
-            />
-          </div>
-          <div>
-            <FormField
-              control={form.control}
-              name="cellNumber"
-              render={({ field }) => (
-                <div className="mt-3 grid w-full gap-1.5">
-                  <Label htmlFor="cellNumber">Cell number</Label>
-                  <Input
-                    id="cellNumber"
-                    type="tel"
-                    name="cellNumber"
-                    onChange={field.onChange}
-                    defaultValue={fellow?.cellNumber || field.value}
-                    placeholder="+254-700-000-000"
-                    className="mt-1.5 resize-none bg-card"
-                  />
-                </div>
-              )}
-            />
-          </div>
-          <div>
-            <FormField
-              control={form.control}
-              name="mpesaName"
-              render={({ field }) => (
-                <div className="mt-3 grid w-full gap-1.5">
-                  <Label htmlFor="mpesaName">MPESA name</Label>
-                  <Input
-                    id="mpesaName"
-                    name="mpesaName"
-                    onChange={field.onChange}
-                    defaultValue={fellow?.mpesaName || field.value}
-                    placeholder="John Kenyatta"
-                    className="mt-1.5 resize-none bg-card"
-                  />
-                </div>
-              )}
-            />
-          </div>
-          <div>
-            <FormField
-              control={form.control}
-              name="mpesaNumber"
-              render={({ field }) => (
-                <div className="mt-3 grid w-full gap-1.5">
-                  <Label htmlFor="mpesaNumber">MPESA number</Label>
-                  <Input
-                    id="mpesaNumber"
-                    name="mpesaNumber"
-                    onChange={field.onChange}
-                    defaultValue={fellow?.mpesaNumber || field.value}
-                    placeholder="+254-700-000-000"
-                    className="mt-1.5 resize-none bg-card"
-                  />
-                </div>
-              )}
-            />
-          </div>
-          <div>
-            {/* TODO: combobox */}
-            <FormField
-              control={form.control}
-              name="county"
-              render={({ field }) => (
-                <div className="mt-3 grid w-full gap-1.5">
-                  <Label htmlFor="county">County</Label>
-                  <Input
-                    id="county"
-                    name="county"
-                    onChange={field.onChange}
-                    defaultValue={fellow?.county || field.value}
-                    placeholder="Nairobi"
-                    className="mt-1.5 resize-none bg-card"
-                  />
-                </div>
-              )}
-            />
-          </div>
-          <div>
-            {/* TODO: combobox */}
-            <FormField
-              control={form.control}
-              name="subCounty"
-              render={({ field }) => (
-                <div className="mt-3 grid w-full gap-1.5">
-                  <Label htmlFor="subCounty">Sub-county</Label>
-                  <Input
-                    id="subCounty"
-                    name="subCounty"
-                    onChange={field.onChange}
-                    defaultValue={fellow?.subCounty || field.value}
-                    placeholder="Westlands"
-                    className="mt-1.5 resize-none bg-card"
-                  />
-                </div>
-              )}
-            />
-          </div>
-          <div>
-            {/* Draft date picker */}
-            <FormField
-              control={form.control}
-              name="dateOfBirth"
-              render={({ field }) => (
-                <div className="mt-3 grid w-full gap-1.5">
-                  <Label htmlFor="dateOfBirth">Date of birth</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                          !field.value && "text-muted-foreground",
-                        )}
-                      >
-                        <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={fellow?.dateOfBirth || field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              )}
-            />
-          </div>
-          <div>
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <div className="mt-3 grid w-full gap-1.5">
-                  <Label htmlFor="gender">Gender</Label>
-                  <Select>
-                    <SelectTrigger className="">
-                      <SelectValue
-                        className="text-muted-foreground"
-                        defaultValue={fellow?.gender || field.value}
+
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            action={formAction}
+            className="overflow-hidden text-ellipsis"
+          >
+            <div className="mt-6 space-y-6">
+              <div>
+                <FormField
+                  control={form.control}
+                  name="fellowName"
+                  render={({ field }) => (
+                    <div className="mt-3 grid w-full gap-1.5">
+                      <Label htmlFor="fellowName">Name</Label>
+                      <Input
+                        id="fellowName"
+                        name="fellowName"
                         onChange={field.onChange}
-                        placeholder={
-                          <span className="text-muted-foreground">
-                            Select gender
-                          </span>
-                        }
+                        defaultValue={fellow?.fellowName || field.value}
+                        className="mt-1.5 resize-none bg-card"
+                        placeholder="John Kenyatta"
+                        data-1p-ignore="true"
                       />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="light">Male</SelectItem>
-                      <SelectItem value="dark">Female</SelectItem>
-                      <SelectItem value="system">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                    </div>
+                  )}
+                />
+              </div>
+              <div>
+                <FormField
+                  control={form.control}
+                  name="fellowEmail"
+                  render={({ field }) => (
+                    <div className="mt-3 grid w-full gap-1.5">
+                      <Label htmlFor="fellowEmail">Email</Label>
+                      <Input
+                        id="fellowEmail"
+                        name="fellowEmail"
+                        onChange={field.onChange}
+                        defaultValue={fellow?.fellowName || field.value}
+                        className="mt-1.5 resize-none bg-card"
+                        placeholder="john.kenyatta@gmail.com"
+                        data-1p-ignore="true"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div>
+                <FormField
+                  control={form.control}
+                  name="cellNumber"
+                  render={({ field }) => (
+                    <div className="mt-3 grid w-full gap-1.5">
+                      <Label htmlFor="cellNumber">Cell number</Label>
+                      <Input
+                        id="cellNumber"
+                        type="tel"
+                        name="cellNumber"
+                        onChange={field.onChange}
+                        defaultValue={fellow?.cellNumber || field.value}
+                        placeholder="+254-700-000-000"
+                        className="mt-1.5 resize-none bg-card"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div>
+                <FormField
+                  control={form.control}
+                  name="mpesaName"
+                  render={({ field }) => (
+                    <div className="mt-3 grid w-full gap-1.5">
+                      <Label htmlFor="mpesaName">MPESA name</Label>
+                      <Input
+                        id="mpesaName"
+                        name="mpesaName"
+                        onChange={field.onChange}
+                        defaultValue={fellow?.mpesaName || field.value}
+                        placeholder="John Kenyatta"
+                        className="mt-1.5 resize-none bg-card"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div>
+                <FormField
+                  control={form.control}
+                  name="mpesaNumber"
+                  render={({ field }) => (
+                    <div className="mt-3 grid w-full gap-1.5">
+                      <Label htmlFor="mpesaNumber">MPESA number</Label>
+                      <Input
+                        id="mpesaNumber"
+                        name="mpesaNumber"
+                        onChange={field.onChange}
+                        defaultValue={fellow?.mpesaNumber || field.value}
+                        placeholder="+254-700-000-000"
+                        className="mt-1.5 resize-none bg-card"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div>
+                {/* TODO: combobox */}
+                <FormField
+                  control={form.control}
+                  name="county"
+                  render={({ field }) => (
+                    <div className="mt-3 grid w-full gap-1.5">
+                      <Label htmlFor="county">County</Label>
+                      <Input
+                        id="county"
+                        name="county"
+                        onChange={field.onChange}
+                        defaultValue={fellow?.county || field.value}
+                        placeholder="Nairobi"
+                        className="mt-1.5 resize-none bg-card"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div>
+                {/* TODO: combobox */}
+                <FormField
+                  control={form.control}
+                  name="subCounty"
+                  render={({ field }) => (
+                    <div className="mt-3 grid w-full gap-1.5">
+                      <Label htmlFor="subCounty">Sub-county</Label>
+                      <Input
+                        id="subCounty"
+                        name="subCounty"
+                        onChange={field.onChange}
+                        defaultValue={fellow?.subCounty || field.value}
+                        placeholder="Westlands"
+                        className="mt-1.5 resize-none bg-card"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+              <div>
+                {/* Draft date picker */}
+                <FormField
+                  control={form.control}
+                  name="dateOfBirth"
+                  render={({ field }) => (
+                    <div className="mt-3 grid w-full gap-1.5">
+                      <Label htmlFor="dateOfBirth">Date of birth</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                              !field.value && "text-muted-foreground",
+                            )}
+                          >
+                            <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={fellow?.dateOfBirth || field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  )}
+                />
+              </div>
+              <div>
+                <FormField
+                  control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <div className="mt-3 grid w-full gap-1.5">
+                      <Label htmlFor="gender">Gender</Label>
+                      <Select>
+                        <SelectTrigger className="">
+                          <SelectValue
+                            className="text-muted-foreground"
+                            defaultValue={fellow?.gender || field.value}
+                            onChange={field.onChange}
+                            placeholder={
+                              <span className="text-muted-foreground">
+                                Select gender
+                              </span>
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="M">Male</SelectItem>
+                          <SelectItem value="F">Female</SelectItem>
+                          <SelectItem value="O">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                />
+              </div>
+              <SheetFooter>
+                {/* <SheetClose asChild> */}
+                <Button
+                  type="submit"
+                  className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
+                >
+                  Submit
+                </Button>
+                {/* </SheetClose> */}
+              </SheetFooter>
+              {mode === "edit" && (
+                <DropoutDialog>
+                  <Button
+                    type="submit"
+                    className="w-full bg-[#AC2925] py-5 text-white transition-transform  active:scale-95"
+                  >
+                    Drop Out
+                  </Button>
+                </DropoutDialog>
               )}
-            />
-          </div>
-          <SheetFooter>
-            <SheetClose asChild>
-              <Button
-                type="submit"
-                className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
-              >
-                Submit
-              </Button>
-            </SheetClose>
-          </SheetFooter>
-          {mode === "edit" && (
-            <DropoutDialog>
-              <Button
-                type="submit"
-                className="w-full bg-[#AC2925] py-5 text-white transition-transform  active:scale-95"
-              >
-                Drop Out
-              </Button>
-            </DropoutDialog>
-          )}
-        </div>
+            </div>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

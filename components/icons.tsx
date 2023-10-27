@@ -304,7 +304,7 @@ export const Icons = {
     >
       <path
         stroke="currentColor"
-        strokeWidth="1.2"
+        strokeWidth="1.7"
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M3.26611 6H19.8619M5.11009 6V20C5.11009 21.1046 5.93566 22 6.95406 22H16.1739C17.1923 22 18.0179 21.1046 18.0179 20V6M7.87604 6V4C7.87604 2.89543 8.70162 2 9.72001 2H13.408C14.4264 2 15.2519 2.89543 15.2519 4V6"
@@ -312,14 +312,14 @@ export const Icons = {
       <path
         d="M13.4077 11V17"
         stroke="currentColor"
-        strokeWidth="1.2"
+        strokeWidth="1.7"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M9.71973 11V17"
         stroke="currentColor"
-        strokeWidth="1.2"
+        strokeWidth="1.7"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
