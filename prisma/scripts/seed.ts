@@ -424,6 +424,10 @@ async function parseCsvFile(fileName: string): Promise<any[]> {
             return;
           }
 
+          if (dataRow["Gender"] !== null) {
+            dataRow["Gender"] = dataRow["Gender"].trim();
+          }
+
           duplicatesDetectorHash.add(dataRow["Shamiri_ID"]);
         }
 
