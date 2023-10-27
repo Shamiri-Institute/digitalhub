@@ -1,5 +1,7 @@
 import { objectId } from "#/lib/crypto";
 import { Database, db } from "#/lib/db";
+import { parseEuropeanDate } from "#/lib/utils";
+import { parseCsvFile } from "#/prisma/scripts/utils";
 
 async function seedDatabase() {
   await truncateTables();
@@ -10,8 +12,10 @@ async function seedDatabase() {
   // await createUsers(db);
   await createHubs(db);
   await createSchools(db);
-  await createFellows(db);
   await createSupervisors(db);
+  await createFellows(db);
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+  await createFellowAttendances(db);
   await createStudents(db);
 }
 
@@ -27,7 +31,7 @@ seedDatabase()
 
 async function truncateTables() {
   await db.$executeRaw`
-  TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, supervisors, schools, hub_coordinators;
+  TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, fellow_attendances, supervisors, schools, hub_coordinators;
   `;
 }
 
@@ -44,8 +48,7 @@ async function createSystemUser(db: Database) {
 async function createImplementers(db: Database) {
   console.log("Creating implementers");
 
-  const implementers = await parseCsvFile("implementer_info");
-  for (let implementer of implementers) {
+  await parseCsvFile("implementer_info", async (implementer: any) => {
     await db.implementer.create({
       data: {
         id: objectId("impl"),
@@ -58,7 +61,7 @@ async function createImplementers(db: Database) {
         pointPersonEmail: implementer["PP_Email"],
       },
     });
-  }
+  });
 }
 
 // async function createPermissions(db: Database) {
@@ -128,8 +131,7 @@ async function createImplementers(db: Database) {
 async function createHubs(db: Database) {
   console.log("Creating hubs");
 
-  const hubs = await parseCsvFile("hub_info");
-  for (let hub of hubs) {
+  await parseCsvFile("hub_info", async (hub: any) => {
     const implementer = await db.implementer.findFirstOrThrow({
       where: { visibleId: hub["implementer_id"] },
     });
@@ -156,14 +158,13 @@ async function createHubs(db: Database) {
         coordinatorId: hubCoordinatorId,
       },
     });
-  }
+  });
 }
 
 async function createSchools(db: Database) {
   console.log("Creating schools");
 
-  const schools = await parseCsvFile("school_info");
-  for (let school of schools) {
+  await parseCsvFile("school_info", async (school: any) => {
     let implementerId: string | undefined;
     if (school["Implementer_ID"]) {
       const implementer = await db.implementer.findFirstOrThrow({
@@ -202,14 +203,13 @@ async function createSchools(db: Database) {
         droppedOut: Boolean(school["Dropped_Out"]),
       },
     });
-  }
+  });
 }
 
 async function createFellows(db: Database) {
   console.log("Creating fellows");
 
-  const fellows = await parseCsvFile("fellow_info");
-  for (let fellow of fellows) {
+  await parseCsvFile("fellow_info", async (fellow: any) => {
     await db.fellow.create({
       data: {
         id: objectId("fellow"),
@@ -242,14 +242,13 @@ async function createFellows(db: Database) {
         // })).id,
       },
     });
-  }
+  });
 }
 
 async function createSupervisors(db: Database) {
   console.log("Creating supervisors");
 
-  const supervisors = await parseCsvFile("supervisor_info");
-  for (let supervisor of supervisors) {
+  await parseCsvFile("supervisor_info", async (supervisor: any) => {
     await db.supervisor.create({
       data: {
         id: objectId("sup"),
@@ -289,178 +288,121 @@ async function createSupervisors(db: Database) {
         droppedOut: Boolean(supervisor["Drop_out"]),
       },
     });
-  }
+  });
+}
+
+async function createFellowAttendances(db: Database) {
+  console.log("Creating fellow attendances");
+
+  await parseCsvFile(
+    "fellow_attendance_temp",
+    async (fellowAttendance: any) => {
+      try {
+        const fellowId = (await db.fellow.findFirst({
+          where: { visibleId: fellowAttendance["Fellow_ID"] },
+        }))!.id!;
+        const schoolId = (await db.school.findFirst({
+          where: { visibleId: fellowAttendance["School_ID"] },
+        }))!.id!;
+        const supervisorId = (await db.supervisor.findFirst({
+          where: { visibleId: fellowAttendance["Supervisor_ID"] },
+        }))!.id!;
+        await db.fellowAttendance.create({
+          data: {
+            visibleId: fellowAttendance["Attendance_ID"],
+            fellow: {
+              connect: { id: fellowId },
+            },
+            sessionNumber: parseInt(fellowAttendance["Session"]),
+            sessionDate: parseEuropeanDate(fellowAttendance["Date"]) as Date,
+            yearOfImplementation: parseInt(fellowAttendance["Year_of_imp"]),
+            school: {
+              connect: { id: schoolId },
+            },
+            supervisor: {
+              connect: { id: supervisorId },
+            },
+            attended: Boolean(fellowAttendance["Attended"]),
+            absenceReason: fellowAttendance["Absence_Reason"],
+            paymentInitiated: Boolean(fellowAttendance["Payment_Initiated"]),
+          },
+        });
+      } catch (e) {
+        console.log(fellowAttendance);
+        throw e;
+      }
+    },
+  );
 }
 
 async function createStudents(db: Database) {
   console.log("Creating students");
 
-  const students = await parseCsvFile("student_info");
-  for (let student of students) {
-    await db.student.create({
-      data: {
-        id: objectId("stu"),
-        studentName: student["Name"],
-        visibleId: student["Shamiri_ID"],
-        fellowId: student["Fellow_ID"]
-          ? (
-              await db.fellow.findFirst({
-                where: { visibleId: student["Fellow_ID"] },
-              })
-            )?.id
-          : null,
-        supervisorId: student["Supervisor_ID"]
-          ? (
-              await db.supervisor.findFirst({
-                where: { visibleId: student["Supervisor_ID"] },
-              })
-            )?.id
-          : null,
-        implementerId: (
-          await db.supervisor.findFirst({
-            where: { visibleId: student["Implementer_ID"] },
-          })
-        )?.id,
-        schoolId: (
-          await db.school.findFirst({
-            where: { visibleId: student["School_ID"] },
-          })
-        )?.id,
-        yearOfImplementation: parseInt(student["Year_of_imp"]),
-        admissionNumber: student["Admission_Number"],
-        age: parseInt(student["Age"]),
-        gender: student["Gender"],
-        form: parseInt(student["Form"]),
-        stream: student["Stream"],
-        condition: student["Condition"],
-        intervention: student["intervention"],
-        tribe: student["Tribe"],
-        county: student["County"],
-        financialStatus: student["Financial_Status"],
-        home: student["Home"],
-        siblings: student["Siblings"],
-        religion: student["Religion"],
-        group: student["Group"],
-        survivingParents: student["Surviving_Parents"],
-        parentsDead: student["Parents_Dead"],
-        fathersEducation: student["Fathers_Education"],
-        mothersEducation: student["Mothers_Education"],
-        coCurricular: student["Co_Curricular"],
-        sports: student["Sports"],
-        createScreeningId: Boolean(student["Create_Screening_ID"]),
-        phoneNumber: student["phone_number"],
-        mpesaNumber: student["mpesa_number"],
-        attendanceSession0: Boolean(student["Attendance_Session_0"]),
-        attendanceSession1: Boolean(student["Attendance_Session_1"]),
-        attendanceSession2: Boolean(student["Attendance_Session_2"]),
-        attendanceSession3: Boolean(student["Attendance_Session_3"]),
-        attendanceSession4: Boolean(student["Attendance_Session_4"]),
-      },
-    });
-  }
-}
-
-/**
- * Loads and parse CSV file in ./data/ directory
- * These CSV files are downloaded from Airtable.
- **/
-import * as csv from "csv-parse";
-import * as fs from "fs";
-import * as path from "path";
-
-async function parseCsvFile(fileName: string): Promise<any[]> {
-  return new Promise(async (resolve, reject) => {
-    let records: any[] = [];
-    const duplicatesDetectorHash = new Set();
-    const filePath = path.resolve(`./prisma/scripts/airtable/${fileName}.csv`);
-    fs.createReadStream(filePath)
-      .pipe(csv.parse({ delimiter: ",", columns: true }))
-      .on("data", function (row: any) {
-        const dataRow = replaceEmptyStringsWithNull(row);
-        if (fileName === "school_info") {
-          if (dataRow["Implementer_ID"].includes(",")) {
-            console.warn(
-              `Warning: Implementer_ID contains multiple values (${dataRow["Implementer_ID"]}). Check if this is correct. Truncating to one for now.`,
-            );
-            dataRow["Implementer_ID"] = dataRow["Implementer_ID"].split(",")[0];
-          }
-        }
-
-        if (fileName === "implementer_info") {
-          if (dataRow["Implementer"] === null) {
-            console.warn(
-              "Warning: Implementer name is null. Setting to empty string.",
-            );
-            dataRow["Implementer"] = "";
-          }
-          if (dataRow["Implementer_Type"] === null) {
-            console.warn(
-              "Warning: Implementer type is null. Setting to empty string.",
-            );
-            dataRow["Implementer_Type"] = "";
-          }
-        }
-
-        if (fileName === "supervisor_info") {
-          if (dataRow["Supervisor"] === null) {
-            console.warn(
-              "Warning: Supervisor name is null. Setting to empty string.",
-            );
-            dataRow["Supervisor"] = "";
-          }
-          if (dataRow["Hub_ID"]?.includes(",")) {
-            console.warn(
-              `Warning: Hub_ID contains multiple values (${dataRow["Hub_ID"]}). Check if this is correct. Truncating to one for now.`,
-            );
-            dataRow["Hub_ID"] = dataRow["Hub_ID"].split(",")[0];
-          }
-        }
-
-        if (fileName === "student_info") {
-          if (duplicatesDetectorHash.has(dataRow["Shamiri_ID"])) {
-            console.warn(
-              `Warning: Duplicate Shamiri_ID (${dataRow["Shamiri_ID"]}). Skipping.`,
-            );
-            return;
-          }
-
-          if (dataRow["Gender"] !== null) {
-            dataRow["Gender"] = dataRow["Gender"].trim();
-          }
-
-          duplicatesDetectorHash.add(dataRow["Shamiri_ID"]);
-        }
-
-        if (records.length % 1000 === 0) {
-          console.log(`Parsed ${records.length} records`);
-        }
-
-        records.push(dataRow);
-      })
-      .on("end", function () {
-        resolve(records);
-      })
-      .on("error", function (error: any) {
-        console.log(error.message);
-        reject(error);
+  await parseCsvFile("student_info", async (student: any) => {
+    try {
+      await db.student.create({
+        data: {
+          id: objectId("stu"),
+          studentName: student["Name"],
+          visibleId: student["Shamiri_ID"],
+          fellowId: student["Fellow_ID"]
+            ? (
+                await db.fellow.findFirst({
+                  where: { visibleId: student["Fellow_ID"] },
+                })
+              )?.id
+            : null,
+          supervisorId: student["Supervisor_ID"]
+            ? (
+                await db.supervisor.findFirst({
+                  where: { visibleId: student["Supervisor_ID"] },
+                })
+              )?.id
+            : null,
+          implementerId: (
+            await db.supervisor.findFirst({
+              where: { visibleId: student["Implementer_ID"] },
+            })
+          )?.id,
+          schoolId: (
+            await db.school.findFirst({
+              where: { visibleId: student["School_ID"] },
+            })
+          )?.id,
+          yearOfImplementation: parseInt(student["Year_of_imp"]),
+          admissionNumber: student["Admission_Number"],
+          age: parseInt(student["Age"]),
+          gender: student["Gender"],
+          form: parseInt(student["Form"]),
+          stream: student["Stream"],
+          condition: student["Condition"],
+          intervention: student["intervention"],
+          tribe: student["Tribe"],
+          county: student["County"],
+          financialStatus: student["Financial_Status"],
+          home: student["Home"],
+          siblings: student["Siblings"],
+          religion: student["Religion"],
+          group: student["Group"],
+          survivingParents: student["Surviving_Parents"],
+          parentsDead: student["Parents_Dead"],
+          fathersEducation: student["Fathers_Education"],
+          mothersEducation: student["Mothers_Education"],
+          coCurricular: student["Co_Curricular"],
+          sports: student["Sports"],
+          createScreeningId: Boolean(student["Create_Screening_ID"]),
+          phoneNumber: student["phone_number"],
+          mpesaNumber: student["mpesa_number"],
+          attendanceSession0: Boolean(student["Attendance_Session_0"]),
+          attendanceSession1: Boolean(student["Attendance_Session_1"]),
+          attendanceSession2: Boolean(student["Attendance_Session_2"]),
+          attendanceSession3: Boolean(student["Attendance_Session_3"]),
+          attendanceSession4: Boolean(student["Attendance_Session_4"]),
+        },
       });
-  });
-}
-
-interface GenericObject {
-  [key: string]: any;
-}
-
-function replaceEmptyStringsWithNull(obj: GenericObject): GenericObject {
-  return Object.entries(obj).reduce((newObj: GenericObject, [key, value]) => {
-    if (value === "") {
-      newObj[key.trim()] = null;
-    } else if (typeof value === "object" && value !== null) {
-      // If value is an object or an array
-      newObj[key.trim()] = replaceEmptyStringsWithNull(value);
-    } else {
-      newObj[key.trim()] = value;
+    } catch (e) {
+      console.log(student);
+      throw e;
     }
-    return newObj;
-  }, {});
+  });
 }

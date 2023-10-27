@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { SchoolDemographics } from "#/app/(platform)/schools/[visibleId]/demographics";
 import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
+import { currentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
@@ -93,7 +94,7 @@ type SchoolFindUniqueOutput = NonNullable<
 >;
 
 async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
-  // const supervisor = await currentSupervisor();
+  const supervisor = await currentSupervisor();
   const fellows = await db.fellow.findMany({
     where: { hubId: school.hubId },
   });
