@@ -15,31 +15,33 @@ export default async function SchoolDetailPage({
   const school = await db.school.findUnique({
     where: { visibleId },
   });
-  const demographics = {
-    totalPopulation: 1000,
-    malePopulation: 500,
-    femalePopulation: 500,
-  };
-
   if (!school) {
     notFound();
   }
+
+  const males = await db.student.count({
+    where: { schoolId: school.id, gender: "M" },
+  });
+
+  const females = await db.student.count({
+    where: { schoolId: school.id, gender: "F" },
+  });
+
+  const others = await db.student.count({
+    where: { schoolId: school.id, gender: undefined },
+  });
+
+  const total = await db.student.count({ where: { schoolId: school.id } });
 
   return (
     <main className="pt-2">
       <Header />
       <div className="relative">
-        <SchoolDemographics
-          totalPopulation={demographics.totalPopulation}
-          malePopulation={demographics.malePopulation}
-          femalePopulation={demographics.femalePopulation}
-        />
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <SchoolDemographics males={males} females={females} others={others} />
+        <div className="absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2">
           <div className="text-center">
             <div className="text-sm">Students</div>
-            <div className="text-2xl font-semibold">
-              {demographics.totalPopulation}
-            </div>
+            <div className="text-2xl font-semibold">{total}</div>
             <div className="gap flex justify-around">
               <div className="flex items-center gap-1">
                 <div className="h-1.5 w-1.5 rounded-full bg-[#B7D4E8]" />
