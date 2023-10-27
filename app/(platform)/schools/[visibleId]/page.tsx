@@ -35,6 +35,8 @@ export default async function SchoolDetailPage({
 
   const total = await db.student.count({ where: { schoolId: school.id } });
 
+  const supervisor = await currentSupervisor();
+
   return (
     <main className="pt-2">
       <Header />
@@ -73,7 +75,14 @@ export default async function SchoolDetailPage({
       <div className="mt-8">
         <div className="mx-4 flex justify-between border-b border-border/50 pb-3">
           <div className="text-2xl font-semibold">Fellows</div>
-          <FellowModifyDialog mode="create">
+          <FellowModifyDialog
+            mode="create"
+            fellow={{
+              hubId: school.hubId,
+              supervisorId: supervisor.id,
+              implementerId: school.implementerId,
+            }}
+          >
             <button className="transition-transform active:scale-95">
               <Icons.plusCircle
                 className="h-6 w-6 text-shamiri-blue"

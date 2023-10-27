@@ -29,7 +29,6 @@ import {
   Sheet,
   SheetContent,
   SheetDescription,
-  SheetFooter,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -82,9 +81,32 @@ export function FellowModifyDialog({
 }) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
+    defaultValues: {
+      fellowName: fellow?.fellowName,
+      fellowEmail: fellow?.fellowEmail,
+      cellNumber: fellow?.cellNumber,
+      mpesaName: fellow?.mpesaName,
+      mpesaNumber: fellow?.mpesaNumber,
+      county: fellow?.county,
+      subCounty: fellow?.subCounty,
+      dateOfBirth: fellow?.dateOfBirth,
+      gender: fellow?.gender,
+    },
   });
 
+  const [isSheetOpen, setIsSheetOpen] = React.useState(false);
+  const [state, formAction] = useFormState(addFellow, initialState);
+
   function onSubmit(data: z.infer<typeof FormSchema>) {
+    console.log({ data });
+
+    const result = formAction({
+      ...data,
+      hubId: fellow?.hubId,
+      supervisorId: fellow?.supervisorId,
+      implementerId: fellow?.implementerId,
+    });
+    console.log({ result });
     toast({
       title: "You submitted the following values:",
       description: (
@@ -93,12 +115,12 @@ export function FellowModifyDialog({
         </pre>
       ),
     });
+
+    setIsSheetOpen(false);
   }
 
-  const [state, formAction] = useFormState(addFellow, initialState);
-
   return (
-    <Sheet>
+    <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <SheetTrigger asChild>{children}</SheetTrigger>
       <SheetContent className="overflow-y-scroll" side="right">
         <SheetHeader>
@@ -120,9 +142,10 @@ export function FellowModifyDialog({
 
         <Form {...form}>
           <form
+            id="modifyFellowForm"
             onSubmit={form.handleSubmit(onSubmit)}
             action={formAction}
-            className="overflow-hidden text-ellipsis"
+            className="overflow-hidden text-ellipsis px-1"
           >
             <div className="mt-6 space-y-6">
               <div>
@@ -134,12 +157,10 @@ export function FellowModifyDialog({
                       <Label htmlFor="fellowName">Name</Label>
                       <Input
                         id="fellowName"
-                        name="fellowName"
-                        onChange={field.onChange}
-                        defaultValue={fellow?.fellowName || field.value}
                         className="mt-1.5 resize-none bg-card"
                         placeholder="John Kenyatta"
                         data-1p-ignore="true"
+                        {...field}
                       />
                     </div>
                   )}
@@ -154,12 +175,10 @@ export function FellowModifyDialog({
                       <Label htmlFor="fellowEmail">Email</Label>
                       <Input
                         id="fellowEmail"
-                        name="fellowEmail"
-                        onChange={field.onChange}
-                        defaultValue={fellow?.fellowName || field.value}
                         className="mt-1.5 resize-none bg-card"
                         placeholder="john.kenyatta@gmail.com"
                         data-1p-ignore="true"
+                        {...field}
                       />
                     </div>
                   )}
@@ -174,12 +193,9 @@ export function FellowModifyDialog({
                       <Label htmlFor="cellNumber">Cell number</Label>
                       <Input
                         id="cellNumber"
-                        type="tel"
-                        name="cellNumber"
-                        onChange={field.onChange}
-                        defaultValue={fellow?.cellNumber || field.value}
                         placeholder="+254-700-000-000"
                         className="mt-1.5 resize-none bg-card"
+                        {...field}
                       />
                     </div>
                   )}
@@ -194,11 +210,9 @@ export function FellowModifyDialog({
                       <Label htmlFor="mpesaName">MPESA name</Label>
                       <Input
                         id="mpesaName"
-                        name="mpesaName"
-                        onChange={field.onChange}
-                        defaultValue={fellow?.mpesaName || field.value}
                         placeholder="John Kenyatta"
                         className="mt-1.5 resize-none bg-card"
+                        {...field}
                       />
                     </div>
                   )}
@@ -213,11 +227,9 @@ export function FellowModifyDialog({
                       <Label htmlFor="mpesaNumber">MPESA number</Label>
                       <Input
                         id="mpesaNumber"
-                        name="mpesaNumber"
-                        onChange={field.onChange}
-                        defaultValue={fellow?.mpesaNumber || field.value}
                         placeholder="+254-700-000-000"
                         className="mt-1.5 resize-none bg-card"
+                        {...field}
                       />
                     </div>
                   )}
@@ -233,11 +245,9 @@ export function FellowModifyDialog({
                       <Label htmlFor="county">County</Label>
                       <Input
                         id="county"
-                        name="county"
-                        onChange={field.onChange}
-                        defaultValue={fellow?.county || field.value}
                         placeholder="Nairobi"
                         className="mt-1.5 resize-none bg-card"
+                        {...field}
                       />
                     </div>
                   )}
@@ -253,18 +263,15 @@ export function FellowModifyDialog({
                       <Label htmlFor="subCounty">Sub-county</Label>
                       <Input
                         id="subCounty"
-                        name="subCounty"
-                        onChange={field.onChange}
-                        defaultValue={fellow?.subCounty || field.value}
                         placeholder="Westlands"
                         className="mt-1.5 resize-none bg-card"
+                        {...field}
                       />
                     </div>
                   )}
                 />
               </div>
               <div>
-                {/* Draft date picker */}
                 <FormField
                   control={form.control}
                   name="dateOfBirth"
@@ -282,7 +289,7 @@ export function FellowModifyDialog({
                           >
                             <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
                             {field.value ? (
-                              format(field.value, "PPP")
+                              format(field.value, "dd/MM/yyyy")
                             ) : (
                               <span>Pick a date</span>
                             )}
@@ -308,8 +315,12 @@ export function FellowModifyDialog({
                   render={({ field }) => (
                     <div className="mt-3 grid w-full gap-1.5">
                       <Label htmlFor="gender">Gender</Label>
-                      <Select>
-                        <SelectTrigger className="">
+                      <Select
+                        name="gender"
+                        defaultValue={fellow?.gender || field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
                           <SelectValue
                             className="text-muted-foreground"
                             defaultValue={fellow?.gender || field.value}
@@ -331,18 +342,18 @@ export function FellowModifyDialog({
                   )}
                 />
               </div>
-              <SheetFooter>
-                {/* <SheetClose asChild> */}
-                <Button
-                  type="submit"
-                  className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
-                >
-                  Submit
-                </Button>
-                {/* </SheetClose> */}
-              </SheetFooter>
+              <Button
+                type="submit"
+                form="modifyFellowForm"
+                className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
+              >
+                Submit
+              </Button>
+              <p aria-live="polite" className="sr-only" role="status">
+                {state?.message}
+              </p>
               {mode === "edit" && (
-                <DropoutDialog>
+                <DropoutDialog fellow={fellow}>
                   <Button
                     type="submit"
                     className="w-full bg-[#AC2925] py-5 text-white transition-transform  active:scale-95"

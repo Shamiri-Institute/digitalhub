@@ -99,7 +99,7 @@ async function parseCsvFile(file: File) {
   });
 }
 
-export async function addFellow(prevState: any, formData: any) {
+export async function addFellow(prevState: any, formDataObject: any) {
   const data = z
     .object({
       fellowName: z.string(),
@@ -111,18 +111,11 @@ export async function addFellow(prevState: any, formData: any) {
       subCounty: z.string(),
       dateOfBirth: z.date(),
       gender: z.string(),
+      hubId: z.string(),
+      supervisorId: z.string(),
+      implementerId: z.string(),
     })
-    .parse({
-      fellowName: formData.get("fellowName"),
-      fellowEmail: formData.get("fellowEmail"),
-      cellNumber: formData.get("cellNumber"),
-      mpesaName: formData.get("mpesaName"),
-      mpesaNumber: formData.get("mpesaNumber"),
-      county: formData.get("county"),
-      subCounty: formData.get("subCounty"),
-      dateOfBirth: formData.get("dateOfBirth"),
-      gender: formData.get("gender"),
-    });
+    .parse(formDataObject);
 
   console.log({ data });
 
@@ -132,8 +125,20 @@ export async function addFellow(prevState: any, formData: any) {
       visibleId: generateVisibleID(),
       fellowName: data.fellowName,
       fellowEmail: data.fellowEmail,
+      cellNumber: data.cellNumber,
+      mpesaName: data.mpesaName,
+      mpesaNumber: data.mpesaNumber,
+      county: data.county,
+      subCounty: data.subCounty,
+      dateOfBirth: data.dateOfBirth,
+      gender: data.gender,
+      hubId: data.hubId,
+      supervisorId: data.supervisorId,
+      implementerId: data.implementerId,
     },
   });
+
+  revalidatePath(`/schools/${data.schoolId}`);
 }
 function generateVisibleID(): string {
   // Get current year
