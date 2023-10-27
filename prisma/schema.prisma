@@ -226,7 +226,7 @@ model Student {
   createdAt            DateTime     @default(now()) @map("created_at")
   updatedAt            DateTime     @updatedAt @map("updated_at")
   archivedAt           DateTime?    @map("archived_at")
-  name                 String       @db.VarChar(255)
+  studentName          String?      @map("student_name") @db.VarChar(255)
   visibleId            String       @unique @map("visible_id") @db.VarChar(100)
   fellowId             String?      @map("fellow_id") @db.VarChar(255)
   fellow               Fellow?      @relation(fields: [fellowId], references: [id])
@@ -236,8 +236,6 @@ model Student {
   implementer          Implementer? @relation(fields: [implementerId], references: [id])
   schoolId             String?      @map("school_id") @db.VarChar(255)
   school               School?      @relation(fields: [schoolId], references: [id])
-  hubId                String       @map("hub_id") @db.VarChar(255)
-  hub                  Hub          @relation(fields: [hubId], references: [id])
   yearOfImplementation Int?         @map("year_of_implementation")
   admissionNumber      String?      @map("admission_number") @db.VarChar(255)
   age                  Int?
@@ -252,7 +250,7 @@ model Student {
   home                 String?      @db.VarChar(255)
   siblings             String?      @db.VarChar(255)
   religion             String?      @db.VarChar(255)
-  groupName            String?      @map("group_name") @db.VarChar(255)
+  group                String?      @db.VarChar(255)
   survivingParents     String?      @map("surviving_parents") @db.VarChar(255)
   parentsDead          String?      @map("parents_dead") @db.VarChar(255)
   fathersEducation     String?      @map("fathers_education") @db.VarChar(255)
@@ -396,7 +394,6 @@ model Hub {
   fellows       Fellow[]
   supervisors   Supervisor[]
   schools       School[]
-  students      Student[]
 
   @@map("hubs")
 }
