@@ -1,20 +1,21 @@
 "use client";
 
+// TODO: use recharts
 export function SchoolDemographics({
-  malePopulation,
-  femalePopulation,
-  totalPopulation,
+  males,
+  females,
+  others,
 }: {
-  malePopulation: number;
-  femalePopulation: number;
-  totalPopulation: number;
+  males: number;
+  females: number;
+  others: number;
 }) {
   const strokeWidth = 30;
   const radius = 100 - strokeWidth / 2;
   const circumference = 2 * Math.PI * radius;
 
-  const malePercentage = malePopulation / totalPopulation;
-  const femalePercentage = femalePopulation / totalPopulation;
+  const malePercentage = 200 / 400;
+  const femalePercentage = 200 / 400;
 
   const maleDashLength = circumference * malePercentage;
   const femaleDashLength = circumference * femalePercentage;
