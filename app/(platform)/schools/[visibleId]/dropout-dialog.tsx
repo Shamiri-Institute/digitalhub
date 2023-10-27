@@ -39,7 +39,13 @@ const initialState = {
   message: null,
 };
 
-export function DropoutDialog({ children }: { children: React.ReactNode }) {
+export function DropoutDialog({
+  fellow,
+  children,
+}: {
+  fellow: any;
+  children: React.ReactNode;
+}) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });

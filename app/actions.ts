@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { InviteUserCommand } from "#/commands/invite-user";
+import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { redirect } from "next/navigation";
 
@@ -97,3 +98,63 @@ async function parseCsvFile(file: File) {
     parser.end();
   });
 }
+
+export async function addFellow(prevState: any, formData: any) {
+  const data = z
+    .object({
+      fellowName: z.string(),
+      fellowEmail: z.string(),
+      cellNumber: z.string(),
+      mpesaName: z.string(),
+      mpesaNumber: z.string(),
+      county: z.string(),
+      subCounty: z.string(),
+      dateOfBirth: z.date(),
+      gender: z.string(),
+    })
+    .parse({
+      fellowName: formData.get("fellowName"),
+      fellowEmail: formData.get("fellowEmail"),
+      cellNumber: formData.get("cellNumber"),
+      mpesaName: formData.get("mpesaName"),
+      mpesaNumber: formData.get("mpesaNumber"),
+      county: formData.get("county"),
+      subCounty: formData.get("subCounty"),
+      dateOfBirth: formData.get("dateOfBirth"),
+      gender: formData.get("gender"),
+    });
+
+  console.log({ data });
+
+  await db.fellow.create({
+    data: {
+      id: objectId("fellow"),
+      visibleId: generateVisibleID(),
+      fellowName: data.fellowName,
+      fellowEmail: data.fellowEmail,
+    },
+  });
+}
+function generateVisibleID(): string {
+  // Get current year
+  const currentYear: number = new Date().getFullYear();
+
+  // Extract last two digits of the current year
+  let yearDigits: string = String(currentYear).slice(-2);
+
+  // First part
+  let part1: string = `TFW${yearDigits}`;
+
+  // Second part
+  let part2: string =
+    Math.random() < 0.5
+      ? String.fromCharCode(65 + Math.floor(Math.random() * 26)) // Generate random letter from A-Z
+      : String(`00${Math.floor(Math.random() * 999)}`).slice(-3); // Zero-padding if number is less than 100
+
+  // Third part
+  let part3: string = String(`00${Math.floor(Math.random() * 999)}`).slice(-3);
+
+  return `${part1}_${part2}_${part3}`;
+}
+
+console.log(generateVisibleID()); // Output: TFW23_S_021, TFW23_P_482, TFW23_O_123, etc.
