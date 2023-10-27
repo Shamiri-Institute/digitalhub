@@ -1,19 +1,17 @@
 import Link from "next/link";
 
 import { Icons } from "#/components/icons";
-import { Button } from "#/components/ui/button";
-import { Card } from "#/components/ui/card";
-import { Separator } from "#/components/ui/separator";
-import { cn } from "#/lib/utils";
-
-import { currentHub } from "#/app/auth";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "#/components/ui/accordion";
+import { Button } from "#/components/ui/button";
+import { Card } from "#/components/ui/card";
+import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import { cn } from "#/lib/utils";
 
 export default function SchoolsPage() {
   return (
@@ -49,17 +47,20 @@ async function SchoolsList() {
   //   contactNo: "+254712342314780",
   //   demographics: "Mixed",
   // };
-  const hub = await currentHub();
   const assignedSchoolId = "ANS23_School_17";
+  const assignedHubId = "hub_01hdrjbmfyfcnrw7be3an7zwkc";
   const assignedSchool = await db.school.findFirst({
-    where: { visibleId: assignedSchoolId, hubId: hub!.id },
+    where: {
+      visibleId: assignedSchoolId,
+      hubId: assignedHubId,
+    },
   });
   if (!assignedSchool) {
     throw new Error("Assigned school not found");
   }
 
   const otherSchools = await db.school.findMany({
-    where: { visibleId: { not: assignedSchoolId }, hubId: hub!.id },
+    where: { visibleId: { not: assignedSchoolId }, hubId: assignedHubId },
   });
 
   // const otherSchools = [

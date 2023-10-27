@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { SchoolDemographics } from "#/app/(platform)/schools/[visibleId]/demographics";
+import { DropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
 import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
 import { currentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
@@ -101,7 +102,12 @@ async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {fellows.map((fellow) => (
-        <FellowCard fellow={fellow} presentCount={13} totalStudents={15} />
+        <FellowCard
+          key={fellow.id}
+          fellow={fellow}
+          presentCount={13}
+          totalStudents={15}
+        />
       ))}
     </div>
   );
@@ -126,9 +132,14 @@ function FellowCard({
         <h2 className="text-lg font-bold">{fellow.fellowName}</h2>
         <div className="flex gap-0.5">
           <FellowModifyDialog mode="edit" fellow={fellow}>
-            <Icons.edit className="mr-4 h-6 w-6 align-baseline text-brand" />
+            <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
           </FellowModifyDialog>
-          <Icons.delete className="h-6 w-6 text-brand" />
+          <DropoutDialog fellow={fellow}>
+            <Icons.delete
+              className="h-6 w-6 cursor-pointer text-brand"
+              strokeWidth={2.5}
+            />
+          </DropoutDialog>
         </div>
       </div>
       <p className="mt-1 text-sm text-gray-600">
