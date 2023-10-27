@@ -11,6 +11,7 @@ async function seedDatabase() {
   await createHubs(db);
   await createSchools(db);
   await createFellows(db);
+  await createSupervisors(db);
 }
 
 seedDatabase()
@@ -243,6 +244,53 @@ async function createFellows(db: Database) {
   }
 }
 
+async function createSupervisors(db: Database) {
+  console.log("Creating supervisors");
+
+  const supervisors = await parseCsvFile("supervisor_info");
+  for (let supervisor of supervisors) {
+    await db.supervisor.create({
+      data: {
+        id: objectId("sup"),
+        hubId: supervisor["Hub_ID"]
+          ? (
+              await db.hub.findUnique({
+                where: { visibleId: supervisor["Hub_ID"] },
+              })
+            )?.id
+          : null,
+        visibleId: supervisor["Supervisor_ID"],
+        supervisorName: supervisor["Supervisor"],
+        supervisorEmail: supervisor["Email"],
+        idNumber: supervisor["ID_No"],
+        cellNumber: supervisor["Cell_No"],
+        mpesaNumber: supervisor["MPESA_No"],
+        implementerId: supervisor["Implementer_ID"]
+          ? (
+              await db.implementer.findUnique({
+                where: { visibleId: supervisor["Implementer_ID"] },
+              })
+            )?.id
+          : null,
+        memberId: null,
+        county: supervisor["County"],
+        subCounty: supervisor["Sub-County"],
+        bankName: supervisor["Bank_Name"],
+        bankBranch: supervisor["Bank_Branch"],
+        bankAccountName: null,
+        bankAccountNumber: supervisor["Bank_Acc_No"],
+        kra: supervisor["KRA"],
+        nhif: supervisor["NHIF"],
+        nssf: supervisor["NSSF"],
+        dateOfBirth: supervisor["DOB"],
+        gender: supervisor["Gender"],
+        trainingLevel: supervisor["Training_Level"],
+        droppedOut: Boolean(supervisor["Drop_out"]),
+      },
+    });
+  }
+}
+
 /**
  * Loads and parse CSV file in ./data/ directory
  * These CSV files are downloaded from Airtable.
@@ -280,6 +328,15 @@ async function parseCsvFile(fileName: string): Promise<any[]> {
               "Warning: Implementer type is null. Setting to empty string.",
             );
             dataRow["Implementer_Type"] = "";
+          }
+        }
+
+        if (fileName === "supervisor_info") {
+          if (dataRow["Supervisor"] === null) {
+            console.warn(
+              "Warning: Supervisor name is null. Setting to empty string.",
+            );
+            dataRow["Supervisor"] = "";
           }
         }
 
