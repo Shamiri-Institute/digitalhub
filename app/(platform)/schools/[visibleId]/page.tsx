@@ -1,14 +1,17 @@
+import { Prisma } from "@prisma/client";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SchoolDemographics } from "#/app/(platform)/schools/[visibleId]/demographics";
 import { DropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
 import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
+import { RescheduleDialog } from "#/app/(platform)/schools/[visibleId]/reschedule-dialog";
 import { currentSupervisor } from "#/app/auth";
+import { Back } from "#/components/common/back";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import type { FellowWithAttendance } from "#/types/prisma";
-import { Prisma } from "@prisma/client";
 
 export default async function SchoolDetailPage({
   params: { visibleId },
@@ -173,14 +176,14 @@ function FellowCard({
         (attendance: FellowWithAttendance["attendances"][number]) =>
           attendance.sessionNumber === sessionNumber,
       );
-    if (!attendance) {
-      return "not-marked";
-    }
-    if (attendance.attended) {
+    if (attendance.attended === true) {
       return "present";
     }
     if (attendance.attended === false) {
       return "absent";
+    }
+    if (attendance.attended === null) {
+      return "not-marked";
     }
     return "not-marked";
   }
@@ -198,6 +201,9 @@ function FellowCard({
       <div className="flex justify-between">
         <h2 className="text-lg font-bold">{fellow.fellowName}</h2>
         <div className="flex gap-0.5">
+          <RescheduleDialog fellow={fellow}>
+            <Icons.calendar className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
+          </RescheduleDialog>
           <FellowModifyDialog mode="edit" fellow={fellow}>
             <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
           </FellowModifyDialog>
@@ -245,7 +251,12 @@ function FellowCard({
         </div>
       </div>
       <div className="mt-8 rounded bg-shamiri-blue p-2 text-center text-white">
-        {presentCount}/{totalStudents} Students
+        <Link
+          href={`/schools/${school.visibleId}/students?fellowId=${fellow.visibleId}`}
+          className="block w-full"
+        >
+          {presentCount}/{totalStudents} Students
+        </Link>
       </div>
     </div>
   );
@@ -254,9 +265,7 @@ function FellowCard({
 function Header() {
   return (
     <header className="flex justify-between">
-      <button>
-        <Icons.chevronLeft className="mr-4 h-6 w-6 align-baseline text-brand" />
-      </button>
+      <Back />
       <div className="flex gap-2">
         <Icons.edit className="mr-4 h-6 w-6 align-baseline text-brand" />
         <Icons.search className="h-6 w-6 text-brand" strokeWidth={1.75} />
