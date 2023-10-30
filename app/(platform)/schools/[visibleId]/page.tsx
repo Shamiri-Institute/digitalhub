@@ -124,21 +124,6 @@ async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
             key={fellow.id}
             fellow={fellow}
             school={school}
-            presentCount={
-              fellow.students.filter((student) => {
-                const attendances = [
-                  student.attendanceSession0,
-                  student.attendanceSession1,
-                  student.attendanceSession2,
-                  student.attendanceSession3,
-                  student.attendanceSession4,
-                ];
-                const attendanceCount = attendances.filter(
-                  (attendance) => attendance === true,
-                ).length;
-                return attendanceCount >= 0;
-              }).length
-            }
             totalStudents={fellow.students.length}
           />
         );
@@ -151,12 +136,10 @@ function FellowCard({
   fellow,
   school,
   totalStudents,
-  presentCount,
 }: {
   fellow: FellowWithAttendance;
   school: SchoolFindUniqueOutput;
   totalStudents: number;
-  presentCount: number;
 }) {
   const filteredAttendances: FellowWithAttendance["attendances"][number][] =
     fellow.fellowAttendances.filter(
@@ -202,15 +185,21 @@ function FellowCard({
         <h2 className="text-lg font-bold">{fellow.fellowName}</h2>
         <div className="flex gap-0.5">
           <RescheduleDialog fellow={fellow}>
-            <Icons.calendar className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
+            <Icons.calendar
+              className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand"
+              strokeWidth={1.75}
+            />
           </RescheduleDialog>
           <FellowModifyDialog mode="edit" fellow={fellow}>
-            <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
+            <Icons.edit
+              className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand"
+              strokeWidth={1.75}
+            />
           </FellowModifyDialog>
           <DropoutDialog fellow={fellow}>
             <Icons.delete
               className="h-6 w-6 cursor-pointer text-brand"
-              strokeWidth={2.5}
+              strokeWidth={1.75}
             />
           </DropoutDialog>
         </div>
@@ -219,9 +208,9 @@ function FellowCard({
         Shamiri ID: {fellow.visibleId}
       </p>
       <Separator className="my-2" />
-      <div className="mt-4 flex justify-between">
+      <div className="mt-4 flex justify-between pb-2">
         {sessionItems.map((session, index) => (
-          <div key={index} className="flex flex-col items-center">
+          <div key={index} className="flex flex-col items-center gap-1.5">
             <div className="text-sm text-muted-foreground">{session.label}</div>
             <div
               className={`h-5 w-5 rounded-full ${
@@ -250,12 +239,12 @@ function FellowCard({
           <span>Not marked</span>
         </div>
       </div>
-      <div className="mt-8 rounded bg-shamiri-blue p-2 text-center text-white">
+      <div className="mt-8 rounded bg-shamiri-blue p-2 text-center text-white transition-all duration-300 hover:bg-shamiri-blue-darker active:scale-95">
         <Link
           href={`/schools/${school.visibleId}/students?fellowId=${fellow.visibleId}`}
           className="block w-full"
         >
-          {presentCount}/{totalStudents} Students
+          {totalStudents} Students
         </Link>
       </div>
     </div>
