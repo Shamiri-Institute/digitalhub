@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
+import { Prisma } from "@prisma/client";
 
 import { SchoolDemographics } from "#/app/(platform)/schools/[visibleId]/demographics";
 import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
 
 export default async function SchoolDetailPage({
   params: { visibleId },
@@ -63,7 +63,7 @@ export default async function SchoolDetailPage({
         <div className="mt-1 flex gap-4">
           <div className="h-4 w-4 rounded-full bg-muted-green" />
           <div className="h-4 w-4 rounded-full bg-muted-green" />
-          <div className="h-4 w-4 rounded-full bg-[#DE5E68]" />
+          <div className="h-4 w-4 rounded-full bg-shamiri-red" />
         </div>
       </div>
       <div className="mt-8">
@@ -143,13 +143,12 @@ function FellowCard({
           <div key={index} className="flex flex-col items-center">
             <div className="text-sm text-muted-foreground">{session.label}</div>
             <div
-              className={`h-5 w-5 rounded-full ${
-                session.status === "present"
-                  ? "bg-[#85A070]"
-                  : session.status === "absent"
+              className={`h-5 w-5 rounded-full ${session.status === "present"
+                ? "bg-[#85A070]"
+                : session.status === "absent"
                   ? "bg-[#DE5E68]"
                   : "bg-gray-300"
-              } mx-1`}
+                } mx-1`}
             ></div>
           </div>
         ))}
