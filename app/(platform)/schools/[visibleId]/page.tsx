@@ -111,17 +111,14 @@ async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
     },
     include: { fellowAttendances: true },
   });
-  const fellowAttendances = await db.fellowAttendance.findMany({
-    where: { schoolId: school.id },
-    include: { fellow: true },
-  });
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {fellows.map((fellow) => (
         <FellowCard
           key={fellow.id}
-          fellow={fellowAttendances}
+          fellow={fellow}
+          school={school}
           presentCount={13}
           totalStudents={15}
         />
@@ -132,13 +129,53 @@ async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
 
 function FellowCard({
   fellow,
+  school,
   totalStudents,
   presentCount,
 }: {
   fellow: FellowWithAttendance;
+  school: SchoolFindUniqueOutput;
   totalStudents: number;
   presentCount: number;
 }) {
+  const filteredAttendances: FellowWithAttendance["attendances"][number][] =
+    fellow.fellowAttendances.filter(
+      (attendance: FellowWithAttendance["attendances"][number]) =>
+        attendance.schoolId === school.id,
+    );
+
+  if (filteredAttendances.length !== 5) {
+    console.error(
+      `Fellow ${fellow.fellowName} has ${filteredAttendances.length} attendances`,
+    );
+  }
+
+  function getAttendanceStatus(sessionNumber: number) {
+    const attendance: FellowWithAttendance["attendances"][number] =
+      filteredAttendances.find(
+        (attendance: FellowWithAttendance["attendances"][number]) =>
+          attendance.sessionNumber === sessionNumber,
+      );
+    if (!attendance) {
+      return "not-marked";
+    }
+    if (attendance.attended) {
+      return "present";
+    }
+    if (attendance.attended === false) {
+      return "absent";
+    }
+    return "not-marked";
+  }
+
+  const sessionItems = [
+    { status: getAttendanceStatus(0), label: "Pre" },
+    { status: getAttendanceStatus(1), label: "S1" },
+    { status: getAttendanceStatus(2), label: "S2" },
+    { status: getAttendanceStatus(3), label: "S3" },
+    { status: getAttendanceStatus(4), label: "S4" },
+  ];
+
   return (
     <div className="rounded border p-8 shadow-md">
       <div className="flex justify-between">
@@ -160,13 +197,7 @@ function FellowCard({
       </p>
       <Separator className="my-2" />
       <div className="mt-4 flex justify-between">
-        {[
-          { status: "present", label: "Pre" },
-          { status: "present", label: "S1" },
-          { status: "absent", label: "S2" },
-          { status: "not-marked", label: "S3" },
-          { status: "not-marked", label: "S4" },
-        ].map((session, index) => (
+        {sessionItems.map((session, index) => (
           <div key={index} className="flex flex-col items-center">
             <div className="text-sm text-muted-foreground">{session.label}</div>
             <div
