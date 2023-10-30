@@ -7,6 +7,7 @@ import { currentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import type { FellowWithAttendance } from "#/types/prisma";
 import { Prisma } from "@prisma/client";
 
 export default async function SchoolDetailPage({
@@ -104,16 +105,23 @@ type SchoolFindUniqueOutput = NonNullable<
 >;
 
 async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
-  const supervisor = await currentSupervisor();
   const fellows = await db.fellow.findMany({
-    where: { hubId: school.hubId },
+    where: {
+      fellowAttendances: { some: { schoolId: school.id } },
+    },
+    include: { fellowAttendances: true },
   });
+  const fellowAttendances = await db.fellowAttendance.findMany({
+    where: { schoolId: school.id },
+    include: { fellow: true },
+  });
+
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {fellows.map((fellow) => (
         <FellowCard
           key={fellow.id}
-          fellow={fellow}
+          fellow={fellowAttendances}
           presentCount={13}
           totalStudents={15}
         />
@@ -122,16 +130,12 @@ async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
   );
 }
 
-type FellowFindManyItemOutput = Prisma.PromiseReturnType<
-  typeof db.fellow.findMany
->[number];
-
 function FellowCard({
   fellow,
   totalStudents,
   presentCount,
 }: {
-  fellow: FellowFindManyItemOutput;
+  fellow: FellowWithAttendance;
   totalStudents: number;
   presentCount: number;
 }) {
