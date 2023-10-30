@@ -108,21 +108,38 @@ async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
   const fellows = await db.fellow.findMany({
     where: {
       fellowAttendances: { some: { schoolId: school.id } },
+      students: { some: { schoolId: school.id } },
     },
-    include: { fellowAttendances: true },
+    include: { fellowAttendances: true, students: true },
   });
 
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      {fellows.map((fellow) => (
-        <FellowCard
-          key={fellow.id}
-          fellow={fellow}
-          school={school}
-          presentCount={13}
-          totalStudents={15}
-        />
-      ))}
+      {fellows.map((fellow) => {
+        return (
+          <FellowCard
+            key={fellow.id}
+            fellow={fellow}
+            school={school}
+            presentCount={
+              fellow.students.filter((student) => {
+                const attendances = [
+                  student.attendanceSession0,
+                  student.attendanceSession1,
+                  student.attendanceSession2,
+                  student.attendanceSession3,
+                  student.attendanceSession4,
+                ];
+                const attendanceCount = attendances.filter(
+                  (attendance) => attendance === true,
+                ).length;
+                return attendanceCount >= 0;
+              }).length
+            }
+            totalStudents={fellow.students.length}
+          />
+        );
+      })}
     </div>
   );
 }
