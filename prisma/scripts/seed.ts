@@ -341,7 +341,7 @@ async function createStudents(db: Database) {
       await db.student.create({
         data: {
           id: objectId("stu"),
-          studentName: student["Name"],
+          studentName: student["Student_Name"],
           visibleId: student["Shamiri_ID"],
           fellowId: student["Fellow_ID"]
             ? (
