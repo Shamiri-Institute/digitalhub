@@ -78,7 +78,9 @@ export function DropoutDialog({
           >
             <DialogHeader className="space-y-0 px-6 py-4">
               <div className="flex items-center gap-2">
-                <span className="text-base font-medium">Drop out reason</span>
+                <span className="text-base font-medium">
+                  Drop out {fellow.fellowName}
+                </span>
               </div>
             </DialogHeader>
             <Separator />
@@ -112,7 +114,7 @@ export function DropoutDialog({
                 data-testid={constants.ADD_MEMBERS_SUBMIT}
                 className="w-full bg-[#AC2925]"
               >
-                Submit
+                Drop out {fellow.fellowName}
               </Button>
             </div>
             <p aria-live="polite" className="sr-only" role="status">
