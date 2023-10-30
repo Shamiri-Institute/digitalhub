@@ -7,14 +7,13 @@ async function seedDatabase() {
   await truncateTables();
   await createSystemUser(db);
   await createImplementers(db);
-  // await createPermissions(db);
-  // await createRoles(db);
-  // await createUsers(db);
+  //// await createPermissions(db);
+  //// await createRoles(db);
+  //// await createUsers(db);
   await createHubs(db);
   await createSchools(db);
   await createSupervisors(db);
   await createFellows(db);
-  await new Promise((resolve) => setTimeout(resolve, 5000));
   await createFellowAttendances(db);
   await createStudents(db);
 }
@@ -322,13 +321,12 @@ async function createFellowAttendances(db: Database) {
             supervisor: {
               connect: { id: supervisorId },
             },
-            attended: Boolean(fellowAttendance["Attended"]),
+            attended: Boolean(fellowAttendance["Attendance"]),
             absenceReason: fellowAttendance["Absence_Reason"],
             paymentInitiated: Boolean(fellowAttendance["Payment_Initiated"]),
           },
         });
       } catch (e) {
-        console.log(fellowAttendance);
         throw e;
       }
     },
@@ -401,7 +399,6 @@ async function createStudents(db: Database) {
         },
       });
     } catch (e) {
-      console.log(student);
       throw e;
     }
   });
