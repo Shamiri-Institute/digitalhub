@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 
+import { StudentDropoutDialog } from "#/app/(platform)/schools/[visibleId]/students/dropout-dialog";
 import { StudentAttendanceDot } from "#/app/(platform)/schools/[visibleId]/students/student-attendance-dot";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
@@ -119,9 +120,9 @@ function StudentCard({ student }: { student: any }) {
           <button>
             <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
           </button>
-          <button>
+          <StudentDropoutDialog student={student}>
             <Icons.delete className="h-6 w-6 cursor-pointer text-brand" />
-          </button>
+          </StudentDropoutDialog>
         </div>
       </div>
       <p className="mt-1 text-sm text-gray-600">
