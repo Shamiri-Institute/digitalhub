@@ -2,11 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
+import { useRouter } from "next/navigation";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { StudentDropoutDialog } from "#/app/(platform)/schools/[visibleId]/students/dropout-dialog";
+import { modifyStudent } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Form, FormField } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
@@ -50,13 +51,15 @@ const FormSchema = z.object({
   admissionNumber: z.string({
     required_error: "Please enter the student's admission number.",
   }),
-  age: z.string({
-    required_error: "Please enter the student's age.",
-  }),
+  age: z
+    .string({
+      required_error: "Please enter the student's age.",
+    })
+    .optional(),
   gender: z.string({
     required_error: "Please enter the student's gender.",
   }),
-  form: z.string().transform((val) => parseInt(val)),
+  form: z.string(),
   stream: z.string().optional(),
   condition: z.string().optional(),
   intervention: z.string().optional(),
@@ -66,21 +69,30 @@ const FormSchema = z.object({
   home: z.string().optional(),
   siblings: z.string().optional(),
   religion: z.string().optional(),
-  groupName: z.string().optional(),
+  groupName: z.string(),
   survivingParents: z.string().optional(),
   parentsDead: z.string().optional(),
   fathersEducation: z.string().optional(),
   mothersEducation: z.string().optional(),
   coCurricular: z.string().optional(),
   sports: z.string().optional(),
-  phoneNumber: z.string({
-    required_error: "Please enter the student's phone number.",
-  }),
-  mpesaNumber: z.string({
-    required_error: "Please enter the student's MPESA number.",
-  }),
+  phoneNumber: z
+    .string({
+      required_error: "Please enter the student's phone number.",
+    })
+    .optional(),
+  mpesaNumber: z
+    .string({
+      required_error: "Please enter the student's MPESA number.",
+    })
+    .optional(),
   dropOutReason: z.string().optional(),
 });
+
+export type ModifyStudentData = z.infer<typeof FormSchema> & {
+  mode: "create" | "edit";
+  visibleId?: string;
+};
 
 export function StudentModifyDialog({
   mode,
@@ -109,6 +121,8 @@ export function StudentModifyDialog({
   fellowName: string;
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -122,7 +136,7 @@ export function StudentModifyDialog({
       admissionNumber: student?.admissionNumber ?? undefined,
       age: student?.age?.toString() ?? undefined,
       gender: student?.gender ?? undefined,
-      form: student?.form ?? undefined,
+      form: student?.form?.toString() ?? undefined,
       stream: student?.stream ?? undefined,
       condition: student?.condition ?? undefined,
       intervention: student?.intervention ?? undefined,
@@ -147,14 +161,45 @@ export function StudentModifyDialog({
 
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log({ data });
-
-    toast({
-      title: `Added ${data.studentName} to ${fellowName}'s group at ${schoolName}.`,
+  async function onSubmit(data: ModifyStudentData) {
+    const response = await modifyStudent({
+      ...data,
+      mode,
+      visibleId: student?.visibleId,
     });
+    if (response?.error) {
+      console.error(response?.error);
+      toast({
+        variant: "destructive",
+        title: response?.error,
+      });
+      return;
+    }
 
-    setIsSheetOpen(false);
+    if (response) {
+      console.log({ response });
+
+      if (mode === "create") {
+        toast({
+          description: `Added ${data.studentName} to ${fellowName}'s group at ${schoolName}`,
+        });
+      } else if (mode === "edit") {
+        toast({
+          description: `Updated ${student?.studentName}'s info`,
+        });
+      }
+
+      setIsSheetOpen(false);
+
+      router.refresh();
+
+      form.reset();
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+      });
+    }
   }
 
   function onError(errors: any) {
@@ -255,6 +300,8 @@ export function StudentModifyDialog({
                       </Label>
                       <Input
                         id="age"
+                        type="number"
+                        min={0}
                         className="mt-1.5 resize-none bg-card"
                         placeholder="23"
                         {...field}
@@ -516,7 +563,7 @@ export function StudentModifyDialog({
                       <Input
                         id="groupName"
                         className="mt-1.5 resize-none bg-card"
-                        placeholder="N/A"
+                        placeholder="55_E45"
                         {...field}
                       />
                     </div>
@@ -705,19 +752,9 @@ export function StudentModifyDialog({
                 form="modifyStudentForm"
                 className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
               >
-                Submit
+                {mode === "create" && "Add student"}
+                {mode === "edit" && `Update ${student?.studentName}`}
               </Button>
-
-              {mode === "edit" && (
-                <StudentDropoutDialog student={student}>
-                  <Button
-                    type="submit"
-                    className="w-full bg-[#AC2925] py-5 text-white transition-transform  active:scale-95"
-                  >
-                    Drop Out
-                  </Button>
-                </StudentDropoutDialog>
-              )}
             </div>
           </form>
         </Form>
