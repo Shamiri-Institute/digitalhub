@@ -72,7 +72,7 @@ export function StudentDropoutDialog({
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger>{children}</DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="gap-0 p-0">
         <Form {...form}>
           <form
@@ -87,6 +87,7 @@ export function StudentDropoutDialog({
               </div>
             </DialogHeader>
             <Separator />
+
             <div className="my-6 space-y-6">
               <div className="px-6">
                 <FormField

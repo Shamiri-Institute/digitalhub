@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { notFound } from "next/navigation";
 
 import { StudentDropoutDialog } from "#/app/(platform)/schools/[visibleId]/students/dropout-dialog";
@@ -34,13 +35,8 @@ export default async function SchoolStudentsPage({
 
   const students: StudentWithSchoolAndFellow[] = await db.student.findMany({
     where: { schoolId: school.id, fellowId: fellow.id },
-    include: {
-      fellow: true,
-      school: true,
-    },
-    orderBy: {
-      visibleId: "asc",
-    },
+    include: { fellow: true, school: true },
+    orderBy: { visibleId: "asc" },
   });
 
   return (
@@ -73,7 +69,7 @@ export default async function SchoolStudentsPage({
         </div>
       </div>
       <div className="mx-4 mt-8">
-        <StudentsList school={school} students={students} />
+        <StudentsList school={school} fellow={fellow} students={students} />
       </div>
     </main>
   );
@@ -102,17 +98,50 @@ function Header({
   );
 }
 
-function StudentsList({ school, students }: { school: any; students: any[] }) {
+function StudentsList({
+  school,
+  fellow,
+  students,
+}: {
+  school: Prisma.SchoolGetPayload<{}>;
+  fellow: Prisma.FellowGetPayload<{
+    include: {
+      supervisor: true;
+      implementer: true;
+    };
+  }>;
+  students: StudentWithSchoolAndFellow[];
+}) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {students.map((student) => {
-        return <StudentCard key={student.id} student={student} />;
+        return (
+          <StudentCard
+            key={student.id}
+            student={student}
+            school={school}
+            fellow={fellow}
+          />
+        );
       })}
     </div>
   );
 }
 
-function StudentCard({ student }: { student: any }) {
+function StudentCard({
+  student,
+  school,
+  fellow,
+}: {
+  student: StudentWithSchoolAndFellow;
+  school: Prisma.SchoolGetPayload<{}>;
+  fellow: Prisma.FellowGetPayload<{
+    include: {
+      supervisor: true;
+      implementer: true;
+    };
+  }>;
+}) {
   function getAttendanceStatus(attendance: boolean | null) {
     if (attendance === true) {
       return "present";
@@ -148,9 +177,20 @@ function StudentCard({ student }: { student: any }) {
           )}
         </div>
         <div className="flex gap-0.5">
-          <button>
+          <StudentModifyDialog
+            mode="edit"
+            student={student}
+            fellowName={fellow.fellowName ?? "N/A"}
+            schoolName={school.schoolName}
+            info={{
+              schoolVisibleId: school.visibleId,
+              fellowVisibleId: fellow.visibleId,
+              supervisorVisibleId: fellow.supervisor?.visibleId!,
+              implementerVisibleId: fellow.implementer?.visibleId!,
+            }}
+          >
             <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
-          </button>
+          </StudentModifyDialog>
           {!student.droppedOut && (
             <StudentDropoutDialog student={student}>
               <Icons.delete className="h-6 w-6 cursor-pointer text-brand" />

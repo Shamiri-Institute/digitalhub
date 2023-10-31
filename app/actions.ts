@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import type { ModifyStudentData } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
 import { InviteUserCommand } from "#/commands/invite-user";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -382,72 +383,57 @@ export async function dropoutStudentWithReason(
   }
 }
 
-export async function addStudent(prevState: any, formData: any) {
+export async function modifyStudent(data: ModifyStudentData) {
   try {
-    const data = z
-      .object({
-        studentName: z.string(),
-        fellowVisibleId: z.string(),
-        supervisorVisibleId: z.string(),
-        implementerVisibleId: z.string(),
-        schoolVisibleId: z.string(),
-        yearOfImplementation: z.number(),
-        admissionNumber: z.string(),
-        age: z.number(),
-        gender: z.enum(["M", "F"]).nullable(),
-        form: z.number(),
-        stream: z.string(),
-        condition: z.string(),
-        intervention: z.string(),
-        tribe: z.string(),
-        county: z.string(),
-        financialStatus: z.string(),
-        home: z.string(),
-        siblings: z.string(),
-        religion: z.string(),
-        groupName: z.string(),
-        survivingParents: z.string(),
-        parentsDead: z.string(),
-        fathersEducation: z.string(),
-        mothersEducation: z.string(),
-        coCurricular: z.string(),
-        sports: z.string(),
-        isClinicalCase: z.boolean(),
-        phoneNumber: z.string(),
-        mpesaNumber: z.string(),
-      })
-      .parse({
-        studentName: formData.get("studentName"),
-        fellowVisibleId: formData.get("fellowVisibleId"),
-        supervisorVisibleId: formData.get("supervisorVisibleId"),
-        implementerVisibleId: formData.get("implementerVisibleId"),
-        schoolVisibleId: formData.get("schoolVisibleId"),
-        yearOfImplementation: formData.get("yearOfImplementation"),
-        admissionNumber: formData.get("admissionNumber"),
-        age: formData.get("age"),
-        gender: formData.get("gender"),
-        form: formData.get("form"),
-        stream: formData.get("stream"),
-        condition: formData.get("condition"),
-        intervention: formData.get("intervention"),
-        tribe: formData.get("tribe"),
-        county: formData.get("county"),
-        financialStatus: formData.get("financialStatus"),
-        home: formData.get("home"),
-        siblings: formData.get("siblings"),
-        religion: formData.get("religion"),
-        groupName: formData.get("groupName"),
-        survivingParents: formData.get("survivingParents"),
-        parentsDead: formData.get("parentsDead"),
-        fathersEducation: formData.get("fathersEducation"),
-        mothersEducation: formData.get("mothersEducation"),
-        coCurricular: formData.get("coCurricular"),
-        sports: formData.get("sports"),
-        isClinicalCase: formData.get("isClinicalCase"),
-        phoneNumber: formData.get("phoneNumber"),
-        mpesaNumber: formData.get("mpesaNumber"),
-      });
+    if (data.mode === "create") {
+      return await createStudent(data);
+    } else if (data.mode === "edit") {
+      return await updateStudent(data);
+    } else {
+      return { error: "Invalid mode" };
+    }
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
 
+async function updateStudent(data: ModifyStudentData) {
+  const student = await db.student.update({
+    where: { visibleId: data.visibleId },
+    data: {
+      studentName: data.studentName,
+      yearOfImplementation: data.yearOfImplementation,
+      admissionNumber: data.admissionNumber,
+      age: data.age ? parseInt(data.age) : null,
+      gender: data.gender,
+      form: parseInt(data.form),
+      stream: data.stream,
+      condition: data.condition,
+      intervention: data.intervention,
+      tribe: data.tribe,
+      county: data.county,
+      financialStatus: data.financialStatus,
+      home: data.home,
+      siblings: data.siblings,
+      religion: data.religion,
+      groupName: data.groupName,
+      survivingParents: data.survivingParents,
+      parentsDead: data.parentsDead,
+      fathersEducation: data.fathersEducation,
+      mothersEducation: data.mothersEducation,
+      coCurricular: data.coCurricular,
+      sports: data.sports,
+      phoneNumber: data.phoneNumber,
+      mpesaNumber: data.mpesaNumber,
+    },
+  });
+
+  return { student };
+}
+
+async function createStudent(data: ModifyStudentData) {
+  try {
     const fellow = await db.fellow.findUniqueOrThrow({
       where: { visibleId: data.fellowVisibleId },
     });
@@ -472,9 +458,9 @@ export async function addStudent(prevState: any, formData: any) {
         schoolId: school.id,
         yearOfImplementation: data.yearOfImplementation,
         admissionNumber: data.admissionNumber,
-        age: data.age,
+        age: data.age ? parseInt(data.age) : null,
         gender: data.gender,
-        form: data.form,
+        form: parseInt(data.form),
         stream: data.stream,
         condition: data.condition,
         intervention: data.intervention,
@@ -491,7 +477,6 @@ export async function addStudent(prevState: any, formData: any) {
         mothersEducation: data.mothersEducation,
         coCurricular: data.coCurricular,
         sports: data.sports,
-        isClinicalCase: data.isClinicalCase,
         phoneNumber: data.phoneNumber,
         mpesaNumber: data.mpesaNumber,
       },
@@ -509,5 +494,6 @@ export async function addStudent(prevState: any, formData: any) {
 }
 
 function generateStudentVisibleID(groupName: string) {
-  return `${groupName}_${Math.random().toString(36).substring(7)}`;
+  const suffix = Math.floor(Math.random() * 90000) + 10000;
+  return `${groupName}_${suffix}`;
 }
