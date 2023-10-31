@@ -30,7 +30,7 @@ seedDatabase()
 
 async function truncateTables() {
   await db.$executeRaw`
-  TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, fellow_attendances, supervisors, schools, hub_coordinators;
+  TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, intervention_sessions, fellow_attendances, supervisors, schools, hub_coordinators;
   `;
 }
 
@@ -395,14 +395,14 @@ async function createStudents(db: Database) {
           home: student["Home"],
           siblings: student["Siblings"],
           religion: student["Religion"],
-          group: student["Group"],
+          groupName: student["Group"],
           survivingParents: student["Surviving_Parents"],
           parentsDead: student["Parents_Dead"],
           fathersEducation: student["Fathers_Education"],
           mothersEducation: student["Mothers_Education"],
           coCurricular: student["Co_Curricular"],
           sports: student["Sports"],
-          createScreeningId: Boolean(student["Create_Screening_ID"]),
+          isClinicalCase: Boolean(student["Create_Screening_ID"]),
           phoneNumber: student["phone_number"],
           mpesaNumber: student["mpesa_number"],
           attendanceSession0: Boolean(student["Attendance_Session_0"]),

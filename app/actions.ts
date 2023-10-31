@@ -11,7 +11,7 @@ import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 
-export async function inviteUserToOrganization(prevState: any, formData: any) {
+export async function inviteUserToImplementer(prevState: any, formData: any) {
   const data = z
     .object({
       emails: z.string().transform((val) => val.split(",")),
@@ -23,7 +23,7 @@ export async function inviteUserToOrganization(prevState: any, formData: any) {
     });
 
   // TODO: dummy values, use auth/cookies to pull this info
-  const currentOrganization = await db.organization.findFirstOrThrow();
+  const currentImplementer = await db.implementer.findFirstOrThrow();
   const currentUser = await db.user.findFirstOrThrow();
 
   const invitations = data.emails.map(async (email) => {
@@ -31,14 +31,14 @@ export async function inviteUserToOrganization(prevState: any, formData: any) {
     const inviteUser = new InviteUserCommand();
     await inviteUser.run({
       email,
-      organizationId: currentOrganization.id,
+      implementerId: currentImplementer.id,
       inviterId: currentUser.id,
       roleId: data.role,
     });
   });
   await Promise.allSettled(invitations);
 
-  revalidatePath("/admin/organization/members");
+  revalidatePath("/admin/implementer/members");
 }
 
 export async function batchUploadFellows(formData: FormData) {
@@ -380,4 +380,134 @@ export async function dropoutStudentWithReason(
     console.error(error);
     return { error: "Something went wrong" };
   }
+}
+
+export async function addStudent(prevState: any, formData: any) {
+  try {
+    const data = z
+      .object({
+        studentName: z.string(),
+        fellowVisibleId: z.string(),
+        supervisorVisibleId: z.string(),
+        implementerVisibleId: z.string(),
+        schoolVisibleId: z.string(),
+        yearOfImplementation: z.number(),
+        admissionNumber: z.string(),
+        age: z.number(),
+        gender: z.enum(["M", "F"]).nullable(),
+        form: z.number(),
+        stream: z.string(),
+        condition: z.string(),
+        intervention: z.string(),
+        tribe: z.string(),
+        county: z.string(),
+        financialStatus: z.string(),
+        home: z.string(),
+        siblings: z.string(),
+        religion: z.string(),
+        groupName: z.string(),
+        survivingParents: z.string(),
+        parentsDead: z.string(),
+        fathersEducation: z.string(),
+        mothersEducation: z.string(),
+        coCurricular: z.string(),
+        sports: z.string(),
+        isClinicalCase: z.boolean(),
+        phoneNumber: z.string(),
+        mpesaNumber: z.string(),
+      })
+      .parse({
+        studentName: formData.get("studentName"),
+        fellowVisibleId: formData.get("fellowVisibleId"),
+        supervisorVisibleId: formData.get("supervisorVisibleId"),
+        implementerVisibleId: formData.get("implementerVisibleId"),
+        schoolVisibleId: formData.get("schoolVisibleId"),
+        yearOfImplementation: formData.get("yearOfImplementation"),
+        admissionNumber: formData.get("admissionNumber"),
+        age: formData.get("age"),
+        gender: formData.get("gender"),
+        form: formData.get("form"),
+        stream: formData.get("stream"),
+        condition: formData.get("condition"),
+        intervention: formData.get("intervention"),
+        tribe: formData.get("tribe"),
+        county: formData.get("county"),
+        financialStatus: formData.get("financialStatus"),
+        home: formData.get("home"),
+        siblings: formData.get("siblings"),
+        religion: formData.get("religion"),
+        groupName: formData.get("groupName"),
+        survivingParents: formData.get("survivingParents"),
+        parentsDead: formData.get("parentsDead"),
+        fathersEducation: formData.get("fathersEducation"),
+        mothersEducation: formData.get("mothersEducation"),
+        coCurricular: formData.get("coCurricular"),
+        sports: formData.get("sports"),
+        isClinicalCase: formData.get("isClinicalCase"),
+        phoneNumber: formData.get("phoneNumber"),
+        mpesaNumber: formData.get("mpesaNumber"),
+      });
+
+    const fellow = await db.fellow.findUniqueOrThrow({
+      where: { visibleId: data.fellowVisibleId },
+    });
+    const supervisor = await db.supervisor.findUniqueOrThrow({
+      where: { visibleId: data.supervisorVisibleId },
+    });
+    const implementer = await db.implementer.findUniqueOrThrow({
+      where: { visibleId: data.implementerVisibleId },
+    });
+    const school = await db.school.findUniqueOrThrow({
+      where: { visibleId: data.schoolVisibleId },
+    });
+
+    const student = await db.student.create({
+      data: {
+        id: objectId("stu"),
+        studentName: data.studentName,
+        visibleId: generateStudentVisibleID(data.groupName),
+        fellowId: fellow.id,
+        supervisorId: supervisor.id,
+        implementerId: implementer.id,
+        schoolId: school.id,
+        yearOfImplementation: data.yearOfImplementation,
+        admissionNumber: data.admissionNumber,
+        age: data.age,
+        gender: data.gender,
+        form: data.form,
+        stream: data.stream,
+        condition: data.condition,
+        intervention: data.intervention,
+        tribe: data.tribe,
+        county: data.county,
+        financialStatus: data.financialStatus,
+        home: data.home,
+        siblings: data.siblings,
+        religion: data.religion,
+        groupName: data.groupName,
+        survivingParents: data.survivingParents,
+        parentsDead: data.parentsDead,
+        fathersEducation: data.fathersEducation,
+        mothersEducation: data.mothersEducation,
+        coCurricular: data.coCurricular,
+        sports: data.sports,
+        isClinicalCase: data.isClinicalCase,
+        phoneNumber: data.phoneNumber,
+        mpesaNumber: data.mpesaNumber,
+      },
+    });
+
+    revalidatePath(
+      `/schools/${data.schoolVisibleId}/students?fellowId=${data.fellowVisibleId}`,
+    );
+
+    return { student };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+function generateStudentVisibleID(groupName: string) {
+  return `${groupName}_${Math.random().toString(36).substring(7)}`;
 }
