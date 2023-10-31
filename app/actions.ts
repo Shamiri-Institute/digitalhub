@@ -1,6 +1,6 @@
 "use server";
 
-import { FellowAttendance } from "@prisma/client";
+import { FellowAttendance, Prisma } from "@prisma/client";
 import * as csv from "csv-parse";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -459,7 +459,7 @@ export async function dropoutStudentWithReason(
 
 export async function modifyStudent(
   data: ModifyStudentData & { mode: "create" | "edit" },
-) {
+): Promise<{ error: string } | { student: Prisma.StudentGetPayload<{}> }> {
   try {
     if (data.mode === "create") {
       revalidatePath(

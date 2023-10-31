@@ -1,15 +1,15 @@
 import { z } from "zod";
 
-import { db as database, Database } from "#/lib/db";
 import { Command } from "#/commands";
 import { sendEmail } from "#/emails";
 import UserWelcomer from "#/emails/user-welcomer";
+import { db as database, Database } from "#/lib/db";
 
 const InviteMaxAge = 1000 * 60 * 60 * 24 * 7; // 1 week
 
 interface InviteUserInput {
   email: string;
-  organizationId: string;
+  implementerId: string;
   inviterId: string;
   roleId: string;
 }
@@ -28,35 +28,35 @@ export class InviteUserCommand extends Command<
   }
 
   protected async perform(input: InviteUserInput) {
-    const { email, organizationId, inviterId, roleId } = z
+    const { email, implementerId, inviterId, roleId } = z
       .object({
         email: z.string().email(),
-        organizationId: z.string(),
+        implementerId: z.string(),
         inviterId: z.string(),
         roleId: z.string(),
       })
       .parse(input);
 
-    const uniqueKey = `${email}${organizationId}${roleId}${new Date().getTime()}`;
+    const uniqueKey = `${email}${implementerId}${roleId}${new Date().getTime()}`;
     const array = new TextEncoder().encode(uniqueKey);
     const digest = await crypto.subtle.digest("SHA-256", array);
     const secureToken = Buffer.from(digest).toString("base64");
 
-    const invitation = await this.db.organizationInvite.create({
+    const invitation = await this.db.implementerInvite.create({
       data: {
         email,
-        organizationId,
+        implementerId,
         roleId,
         expiresAt: new Date(Date.now() + InviteMaxAge),
         secureToken,
       },
     });
 
-    const organization = await this.db.organization.findUnique({
-      where: { id: organizationId },
+    const implementer = await this.db.implementer.findUnique({
+      where: { id: implementerId },
     });
-    if (!organization) {
-      throw new Error("Organization not found");
+    if (!implementer) {
+      throw new Error("Implementer not found");
     }
 
     const subject = `Welcome to the Shamiri Digital Hub!`;
@@ -65,13 +65,15 @@ export class InviteUserCommand extends Command<
       subject: subject,
       react: UserWelcomer({
         email,
-        organizationName: organization.name,
+        implementerName: implementer.implementerName,
         preview: subject,
       }),
     });
 
     // TODO: add to audit log
-    console.log(`user#${inviterId} invited ${email} to ${organization.name}`);
+    console.log(
+      `user#${inviterId} invited ${email} to ${implementer.implementerName}`,
+    );
 
     return { invitationId: invitation.id };
   }

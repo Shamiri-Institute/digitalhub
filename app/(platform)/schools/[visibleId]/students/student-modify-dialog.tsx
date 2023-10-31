@@ -166,11 +166,11 @@ export function StudentModifyDialog({
       mode,
       visibleId: student?.visibleId,
     });
-    if (response?.error) {
-      console.error(response?.error);
+    if (response && (response as any).error) {
+      console.error((response as any).error);
       toast({
         variant: "destructive",
-        title: response?.error,
+        title: (response as any).error,
       });
       return;
     }
