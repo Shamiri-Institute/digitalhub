@@ -4,8 +4,8 @@ import { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import * as React from "react";
 
+import { Toaster } from "#/components/ui/toaster";
 import { TooltipProvider } from "#/components/ui/tooltip";
-import { Toaster } from "sonner";
 
 export function Providers({
   session,
@@ -18,7 +18,7 @@ export function Providers({
     <SessionProvider session={session}>
       <TooltipProvider>
         {children}
-        <Toaster closeButton />
+        <Toaster />
       </TooltipProvider>
     </SessionProvider>
   );

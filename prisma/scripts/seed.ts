@@ -209,38 +209,47 @@ async function createFellows(db: Database) {
   console.log("Creating fellows");
 
   await parseCsvFile("fellow_info", async (fellow: any) => {
-    await db.fellow.create({
-      data: {
-        id: objectId("fellow"),
-        visibleId: fellow["Fellow_ID"],
-        fellowName: fellow["Fellow"],
-        fellowEmail: fellow["Email"],
-        yearOfImplementation: parseInt(fellow["Year_of_imp"]),
-        mpesaName: fellow["MPESA Name"],
-        mpesaNumber: fellow["MPESA_No"],
-        idNumber: fellow["ID_No"],
-        cellNumber: fellow["Cell_No"],
-        county: fellow["County"],
-        subCounty: fellow["Sub-County"],
-        dateOfBirth: fellow["DOB"],
-        gender: fellow["Gender"],
-        droppedOut: Boolean(fellow["Drop_out"]),
-        transferred: Boolean(fellow["Transfered"]),
-        hubId: (
-          await db.hub.findFirst({
-            where: { visibleId: fellow["Hub_ID"] },
-          })
-        )?.id,
-        implementerId: (
-          await db.implementer.findFirst({
-            where: { visibleId: fellow["Implementer_ID"] },
-          })
-        )?.id,
-        // supervisorId: (await db.supervisor.findFirstOrThrow({
-        //   where: { visibleId: fellow["Supervisor_ID"] },
-        // })).id,
-      },
-    });
+    try {
+      await db.fellow.create({
+        data: {
+          id: objectId("fellow"),
+          visibleId: fellow["Fellow_ID"],
+          fellowName: fellow["Fellow"],
+          fellowEmail: fellow["Email"],
+          yearOfImplementation: parseInt(fellow["Year_of_imp"]),
+          mpesaName: fellow["MPESA Name"],
+          mpesaNumber: fellow["MPESA_No"],
+          idNumber: fellow["ID_No"],
+          cellNumber: fellow["Cell_No"],
+          county: fellow["County"],
+          subCounty: fellow["Sub-County"],
+          dateOfBirth: fellow["DOB"],
+          gender: fellow["Gender"],
+          droppedOut: Boolean(fellow["Drop_out"]),
+          transferred: Boolean(fellow["Transfered"]),
+          hubId: (
+            await db.hub.findFirst({
+              where: { visibleId: fellow["Hub_ID"] },
+            })
+          )?.id,
+          implementerId: (
+            await db.implementer.findFirst({
+              where: { visibleId: fellow["Implementer_ID"] },
+            })
+          )?.id,
+          supervisorId: fellow["Supervisor_ID"]
+            ? (
+                await db.supervisor.findFirstOrThrow({
+                  where: { visibleId: fellow["Supervisor_ID"] },
+                })
+              ).id
+            : null,
+        },
+      });
+    } catch (error: unknown) {
+      console.error("fellow", fellow);
+      throw error;
+    }
   });
 }
 
@@ -248,45 +257,50 @@ async function createSupervisors(db: Database) {
   console.log("Creating supervisors");
 
   await parseCsvFile("supervisor_info", async (supervisor: any) => {
-    await db.supervisor.create({
-      data: {
-        id: objectId("sup"),
-        hubId: supervisor["Hub_ID"]
-          ? (
-              await db.hub.findUnique({
-                where: { visibleId: supervisor["Hub_ID"] },
-              })
-            )?.id
-          : null,
-        visibleId: supervisor["Supervisor_ID"],
-        supervisorName: supervisor["Supervisor"],
-        supervisorEmail: supervisor["Email"],
-        idNumber: supervisor["ID_No"],
-        cellNumber: supervisor["Cell_No"],
-        mpesaNumber: supervisor["MPESA_No"],
-        implementerId: supervisor["Implementer_ID"]
-          ? (
-              await db.implementer.findUnique({
-                where: { visibleId: supervisor["Implementer_ID"] },
-              })
-            )?.id
-          : null,
-        memberId: null,
-        county: supervisor["County"],
-        subCounty: supervisor["Sub-County"],
-        bankName: supervisor["Bank_Name"],
-        bankBranch: supervisor["Bank_Branch"],
-        bankAccountName: null,
-        bankAccountNumber: supervisor["Bank_Acc_No"],
-        kra: supervisor["KRA"],
-        nhif: supervisor["NHIF"],
-        nssf: supervisor["NSSF"],
-        dateOfBirth: supervisor["DOB"],
-        gender: supervisor["Gender"],
-        trainingLevel: supervisor["Training_Level"],
-        droppedOut: Boolean(supervisor["Drop_out"]),
-      },
-    });
+    try {
+      await db.supervisor.create({
+        data: {
+          id: objectId("sup"),
+          hubId: supervisor["Hub_ID"]
+            ? (
+                await db.hub.findUnique({
+                  where: { visibleId: supervisor["Hub_ID"] },
+                })
+              )?.id
+            : null,
+          visibleId: supervisor["Supervisor_ID"],
+          supervisorName: supervisor["Supervisor"],
+          supervisorEmail: supervisor["Email"],
+          idNumber: supervisor["ID_No"],
+          cellNumber: supervisor["Cell_No"],
+          mpesaNumber: supervisor["MPESA_No"],
+          implementerId: supervisor["Implementer_ID"]
+            ? (
+                await db.implementer.findUnique({
+                  where: { visibleId: supervisor["Implementer_ID"] },
+                })
+              )?.id
+            : null,
+          memberId: null,
+          county: supervisor["County"],
+          subCounty: supervisor["Sub-County"],
+          bankName: supervisor["Bank_Name"],
+          bankBranch: supervisor["Bank_Branch"],
+          bankAccountName: null,
+          bankAccountNumber: supervisor["Bank_Acc_No"],
+          kra: supervisor["KRA"],
+          nhif: supervisor["NHIF"],
+          nssf: supervisor["NSSF"],
+          dateOfBirth: supervisor["DOB"],
+          gender: supervisor["Gender"],
+          trainingLevel: supervisor["Training_Level"],
+          droppedOut: Boolean(supervisor["Drop_out"]),
+        },
+      });
+    } catch (error: unknown) {
+      console.error(error);
+      throw error;
+    }
   });
 }
 
