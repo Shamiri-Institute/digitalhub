@@ -22,6 +22,7 @@ export default async function SchoolDetailPage({
 }) {
   const school = await db.school.findUnique({
     where: { visibleId },
+    include: { hub: true, implementer: true },
   });
   if (!school) {
     notFound();
@@ -83,10 +84,11 @@ export default async function SchoolDetailPage({
           <div className="text-2xl font-semibold">Fellows</div>
           <FellowModifyDialog
             mode="create"
-            fellow={{
-              hubId: school.hubId,
-              supervisorId: supervisor.id,
-              implementerId: school.implementerId,
+            info={{
+              hubVisibleId: school?.hub?.visibleId!,
+              supervisorVisibleId: supervisor.visibleId,
+              implementerVisibleId: school?.implementer?.visibleId!,
+              schoolVisibleId: school.visibleId,
             }}
           >
             <button className="transition-transform active:scale-95">
@@ -99,17 +101,21 @@ export default async function SchoolDetailPage({
         </div>
       </div>
       <div className="mx-4 mt-8">
-        <FellowsList school={school} />
+        <FellowsList school={school} supervisor={supervisor} />
       </div>
     </main>
   );
 }
 
-type SchoolFindUniqueOutput = NonNullable<
-  Prisma.PromiseReturnType<typeof db.school.findUnique>
->;
-
-async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
+async function FellowsList({
+  school,
+  supervisor,
+}: {
+  school: Prisma.SchoolGetPayload<{
+    include: { hub: true; implementer: true };
+  }>;
+  supervisor: Prisma.SupervisorGetPayload<{}>;
+}) {
   const fellows = await db.fellow.findMany({
     where: {
       fellowAttendances: { some: { schoolId: school.id } },
@@ -117,7 +123,7 @@ async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
     },
     include: { fellowAttendances: true, students: true },
     orderBy: {
-      visibleId: "asc",
+      createdAt: "asc",
     },
   });
 
@@ -129,6 +135,7 @@ async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
             key={fellow.id}
             fellow={fellow}
             school={school}
+            supervisor={supervisor}
             totalStudents={fellow.students.length}
           />
         );
@@ -140,10 +147,14 @@ async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
 function FellowCard({
   fellow,
   school,
+  supervisor,
   totalStudents,
 }: {
   fellow: FellowWithAttendance;
-  school: SchoolFindUniqueOutput;
+  school: Prisma.SchoolGetPayload<{
+    include: { hub: true; implementer: true };
+  }>;
+  supervisor: Prisma.SupervisorGetPayload<{}>;
   totalStudents: number;
 }) {
   const filteredAttendances: FellowWithAttendance["attendances"][number][] =
@@ -187,26 +198,37 @@ function FellowCard({
   return (
     <div className="rounded border p-8 shadow-md">
       <div className="flex justify-between">
-        <h2 className="text-lg font-bold">{fellow.fellowName}</h2>
+        <div className="flex gap-2">
+          <h2 className="text-lg font-bold">{fellow.fellowName}</h2>
+          {fellow.droppedOut && (
+            <div>
+              <span className="inline-flex items-center rounded-md bg-zinc-50 px-1.5 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-inset ring-zinc-500/10">
+                Dropped Out
+              </span>
+            </div>
+          )}
+        </div>
         <div className="flex gap-0.5">
           <RescheduleDialog fellow={fellow}>
-            <Icons.calendar
-              className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand"
-              strokeWidth={1.75}
-            />
+            <Icons.calendar className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
           </RescheduleDialog>
-          <FellowModifyDialog mode="edit" fellow={fellow}>
-            <Icons.edit
-              className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand"
-              strokeWidth={1.75}
-            />
+          <FellowModifyDialog
+            mode="edit"
+            fellow={fellow}
+            info={{
+              hubVisibleId: school?.hub?.visibleId!,
+              supervisorVisibleId: supervisor.visibleId,
+              implementerVisibleId: school?.implementer?.visibleId!,
+              schoolVisibleId: school.visibleId,
+            }}
+          >
+            <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
           </FellowModifyDialog>
-          <FellowDropoutDialog fellow={fellow}>
-            <Icons.delete
-              className="h-6 w-6 cursor-pointer text-brand"
-              strokeWidth={1.75}
-            />
-          </FellowDropoutDialog>
+          {!fellow.droppedOut && (
+            <FellowDropoutDialog fellow={fellow} school={school}>
+              <Icons.delete className="h-6 w-6 cursor-pointer text-brand" />
+            </FellowDropoutDialog>
+          )}
         </div>
       </div>
       <p className="mt-1 text-sm text-gray-600">
