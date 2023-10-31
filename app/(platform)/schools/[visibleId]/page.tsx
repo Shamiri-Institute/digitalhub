@@ -116,6 +116,9 @@ async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
       students: { some: { schoolId: school.id } },
     },
     include: { fellowAttendances: true, students: true },
+    orderBy: {
+      visibleId: "asc",
+    },
   });
 
   return (
