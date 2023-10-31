@@ -1,15 +1,15 @@
 "use server";
 
+import { FellowAttendance } from "@prisma/client";
 import * as csv from "csv-parse";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { InviteUserCommand } from "#/commands/invite-user";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
-import { FellowAttendance } from "@prisma/client";
-import { redirect } from "next/navigation";
 
 export async function inviteUserToOrganization(prevState: any, formData: any) {
   const data = z
@@ -352,6 +352,8 @@ export async function markStudentAttendance(
 
 export async function dropoutStudentWithReason(
   studentVisibleId: string,
+  schoolVisibleId: string,
+  fellowVisibleId: string,
   dropoutReason: string,
 ) {
   try {
@@ -362,6 +364,10 @@ export async function dropoutStudentWithReason(
         dropOutReason: dropoutReason,
       },
     });
+
+    revalidatePath(
+      `/schools/${schoolVisibleId}/students?fellowId=${fellowVisibleId}}`,
+    );
 
     return { student };
   } catch (error: unknown) {

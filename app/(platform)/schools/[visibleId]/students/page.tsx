@@ -6,6 +6,7 @@ import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import { AttendanceStatus, SessionLabel } from "#/types/app";
+import { StudentWithSchoolAndFellow } from "#/types/prisma";
 
 export default async function SchoolStudentsPage({
   params: { visibleId },
@@ -29,8 +30,12 @@ export default async function SchoolStudentsPage({
     notFound();
   }
 
-  const students = await db.student.findMany({
+  const students: StudentWithSchoolAndFellow[] = await db.student.findMany({
     where: { schoolId: school.id, fellowId: fellow.id },
+    include: {
+      fellow: true,
+      school: true,
+    },
   });
 
   return (
@@ -65,7 +70,7 @@ function Header({
   fellowName: string;
 }) {
   return (
-    <header className="flex justify-between">
+    <header className="flex items-center justify-between">
       <button>
         <Icons.chevronLeft className="mr-4 h-6 w-6 align-baseline text-brand" />
       </button>
@@ -113,19 +118,30 @@ function StudentCard({ student }: { student: any }) {
   ];
 
   return (
-    <div className="rounded border p-8 shadow-md">
+    <div className="rounded-lg border p-8 shadow-md">
       <div className="flex justify-between">
-        <h2 className="text-lg font-bold">{student.studentName || "N/A"}</h2>
+        <div className="flex gap-2">
+          <h2 className="text-lg font-bold">{student.studentName || "N/A"}</h2>
+          {student.droppedOut && (
+            <div>
+              <span className="inline-flex items-center rounded-md bg-zinc-50 px-1.5 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-inset ring-zinc-500/10">
+                Dropped Out
+              </span>
+            </div>
+          )}
+        </div>
         <div className="flex gap-0.5">
           <button>
             <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
           </button>
-          <StudentDropoutDialog student={student}>
-            <Icons.delete className="h-6 w-6 cursor-pointer text-brand" />
-          </StudentDropoutDialog>
+          {!student.droppedOut && (
+            <StudentDropoutDialog student={student}>
+              <Icons.delete className="h-6 w-6 cursor-pointer text-brand" />
+            </StudentDropoutDialog>
+          )}
         </div>
       </div>
-      <p className="mt-1 text-sm text-gray-600">
+      <p className="mt-2 text-sm text-gray-600">
         Shamiri ID: {student.visibleId}
       </p>
       <Separator className="my-2" />
