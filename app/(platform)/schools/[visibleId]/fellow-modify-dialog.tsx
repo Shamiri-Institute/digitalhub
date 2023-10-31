@@ -9,7 +9,7 @@ import { z } from "zod";
 // @ts-expect-error
 import { experimental_useFormState as useFormState } from "react-dom";
 
-import { DropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
+import { FellowDropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
 import { addFellow } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -353,14 +353,14 @@ export function FellowModifyDialog({
                 {state?.message}
               </p>
               {mode === "edit" && (
-                <DropoutDialog fellow={fellow}>
+                <FellowDropoutDialog fellow={fellow}>
                   <Button
                     type="submit"
                     className="w-full bg-[#AC2925] py-5 text-white transition-transform  active:scale-95"
                   >
                     Drop Out
                   </Button>
-                </DropoutDialog>
+                </FellowDropoutDialog>
               )}
             </div>
           </form>
