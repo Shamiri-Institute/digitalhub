@@ -2,10 +2,10 @@
 
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
+import { useToast } from "#/components/ui/use-toast";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
@@ -14,10 +14,11 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [clickedGoogle, setClickedGoogle] = useState(false);
   const [clickedEmail, setClickedEmail] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const error = searchParams?.get("error");
-    error && toast.error(error);
+    error && toast({ title: error });
   }, [searchParams]);
 
   return (

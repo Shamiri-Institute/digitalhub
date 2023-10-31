@@ -50,6 +50,13 @@ export async function parseCsvFile(
       if (dataRow["Fellow_ID"] === "TFW23_S_301") {
         console.log("debug", dataRow["Fellow_ID"]);
       }
+
+      if (dataRow["Supervisor_ID"]?.includes(",")) {
+        console.warn(
+          `Warning: Supervisor_ID contains multiple values (${dataRow["Supervisor_ID"]}). Check if this is correct. Truncating to one for now.`,
+        );
+        dataRow["Supervisor_ID"] = dataRow["Supervisor_ID"].split(",")[0];
+      }
     }
 
     if (fileName === "fellow_attendance_temp") {
