@@ -7,7 +7,7 @@ import { sendEmail } from "#/emails";
 import implementerWelcomer from "#/emails/implementer-welcomer";
 import { objectId } from "#/lib/crypto";
 import { db as database, Database } from "#/lib/db";
-import { implementerModel } from "#/models/implementer";
+import { ImplementerModel } from "#/models/implementer";
 
 interface OnboardimplementerInput {
   name: string;
@@ -34,9 +34,13 @@ export class OnboardimplementerCommand extends Command<
   protected async perform(input: OnboardimplementerInput) {
     const validInput = this.validate(input);
 
-    const implementer = await new implementerModel(this.db).create({
-      name: validInput.name,
-      contactEmail: validInput.contactEmail,
+    const implementer = await new ImplementerModel(this.db).create({
+      visibleId: `Impl_${Math.floor(Math.random() * 1000000)}`,
+      implementerType: "INGO",
+      implementerName: validInput.name,
+      pointPersonName: validInput.name,
+      pointPersonEmail: validInput.contactEmail,
+      pointPersonPhone: "",
     });
 
     if (input.avatarUrl) {
@@ -53,14 +57,14 @@ export class OnboardimplementerCommand extends Command<
       });
     }
 
-    const subject = `${implementer.name} joins Shamiri Digital Hub!`;
+    const subject = `${implementer.implementerName} joins Shamiri Digital Hub!`;
     const emailComponent: React.ReactElement = implementerWelcomer({
-      name: implementer.name,
-      email: implementer.contactEmail,
+      name: implementer.implementerName,
+      email: implementer.pointPersonEmail!,
       preview: subject,
     });
     await sendEmail({
-      to: implementer.contactEmail,
+      to: implementer.pointPersonEmail!,
       subject: subject,
       react: emailComponent,
     });

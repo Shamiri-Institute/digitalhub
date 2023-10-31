@@ -48,11 +48,9 @@ async function SchoolsList() {
   //   demographics: "Mixed",
   // };
   const assignedSchoolId = "ANS23_School_17";
-  const assignedHubId = "hub_01hdrjbmfyfcnrw7be3an7zwkc";
   const assignedSchool = await db.school.findFirst({
     where: {
       visibleId: assignedSchoolId,
-      hubId: assignedHubId,
     },
   });
   if (!assignedSchool) {
@@ -60,7 +58,10 @@ async function SchoolsList() {
   }
 
   const otherSchools = await db.school.findMany({
-    where: { visibleId: { not: assignedSchoolId }, hubId: assignedHubId },
+    where: {
+      visibleId: { not: assignedSchoolId },
+      hubId: assignedSchool.hubId,
+    },
   });
 
   // const otherSchools = [

@@ -6,7 +6,7 @@ import { z } from "zod";
 // @ts-expect-error
 import { experimental_useFormState as useFormState } from "react-dom";
 
-import { inviteUserToOrganization } from "#/app/actions";
+import { inviteUserToImplementer } from "#/app/actions";
 import { OrganizationAvatar } from "#/components/ui/avatar";
 import { Button } from "#/components/ui/button";
 import {
@@ -72,7 +72,7 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
   }
 
   const [state, formAction] = useFormState(
-    inviteUserToOrganization,
+    inviteUserToImplementer,
     initialState,
   );
 
