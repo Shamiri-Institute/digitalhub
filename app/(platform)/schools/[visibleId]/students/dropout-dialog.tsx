@@ -22,13 +22,9 @@ import { StudentWithFellow } from "#/types/prisma";
 
 const FormSchema = z.object({
   reason: z.string({
-    required_error: "Please select the email(s) to invite.",
+    required_error: "Please enter the drop out reason",
   }),
 });
-
-const initialState = {
-  message: null,
-};
 
 export function StudentDropoutDialog({
   student,
@@ -46,9 +42,10 @@ export function StudentDropoutDialog({
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     const response = await dropoutStudentWithReason(
       student.visibleId,
+      student.school.visibleId,
+      student.fellow.visibleId,
       data.reason,
     );
-    console.log({ response });
     if (response?.error) {
       toast({
         variant: "destructive",
@@ -63,6 +60,8 @@ export function StudentDropoutDialog({
       });
 
       setDialogOpen(false);
+
+      form.reset();
     } else {
       toast({
         variant: "destructive",
