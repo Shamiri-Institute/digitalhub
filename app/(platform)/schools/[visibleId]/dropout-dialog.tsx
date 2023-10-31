@@ -1,12 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Prisma } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-// @ts-expect-error
-import { experimental_useFormState as useFormState } from "react-dom";
 
-import { inviteUserToOrganization } from "#/app/actions";
+import { dropoutFellowWithReason } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -27,15 +26,13 @@ const FormSchema = z.object({
   }),
 });
 
-const initialState = {
-  message: null,
-};
-
 export function FellowDropoutDialog({
   fellow,
+  school,
   children,
 }: {
-  fellow: any;
+  fellow: Prisma.FellowGetPayload<{}>;
+  school: Prisma.SchoolGetPayload<{}>;
   children: React.ReactNode;
 }) {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -43,18 +40,17 @@ export function FellowDropoutDialog({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    const response = await formAction(data);
+    const response = await dropoutFellowWithReason(
+      fellow.visibleId,
+      school.visibleId,
+      data.reason,
+    );
     console.log({ response });
 
     toast({
-      title: `Successfully dropped out ${fellow.fellowName} from ${fellow.schoolName}`,
+      title: `Dropped out ${fellow.fellowName}`,
     });
   }
-
-  const [state, formAction] = useFormState(
-    inviteUserToOrganization,
-    initialState,
-  );
 
   return (
     <Dialog>
@@ -97,18 +93,10 @@ export function FellowDropoutDialog({
               </div>
             </div>
             <div className="flex justify-end px-6 pb-6">
-              <Button
-                variant="destructive"
-                type="submit"
-                data-testid={constants.ADD_MEMBERS_SUBMIT}
-                className="w-full bg-[#AC2925]"
-              >
+              <Button variant="destructive" type="submit" className="w-full">
                 Drop out {fellow.fellowName}
               </Button>
             </div>
-            <p aria-live="polite" className="sr-only" role="status">
-              {state?.message}
-            </p>
           </form>
         </Form>
       </DialogContent>

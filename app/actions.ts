@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { ModifyFellowData } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
 import type { ModifyStudentData } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
 import { InviteUserCommand } from "#/commands/invite-user";
 import { objectId } from "#/lib/crypto";
@@ -102,47 +103,91 @@ async function parseCsvFile(file: File) {
   });
 }
 
-export async function addFellow(prevState: any, formDataObject: any) {
-  const data = z
-    .object({
-      fellowName: z.string(),
-      fellowEmail: z.string(),
-      cellNumber: z.string(),
-      mpesaName: z.string(),
-      mpesaNumber: z.string(),
-      county: z.string(),
-      subCounty: z.string(),
-      dateOfBirth: z.date(),
-      gender: z.string(),
-      hubId: z.string(),
-      supervisorId: z.string(),
-      implementerId: z.string(),
-    })
-    .parse(formDataObject);
-
-  await db.fellow.create({
-    data: {
-      id: objectId("fellow"),
-      visibleId: generateVisibleID(),
-      fellowName: data.fellowName,
-      fellowEmail: data.fellowEmail,
-      cellNumber: data.cellNumber,
-      mpesaName: data.mpesaName,
-      mpesaNumber: data.mpesaNumber,
-      county: data.county,
-      subCounty: data.subCounty,
-      dateOfBirth: data.dateOfBirth,
-      gender: data.gender,
-      hubId: data.hubId,
-      supervisorId: data.supervisorId,
-      implementerId: data.implementerId,
-    },
-  });
-
-  revalidatePath(`/schools/${data.schoolId}`);
+export async function modifyFellow(
+  data: ModifyFellowData & { mode: "create" | "edit"; schoolVisibleId: string },
+) {
+  try {
+    if (data.mode === "create") {
+      revalidatePath(`/schools/${data.schoolVisibleId}`);
+      return await createFellow(data);
+    } else if (data.mode === "edit") {
+      revalidatePath(`/schools/${data.schoolVisibleId}`);
+      return await updateFellow(data);
+    } else {
+      return { error: "Invalid mode" };
+    }
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
 }
 
-function generateVisibleID(): string {
+async function updateFellow(data: ModifyFellowData) {
+  try {
+    const fellow = await db.fellow.update({
+      where: {
+        visibleId: data.visibleId,
+      },
+      data: {
+        id: objectId("fellow"),
+        fellowName: data.fellowName,
+        fellowEmail: data.fellowEmail,
+        cellNumber: data.cellNumber,
+        mpesaName: data.mpesaName,
+        mpesaNumber: data.mpesaNumber,
+        county: data.county,
+        subCounty: data.subCounty,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender,
+      },
+    });
+
+    return { fellow };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+async function createFellow(data: ModifyFellowData) {
+  try {
+    const hub = await db.hub.findUniqueOrThrow({
+      where: { visibleId: data.hubVisibleId },
+    });
+    const supervisor = await db.supervisor.findUniqueOrThrow({
+      where: { visibleId: data.supervisorVisibleId },
+    });
+    const implementer = await db.implementer.findUniqueOrThrow({
+      where: { visibleId: data.implementerVisibleId },
+    });
+
+    const fellow = await db.fellow.create({
+      data: {
+        id: objectId("fellow"),
+        visibleId: generateFellowVisibleID(),
+        hubId: hub.id,
+        supervisorId: supervisor.id,
+        implementerId: implementer.id,
+        fellowName: data.fellowName,
+        fellowEmail: data.fellowEmail,
+        cellNumber: data.cellNumber,
+        mpesaName: data.mpesaName,
+        mpesaNumber: data.mpesaNumber,
+        county: data.county,
+        subCounty: data.subCounty,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender,
+      },
+    });
+
+    return { fellow };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+function generateFellowVisibleID(): string {
   // Get current year
   const currentYear: number = new Date().getFullYear();
 
@@ -237,6 +282,35 @@ export async function markFellowAttendance(
     return {
       error: "Something went wrong",
     };
+  }
+}
+
+export async function dropoutFellowWithReason(
+  fellowVisibleId: string,
+  schoolVisibleId: string,
+  dropoutReason: string,
+) {
+  try {
+    const fellow = await db.fellow.update({
+      where: { visibleId: fellowVisibleId },
+      data: {
+        droppedOut: true,
+        dropOutReason: dropoutReason,
+      },
+    });
+
+    revalidatePath(`/schools/${schoolVisibleId}`);
+
+    return { fellow };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return { error: "Something went wrong" };
   }
 }
 
@@ -383,11 +457,19 @@ export async function dropoutStudentWithReason(
   }
 }
 
-export async function modifyStudent(data: ModifyStudentData) {
+export async function modifyStudent(
+  data: ModifyStudentData & { mode: "create" | "edit" },
+) {
   try {
     if (data.mode === "create") {
+      revalidatePath(
+        `/schools/${data.schoolVisibleId}/students?fellowId=${data.fellowVisibleId}`,
+      );
       return await createStudent(data);
     } else if (data.mode === "edit") {
+      revalidatePath(
+        `/schools/${data.schoolVisibleId}/students?fellowId=${data.fellowVisibleId}`,
+      );
       return await updateStudent(data);
     } else {
       return { error: "Invalid mode" };
@@ -481,10 +563,6 @@ async function createStudent(data: ModifyStudentData) {
         mpesaNumber: data.mpesaNumber,
       },
     });
-
-    revalidatePath(
-      `/schools/${data.schoolVisibleId}/students?fellowId=${data.fellowVisibleId}`,
-    );
 
     return { student };
   } catch (error: unknown) {

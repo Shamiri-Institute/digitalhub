@@ -30,11 +30,11 @@ import {
 import { toast } from "#/components/ui/use-toast";
 
 const FormSchema = z.object({
-  studentName: z.string({
-    required_error: "Please enter the student's name.",
-  }),
   fellowVisibleId: z.string({
     required_error: "Please enter the fellow's visible ID.",
+  }),
+  studentName: z.string({
+    required_error: "Please enter the student's name.",
   }),
   supervisorVisibleId: z.string({
     required_error: "Please enter the supervisor's visible ID.",
@@ -90,7 +90,6 @@ const FormSchema = z.object({
 });
 
 export type ModifyStudentData = z.infer<typeof FormSchema> & {
-  mode: "create" | "edit";
   visibleId?: string;
 };
 
@@ -126,11 +125,11 @@ export function StudentModifyDialog({
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      studentName: student?.studentName ?? undefined,
       fellowVisibleId: info.fellowVisibleId,
       supervisorVisibleId: info.supervisorVisibleId,
       implementerVisibleId: info.implementerVisibleId,
       schoolVisibleId: info.schoolVisibleId,
+      studentName: student?.studentName ?? undefined,
       yearOfImplementation:
         student?.yearOfImplementation ?? new Date().getFullYear(),
       admissionNumber: student?.admissionNumber ?? undefined,
