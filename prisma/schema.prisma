@@ -250,14 +250,14 @@ model Student {
   home                 String?      @db.VarChar(255)
   siblings             String?      @db.VarChar(255)
   religion             String?      @db.VarChar(255)
-  group                String?      @db.VarChar(255)
+  groupName            String?      @map("group_name") @db.VarChar(255) // TODO: move to intervention_groups & intervention_group_students table
   survivingParents     String?      @map("surviving_parents") @db.VarChar(255)
   parentsDead          String?      @map("parents_dead") @db.VarChar(255)
   fathersEducation     String?      @map("fathers_education") @db.VarChar(255)
   mothersEducation     String?      @map("mothers_education") @db.VarChar(255)
   coCurricular         String?      @map("co_curricular") @db.VarChar(255)
   sports               String?      @db.VarChar(255)
-  createScreeningId    Boolean?     @map("create_screening_id")
+  isClinicalCase       Boolean?     @map("is_clinical_case")
   phoneNumber          String?      @map("phone_number") @db.VarChar(255)
   mpesaNumber          String?      @map("mpesa_number") @db.VarChar(255)
   attendanceSession0   Boolean?     @map("attendance_session_0")
@@ -461,17 +461,19 @@ model HubCoordinator {
 
 /// Intervention sessions are group sessions where the Shamiri Intervention is delivered to high school students by trained youth lay providers in various Kenyan schools.
 model InterventionSession {
-  id          String    @id @db.VarChar(255)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  archivedAt  DateTime? @map("archived_at")
-  visibleId   String    @unique @map("visible_id") @db.VarChar(10)
-  sessionDate DateTime  @map("session_date")
-  sessionName String    @map("session_name") @db.VarChar(255)
-  schoolId    String    @map("school_id") @db.VarChar(255)
-  school      School    @relation(fields: [schoolId], references: [id])
-  leaderId    String    @map("leader_id") @db.VarChar(255)
-  leader      Fellow    @relation(fields: [leaderId], references: [id])
+  id                   String    @id @db.VarChar(255)
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  archivedAt           DateTime? @map("archived_at")
+  visibleId            String    @unique @map("visible_id") @db.VarChar(10)
+  sessionDate          DateTime  @map("session_date")
+  sessionName          String    @map("session_name") @db.VarChar(255)
+  sessionType          String    @map("session_type") @db.VarChar(255) // e.g. pre, s1, s2, s3, s4, s_extra, clinical_followup, data_collection_followup
+  schoolId             String    @map("school_id") @db.VarChar(255)
+  school               School    @relation(fields: [schoolId], references: [id])
+  leaderId             String    @map("leader_id") @db.VarChar(255)
+  leader               Fellow    @relation(fields: [leaderId], references: [id])
+  yearOfImplementation Int       @map("year_of_implementation")
 
   @@map("intervention_sessions")
 }
