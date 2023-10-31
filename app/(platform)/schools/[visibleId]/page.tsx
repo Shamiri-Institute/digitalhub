@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SchoolDemographics } from "#/app/(platform)/schools/[visibleId]/demographics";
-import { DropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
+import { FellowDropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
 import { FellowAttendanceDot } from "#/app/(platform)/schools/[visibleId]/fellow-attendance-dot";
 import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
 import { RescheduleDialog } from "#/app/(platform)/schools/[visibleId]/reschedule-dialog";
@@ -198,12 +198,12 @@ function FellowCard({
               strokeWidth={1.75}
             />
           </FellowModifyDialog>
-          <DropoutDialog fellow={fellow}>
+          <FellowDropoutDialog fellow={fellow}>
             <Icons.delete
               className="h-6 w-6 cursor-pointer text-brand"
               strokeWidth={1.75}
             />
-          </DropoutDialog>
+          </FellowDropoutDialog>
         </div>
       </div>
       <p className="mt-1 text-sm text-gray-600">

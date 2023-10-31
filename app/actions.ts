@@ -335,9 +335,7 @@ export async function markStudentAttendance(
       where: { visibleId: studentVisibleId },
     });
 
-    return {
-      student,
-    };
+    return { student };
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error(error.message);
@@ -349,5 +347,31 @@ export async function markStudentAttendance(
     return {
       error: "Something went wrong",
     };
+  }
+}
+
+export async function dropoutStudentWithReason(
+  studentVisibleId: string,
+  dropoutReason: string,
+) {
+  try {
+    const student = await db.student.update({
+      where: { visibleId: studentVisibleId },
+      data: {
+        droppedOut: true,
+        dropOutReason: dropoutReason,
+      },
+    });
+
+    return { student };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return { error: "Something went wrong" };
   }
 }

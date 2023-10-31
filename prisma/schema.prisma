@@ -265,6 +265,8 @@ model Student {
   attendanceSession2   Boolean?     @map("attendance_session_2")
   attendanceSession3   Boolean?     @map("attendance_session_3")
   attendanceSession4   Boolean?     @map("attendance_session_4")
+  droppedOut           Boolean?     @map("dropped_out")
+  dropOutReason        String?      @map("drop_out_reason")
 
   @@map("students")
 }
