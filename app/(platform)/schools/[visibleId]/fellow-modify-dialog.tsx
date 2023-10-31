@@ -1,16 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Prisma } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-// @ts-expect-error
-import { experimental_useFormState as useFormState } from "react-dom";
 
-import { FellowDropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
-import { addFellow } from "#/app/actions";
+import { modifyFellow } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -37,8 +36,15 @@ import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 
 const FormSchema = z.object({
+  hubVisibleId: z.string(),
+  supervisorVisibleId: z.string(),
+  implementerVisibleId: z.string(),
+  schoolVisibleId: z.string(),
   fellowName: z.string({
     required_error: "Please enter the fellow's name.",
+  }),
+  yearOfImplementation: z.number({
+    required_error: "Please enter the year of implementation.",
   }),
   fellowEmail: z.string({
     required_error: "Please enter the fellow's email.",
@@ -52,71 +58,115 @@ const FormSchema = z.object({
   mpesaNumber: z.string({
     required_error: "Please enter the fellow's MPESA number.",
   }),
-  county: z.string({
-    required_error: "Please enter the fellow's county.",
-  }),
-  subCounty: z.string({
-    required_error: "Please enter the fellow's sub-county.",
-  }),
-  dateOfBirth: z.date({
-    required_error: "Please enter the fellow's date of birth.",
-  }),
+  county: z
+    .string({
+      required_error: "Please enter the fellow's county.",
+    })
+    .optional(),
+  subCounty: z
+    .string({
+      required_error: "Please enter the fellow's sub-county.",
+    })
+    .optional(),
+  dateOfBirth: z
+    .date({
+      required_error: "Please enter the fellow's date of birth.",
+    })
+    .optional(),
   gender: z.string({
     required_error: "Please enter the fellow's gender.",
   }),
+  dropOutReason: z.string().optional(),
 });
 
-const initialState = {
-  message: null,
+export type ModifyFellowData = z.infer<typeof FormSchema> & {
+  visibleId?: string;
 };
 
 export function FellowModifyDialog({
   mode,
   fellow,
+  info,
   children,
 }: {
   mode: "create" | "edit";
-  fellow?: any;
+  fellow?: Prisma.FellowGetPayload<{}>;
+  info: {
+    hubVisibleId: string;
+    supervisorVisibleId: string;
+    implementerVisibleId: string;
+    schoolVisibleId: string;
+  };
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      fellowName: fellow?.fellowName,
-      fellowEmail: fellow?.fellowEmail,
-      cellNumber: fellow?.cellNumber,
-      mpesaName: fellow?.mpesaName,
-      mpesaNumber: fellow?.mpesaNumber,
-      county: fellow?.county,
-      subCounty: fellow?.subCounty,
-      dateOfBirth: fellow?.dateOfBirth,
-      gender: fellow?.gender,
+      hubVisibleId: info.hubVisibleId,
+      supervisorVisibleId: info.supervisorVisibleId,
+      implementerVisibleId: info.implementerVisibleId,
+      schoolVisibleId: info.schoolVisibleId,
+      fellowName: fellow?.fellowName ?? undefined,
+      yearOfImplementation:
+        fellow?.yearOfImplementation ?? new Date().getFullYear(),
+      fellowEmail: fellow?.fellowEmail ?? undefined,
+      cellNumber: fellow?.cellNumber ?? undefined,
+      mpesaName: fellow?.mpesaName ?? undefined,
+      mpesaNumber: fellow?.mpesaNumber ?? undefined,
+      county: fellow?.county ?? undefined,
+      subCounty: fellow?.subCounty ?? undefined,
+      dateOfBirth: fellow?.dateOfBirth ?? undefined,
+      gender: fellow?.gender ?? undefined,
     },
   });
 
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
-  const [state, formAction] = useFormState(addFellow, initialState);
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log({ data });
-
-    const result = formAction({
+  async function onSubmit(data: ModifyFellowData) {
+    const response = await modifyFellow({
       ...data,
-      hubId: fellow?.hubId,
-      supervisorId: fellow?.supervisorId,
-      implementerId: fellow?.implementerId,
+      mode,
+      visibleId: fellow?.visibleId,
     });
-    console.log({ result });
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+    if (response?.error) {
+      console.error(response?.error);
+      toast({
+        variant: "destructive",
+        title: response?.error,
+      });
+      return;
+    }
 
-    setIsSheetOpen(false);
+    if (response) {
+      console.log({ response });
+
+      if (mode === "create") {
+        toast({
+          description: `Added ${response.fellow?.fellowName}`,
+        });
+      } else if (mode === "edit") {
+        toast({
+          description: `Updated ${response.fellow?.fellowName}'s info`,
+        });
+      }
+
+      setIsSheetOpen(false);
+
+      router.refresh();
+
+      form.reset();
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+      });
+    }
+  }
+
+  function onError(errors: any) {
+    console.log({ errors });
   }
 
   return (
@@ -128,7 +178,7 @@ export function FellowModifyDialog({
             <SheetTitle className="md:text-xl">Add a fellow</SheetTitle>
           )}
           {mode === "edit" && (
-            <SheetTitle className="md:text-xl">{fellow.fellowName}</SheetTitle>
+            <SheetTitle className="md:text-xl">{fellow?.fellowName}</SheetTitle>
           )}
           {mode === "create" && (
             <SheetDescription>
@@ -136,18 +186,29 @@ export function FellowModifyDialog({
             </SheetDescription>
           )}
           {mode === "edit" && (
-            <SheetDescription>Shamiri ID: {fellow.visibleId}</SheetDescription>
+            <SheetDescription>Shamiri ID: {fellow?.visibleId}</SheetDescription>
           )}
         </SheetHeader>
 
         <Form {...form}>
           <form
             id="modifyFellowForm"
-            onSubmit={form.handleSubmit(onSubmit)}
-            action={formAction}
+            onSubmit={form.handleSubmit(onSubmit, onError)}
             className="overflow-hidden text-ellipsis px-1"
           >
             <div className="mt-6 space-y-6">
+              <div className="hidden">
+                <input type="hidden" {...form.register("hubVisibleId")} />
+                <input
+                  type="hidden"
+                  {...form.register("supervisorVisibleId")}
+                />
+                <input
+                  type="hidden"
+                  {...form.register("implementerVisibleId")}
+                />
+                <input type="hidden" {...form.register("schoolVisibleId")} />
+              </div>
               <div>
                 <FormField
                   control={form.control}
@@ -342,26 +403,34 @@ export function FellowModifyDialog({
                   )}
                 />
               </div>
+
+              {fellow?.droppedOut && (
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="dropOutReason"
+                    render={({ field }) => (
+                      <div className="mt-3 grid w-full gap-1.5">
+                        <Label htmlFor="dropOutReason">Drop out reason</Label>
+                        <Input
+                          id="dropOutReason"
+                          className="mt-1.5 resize-none bg-card"
+                          placeholder="Student has entered the workforce"
+                          {...field}
+                        />
+                      </div>
+                    )}
+                  />
+                </div>
+              )}
               <Button
                 type="submit"
                 form="modifyFellowForm"
                 className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
               >
-                Submit
+                {mode === "create" && "Add fellow"}
+                {mode === "edit" && `Update ${fellow?.fellowName}`}
               </Button>
-              <p aria-live="polite" className="sr-only" role="status">
-                {state?.message}
-              </p>
-              {mode === "edit" && (
-                <FellowDropoutDialog fellow={fellow}>
-                  <Button
-                    type="submit"
-                    className="w-full bg-[#AC2925] py-5 text-white transition-transform  active:scale-95"
-                  >
-                    Drop Out
-                  </Button>
-                </FellowDropoutDialog>
-              )}
             </div>
           </form>
         </Form>

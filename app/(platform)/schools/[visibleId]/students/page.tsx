@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { StudentDropoutDialog } from "#/app/(platform)/schools/[visibleId]/students/dropout-dialog";
 import { StudentAttendanceDot } from "#/app/(platform)/schools/[visibleId]/students/student-attendance-dot";
 import { StudentModifyDialog } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
+import { Back } from "#/components/common/back";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
@@ -84,9 +85,7 @@ function Header({
 }) {
   return (
     <header className="flex items-center justify-between">
-      <button>
-        <Icons.chevronLeft className="mr-4 h-6 w-6 align-baseline text-brand" />
-      </button>
+      <Back />
       <div className="flex flex-col items-center">
         <div className="text-2xl font-semibold">{schoolName}</div>
         <div className="text-lg">{fellowName}</div>

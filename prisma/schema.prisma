@@ -289,7 +289,6 @@ model Fellow {
   subCounty            String?               @map("sub_county") @db.VarChar(255)
   dateOfBirth          DateTime?             @map("date_of_birth") @db.Date
   gender               String?               @map("gender")
-  droppedOut           Boolean?              @map("dropped_out")
   transferred          Boolean?              @map("transferred")
   hubId                String?               @map("hub_id") @db.VarChar(255)
   hub                  Hub?                  @relation(fields: [hubId], references: [id])
@@ -297,6 +296,8 @@ model Fellow {
   implementer          Implementer?          @relation(fields: [implementerId], references: [id])
   supervisorId         String?               @map("supervisor_id") @db.VarChar(255)
   supervisor           Supervisor?           @relation(fields: [supervisorId], references: [id])
+  droppedOut           Boolean?              @map("dropped_out")
+  dropOutReason        String?               @map("drop_out_reason")
   students             Student[]
   fellowAttendances    FellowAttendance[]
   interventionSessions InterventionSession[]
