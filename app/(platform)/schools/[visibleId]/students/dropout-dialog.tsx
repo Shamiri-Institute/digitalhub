@@ -1,12 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-// @ts-expect-error
-import { experimental_useFormState as useFormState } from "react-dom";
 
-import { inviteUserToOrganization } from "#/app/actions";
+import { dropoutStudentWithReason } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -19,7 +18,7 @@ import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
-import { constants } from "#/tests/constants";
+import { StudentWithFellow } from "#/types/prisma";
 
 const FormSchema = z.object({
   reason: z.string({
@@ -31,34 +30,50 @@ const initialState = {
   message: null,
 };
 
-export function FellowDropoutDialog({
-  fellow,
+export function StudentDropoutDialog({
+  student,
   children,
 }: {
-  fellow: any;
+  student: StudentWithFellow;
   children: React.ReactNode;
 }) {
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    const response = await formAction(data);
+    const response = await dropoutStudentWithReason(
+      student.visibleId,
+      data.reason,
+    );
     console.log({ response });
+    if (response?.error) {
+      toast({
+        variant: "destructive",
+        title: response?.error,
+      });
+      return;
+    }
 
-    toast({
-      title: `Successfully dropped out ${fellow.fellowName} from ${fellow.schoolName}`,
-    });
+    if (response) {
+      toast({
+        title: `Dropped out ${student.studentName}`,
+      });
+
+      setDialogOpen(false);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+      });
+    }
   }
 
-  const [state, formAction] = useFormState(
-    inviteUserToOrganization,
-    initialState,
-  );
-
   return (
-    <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogTrigger>{children}</DialogTrigger>
       <DialogContent className="gap-0 p-0">
         <Form {...form}>
           <form
@@ -68,7 +83,7 @@ export function FellowDropoutDialog({
             <DialogHeader className="space-y-0 px-6 py-4">
               <div className="flex items-center gap-2">
                 <span className="text-base font-medium">
-                  Drop out {fellow.fellowName}
+                  Drop out {student.studentName}
                 </span>
               </div>
             </DialogHeader>
@@ -80,16 +95,14 @@ export function FellowDropoutDialog({
                   name="reason"
                   render={({ field }) => (
                     <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="reason">Reason</Label>
+                      <Label htmlFor="emails">Reason</Label>
                       <Textarea
                         id="reason"
                         name="reason"
                         onChange={field.onChange}
                         defaultValue={field.value}
-                        placeholder="e.g. Fellow is not interested in the program"
+                        placeholder="e.g. Student has entered the workforce"
                         className="mt-1.5 resize-none bg-card"
-                        data-testid={constants.ADD_MEMBERS_EMAILS}
-                        data-1p-ignore="true"
                       />
                     </div>
                   )}
@@ -97,18 +110,10 @@ export function FellowDropoutDialog({
               </div>
             </div>
             <div className="flex justify-end px-6 pb-6">
-              <Button
-                variant="destructive"
-                type="submit"
-                data-testid={constants.ADD_MEMBERS_SUBMIT}
-                className="w-full bg-[#AC2925]"
-              >
-                Drop out {fellow.fellowName}
+              <Button variant="destructive" type="submit" className="w-full">
+                Drop out {student.studentName}
               </Button>
             </div>
-            <p aria-live="polite" className="sr-only" role="status">
-              {state?.message}
-            </p>
           </form>
         </Form>
       </DialogContent>
