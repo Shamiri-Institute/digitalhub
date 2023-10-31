@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { StudentDropoutDialog } from "#/app/(platform)/schools/[visibleId]/students/dropout-dialog";
 import { StudentAttendanceDot } from "#/app/(platform)/schools/[visibleId]/students/student-attendance-dot";
+import { StudentModifyDialog } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
@@ -25,6 +26,7 @@ export default async function SchoolStudentsPage({
   const fellowVisibleId = searchParams?.fellowId as string | undefined;
   const fellow = await db.fellow.findUnique({
     where: { visibleId: fellowVisibleId },
+    include: { supervisor: true, implementer: true },
   });
   if (!fellow) {
     notFound();
@@ -35,6 +37,9 @@ export default async function SchoolStudentsPage({
     include: {
       fellow: true,
       school: true,
+    },
+    orderBy: {
+      visibleId: "asc",
     },
   });
 
@@ -47,12 +52,24 @@ export default async function SchoolStudentsPage({
       <div className="mt-8">
         <div className="mx-4 flex justify-between border-b border-border/50 pb-3">
           <div className="text-2xl font-semibold">Students</div>
-          <button className="transition-transform active:scale-95">
-            <Icons.plusCircle
-              className="h-6 w-6 text-shamiri-blue"
-              strokeWidth={1.5}
-            />
-          </button>
+          <StudentModifyDialog
+            mode="create"
+            fellowName={fellow.fellowName ?? "N/A"}
+            schoolName={school.schoolName}
+            info={{
+              schoolVisibleId: school.visibleId,
+              fellowVisibleId: fellow.visibleId,
+              supervisorVisibleId: fellow.supervisor?.visibleId!,
+              implementerVisibleId: fellow.implementer?.visibleId!,
+            }}
+          >
+            <button className="transition-transform active:scale-95">
+              <Icons.plusCircle
+                className="h-6 w-6 text-shamiri-blue"
+                strokeWidth={1.5}
+              />
+            </button>
+          </StudentModifyDialog>
         </div>
       </div>
       <div className="mx-4 mt-8">

@@ -6,7 +6,7 @@ import { z } from "zod";
 // @ts-expect-error
 import { experimental_useFormState as useFormState } from "react-dom";
 
-import { inviteUserToOrganization } from "#/app/actions";
+import { inviteUserToImplementer } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -63,7 +63,7 @@ export function RescheduleDialog({
   }
 
   const [state, formAction] = useFormState(
-    inviteUserToOrganization,
+    inviteUserToImplementer,
     initialState,
   );
 
