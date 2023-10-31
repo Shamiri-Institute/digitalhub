@@ -119,8 +119,6 @@ export async function addFellow(prevState: any, formDataObject: any) {
     })
     .parse(formDataObject);
 
-  console.log({ data });
-
   await db.fellow.create({
     data: {
       id: objectId("fellow"),
@@ -277,5 +275,79 @@ function sessionLabelToNumber(label: SessionLabel): SessionNumber {
       return 4;
     default:
       throw new Error("Invalid session label");
+  }
+}
+
+export async function markStudentAttendance(
+  status: AttendanceStatus,
+  label: SessionLabel,
+  studentVisibleId: string,
+) {
+  try {
+    const sessionNumber = sessionLabelToNumber(label);
+
+    const attendanceBoolean = attendanceStatusToBoolean(status);
+
+    switch (sessionNumber) {
+      case 0:
+        await db.student.update({
+          where: { visibleId: studentVisibleId },
+          data: {
+            attendanceSession0: attendanceBoolean,
+          },
+        });
+        break;
+      case 1:
+        await db.student.update({
+          where: { visibleId: studentVisibleId },
+          data: {
+            attendanceSession1: attendanceBoolean,
+          },
+        });
+        break;
+      case 2:
+        await db.student.update({
+          where: { visibleId: studentVisibleId },
+          data: {
+            attendanceSession2: attendanceBoolean,
+          },
+        });
+        break;
+      case 3:
+        await db.student.update({
+          where: { visibleId: studentVisibleId },
+          data: {
+            attendanceSession3: attendanceBoolean,
+          },
+        });
+        break;
+      case 4:
+        await db.student.update({
+          where: { visibleId: studentVisibleId },
+          data: {
+            attendanceSession3: attendanceBoolean,
+          },
+        });
+        break;
+    }
+
+    const student = await db.student.findUniqueOrThrow({
+      where: { visibleId: studentVisibleId },
+    });
+
+    return {
+      student,
+    };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return {
+      error: "Something went wrong",
+    };
   }
 }
