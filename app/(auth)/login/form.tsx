@@ -58,19 +58,28 @@ export function LoginForm() {
                   setClickedEmail(false);
                   if (res?.ok && !res?.error) {
                     setEmail("");
-                    toast.success("Email sent - check your inbox!");
+                    toast({ description: "Email sent - check your inbox!" });
                   } else {
-                    toast.error("Error sending email - try again?");
+                    toast({
+                      variant: "destructive",
+                      description: "Error sending email - try again?",
+                    });
                   }
                 });
               } else {
-                toast.error("No account found with that email address.");
+                toast({
+                  variant: "destructive",
+                  description: "No account found with that email address.",
+                });
                 setClickedEmail(false);
               }
             })
             .catch(() => {
               setClickedEmail(false);
-              toast.error("Error sending email - try again?");
+              toast({
+                variant: "destructive",
+                description: "Error sending email - try again?",
+              });
             });
         }}
         className="flex flex-col space-y-3"

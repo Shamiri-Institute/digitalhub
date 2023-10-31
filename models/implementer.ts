@@ -12,7 +12,7 @@ type implementerFindUniqueOutput = Prisma.PromiseReturnType<
 
 export const implementerPrefix = "impl";
 
-export class implementerModel extends Model {
+export class ImplementerModel extends Model {
   prefix = implementerPrefix;
 
   async findUnique(id: string): Promise<implementerFindUniqueOutput | null> {
@@ -22,7 +22,7 @@ export class implementerModel extends Model {
   }
 
   async create(
-    data: Omit<Prisma.implementerCreateInput, "id">,
+    data: Omit<Prisma.ImplementerCreateInput, "id">,
   ): Promise<implementerCreateOutput> {
     return await this.cursor.implementer.create({
       data: {

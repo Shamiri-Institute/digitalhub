@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { Command } from "#/commands";
 import { db as database, Database } from "#/lib/db";
-import { implementerModel } from "#/models/implementer";
+import { ImplementerModel } from "#/models/implementer";
 import { UserModel } from "#/models/user";
 
 interface OnboardUserInput {
@@ -54,7 +54,7 @@ export class OnboardUserCommand extends Command<
         name: validInput.name,
       });
 
-      const implementer = await new implementerModel(tx).findUnique(
+      const implementer = await new ImplementerModel(tx).findUnique(
         validInput.implementerId,
       );
       if (!implementer) {
