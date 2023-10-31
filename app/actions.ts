@@ -7,6 +7,8 @@ import { z } from "zod";
 import { InviteUserCommand } from "#/commands/invite-user";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
+import { FellowAttendance } from "@prisma/client";
 import { redirect } from "next/navigation";
 
 export async function inviteUserToOrganization(prevState: any, formData: any) {
@@ -140,6 +142,7 @@ export async function addFellow(prevState: any, formDataObject: any) {
 
   revalidatePath(`/schools/${data.schoolId}`);
 }
+
 function generateVisibleID(): string {
   // Get current year
   const currentYear: number = new Date().getFullYear();
@@ -162,4 +165,117 @@ function generateVisibleID(): string {
   return `${part1}_${part2}_${part3}`;
 }
 
-console.log(generateVisibleID()); // Output: TFW23_S_021, TFW23_P_482, TFW23_O_123, etc.
+export async function markFellowAttendance(
+  status: AttendanceStatus,
+  label: SessionLabel,
+  fellowVisibleId: string,
+  schoolVisibleId: string,
+) {
+  try {
+    const fellow = await db.fellow.findUniqueOrThrow({
+      where: { visibleId: fellowVisibleId },
+    });
+
+    if (!fellow.supervisorId) {
+      throw new Error(`Fellow (${fellow.visibleId}) has no supervisor`);
+    }
+
+    const school = await db.school.findUniqueOrThrow({
+      where: { visibleId: schoolVisibleId },
+    });
+
+    const sessionNumber = sessionLabelToNumber(label);
+
+    const fellowAttendance = await db.fellowAttendance.findFirst({
+      where: {
+        fellowId: fellow.id,
+        sessionNumber,
+      },
+    });
+
+    let attendance: FellowAttendance | null = null;
+    if (fellowAttendance) {
+      attendance = await db.fellowAttendance.update({
+        where: {
+          id: fellowAttendance.id,
+        },
+        data: {
+          sessionNumber,
+          attended: attendanceStatusToBoolean(status),
+        },
+      });
+    } else {
+      attendance = await db.fellowAttendance.create({
+        data: {
+          fellowId: fellow.id,
+          visibleId: generateFellowAttendanceVisibleId(
+            fellow.visibleId,
+            schoolVisibleId,
+            label,
+          ),
+          yearOfImplementation: new Date().getFullYear(),
+          sessionNumber: sessionNumber as number,
+          // TODO: remove this as we need a way to know the date of the session (see introduced intervention_sessions)
+          sessionDate: new Date(),
+          attended: attendanceStatusToBoolean(status),
+          schoolId: school.id,
+          supervisorId: fellow.supervisorId,
+        },
+      });
+    }
+
+    return {
+      attendance,
+    };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return {
+      error: "Something went wrong",
+    };
+  }
+}
+
+function generateFellowAttendanceVisibleId(
+  fellowId: string,
+  schoolId: string,
+  sessionLabel: string,
+) {
+  const randomString = Math.random().toString(36).substring(7);
+  return `${fellowId}_${schoolId}_${sessionLabel}_${randomString}`;
+}
+
+function attendanceStatusToBoolean(status: AttendanceStatus): boolean | null {
+  switch (status) {
+    case "present":
+      return true;
+    case "absent":
+      return false;
+    case "not-marked":
+      return null;
+    default:
+      throw new Error("Invalid attendance status");
+  }
+}
+
+function sessionLabelToNumber(label: SessionLabel): SessionNumber {
+  switch (label) {
+    case "Pre":
+      return 0;
+    case "S1":
+      return 1;
+    case "S2":
+      return 2;
+    case "S3":
+      return 3;
+    case "S4":
+      return 4;
+    default:
+      throw new Error("Invalid session label");
+  }
+}

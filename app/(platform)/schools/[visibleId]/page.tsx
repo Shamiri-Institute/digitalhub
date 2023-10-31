@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { SchoolDemographics } from "#/app/(platform)/schools/[visibleId]/demographics";
 import { DropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
+import { FellowAttendanceDot } from "#/app/(platform)/schools/[visibleId]/fellow-attendance-dot";
 import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
 import { RescheduleDialog } from "#/app/(platform)/schools/[visibleId]/reschedule-dialog";
 import { currentSupervisor } from "#/app/auth";
@@ -11,6 +12,7 @@ import { Back } from "#/components/common/back";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 import type { FellowWithAttendance } from "#/types/prisma";
 
 export default async function SchoolDetailPage({
@@ -153,7 +155,7 @@ function FellowCard({
     );
   }
 
-  function getAttendanceStatus(sessionNumber: number) {
+  function getAttendanceStatus(sessionNumber: SessionNumber): AttendanceStatus {
     const attendance: FellowWithAttendance["attendances"][number] =
       filteredAttendances.find(
         (attendance: FellowWithAttendance["attendances"][number]) =>
@@ -171,7 +173,7 @@ function FellowCard({
     return "not-marked";
   }
 
-  const sessionItems = [
+  const sessionItems: { status: AttendanceStatus; label: SessionLabel }[] = [
     { status: getAttendanceStatus(0), label: "Pre" },
     { status: getAttendanceStatus(1), label: "S1" },
     { status: getAttendanceStatus(2), label: "S2" },
@@ -210,22 +212,16 @@ function FellowCard({
       <Separator className="my-2" />
       <div className="mt-4 flex justify-between pb-2">
         {sessionItems.map((session, index) => (
-          <div key={index} className="flex flex-col items-center gap-1.5">
-            <div className="text-sm text-muted-foreground">{session.label}</div>
-            <div
-              className={`h-5 w-5 rounded-full ${
-                session.status === "present"
-                  ? "bg-[#85A070]"
-                  : session.status === "absent"
-                  ? "bg-[#DE5E68]"
-                  : "bg-gray-300"
-              } mx-1`}
-            ></div>
-          </div>
+          <FellowAttendanceDot
+            key={index}
+            session={session}
+            fellow={fellow}
+            school={school}
+          />
         ))}
       </div>
       <Separator className="my-2" />
-      <div className="mt-4 flex items-center justify-between text-xs">
+      <div className="mt-4 flex items-center justify-between text-sm">
         <div className="flex items-center gap-1.5">
           <div className={`h-3 w-3 rounded-full bg-[#85A070]`}></div>
           <span>Present</span>
