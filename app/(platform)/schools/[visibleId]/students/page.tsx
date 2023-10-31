@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 
+import { StudentAttendanceDot } from "#/app/(platform)/schools/[visibleId]/students/student-attendance-dot";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import { AttendanceStatus, SessionLabel } from "#/types/app";
 
 export default async function SchoolStudentsPage({
   params: { visibleId },
@@ -101,7 +103,7 @@ function StudentCard({ student }: { student: any }) {
     return "not-marked";
   }
 
-  const sessionItems = [
+  const sessionItems: { status: AttendanceStatus; label: SessionLabel }[] = [
     { status: getAttendanceStatus(student.attendanceSession0), label: "Pre" },
     { status: getAttendanceStatus(student.attendanceSession1), label: "S1" },
     { status: getAttendanceStatus(student.attendanceSession2), label: "S2" },
@@ -109,18 +111,17 @@ function StudentCard({ student }: { student: any }) {
     { status: getAttendanceStatus(student.attendanceSession4), label: "S4" },
   ];
 
-  console.log({ student });
-
   return (
     <div className="rounded border p-8 shadow-md">
       <div className="flex justify-between">
         <h2 className="text-lg font-bold">{student.studentName || "N/A"}</h2>
         <div className="flex gap-0.5">
-          <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
-          <Icons.delete
-            className="h-6 w-6 cursor-pointer text-brand"
-            strokeWidth={2.5}
-          />
+          <button>
+            <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
+          </button>
+          <button>
+            <Icons.delete className="h-6 w-6 cursor-pointer text-brand" />
+          </button>
         </div>
       </div>
       <p className="mt-1 text-sm text-gray-600">
@@ -129,18 +130,11 @@ function StudentCard({ student }: { student: any }) {
       <Separator className="my-2" />
       <div className="mt-4 flex justify-between">
         {sessionItems.map((session, index) => (
-          <div key={index} className="flex flex-col items-center">
-            <div className="text-sm text-muted-foreground">{session.label}</div>
-            <div
-              className={`h-5 w-5 rounded-full ${
-                session.status === "present"
-                  ? "bg-[#85A070]"
-                  : session.status === "absent"
-                  ? "bg-[#DE5E68]"
-                  : "bg-gray-300"
-              } mx-1`}
-            ></div>
-          </div>
+          <StudentAttendanceDot
+            key={index}
+            session={session}
+            student={student}
+          />
         ))}
       </div>
       <Separator className="my-2" />
