@@ -1,12 +1,12 @@
 import Link from "next/link";
 
+import { SessionSchedule } from "#/app/(platform)/(dashboard)/session-schedule";
 import { ClinicalFeatureCard } from "#/app/(platform)/clinical-feature-card";
 import { Header } from "#/app/(platform)/common";
 import { HubCoordinatorView } from "#/app/(platform)/hub-coordinator-view";
 import { currentHub } from "#/app/auth";
 import { Icon, Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
-import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import { getServerSession } from "next-auth";
 
@@ -33,16 +33,36 @@ async function SupervisorView() {
       <div className="mb-8 mt-8 md:mt-0">
         <Header userName={session?.user.name!} hubName={hub?.hubName!} />
       </div>
-      <OverviewCards />
+
       <div className="mt-8">
-        <Separator />
+        <OverviewCards />
       </div>
 
-      <h3 className="mt-4 text-base font-semibold text-brand xl:text-2xl">
-        Recently opened
-      </h3>
-      <div className="mt-4">
-        <SchoolsList />
+      <div className="mt-8 max-w-3xl">
+        <h3 className="mt-4 text-base font-semibold text-brand xl:text-2xl">
+          Sessions
+        </h3>
+        <div className="mt-4">
+          <SessionSchedule
+            sessions={[
+              {
+                title: "Kamkunji, S01",
+                date: new Date("2024-11-03T19:30:00Z"),
+                startTime: "2:30 PM",
+                endTime: "3:30 PM",
+              },
+            ]}
+          />
+        </div>
+      </div>
+
+      <div className="mt-12">
+        <h3 className="mt-4 text-base font-semibold text-brand xl:text-2xl">
+          Recently opened
+        </h3>
+        <div className="mt-4">
+          <SchoolsList />
+        </div>
       </div>
     </div>
   );
