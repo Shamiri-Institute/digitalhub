@@ -2,6 +2,7 @@
 
 import * as React from "react";
 
+import { SchedulingDialog } from "#/app/(platform)/(dashboard)/scheduling-dialog";
 import { cn } from "#/lib/utils";
 import {
   eachDayOfInterval,
@@ -92,15 +93,17 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
 
                 <div className="relative flex-1 border-t border-gray-300/50">
                   {isSessionThisHour && (
-                    <button
-                      ref={firstSession}
-                      className="absolute top-1/2 z-20 ml-[10%] h-full w-fit cursor-pointer rounded-md bg-active-card px-8 py-2 text-white transition-all active:scale-90"
-                    >
-                      <h2 className="font-semibold">{session.title}</h2>
-                      <span className="text-sm">
-                        {session.startTime} - {session.endTime}
-                      </span>
-                    </button>
+                    <SchedulingDialog>
+                      <button
+                        ref={firstSession}
+                        className="absolute top-1/2 z-20 ml-[10%] h-full w-fit cursor-pointer rounded-md bg-active-card px-8 py-2 text-white transition-all active:scale-90"
+                      >
+                        <h2 className="font-semibold">{session.title}</h2>
+                        <span className="text-sm">
+                          {session.startTime} - {session.endTime}
+                        </span>
+                      </button>
+                    </SchedulingDialog>
                   )}
                 </div>
               </div>
