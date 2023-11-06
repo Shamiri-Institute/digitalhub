@@ -29,9 +29,21 @@ seedDatabase()
   });
 
 async function truncateTables() {
-  await db.$executeRaw`
-  TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, intervention_sessions, fellow_attendances, supervisors, schools, hub_coordinators;
+  const tables = await db.$queryRaw<{ readonly tablename: string }[]>`
+    SELECT tablename
+    FROM pg_catalog.pg_tables
+    WHERE schemaname != 'pg_catalog' AND
+    schemaname != 'information_schema';
   `;
+
+  for (const { tablename } of tables) {
+    if (tablename === "_prisma_migrations") {
+      continue;
+    }
+
+    console.log(`Truncating table ${tablename}`);
+    await db.$executeRaw`TRUNCATE TABLE ${tablename} CASCADE;`;
+  }
 }
 
 async function createSystemUser(db: Database) {
