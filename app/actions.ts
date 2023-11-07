@@ -1,14 +1,19 @@
 "use server";
 
+import { FellowAttendance, Prisma } from "@prisma/client";
 import * as csv from "csv-parse";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { ModifyFellowData } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
+import type { ModifyStudentData } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
 import { InviteUserCommand } from "#/commands/invite-user";
+import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { redirect } from "next/navigation";
+import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 
-export async function inviteUserToOrganization(prevState: any, formData: any) {
+export async function inviteUserToImplementer(prevState: any, formData: any) {
   const data = z
     .object({
       emails: z.string().transform((val) => val.split(",")),
@@ -20,7 +25,7 @@ export async function inviteUserToOrganization(prevState: any, formData: any) {
     });
 
   // TODO: dummy values, use auth/cookies to pull this info
-  const currentOrganization = await db.organization.findFirstOrThrow();
+  const currentImplementer = await db.implementer.findFirstOrThrow();
   const currentUser = await db.user.findFirstOrThrow();
 
   const invitations = data.emails.map(async (email) => {
@@ -28,14 +33,14 @@ export async function inviteUserToOrganization(prevState: any, formData: any) {
     const inviteUser = new InviteUserCommand();
     await inviteUser.run({
       email,
-      organizationId: currentOrganization.id,
+      implementerId: currentImplementer.id,
       inviterId: currentUser.id,
       roleId: data.role,
     });
   });
   await Promise.allSettled(invitations);
 
-  revalidatePath("/admin/organization/members");
+  revalidatePath("/admin/implementer/members");
 }
 
 export async function batchUploadFellows(formData: FormData) {
@@ -96,4 +101,477 @@ async function parseCsvFile(file: File) {
     parser.write(Buffer.from(await file.arrayBuffer()));
     parser.end();
   });
+}
+
+export async function modifyFellow(
+  data: ModifyFellowData & { mode: "create" | "edit"; schoolVisibleId: string },
+) {
+  try {
+    if (data.mode === "create") {
+      revalidatePath(`/schools/${data.schoolVisibleId}`);
+      return await createFellow(data);
+    } else if (data.mode === "edit") {
+      revalidatePath(`/schools/${data.schoolVisibleId}`);
+      return await updateFellow(data);
+    } else {
+      return { error: "Invalid mode" };
+    }
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+async function updateFellow(data: ModifyFellowData) {
+  try {
+    const fellow = await db.fellow.update({
+      where: {
+        visibleId: data.visibleId,
+      },
+      data: {
+        id: objectId("fellow"),
+        fellowName: data.fellowName,
+        fellowEmail: data.fellowEmail,
+        cellNumber: data.cellNumber,
+        mpesaName: data.mpesaName,
+        mpesaNumber: data.mpesaNumber,
+        county: data.county,
+        subCounty: data.subCounty,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender,
+      },
+    });
+
+    return { fellow };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+async function createFellow(data: ModifyFellowData) {
+  try {
+    const hub = await db.hub.findUniqueOrThrow({
+      where: { visibleId: data.hubVisibleId },
+    });
+    const supervisor = await db.supervisor.findUniqueOrThrow({
+      where: { visibleId: data.supervisorVisibleId },
+    });
+    const implementer = await db.implementer.findUniqueOrThrow({
+      where: { visibleId: data.implementerVisibleId },
+    });
+
+    const fellow = await db.fellow.create({
+      data: {
+        id: objectId("fellow"),
+        visibleId: generateFellowVisibleID(),
+        hubId: hub.id,
+        supervisorId: supervisor.id,
+        implementerId: implementer.id,
+        fellowName: data.fellowName,
+        fellowEmail: data.fellowEmail,
+        cellNumber: data.cellNumber,
+        mpesaName: data.mpesaName,
+        mpesaNumber: data.mpesaNumber,
+        county: data.county,
+        subCounty: data.subCounty,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender,
+      },
+    });
+
+    return { fellow };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+function generateFellowVisibleID(): string {
+  // Get current year
+  const currentYear: number = new Date().getFullYear();
+
+  // Extract last two digits of the current year
+  let yearDigits: string = String(currentYear).slice(-2);
+
+  // First part
+  let part1: string = `TFW${yearDigits}`;
+
+  // Second part
+  let part2: string =
+    Math.random() < 0.5
+      ? String.fromCharCode(65 + Math.floor(Math.random() * 26)) // Generate random letter from A-Z
+      : String(`00${Math.floor(Math.random() * 999)}`).slice(-3); // Zero-padding if number is less than 100
+
+  // Third part
+  let part3: string = String(`00${Math.floor(Math.random() * 999)}`).slice(-3);
+
+  return `${part1}_${part2}_${part3}`;
+}
+
+export async function markFellowAttendance(
+  status: AttendanceStatus,
+  label: SessionLabel,
+  fellowVisibleId: string,
+  schoolVisibleId: string,
+) {
+  try {
+    const fellow = await db.fellow.findUniqueOrThrow({
+      where: { visibleId: fellowVisibleId },
+    });
+
+    if (!fellow.supervisorId) {
+      throw new Error(`Fellow (${fellow.visibleId}) has no supervisor`);
+    }
+
+    const school = await db.school.findUniqueOrThrow({
+      where: { visibleId: schoolVisibleId },
+    });
+
+    const sessionNumber = sessionLabelToNumber(label);
+
+    const fellowAttendance = await db.fellowAttendance.findFirst({
+      where: {
+        fellowId: fellow.id,
+        sessionNumber,
+      },
+    });
+
+    let attendance: FellowAttendance | null = null;
+    if (fellowAttendance) {
+      attendance = await db.fellowAttendance.update({
+        where: {
+          id: fellowAttendance.id,
+        },
+        data: {
+          sessionNumber,
+          attended: attendanceStatusToBoolean(status),
+        },
+      });
+    } else {
+      attendance = await db.fellowAttendance.create({
+        data: {
+          fellowId: fellow.id,
+          visibleId: generateFellowAttendanceVisibleId(
+            fellow.visibleId,
+            schoolVisibleId,
+            label,
+          ),
+          yearOfImplementation: new Date().getFullYear(),
+          sessionNumber: sessionNumber as number,
+          // TODO: remove this as we need a way to know the date of the session (see introduced intervention_sessions)
+          sessionDate: new Date(),
+          attended: attendanceStatusToBoolean(status),
+          schoolId: school.id,
+          supervisorId: fellow.supervisorId,
+        },
+      });
+    }
+
+    return {
+      attendance,
+    };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return {
+      error: "Something went wrong",
+    };
+  }
+}
+
+export async function dropoutFellowWithReason(
+  fellowVisibleId: string,
+  schoolVisibleId: string,
+  dropoutReason: string,
+) {
+  try {
+    const fellow = await db.fellow.update({
+      where: { visibleId: fellowVisibleId },
+      data: {
+        droppedOut: true,
+        dropOutReason: dropoutReason,
+      },
+    });
+
+    revalidatePath(`/schools/${schoolVisibleId}`);
+
+    return { fellow };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+function generateFellowAttendanceVisibleId(
+  fellowId: string,
+  schoolId: string,
+  sessionLabel: string,
+) {
+  const randomString = Math.random().toString(36).substring(7);
+  return `${fellowId}_${schoolId}_${sessionLabel}_${randomString}`;
+}
+
+function attendanceStatusToBoolean(status: AttendanceStatus): boolean | null {
+  switch (status) {
+    case "present":
+      return true;
+    case "absent":
+      return false;
+    case "not-marked":
+      return null;
+    default:
+      throw new Error("Invalid attendance status");
+  }
+}
+
+function sessionLabelToNumber(label: SessionLabel): SessionNumber {
+  switch (label) {
+    case "Pre":
+      return 0;
+    case "S1":
+      return 1;
+    case "S2":
+      return 2;
+    case "S3":
+      return 3;
+    case "S4":
+      return 4;
+    default:
+      throw new Error("Invalid session label");
+  }
+}
+
+export async function markStudentAttendance(
+  status: AttendanceStatus,
+  label: SessionLabel,
+  studentVisibleId: string,
+) {
+  try {
+    const sessionNumber = sessionLabelToNumber(label);
+
+    const attendanceBoolean = attendanceStatusToBoolean(status);
+
+    switch (sessionNumber) {
+      case 0:
+        await db.student.update({
+          where: { visibleId: studentVisibleId },
+          data: {
+            attendanceSession0: attendanceBoolean,
+          },
+        });
+        break;
+      case 1:
+        await db.student.update({
+          where: { visibleId: studentVisibleId },
+          data: {
+            attendanceSession1: attendanceBoolean,
+          },
+        });
+        break;
+      case 2:
+        await db.student.update({
+          where: { visibleId: studentVisibleId },
+          data: {
+            attendanceSession2: attendanceBoolean,
+          },
+        });
+        break;
+      case 3:
+        await db.student.update({
+          where: { visibleId: studentVisibleId },
+          data: {
+            attendanceSession3: attendanceBoolean,
+          },
+        });
+        break;
+      case 4:
+        await db.student.update({
+          where: { visibleId: studentVisibleId },
+          data: {
+            attendanceSession3: attendanceBoolean,
+          },
+        });
+        break;
+    }
+
+    const student = await db.student.findUniqueOrThrow({
+      where: { visibleId: studentVisibleId },
+    });
+
+    return { student };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return {
+      error: "Something went wrong",
+    };
+  }
+}
+
+export async function dropoutStudentWithReason(
+  studentVisibleId: string,
+  schoolVisibleId: string,
+  fellowVisibleId: string,
+  dropoutReason: string,
+) {
+  try {
+    const student = await db.student.update({
+      where: { visibleId: studentVisibleId },
+      data: {
+        droppedOut: true,
+        dropOutReason: dropoutReason,
+      },
+    });
+
+    revalidatePath(
+      `/schools/${schoolVisibleId}/students?fellowId=${fellowVisibleId}}`,
+    );
+
+    return { student };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function modifyStudent(
+  data: ModifyStudentData & { mode: "create" | "edit" },
+): Promise<{ error: string } | { student: Prisma.StudentGetPayload<{}> }> {
+  try {
+    if (data.mode === "create") {
+      revalidatePath(
+        `/schools/${data.schoolVisibleId}/students?fellowId=${data.fellowVisibleId}`,
+      );
+      return await createStudent(data);
+    } else if (data.mode === "edit") {
+      revalidatePath(
+        `/schools/${data.schoolVisibleId}/students?fellowId=${data.fellowVisibleId}`,
+      );
+      return await updateStudent(data);
+    } else {
+      return { error: "Invalid mode" };
+    }
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+async function updateStudent(data: ModifyStudentData) {
+  const student = await db.student.update({
+    where: { visibleId: data.visibleId },
+    data: {
+      studentName: data.studentName,
+      yearOfImplementation: data.yearOfImplementation,
+      admissionNumber: data.admissionNumber,
+      age: data.age ? parseInt(data.age) : null,
+      gender: data.gender,
+      form: parseInt(data.form),
+      stream: data.stream,
+      condition: data.condition,
+      intervention: data.intervention,
+      tribe: data.tribe,
+      county: data.county,
+      financialStatus: data.financialStatus,
+      home: data.home,
+      siblings: data.siblings,
+      religion: data.religion,
+      groupName: data.groupName,
+      survivingParents: data.survivingParents,
+      parentsDead: data.parentsDead,
+      fathersEducation: data.fathersEducation,
+      mothersEducation: data.mothersEducation,
+      coCurricular: data.coCurricular,
+      sports: data.sports,
+      phoneNumber: data.phoneNumber,
+      mpesaNumber: data.mpesaNumber,
+    },
+  });
+
+  return { student };
+}
+
+async function createStudent(data: ModifyStudentData) {
+  try {
+    const fellow = await db.fellow.findUniqueOrThrow({
+      where: { visibleId: data.fellowVisibleId },
+    });
+    const supervisor = await db.supervisor.findUniqueOrThrow({
+      where: { visibleId: data.supervisorVisibleId },
+    });
+    const implementer = await db.implementer.findUniqueOrThrow({
+      where: { visibleId: data.implementerVisibleId },
+    });
+    const school = await db.school.findUniqueOrThrow({
+      where: { visibleId: data.schoolVisibleId },
+    });
+
+    const student = await db.student.create({
+      data: {
+        id: objectId("stu"),
+        studentName: data.studentName,
+        visibleId: generateStudentVisibleID(data.groupName),
+        fellowId: fellow.id,
+        supervisorId: supervisor.id,
+        implementerId: implementer.id,
+        schoolId: school.id,
+        yearOfImplementation: data.yearOfImplementation,
+        admissionNumber: data.admissionNumber,
+        age: data.age ? parseInt(data.age) : null,
+        gender: data.gender,
+        form: parseInt(data.form),
+        stream: data.stream,
+        condition: data.condition,
+        intervention: data.intervention,
+        tribe: data.tribe,
+        county: data.county,
+        financialStatus: data.financialStatus,
+        home: data.home,
+        siblings: data.siblings,
+        religion: data.religion,
+        groupName: data.groupName,
+        survivingParents: data.survivingParents,
+        parentsDead: data.parentsDead,
+        fathersEducation: data.fathersEducation,
+        mothersEducation: data.mothersEducation,
+        coCurricular: data.coCurricular,
+        sports: data.sports,
+        phoneNumber: data.phoneNumber,
+        mpesaNumber: data.mpesaNumber,
+      },
+    });
+
+    return { student };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+function generateStudentVisibleID(groupName: string) {
+  const suffix = Math.floor(Math.random() * 90000) + 10000;
+  return `${groupName}_${suffix}`;
 }

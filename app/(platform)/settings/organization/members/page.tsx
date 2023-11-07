@@ -47,11 +47,11 @@ export interface Member {
 //   },
 // ];
 
-export default async function OrganizationMembers() {
-  const currentOrganizationId = (await db.organization.findFirst())?.id!;
-  const memberships = await db.organizationMember.findMany({
+export default async function ImplementerMembers() {
+  const currentImplementerId = (await db.implementer.findFirst())?.id!;
+  const memberships = await db.implementerMember.findMany({
     where: {
-      organizationId: currentOrganizationId,
+      implementerId: currentImplementerId,
     },
     select: {
       user: {
@@ -69,8 +69,8 @@ export default async function OrganizationMembers() {
     },
   });
   const members: Member[] = memberships.map((membership) => ({
-    name: membership.user.name,
-    email: membership.user.email,
+    name: membership.user.name ?? "",
+    email: membership.user.email ?? "",
     role: membership.roles[0]!.role.name,
     avatarUrl: membership.user.avatar
       ? `/api/files/${membership.user.avatar.fileId.slice(5)}/avatar`
@@ -79,10 +79,10 @@ export default async function OrganizationMembers() {
 
   return (
     <main className="mt-10 md:mt-0">
-      <Breadcrumbs crumbs={["Settings", "Organization", "Members"]} />
+      <Breadcrumbs crumbs={["Settings", "Implementer", "Members"]} />
       <div className="md:mt-4">
-        <div className="text-sm md:text-base text-muted-foreground py-2">
-          Manage who is a member of this organization.
+        <div className="py-2 text-sm text-muted-foreground md:text-base">
+          Manage who is a member of this implementer.
         </div>
         <Separator className="my-4" />
         <div>
