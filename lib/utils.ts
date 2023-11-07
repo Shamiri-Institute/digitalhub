@@ -25,3 +25,22 @@ export function constructMetadata({
     description,
   };
 }
+
+export function parseEuropeanDate(dateString: string | null): Date | null {
+  if (!dateString) return null;
+
+  // European date format is "day/month/year"
+  const parts = dateString.split("/");
+
+  if (parts.length < 3) return null;
+
+  const year = Number(parts[2]);
+  const month = Number(parts[1]);
+  const day = Number(parts[0]);
+
+  if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+
+  const date = new Date(year, month - 1, day);
+
+  return date;
+}

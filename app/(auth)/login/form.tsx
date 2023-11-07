@@ -2,10 +2,10 @@
 
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
+import { useToast } from "#/components/ui/use-toast";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
@@ -14,10 +14,11 @@ export function LoginForm() {
   const [email, setEmail] = useState("");
   const [clickedGoogle, setClickedGoogle] = useState(false);
   const [clickedEmail, setClickedEmail] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const error = searchParams?.get("error");
-    error && toast.error(error);
+    error && toast({ title: error });
   }, [searchParams]);
 
   return (
@@ -57,19 +58,28 @@ export function LoginForm() {
                   setClickedEmail(false);
                   if (res?.ok && !res?.error) {
                     setEmail("");
-                    toast.success("Email sent - check your inbox!");
+                    toast({ description: "Email sent - check your inbox!" });
                   } else {
-                    toast.error("Error sending email - try again?");
+                    toast({
+                      variant: "destructive",
+                      description: "Error sending email - try again?",
+                    });
                   }
                 });
               } else {
-                toast.error("No account found with that email address.");
+                toast({
+                  variant: "destructive",
+                  description: "No account found with that email address.",
+                });
                 setClickedEmail(false);
               }
             })
             .catch(() => {
               setClickedEmail(false);
-              toast.error("Error sending email - try again?");
+              toast({
+                variant: "destructive",
+                description: "Error sending email - try again?",
+              });
             });
         }}
         className="flex flex-col space-y-3"

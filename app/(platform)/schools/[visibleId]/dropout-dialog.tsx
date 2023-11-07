@@ -1,12 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Prisma } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-// @ts-expect-error
-import { experimental_useFormState as useFormState } from "react-dom";
 
-import { inviteUserToOrganization } from "#/app/actions";
+import { dropoutFellowWithReason } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -21,44 +20,37 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { constants } from "#/tests/constants";
 
-const organization = {
-  name: "Team Shamri",
-  avatarUrl: "https://i.imgur.com/1s8jfQi.png",
-};
-
 const FormSchema = z.object({
-  emails: z.string({
+  reason: z.string({
     required_error: "Please select the email(s) to invite.",
-  }),
-  role: z.string({
-    required_error: "Please select the role to invite as.",
   }),
 });
 
-const initialState = {
-  message: null,
-};
-
-export function DropoutDialog({ children }: { children: React.ReactNode }) {
+export function FellowDropoutDialog({
+  fellow,
+  school,
+  children,
+}: {
+  fellow: Prisma.FellowGetPayload<{}>;
+  school: Prisma.SchoolGetPayload<{}>;
+  children: React.ReactNode;
+}) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    const response = await dropoutFellowWithReason(
+      fellow.visibleId,
+      school.visibleId,
+      data.reason,
+    );
+    console.log({ response });
+
     toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
+      title: `Dropped out ${fellow.fellowName}`,
     });
   }
-
-  const [state, formAction] = useFormState(
-    inviteUserToOrganization,
-    initialState,
-  );
 
   return (
     <Dialog>
@@ -66,13 +58,14 @@ export function DropoutDialog({ children }: { children: React.ReactNode }) {
       <DialogContent className="gap-0 p-0">
         <Form {...form}>
           <form
-            // onSubmit={form.handleSubmit(onSubmit)}
-            action={formAction}
+            onSubmit={form.handleSubmit(onSubmit)}
             className="overflow-hidden text-ellipsis"
           >
             <DialogHeader className="space-y-0 px-6 py-4">
               <div className="flex items-center gap-2">
-                <span className="text-base font-medium">Drop out reason</span>
+                <span className="text-base font-medium">
+                  Drop out {fellow.fellowName}
+                </span>
               </div>
             </DialogHeader>
             <Separator />
@@ -80,13 +73,13 @@ export function DropoutDialog({ children }: { children: React.ReactNode }) {
               <div className="px-6">
                 <FormField
                   control={form.control}
-                  name="emails"
+                  name="reason"
                   render={({ field }) => (
                     <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="emails">Reason</Label>
+                      <Label htmlFor="reason">Reason</Label>
                       <Textarea
-                        id="emails"
-                        name="emails"
+                        id="reason"
+                        name="reason"
                         onChange={field.onChange}
                         defaultValue={field.value}
                         placeholder="e.g. Fellow is not interested in the program"
@@ -100,18 +93,10 @@ export function DropoutDialog({ children }: { children: React.ReactNode }) {
               </div>
             </div>
             <div className="flex justify-end px-6 pb-6">
-              <Button
-                variant="destructive"
-                type="submit"
-                data-testid={constants.ADD_MEMBERS_SUBMIT}
-                className="w-full bg-[#AC2925]"
-              >
-                Submit
+              <Button variant="destructive" type="submit" className="w-full">
+                Drop out {fellow.fellowName}
               </Button>
             </div>
-            <p aria-live="polite" className="sr-only" role="status">
-              {state?.message}
-            </p>
           </form>
         </Form>
       </DialogContent>

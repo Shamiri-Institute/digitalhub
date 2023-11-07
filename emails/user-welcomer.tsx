@@ -1,16 +1,15 @@
-import * as React from "react";
 import {
-  Html,
-  Head,
   Body,
   Container,
-  Section,
+  Head,
   Heading,
+  Html,
   Img,
-  Text,
   Link,
-  Tailwind,
   Preview,
+  Section,
+  Tailwind,
+  Text,
 } from "@react-email/components";
 
 import { SDH_HERO_IMAGE, SDH_LOGO_BANNER } from "../lib/constants";
@@ -19,12 +18,12 @@ import Footer from "./components/footer";
 export default function UserWelcomer({
   email = "dmndetei@amhf.or.ke",
   // userName = "Prof. David M. Ndetei",
-  organizationName = "Africa Mental Health Training and Research Foundation",
+  implementerName = "Africa Mental Health Training and Research Foundation",
   preview = "Welcome to the Shamiri Digital Hub, Prof. David M. Ndetei!",
 }: {
   email: string;
   // userName: string;
-  organizationName: string;
+  implementerName: string;
   preview: string;
 }) {
   return (
@@ -54,9 +53,9 @@ export default function UserWelcomer({
               Hello 👋🏾,
             </Text>
             <Text className="text-sm leading-6 text-black">
-              <span className="font-medium">{organizationName}</span> has
-              invited you to get you started on the key operations platform that
-              powers the{" "}
+              <span className="font-medium">{implementerName}</span> has invited
+              you to get you started on the key operations platform that powers
+              the{" "}
               <Link
                 href="https://www.shamiri.institute/the-shamiri-intervention"
                 className="font-medium text-sky-600 no-underline"

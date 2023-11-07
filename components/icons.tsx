@@ -266,7 +266,7 @@ export const Icons = {
       />
     </svg>
   ),
-  edit: ({ className, ...props }: LucideProps) => (
+  edit: ({ className, strokeWidth, ...props }: LucideProps) => (
     <svg
       width="23"
       height="24"
@@ -279,20 +279,20 @@ export const Icons = {
       <path
         d="M2.76611 21H19.3619"
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth={strokeWidth || "1.75"}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth={strokeWidth || "1.75"}
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M4.14904 13.5L13.3689 3.49998C14.1327 2.67155 15.3711 2.67155 16.1349 3.49998C16.8986 4.32841 16.8986 5.67155 16.1349 6.49998L6.91499 16.5L3.22705 17.5L4.14904 13.5Z"
       />
     </svg>
   ),
-  delete: ({ className, ...props }: LucideProps) => (
+  delete: ({ className, strokeWidth, ...props }: LucideProps) => (
     <svg
       width="23"
       height="24"
@@ -304,7 +304,7 @@ export const Icons = {
     >
       <path
         stroke="currentColor"
-        strokeWidth="1.2"
+        strokeWidth={strokeWidth || "1.75"}
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M3.26611 6H19.8619M5.11009 6V20C5.11009 21.1046 5.93566 22 6.95406 22H16.1739C17.1923 22 18.0179 21.1046 18.0179 20V6M7.87604 6V4C7.87604 2.89543 8.70162 2 9.72001 2H13.408C14.4264 2 15.2519 2.89543 15.2519 4V6"
@@ -312,14 +312,14 @@ export const Icons = {
       <path
         d="M13.4077 11V17"
         stroke="currentColor"
-        strokeWidth="1.2"
+        strokeWidth={strokeWidth || "1.75"}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M9.71973 11V17"
         stroke="currentColor"
-        strokeWidth="1.2"
+        strokeWidth={strokeWidth || "1.75"}
         strokeLinecap="round"
         strokeLinejoin="round"
       />

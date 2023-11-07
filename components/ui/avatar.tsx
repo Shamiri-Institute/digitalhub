@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
+import * as React from "react";
 
 import { cn, getInitials } from "#/lib/utils";
 
@@ -13,7 +13,7 @@ const Avatar = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full",
-      className
+      className,
     )}
     {...props}
   />
@@ -40,14 +40,14 @@ const AvatarFallback = React.forwardRef<
     ref={ref}
     className={cn(
       "flex h-full w-full items-center justify-center rounded-full bg-muted",
-      className
+      className,
     )}
     {...props}
   />
 ));
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
 
-export { Avatar, AvatarImage, AvatarFallback };
+export { Avatar, AvatarFallback, AvatarImage };
 
 const UserAvatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Fallback>,
@@ -60,8 +60,8 @@ const UserAvatar = React.forwardRef<
   <Avatar
     ref={ref}
     className={cn(
-      "bg-foreground/5 dark:bg-foreground/10 h-11 w-11 rounded-full",
-      className
+      "h-11 w-11 rounded-full bg-foreground/5 dark:bg-foreground/10",
+      className,
     )}
     {...props}
   >
@@ -73,7 +73,7 @@ const UserAvatar = React.forwardRef<
 ));
 UserAvatar.displayName = "UserAvatar";
 
-const OrganizationAvatar = React.forwardRef<
+const ImplementerAvatar = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Fallback>,
   React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback> & {
     src: string;
@@ -84,8 +84,8 @@ const OrganizationAvatar = React.forwardRef<
   <Avatar
     ref={ref}
     className={cn(
-      "bg-foreground/5 dark:bg-foreground/10 h-11 w-11 rounded-lg",
-      className
+      "h-11 w-11 rounded-lg bg-foreground/5 dark:bg-foreground/10",
+      className,
     )}
     {...props}
   >
@@ -95,6 +95,6 @@ const OrganizationAvatar = React.forwardRef<
     </AvatarFallback>
   </Avatar>
 ));
-OrganizationAvatar.displayName = "OrganizationAvatar";
+ImplementerAvatar.displayName = "OrganizationAvatar";
 
-export { UserAvatar, OrganizationAvatar };
+export { ImplementerAvatar as OrganizationAvatar, UserAvatar };
