@@ -180,6 +180,19 @@ const navigationItems: NavigationItem[] = [
     Icon: Icons.pieChart,
     roles: HubCoordinatorAndAboveRoles,
   },
+  // todo: take to supervisor
+  {
+    path: "/screenings",
+    title: "Screenings",
+    Icon: Icons.heartHandshake,
+    roles: SupervisorAndAboveRoles,
+  },
+  {
+    path: "/profile",
+    title: "Profile",
+    Icon: Icons.user,
+    roles: SupervisorAndAboveRoles,
+  }
 ];
 
 function AppNavigation() {

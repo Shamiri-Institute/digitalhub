@@ -131,7 +131,7 @@ async function SchoolsList() {
   );
 }
 
-function SchoolCard({
+export function SchoolCard({
   school,
   sessionTypes,
   assigned,
