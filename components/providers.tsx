@@ -4,9 +4,8 @@ import { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import * as React from "react";
 
-import { ThemeProvider } from "#/components/theme-provider";
+import { Toaster } from "#/components/ui/toaster";
 import { TooltipProvider } from "#/components/ui/tooltip";
-import { Toaster } from "sonner";
 
 export function Providers({
   session,
@@ -17,17 +16,10 @@ export function Providers({
 }) {
   return (
     <SessionProvider session={session}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
-        <TooltipProvider>
-          {children}
-          <Toaster closeButton />
-        </TooltipProvider>
-      </ThemeProvider>
+      <TooltipProvider>
+        {children}
+        <Toaster />
+      </TooltipProvider>
     </SessionProvider>
   );
 }
