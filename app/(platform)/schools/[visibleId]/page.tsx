@@ -1,11 +1,20 @@
+import { Prisma } from "@prisma/client";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Prisma } from "@prisma/client";
 
 import { SchoolDemographics } from "#/app/(platform)/schools/[visibleId]/demographics";
+import { FellowDropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
+import { FellowAttendanceDot } from "#/app/(platform)/schools/[visibleId]/fellow-attendance-dot";
 import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
+import { RescheduleDialog } from "#/app/(platform)/schools/[visibleId]/reschedule-dialog";
+import { currentSupervisor } from "#/app/auth";
+import { Back } from "#/components/common/back";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
+import type { FellowWithAttendance } from "#/types/prisma";
 
 export default async function SchoolDetailPage({
   params: { visibleId },
@@ -14,32 +23,37 @@ export default async function SchoolDetailPage({
 }) {
   const school = await db.school.findUnique({
     where: { visibleId },
+    include: { hub: true, implementer: true },
   });
-  const demographics = {
-    totalPopulation: 1000,
-    malePopulation: 500,
-    femalePopulation: 500,
-  };
-
   if (!school) {
     notFound();
   }
+
+  const males = await db.student.count({
+    where: { schoolId: school.id, gender: "M" },
+  });
+
+  const females = await db.student.count({
+    where: { schoolId: school.id, gender: "F" },
+  });
+
+  const others = await db.student.count({
+    where: { schoolId: school.id, gender: undefined },
+  });
+
+  const total = await db.student.count({ where: { schoolId: school.id } });
+
+  const supervisor = await currentSupervisor();
 
   return (
     <main className="pt-2">
       <Header />
       <div className="relative">
-        <SchoolDemographics
-          totalPopulation={demographics.totalPopulation}
-          malePopulation={demographics.malePopulation}
-          femalePopulation={demographics.femalePopulation}
-        />
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <SchoolDemographics males={males} females={females} others={others} />
+        <div className="absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2">
           <div className="text-center">
             <div className="text-sm">Students</div>
-            <div className="text-2xl font-semibold">
-              {demographics.totalPopulation}
-            </div>
+            <div className="text-2xl font-semibold">{total}</div>
             <div className="gap flex justify-around">
               <div className="flex items-center gap-1">
                 <div className="h-1.5 w-1.5 rounded-full bg-[#B7D4E8]" />
@@ -69,7 +83,15 @@ export default async function SchoolDetailPage({
       <div className="mt-8">
         <div className="mx-4 flex justify-between border-b border-border/50 pb-3">
           <div className="text-2xl font-semibold">Fellows</div>
-          <FellowModifyDialog mode="create">
+          <FellowModifyDialog
+            mode="create"
+            info={{
+              hubVisibleId: school?.hub?.visibleId!,
+              supervisorVisibleId: supervisor.visibleId,
+              implementerVisibleId: school?.implementer?.visibleId!,
+              schoolVisibleId: school.visibleId,
+            }}
+          >
             <button className="transition-transform active:scale-95">
               <Icons.plusCircle
                 className="h-6 w-6 text-shamiri-blue"
@@ -80,58 +102,141 @@ export default async function SchoolDetailPage({
         </div>
       </div>
       <div className="mx-4 mt-8">
-        <FellowsList school={school} />
+        <FellowsList school={school} supervisor={supervisor} />
       </div>
     </main>
   );
 }
 
-type SchoolFindUniqueOutput = NonNullable<
-  Prisma.PromiseReturnType<typeof db.school.findUnique>
->;
-
-async function FellowsList({ school }: { school: SchoolFindUniqueOutput }) {
-  // const supervisor = await currentSupervisor();
+async function FellowsList({
+  school,
+  supervisor,
+}: {
+  school: Prisma.SchoolGetPayload<{
+    include: { hub: true; implementer: true };
+  }>;
+  supervisor: Prisma.SupervisorGetPayload<{}>;
+}) {
   const fellows = await db.fellow.findMany({
-    where: { hubId: school.hubId },
+    where: {
+      fellowAttendances: { some: { schoolId: school.id } },
+      students: { some: { schoolId: school.id } },
+    },
+    include: { fellowAttendances: true, students: true },
+    orderBy: {
+      createdAt: "asc",
+    },
   });
+
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      {fellows.map((fellow) => (
-        <FellowCard fellow={fellow} presentCount={13} totalStudents={15} />
-      ))}
+      {fellows.map((fellow) => {
+        return (
+          <FellowCard
+            key={fellow.id}
+            fellow={fellow}
+            school={school}
+            supervisor={supervisor}
+            totalStudents={fellow.students.length}
+          />
+        );
+      })}
     </div>
   );
 }
 
-type FellowFindManyItemOutput = Prisma.PromiseReturnType<
-  typeof db.fellow.findMany
->[number];
-
 function FellowCard({
   fellow,
+  school,
+  supervisor,
   totalStudents,
-  presentCount,
 }: {
-  fellow: FellowFindManyItemOutput;
+  fellow: FellowWithAttendance;
+  school: Prisma.SchoolGetPayload<{
+    include: { hub: true; implementer: true };
+  }>;
+  supervisor: Prisma.SupervisorGetPayload<{}>;
   totalStudents: number;
-  presentCount: number;
 }) {
+  const filteredAttendances: FellowWithAttendance["attendances"][number][] =
+    fellow.fellowAttendances.filter(
+      (attendance: FellowWithAttendance["attendances"][number]) =>
+        attendance.schoolId === school.id,
+    );
+
+  if (filteredAttendances.length !== 5) {
+    console.error(
+      `Fellow ${fellow.fellowName} has ${filteredAttendances.length} attendances`,
+    );
+  }
+
+  function getAttendanceStatus(sessionNumber: SessionNumber): AttendanceStatus {
+    const attendance: FellowWithAttendance["attendances"][number] =
+      filteredAttendances.find(
+        (attendance: FellowWithAttendance["attendances"][number]) =>
+          attendance.sessionNumber === sessionNumber,
+      );
+    if (attendance.attended === true) {
+      return "present";
+    }
+    if (attendance.attended === false) {
+      return "absent";
+    }
+    if (attendance.attended === null) {
+      return "not-marked";
+    }
+    return "not-marked";
+  }
+
+  const sessionItems: { status: AttendanceStatus; label: SessionLabel }[] = [
+    { status: getAttendanceStatus(0), label: "Pre" },
+    { status: getAttendanceStatus(1), label: "S1" },
+    { status: getAttendanceStatus(2), label: "S2" },
+    { status: getAttendanceStatus(3), label: "S3" },
+    { status: getAttendanceStatus(4), label: "S4" },
+  ];
+
   return (
     <div className="rounded border p-8 shadow-md">
       <div className="flex justify-between">
-        <h2 className="text-lg font-bold">{fellow.fellowName}</h2>
+        <div className="flex gap-2">
+          <h2 className="text-lg font-bold">{fellow.fellowName}</h2>
+          {fellow.droppedOut && (
+            <div>
+              <span className="inline-flex items-center rounded-md bg-zinc-50 px-1.5 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-inset ring-zinc-500/10">
+                Dropped Out
+              </span>
+            </div>
+          )}
+        </div>
         <div className="flex gap-0.5">
-          <FellowModifyDialog mode="edit" fellow={fellow}>
-            <Icons.edit className="mr-4 h-6 w-6 align-baseline text-brand" />
+          <RescheduleDialog fellow={fellow}>
+            <Icons.calendar className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
+          </RescheduleDialog>
+          <FellowModifyDialog
+            mode="edit"
+            fellow={fellow}
+            info={{
+              hubVisibleId: school?.hub?.visibleId!,
+              supervisorVisibleId: supervisor.visibleId,
+              implementerVisibleId: school?.implementer?.visibleId!,
+              schoolVisibleId: school.visibleId,
+            }}
+          >
+            <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
           </FellowModifyDialog>
-          <Icons.delete className="h-6 w-6 text-brand" />
+          {!fellow.droppedOut && (
+            <FellowDropoutDialog fellow={fellow} school={school}>
+              <Icons.delete className="h-6 w-6 cursor-pointer text-brand" />
+            </FellowDropoutDialog>
+          )}
         </div>
       </div>
       <p className="mt-1 text-sm text-gray-600">
         Shamiri ID: {fellow.visibleId}
       </p>
       <Separator className="my-2" />
+<!--     here ----   -->
       <div className="mt-4 flex justify-between">
         {[
           { status: "present", label: "Pre" },
@@ -151,10 +256,23 @@ function FellowCard({
                 } mx-1`}
             ></div>
           </div>
+
+      <div className="mt-4 flex justify-between pb-2">
+        {sessionItems.map((session, index) => (
+          <FellowAttendanceDot
+            key={index}
+            session={session}
+            fellow={fellow}
+            school={school}
+          />
+
         ))}
       </div>
+          
+//     end of here ----  
+          
       <Separator className="my-2" />
-      <div className="mt-4 flex items-center justify-between text-xs">
+      <div className="mt-4 flex items-center justify-between text-sm">
         <div className="flex items-center gap-1.5">
           <div className={`h-3 w-3 rounded-full bg-[#85A070]`}></div>
           <span>Present</span>
@@ -168,8 +286,13 @@ function FellowCard({
           <span>Not marked</span>
         </div>
       </div>
-      <div className="mt-8 rounded bg-shamiri-blue p-2 text-center text-white">
-        {presentCount}/{totalStudents} Students
+      <div className="mt-8 rounded bg-shamiri-blue p-2 text-center text-white transition-all duration-300 hover:bg-shamiri-blue-darker active:scale-95">
+        <Link
+          href={`/schools/${school.visibleId}/students?fellowId=${fellow.visibleId}`}
+          className="block w-full"
+        >
+          {totalStudents} Students
+        </Link>
       </div>
     </div>
   );
@@ -178,9 +301,7 @@ function FellowCard({
 function Header() {
   return (
     <header className="flex justify-between">
-      <button>
-        <Icons.chevronLeft className="mr-4 h-6 w-6 align-baseline text-brand" />
-      </button>
+      <Back />
       <div className="flex gap-2">
         <Icons.edit className="mr-4 h-6 w-6 align-baseline text-brand" />
         <Icons.search className="h-6 w-6 text-brand" strokeWidth={1.75} />

@@ -184,7 +184,43 @@ CREATE TABLE "students" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "archived_at" TIMESTAMP(3),
-    "hub_id" VARCHAR(255) NOT NULL,
+    "student_name" VARCHAR(255),
+    "visible_id" VARCHAR(100) NOT NULL,
+    "fellow_id" VARCHAR(255),
+    "supervisor_id" VARCHAR(255),
+    "implementer_id" VARCHAR(255),
+    "school_id" VARCHAR(255),
+    "year_of_implementation" INTEGER,
+    "admission_number" VARCHAR(255),
+    "age" INTEGER,
+    "gender" VARCHAR(10),
+    "form" INTEGER,
+    "stream" VARCHAR(255),
+    "condition" VARCHAR(255),
+    "intervention" VARCHAR(255),
+    "tribe" VARCHAR(255),
+    "county" VARCHAR(255),
+    "financial_status" VARCHAR(255),
+    "home" VARCHAR(255),
+    "siblings" VARCHAR(255),
+    "religion" VARCHAR(255),
+    "group_name" VARCHAR(255),
+    "surviving_parents" VARCHAR(255),
+    "parents_dead" VARCHAR(255),
+    "fathers_education" VARCHAR(255),
+    "mothers_education" VARCHAR(255),
+    "co_curricular" VARCHAR(255),
+    "sports" VARCHAR(255),
+    "is_clinical_case" BOOLEAN,
+    "phone_number" VARCHAR(255),
+    "mpesa_number" VARCHAR(255),
+    "attendance_session_0" BOOLEAN,
+    "attendance_session_1" BOOLEAN,
+    "attendance_session_2" BOOLEAN,
+    "attendance_session_3" BOOLEAN,
+    "attendance_session_4" BOOLEAN,
+    "dropped_out" BOOLEAN,
+    "drop_out_reason" TEXT,
 
     CONSTRAINT "students_pkey" PRIMARY KEY ("id")
 );
@@ -195,24 +231,46 @@ CREATE TABLE "fellows" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "archived_at" TIMESTAMP(3),
-    "hub_id" VARCHAR(255),
-    "supervisor_id" VARCHAR(255),
+    "visible_id" VARCHAR(100) NOT NULL,
     "fellow_name" VARCHAR(255),
+    "fellow_email" VARCHAR(255),
     "year_of_implementation" INTEGER,
     "mpesa_name" VARCHAR(255),
+    "mpesa_number" VARCHAR(255),
     "id_number" VARCHAR(255),
     "cell_number" VARCHAR(255),
-    "mpesa_number" VARCHAR(255),
-    "email" VARCHAR(255),
-    "implementer_id" VARCHAR(255),
     "county" VARCHAR(255),
     "sub_county" VARCHAR(255),
-    "date_of_birth" TIMESTAMP(3),
+    "date_of_birth" DATE,
     "gender" TEXT,
-    "dropped_out" BOOLEAN,
     "transferred" BOOLEAN,
+    "hub_id" VARCHAR(255),
+    "implementer_id" VARCHAR(255),
+    "supervisor_id" VARCHAR(255),
+    "dropped_out" BOOLEAN,
+    "drop_out_reason" TEXT,
 
     CONSTRAINT "fellows_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "fellow_attendances" (
+    "id" SERIAL NOT NULL,
+    "visible_id" VARCHAR(100) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "archived_at" TIMESTAMP(3),
+    "fellow_id" VARCHAR(255) NOT NULL,
+    "session_number" INTEGER NOT NULL,
+    "session_date" TIMESTAMP(3) NOT NULL,
+    "year_of_implementation" INTEGER NOT NULL,
+    "school_id" VARCHAR(255) NOT NULL,
+    "supervisor_id" VARCHAR(255) NOT NULL,
+    "attended" BOOLEAN,
+    "absence_reason" TEXT,
+    "payment_initiated" BOOLEAN,
+
+    CONSTRAINT "fellow_attendances_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -221,14 +279,29 @@ CREATE TABLE "supervisors" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "archived_at" TIMESTAMP(3),
-    "hub_id" VARCHAR(255) NOT NULL,
-    "supervisor_name" VARCHAR(255) NOT NULL,
-    "visible_id" VARCHAR(10) NOT NULL,
+    "hub_id" VARCHAR(255),
+    "visible_id" VARCHAR(100) NOT NULL,
+    "supervisor_name" VARCHAR(255),
+    "supervisor_email" VARCHAR(255),
     "id_number" VARCHAR(255),
     "cell_number" VARCHAR(255),
     "mpesa_number" VARCHAR(255),
-    "email" VARCHAR(255),
-    "member_id" INTEGER,
+    "implementer_id" VARCHAR(255),
+    "memberId" INTEGER,
+    "county" VARCHAR(255),
+    "sub_county" VARCHAR(255),
+    "bank_name" VARCHAR(255),
+    "bank_branch" VARCHAR(255),
+    "bank_account_name" VARCHAR(255),
+    "bank_account_number" VARCHAR(255),
+    "kra" VARCHAR(255),
+    "nhif" VARCHAR(255),
+    "nssf" VARCHAR(255),
+    "date_of_birth" DATE,
+    "gender" VARCHAR(10),
+    "training_level" VARCHAR(255),
+    "dropped_out" BOOLEAN,
+    "assigned_school_id" VARCHAR(255),
 
     CONSTRAINT "supervisors_pkey" PRIMARY KEY ("id")
 );
@@ -317,6 +390,23 @@ CREATE TABLE "hub_coordinators" (
     CONSTRAINT "hub_coordinators_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "intervention_sessions" (
+    "id" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "archived_at" TIMESTAMP(3),
+    "visible_id" VARCHAR(10) NOT NULL,
+    "session_date" TIMESTAMP(3) NOT NULL,
+    "session_name" VARCHAR(255) NOT NULL,
+    "session_type" VARCHAR(255) NOT NULL,
+    "school_id" VARCHAR(255) NOT NULL,
+    "leader_id" VARCHAR(255) NOT NULL,
+    "year_of_implementation" INTEGER NOT NULL,
+
+    CONSTRAINT "intervention_sessions_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
@@ -357,13 +447,19 @@ CREATE UNIQUE INDEX "implementer_invites_email_implementer_id_secure_token_key" 
 CREATE UNIQUE INDEX "permissions_permission_label_key" ON "permissions"("permission_label");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "fellows_email_key" ON "fellows"("email");
+CREATE UNIQUE INDEX "students_visible_id_key" ON "students"("visible_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "fellows_visible_id_key" ON "fellows"("visible_id");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "fellow_attendances_visible_id_key" ON "fellow_attendances"("visible_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "supervisors_visible_id_key" ON "supervisors"("visible_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "supervisors_email_key" ON "supervisors"("email");
+CREATE UNIQUE INDEX "supervisors_supervisor_email_key" ON "supervisors"("supervisor_email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "schools_visible_id_key" ON "schools"("visible_id");
@@ -376,6 +472,9 @@ CREATE UNIQUE INDEX "hub_coordinators_visible_id_key" ON "hub_coordinators"("vis
 
 -- CreateIndex
 CREATE UNIQUE INDEX "hub_coordinators_coordinator_email_key" ON "hub_coordinators"("coordinator_email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "intervention_sessions_visible_id_key" ON "intervention_sessions"("visible_id");
 
 -- AddForeignKey
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -429,22 +528,46 @@ ALTER TABLE "member_permissions" ADD CONSTRAINT "member_permissions_member_id_fk
 ALTER TABLE "member_permissions" ADD CONSTRAINT "member_permissions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "students" ADD CONSTRAINT "students_hub_id_fkey" FOREIGN KEY ("hub_id") REFERENCES "hubs"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "students" ADD CONSTRAINT "students_fellow_id_fkey" FOREIGN KEY ("fellow_id") REFERENCES "fellows"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "students" ADD CONSTRAINT "students_supervisor_id_fkey" FOREIGN KEY ("supervisor_id") REFERENCES "supervisors"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "students" ADD CONSTRAINT "students_implementer_id_fkey" FOREIGN KEY ("implementer_id") REFERENCES "implementers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "students" ADD CONSTRAINT "students_school_id_fkey" FOREIGN KEY ("school_id") REFERENCES "schools"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "fellows" ADD CONSTRAINT "fellows_hub_id_fkey" FOREIGN KEY ("hub_id") REFERENCES "hubs"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "fellows" ADD CONSTRAINT "fellows_supervisor_id_fkey" FOREIGN KEY ("supervisor_id") REFERENCES "supervisors"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "fellows" ADD CONSTRAINT "fellows_implementer_id_fkey" FOREIGN KEY ("implementer_id") REFERENCES "implementers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "supervisors" ADD CONSTRAINT "supervisors_hub_id_fkey" FOREIGN KEY ("hub_id") REFERENCES "hubs"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "fellows" ADD CONSTRAINT "fellows_supervisor_id_fkey" FOREIGN KEY ("supervisor_id") REFERENCES "supervisors"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "supervisors" ADD CONSTRAINT "supervisors_member_id_fkey" FOREIGN KEY ("member_id") REFERENCES "implementer_members"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "fellow_attendances" ADD CONSTRAINT "fellow_attendances_fellow_id_fkey" FOREIGN KEY ("fellow_id") REFERENCES "fellows"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "fellow_attendances" ADD CONSTRAINT "fellow_attendances_school_id_fkey" FOREIGN KEY ("school_id") REFERENCES "schools"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "fellow_attendances" ADD CONSTRAINT "fellow_attendances_supervisor_id_fkey" FOREIGN KEY ("supervisor_id") REFERENCES "supervisors"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "supervisors" ADD CONSTRAINT "supervisors_hub_id_fkey" FOREIGN KEY ("hub_id") REFERENCES "hubs"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "supervisors" ADD CONSTRAINT "supervisors_implementer_id_fkey" FOREIGN KEY ("implementer_id") REFERENCES "implementers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "supervisors" ADD CONSTRAINT "supervisors_memberId_fkey" FOREIGN KEY ("memberId") REFERENCES "implementer_members"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "supervisors" ADD CONSTRAINT "supervisors_assigned_school_id_fkey" FOREIGN KEY ("assigned_school_id") REFERENCES "schools"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "schools" ADD CONSTRAINT "schools_implementer_id_fkey" FOREIGN KEY ("implementer_id") REFERENCES "implementers"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -460,3 +583,9 @@ ALTER TABLE "hubs" ADD CONSTRAINT "hubs_implementer_id_fkey" FOREIGN KEY ("imple
 
 -- AddForeignKey
 ALTER TABLE "hub_coordinators" ADD CONSTRAINT "hub_coordinators_implementer_id_fkey" FOREIGN KEY ("implementer_id") REFERENCES "implementers"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "intervention_sessions" ADD CONSTRAINT "intervention_sessions_school_id_fkey" FOREIGN KEY ("school_id") REFERENCES "schools"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "intervention_sessions" ADD CONSTRAINT "intervention_sessions_leader_id_fkey" FOREIGN KEY ("leader_id") REFERENCES "fellows"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

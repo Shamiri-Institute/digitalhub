@@ -1,22 +1,20 @@
 "use client";
 
-import { z } from "zod";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 // @ts-expect-error
 import { experimental_useFormState as useFormState } from "react-dom";
-import { experimental_useFormStatus as useFormStatus } from "react-dom";
 
+import { inviteUserToImplementer } from "#/app/actions";
 import { OrganizationAvatar } from "#/components/ui/avatar";
+import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { Label } from "#/components/ui/label";
-import { Separator } from "#/components/ui/separator";
-import { Textarea } from "#/components/ui/textarea";
 import {
   Form,
   FormControl,
@@ -25,7 +23,7 @@ import {
   FormLabel,
   FormMessage,
 } from "#/components/ui/form";
-import { toast } from "#/components/ui/use-toast";
+import { Label } from "#/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -33,10 +31,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { Button } from "#/components/ui/button";
+import { Separator } from "#/components/ui/separator";
+import { Textarea } from "#/components/ui/textarea";
+import { toast } from "#/components/ui/use-toast";
 import { RoleTypes } from "#/models/role";
 import { constants } from "#/tests/constants";
-import { inviteUserToOrganization } from "#/app/actions";
 
 const organization = {
   name: "Team Shamri",
@@ -73,34 +72,34 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
   }
 
   const [state, formAction] = useFormState(
-    inviteUserToOrganization,
-    initialState
+    inviteUserToImplementer,
+    initialState,
   );
 
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="p-0 gap-0">
+      <DialogContent className="gap-0 p-0">
         <Form {...form}>
           <form
-            // onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(onSubmit)}
             action={formAction}
             className="overflow-hidden text-ellipsis"
           >
-            <DialogHeader className="px-6 py-4 space-y-0">
+            <DialogHeader className="space-y-0 px-6 py-4">
               <div className="flex items-center gap-2">
                 <OrganizationAvatar
                   src={organization.avatarUrl}
                   fallback={organization.name}
-                  className="w-7 h-7"
+                  className="h-7 w-7"
                 />
-                <span className="font-medium text-base">
+                <span className="text-base font-medium">
                   Invite to your organization
                 </span>
               </div>
             </DialogHeader>
             <Separator />
-            <div className="space-y-6 my-6">
+            <div className="my-6 space-y-6">
               <div className="px-6">
                 <FormField
                   control={form.control}
@@ -164,7 +163,7 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                 )}
               />
             </div>
-            <div className="px-6 pb-6 flex justify-end">
+            <div className="flex justify-end px-6 pb-6">
               <Button
                 variant="brand"
                 type="submit"
