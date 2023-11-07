@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Prisma } from "@prisma/client";
 
 import { SchoolDemographics } from "#/app/(platform)/schools/[visibleId]/demographics";
 import { FellowDropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
@@ -76,7 +77,7 @@ export default async function SchoolDetailPage({
         <div className="mt-1 flex gap-4">
           <div className="h-4 w-4 rounded-full bg-muted-green" />
           <div className="h-4 w-4 rounded-full bg-muted-green" />
-          <div className="h-4 w-4 rounded-full bg-[#DE5E68]" />
+          <div className="h-4 w-4 rounded-full bg-shamiri-red" />
         </div>
       </div>
       <div className="mt-8">
@@ -235,6 +236,27 @@ function FellowCard({
         Shamiri ID: {fellow.visibleId}
       </p>
       <Separator className="my-2" />
+<!--     here ----   -->
+      <div className="mt-4 flex justify-between">
+        {[
+          { status: "present", label: "Pre" },
+          { status: "present", label: "S1" },
+          { status: "absent", label: "S2" },
+          { status: "not-marked", label: "S3" },
+          { status: "not-marked", label: "S4" },
+        ].map((session, index) => (
+          <div key={index} className="flex flex-col items-center">
+            <div className="text-sm text-muted-foreground">{session.label}</div>
+            <div
+              className={`h-5 w-5 rounded-full ${session.status === "present"
+                ? "bg-[#85A070]"
+                : session.status === "absent"
+                  ? "bg-[#DE5E68]"
+                  : "bg-gray-300"
+                } mx-1`}
+            ></div>
+          </div>
+
       <div className="mt-4 flex justify-between pb-2">
         {sessionItems.map((session, index) => (
           <FellowAttendanceDot
@@ -243,8 +265,12 @@ function FellowCard({
             fellow={fellow}
             school={school}
           />
+
         ))}
       </div>
+          
+//     end of here ----  
+          
       <Separator className="my-2" />
       <div className="mt-4 flex items-center justify-between text-sm">
         <div className="flex items-center gap-1.5">

@@ -47,6 +47,8 @@
     --muted-yellow: 42 95% 57%;
     --muted-pink: 319 40% 70%;
     --muted-sky: 202 58% 80%;
+
+    --brand-light-gray: 0 4% 51%;
   }
 
   .dark {
