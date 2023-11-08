@@ -47,9 +47,8 @@ async function SupervisorView() {
             sessions={[
               {
                 title: "Kamkunji, S01",
-                date: new Date("2024-11-03T19:30:00Z"),
-                startTime: "2:30 PM",
-                endTime: "3:30 PM",
+                date: new Date("2023-11-05T19:30:00Z"),
+                duration: 1,
               },
             ]}
           />
