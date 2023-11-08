@@ -13,6 +13,8 @@ import { Calendar } from "#/components/ui/calendar";
 import { FormField } from "#/components/ui/form";
 import { Popover, PopoverContent } from "#/components/ui/popover";
 import { cn } from "#/lib/utils";
+import { Card } from "#/components/ui/card";
+import Link from "next/link";
 
 const FormSchema = z.object({
     dateOfSession: z.date({
@@ -31,7 +33,7 @@ let sessions = [{
 
 export default function SchoolReport() {
     return (
-        <div className="bg-canvas h-full px-2">
+        <div >
             <IntroHeader />
             {sessions.map
                 (session => (
@@ -42,7 +44,7 @@ export default function SchoolReport() {
     )
 }
 
-function IntroHeader() {
+export function IntroHeader() {
     return (
         <>
             <div className='flex justify-between items-center mt-2 '>
@@ -51,7 +53,7 @@ function IntroHeader() {
                 </button>
                 <h3 className='text-brand font-bold text-xl'>My School Report</h3>
                 <button>
-                    <Icons.add className='h-6 w-6 align-baseline xl:h-7 xl:w-7 text-brand' />
+                    <Icons.add className='h-6 w-6 align-baseline xl:h-7 xl:w-7 text-shamiri-blue' />
                 </button>
             </div>
             <h4 className='text-xs text-center text-brand-light-gray'>Kamkunji Secondary School</h4>
@@ -71,14 +73,16 @@ function SchoolReportCard({
         resolver: zodResolver(FormSchema),
     });
     return (
-        <>
-            <div className='flex  items-center mt-2  bg-white py-2 px-4 rounded-lg '>
-                <div className="flex items-start h-full">
-                    <div className={cn('h-6 w-6 bg-gray-400 rounded-full',
+        <Card className="my-4 flex">
+            <div className='flex  items-center mt-2 py-2 px-4  '>
+                <Link href={`/profile/school-report/${name}`}>
+                    <div className="flex items-start h-full">
+                        <div className={cn('h-6 w-6 bg-gray-400 rounded-full',
 
-                        done ? 'bg-muted-green' : 'bg-gray-400'
-                    )} />
-                </div>
+                            done ? 'bg-muted-green' : 'bg-gray-400'
+                        )} />
+                    </div>
+                </Link>
                 <div className='flex flex-col justify-start'>
                     <p className='text-base font-semibold text-brand pl-3'>
                         {name}
@@ -127,6 +131,6 @@ function SchoolReportCard({
                     </div>
                 </div>
             </div>
-        </>
+        </Card >
     )
 }
