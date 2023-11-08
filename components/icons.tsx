@@ -23,6 +23,7 @@ import {
   Smile,
   SunMedium,
   Users2,
+  MoreHorizontal,
   type LucideIcon,
 } from "lucide-react";
 import * as React from "react";
@@ -54,6 +55,7 @@ export const Icons = {
   pieChart: PieChart,
   mail: Mail,
   plusCircle: PlusCircle,
+  moreHorizontal: MoreHorizontal,
   logo: ({ className, ...props }: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"

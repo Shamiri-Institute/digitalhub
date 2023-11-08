@@ -1,3 +1,16 @@
+import Link from "next/link";
+
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "#/components/ui/accordion";
+import { Button } from "#/components/ui/button";
+import { Card } from "#/components/ui/card";
+import { Separator } from "#/components/ui/separator";
+import { cn } from "#/lib/utils";
+
 import { SchoolCard } from '#/app/(platform)/schools/page'
 import { currentHub } from '#/app/auth';
 import { Icons } from '#/components/icons'
@@ -6,6 +19,69 @@ import React from 'react'
 
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
+
+
+const fellowDetails = [{
+    id: "FE_001",
+    name: "Jean Kasudi",
+    gender: "Female",
+    cell_number: "0790-000-100",
+    mpesa_number: "0792000000",
+    hub: "Nairobi",
+    county: "Nairobi",
+    age: 18,
+    sessions_attended: 7
+},
+{
+    id: "FE_003",
+
+    name: "Faith Mwende",
+    gender: "Female",
+    cell_number: "0790-000-100",
+    mpesa_number: "0792000000",
+    hub: "Nairobi",
+    county: "Nairobi",
+    age: 23,
+    sessions_attended: 16
+},
+{
+    id: "FE_005",
+
+    name: "Innocent Kilonzo",
+    gender: "Male",
+    cell_number: "0790-000-100",
+    mpesa_number: "0792000000",
+    hub: "Nairobi",
+    county: "Nairobi",
+    age: 25,
+    sessions_attended: 12
+},
+{
+    id: "FE_006",
+
+    name: "Marcus Ikenye",
+    gender: "Male",
+    cell_number: "0790-000-100",
+    mpesa_number: "0792000000",
+    hub: "Nairobi",
+    county: "Nairobi",
+    age: 20,
+    sessions_attended: 10
+},
+{
+    id: "FE_007",
+
+    name: "Flavour Otieno",
+    gender: "Male",
+    cell_number: "0790-000-100",
+    mpesa_number: "0792000000",
+    hub: "Nairobi",
+    county: "Nairobi",
+    age: 18,
+    sessions_attended: 18
+},
+]
+
 
 export default function SupervisorProfile() {
     return (
@@ -89,13 +165,7 @@ async function MySchools() {
                     sessionTypes={sessionTypes}
                     assigned
                 />
-                {/* {otherSchools.map((school) => (
-                    <SchoolCard
-                        key={school.schoolName}
-                        school={school}
-                        sessionTypes={sessionTypes}
-                    />
-                ))} */}
+
             </div>
         </>
     )
@@ -124,25 +194,14 @@ async function MyFellows() {
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2  xl:grid-cols-3 sm:items-center mt-6">
-                {/* todo: change to fellow card */}
-                <SchoolCard
-                    key={assignedSchool.schoolName}
-                    school={assignedSchool}
-                    sessionTypes={sessionTypes}
-
-                />
-                <SchoolCard
-                    key={assignedSchool.schoolName}
-                    school={assignedSchool}
-                    sessionTypes={sessionTypes}
-
-                />
-                <SchoolCard
-                    key={assignedSchool.schoolName}
-                    school={assignedSchool}
-                    sessionTypes={sessionTypes}
-
-                />
+                {
+                    fellowDetails.map((fellow) => (
+                        <MyFellowCard
+                            key={fellow.name}
+                            fellow={fellow}
+                        />
+                    ))
+                }
             </div>
         </>
     )
@@ -150,3 +209,137 @@ async function MyFellows() {
 
 
 
+
+
+export function MyFellowCard({
+    fellow,
+    assigned,
+}: {
+    fellow: any;
+    assigned?: boolean;
+}) {
+
+
+    return (
+        <Card
+            className={cn("mb-4 flex flex-col gap-5 p-5 pr-3.5", {
+                "bg-white": !assigned,
+                "bg-brand": assigned,
+            })}
+        >
+            <div
+                className={cn(
+                    "flex items-center justify-between gap-4 border-b border-border/50 pb-3 pr-3",
+                    "grid grid-cols-[15fr,10fr]",
+                    {
+                        "border-border/20": assigned,
+                    },
+                )}
+            >
+
+                <div>
+
+
+                    <h3
+                        className={cn("font-semibold xl:text-xl text-brand")}
+                    >
+                        {fellow.name}
+                    </h3>
+                    <p className="text-xs font-medium text-muted-foreground xl:text-lg">
+                        Shamiri ID: 123456
+
+                    </p>
+                </div>
+                <div
+                    className={cn(
+                        "flex items-start justify-end  pl-4",
+
+
+                    )}
+                >
+                    <Link
+                        href={`#`}
+                        className="flex flex-col gap-[1px]"
+                    >
+
+                        <div>
+                            <Icons.moreHorizontal className="h-5 w-5 text-brand" />
+
+                        </div>
+
+                    </Link>
+
+                </div>
+            </div>
+
+            <div className="flex flex-col ">
+                <div className="flex justify-between">
+
+                    <div className="flex flex-col ">
+
+                        <div className="flex justify-start gap-2">
+                            <p className="text-base font-medium text-muted-foreground xl:text-lg">
+                                Age:
+                            </p>
+                            <p className="text-base font-semibold xl:text-lg text-brand">
+                                {fellow.age}
+                            </p>
+                        </div>
+                        <div className="flex justify-start gap-2">
+                            <p className="text-base font-medium text-muted-foreground xl:text-lg">
+                                Gender:
+                            </p>
+                            <p className="text-base font-semibold xl:text-lg text-brand">
+                                {fellow.gender}
+                            </p>
+                        </div>
+                        <div className="flex justify-start gap-2">
+                            <p className="text-base font-medium text-muted-foreground xl:text-lg">
+                                Contact:
+                            </p>
+                            <p className="text-base font-semibold xl:text-lg text-brand">
+                                {fellow.cell_number}
+                            </p>
+                        </div>
+                        <div className="flex justify-start gap-2">
+                            <p className="text-base font-medium text-muted-foreground xl:text-lg">
+                                Mpesa:
+                            </p>
+                            <p className="text-base font-semibold xl:text-lg text-brand">
+                                {fellow.mpesa_number}
+                            </p>
+                        </div>
+                        <div className="flex justify-start gap-2">
+                            <p className="text-base font-medium text-muted-foreground xl:text-lg">
+                                Hub:
+                            </p>
+                            <p className="text-base font-semibold xl:text-lg text-brand">
+                                {fellow.hub}
+                            </p>
+                        </div>
+                        <div className="flex justify-start gap-2">
+                            <p className="text-base font-medium text-muted-foreground xl:text-lg">
+                                County:
+                            </p>
+                            <p className="text-base font-semibold xl:text-lg text-brand">
+                                {fellow.county}
+                            </p>
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        className="flex flex-col items-end justify-end"
+                    >
+                        <h2 className="text-5xl text-shamiri-blue font-semibold text-right self-end">18</h2>
+                        <p className="text-xs font-medium text-brand text-right">Sessions attended</p>
+                    </div>
+                </div>
+                <Button className="w-full mt-4 bg-shamiri-blue hover:bg-brand">Schools</Button>
+
+            </div>
+
+        </Card>
+    );
+}
