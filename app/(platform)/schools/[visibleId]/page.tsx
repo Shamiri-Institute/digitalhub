@@ -236,7 +236,7 @@ function FellowCard({
         Shamiri ID: {fellow.visibleId}
       </p>
       <Separator className="my-2" />
-<!--     here ----   -->
+      {/* <!--     here ----   --> */}
       <div className="mt-4 flex justify-between">
         {[
           { status: "present", label: "Pre" },
@@ -295,17 +295,17 @@ function FellowCard({
         </Link>
       </div>
     </div>
-  );
+      );
 }
 
-function Header() {
+      function Header() {
   return (
-    <header className="flex justify-between">
-      <Back />
-      <div className="flex gap-2">
-        <Icons.edit className="mr-4 h-6 w-6 align-baseline text-brand" />
-        <Icons.search className="h-6 w-6 text-brand" strokeWidth={1.75} />
-      </div>
-    </header>
-  );
+      <header className="flex justify-between">
+        <Back />
+        <div className="flex gap-2">
+          <Icons.edit className="mr-4 h-6 w-6 align-baseline text-brand" />
+          <Icons.search className="h-6 w-6 text-brand" strokeWidth={1.75} />
+        </div>
+      </header>
+      );
 }
