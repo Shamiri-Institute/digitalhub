@@ -37,7 +37,7 @@
     "@radix-ui/react-tooltip": "^1.0.6",
     "@react-email/components": "^0.0.7",
     "@tanstack/react-table": "^8.10.1",
-    "aws-crt": "^1.18.0",
+    "aws-crt": "^1.19.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "cmdk": "^0.2.0",
