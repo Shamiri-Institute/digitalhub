@@ -1,7 +1,6 @@
 import { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Prisma } from "@prisma/client";
 
 import { SchoolDemographics } from "#/app/(platform)/schools/[visibleId]/demographics";
 import { FellowDropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
@@ -236,26 +235,6 @@ function FellowCard({
         Shamiri ID: {fellow.visibleId}
       </p>
       <Separator className="my-2" />
-      {/* <!--     here ----   --> */}
-      <div className="mt-4 flex justify-between">
-        {[
-          { status: "present", label: "Pre" },
-          { status: "present", label: "S1" },
-          { status: "absent", label: "S2" },
-          { status: "not-marked", label: "S3" },
-          { status: "not-marked", label: "S4" },
-        ].map((session, index) => (
-          <div key={index} className="flex flex-col items-center">
-            <div className="text-sm text-muted-foreground">{session.label}</div>
-            <div
-              className={`h-5 w-5 rounded-full ${session.status === "present"
-                ? "bg-[#85A070]"
-                : session.status === "absent"
-                  ? "bg-[#DE5E68]"
-                  : "bg-gray-300"
-                } mx-1`}
-            ></div>
-          </div>
 
       <div className="mt-4 flex justify-between pb-2">
         {sessionItems.map((session, index) => (
@@ -268,9 +247,7 @@ function FellowCard({
 
         ))}
       </div>
-          
-//     end of here ----  
-          
+
       <Separator className="my-2" />
       <div className="mt-4 flex items-center justify-between text-sm">
         <div className="flex items-center gap-1.5">
@@ -295,17 +272,17 @@ function FellowCard({
         </Link>
       </div>
     </div>
-      );
+  );
 }
 
-      function Header() {
+function Header() {
   return (
-      <header className="flex justify-between">
-        <Back />
-        <div className="flex gap-2">
-          <Icons.edit className="mr-4 h-6 w-6 align-baseline text-brand" />
-          <Icons.search className="h-6 w-6 text-brand" strokeWidth={1.75} />
-        </div>
-      </header>
-      );
+    <header className="flex justify-between">
+      <Back />
+      <div className="flex gap-2">
+        <Icons.edit className="mr-4 h-6 w-6 align-baseline text-brand" />
+        <Icons.search className="h-6 w-6 text-brand" strokeWidth={1.75} />
+      </div>
+    </header>
+  );
 }
