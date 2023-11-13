@@ -1,32 +1,59 @@
 "use client";
+
+import * as React from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import Link from "next/link";
+
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
 import { Card } from "#/components/ui/card";
 import { FormField } from "#/components/ui/form";
 import { Popover, PopoverContent } from "#/components/ui/popover";
 import { cn } from "#/lib/utils";
-import Link from "next/link";
-import { FormSchema } from "./page";
+import { OccurrenceData, revalidateFromClient, toggleInterventionOccurrence } from "#/app/actions"
+import { useToast } from '#/components/ui/use-toast';
+import { FormSchema, SessionItem } from "./page";
+import { useRouter } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 
-export function SchoolReportCard({ name, attended }: { name: string; attended: boolean; }) {
+export function SchoolReportCard({ name, payload: data, occurring }: { name: string; payload: OccurrenceData; occurring: boolean; }) {
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
     });
+    const { toast } = useToast()
+
+    const onOccurrenceToggleClick = React.useCallback(async () => {
+        console.debug(`Sesssion ${data.sessionName} clicked`)
+        const response = await toggleInterventionOccurrence(data)
+        if (response) {
+            toast({
+                title: data.occurred ? 'Marked as occurring' : 'Marked as not occurring'
+            })
+            await revalidateFromClient('/profile/school-report')
+        } else {
+            toast({
+                variant: 'destructive',
+                title: `Already ${data.occurred ? 'occurring' : 'not occurring'}`
+            })
+        }
+    }, [occurring])
+
     return (
         <Card className="my-4 flex">
             <div className="mt-2  flex items-center px-4 py-2  ">
                 <div className="flex h-full items-start">
-                    <div
+                    <button
+                        onClick={onOccurrenceToggleClick}
                         className={cn(
                             "h-6 w-6 rounded-full bg-gray-400",
-
-                            attended ? "bg-muted-green" : "bg-gray-400"
-                        )} />
+                            occurring ? "bg-muted-green" : "bg-gray-400"
+                        )}>
+                        <span className="sr-only">Mark {occurring ? "Unoccurring" : "Occurring"}</span>
+                    </button>
                 </div>
                 <div className="flex flex-col justify-start">
                     <Link href={`/profile/school-report/${name}`}>
