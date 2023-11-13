@@ -12,10 +12,11 @@ import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 
 import { SchoolCard } from '#/app/(platform)/schools/page'
-import { currentHub } from '#/app/auth';
+import { currentHub, currentSupervisor } from '#/app/auth';
 import { Icons } from '#/components/icons'
 import { db } from '#/lib/db';
 import React from 'react'
+import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
 
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
@@ -83,11 +84,61 @@ const fellowDetails = [{
 ]
 
 
-export default function SupervisorProfile() {
+export default async function SupervisorProfile() {
+    let supervisor = await currentSupervisor()
+
+
+    const fellowsCount = (
+        await db.fellowAttendance.groupBy({
+            by: ["fellowId"],
+            where: {
+                supervisorId: supervisor.id,
+                schoolId: supervisor.assignedSchoolId ?? undefined,
+            },
+            _sum: {
+                id: true,
+            },
+        })
+    ).length;
+
+    // SELECT COUNT(*) FROM schools WHERE hub_id = 'hub_01hetrj9mhf8kbq9tcm3eyg66v';
+
+
+    const schoolCount = await db.school.count({
+        where: {
+            hubId: supervisor.hubId
+        }
+    }
+    )
+
+    // STUDENT COUNT
+
+    // SELECT * FROM fellows WHERE supervisor_id = current_supervisor_id INNER JOIN students ON fellows.id = students.fellow_id
+
+    // SELECT fellows.fellow_name, students.student_name FROM fellows INNER JOIN students ON fellows.id = students.fellow_id WHERE fellows.supervisor_id = 'sup_01hetrjb41f80a5hee3430bh79';
+
+    const studentCount = (await db.fellow.findMany({
+        where: {
+            supervisorId: supervisor.id
+        },
+        include: {
+            students: true
+        }
+    })).map(fellow => fellow.students.length).reduce((a, b) => a + b, 0);
+    console.debug({ studentCount })
+
+    let supervisorName = supervisor.supervisorName ?? "N/A"
+
+    // console.log({ supervisor, fellowsCount, schoolCount })
+
+
     return (
         <>
             <IntroHeader />
-            <ProfileHeader />
+
+            <ProfileHeader fellowsCount={fellowsCount} schoolCount={schoolCount} supervisorName={supervisorName} studentCount={studentCount} />
+
+
             <MySchools />
             <MyFellows />
         </>
@@ -109,27 +160,35 @@ function IntroHeader() {
     )
 }
 
-function ProfileHeader() {
+
+function splitNameIntoInitials(name: string) {
+    let initials = name.match(/\b\w/g) || [];
+    initials = ((initials.shift() || "") + (initials.pop() || "")).toUpperCase();
+    return initials;
+}
+
+function ProfileHeader({ fellowsCount, schoolCount, supervisorName, studentCount }: { fellowsCount: number, schoolCount: number, supervisorName: string, studentCount: number }) {
     return (
         <div className='flex flex-col justify-center items-center mt-10 border-b '>
-            <div className='h-32 w-32 bg-gray-400 rounded-full my-4'>
-                {/* todo: image goes here ?? */}
+            <div className='h-32 w-32 bg-gray-400 rounded-full my-4 flex justify-center items-center'>
+                <h3 className="text-4xl text-shamiri-blue font-semibold text-center self-center">
+                    {splitNameIntoInitials(supervisorName)}
+                </h3>
             </div>
             <p className='text-base font-semibold text-shamiri-blue-darker xl:text-2xl pl-3'>
-                Supervisor Name
+                {supervisorName}
             </p>
-
             <div className='flex my-4'>
                 <div className='pr-4'>
-                    <p className='text-base font-semibold text-shamiri-blue'>09</p>
+                    <p className='text-base font-semibold text-shamiri-blue'>{fellowsCount.toString().padStart(2, "0")}</p>
                     <p className='text-xs text-brand'>Fellows</p>
                 </div>
                 <div className=' border-l border-border/50 pl-4'>
-                    <p className='text-base font-semibold text-shamiri-blue'>05</p>
+                    <p className='text-base font-semibold text-shamiri-blue'>{schoolCount.toString().padStart(2, "0")}</p>
                     <p className='text-xs text-brand'>Schools</p>
                 </div>
                 <div className=' border-l border-border/50 pl-4'>
-                    <p className='text-base font-semibold text-shamiri-blue'>2000</p>
+                    <p className='text-base font-semibold text-shamiri-blue'>{studentCount.toString().padStart(2, "0")}</p>
                     <p className='text-xs text-brand'>Students</p>
                 </div>
             </div>
@@ -159,7 +218,14 @@ async function MySchools() {
                     My School
                 </h3>
 
-                <SchoolCard
+                {/* <SchoolCard
+                    key={assignedSchool.schoolName}
+                    school={assignedSchool}
+                    sessionTypes={sessionTypes}
+                    assigned
+                /> */}
+
+                <SchoolCardProfile
                     key={assignedSchool.schoolName}
                     school={assignedSchool}
                     sessionTypes={sessionTypes}

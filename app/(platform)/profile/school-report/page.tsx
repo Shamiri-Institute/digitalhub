@@ -27,7 +27,22 @@ const FormSchema = z.object({
 let sessions = [{
     session: "Pre session",
     done: true
-}, { session: "Session 01", done: false }, { session: "Session 02", done: false }, { session: "Session 03", done: false }, { session: "Session 04", done: false }]
+}, { session: "Session 01", done: false },
+{ session: "Session 02", done: false },
+{ session: "Session 03", done: false },
+{ session: "Session 04", done: false },
+{ session: "Follow-up 01", done: false },
+{ session: "Follow-up 02", done: false },
+{ session: "Follow-up 03", done: false },
+{ session: "Follow-up 04", done: false },
+{ session: "Follow-up 05", done: false },
+{ session: "Follow-up 06", done: false },
+{ session: "Follow-up 07", done: false },
+{ session: "Follow-up 08", done: false },
+
+
+
+]
 
 
 
@@ -48,13 +63,17 @@ export function IntroHeader() {
     return (
         <>
             <div className='flex justify-between items-center mt-2 '>
-                <button  >
-                    <Icons.chevronLeft className='h-6 w-6 align-baseline xl:h-7 xl:w-7 text-brand' />
-                </button>
+                <Link href='/profile'>
+                    <button  >
+                        <Icons.chevronLeft className='h-6 w-6 align-baseline xl:h-7 xl:w-7 text-brand' />
+                    </button>
+                </Link>
                 <h3 className='text-brand font-bold text-xl'>My School Report</h3>
-                <button>
+                {/* <button>
                     <Icons.add className='h-6 w-6 align-baseline xl:h-7 xl:w-7 text-shamiri-blue' />
-                </button>
+                </button> */}
+                <div>
+                </div>
             </div>
             <h4 className='text-xs text-center text-brand-light-gray'>Kamkunji Secondary School</h4>
 
@@ -75,18 +94,19 @@ function SchoolReportCard({
     return (
         <Card className="my-4 flex">
             <div className='flex  items-center mt-2 py-2 px-4  '>
-                <Link href={`/profile/school-report/${name}`}>
-                    <div className="flex items-start h-full">
-                        <div className={cn('h-6 w-6 bg-gray-400 rounded-full',
+                <div className="flex items-start h-full">
+                    <div className={cn('h-6 w-6 bg-gray-400 rounded-full',
 
-                            done ? 'bg-muted-green' : 'bg-gray-400'
-                        )} />
-                    </div>
-                </Link>
+                        done ? 'bg-muted-green' : 'bg-gray-400'
+                    )} />
+                </div>
                 <div className='flex flex-col justify-start'>
-                    <p className='text-base font-semibold text-brand pl-3'>
-                        {name}
-                    </p>
+                    <Link href={`/profile/school-report/${name}`}>
+
+                        <p className='text-base font-semibold text-brand pl-3'>
+                            {name}
+                        </p>
+                    </Link>
 
                     <div className='flex justify-start items-baseline'>
                         {/* <p className='text-xs font-semibold text-brand pl-3'>

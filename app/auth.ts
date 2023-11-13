@@ -83,7 +83,15 @@ export async function currentHub() {
 }
 
 export async function currentSupervisor() {
-  const supervisor = await db.supervisor.findFirst();
+  const supervisor = await db.supervisor.findFirst({
+    where: {
+      visibleId: "SPV23_S_25",
+    },
+    include: {
+      assignedSchool: true,
+    },
+  });
+
   if (!supervisor) {
     throw new Error("No supervisor found");
   }
