@@ -44,10 +44,12 @@ export default async function SchoolReport() {
     const interventionSessions: { session: SessionItem | null, defaultName: string }[] = await Promise.all(sessionItems.map(async (sessionItem) => {
         let created = false
 
-        const interventionSession = await db.interventionSession.findFirst({ // TODO: add unique index and move to findUnique
+        const interventionSession = await db.interventionSession.findUnique({
             where: {
-                sessionType: sessionItem.sessionType,
-                schoolId: assignedSchoolId,
+                findInterventionBySchoolAndSessionType: {
+                    sessionType: sessionItem.sessionType,
+                    schoolId: assignedSchoolId,
+                },
             }
         })
         if (interventionSession) {
