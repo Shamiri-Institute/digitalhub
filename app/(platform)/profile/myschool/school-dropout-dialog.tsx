@@ -35,8 +35,8 @@ const initialDropoutState = {
 }
 
 
-
-const dropOutReducer = (state, action) => {
+// TODO: FIX THE TYPES
+const dropOutReducer = (state: any, action: any) => {
     if (action.type === "Lack of commitment") {
         return {
             ...state,

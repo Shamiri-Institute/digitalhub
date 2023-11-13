@@ -1,5 +1,4 @@
 "use client";
-import { IntroHeader } from "#/app/(platform)/profile/school-report/page";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Form, FormField } from "#/components/ui/form";
