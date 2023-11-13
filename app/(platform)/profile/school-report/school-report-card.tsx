@@ -16,9 +16,15 @@ import { Popover, PopoverContent } from "#/components/ui/popover";
 import { cn } from "#/lib/utils";
 import { OccurrenceData, revalidateFromClient, toggleInterventionOccurrence } from "#/app/actions"
 import { useToast } from '#/components/ui/use-toast';
-import { FormSchema, SessionItem } from "./page";
+import { SessionItem } from "./page";
 import { useRouter } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+
+const FormSchema = z.object({
+    dateOfSession: z.date({
+        required_error: "Please enter the fellow's date of session.",
+    }),
+});
 
 export function SchoolReportCard({ name, payload: data, occurring }: { name: string; payload: OccurrenceData; occurring: boolean; }) {
     const form = useForm<z.infer<typeof FormSchema>>({

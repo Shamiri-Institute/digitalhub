@@ -1,3 +1,4 @@
+import * as React from 'react'
 import Link from "next/link";
 
 import {
@@ -9,14 +10,12 @@ import {
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
-import { cn } from "#/lib/utils";
-
-import { SchoolCard } from '#/app/(platform)/schools/page'
+import { cn, getInitials } from "#/lib/utils";
+import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
+import { SchoolCard } from "../schools/school-card";
 import { currentHub, currentSupervisor } from '#/app/auth';
 import { Icons } from '#/components/icons'
 import { db } from '#/lib/db';
-import React from 'react'
-import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
 
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
@@ -133,15 +132,12 @@ export default async function SupervisorProfile() {
 
 
     return (
-        <>
+        <main>
             <IntroHeader />
-
             <ProfileHeader fellowsCount={fellowsCount} schoolCount={schoolCount} supervisorName={supervisorName} studentCount={studentCount} />
-
-
             <MySchools />
             <MyFellows />
-        </>
+        </main>
     )
 }
 
@@ -161,18 +157,12 @@ function IntroHeader() {
 }
 
 
-function splitNameIntoInitials(name: string) {
-    let initials = name.match(/\b\w/g) || [];
-    initials = ((initials.shift() || "") + (initials.pop() || "")).toUpperCase();
-    return initials;
-}
-
 function ProfileHeader({ fellowsCount, schoolCount, supervisorName, studentCount }: { fellowsCount: number, schoolCount: number, supervisorName: string, studentCount: number }) {
     return (
         <div className='flex flex-col justify-center items-center mt-10 border-b '>
             <div className='h-32 w-32 bg-gray-400 rounded-full my-4 flex justify-center items-center'>
                 <h3 className="text-4xl text-shamiri-blue font-semibold text-center self-center">
-                    {splitNameIntoInitials(supervisorName)}
+                    {getInitials(supervisorName)}
                 </h3>
             </div>
             <p className='text-base font-semibold text-shamiri-blue-darker xl:text-2xl pl-3'>
@@ -217,14 +207,6 @@ async function MySchools() {
                 <h3 className='text-base font-semibold text-brand xl:text-2xl mt-4'>
                     My School
                 </h3>
-
-                {/* <SchoolCard
-                    key={assignedSchool.schoolName}
-                    school={assignedSchool}
-                    sessionTypes={sessionTypes}
-                    assigned
-                /> */}
-
                 <SchoolCardProfile
                     key={assignedSchool.schoolName}
                     school={assignedSchool}
@@ -246,7 +228,6 @@ async function MyFellows() {
     if (!assignedSchool) {
         throw new Error("Assigned school not found");
     }
-
 
     return (
         <>
@@ -277,15 +258,13 @@ async function MyFellows() {
 
 
 
-export function MyFellowCard({
+function MyFellowCard({
     fellow,
     assigned,
 }: {
     fellow: any;
     assigned?: boolean;
 }) {
-
-
     return (
         <Card
             className={cn("mb-4 flex flex-col gap-5 p-5 pr-3.5", {
@@ -302,7 +281,6 @@ export function MyFellowCard({
                     },
                 )}
             >
-
                 <div>
 
 
