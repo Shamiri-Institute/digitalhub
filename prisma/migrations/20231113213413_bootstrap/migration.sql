@@ -396,15 +396,26 @@ CREATE TABLE "intervention_sessions" (
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
     "archived_at" TIMESTAMP(3),
-    "visible_id" VARCHAR(10) NOT NULL,
     "session_date" TIMESTAMP(3) NOT NULL,
     "session_name" VARCHAR(255) NOT NULL,
     "session_type" VARCHAR(255) NOT NULL,
     "school_id" VARCHAR(255) NOT NULL,
-    "leader_id" VARCHAR(255) NOT NULL,
+    "occurred" BOOLEAN NOT NULL,
     "year_of_implementation" INTEGER NOT NULL,
 
     CONSTRAINT "intervention_sessions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "intervention_group_sessions" (
+    "id" VARCHAR(255) NOT NULL,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+    "archived_at" TIMESTAMP(3),
+    "leader_id" VARCHAR(255),
+    "interventionSessionId" VARCHAR(255) NOT NULL,
+
+    CONSTRAINT "intervention_group_sessions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -474,7 +485,7 @@ CREATE UNIQUE INDEX "hub_coordinators_visible_id_key" ON "hub_coordinators"("vis
 CREATE UNIQUE INDEX "hub_coordinators_coordinator_email_key" ON "hub_coordinators"("coordinator_email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "intervention_sessions_visible_id_key" ON "intervention_sessions"("visible_id");
+CREATE UNIQUE INDEX "intervention_sessions_session_type_school_id_key" ON "intervention_sessions"("session_type", "school_id");
 
 -- AddForeignKey
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -588,4 +599,7 @@ ALTER TABLE "hub_coordinators" ADD CONSTRAINT "hub_coordinators_implementer_id_f
 ALTER TABLE "intervention_sessions" ADD CONSTRAINT "intervention_sessions_school_id_fkey" FOREIGN KEY ("school_id") REFERENCES "schools"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "intervention_sessions" ADD CONSTRAINT "intervention_sessions_leader_id_fkey" FOREIGN KEY ("leader_id") REFERENCES "fellows"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "intervention_group_sessions" ADD CONSTRAINT "intervention_group_sessions_leader_id_fkey" FOREIGN KEY ("leader_id") REFERENCES "fellows"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "intervention_group_sessions" ADD CONSTRAINT "intervention_group_sessions_interventionSessionId_fkey" FOREIGN KEY ("interventionSessionId") REFERENCES "intervention_sessions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
