@@ -2,9 +2,10 @@ import Link from "next/link";
 import { z } from "zod";
 
 import { Icons } from "#/components/icons";
-import { SchoolReportCard } from "./school-report-card";
 import { db } from "#/lib/db";
 import { currentSupervisor } from "#/app/auth";
+import { SchoolReportCard } from "./school-report-card";
+import { addWeeks } from "date-fns";
 
 export const FormSchema = z.object({
     dateOfSession: z.date({
@@ -12,25 +13,26 @@ export const FormSchema = z.object({
     }),
 });
 
-interface SessionItem {
-    displayName: string
+export interface SessionItem {
+    sessionName: string
     sessionType: string
+    sessionDate: Date
 }
 
 let sessionItems: SessionItem[] = [
-    { displayName: "Pre session", sessionType: "s0" },
-    { displayName: "Session 01", sessionType: "s1" },
-    { displayName: "Session 02", sessionType: "s2" },
-    { displayName: "Session 03", sessionType: "s3" },
-    { displayName: "Session 04", sessionType: "s4" },
-    { displayName: "Follow-up 01", sessionType: "fu1" },
-    { displayName: "Follow-up 02", sessionType: "fu2" },
-    { displayName: "Follow-up 03", sessionType: "fu3" },
-    { displayName: "Follow-up 04", sessionType: "fu4" },
-    { displayName: "Follow-up 05", sessionType: "fu5" },
-    { displayName: "Follow-up 06", sessionType: "fu6" },
-    { displayName: "Follow-up 07", sessionType: "fu7" },
-    { displayName: "Follow-up 08", sessionType: "fu8" },
+    { sessionName: "Pre session", sessionType: "s0", sessionDate: addWeeks(new Date(), 0) },
+    { sessionName: "Session 01", sessionType: "s1", sessionDate: addWeeks(new Date(), 1) },
+    { sessionName: "Session 02", sessionType: "s2", sessionDate: addWeeks(new Date(), 2) },
+    { sessionName: "Session 03", sessionType: "s3", sessionDate: addWeeks(new Date(), 3) },
+    { sessionName: "Session 04", sessionType: "s4", sessionDate: addWeeks(new Date(), 4) },
+    { sessionName: "Follow-up 01", sessionType: "fu1", sessionDate: addWeeks(new Date(), 5) },
+    { sessionName: "Follow-up 02", sessionType: "fu2", sessionDate: addWeeks(new Date(), 6) },
+    { sessionName: "Follow-up 03", sessionType: "fu3", sessionDate: addWeeks(new Date(), 7) },
+    { sessionName: "Follow-up 04", sessionType: "fu4", sessionDate: addWeeks(new Date(), 8) },
+    { sessionName: "Follow-up 05", sessionType: "fu5", sessionDate: addWeeks(new Date(), 9) },
+    { sessionName: "Follow-up 06", sessionType: "fu6", sessionDate: addWeeks(new Date(), 10) },
+    { sessionName: "Follow-up 07", sessionType: "fu7", sessionDate: addWeeks(new Date(), 11) },
+    { sessionName: "Follow-up 08", sessionType: "fu8", sessionDate: addWeeks(new Date(), 12) },
 ];
 
 export default async function SchoolReport() {
@@ -40,8 +42,10 @@ export default async function SchoolReport() {
         throw Error("Supervisor has no assigned school")
     }
 
-
-    const interventionSessions: { session: SessionItem | null, defaultName: string }[] = await Promise.all(sessionItems.map(async (sessionItem) => {
+    const interventionSessions: {
+        session: (SessionItem & { occurred: boolean }) | null,
+        defaultSessionValues: Pick<SessionItem, 'sessionName' | 'sessionDate' | 'sessionType'>
+    }[] = await Promise.all(sessionItems.map(async (sessionItem) => {
         let created = false
 
         const interventionSession = await db.interventionSession.findUnique({
@@ -56,24 +60,46 @@ export default async function SchoolReport() {
             created = true
             return {
                 session: {
-                    displayName: interventionSession.sessionName,
+                    occurred: interventionSession.occurred,
+                    sessionName: interventionSession.sessionName,
                     sessionType: interventionSession.sessionType,
+                    sessionDate: interventionSession.sessionDate
                 },
-                defaultName: sessionItem.displayName
+                defaultSessionValues: {
+                    sessionName: sessionItem.sessionName,
+                    sessionType: sessionItem.sessionType,
+                    sessionDate: sessionItem.sessionDate,
+                }
             }
         }
 
         return {
             session: null,
-            defaultName: sessionItem.displayName
+            defaultSessionValues: {
+                sessionName: sessionItem.sessionName,
+                sessionType: sessionItem.sessionType,
+                sessionDate: sessionItem.sessionDate,
+            }
         }
     }))
 
     return (
         <div>
             <IntroHeader />
-            {interventionSessions.map(({ session, defaultName }) => (
-                <SchoolReportCard name={session?.displayName ?? defaultName} attended={session !== null} />
+            {interventionSessions.map(({ session, defaultSessionValues }) => (
+                <SchoolReportCard
+                    key={session?.sessionName ?? defaultSessionValues.sessionName}
+                    name={session?.sessionName ?? defaultSessionValues.sessionName}
+                    occurring={session?.occurred || false}
+                    payload={{
+                        occurred: !(session?.occurred || false),
+                        sessionName: session?.sessionName ?? defaultSessionValues.sessionName,
+                        sessionDate: defaultSessionValues.sessionDate,
+                        sessionType: defaultSessionValues.sessionType,
+                        yearOfImplementation: session?.sessionDate.getFullYear() || new Date().getFullYear(),
+                        schoolId: assignedSchoolId
+                    }}
+                />
             ))}
         </div>
     );
