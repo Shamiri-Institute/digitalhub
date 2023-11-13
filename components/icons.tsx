@@ -24,6 +24,9 @@ import {
   SunMedium,
   Users2,
   MoreHorizontal,
+  XIcon,
+  Star,
+  // StarIcon,
   type LucideIcon,
 } from "lucide-react";
 import * as React from "react";
@@ -56,6 +59,9 @@ export const Icons = {
   mail: Mail,
   plusCircle: PlusCircle,
   moreHorizontal: MoreHorizontal,
+  xIcon: XIcon,
+  startOutline: Star,
+  // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -671,4 +677,12 @@ export const Icons = {
       <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
     </svg>
   ),
+  star: ({ className, ...props }: LucideProps) => (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"
+      {...props}
+      className={className}
+    >
+      <path fill="currentColor" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M8.99935 0.666992L10.9666 6.72152H17.3327L12.1824 10.4634L14.1496 16.5179L8.99935 12.7761L3.84907 16.5179L5.8163 10.4634L0.666016 6.72152H7.03212L8.99935 0.666992Z" />
+    </svg>
+  )
 };
