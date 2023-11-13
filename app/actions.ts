@@ -575,3 +575,20 @@ function generateStudentVisibleID(groupName: string) {
   const suffix = Math.floor(Math.random() * 90000) + 10000;
   return `${groupName}_${suffix}`;
 }
+
+interface OccurrenceData {
+  occurred: boolean;
+  sessionName: string;
+  sessionDate: Date;
+  sessionType: string;
+  schoolId: string;
+}
+
+/**
+ * This represents where the intervention session happened or will happen at all.
+ *
+ * Student and fellow attendance is more about the individual level the individual level.
+ */
+async function toggleInterventionOccurrence({ occurred }: OccurrenceData) {
+  if (occurred)
+}
