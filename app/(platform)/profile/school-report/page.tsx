@@ -7,12 +7,6 @@ import { currentSupervisor } from "#/app/auth";
 import { SchoolReportCard } from "./school-report-card";
 import { addWeeks } from "date-fns";
 
-export const FormSchema = z.object({
-    dateOfSession: z.date({
-        required_error: "Please enter the fellow's date of session.",
-    }),
-});
-
 export interface SessionItem {
     sessionName: string
     sessionType: string
@@ -105,11 +99,11 @@ export default async function SchoolReport() {
     );
 }
 
-export async function IntroHeader() {
+async function IntroHeader() {
     const { assignedSchool } = await currentSupervisor();
 
     return (
-        <>
+        <div>
             <div className="mt-2 flex items-center justify-between ">
                 <Link href="/profile">
                     <button>
@@ -125,7 +119,7 @@ export async function IntroHeader() {
             <h4 className="text-brand-light-gray text-center text-xs">
                 {assignedSchool?.schoolName}
             </h4>
-        </>
+        </div>
     );
 }
 
