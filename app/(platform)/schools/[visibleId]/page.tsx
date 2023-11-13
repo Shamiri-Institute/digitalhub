@@ -76,7 +76,7 @@ export default async function SchoolDetailPage({
         <div className="mt-1 flex gap-4">
           <div className="h-4 w-4 rounded-full bg-muted-green" />
           <div className="h-4 w-4 rounded-full bg-muted-green" />
-          <div className="h-4 w-4 rounded-full bg-[#DE5E68]" />
+          <div className="h-4 w-4 rounded-full bg-shamiri-red" />
         </div>
       </div>
       <div className="mt-8">
@@ -235,6 +235,7 @@ function FellowCard({
         Shamiri ID: {fellow.visibleId}
       </p>
       <Separator className="my-2" />
+
       <div className="mt-4 flex justify-between pb-2">
         {sessionItems.map((session, index) => (
           <FellowAttendanceDot
@@ -243,8 +244,10 @@ function FellowCard({
             fellow={fellow}
             school={school}
           />
+
         ))}
       </div>
+
       <Separator className="my-2" />
       <div className="mt-4 flex items-center justify-between text-sm">
         <div className="flex items-center gap-1.5">
