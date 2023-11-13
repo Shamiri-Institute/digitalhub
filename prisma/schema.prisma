@@ -478,7 +478,7 @@ model InterventionSession {
   yearOfImplementation      Int                        @map("year_of_implementation")
   interventionGroupSessions InterventionGroupSession[]
 
-  @@index([sessionType, schoolId], name: "unique_school_and_type_intervention_session")
+  @@unique([sessionType, schoolId], name: "unique_school_and_type_intervention_session")
   @@map("intervention_sessions")
 }
 
