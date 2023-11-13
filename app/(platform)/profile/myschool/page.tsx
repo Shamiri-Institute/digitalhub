@@ -11,9 +11,13 @@ import { FormField } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { Card } from "#/components/ui/card";
 import { useRouter } from "next/navigation";
+import { SchoolDropoutDialog } from "#/app/(platform)/profile/myschool/school-dropout-dialog";
 
 
 const FormSchema = z.object({
+    schoolName: z.string({
+        required_error: "Please enter the promise number of students.",
+    }),
     promisedNoOfStudents: z.string({
         required_error: "Please enter the promise number of students.",
     }),
@@ -38,6 +42,15 @@ const FormSchema = z.object({
 });
 
 
+const sampleSchool = {
+    name: 'Kamukunji Seconday School',
+    promisedNoOfStudents: 100,
+    pointPersonName: 'John Doe',
+    pointPersonEmail: 'test@gmail.com',
+    pointPersonCounty: 'Nairobi',
+    schoolEmail: 'kamunki@gmail.com',
+}
+
 
 
 
@@ -54,9 +67,9 @@ export default function MySchooPage() {
                 <button className='flex flex-1' onClick={() => router.back()}>
                     <Icons.chevronLeft className='h-6 w-6 align-baseline xl:h-7 xl:w-7 text-brand' />
                 </button>
-                <button>
+                {/* <button>
                     <Icons.add className='h-6 w-6 align-baseline xl:h-7 xl:w-7 text-brand' />
-                </button>
+                </button> */}
             </div>
             <h3 className='text-base font-semibold text-brand xl:text-2xl mb-2'>
                 My Fellows
@@ -244,13 +257,23 @@ export default function MySchooPage() {
                         >
                             Save
                         </Button>
-                        <Button
+                        {/* <Button
                             type="submit"
                             className="mt-2 w-full bg-shamiri-red
                              py-5 text-white transition-transform hover:bg-shamiri-red hover:text-white active:scale-95"
                         >
                             Remove
-                        </Button>
+                        </Button> */}
+                        <SchoolDropoutDialog school={sampleSchool}>
+                            <Button
+                                type="submit"
+                                className="mt-2 w-full bg-shamiri-red
+                             py-5 text-white transition-transform hover:bg-shamiri-red hover:text-white active:scale-95"
+                            >
+
+                                Remove
+                            </Button>
+                        </SchoolDropoutDialog>
 
 
 
