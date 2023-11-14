@@ -12,6 +12,7 @@
     "db:dev:up": "docker-compose down && docker-compose up db",
     "db:dev:seed": "dotenv -c development -- tsx prisma/scripts/seed.ts",
     "db:dev:migrate": "dotenv -c development -- npx prisma migrate dev",
+    "db:dev:types": "dotenv -c development -- npx prisma generate",
     "email:dev": "email dev -p 4444"
   },
   "dependencies": {

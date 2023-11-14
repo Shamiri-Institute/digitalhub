@@ -7,15 +7,16 @@ async function seedDatabase() {
   await truncateTables();
   await createSystemUser(db);
   await createImplementers(db);
-  //// await createPermissions(db);
-  //// await createRoles(db);
-  //// await createUsers(db);
+  // await createPermissions(db);
+  // await createRoles(db);
+  // await createUsers(db);
   await createHubs(db);
   await createSchools(db);
   await createSupervisors(db);
   await createFellows(db);
   await createFellowAttendances(db);
   await createStudents(db);
+  await createFixtures(db);
 }
 
 seedDatabase()
@@ -29,21 +30,9 @@ seedDatabase()
   });
 
 async function truncateTables() {
-  const tables = await db.$queryRaw<{ readonly tablename: string }[]>`
-    SELECT tablename
-    FROM pg_catalog.pg_tables
-    WHERE schemaname != 'pg_catalog' AND
-    schemaname != 'information_schema';
-  `;
-
-  for (const { tablename } of tables) {
-    if (tablename === "_prisma_migrations") {
-      continue;
-    }
-
-    console.log(`Truncating table ${tablename}`);
-    await db.$executeRaw`TRUNCATE TABLE ${tablename} CASCADE;`;
-  }
+  await db.$executeRaw`
+    TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, intervention_sessions,intervention_group_sessions, fellow_attendances, supervisors, schools, hub_coordinators;
+    `;
 }
 
 async function createSystemUser(db: Database) {
@@ -427,5 +416,23 @@ async function createStudents(db: Database) {
     } catch (e) {
       throw e;
     }
+  });
+}
+
+async function createFixtures(db: Database) {
+  console.log("creating fixtures");
+  let stDominic = await db.school.findUnique({
+    where: {
+      visibleId: "ANS23_School_3",
+    },
+  });
+
+  await db.supervisor.update({
+    where: {
+      visibleId: "SPV23_S_25",
+    },
+    data: {
+      assignedSchoolId: stDominic?.id,
+    },
   });
 }
