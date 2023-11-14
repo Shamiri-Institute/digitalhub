@@ -575,3 +575,84 @@ function generateStudentVisibleID(groupName: string) {
   const suffix = Math.floor(Math.random() * 90000) + 10000;
   return `${groupName}_${suffix}`;
 }
+
+export interface OccurrenceData {
+  occurred: boolean;
+  sessionName: string;
+  sessionDate: Date;
+  yearOfImplementation: number;
+  sessionType: string;
+  schoolId: string;
+}
+
+/**
+ * This represents where the intervention session happened or will happen at all.
+ *
+ * Student and fellow attendance is more about the individual level the individual level.
+ */
+export async function toggleInterventionOccurrence(data: OccurrenceData) {
+  const interventionSession = await db.interventionSession.findUnique({
+    where: {
+      findInterventionBySchoolAndSessionType: {
+        schoolId: data.schoolId,
+        sessionType: data.sessionType,
+      },
+    },
+  });
+
+  const { occurred } = data;
+  let success = false;
+  if (occurred) {
+    if (interventionSession === null) {
+      // TODO: if they tap a downstream session (e.g. s4) and all sessions in between is unoccurrred, mark all the in between sesssion occurred
+      await db.interventionSession.create({
+        data: {
+          id: objectId("isess"),
+          sessionName: data.sessionName,
+          sessionDate: data.sessionDate,
+          sessionType: data.sessionType,
+          yearOfImplementation: data.yearOfImplementation,
+          schoolId: data.schoolId,
+          occurred,
+        },
+      });
+      success = true;
+    } else if (interventionSession.occurred === false) {
+      await db.interventionSession.update({
+        where: {
+          findInterventionBySchoolAndSessionType: {
+            schoolId: data.schoolId,
+            sessionType: data.sessionType,
+          },
+        },
+        data: { occurred },
+      });
+      success = true;
+    } else if (interventionSession.occurred === true) {
+      console.error(`Intervention session is already marked as occurring`);
+    }
+  } else {
+    if (interventionSession === null) {
+      console.error(
+        `Intervention session is attempting to be unmarked but session doesn't exist`,
+      );
+    } else {
+      await db.interventionSession.update({
+        where: {
+          findInterventionBySchoolAndSessionType: {
+            schoolId: data.schoolId,
+            sessionType: data.sessionType,
+          },
+        },
+        data: { occurred },
+      });
+      success = true;
+    }
+  }
+
+  return success;
+}
+
+export async function revalidateFromClient(path: string) {
+  revalidatePath(path);
+}

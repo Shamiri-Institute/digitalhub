@@ -273,34 +273,34 @@ model Student {
 
 /// Fellows are the lay-providers, group leaders of the Shamiri Intervention.
 model Fellow {
-  id                   String                @id @db.VarChar(255)
-  createdAt            DateTime              @default(now()) @map("created_at")
-  updatedAt            DateTime              @updatedAt @map("updated_at")
-  archivedAt           DateTime?             @map("archived_at")
-  visibleId            String                @unique @map("visible_id") @db.VarChar(100)
-  fellowName           String?               @map("fellow_name") @db.VarChar(255)
-  fellowEmail          String?               @map("fellow_email") @db.VarChar(255)
-  yearOfImplementation Int?                  @map("year_of_implementation")
-  mpesaName            String?               @map("mpesa_name") @db.VarChar(255)
-  mpesaNumber          String?               @map("mpesa_number") @db.VarChar(255)
-  idNumber             String?               @map("id_number") @db.VarChar(255)
-  cellNumber           String?               @map("cell_number") @db.VarChar(255)
-  county               String?               @map("county") @db.VarChar(255)
-  subCounty            String?               @map("sub_county") @db.VarChar(255)
-  dateOfBirth          DateTime?             @map("date_of_birth") @db.Date
-  gender               String?               @map("gender")
-  transferred          Boolean?              @map("transferred")
-  hubId                String?               @map("hub_id") @db.VarChar(255)
-  hub                  Hub?                  @relation(fields: [hubId], references: [id])
-  implementerId        String?               @map("implementer_id") @db.VarChar(255)
-  implementer          Implementer?          @relation(fields: [implementerId], references: [id])
-  supervisorId         String?               @map("supervisor_id") @db.VarChar(255)
-  supervisor           Supervisor?           @relation(fields: [supervisorId], references: [id])
-  droppedOut           Boolean?              @map("dropped_out")
-  dropOutReason        String?               @map("drop_out_reason")
-  students             Student[]
-  fellowAttendances    FellowAttendance[]
-  interventionSessions InterventionSession[]
+  id                       String                     @id @db.VarChar(255)
+  createdAt                DateTime                   @default(now()) @map("created_at")
+  updatedAt                DateTime                   @updatedAt @map("updated_at")
+  archivedAt               DateTime?                  @map("archived_at")
+  visibleId                String                     @unique @map("visible_id") @db.VarChar(100)
+  fellowName               String?                    @map("fellow_name") @db.VarChar(255)
+  fellowEmail              String?                    @map("fellow_email") @db.VarChar(255)
+  yearOfImplementation     Int?                       @map("year_of_implementation")
+  mpesaName                String?                    @map("mpesa_name") @db.VarChar(255)
+  mpesaNumber              String?                    @map("mpesa_number") @db.VarChar(255)
+  idNumber                 String?                    @map("id_number") @db.VarChar(255)
+  cellNumber               String?                    @map("cell_number") @db.VarChar(255)
+  county                   String?                    @map("county") @db.VarChar(255)
+  subCounty                String?                    @map("sub_county") @db.VarChar(255)
+  dateOfBirth              DateTime?                  @map("date_of_birth") @db.Date
+  gender                   String?                    @map("gender")
+  transferred              Boolean?                   @map("transferred")
+  hubId                    String?                    @map("hub_id") @db.VarChar(255)
+  hub                      Hub?                       @relation(fields: [hubId], references: [id])
+  implementerId            String?                    @map("implementer_id") @db.VarChar(255)
+  implementer              Implementer?               @relation(fields: [implementerId], references: [id])
+  supervisorId             String?                    @map("supervisor_id") @db.VarChar(255)
+  supervisor               Supervisor?                @relation(fields: [supervisorId], references: [id])
+  droppedOut               Boolean?                   @map("dropped_out")
+  dropOutReason            String?                    @map("drop_out_reason")
+  students                 Student[]
+  fellowAttendances        FellowAttendance[]
+  InterventionGroupSession InterventionGroupSession[]
 
   @@map("fellows")
 }
@@ -463,21 +463,35 @@ model HubCoordinator {
   @@map("hub_coordinators")
 }
 
-/// Intervention sessions are group sessions where the Shamiri Intervention is delivered to high school students by trained youth lay providers in various Kenyan schools.
+/// Intervention sessions represent the school-wide intervention event happening
 model InterventionSession {
-  id                   String    @id @db.VarChar(255)
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
-  archivedAt           DateTime? @map("archived_at")
-  visibleId            String    @unique @map("visible_id") @db.VarChar(10)
-  sessionDate          DateTime  @map("session_date")
-  sessionName          String    @map("session_name") @db.VarChar(255)
-  sessionType          String    @map("session_type") @db.VarChar(255) // e.g. pre, s1, s2, s3, s4, s_extra, clinical_followup, data_collection_followup
-  schoolId             String    @map("school_id") @db.VarChar(255)
-  school               School    @relation(fields: [schoolId], references: [id])
-  leaderId             String    @map("leader_id") @db.VarChar(255)
-  leader               Fellow    @relation(fields: [leaderId], references: [id])
-  yearOfImplementation Int       @map("year_of_implementation")
+  id                        String                     @id @db.VarChar(255)
+  createdAt                 DateTime                   @default(now()) @map("created_at")
+  updatedAt                 DateTime                   @updatedAt @map("updated_at")
+  archivedAt                DateTime?                  @map("archived_at")
+  sessionDate               DateTime                   @map("session_date")
+  sessionName               String                     @map("session_name") @db.VarChar(255)
+  sessionType               String                     @map("session_type") @db.VarChar(255) // e.g. s0, s1, s2, s3, s4, fu1, fu2, ..., fu8
+  schoolId                  String                     @map("school_id") @db.VarChar(255)
+  school                    School                     @relation(fields: [schoolId], references: [id])
+  occurred                  Boolean
+  yearOfImplementation      Int                        @map("year_of_implementation")
+  interventionGroupSessions InterventionGroupSession[]
 
+  @@unique([sessionType, schoolId], name: "findInterventionBySchoolAndSessionType")
   @@map("intervention_sessions")
+}
+
+/// Intervention group sessions are group sessions where the Shamiri Intervention is delivered to high school students by run by fellows (a group leader)
+model InterventionGroupSession {
+  id                    String              @id @db.VarChar(255)
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+  archivedAt            DateTime?           @map("archived_at")
+  leaderId              String?             @map("leader_id") @db.VarChar(255)
+  leader                Fellow?             @relation(fields: [leaderId], references: [id])
+  interventionSessionId String              @db.VarChar(255)
+  interventionSesssion  InterventionSession @relation(fields: [interventionSessionId], references: [id])
+
+  @@map("intervention_group_sessions")
 }
