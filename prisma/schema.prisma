@@ -228,7 +228,7 @@ model Student {
   archivedAt           DateTime?    @map("archived_at")
   studentName          String?      @map("student_name") @db.VarChar(255)
   visibleId            String       @unique @map("visible_id") @db.VarChar(100)
-  fellowId             String?      @map("fellow_id") @db.VarChar(255)
+  fellowId             String?      @map("fellow_id") @db.VarChar(255) // TODO: we may need to remove this, intervention_group_sessions.leader_id is more reliable
   fellow               Fellow?      @relation(fields: [fellowId], references: [id])
   supervisorId         String?      @map("supervisor_id") @db.VarChar(255)
   supervisor           Supervisor?  @relation(fields: [supervisorId], references: [id])
@@ -391,6 +391,7 @@ model School {
   longitude                   Float?                @map("longitude")
   latitude                    Float?                @map("latitude")
   droppedOut                  Boolean?              @map("dropped_out")
+  dropoutReason               String?               @map("dropout_reason")
   preSessionDate              DateTime?             @map("pre_session_date")
   session1Date                DateTime?             @map("session_1_date")
   session2Date                DateTime?             @map("session_2_date")
