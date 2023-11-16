@@ -656,3 +656,29 @@ export async function toggleInterventionOccurrence(data: OccurrenceData) {
 export async function revalidateFromClient(path: string) {
   revalidatePath(path);
 }
+
+export async function dropoutSchoolWithReason(
+  schoolVisibleId: string,
+  dropoutReason: string,
+) {
+  try {
+    const school = await db.school.update({
+      where: { visibleId: schoolVisibleId },
+      data: {
+        droppedOut: true,
+        dropoutReason: dropoutReason,
+      },
+    });
+
+    return { school };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
