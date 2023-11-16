@@ -5,7 +5,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { dropoutStudentWithReason } from "#/app/actions";
+import { dropoutSchoolWithReason, dropoutStudentWithReason, revalidateFromClient } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
     Dialog,
@@ -17,11 +17,12 @@ import { Form, FormField } from "#/components/ui/form";
 import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
 
 import { cn } from "#/lib/utils";
 import { set } from "date-fns";
 import { Icons } from "#/components/icons";
+import { useToast } from "#/components/ui/use-toast";
+import { School } from "@prisma/client";
 
 
 const FormSchema = z.object({
@@ -35,7 +36,7 @@ export function SchoolDropoutDialog({
     school,
     children,
 }: {
-    school: any; // todo: add school type
+    school: School;
     children: React.ReactNode;
 }) {
 
@@ -43,18 +44,29 @@ export function SchoolDropoutDialog({
     const [reason, setReason] = React.useState("");
     const [otherOption, setOtherOption] = React.useState(false);
 
+    const { toast } = useToast();
+
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
     });
 
     async function onSubmit(data: z.infer<typeof FormSchema>) {
-        // TODO: call server action to drop out school
+        console.log("onSubmit", reason);
+        const response = await dropoutSchoolWithReason(school.visibleId, reason);
+        if (response.school) {
+            toast({
+                variant: "destructive",
+                title: "School has been dropped out",
+            });
+            await revalidateFromClient('/profile/myschool')
+            setDialogOpen(false);
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Something went wrong",
+            });
 
-        toast({
-            variant: "destructive",
-            title: "School has been dropped out",
-        });
-
+        }
     }
 
     return (
@@ -63,9 +75,21 @@ export function SchoolDropoutDialog({
             <DialogContent className="gap-0 p-0">
                 <Form {...form}>
                     <form
-                        onSubmit={form.handleSubmit(onSubmit)}
+                        onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                            console.error({ errors });
+                        })}
                         className="overflow-hidden text-ellipsis"
                     >
+
+
+                        <FormField
+                            control={form.control}
+                            name="reason"
+                            defaultValue={reason}
+                            render={({ field }) => (
+                                <input type="hidden" name="reason" value={field.value} />
+                            )}
+                        />
 
                         <Separator />
 
@@ -98,7 +122,9 @@ export function SchoolDropoutDialog({
 
                         {otherOption && <div className="my-6 space-y-6">
                             <div className="px-6">
-                                <button className="flex gap-0.5 items-center text-sm font-semibold text-brand" onClick={() => setOtherOption(false)}>
+                                <button className="flex gap-0.5 items-center text-sm font-semibold text-brand" onClick={() => {
+                                    setOtherOption(false)
+                                }}>
                                     <Icons.chevronLeft className="h-4" strokeWidth={2.5} />
                                     <span>Go back</span>
                                 </button>
@@ -110,8 +136,8 @@ export function SchoolDropoutDialog({
                                             <Textarea
                                                 id="reason"
                                                 name="reason"
-                                                onChange={field.onChange}
-                                                defaultValue={field.value}
+                                                onChange={(event) => setReason(event.target.value)}
+                                                defaultValue={reason}
                                                 placeholder="Tell us why, write here..."
                                                 className="mt-1.5 resize-none bg-card"
                                             />
@@ -122,7 +148,7 @@ export function SchoolDropoutDialog({
                         </div>}
                         <div className="flex justify-end px-6 pb-6">
                             <Button variant="destructive" type="submit" className="w-full">
-                                Drop out {school.name}
+                                Drop out {school.schoolName}
                             </Button>
                         </div>
                     </form>
@@ -136,10 +162,11 @@ function DropoutReasonButton({ label, active, onClick }: { label: string; active
     return (
         <div>
             <Button
-                className={cn("min-w-[250px] my-1 bg-[#ededed] text-brand font-semibold justify-start rounded-sm ", {
+                className={cn("min-w-[220px] my-1 bg-[#ededed] text-brand font-semibold justify-start rounded-sm ", {
                     "bg-brand text-[#ededed]": active,
                 })}
                 variant="base"
+                type="button"
                 onClick={onClick}
             >
                 {label}
