@@ -137,6 +137,7 @@ export default async function SupervisorProfile() {
             <ProfileHeader fellowsCount={fellowsCount} schoolCount={schoolCount} supervisorName={supervisorName} studentCount={studentCount} />
             <MySchools />
             <MyFellows />
+            {/* <Expenses /> */}
         </main>
     )
 }
@@ -386,4 +387,40 @@ function MyFellowCard({
 
         </Card>
     );
+}
+
+
+function Expenses() {
+    return (
+        <>
+            <div className="grid grid-cols-1 gap-4 sm:gap-6  sm:items-center">
+                <h3 className='text-base font-semibold text-brand xl:text-2xl mt-4'>
+                    Expense
+                </h3>
+                <Card
+                    className={cn("mb-4 flex flex-col gap-5 p-5 pr-3.5 bg-white ")}
+                >
+                    <div className="flex flex-col">
+                        <div className="">
+                            <h3 className='text-sm font-normal text-muted-foreground'>
+                                Previous Requests History
+                            </h3>
+                            <Separator className="w-full" />
+                            <ExpenseCard />
+                        </div>
+                        <Button className="w-full mt-4 bg-shamiri-blue hover:bg-brand">Request Refund</Button>
+
+                    </div>
+                </Card>
+            </div>
+        </>
+    )
+}
+
+function ExpenseCard() {
+    return (
+        <div className=''>
+
+        </div>
+    )
 }
