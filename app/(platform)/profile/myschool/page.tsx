@@ -8,7 +8,7 @@ export default async function MySchoolPage() {
 
     if (assignedSchool?.droppedOut) {
         return (
-            <div>{assignedSchool?.schoolName} has dropped out. {assignedSchool.dropoutReason}</div>
+            <div><strong>{assignedSchool?.schoolName}</strong> has dropped out. <strong>{assignedSchool.dropoutReason}</strong></div>
         )
     }
 
