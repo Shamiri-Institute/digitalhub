@@ -5,7 +5,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { dropoutStudentWithReason } from "#/app/actions";
+import { dropoutSchoolWithReason, dropoutStudentWithReason, revalidateFromClient } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
     Dialog,
@@ -17,9 +17,12 @@ import { Form, FormField } from "#/components/ui/form";
 import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
 
 import { cn } from "#/lib/utils";
+import { set } from "date-fns";
+import { Icons } from "#/components/icons";
+import { useToast } from "#/components/ui/use-toast";
+import { School } from "@prisma/client";
 
 
 const FormSchema = z.object({
@@ -29,97 +32,41 @@ const FormSchema = z.object({
 });
 
 
-const initialDropoutState = {
-    reason: "Lack of commitment",
-    dropoutReason: "",
-}
-
-
-// TODO: FIX THE TYPES
-const dropOutReducer = (state: any, action: any) => {
-    if (action.type === "Lack of commitment") {
-        return {
-            ...state,
-            reason: "Lack of commitment",
-        }
-    }
-    if (action.type === "Timeline conflict") {
-        return {
-            ...state,
-            reason: "Timeline conflict",
-        }
-    }
-    if (action.type === "Poor communication") {
-        return {
-            ...state,
-            reason: "Poor communication",
-        }
-    }
-    if (action.type === "Don't fully understand the program") {
-        return {
-            ...state,
-            reason: "Don't fully understand the program",
-        }
-    }
-    if (action.type === "Other") {
-        return {
-            ...state,
-            reason: "Other",
-        }
-    }
-    // if(action.type === "dropoutReason") {
-    //     return {
-    //         ...state,
-    //         dropoutReason: action.payload,
-    //     }
-    // }
-    return state
-}
-
 export function SchoolDropoutDialog({
     school,
     children,
 }: {
-    school: any; // todo: add school type
+    school: School;
     children: React.ReactNode;
 }) {
 
     const [dialogOpen, setDialogOpen] = React.useState(false);
-    const [dropOutState, dispatch] = React.useReducer(dropOutReducer, initialDropoutState)
+    const [reason, setReason] = React.useState("");
+    const [otherOption, setOtherOption] = React.useState(false);
+
+    const { toast } = useToast();
 
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
     });
 
     async function onSubmit(data: z.infer<typeof FormSchema>) {
-        // const response = await dropoutStudentWithReason(
-        //   student.visibleId,
-        //   student.school.visibleId,
-        //   student.fellow.visibleId,
-        //   data.reason,
-        // );
-        // if (response?.error) {
-        //   toast({
-        //     variant: "destructive",
-        //     title: response?.error,
-        //   });
-        //   return;
-        // }
+        console.log("onSubmit", reason);
+        const response = await dropoutSchoolWithReason(school.visibleId, reason);
+        if (response.school) {
+            toast({
+                variant: "destructive",
+                title: "School has been dropped out",
+            });
+            await revalidateFromClient('/profile/myschool')
+            setDialogOpen(false);
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Something went wrong",
+            });
 
-        // if (response) {
-        //   toast({
-        //     title: `Dropped out ${student.studentName}`,
-        //   });
-
-        //   setDialogOpen(false);
-
-        //   form.reset();
-        // } else {
-        toast({
-            variant: "destructive",
-            title: "Something went wrong",
-        });
-        // }
+        }
     }
 
     return (
@@ -128,17 +75,22 @@ export function SchoolDropoutDialog({
             <DialogContent className="gap-0 p-0">
                 <Form {...form}>
                     <form
-                        onSubmit={form.handleSubmit(onSubmit)}
+                        onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                            console.error({ errors });
+                        })}
                         className="overflow-hidden text-ellipsis"
                     >
-                        <DialogHeader className="space-y-0 px-6 py-4">
-                            <div className="flex items-center gap-2">
-                                <span className="text-base font-medium">
-                                    School Dropped out?
-                                    {/* Drop out {school.name} */}
-                                </span>
-                            </div>
-                        </DialogHeader>
+
+
+                        <FormField
+                            control={form.control}
+                            name="reason"
+                            defaultValue={reason}
+                            render={({ field }) => (
+                                <input type="hidden" name="reason" value={field.value} />
+                            )}
+                        />
+
                         <Separator />
 
                         <div className="my-6 space-y-6">
@@ -146,63 +98,46 @@ export function SchoolDropoutDialog({
                                 {/* clickable options such as lack of 'timeline conflict', 'lack of commitment' with a grayish background */}
                                 <h3 className="text-lg font-bold text-brand mb-2">Tell us why</h3>
 
+                                {!otherOption &&
+                                    <>
 
-                                <Button
-                                    className={cn("w-full my-1 bg-muted", {
-                                        "bg-muted-foreground hover:bg-muted-foreground": dropOutState.reason === "Lack of commitment",
-                                    })}
-                                    variant="outline"
-                                    onClick={() => dispatch({ type: "Lack of commitment" })}
-                                >
-                                    Lack of commitment
-                                </Button>
-                                <Button
-                                    className={cn("w-full my-1 bg-muted hover:bg-muted", {
-                                        "bg-muted-foreground hover:bg-muted-foreground": dropOutState.reason === "Timeline conflict",
-                                    })}
-                                    variant="outline"
-                                    onClick={() => dispatch({ type: "Timeline conflict" })}
-                                >
-                                    Timeline conflict
-                                </Button>
-                                <Button
-                                    className={cn("w-full my-1 bg-muted ", {
-                                        "bg-muted-foreground hover:bg-muted-foreground": dropOutState.reason === "Poor communication",
-                                    })}
-                                    variant="outline"
-                                    onClick={() => dispatch({ type: "Poor communication" })}
-                                >
-                                    Poor communication
-                                </Button>
-                                <Button
-                                    className={cn("w-full my-1 bg-muted ", {
-                                        "bg-muted-foreground hover:bg-muted-foreground": dropOutState.reason === "Don't fully understand the program",
-                                    })}
-                                    variant="outline"
-                                    onClick={() => dispatch({ type: "Don't fully understand the program" })}
-                                >
-                                    Don't fully understand the program
-                                </Button>
+                                        <DropoutReasonButton label="Lack of commitment" active={reason === 'Lack of commitment'} onClick={() => setReason("Lack of commitment")} />
+
+                                        <DropoutReasonButton label="Timeline conflict" active={reason === 'Timeline conflict'} onClick={() => setReason("Timeline conflict")} />
+
+                                        <DropoutReasonButton label="Poor communication" active={reason === 'Poor communication'} onClick={() => setReason("Poor communication")} />
+
+                                        <DropoutReasonButton label="Don't fully understand the program" active={reason === "Don't fully understand the program"} onClick={() => setReason("Don't fully understand the program")} />
+
+                                        <DropoutReasonButton label="Other" active={false} onClick={() => {
+                                            setReason("")
+                                            setOtherOption(true)
+                                        }} />
+                                    </>
+                                }
 
                             </div>
                         </div>
 
 
-                        <div className="my-6 space-y-6">
+                        {otherOption && <div className="my-6 space-y-6">
                             <div className="px-6">
+                                <button className="flex gap-0.5 items-center text-sm font-semibold text-brand" onClick={() => {
+                                    setOtherOption(false)
+                                }}>
+                                    <Icons.chevronLeft className="h-4" strokeWidth={2.5} />
+                                    <span>Go back</span>
+                                </button>
                                 <FormField
                                     control={form.control}
                                     name="reason"
                                     render={({ field }) => (
                                         <div className="mt-3 grid w-full gap-1.5">
-                                            <Label htmlFor="emails">Tell us why</Label>
-
-
                                             <Textarea
                                                 id="reason"
                                                 name="reason"
-                                                onChange={field.onChange}
-                                                defaultValue={field.value}
+                                                onChange={(event) => setReason(event.target.value)}
+                                                defaultValue={reason}
                                                 placeholder="Tell us why, write here..."
                                                 className="mt-1.5 resize-none bg-card"
                                             />
@@ -210,15 +145,32 @@ export function SchoolDropoutDialog({
                                     )}
                                 />
                             </div>
-                        </div>
+                        </div>}
                         <div className="flex justify-end px-6 pb-6">
                             <Button variant="destructive" type="submit" className="w-full">
-                                Drop out {school.name}
+                                Drop out {school.schoolName}
                             </Button>
                         </div>
                     </form>
                 </Form>
             </DialogContent>
-        </Dialog>
+        </Dialog >
     );
+}
+
+function DropoutReasonButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+    return (
+        <div>
+            <Button
+                className={cn("min-w-[220px] my-1 bg-[#ededed] text-brand font-semibold justify-start rounded-sm ", {
+                    "bg-brand text-[#ededed]": active,
+                })}
+                variant="base"
+                type="button"
+                onClick={onClick}
+            >
+                {label}
+            </Button>
+        </div>
+    )
 }
