@@ -21,7 +21,25 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
-First, run the development server:
+First, set up your `.env.development` environment: Copy `.env.example` over and check with the team
+on what to supply for the various Digital Hub-related credentials.
+- for [NextAuth.js login via Google](https://next-auth.js.org/providers/google), you may wish to create your own Client ID for local dev. (If you used another dev's creds, and they regenerated the client later, you'd get an `Error 401: deleted_client`.) Do so in your GCloud project's [credentials page](https://console.developers.google.com/apis/credentials), configuring:
+  - authorized origins: http://localhost:3000
+  - authorized redirect URI: http://localhost:3000/api/auth/callback/google
+  Then copy the `Client ID` & `Client secret` to the GOOGLE* env vars.
+
+Then setup the db (needs docker compose installed):
+```
+npm run db:dev:up
+# OR run it in detached mode:
+# docker-compose up -d db
+
+npm run db:dev:migrate
+npm run db:dev:seed     # populate with some test data
+```
+Test data comes from csv's pulled from Airtable, stored in [prisma/scripts/airtable](prisma/scripts/airtable). See [seed.ts](prisma/scripts/seed.ts) for the loading code.
+
+Then run the development server:
 
 ```bash
 npm run dev
