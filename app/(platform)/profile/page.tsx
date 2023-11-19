@@ -1,18 +1,10 @@
 import * as React from 'react'
 import Link from "next/link";
-
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "#/components/ui/accordion";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { cn, getInitials } from "#/lib/utils";
 import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
-import { SchoolCard } from "../schools/school-card";
 import { currentHub, currentSupervisor } from '#/app/auth';
 import { Icons } from '#/components/icons'
 import { db } from '#/lib/db';
@@ -56,30 +48,7 @@ const fellowDetails = [{
     age: 25,
     sessions_attended: 12
 },
-{
-    id: "FE_006",
 
-    name: "Marcus Ikenye",
-    gender: "Male",
-    cell_number: "0790-000-100",
-    mpesa_number: "0792000000",
-    hub: "Nairobi",
-    county: "Nairobi",
-    age: 20,
-    sessions_attended: 10
-},
-{
-    id: "FE_007",
-
-    name: "Flavour Otieno",
-    gender: "Male",
-    cell_number: "0790-000-100",
-    mpesa_number: "0792000000",
-    hub: "Nairobi",
-    county: "Nairobi",
-    age: 18,
-    sessions_attended: 18
-},
 ]
 
 
@@ -137,7 +106,7 @@ export default async function SupervisorProfile() {
             <ProfileHeader fellowsCount={fellowsCount} schoolCount={schoolCount} supervisorName={supervisorName} studentCount={studentCount} />
             <MySchools />
             <MyFellows />
-            {/* <Expenses /> */}
+            <Expenses />
         </main>
     )
 }
@@ -152,7 +121,9 @@ function IntroHeader() {
                     Profile
                 </h3>
             </div>
-            <Icons.search className="h-5 w-5 align-baseline text-brand" />
+            <Link href={'/profile/edit-profile'}>
+                <Icons.edit className="h-5 w-5 align-baseline text-brand" />
+            </Link>
         </div>
     )
 }
@@ -390,12 +361,20 @@ function MyFellowCard({
 }
 
 
+const sample_expenses = [
+    // todo: is date of type date or string?
+    { id: 1, name: "Material", amount: "500", date: "March 12, 2021" },
+    { id: 2, name: "Self", amount: "374", date: "April 10, 2021" },
+    { id: 3, name: "Reason", amount: "128", date: "May 08, 2021" },
+]
+
+
 function Expenses() {
     return (
         <>
             <div className="grid grid-cols-1 gap-4 sm:gap-6  sm:items-center">
-                <h3 className='text-base font-semibold text-brand xl:text-2xl mt-4'>
-                    Expense
+                <h3 className='text-lg font-semibold text-brand mt-4'>
+                    Expenses
                 </h3>
                 <Card
                     className={cn("mb-4 flex flex-col gap-5 p-5 pr-3.5 bg-white ")}
@@ -406,9 +385,19 @@ function Expenses() {
                                 Previous Requests History
                             </h3>
                             <Separator className="w-full" />
-                            <ExpenseCard />
+
+                            {
+                                sample_expenses.map((expense) => (
+
+                                    <ExpenseCard key={expense.id} name={expense.name} amount={expense.amount} date={expense.date} />
+                                ))
+                            }
                         </div>
-                        <Button className="w-full mt-4 bg-shamiri-blue hover:bg-brand">Request Refund</Button>
+                        <Link href={`/profile/refund`}>
+                            <Button className="w-full mt-4 bg-shamiri-blue hover:bg-brand" >
+                                Request Refund
+                            </Button>
+                        </Link>
 
                     </div>
                 </Card>
@@ -417,10 +406,19 @@ function Expenses() {
     )
 }
 
-function ExpenseCard() {
+function ExpenseCard({ name, amount, date }: { name: string, amount: string, date: string }) {
     return (
-        <div className=''>
-
+        <div className='flex items-center my-2'>
+            <div className='h-2 w-2 bg-brand rounded-full mr-2' />
+            <div className='flex flex-col flex-1 mr-4 '>
+                <div className='flex justify-between '>
+                    <p className='text-base font-normal text-brand'>{name}</p>
+                    <p className='text-sm font-semibold text-muted-foreground'>Ksh. {amount}</p>
+                </div>
+                <div>
+                    <p className='text-xs font-normal text-muted-foreground'> {date}</p>
+                </div>
+            </div>
         </div>
     )
 }
