@@ -192,7 +192,7 @@ const navigationItems: NavigationItem[] = [
     title: "Profile",
     Icon: Icons.user,
     roles: SupervisorAndAboveRoles,
-  }
+  },
 ];
 
 function AppNavigation() {
