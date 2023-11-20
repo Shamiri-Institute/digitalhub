@@ -496,3 +496,13 @@ model InterventionGroupSession {
 
   @@map("intervention_group_sessions")
 }
+
+model ReimbursementRequest {
+  id         String    @id @db.VarChar(255)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  archivedAt DateTime? @map("archived_at")
+  details    Json // e.g. { "subtype": "materials",  }
+
+  @@map("reimbursement_requests")
+}
