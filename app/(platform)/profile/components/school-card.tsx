@@ -11,14 +11,9 @@ import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 
-import { Icons } from '#/components/icons'
-import { db } from '#/lib/db';
-import React from 'react'
-
+import { Icons } from "#/components/icons";
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
-
-
 
 export function SchoolCardProfile({
   school,
@@ -106,7 +101,7 @@ export function SchoolCardProfile({
           </Link>
           {assigned && (
             <Link href={`/profile/myschool`}>
-              <button className="mt-1" >
+              <button className="mt-1">
                 <Icons.edit className="text-shamiri-light-blue" />
               </button>
             </Link>

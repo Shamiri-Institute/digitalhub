@@ -1,29 +1,23 @@
-"use client"
-import React from 'react'
-import Link from "next/link"
-import { Icons } from '#/components/icons'
-import { RefundForm } from './refund-form'
+"use client";
+import { Icons } from "#/components/icons";
+import Link from "next/link";
+import { RefundForm } from "./refund-form";
 
 export default function RefundPage() {
-    return (
-        <>
-            <PageHeader />
-            <RefundForm />
-        </>
-    )
+  return (
+    <>
+      <PageHeader />
+      <RefundForm />
+    </>
+  );
 }
 
 function PageHeader() {
-    return (
-        <div className='flex justify-end mt-2'>
-            <Link href={'/profile'} >
-                <Icons.xIcon className='w-6 h-6' />
-            </Link>
-        </div>
-    )
+  return (
+    <div className="mt-2 flex justify-end">
+      <Link href={"/profile"}>
+        <Icons.xIcon className="h-6 w-6" />
+      </Link>
+    </div>
+  );
 }
-
-
-
-
-
