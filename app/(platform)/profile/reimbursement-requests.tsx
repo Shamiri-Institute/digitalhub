@@ -35,10 +35,10 @@ export function ReimbursementRequests({ requests }: { requests: Prisma.Reimburse
                             ))}
                         </div>
 
-                        <button className="mt-4 w-full text-xs text-shamiri-blue" onClick={() => setShowMore((showMore) => !showMore)}>
+                        {rows.length > 0 && <button className="mt-4 w-full text-xs text-shamiri-blue" onClick={() => setShowMore((showMore) => !showMore)}>
                             {showMore ? 'Show Less' : 'Show More'}
                         </button>
-
+                        }
                         <Link href={`/profile/refund`}>
                             <Button className="mt-4 w-full bg-shamiri-blue hover:bg-brand">
                                 Request Refund
