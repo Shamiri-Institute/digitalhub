@@ -1,8 +1,8 @@
 import sharp from "sharp";
 
 import { DatabaseCommand } from "#/commands";
-import { putObject } from "#/lib/s3";
 import { objectId } from "#/lib/crypto";
+import { putObject } from "#/lib/s3";
 import { FileModel } from "#/models/file";
 
 interface UploadImageInput {

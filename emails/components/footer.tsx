@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Hr, Tailwind, Text } from "@react-email/components";
 
 export default function Footer({ email }: { email: string }) {

@@ -4,18 +4,18 @@ import { parseEuropeanDate } from "#/lib/utils";
 import { parseCsvFile } from "#/prisma/scripts/utils";
 
 async function seedDatabase() {
-  await truncateTables();
-  await createSystemUser(db);
-  await createImplementers(db);
-  // await createPermissions(db);
-  // await createRoles(db);
-  // await createUsers(db);
-  await createHubs(db);
-  await createSchools(db);
-  await createSupervisors(db);
-  await createFellows(db);
-  await createFellowAttendances(db);
-  await createStudents(db);
+  // await truncateTables();
+  // await createSystemUser(db);
+  // await createImplementers(db);
+  // // await createPermissions(db);
+  // // await createRoles(db);
+  // // await createUsers(db);
+  // await createHubs(db);
+  // await createSchools(db);
+  // await createSupervisors(db);
+  // await createFellows(db);
+  // await createFellowAttendances(db);
+  // await createStudents(db);
   await createFixtures(db);
 }
 
@@ -31,7 +31,7 @@ seedDatabase()
 
 async function truncateTables() {
   await db.$executeRaw`
-    TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, intervention_sessions,intervention_group_sessions, fellow_attendances, supervisors, schools, hub_coordinators;
+    TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, intervention_sessions,intervention_group_sessions, fellow_attendances, supervisors, schools, hub_coordinators, reimbursement_requests;
     `;
 }
 
@@ -420,19 +420,75 @@ async function createStudents(db: Database) {
 }
 
 async function createFixtures(db: Database) {
-  console.log("creating fixtures");
+  // console.log("creating fixtures");
   let stDominic = await db.school.findUnique({
     where: {
       visibleId: "ANS23_School_3",
     },
+    include: {
+      hub: true,
+    },
   });
 
-  await db.supervisor.update({
+  const supervisorMichelle = await db.supervisor.update({
     where: {
       visibleId: "SPV23_S_25",
     },
     data: {
       assignedSchoolId: stDominic?.id,
     },
+  });
+
+  const data = [
+    {
+      subtype: "material",
+      session: "s02",
+      destination: "school",
+      amount: 500,
+      date: new Date("March 12, 2023"),
+    },
+    {
+      subtype: "self",
+      session: "fu02",
+      destination: "hub",
+      amount: 374,
+      date: new Date("April 10, 2023"),
+    },
+    {
+      subtype: "self",
+      session: "dcfu02",
+      destination: "main_office",
+      amount: 128,
+      date: new Date("May 08, 2023"),
+    },
+    {
+      subtype: "self",
+      session: "cfu01",
+      destination: "supervision_location",
+      amount: 128,
+      date: new Date("May 08, 2023"),
+    },
+  ].map((reimbursement) => ({
+    id: objectId("reim"),
+    supervisorId: supervisorMichelle.id,
+    hubId: stDominic!.hubId!,
+    hubCoordinatorId: stDominic!.hub!.coordinatorId!,
+    incurredAt: reimbursement.date,
+    amount: reimbursement.amount,
+    kind: "transport",
+    mpesaName:
+      supervisorMichelle!.mpesaName ||
+      supervisorMichelle!.supervisorName ||
+      "N/A",
+    mpesaNumber: supervisorMichelle!.mpesaNumber || "N/A",
+    details: {
+      subtype: reimbursement.subtype,
+      session: reimbursement.session,
+      receiptUrl: "https://example.com/uber.pdf",
+    },
+  }));
+
+  await db.reimbursementRequest.createMany({
+    data,
   });
 }
