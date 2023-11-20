@@ -1,4 +1,6 @@
 "use client";
+
+import { revalidateFromClient, submitTransportReimbursementRequest } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -18,6 +20,7 @@ import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
+import { redirect, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -51,7 +54,7 @@ export const FormSchema = z.object({
   }),
 });
 
-export function RefundForm() {
+export function RefundForm({ supervisorId, hubId }: { supervisorId: string; hubId: string; }) {
   const [transportSubtype, setTransportSubtype] = useState("");
   const { toast } = useToast();
 
@@ -69,18 +72,25 @@ export function RefundForm() {
     },
   });
 
+  const router = useRouter();
+
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    // TODO : BACKEND CALL
+    await submitTransportReimbursementRequest({
+      supervisorId,
+      hubId,
+      ...data
+    })
+
     toast({
       variant: "default",
       title: "Request for refund has been sent",
     });
-    //   form.reset();
-    // if error
-    // toast({
-    //     variant: "destructive",
-    //     title: "Something went wrong",
-    // });
+
+    await revalidateFromClient('/profile/refund')
+
+    form.reset();
+
+    router.push('/profile')
   }
 
   return (
@@ -267,6 +277,7 @@ export function RefundForm() {
                     <Input
                       id="amount"
                       className="mt-1.5 resize-none bg-card"
+                      type="number"
                       placeholder="Type total amount here"
                       data-1p-ignore="true"
                       {...field}
