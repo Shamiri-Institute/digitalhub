@@ -11,7 +11,7 @@ import { FormField } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { Card } from "#/components/ui/card";
 
-export const FormSchema = z.object({
+const FormSchema = z.object({
     personalEmail: z.string({
         required_error: "Please enter the promise number of students.",
     }),
