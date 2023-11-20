@@ -1,13 +1,23 @@
-"use client";
-import { Icons } from "#/components/icons";
 import Link from "next/link";
+
+import { Icons } from "#/components/icons";
+import { currentSupervisor } from "#/app/auth";
 import { RefundForm } from "./refund-form";
 
-export default function RefundPage() {
+export default async function RefundPage() {
+  const supervisor = await currentSupervisor();
+
+  if (!supervisor.assignedSchool) {
+    throw new Error("Supervisor has no assigned school");
+  }
+  if (!supervisor.assignedSchool.hubId) {
+    throw new Error("Assigned school has no hub");
+  }
+
   return (
     <>
       <PageHeader />
-      <RefundForm />
+      <RefundForm supervisorId={supervisor.id} hubId={supervisor.assignedSchool.hubId} />
     </>
   );
 }
