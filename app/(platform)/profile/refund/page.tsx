@@ -1,29 +1,33 @@
-"use client"
-import React from 'react'
-import Link from "next/link"
-import { Icons } from '#/components/icons'
-import { RefundForm } from './refund-form'
+import Link from "next/link";
 
-export default function RefundPage() {
-    return (
-        <>
-            <PageHeader />
-            <RefundForm />
-        </>
-    )
+import { Icons } from "#/components/icons";
+import { currentSupervisor } from "#/app/auth";
+import { RefundForm } from "./refund-form";
+
+export default async function RefundPage() {
+  const supervisor = await currentSupervisor();
+
+  if (!supervisor.assignedSchool) {
+    throw new Error("Supervisor has no assigned school");
+  }
+  if (!supervisor.assignedSchool.hubId) {
+    throw new Error("Assigned school has no hub");
+  }
+
+  return (
+    <>
+      <PageHeader />
+      <RefundForm supervisorId={supervisor.id} hubId={supervisor.assignedSchool.hubId} />
+    </>
+  );
 }
 
 function PageHeader() {
-    return (
-        <div className='flex justify-end mt-2'>
-            <Link href={'/profile'} >
-                <Icons.xIcon className='w-6 h-6' />
-            </Link>
-        </div>
-    )
+  return (
+    <div className="mt-2 flex justify-end">
+      <Link href={"/profile"}>
+        <Icons.xIcon className="h-6 w-6" />
+      </Link>
+    </div>
+  );
 }
-
-
-
-
-
