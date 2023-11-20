@@ -1,9 +1,9 @@
 import {
-  S3Client,
   GetObjectCommand,
   GetObjectCommandInput,
   PutObjectCommand,
   PutObjectCommandInput,
+  S3Client,
 } from "@aws-sdk/client-s3";
 
 import { env } from "#/env";
@@ -20,7 +20,7 @@ export async function getObject(input: Pick<GetObjectCommandInput, "Key">) {
 }
 
 export async function putObject(
-  input: Pick<PutObjectCommandInput, "Body" | "Key">
+  input: Pick<PutObjectCommandInput, "Body" | "Key">,
 ) {
   const command = new PutObjectCommand({
     ...input,
