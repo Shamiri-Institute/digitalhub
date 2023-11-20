@@ -35,7 +35,7 @@ export function ReimbursementRequests({ requests }: { requests: Prisma.Reimburse
                             ))}
                         </div>
 
-                        {rows.length > 3 && <button className="mt-4 w-full text-xs text-shamiri-blue" onClick={() => setShowMore((showMore) => !showMore)}>
+                        {requests.length > 3 && <button className="mt-4 w-full text-xs text-shamiri-blue" onClick={() => setShowMore((showMore) => !showMore)}>
                             {showMore ? 'Show Less' : 'Show More'}
                         </button>
                         }
