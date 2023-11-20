@@ -15,17 +15,17 @@ import {
   LucideProps,
   Mail,
   Moon,
+  MoreHorizontal,
   Network,
   PieChart,
   PlusCircle,
   Search,
   Settings,
   Smile,
+  Star,
   SunMedium,
   Users2,
-  MoreHorizontal,
   XIcon,
-  Star,
   // StarIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -678,11 +678,22 @@ export const Icons = {
     </svg>
   ),
   star: ({ className, ...props }: LucideProps) => (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
       {...props}
       className={className}
     >
-      <path fill="currentColor" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" d="M8.99935 0.666992L10.9666 6.72152H17.3327L12.1824 10.4634L14.1496 16.5179L8.99935 12.7761L3.84907 16.5179L5.8163 10.4634L0.666016 6.72152H7.03212L8.99935 0.666992Z" />
+      <path
+        fill="currentColor"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8.99935 0.666992L10.9666 6.72152H17.3327L12.1824 10.4634L14.1496 16.5179L8.99935 12.7761L3.84907 16.5179L5.8163 10.4634L0.666016 6.72152H7.03212L8.99935 0.666992Z"
+      />
     </svg>
-  )
+  ),
 };

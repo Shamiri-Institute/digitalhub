@@ -26,7 +26,7 @@ export class ManageMembersPage extends AppPage {
       | "hub-coordinator"
       | "supervisor"
       | "researcher"
-      | "external"
+      | "external",
   ) {
     await this.page.getByTestId(constants.ADD_MEMBERS_ROLE).click();
     await this.page
