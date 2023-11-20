@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-import { getObject } from "#/lib/s3";
 import { db } from "#/lib/db";
+import { getObject } from "#/lib/s3";
 
 export async function GET(
   request: NextRequest,
@@ -12,7 +12,7 @@ export async function GET(
       fileIdHash: string;
       fileName: string;
     };
-  }
+  },
 ) {
   try {
     const fileId = `file_${params.fileIdHash}`;
