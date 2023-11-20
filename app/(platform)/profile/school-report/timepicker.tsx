@@ -52,7 +52,7 @@ export function Timepicker({
       console.error("Invalid time range");
       return;
     }
-    const startDateTime = parse(startTime, "h:mmaa", new Date());
+    const startDateTime = parse(startTime, "h:mmaa", time);
     const newTime = getTimeFromDate(startDateTime);
     onSelect(newTime);
   };

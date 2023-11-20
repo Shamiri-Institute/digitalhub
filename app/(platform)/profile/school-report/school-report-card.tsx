@@ -147,7 +147,11 @@ export function SchoolReportCard({
               <Timepicker
                 time={data.sessionDate}
                 onSelect={(date) => {
-                  console.log("Picking time", date);
+                  if (date) {
+                    onOccurrenceDateSelect(date);
+                  } else {
+                    console.error("No date to set");
+                  }
                 }}
               />
             </div>
