@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 
-import { getUrl } from "#/tests/pages/helpers";
 import { AppPage } from "#/tests/pages/app-page";
+import { getUrl } from "#/tests/pages/helpers";
 
 export class IndexPage extends AppPage {
   readonly route = getUrl("/");

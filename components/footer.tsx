@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Button } from "#/components/ui/button";
 import { navigation } from "#/components/navigation";
+import { Button } from "#/components/ui/button";
 
 function PageLink({
   label,

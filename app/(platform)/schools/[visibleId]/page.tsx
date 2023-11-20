@@ -244,7 +244,6 @@ function FellowCard({
             fellow={fellow}
             school={school}
           />
-
         ))}
       </div>
 

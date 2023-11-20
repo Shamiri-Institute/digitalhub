@@ -1,19 +1,17 @@
-import * as React from 'react'
-import Link from "next/link";
+import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
+import { currentHub, currentSupervisor } from "#/app/auth";
+import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
+import { db } from "#/lib/db";
 import { cn, getInitials } from "#/lib/utils";
-import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
-import { currentHub, currentSupervisor } from '#/app/auth';
-import { Icons } from '#/components/icons'
-import { db } from '#/lib/db';
-
+import Link from "next/link";
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
 
-
-const fellowDetails = [{
+const fellowDetails = [
+  {
     id: "FE_001",
     name: "Jean Kasudi",
     gender: "Female",
@@ -22,9 +20,9 @@ const fellowDetails = [{
     hub: "Nairobi",
     county: "Nairobi",
     age: 18,
-    sessions_attended: 7
-},
-{
+    sessions_attended: 7,
+  },
+  {
     id: "FE_003",
 
     name: "Faith Mwende",
@@ -34,9 +32,9 @@ const fellowDetails = [{
     hub: "Nairobi",
     county: "Nairobi",
     age: 23,
-    sessions_attended: 16
-},
-{
+    sessions_attended: 16,
+  },
+  {
     id: "FE_005",
 
     name: "Innocent Kilonzo",
@@ -46,379 +44,370 @@ const fellowDetails = [{
     hub: "Nairobi",
     county: "Nairobi",
     age: 25,
-    sessions_attended: 12
-},
-
-]
-
+    sessions_attended: 12,
+  },
+];
 
 export default async function SupervisorProfile() {
-    let supervisor = await currentSupervisor()
+  let supervisor = await currentSupervisor();
 
+  const fellowsCount = (
+    await db.fellowAttendance.groupBy({
+      by: ["fellowId"],
+      where: {
+        supervisorId: supervisor.id,
+        schoolId: supervisor.assignedSchoolId ?? undefined,
+      },
+      _sum: {
+        id: true,
+      },
+    })
+  ).length;
 
-    const fellowsCount = (
-        await db.fellowAttendance.groupBy({
-            by: ["fellowId"],
-            where: {
-                supervisorId: supervisor.id,
-                schoolId: supervisor.assignedSchoolId ?? undefined,
-            },
-            _sum: {
-                id: true,
-            },
-        })
-    ).length;
+  // SELECT COUNT(*) FROM schools WHERE hub_id = 'hub_01hetrj9mhf8kbq9tcm3eyg66v';
 
-    // SELECT COUNT(*) FROM schools WHERE hub_id = 'hub_01hetrj9mhf8kbq9tcm3eyg66v';
+  const schoolCount = await db.school.count({
+    where: {
+      hubId: supervisor.hubId,
+    },
+  });
 
+  // STUDENT COUNT
 
-    const schoolCount = await db.school.count({
-        where: {
-            hubId: supervisor.hubId
-        }
-    }
-    )
+  // SELECT * FROM fellows WHERE supervisor_id = current_supervisor_id INNER JOIN students ON fellows.id = students.fellow_id
 
-    // STUDENT COUNT
+  // SELECT fellows.fellow_name, students.student_name FROM fellows INNER JOIN students ON fellows.id = students.fellow_id WHERE fellows.supervisor_id = 'sup_01hetrjb41f80a5hee3430bh79';
 
-    // SELECT * FROM fellows WHERE supervisor_id = current_supervisor_id INNER JOIN students ON fellows.id = students.fellow_id
+  const studentCount = (
+    await db.fellow.findMany({
+      where: {
+        supervisorId: supervisor.id,
+      },
+      include: {
+        students: true,
+      },
+    })
+  )
+    .map((fellow) => fellow.students.length)
+    .reduce((a, b) => a + b, 0);
+  console.debug({ studentCount });
 
-    // SELECT fellows.fellow_name, students.student_name FROM fellows INNER JOIN students ON fellows.id = students.fellow_id WHERE fellows.supervisor_id = 'sup_01hetrjb41f80a5hee3430bh79';
+  let supervisorName = supervisor.supervisorName ?? "N/A";
 
-    const studentCount = (await db.fellow.findMany({
-        where: {
-            supervisorId: supervisor.id
-        },
-        include: {
-            students: true
-        }
-    })).map(fellow => fellow.students.length).reduce((a, b) => a + b, 0);
-    console.debug({ studentCount })
+  // console.log({ supervisor, fellowsCount, schoolCount })
 
-    let supervisorName = supervisor.supervisorName ?? "N/A"
-
-    // console.log({ supervisor, fellowsCount, schoolCount })
-
-
-    return (
-        <main>
-            <IntroHeader />
-            <ProfileHeader fellowsCount={fellowsCount} schoolCount={schoolCount} supervisorName={supervisorName} studentCount={studentCount} />
-            <MySchools />
-            <MyFellows />
-            <Expenses />
-        </main>
-    )
+  return (
+    <main>
+      <IntroHeader />
+      <ProfileHeader
+        fellowsCount={fellowsCount}
+        schoolCount={schoolCount}
+        supervisorName={supervisorName}
+        studentCount={studentCount}
+      />
+      <MySchools />
+      <MyFellows />
+      <Expenses />
+    </main>
+  );
 }
-
 
 function IntroHeader() {
-    return (
-        <div className='flex justify-between items-center  mt-2'>
-            <div className='flex items-center'>
-                <Icons.user className="h-5 w-5 align-baseline xl:h-7 xl:w-7 text-brand" />
-                <h3 className="text-base font-semibold text-brand xl:text-2xl pl-3">
-                    Profile
-                </h3>
-            </div>
-            <Link href={'/profile/edit-profile'}>
-                <Icons.edit className="h-5 w-5 align-baseline text-brand" />
-            </Link>
-        </div>
-    )
+  return (
+    <div className="mt-2 flex items-center  justify-between">
+      <div className="flex items-center">
+        <Icons.user className="h-5 w-5 align-baseline text-brand xl:h-7 xl:w-7" />
+        <h3 className="pl-3 text-base font-semibold text-brand xl:text-2xl">
+          Profile
+        </h3>
+      </div>
+      <Link href={"/profile/edit-profile"}>
+        <Icons.edit className="h-5 w-5 align-baseline text-brand" />
+      </Link>
+    </div>
+  );
 }
 
-
-function ProfileHeader({ fellowsCount, schoolCount, supervisorName, studentCount }: { fellowsCount: number, schoolCount: number, supervisorName: string, studentCount: number }) {
-    return (
-        <div className='flex flex-col justify-center items-center mt-10 border-b '>
-            <div className='h-32 w-32 bg-gray-400 rounded-full my-4 flex justify-center items-center'>
-                <h3 className="text-4xl text-shamiri-blue font-semibold text-center self-center">
-                    {getInitials(supervisorName)}
-                </h3>
-            </div>
-            <p className='text-base font-semibold text-shamiri-blue-darker xl:text-2xl pl-3'>
-                {supervisorName}
-            </p>
-            <div className='flex my-4'>
-                <div className='pr-4'>
-                    <p className='text-base font-semibold text-shamiri-blue'>{fellowsCount.toString().padStart(2, "0")}</p>
-                    <p className='text-xs text-brand'>Fellows</p>
-                </div>
-                <div className=' border-l border-border/50 pl-4'>
-                    <p className='text-base font-semibold text-shamiri-blue'>{schoolCount.toString().padStart(2, "0")}</p>
-                    <p className='text-xs text-brand'>Schools</p>
-                </div>
-                <div className=' border-l border-border/50 pl-4'>
-                    <p className='text-base font-semibold text-shamiri-blue'>{studentCount.toString().padStart(2, "0")}</p>
-                    <p className='text-xs text-brand'>Students</p>
-                </div>
-            </div>
+function ProfileHeader({
+  fellowsCount,
+  schoolCount,
+  supervisorName,
+  studentCount,
+}: {
+  fellowsCount: number;
+  schoolCount: number;
+  supervisorName: string;
+  studentCount: number;
+}) {
+  return (
+    <div className="mt-10 flex flex-col items-center justify-center border-b ">
+      <div className="my-4 flex h-32 w-32 items-center justify-center rounded-full bg-gray-400">
+        <h3 className="self-center text-center text-4xl font-semibold text-shamiri-blue">
+          {getInitials(supervisorName)}
+        </h3>
+      </div>
+      <p className="pl-3 text-base font-semibold text-shamiri-blue-darker xl:text-2xl">
+        {supervisorName}
+      </p>
+      <div className="my-4 flex">
+        <div className="pr-4">
+          <p className="text-base font-semibold text-shamiri-blue">
+            {fellowsCount.toString().padStart(2, "0")}
+          </p>
+          <p className="text-xs text-brand">Fellows</p>
         </div>
-    )
+        <div className=" border-l border-border/50 pl-4">
+          <p className="text-base font-semibold text-shamiri-blue">
+            {schoolCount.toString().padStart(2, "0")}
+          </p>
+          <p className="text-xs text-brand">Schools</p>
+        </div>
+        <div className=" border-l border-border/50 pl-4">
+          <p className="text-base font-semibold text-shamiri-blue">
+            {studentCount.toString().padStart(2, "0")}
+          </p>
+          <p className="text-xs text-brand">Students</p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 async function MySchools() {
-    const hub = await currentHub();
-    const assignedSchoolId = "ANS23_School_17";
-    const assignedSchool = await db.school.findFirst({
-        where: { visibleId: assignedSchoolId, hubId: hub!.id },
-    });
-    if (!assignedSchool) {
-        throw new Error("Assigned school not found");
-    }
+  const hub = await currentHub();
+  const assignedSchoolId = "ANS23_School_17";
+  const assignedSchool = await db.school.findFirst({
+    where: { visibleId: assignedSchoolId, hubId: hub!.id },
+  });
+  if (!assignedSchool) {
+    throw new Error("Assigned school not found");
+  }
 
-    const otherSchools = await db.school.findMany({
-        where: { visibleId: { not: assignedSchoolId }, hubId: hub!.id },
-    });
+  const otherSchools = await db.school.findMany({
+    where: { visibleId: { not: assignedSchoolId }, hubId: hub!.id },
+  });
 
-    return (
-        <>
-
-            <div className="grid grid-cols-1 gap-4 sm:gap-6  sm:items-center">
-                <h3 className='text-base font-semibold text-brand xl:text-2xl mt-4'>
-                    My School
-                </h3>
-                <SchoolCardProfile
-                    key={assignedSchool.schoolName}
-                    school={assignedSchool}
-                    sessionTypes={sessionTypes}
-                    assigned
-                />
-
-            </div>
-        </>
-    )
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-4 sm:items-center  sm:gap-6">
+        <h3 className="mt-4 text-base font-semibold text-brand xl:text-2xl">
+          My School
+        </h3>
+        <SchoolCardProfile
+          key={assignedSchool.schoolName}
+          school={assignedSchool}
+          sessionTypes={sessionTypes}
+          assigned
+        />
+      </div>
+    </>
+  );
 }
 
 async function MyFellows() {
-    const hub = await currentHub();
-    const assignedSchoolId = "ANS23_School_17";
-    const assignedSchool = await db.school.findFirst({
-        where: { visibleId: assignedSchoolId, hubId: hub!.id },
-    });
-    if (!assignedSchool) {
-        throw new Error("Assigned school not found");
-    }
+  const hub = await currentHub();
+  const assignedSchoolId = "ANS23_School_17";
+  const assignedSchool = await db.school.findFirst({
+    where: { visibleId: assignedSchoolId, hubId: hub!.id },
+  });
+  if (!assignedSchool) {
+    throw new Error("Assigned school not found");
+  }
 
-    return (
-        <>
-            <div className='flex justify-between items-center mt-5'>
-                <h3 className='text-base font-semibold text-brand xl:text-2xl'>
-                    My Fellows
-                </h3>
-                <button>
-                    <Icons.add className='h-6 w-6 align-baseline xl:h-7 xl:w-7 text-brand' />
-                </button>
-            </div>
+  return (
+    <>
+      <div className="mt-5 flex items-center justify-between">
+        <h3 className="text-base font-semibold text-brand xl:text-2xl">
+          My Fellows
+        </h3>
+        <button>
+          <Icons.add className="h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
+        </button>
+      </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2  xl:grid-cols-3 sm:items-center mt-6">
-                {
-                    fellowDetails.map((fellow) => (
-                        <MyFellowCard
-                            key={fellow.name}
-                            fellow={fellow}
-                        />
-                    ))
-                }
-            </div>
-        </>
-    )
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:items-center  sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {fellowDetails.map((fellow) => (
+          <MyFellowCard key={fellow.name} fellow={fellow} />
+        ))}
+      </div>
+    </>
+  );
 }
-
-
-
-
 
 function MyFellowCard({
-    fellow,
-    assigned,
+  fellow,
+  assigned,
 }: {
-    fellow: any;
-    assigned?: boolean;
+  fellow: any;
+  assigned?: boolean;
 }) {
-    return (
-        <Card
-            className={cn("mb-4 flex flex-col gap-5 p-5 pr-3.5", {
-                "bg-white": !assigned,
-                "bg-brand": assigned,
-            })}
-        >
-            <div
-                className={cn(
-                    "flex items-center justify-between gap-4 border-b border-border/50 pb-3 pr-3",
-                    "grid grid-cols-[15fr,10fr]",
-                    {
-                        "border-border/20": assigned,
-                    },
-                )}
-            >
-                <div>
-
-
-                    <h3
-                        className={cn("font-semibold xl:text-xl text-brand")}
-                    >
-                        {fellow.name}
-                    </h3>
-                    <p className="text-xs font-medium text-muted-foreground xl:text-lg">
-                        Shamiri ID: 123456
-
-                    </p>
-                </div>
-                <div
-                    className={cn(
-                        "flex items-start justify-end  pl-4",
-
-
-                    )}
-                >
-                    <Link
-                        href={`#`}
-                        className="flex flex-col gap-[1px]"
-                    >
-
-                        <div>
-                            <Icons.moreHorizontal className="h-5 w-5 text-brand" />
-
-                        </div>
-
-                    </Link>
-
-                </div>
+  return (
+    <Card
+      className={cn("mb-4 flex flex-col gap-5 p-5 pr-3.5", {
+        "bg-white": !assigned,
+        "bg-brand": assigned,
+      })}
+    >
+      <div
+        className={cn(
+          "flex items-center justify-between gap-4 border-b border-border/50 pb-3 pr-3",
+          "grid grid-cols-[15fr,10fr]",
+          {
+            "border-border/20": assigned,
+          },
+        )}
+      >
+        <div>
+          <h3 className={cn("font-semibold text-brand xl:text-xl")}>
+            {fellow.name}
+          </h3>
+          <p className="text-xs font-medium text-muted-foreground xl:text-lg">
+            Shamiri ID: 123456
+          </p>
+        </div>
+        <div className={cn("flex items-start justify-end  pl-4")}>
+          <Link href={`#`} className="flex flex-col gap-[1px]">
+            <div>
+              <Icons.moreHorizontal className="h-5 w-5 text-brand" />
             </div>
+          </Link>
+        </div>
+      </div>
 
-            <div className="flex flex-col ">
-                <div className="flex justify-between">
-
-                    <div className="flex flex-col ">
-
-                        <div className="flex justify-start gap-2">
-                            <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                                Age:
-                            </p>
-                            <p className="text-base font-semibold xl:text-lg text-brand">
-                                {fellow.age}
-                            </p>
-                        </div>
-                        <div className="flex justify-start gap-2">
-                            <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                                Gender:
-                            </p>
-                            <p className="text-base font-semibold xl:text-lg text-brand">
-                                {fellow.gender}
-                            </p>
-                        </div>
-                        <div className="flex justify-start gap-2">
-                            <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                                Contact:
-                            </p>
-                            <p className="text-base font-semibold xl:text-lg text-brand">
-                                {fellow.cell_number}
-                            </p>
-                        </div>
-                        <div className="flex justify-start gap-2">
-                            <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                                Mpesa:
-                            </p>
-                            <p className="text-base font-semibold xl:text-lg text-brand">
-                                {fellow.mpesa_number}
-                            </p>
-                        </div>
-                        <div className="flex justify-start gap-2">
-                            <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                                Hub:
-                            </p>
-                            <p className="text-base font-semibold xl:text-lg text-brand">
-                                {fellow.hub}
-                            </p>
-                        </div>
-                        <div className="flex justify-start gap-2">
-                            <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                                County:
-                            </p>
-                            <p className="text-base font-semibold xl:text-lg text-brand">
-                                {fellow.county}
-                            </p>
-                        </div>
-
-                    </div>
-
-
-                    <div
-                        className="flex flex-col items-end justify-end"
-                    >
-                        <h2 className="text-5xl text-shamiri-blue font-semibold text-right self-end">18</h2>
-                        <p className="text-xs font-medium text-brand text-right">Sessions attended</p>
-                    </div>
-                </div>
-                <Button className="w-full mt-4 bg-shamiri-blue hover:bg-brand">Schools</Button>
-
+      <div className="flex flex-col ">
+        <div className="flex justify-between">
+          <div className="flex flex-col ">
+            <div className="flex justify-start gap-2">
+              <p className="text-base font-medium text-muted-foreground xl:text-lg">
+                Age:
+              </p>
+              <p className="text-base font-semibold text-brand xl:text-lg">
+                {fellow.age}
+              </p>
             </div>
+            <div className="flex justify-start gap-2">
+              <p className="text-base font-medium text-muted-foreground xl:text-lg">
+                Gender:
+              </p>
+              <p className="text-base font-semibold text-brand xl:text-lg">
+                {fellow.gender}
+              </p>
+            </div>
+            <div className="flex justify-start gap-2">
+              <p className="text-base font-medium text-muted-foreground xl:text-lg">
+                Contact:
+              </p>
+              <p className="text-base font-semibold text-brand xl:text-lg">
+                {fellow.cell_number}
+              </p>
+            </div>
+            <div className="flex justify-start gap-2">
+              <p className="text-base font-medium text-muted-foreground xl:text-lg">
+                Mpesa:
+              </p>
+              <p className="text-base font-semibold text-brand xl:text-lg">
+                {fellow.mpesa_number}
+              </p>
+            </div>
+            <div className="flex justify-start gap-2">
+              <p className="text-base font-medium text-muted-foreground xl:text-lg">
+                Hub:
+              </p>
+              <p className="text-base font-semibold text-brand xl:text-lg">
+                {fellow.hub}
+              </p>
+            </div>
+            <div className="flex justify-start gap-2">
+              <p className="text-base font-medium text-muted-foreground xl:text-lg">
+                County:
+              </p>
+              <p className="text-base font-semibold text-brand xl:text-lg">
+                {fellow.county}
+              </p>
+            </div>
+          </div>
 
-        </Card>
-    );
+          <div className="flex flex-col items-end justify-end">
+            <h2 className="self-end text-right text-5xl font-semibold text-shamiri-blue">
+              18
+            </h2>
+            <p className="text-right text-xs font-medium text-brand">
+              Sessions attended
+            </p>
+          </div>
+        </div>
+        <Button className="mt-4 w-full bg-shamiri-blue hover:bg-brand">
+          Schools
+        </Button>
+      </div>
+    </Card>
+  );
 }
-
 
 const sample_expenses = [
-    // todo: is date of type date or string?
-    { id: 1, name: "Material", amount: "500", date: "March 12, 2021" },
-    { id: 2, name: "Self", amount: "374", date: "April 10, 2021" },
-    { id: 3, name: "Reason", amount: "128", date: "May 08, 2021" },
-]
-
+  // todo: is date of type date or string?
+  { id: 1, name: "Material", amount: "500", date: "March 12, 2021" },
+  { id: 2, name: "Self", amount: "374", date: "April 10, 2021" },
+  { id: 3, name: "Reason", amount: "128", date: "May 08, 2021" },
+];
 
 function Expenses() {
-    return (
-        <>
-            <div className="grid grid-cols-1 gap-4 sm:gap-6  sm:items-center">
-                <h3 className='text-lg font-semibold text-brand mt-4'>
-                    Expenses
-                </h3>
-                <Card
-                    className={cn("mb-4 flex flex-col gap-5 p-5 pr-3.5 bg-white ")}
-                >
-                    <div className="flex flex-col">
-                        <div className="">
-                            <h3 className='text-sm font-normal text-muted-foreground'>
-                                Previous Requests History
-                            </h3>
-                            <Separator className="w-full" />
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-4 sm:items-center  sm:gap-6">
+        <h3 className="mt-4 text-lg font-semibold text-brand">Expenses</h3>
+        <Card className={cn("mb-4 flex flex-col gap-5 bg-white p-5 pr-3.5 ")}>
+          <div className="flex flex-col">
+            <div className="">
+              <h3 className="text-sm font-normal text-muted-foreground">
+                Previous Requests History
+              </h3>
+              <Separator className="w-full" />
 
-                            {
-                                sample_expenses.map((expense) => (
-
-                                    <ExpenseCard key={expense.id} name={expense.name} amount={expense.amount} date={expense.date} />
-                                ))
-                            }
-                        </div>
-                        <Link href={`/profile/refund`}>
-                            <Button className="w-full mt-4 bg-shamiri-blue hover:bg-brand" >
-                                Request Refund
-                            </Button>
-                        </Link>
-
-                    </div>
-                </Card>
+              {sample_expenses.map((expense) => (
+                <ExpenseCard
+                  key={expense.id}
+                  name={expense.name}
+                  amount={expense.amount}
+                  date={expense.date}
+                />
+              ))}
             </div>
-        </>
-    )
+            <Link href={`/profile/refund`}>
+              <Button className="mt-4 w-full bg-shamiri-blue hover:bg-brand">
+                Request Refund
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      </div>
+    </>
+  );
 }
 
-function ExpenseCard({ name, amount, date }: { name: string, amount: string, date: string }) {
-    return (
-        <div className='flex items-center my-2'>
-            <div className='h-2 w-2 bg-brand rounded-full mr-2' />
-            <div className='flex flex-col flex-1 mr-4 '>
-                <div className='flex justify-between '>
-                    <p className='text-base font-normal text-brand'>{name}</p>
-                    <p className='text-sm font-semibold text-muted-foreground'>Ksh. {amount}</p>
-                </div>
-                <div>
-                    <p className='text-xs font-normal text-muted-foreground'> {date}</p>
-                </div>
-            </div>
+function ExpenseCard({
+  name,
+  amount,
+  date,
+}: {
+  name: string;
+  amount: string;
+  date: string;
+}) {
+  return (
+    <div className="my-2 flex items-center">
+      <div className="mr-2 h-2 w-2 rounded-full bg-brand" />
+      <div className="mr-4 flex flex-1 flex-col ">
+        <div className="flex justify-between ">
+          <p className="text-base font-normal text-brand">{name}</p>
+          <p className="text-sm font-semibold text-muted-foreground">
+            Ksh. {amount}
+          </p>
         </div>
-    )
+        <div>
+          <p className="text-xs font-normal text-muted-foreground"> {date}</p>
+        </div>
+      </div>
+    </div>
+  );
 }
