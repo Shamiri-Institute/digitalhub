@@ -1,32 +1,23 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import Link from "next/link";
 import * as React from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import { Timepicker } from "#/app/(platform)/profile/school-report/timepicker";
 import {
   OccurrenceData,
   revalidateFromClient,
   toggleInterventionOccurrence,
+  updateInterventionOccurrenceDate,
 } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
 import { Card } from "#/components/ui/card";
-import { FormField } from "#/components/ui/form";
 import { Popover, PopoverContent } from "#/components/ui/popover";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-
-const FormSchema = z.object({
-  dateOfSession: z.date({
-    required_error: "Please enter the fellow's date of session.",
-  }),
-});
 
 export function SchoolReportCard({
   name,
@@ -39,9 +30,7 @@ export function SchoolReportCard({
   payload: OccurrenceData;
   occurring: boolean;
 }) {
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-  });
+  const [calendarOpen, setCalendarOpen] = React.useState(false);
   const { toast } = useToast();
 
   const onOccurrenceToggleClick = React.useCallback(async () => {
@@ -61,7 +50,24 @@ export function SchoolReportCard({
     }
   }, [occurring]);
 
-  const [stateDate, setStateDate] = React.useState<Date>(data.sessionDate);
+  const onOccurrenceDateSelect = React.useCallback(async (date: Date) => {
+    const response = await updateInterventionOccurrenceDate({
+      sessionDate: date,
+      sessionType: data.sessionType,
+      schoolId: data.schoolId,
+    });
+    setCalendarOpen(false);
+    if (response) {
+      console.log({ response });
+      toast({ title: "Date updated" });
+      await revalidateFromClient("/profile/school-report");
+    } else {
+      toast({
+        variant: "destructive",
+        title: `Something went wrong`,
+      });
+    }
+  }, []);
 
   return (
     <Card className="my-4 flex">
@@ -79,9 +85,12 @@ export function SchoolReportCard({
             </span>
           </button>
         </div>
-        <div className="flex flex-col justify-start">
-          {/* Adjust url to /profile/school-report/session?id={name} */}
-          <Link href={`/profile/school-report/${name}`}>
+        <div
+          className={cn("flex flex-col justify-start", {
+            "pointer-events-none": !saved,
+          })}
+        >
+          <Link href={`/profile/school-report/session?id=${name}`}>
             <p
               className={cn("pl-3 text-base font-medium leading-5 text-brand", {
                 "text-light-grey": !saved,
@@ -92,40 +101,36 @@ export function SchoolReportCard({
           </Link>
 
           <div className="flex items-center justify-start gap-1.5">
-            <FormField
-              control={form.control}
-              name="dateOfSession"
-              render={({ field }) => (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={null}
-                      className={cn(
-                        "my-0 shrink-0 py-0 pl-3 pr-0 text-xs font-normal text-brand",
-                        {
-                          "pl-3 text-xs font-normal text-brand": !field.value,
-                          "text-light-grey": !saved,
-                        },
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "EEEE, MMM do")
-                      ) : (
-                        <span>{format(data.sessionDate, "EEEE, MMM do")}</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              )}
-            />
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={null}
+                  className={cn(
+                    "my-0 shrink-0 py-0 pl-3 pr-0 text-xs font-normal text-brand",
+                    {
+                      "pl-3 text-xs font-normal text-brand": data.sessionDate,
+                      "text-light-grey": !saved,
+                    },
+                  )}
+                >
+                  <span>{format(data.sessionDate, "EEEE, MMM do")}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={data.sessionDate}
+                  onSelect={(val) => {
+                    if (val) {
+                      onOccurrenceDateSelect(val);
+                    } else {
+                      console.error("No date to set");
+                    }
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
             <span
               className={cn("h-4 overflow-auto font-light", {
                 "text-light-grey": !saved,
@@ -139,7 +144,12 @@ export function SchoolReportCard({
                 "text-light-grey": !saved,
               })}
             >
-              <Timepicker time={stateDate} onSelect={setStateDate} />
+              <Timepicker
+                time={data.sessionDate}
+                onSelect={(date) => {
+                  console.log("Picking time", date);
+                }}
+              />
             </div>
           </div>
         </div>

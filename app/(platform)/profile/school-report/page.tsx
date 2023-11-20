@@ -155,8 +155,10 @@ export default async function SchoolReport() {
             occurred: !(session?.occurred || false),
             sessionName:
               session?.sessionName ?? defaultSessionValues.sessionName,
-            sessionDate: defaultSessionValues.sessionDate,
-            sessionType: defaultSessionValues.sessionType,
+            sessionDate:
+              session?.sessionDate ?? defaultSessionValues.sessionDate,
+            sessionType:
+              session?.sessionType ?? defaultSessionValues.sessionType,
             yearOfImplementation:
               session?.sessionDate.getFullYear() || new Date().getFullYear(),
             schoolId: assignedSchoolId,

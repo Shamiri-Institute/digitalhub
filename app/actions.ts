@@ -653,6 +653,39 @@ export async function toggleInterventionOccurrence(data: OccurrenceData) {
   return success;
 }
 
+export async function updateInterventionOccurrenceDate(
+  data: Pick<OccurrenceData, "sessionDate" | "sessionType" | "schoolId">,
+) {
+  try {
+    const result = await db.interventionSession.update({
+      where: {
+        findInterventionBySchoolAndSessionType: {
+          schoolId: data.schoolId,
+          sessionType: data.sessionType,
+        },
+      },
+      data: {
+        sessionDate: data.sessionDate,
+      },
+    });
+
+    console.log({ result });
+
+    return true;
+  } catch (error: unknown) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      // https://www.prisma.io/docs/reference/api-reference/error-reference#p2025
+      if (error.code === "P2025") {
+        console.error(`Intervention session doesn't exist`);
+      }
+      return false;
+    } else {
+      console.error({ error });
+      throw error;
+    }
+  }
+}
+
 export async function revalidateFromClient(path: string) {
   revalidatePath(path);
 }
