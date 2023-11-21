@@ -30,7 +30,7 @@ export function SessionNavigationHeader({
         </Link>
         <div>
           <h3 className="text-xl font-bold text-brand">My School Report</h3>
-          <h4 className="text-brand-light-gray text-center text-xs">
+          <h4 className="text-brand-light-gray text-center text-sm">
             {schoolName}
           </h4>
           <div className="justify-items-center pl-8 pt-2">

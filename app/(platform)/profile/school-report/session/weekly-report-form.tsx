@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Prisma } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -10,7 +11,11 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { FormSchema } from "./page";
 
-export function WeeklyReportForm() {
+export function WeeklyReportForm({
+  pointSupervisor,
+}: {
+  pointSupervisor: Prisma.SupervisorGetPayload<{}>;
+}) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -27,6 +32,9 @@ export function WeeklyReportForm() {
 
   return (
     <div className="px-6">
+      <div className="my-3 text-center text-sm font-medium text-muted-foreground">
+        <h3>{pointSupervisor.supervisorName}'s Review</h3>
+      </div>
       <Form {...form}>
         <form
           id="weeklyReportForm"
