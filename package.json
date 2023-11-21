@@ -7,6 +7,7 @@
     "build": "next build",
     "postinstall": "prisma generate && prisma migrate deploy",
     "start": "next start",
+    "format": "prettier --write .",
     "lint": "next lint",
     "test": "playwright test",
     "db:dev:up": "docker-compose down && docker-compose up db",
