@@ -7,6 +7,7 @@ import { addWeeks } from "date-fns";
 import { SchoolReportCard } from "./school-report-card";
 
 export interface SessionItem {
+  id: string;
   sessionName: string;
   sessionType: string;
   sessionDate: Date;
@@ -16,7 +17,7 @@ const referenceDate = new Date();
 referenceDate.setHours(14);
 referenceDate.setMinutes(0);
 
-let sessionItems: SessionItem[] = [
+let referenceSessionItems: Omit<SessionItem, "id">[] = [
   {
     sessionName: "Pre session",
     sessionType: "s0",
@@ -103,7 +104,7 @@ export default async function SchoolReport() {
       "sessionName" | "sessionDate" | "sessionType"
     >;
   }[] = await Promise.all(
-    sessionItems.map(async (sessionItem) => {
+    referenceSessionItems.map(async (sessionItem) => {
       let created = false;
 
       const interventionSession = await db.interventionSession.findUnique({
@@ -118,6 +119,7 @@ export default async function SchoolReport() {
         created = true;
         return {
           session: {
+            id: interventionSession.id,
             occurred: interventionSession.occurred,
             sessionName: interventionSession.sessionName,
             sessionType: interventionSession.sessionType,
@@ -151,6 +153,7 @@ export default async function SchoolReport() {
           name={session?.sessionName ?? defaultSessionValues.sessionName}
           saved={session !== null}
           occurring={session?.occurred || false}
+          savedSession={session}
           payload={{
             occurred: !(session?.occurred || false),
             sessionName:

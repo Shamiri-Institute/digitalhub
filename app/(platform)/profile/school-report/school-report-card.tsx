@@ -2,9 +2,9 @@
 
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
-import Link from "next/link";
 import * as React from "react";
 
+import { SessionItem } from "#/app/(platform)/profile/school-report/page";
 import { Timepicker } from "#/app/(platform)/profile/school-report/timepicker";
 import {
   OccurrenceData,
@@ -15,6 +15,7 @@ import {
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
 import { Card } from "#/components/ui/card";
+import { LinkOrDiv } from "#/components/ui/common";
 import { Popover, PopoverContent } from "#/components/ui/popover";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
@@ -22,11 +23,13 @@ import { cn } from "#/lib/utils";
 export function SchoolReportCard({
   name,
   saved,
+  savedSession,
   payload: data,
   occurring,
 }: {
   name: string;
   saved: boolean;
+  savedSession: SessionItem | null;
   payload: OccurrenceData;
   occurring: boolean;
 }) {
@@ -90,7 +93,13 @@ export function SchoolReportCard({
             "pointer-events-none": !saved,
           })}
         >
-          <Link href={`/profile/school-report/session?id=${name}`}>
+          <LinkOrDiv
+            href={
+              savedSession
+                ? `/profile/school-report/session?id=${savedSession.id}`
+                : undefined
+            }
+          >
             <p
               className={cn("pl-3 text-base font-medium leading-5 text-brand", {
                 "text-light-grey": !saved,
@@ -98,7 +107,8 @@ export function SchoolReportCard({
             >
               {name}
             </p>
-          </Link>
+          </LinkOrDiv>
+          {/* <Link href={`/profile/school-report/session?id=${name}`}></Link> */}
 
           <div className="flex items-center justify-start gap-1.5">
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
