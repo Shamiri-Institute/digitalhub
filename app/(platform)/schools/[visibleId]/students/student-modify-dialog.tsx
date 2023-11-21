@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import React from "react";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 

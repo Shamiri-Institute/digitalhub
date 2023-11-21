@@ -482,7 +482,7 @@ model InterventionSession {
   sessionRatings       InterventionSessionRating[]
   sessionNotes         InterventionSessionNote[]
 
-  @@unique([sessionType, schoolId], name: "findInterventionBySchoolAndSessionType")
+  @@unique([schoolId, sessionType], name: "interventionBySchoolIdAndSessionType")
   @@map("intervention_sessions")
 }
 
@@ -501,6 +501,7 @@ model InterventionSessionRating {
   adminSupportRating    Int?                @map("admin_support_rating")
   workloadRating        Int?                @map("workload_rating")
 
+  @@unique([sessionId, supervisorId], name: "ratingBySessionIdAndSupervisorId")
   @@map("intervention_session_ratings")
 }
 

@@ -109,7 +109,7 @@ export default async function SchoolReport() {
 
       const interventionSession = await db.interventionSession.findUnique({
         where: {
-          findInterventionBySchoolAndSessionType: {
+          interventionBySchoolIdAndSessionType: {
             sessionType: sessionItem.sessionType,
             schoolId: assignedSchoolId,
           },

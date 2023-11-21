@@ -1,3 +1,8 @@
+"use client";
+
+import * as React from "react";
+
+import { rateSession, revalidateFromClient } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import {
   Accordion,
@@ -6,6 +11,7 @@ import {
   AccordionTrigger,
 } from "#/components/ui/accordion";
 import { Separator } from "#/components/ui/separator";
+import { useToast } from "#/components/ui/use-toast";
 
 type SessionRatings = {
   studentBehavior: number;
@@ -13,7 +19,49 @@ type SessionRatings = {
   workload: number;
 };
 
-export function SessionRater({ ratings }: { ratings: SessionRatings }) {
+export function SessionRater({
+  revalidatePath,
+  sessionId,
+  supervisorId,
+  hubId,
+  ratings,
+}: {
+  revalidatePath: string;
+  sessionId: string;
+  supervisorId: string;
+  hubId: string;
+  ratings: SessionRatings;
+}) {
+  const { toast } = useToast();
+
+  const onRatingSelect = React.useCallback(
+    async (
+      kind: "student-behavior" | "admin-support" | "workload",
+      rating: number,
+    ) => {
+      const { success } = await rateSession({
+        kind,
+        rating,
+        sessionId,
+        supervisorId,
+        hubId,
+      });
+
+      if (success) {
+        toast({
+          title: "Rating successfully recorded",
+        });
+        revalidateFromClient(revalidatePath);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Could not record rating",
+        });
+      }
+    },
+    [],
+  );
+
   return (
     <div className="mt-4 px-6">
       <Accordion type="single" collapsible>
@@ -34,17 +82,32 @@ export function SessionRater({ ratings }: { ratings: SessionRatings }) {
                 <p className="text-sm font-normal text-brand">
                   Student behavior
                 </p>
-                <RatingStars rating={ratings.studentBehavior} />
+                <RatingStars
+                  onSelect={(rating) => {
+                    onRatingSelect("student-behavior", rating);
+                  }}
+                  rating={ratings.studentBehavior}
+                />
               </div>
 
               <div className="mt-1 flex items-center justify-between">
                 <p className="text-sm font-normal text-brand">Admin support</p>
-                <RatingStars rating={ratings.adminSupport} />
+                <RatingStars
+                  onSelect={(rating) => {
+                    onRatingSelect("admin-support", rating);
+                  }}
+                  rating={ratings.adminSupport}
+                />
               </div>
 
               <div className="mt-1 flex items-center justify-between">
                 <p className="text-sm font-normal text-brand">Workload</p>
-                <RatingStars rating={ratings.workload} />
+                <RatingStars
+                  onSelect={(rating) => {
+                    onRatingSelect("workload", rating);
+                  }}
+                  rating={ratings.workload}
+                />
               </div>
             </div>
           </AccordionContent>
@@ -56,28 +119,34 @@ export function SessionRater({ ratings }: { ratings: SessionRatings }) {
   );
 }
 
-function RatingStars({ rating }: { rating: number }) {
-  if (rating > 5) {
-    console.error("Rating cannot be greater than 5");
-  }
-
+function RatingStars({
+  rating,
+  onSelect,
+}: {
+  rating: number;
+  onSelect: (rating: number) => void;
+}) {
   return (
     <div className="flex flex-1 justify-end">
       {[1, 2, 3, 4, 5].map((i) => {
         if (i <= rating) {
           return (
-            <Icons.star
-              key={i}
-              className="ml-4 h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7"
-            />
+            <button key={i} onClick={() => onSelect(i)}>
+              <Icons.star
+                key={i}
+                className="ml-4 h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7"
+              />
+            </button>
           );
         }
 
         return (
-          <Icons.startOutline
-            key={i}
-            className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7"
-          />
+          <button key={i} onClick={() => onSelect(i)}>
+            <Icons.startOutline
+              key={i}
+              className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7"
+            />
+          </button>
         );
       })}
     </div>

@@ -34,7 +34,7 @@ export default async function ReportDetails({
 
   const session = await db.interventionSession.findUnique({
     where: {
-      findInterventionBySchoolAndSessionType: {
+      interventionBySchoolIdAndSessionType: {
         schoolId: supervisor.assignedSchoolId,
         sessionType,
       },
@@ -74,6 +74,10 @@ export default async function ReportDetails({
         sessionName={session.sessionName}
       />
       <SessionRater
+        revalidatePath={`/profile/school-report/session?type=${sessionType}`}
+        sessionId={session.id}
+        supervisorId={supervisor.id}
+        hubId={supervisor.assignedSchool.hubId ?? ""}
         ratings={{
           studentBehavior: supervisorSessionRating?.studentBehaviorRating ?? 0,
           adminSupport: supervisorSessionRating?.adminSupportRating ?? 0,

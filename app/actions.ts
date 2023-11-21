@@ -593,7 +593,7 @@ export interface OccurrenceData {
 export async function toggleInterventionOccurrence(data: OccurrenceData) {
   const interventionSession = await db.interventionSession.findUnique({
     where: {
-      findInterventionBySchoolAndSessionType: {
+      interventionBySchoolIdAndSessionType: {
         schoolId: data.schoolId,
         sessionType: data.sessionType,
       },
@@ -620,7 +620,7 @@ export async function toggleInterventionOccurrence(data: OccurrenceData) {
     } else if (interventionSession.occurred === false) {
       await db.interventionSession.update({
         where: {
-          findInterventionBySchoolAndSessionType: {
+          interventionBySchoolIdAndSessionType: {
             schoolId: data.schoolId,
             sessionType: data.sessionType,
           },
@@ -639,7 +639,7 @@ export async function toggleInterventionOccurrence(data: OccurrenceData) {
     } else {
       await db.interventionSession.update({
         where: {
-          findInterventionBySchoolAndSessionType: {
+          interventionBySchoolIdAndSessionType: {
             schoolId: data.schoolId,
             sessionType: data.sessionType,
           },
@@ -659,7 +659,7 @@ export async function updateInterventionOccurrenceDate(
   try {
     const result = await db.interventionSession.update({
       where: {
-        findInterventionBySchoolAndSessionType: {
+        interventionBySchoolIdAndSessionType: {
           schoolId: data.schoolId,
           sessionType: data.sessionType,
         },
@@ -713,5 +713,67 @@ export async function dropoutSchoolWithReason(
     }
     console.error(error);
     return { error: "Something went wrong" };
+  }
+}
+
+export async function rateSession(payload: {
+  kind: "student-behavior" | "admin-support" | "workload";
+  rating: number;
+  sessionId: string;
+  supervisorId: string;
+  hubId: string;
+}) {
+  const ratings: {
+    studentBehaviorRating?: number;
+    adminSupportRating?: number;
+    workloadRating?: number;
+  } = {
+    studentBehaviorRating: undefined,
+    adminSupportRating: undefined,
+    workloadRating: undefined,
+  };
+
+  switch (payload.kind) {
+    case "student-behavior":
+      ratings.studentBehaviorRating = payload.rating;
+      break;
+    case "admin-support":
+      ratings.adminSupportRating = payload.rating;
+      break;
+    case "workload":
+      ratings.workloadRating = payload.rating;
+      break;
+    default:
+      throw new Error("Unhandled rating kind");
+  }
+
+  try {
+    await db.interventionSessionRating.upsert({
+      where: {
+        ratingBySessionIdAndSupervisorId: {
+          sessionId: payload.sessionId,
+          supervisorId: payload.supervisorId,
+        },
+      },
+      create: {
+        id: objectId("isr"),
+        sessionId: payload.sessionId,
+        supervisorId: payload.supervisorId,
+        studentBehaviorRating: ratings.studentBehaviorRating,
+        adminSupportRating: ratings.adminSupportRating,
+        workloadRating: ratings.workloadRating,
+      },
+      update: {
+        sessionId: payload.sessionId,
+        supervisorId: payload.supervisorId,
+        studentBehaviorRating: ratings.studentBehaviorRating,
+        adminSupportRating: ratings.adminSupportRating,
+        workloadRating: ratings.workloadRating,
+      },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
   }
 }
