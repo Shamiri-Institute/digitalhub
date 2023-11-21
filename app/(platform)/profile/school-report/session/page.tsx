@@ -1,9 +1,8 @@
-import { ChevronDownIcon } from "@radix-ui/react-icons";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 
 import { AddNoteDialog } from "#/app/(platform)/profile/school-report/session/add-note-dialogue";
+import { currentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import {
   Accordion,
@@ -12,29 +11,31 @@ import {
   AccordionTrigger,
 } from "#/components/ui/accordion";
 import { Button } from "#/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import { SessionNavigationHeader } from "./session-navigation-header";
 import { WeeklyReportForm } from "./weekly-report-form";
 
 export default async function ReportDetails({
   searchParams,
 }: {
-  searchParams: { id: string };
+  searchParams: { type: string };
 }) {
-  const { id: sessionId } = searchParams;
+  const { type: sessionType } = searchParams;
 
-  if (!sessionId) {
+  if (!sessionType) {
     notFound();
   }
 
+  const supervisor = await currentSupervisor();
+
   const session = await db.interventionSession.findUnique({
-    where: { id: sessionId },
+    where: {
+      findInterventionBySchoolAndSessionType: {
+        schoolId: supervisor.assignedSchoolId,
+        sessionType,
+      },
+    },
   });
 
   if (!session) {
@@ -43,7 +44,10 @@ export default async function ReportDetails({
 
   return (
     <div>
-      <Header session={session.sessionName} />
+      <SessionNavigationHeader
+        schoolName={supervisor.assignedSchool.schoolName}
+        sessionName={session.sessionName}
+      />
       <Rating />
       <WeeklyReportForm />
       <Notes />
@@ -51,67 +55,13 @@ export default async function ReportDetails({
   );
 }
 
-const sessions = [
-  "Pre session",
-  "Session 01",
-  "Session 02",
-  "Session 03",
-  "Session 04",
+export const sessionRatingOptions = [
+  { sessionLabel: "Pre session", sessionType: "s0" },
+  { sessionLabel: "Session 01", sessionType: "s1" },
+  { sessionLabel: "Session 02", sessionType: "s2" },
+  { sessionLabel: "Session 03", sessionType: "s3" },
+  { sessionLabel: "Session 04", sessionType: "s4" },
 ];
-
-function Header({ session }: { session: string }) {
-  return (
-    <div>
-      <div className="mt-2 flex  justify-between ">
-        <Link href="/profile/school-report">
-          <Icons.chevronLeft className="h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
-        </Link>
-        <div>
-          <h3 className="text-xl font-bold text-brand">My School Report</h3>
-          <h4 className="text-brand-light-gray text-center text-xs">
-            Kamkunji Secondary School
-          </h4>
-          <div className="justify-items-center pl-8 pt-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="ml-auto place-self-center whitespace-nowrap px-2 py-1.5 text-[0.8125rem] font-medium md:px-4 md:py-2 md:text-sm"
-                >
-                  {session}
-                  <ChevronDownIcon className="ml-1 h-4 w-4 md:ml-2" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {sessions.map((session) => {
-                  return (
-                    <DropdownMenuItem
-                      key={session}
-                      className="relative flex justify-between pr-10"
-                      // onSelect={() => {
-                      // //   setRoleFilter(role);
-                      //   table
-                      //     .getColumn("role")
-                      //     ?.setFilterValue(role === "All" ? "" : role);
-                      // }}
-                    >
-                      {session}
-                    </DropdownMenuItem>
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-        <div>
-          {/* <button>
-                        <Icons.xIcon className='h-6 w-6 align-baseline xl:h-7 xl:w-7 ' />
-                    </button> */}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export const FormSchema = z.object({
   positiveHighlight: z.string({

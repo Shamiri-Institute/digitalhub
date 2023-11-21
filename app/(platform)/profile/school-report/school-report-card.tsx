@@ -96,7 +96,7 @@ export function SchoolReportCard({
           <LinkOrDiv
             href={
               savedSession
-                ? `/profile/school-report/session?id=${savedSession.id}`
+                ? `/profile/school-report/session?type=${savedSession.sessionType}`
                 : undefined
             }
           >
@@ -108,7 +108,6 @@ export function SchoolReportCard({
               {name}
             </p>
           </LinkOrDiv>
-          {/* <Link href={`/profile/school-report/session?id=${name}`}></Link> */}
 
           <div className="flex items-center justify-start gap-1.5">
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
