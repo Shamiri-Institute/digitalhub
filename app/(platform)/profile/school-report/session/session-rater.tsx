@@ -7,7 +7,13 @@ import {
 } from "#/components/ui/accordion";
 import { Separator } from "#/components/ui/separator";
 
-export function SessionRater() {
+type SessionRatings = {
+  studentBehavior: number;
+  adminSupport: number;
+  workload: number;
+};
+
+export function SessionRater({ ratings }: { ratings: SessionRatings }) {
   return (
     <div className="mt-4 px-6">
       <Accordion type="single" collapsible>
@@ -24,45 +30,56 @@ export function SessionRater() {
 
           <AccordionContent>
             <div className="pt-4">
-              <div className="flex items-center justify-between ">
+              <div className="flex items-center justify-between">
                 <p className="text-sm font-normal text-brand">
                   Student behavior
                 </p>
-                <div className="flex flex-1  justify-end">
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                </div>
+                <RatingStars rating={ratings.studentBehavior} />
               </div>
 
               <div className="mt-1 flex items-center justify-between">
                 <p className="text-sm font-normal text-brand">Admin support</p>
-                <div className="flex flex-1  justify-end">
-                  <div>
-                    <Icons.star className="h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7" />
-                  </div>
-                  <Icons.star className="ml-4 h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7" />
-                  <Icons.star className="ml-4 h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                </div>
+                <RatingStars rating={ratings.adminSupport} />
               </div>
 
               <div className="mt-1 flex items-center justify-between">
                 <p className="text-sm font-normal text-brand">Workload</p>
-                <div className="flex flex-1  justify-end">
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                </div>
+                <RatingStars rating={ratings.workload} />
               </div>
             </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
 
-      <Separator className="mt-4" />
+      <Separator className="my-2" />
+    </div>
+  );
+}
+
+function RatingStars({ rating }: { rating: number }) {
+  if (rating > 5) {
+    console.error("Rating cannot be greater than 5");
+  }
+
+  return (
+    <div className="flex flex-1 justify-end">
+      {[1, 2, 3, 4, 5].map((i) => {
+        if (i <= rating) {
+          return (
+            <Icons.star
+              key={i}
+              className="ml-4 h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7"
+            />
+          );
+        }
+
+        return (
+          <Icons.startOutline
+            key={i}
+            className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7"
+          />
+        );
+      })}
     </div>
   );
 }

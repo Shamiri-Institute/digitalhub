@@ -9,6 +9,16 @@ import { SessionNavigationHeader } from "./session-navigation-header";
 import { SessionRater } from "./session-rater";
 import { WeeklyReportForm } from "./weekly-report-form";
 
+const sessionTypeToDisplayName: {
+  [key: string]: string;
+} = {
+  s0: "Pre session",
+  s1: "Session 01",
+  s2: "Session 02",
+  s3: "Session 03",
+  s4: "Session 04",
+};
+
 export default async function ReportDetails({
   searchParams,
 }: {
@@ -29,21 +39,33 @@ export default async function ReportDetails({
         sessionType,
       },
     },
+    include: {
+      sessionRatings: true,
+      sessionNotes: true,
+    },
   });
 
   if (!session) {
+    const sessionName = sessionTypeToDisplayName[sessionType] ?? "Unknown";
+
     return (
       <div>
         <SessionNavigationHeader
           schoolName={supervisor.assignedSchool.schoolName}
-          sessionName="Session 01"
+          sessionName={sessionName}
         />
         <div className="py-6 text-center text-sm">
-          Session has not yet been created.
+          {sessionName} has not yet been created.
         </div>
       </div>
     );
   }
+
+  // Session rating by the currently logged in supervisor if previously created
+  const supervisorSessionRating =
+    session.sessionRatings?.find(
+      (sessionRating) => sessionRating.supervisorId === supervisor.id,
+    ) ?? null;
 
   return (
     <div>
@@ -51,7 +73,13 @@ export default async function ReportDetails({
         schoolName={supervisor.assignedSchool.schoolName}
         sessionName={session.sessionName}
       />
-      <SessionRater />
+      <SessionRater
+        ratings={{
+          studentBehavior: supervisorSessionRating?.studentBehaviorRating ?? 0,
+          adminSupport: supervisorSessionRating?.adminSupportRating ?? 0,
+          workload: supervisorSessionRating?.workloadRating ?? 0,
+        }}
+      />
       <WeeklyReportForm pointSupervisor={supervisor} />
       <SessionNotes />
     </div>
