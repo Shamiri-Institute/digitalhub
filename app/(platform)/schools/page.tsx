@@ -1,4 +1,3 @@
-
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
 import { SchoolCard } from "./school-card";
@@ -120,4 +119,3 @@ async function SchoolsList() {
     </div>
   );
 }
-

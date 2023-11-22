@@ -329,42 +329,44 @@ model FellowAttendance {
 }
 
 model Supervisor {
-  id                String                      @id @db.VarChar(255)
-  createdAt         DateTime                    @default(now()) @map("created_at")
-  updatedAt         DateTime                    @updatedAt @map("updated_at")
-  archivedAt        DateTime?                   @map("archived_at")
-  hubId             String?                     @map("hub_id") @db.VarChar(255)
-  hub               Hub?                        @relation(fields: [hubId], references: [id])
-  visibleId         String                      @unique @map("visible_id") @db.VarChar(100)
-  supervisorName    String?                     @map("supervisor_name") @db.VarChar(255)
-  supervisorEmail   String?                     @unique @map("supervisor_email") @db.VarChar(255)
-  idNumber          String?                     @map("id_number") @db.VarChar(255)
-  cellNumber        String?                     @map("cell_number") @db.VarChar(255)
-  mpesaNumber       String?                     @map("mpesa_number") @db.VarChar(255)
-  implementerId     String?                     @map("implementer_id") @db.VarChar(255)
-  implementer       Implementer?                @relation(fields: [implementerId], references: [id])
-  memberId          Int?
-  member            ImplementerMember?          @relation(fields: [memberId], references: [id])
-  county            String?                     @map("county") @db.VarChar(255)
-  subCounty         String?                     @map("sub_county") @db.VarChar(255)
-  bankName          String?                     @map("bank_name") @db.VarChar(255)
-  bankBranch        String?                     @map("bank_branch") @db.VarChar(255)
-  bankAccountName   String?                     @map("bank_account_name") @db.VarChar(255)
-  bankAccountNumber String?                     @map("bank_account_number") @db.VarChar(255)
-  kra               String?                     @map("kra") @db.VarChar(255)
-  nhif              String?                     @map("nhif") @db.VarChar(255)
-  nssf              String?                     @map("nssf") @db.VarChar(255)
-  dateOfBirth       DateTime?                   @map("date_of_birth") @db.Date
-  gender            String?                     @db.VarChar(10)
-  trainingLevel     String?                     @map("training_level") @db.VarChar(255)
-  droppedOut        Boolean?                    @map("dropped_out")
-  assignedSchoolId  String?                     @map("assigned_school_id") @db.VarChar(255)
-  assignedSchool    School?                     @relation(fields: [assignedSchoolId], references: [id])
-  fellows           Fellow[]
-  students          Student[]
-  fellowAttendances FellowAttendance[]
-  sessionRatings    InterventionSessionRating[]
-  sessionNotes      InterventionSessionNote[]
+  id                    String                      @id @db.VarChar(255)
+  createdAt             DateTime                    @default(now()) @map("created_at")
+  updatedAt             DateTime                    @updatedAt @map("updated_at")
+  archivedAt            DateTime?                   @map("archived_at")
+  hubId                 String?                     @map("hub_id") @db.VarChar(255)
+  hub                   Hub?                        @relation(fields: [hubId], references: [id])
+  visibleId             String                      @unique @map("visible_id") @db.VarChar(100)
+  supervisorName        String?                     @map("supervisor_name") @db.VarChar(255)
+  supervisorEmail       String?                     @unique @map("supervisor_email") @db.VarChar(255)
+  idNumber              String?                     @map("id_number") @db.VarChar(255)
+  cellNumber            String?                     @map("cell_number") @db.VarChar(255)
+  mpesaName             String?                     @map("mpesa_name") @db.VarChar(255)
+  mpesaNumber           String?                     @map("mpesa_number") @db.VarChar(20)
+  implementerId         String?                     @map("implementer_id") @db.VarChar(255)
+  implementer           Implementer?                @relation(fields: [implementerId], references: [id])
+  memberId              Int?
+  member                ImplementerMember?          @relation(fields: [memberId], references: [id])
+  county                String?                     @map("county") @db.VarChar(255)
+  subCounty             String?                     @map("sub_county") @db.VarChar(255)
+  bankName              String?                     @map("bank_name") @db.VarChar(255)
+  bankBranch            String?                     @map("bank_branch") @db.VarChar(255)
+  bankAccountName       String?                     @map("bank_account_name") @db.VarChar(255)
+  bankAccountNumber     String?                     @map("bank_account_number") @db.VarChar(255)
+  kra                   String?                     @map("kra") @db.VarChar(255)
+  nhif                  String?                     @map("nhif") @db.VarChar(255)
+  nssf                  String?                     @map("nssf") @db.VarChar(255)
+  dateOfBirth           DateTime?                   @map("date_of_birth") @db.Date
+  gender                String?                     @db.VarChar(10)
+  trainingLevel         String?                     @map("training_level") @db.VarChar(255)
+  droppedOut            Boolean?                    @map("dropped_out")
+  assignedSchoolId      String?                     @map("assigned_school_id") @db.VarChar(255)
+  assignedSchool        School?                     @relation(fields: [assignedSchoolId], references: [id])
+  fellows               Fellow[]
+  students              Student[]
+  fellowAttendances     FellowAttendance[]
+  sessionRatings        InterventionSessionRating[]
+  sessionNotes          InterventionSessionNote[]
+  reimbursementRequests ReimbursementRequest[]
 
   @@map("supervisors")
 }
@@ -417,51 +419,53 @@ model School {
 }
 
 model Hub {
-  id            String          @id @db.VarChar(255)
-  createdAt     DateTime        @default(now()) @map("created_at")
-  updatedAt     DateTime        @updatedAt @map("updated_at")
-  archivedAt    DateTime?       @map("archived_at")
-  visibleId     String          @unique @map("visible_id") @db.VarChar(10)
-  hubName       String          @map("hub_name") @db.VarChar(255)
-  coordinatorId String?         @map("coordinator_id")
-  coordinator   HubCoordinator? @relation(fields: [coordinatorId], references: [id])
-  implementerId String          @map("implementer_id") @db.VarChar(255)
-  implementer   Implementer     @relation(fields: [implementerId], references: [id])
+  id                    String                 @id @db.VarChar(255)
+  createdAt             DateTime               @default(now()) @map("created_at")
+  updatedAt             DateTime               @updatedAt @map("updated_at")
+  archivedAt            DateTime?              @map("archived_at")
+  visibleId             String                 @unique @map("visible_id") @db.VarChar(10)
+  hubName               String                 @map("hub_name") @db.VarChar(255)
+  coordinatorId         String?                @map("coordinator_id")
+  coordinator           HubCoordinator?        @relation(fields: [coordinatorId], references: [id])
+  implementerId         String                 @map("implementer_id") @db.VarChar(255)
+  implementer           Implementer            @relation(fields: [implementerId], references: [id])
   // clinical_ops_supervisor_id // TODO: add after defining clinical workflows
-  fellows       Fellow[]
-  supervisors   Supervisor[]
-  schools       School[]
+  fellows               Fellow[]
+  supervisors           Supervisor[]
+  schools               School[]
+  reimbursementRequests ReimbursementRequest[]
 
   @@map("hubs")
 }
 
 model HubCoordinator {
-  id                String      @id @db.VarChar(255)
-  createdAt         DateTime    @default(now()) @map("created_at")
-  updatedAt         DateTime    @updatedAt @map("updated_at")
-  archivedAt        DateTime?   @map("archived_at")
-  visibleId         String      @unique @map("visible_id") @db.VarChar(10) // e.g. 23_HC_01
-  coordinatorName   String      @map("coordinator_name") @db.VarChar(255) // e.g. Beverly
-  coordinatorEmail  String?     @unique @map("coordinator_email") @db.VarChar(255) // e.g. nalietujoy@gmail.com
-  idNumber          String?     @map("id_number") @db.VarChar(255)
-  cellNumber        String?     @map("cell_number") @db.VarChar(255)
-  mpesaNumber       String?     @map("mpesa_number") @db.VarChar(255)
-  implementerId     String      @map("implementer_id") @db.VarChar(255)
-  implementer       Implementer @relation(fields: [implementerId], references: [id])
-  county            String?     @map("county") @db.VarChar(255)
-  subCounty         String?     @map("sub_county") @db.VarChar(255)
-  bankName          String?     @map("bank_name") @db.VarChar(255)
-  bankBranch        String?     @map("bank_branch") @db.VarChar(255)
-  bankAccountNumber String?     @map("bank_account_number") @db.VarChar(255)
-  bankAccountName   String?     @map("bank_account_name") @db.VarChar(255)
-  kra               String?     @map("kra") @db.VarChar(255)
-  nhif              String?     @map("nhif") @db.VarChar(255)
-  dateOfBirth       DateTime?   @map("date_of_birth") @db.Date
-  gender            String?     @db.VarChar(10)
-  trainingLevel     String?     @map("training_level") @db.VarChar(255)
-  droppedOut        Boolean?    @map("dropped_out")
+  id                    String                 @id @db.VarChar(255)
+  createdAt             DateTime               @default(now()) @map("created_at")
+  updatedAt             DateTime               @updatedAt @map("updated_at")
+  archivedAt            DateTime?              @map("archived_at")
+  visibleId             String                 @unique @map("visible_id") @db.VarChar(10) // e.g. 23_HC_01
+  coordinatorName       String                 @map("coordinator_name") @db.VarChar(255) // e.g. Beverly
+  coordinatorEmail      String?                @unique @map("coordinator_email") @db.VarChar(255) // e.g. nalietujoy@gmail.com
+  idNumber              String?                @map("id_number") @db.VarChar(255)
+  cellNumber            String?                @map("cell_number") @db.VarChar(255)
+  mpesaNumber           String?                @map("mpesa_number") @db.VarChar(255)
+  implementerId         String                 @map("implementer_id") @db.VarChar(255)
+  implementer           Implementer            @relation(fields: [implementerId], references: [id])
+  county                String?                @map("county") @db.VarChar(255)
+  subCounty             String?                @map("sub_county") @db.VarChar(255)
+  bankName              String?                @map("bank_name") @db.VarChar(255)
+  bankBranch            String?                @map("bank_branch") @db.VarChar(255)
+  bankAccountNumber     String?                @map("bank_account_number") @db.VarChar(255)
+  bankAccountName       String?                @map("bank_account_name") @db.VarChar(255)
+  kra                   String?                @map("kra") @db.VarChar(255)
+  nhif                  String?                @map("nhif") @db.VarChar(255)
+  dateOfBirth           DateTime?              @map("date_of_birth") @db.Date
+  gender                String?                @db.VarChar(10)
+  trainingLevel         String?                @map("training_level") @db.VarChar(255)
+  droppedOut            Boolean?               @map("dropped_out")
   // projects          Project[]
-  hubs              Hub[]
+  hubs                  Hub[]
+  reimbursementRequests ReimbursementRequest[]
 
   @@map("hub_coordinators")
 }
@@ -531,4 +535,28 @@ model InterventionGroupSession {
   sesssion   InterventionSession @relation(fields: [sessionId], references: [id])
 
   @@map("intervention_group_sessions")
+}
+
+model ReimbursementRequest {
+  id               String          @id @db.VarChar(255)
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+  archivedAt       DateTime?       @map("archived_at")
+  supervisorId     String          @map("supervisor_id") @db.VarChar(255)
+  supervisor       Supervisor      @relation(fields: [supervisorId], references: [id])
+  hubId            String          @map("hub_id") @db.VarChar(255)
+  hub              Hub             @relation(fields: [hubId], references: [id])
+  hubCoordinatorId String?         @map("hub_coordinator_id") @db.VarChar(255)
+  hubCoordinator   HubCoordinator? @relation(fields: [hubCoordinatorId], references: [id])
+  incurredAt       DateTime        @map("incurred_at") @db.Timestamptz()
+  amount           Int
+  currency         String          @default("KES") @db.VarChar(10)
+  kind             String          @db.VarChar(255) // e.g. travel, internet, airtime
+  status           String          @default("pending") @db.VarChar(100) // e.g. pending, approved, canceled, rejected
+  details          Json // e.g. { "subtype": "materials", "receipt_link": "google-drive..." }
+  mpesaName        String          @map("mpesa_name") @db.VarChar(255)
+  mpesaNumber      String          @map("mpesa_number") @db.VarChar(20)
+
+  // TODO: sync to s3
+  @@map("reimbursement_requests")
 }
