@@ -821,3 +821,23 @@ export async function saveReport({
     return { success: false };
   }
 }
+
+export async function addNote({
+  sessionId,
+  supervisorId,
+  content,
+}: {
+  sessionId: string;
+  supervisorId: string;
+  content: string;
+}) {
+  try {
+    await db.interventionSessionNote.create({
+      data: { sessionId, supervisorId, kind: "added-notes", content },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}

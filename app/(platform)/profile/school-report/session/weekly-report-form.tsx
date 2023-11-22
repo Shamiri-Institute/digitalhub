@@ -47,8 +47,7 @@ export function WeeklyReportForm({
         notes.find((note) => note.kind === "reported-challenges")?.content ??
         "",
       recommendations:
-        notes.find((note) => note.kind === "positive-highlights")?.content ??
-        "",
+        notes.find((note) => note.kind === "recommendations")?.content ?? "",
     },
   });
 
@@ -143,7 +142,7 @@ export function WeeklyReportForm({
             type="submit"
             className="mt-6 w-full bg-shamiri-blue hover:bg-brand"
           >
-            Save
+            Save Report
           </Button>
         </form>
       </Form>

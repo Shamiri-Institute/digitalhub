@@ -66,16 +66,26 @@ export default async function ReportDetails({
     ) ?? null;
 
   // Weekly report comments by point supervisor
-  const pointSupervisorSessionNotes =
-    session.sessionNotes?.filter(
-      (sessionNote) =>
-        sessionNote.supervisorId === supervisor.id &&
-        [
-          "positive-higlhights",
-          "reported-challenges",
-          "recommendations",
-        ].includes(sessionNote.kind),
-    ) ?? null;
+  const pointSupervisorSessionNotes = session.sessionNotes?.filter(
+    (sessionNote) =>
+      sessionNote.supervisorId === supervisor.id &&
+      [
+        "positive-highlights",
+        "reported-challenges",
+        "recommendations",
+      ].includes(sessionNote.kind),
+  );
+
+  // Added notes by all supervisors
+  const allSupervisorSessionAddedNotes =
+    await db.interventionSessionNote.findMany({
+      where: {
+        sessionId: session.id,
+        kind: "added-notes",
+      },
+      orderBy: { createdAt: "desc" },
+      include: { supervisor: true },
+    });
 
   const revalidatePath = `/profile/school-report/session?type=${sessionType}`;
 
@@ -102,7 +112,12 @@ export default async function ReportDetails({
         pointSupervisor={supervisor}
         notes={pointSupervisorSessionNotes}
       />
-      <SessionNotes />
+      <SessionNotes
+        revalidatePath={revalidatePath}
+        sessionId={session.id}
+        supervisorId={supervisor.id}
+        notes={allSupervisorSessionAddedNotes}
+      />
     </div>
   );
 }

@@ -487,8 +487,6 @@ model InterventionSession {
   @@map("intervention_sessions")
 }
 
-/// TODO: [UI] Only assigned supervisor should be creating positive highlights, reported challenges, recommendations etc
-/// TODO: [UI] Other supervisors can create just 1-5 ratings and contribute to Added Notes section
 model InterventionSessionRating {
   id                    String              @id @db.VarChar(255)
   createdAt             DateTime            @default(now()) @map("created_at")
