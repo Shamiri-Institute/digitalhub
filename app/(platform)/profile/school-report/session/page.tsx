@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { z } from "zod";
 
 import { AddNoteDialog } from "#/app/(platform)/profile/school-report/session/add-note-dialogue";
 import { currentSupervisor } from "#/app/auth";
@@ -67,6 +66,20 @@ export default async function ReportDetails({
       (sessionRating) => sessionRating.supervisorId === supervisor.id,
     ) ?? null;
 
+  // Weekly report comments by point supervisor
+  const pointSupervisorSessionNotes =
+    session.sessionNotes?.filter(
+      (sessionNote) =>
+        sessionNote.supervisorId === supervisor.id &&
+        [
+          "positive-higlhights",
+          "reported-challenges",
+          "recommendations",
+        ].includes(sessionNote.kind),
+    ) ?? null;
+
+  const revalidatePath = `/profile/school-report/session?type=${sessionType}`;
+
   return (
     <div>
       <SessionNavigationHeader
@@ -74,17 +87,22 @@ export default async function ReportDetails({
         sessionName={session.sessionName}
       />
       <SessionRater
-        revalidatePath={`/profile/school-report/session?type=${sessionType}`}
+        revalidatePath={revalidatePath}
         sessionId={session.id}
         supervisorId={supervisor.id}
-        hubId={supervisor.assignedSchool.hubId ?? ""}
         ratings={{
           studentBehavior: supervisorSessionRating?.studentBehaviorRating ?? 0,
           adminSupport: supervisorSessionRating?.adminSupportRating ?? 0,
           workload: supervisorSessionRating?.workloadRating ?? 0,
         }}
       />
-      <WeeklyReportForm pointSupervisor={supervisor} />
+      <WeeklyReportForm
+        revalidatePath={revalidatePath}
+        sessionId={session.id}
+        supervisorId={supervisor.id}
+        pointSupervisor={supervisor}
+        notes={pointSupervisorSessionNotes}
+      />
       <SessionNotes />
     </div>
   );
@@ -97,18 +115,6 @@ export const sessionRatingOptions = [
   { sessionLabel: "Session 03", sessionType: "s3" },
   { sessionLabel: "Session 04", sessionType: "s4" },
 ];
-
-export const FormSchema = z.object({
-  positiveHighlight: z.string({
-    required_error: "Please enter the positive highlights.",
-  }),
-  reportedChallenge: z.string({
-    required_error: "Please enter the reported challenges.",
-  }),
-  recommendations: z.string({
-    required_error: "Please enter the recommendations.",
-  }),
-});
 
 function SessionNotes() {
   return (

@@ -5,29 +5,73 @@ import { Prisma } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { revalidateFromClient, saveReport } from "#/app/actions";
+import { Button } from "#/components/ui/button";
 import { Form, FormField } from "#/components/ui/form";
 import { Label } from "#/components/ui/label";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
-import { FormSchema } from "./page";
+import { useToast } from "#/components/ui/use-toast";
+
+const FormSchema = z.object({
+  positiveHighlights: z.string({
+    required_error: "Please enter the positive highlights.",
+  }),
+  reportedChallenges: z.string({
+    required_error: "Please enter the reported challenges.",
+  }),
+  recommendations: z.string({
+    required_error: "Please enter the recommendations.",
+  }),
+});
 
 export function WeeklyReportForm({
+  revalidatePath,
+  sessionId,
+  supervisorId,
   pointSupervisor,
+  notes,
 }: {
+  revalidatePath: string;
+  sessionId: string;
+  supervisorId: string;
   pointSupervisor: Prisma.SupervisorGetPayload<{}>;
+  notes: Prisma.InterventionSessionNoteGetPayload<{}>[];
 }) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      positiveHighlight: "",
-      reportedChallenge: "",
-      recommendations: "",
+      positiveHighlights:
+        notes.find((note) => note.kind === "positive-highlights")?.content ??
+        "",
+      reportedChallenges:
+        notes.find((note) => note.kind === "reported-challenges")?.content ??
+        "",
+      recommendations:
+        notes.find((note) => note.kind === "positive-highlights")?.content ??
+        "",
     },
   });
 
+  const { toast } = useToast();
+
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    // todo: submit the form (weekly report)
-    toast({ title: "Report submitted successfully" });
+    const { success } = await saveReport({
+      sessionId,
+      supervisorId,
+      positiveHighlights: data.positiveHighlights,
+      reportedChallenges: data.reportedChallenges,
+      recommendations: data.recommendations,
+    });
+
+    if (success) {
+      toast({ title: `Point supervisor report saved` });
+      revalidateFromClient(revalidatePath);
+    } else {
+      toast({
+        variant: "destructive",
+        title: `Point supervisor report failed to save`,
+      });
+    }
   }
 
   return (
@@ -43,13 +87,13 @@ export function WeeklyReportForm({
         >
           <FormField
             control={form.control}
-            name="positiveHighlight"
+            name="positiveHighlights"
             render={({ field }) => (
               <div className="mt-3 grid w-full gap-1.5">
                 <Label htmlFor="emails">Positive Highlights</Label>
                 <Textarea
-                  id="positiveHighlight"
-                  name="positiveHighlight"
+                  id="positiveHighlights"
+                  name="positiveHighlights"
                   onChange={field.onChange}
                   defaultValue={field.value}
                   placeholder="Write here..."
@@ -61,13 +105,13 @@ export function WeeklyReportForm({
           />
           <FormField
             control={form.control}
-            name="reportedChallenge"
+            name="reportedChallenges"
             render={({ field }) => (
               <div className="mt-6 grid w-full gap-1.5">
                 <Label htmlFor="emails">Reported Challenges</Label>
                 <Textarea
-                  id="reportedChallenge"
-                  name="reportedChallenge"
+                  id="reportedChallenges"
+                  name="reportedChallenges"
                   onChange={field.onChange}
                   defaultValue={field.value}
                   placeholder="Write here..."
@@ -95,6 +139,12 @@ export function WeeklyReportForm({
               </div>
             )}
           />
+          <Button
+            type="submit"
+            className="mt-6 w-full bg-shamiri-blue hover:bg-brand"
+          >
+            Save
+          </Button>
         </form>
       </Form>
     </div>

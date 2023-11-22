@@ -721,7 +721,6 @@ export async function rateSession(payload: {
   rating: number;
   sessionId: string;
   supervisorId: string;
-  hubId: string;
 }) {
   const ratings: {
     studentBehaviorRating?: number;
@@ -771,6 +770,51 @@ export async function rateSession(payload: {
         workloadRating: ratings.workloadRating,
       },
     });
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
+
+export async function saveReport({
+  sessionId,
+  supervisorId,
+  positiveHighlights,
+  reportedChallenges,
+  recommendations,
+}: {
+  sessionId: string;
+  supervisorId: string;
+  positiveHighlights: string;
+  reportedChallenges: string;
+  recommendations: string;
+}) {
+  try {
+    await db.$transaction(async (tx) => {
+      const entries = [
+        { kind: "positive-highlights", content: positiveHighlights },
+        { kind: "reported-challenges", content: reportedChallenges },
+        { kind: "recommendations", content: recommendations },
+      ];
+      for (const { kind, content } of entries) {
+        const row = await tx.interventionSessionNote.findFirst({
+          where: { sessionId, supervisorId, kind },
+        });
+
+        if (row) {
+          await tx.interventionSessionNote.update({
+            where: { id: row.id },
+            data: { sessionId, supervisorId, kind, content },
+          });
+        } else {
+          await tx.interventionSessionNote.create({
+            data: { sessionId, supervisorId, kind, content },
+          });
+        }
+      }
+    });
+
     return { success: true };
   } catch (error) {
     console.error(error);

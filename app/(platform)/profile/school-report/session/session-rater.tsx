@@ -23,13 +23,11 @@ export function SessionRater({
   revalidatePath,
   sessionId,
   supervisorId,
-  hubId,
   ratings,
 }: {
   revalidatePath: string;
   sessionId: string;
   supervisorId: string;
-  hubId: string;
   ratings: SessionRatings;
 }) {
   const { toast } = useToast();
@@ -44,7 +42,6 @@ export function SessionRater({
         rating,
         sessionId,
         supervisorId,
-        hubId,
       });
 
       if (success) {
