@@ -1,5 +1,8 @@
 "use client";
 
+import { ChevronDownIcon } from "@radix-ui/react-icons";
+import Link from "next/link";
+
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -8,10 +11,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { ChevronDownIcon } from "@radix-ui/react-icons";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { sessionRatingOptions } from "./page";
+
+const sessionRatingOptions = [
+  { sessionLabel: "Pre session", sessionType: "s0" },
+  { sessionLabel: "Session 01", sessionType: "s1" },
+  { sessionLabel: "Session 02", sessionType: "s2" },
+  { sessionLabel: "Session 03", sessionType: "s3" },
+  { sessionLabel: "Session 04", sessionType: "s4" },
+];
 
 export function SessionNavigationHeader({
   sessionName,
@@ -20,8 +27,6 @@ export function SessionNavigationHeader({
   sessionName: string;
   schoolName: string;
 }) {
-  const router = useRouter();
-
   return (
     <div>
       <div className="mt-2 flex  justify-between ">
@@ -51,9 +56,7 @@ export function SessionNavigationHeader({
                       key={session.sessionType}
                       className="relative flex justify-between pr-10"
                       onSelect={() => {
-                        router.push(
-                          `/profile/school-report/session?type=${session.sessionType}`,
-                        );
+                        window.location.href = `/profile/school-report/session?type=${session.sessionType}`;
                       }}
                     >
                       {session.sessionLabel}
