@@ -20,7 +20,7 @@ export function SessionNotes({
   }>[];
 }) {
   return (
-    <div className="flex flex-col">
+    <div className="mb-12 flex flex-col">
       <div className="mt-4 flex items-center justify-between pl-2 pr-8">
         <h3 className="ml-6 mt-4 text-sm font-semibold text-muted-foreground">
           Added Notes
@@ -37,7 +37,10 @@ export function SessionNotes({
       {notes.length > 0 &&
         notes.map((note) => {
           return (
-            <div className="my-4 flex pl-2 pr-8">
+            <div
+              key={note.id}
+              className="my-4 grid grid-cols-[3fr,7fr] gap-2 pl-2 pr-8"
+            >
               <div>
                 <h3 className="ml-6 mt-4 text-sm font-semibold text-muted-foreground">
                   {note.supervisor.supervisorName}
@@ -45,27 +48,25 @@ export function SessionNotes({
               </div>
 
               <div>
-                <div>
-                  <p className="ml-6 mt-4 text-sm font-normal text-brand">
-                    {note.content}
+                <p className="mt-4 text-sm font-normal text-brand">
+                  {note.content}
+                </p>
+                <div className="mt-5 flex gap-1.5">
+                  <p className="text-brand-light-gray text-xs font-normal">
+                    {formatInTimeZone(
+                      note.createdAt,
+                      Intl.DateTimeFormat().resolvedOptions().timeZone,
+                      "MMMM d",
+                    )}
                   </p>
-                  <div className="mt-5  flex items-center justify-center">
-                    <p className="text-brand-light-gray text-xs font-normal">
-                      {formatInTimeZone(
-                        note.createdAt,
-                        Intl.DateTimeFormat().resolvedOptions().timeZone,
-                        "MMMM d",
-                      )}
-                    </p>
-                    <div className="mx-2 h-6 w-0.5 bg-border/50 " />
-                    <p className="text-brand-light-gray text-xs font-normal">
-                      {formatInTimeZone(
-                        note.createdAt,
-                        Intl.DateTimeFormat().resolvedOptions().timeZone,
-                        "h:mm a",
-                      )}
-                    </p>
-                  </div>
+                  <div className="mx-2 h-6 w-0.5 bg-border/50 " />
+                  <p className="text-brand-light-gray text-xs font-normal">
+                    {formatInTimeZone(
+                      note.createdAt,
+                      Intl.DateTimeFormat().resolvedOptions().timeZone,
+                      "h:mm a",
+                    )}
+                  </p>
                 </div>
               </div>
             </div>
