@@ -1,6 +1,9 @@
 "use client";
 
-import { revalidateFromClient, submitTransportReimbursementRequest } from "#/app/actions";
+import {
+  revalidateFromClient,
+  submitTransportReimbursementRequest,
+} from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -20,7 +23,7 @@ import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -54,7 +57,13 @@ export const FormSchema = z.object({
   }),
 });
 
-export function RefundForm({ supervisorId, hubId }: { supervisorId: string; hubId: string; }) {
+export function RefundForm({
+  supervisorId,
+  hubId,
+}: {
+  supervisorId: string;
+  hubId: string;
+}) {
   const [transportSubtype, setTransportSubtype] = useState("");
   const { toast } = useToast();
 
@@ -78,19 +87,19 @@ export function RefundForm({ supervisorId, hubId }: { supervisorId: string; hubI
     await submitTransportReimbursementRequest({
       supervisorId,
       hubId,
-      ...data
-    })
+      ...data,
+    });
 
     toast({
       variant: "default",
       title: "Request for refund has been sent",
     });
 
-    await revalidateFromClient('/profile/refund')
+    await revalidateFromClient("/profile/refund");
 
     form.reset();
 
-    router.push('/profile')
+    router.push("/profile");
   }
 
   return (
