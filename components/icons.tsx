@@ -696,4 +696,15 @@ export const Icons = {
       />
     </svg>
   ),
+  vshapedHumberger: ({ className, ...props }: LucideProps) => (
+    <svg
+      {...props}
+      className={className}
+      width="20" height="10" viewBox="0 0 20 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+        d="M1.66699 0.833252H18.3337M5.00033 4.99992H15.0003M9.16699 9.16659H10.8337" />
+    </svg>
+
+  )
 };
