@@ -1,7 +1,7 @@
 import Link from "next/link";
 
-import { Icons } from "#/components/icons";
 import { currentSupervisor } from "#/app/auth";
+import { Icons } from "#/components/icons";
 import { RefundForm } from "./refund-form";
 
 export default async function RefundPage() {
@@ -17,7 +17,10 @@ export default async function RefundPage() {
   return (
     <>
       <PageHeader />
-      <RefundForm supervisorId={supervisor.id} hubId={supervisor.assignedSchool.hubId} />
+      <RefundForm
+        supervisorId={supervisor.id}
+        hubId={supervisor.assignedSchool.hubId}
+      />
     </>
   );
 }
