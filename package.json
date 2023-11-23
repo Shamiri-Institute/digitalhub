@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postinstall": "prisma generate && prisma migrate deploy",
+    "vercel:build": "npm run build && prisma generate && prisma migrate deply",
     "start": "next start",
     "format": "prettier --write .",
     "lint": "next lint",
