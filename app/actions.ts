@@ -653,6 +653,57 @@ export async function toggleInterventionOccurrence(data: OccurrenceData) {
   return success;
 }
 
+export async function submitTransportReimbursementRequest(data: {
+  supervisorId: string;
+  hubId: string;
+  receiptDate?: Date;
+  amount: string;
+  mpesaName: string;
+  mpesaNumber: string;
+  receiptUrl: string;
+  session: string;
+  destination: string;
+  reason: string;
+}) {
+  try {
+    if (!data.receiptDate) {
+      return {
+        success: false,
+        error: "Please select a date",
+      };
+    }
+
+    await db.reimbursementRequest.create({
+      data: {
+        id: objectId("reim"),
+        supervisorId: data.supervisorId,
+        hubId: data.hubId,
+        incurredAt: data.receiptDate,
+        amount: parseInt(data.amount),
+        kind: "transport",
+        mpesaName: data.mpesaName,
+        mpesaNumber: data.mpesaNumber,
+        details: {
+          subtype: data.reason,
+          receiptUrl: data.receiptUrl,
+          session: data.session,
+          destination: data.destination,
+        },
+      },
+    });
+
+    return {
+      success: true,
+    };
+  } catch (error: unknown) {
+    console.error(error);
+    return {
+      success: false,
+      error: "Something went wrong",
+    };
+  }
+}
+
 export async function updateInterventionOccurrenceDate(
   data: Pick<OccurrenceData, "sessionDate" | "sessionType" | "schoolId">,
 ) {
