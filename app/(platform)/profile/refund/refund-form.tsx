@@ -23,11 +23,11 @@ import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { isValidPhoneNumber } from 'libphonenumber-js';
 
 export const FormSchema = z.object({
   receiptDate: z
@@ -38,9 +38,13 @@ export const FormSchema = z.object({
   mpesaName: z.string({
     required_error: "Please enter the fellow's MPESA name.",
   }),
-  mpesaNumber: z.string({
-    required_error: "Please enter the fellow's MPESA number.",
-  }).refine((val) => isValidPhoneNumber(val, 'KE'), { message: 'Please enter a valid Kenyan phone number' }),
+  mpesaNumber: z
+    .string({
+      required_error: "Please enter the fellow's MPESA number.",
+    })
+    .refine((val) => isValidPhoneNumber(val, "KE"), {
+      message: "Please enter a valid Kenyan phone number",
+    }),
   session: z.string({
     required_error: "Please select a session.",
   }),
