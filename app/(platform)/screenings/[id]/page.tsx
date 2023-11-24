@@ -5,10 +5,11 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+
 } from "#/components/ui/accordion";
 import { Separator } from "#/components/ui/separator";
-import { Card } from "#/components/ui/card";
-import { Button } from "#/components/ui/button";
+import { ReferralDetails } from "./referral-details";
+import { Sessions } from "./student-sessions";
 
 const ScreeningDetails = ({ params }: { params: { id: string } }) => {
   return <div>
@@ -158,9 +159,7 @@ function PresentingIssues() {
 
           <AccordionContent>
             <Sessions />
-            <Button variant="brand">
-              Add
-            </Button>
+
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3">
@@ -183,104 +182,4 @@ function PresentingIssues() {
       <Separator className="mt-4" />
     </div>
   );
-}
-
-
-
-
-
-
-
-
-const sample_sessions_attended = [
-  {
-    name: "Nishan",
-    session: "1",
-    date: "20 Aug 2021",
-  },
-  {
-    name: "Sweet",
-    session: "4",
-    date: "19 Jan 2021",
-  },
-  {
-    name: "Orion",
-    session: "3",
-    date: "03 Aug 2021",
-  },
-  {
-    name: "Esther",
-    session: "2",
-    date: "20 Feb 2021",
-  },
-
-]
-
-
-function Sessions() {
-  return (
-    <Card
-      className={cn("my-2  gap-5 p-4 pr-3.5bg-white")}
-    >
-      <div className="flex justify-between mb-2">
-        <p
-          className="text-base font-medium text-muted-foreground">
-          No.
-        </p>
-        <p
-          className="text-base font-medium text-muted-foreground">
-          Session Attended
-        </p>
-        <p
-          className="text-base font-medium text-muted-foreground">
-          Date
-        </p>
-      </div>
-      <Separator />
-      {
-        sample_sessions_attended.map((stud) => (
-          <SessionsCard key={stud.name}
-            name={stud.name}
-            session={stud.session}
-            date={stud.date}
-          />
-        ))
-      }
-    </Card>
-  )
-}
-
-function SessionsCard({
-  name, session, date
-}: {
-  name: string;
-  session: string;
-  date: string;
-}
-) {
-  return (
-    <div className="flex justify-between  mt-2 border-b items-center last:border-none" >
-      <p
-        className="text-sm text-brand flex-1 text-left ">
-        {name}
-      </p>
-      <p
-        className="text-sm text-brand flex-1  text-center">
-        {session}
-      </p>
-      <p
-        className="text-sm text-brand flex-1  text-right"
-      >
-        {date}
-      </p>
-    </div>
-  )
-}
-
-function ReferralDetails() {
-  return (
-    <div>
-      p
-    </div>
-  )
 }
