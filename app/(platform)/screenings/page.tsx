@@ -57,8 +57,9 @@ function ScreenCard({
     <div className="mt-4 flex items-center  justify-between rounded-lg border-t-[0.1px] px-2 py-2 shadow-lg shadow-muted-sky ">
       <p className="text-base font-medium text-brand">{name}</p>
       <div className="flex items-center justify-between ">
-        {status.map((stat) => (
+        {status.map((stat, idx) => (
           <div
+            key={idx}
             className={cn(
               "mx-2 flex h-7 w-7 items-center justify-center rounded-full",
               colors[stat],
