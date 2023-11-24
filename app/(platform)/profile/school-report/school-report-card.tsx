@@ -53,7 +53,7 @@ export function SchoolReportCard({
     }
   }, [occurring]);
 
-  const onOccurrenceDateSelect = React.useCallback(async (date: Date) => {
+  const onOccurrenceDateSelect = async (date: Date) => {
     const response = await updateInterventionOccurrenceDate({
       sessionDate: date,
       sessionType: data.sessionType,
@@ -70,7 +70,7 @@ export function SchoolReportCard({
         title: `Something went wrong`,
       });
     }
-  }, []);
+  };
 
   return (
     <Card className="my-4 flex">

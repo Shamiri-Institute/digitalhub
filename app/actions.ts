@@ -730,10 +730,10 @@ export async function updateInterventionOccurrenceDate(
         console.error(`Intervention session doesn't exist`);
       }
       return false;
-    } else {
-      console.error({ error });
-      throw error;
     }
+
+    console.error({ error });
+    throw error;
   }
 }
 
