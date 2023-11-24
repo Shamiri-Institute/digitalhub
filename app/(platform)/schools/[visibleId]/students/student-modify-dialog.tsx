@@ -220,7 +220,7 @@ export function StudentModifyDialog({
           )}
           {mode === "create" && (
             <SheetDescription>
-              This student will be assigned to {fellowName}'s group at{" "}
+              This student will be assigned to {fellowName}&apos;s group at{" "}
               {schoolName}.
             </SheetDescription>
           )}
