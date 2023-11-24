@@ -76,7 +76,7 @@ export function WeeklyReportForm({
   return (
     <div className="px-6">
       <div className="my-3 text-center text-sm font-medium text-muted-foreground">
-        <h3>{pointSupervisor.supervisorName}'s Review</h3>
+        <h3>{pointSupervisor.supervisorName}&apos;s Review</h3>
       </div>
       <Form {...form}>
         <form
