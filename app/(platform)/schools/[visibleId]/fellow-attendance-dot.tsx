@@ -83,7 +83,15 @@ export function FellowAttendanceDot({
         title: "Something went wrong",
       });
     }
-  }, [status]);
+  }, [
+    dotColor,
+    fellow.fellowName,
+    fellow.visibleId,
+    school.visibleId,
+    session.label,
+    status,
+    toast,
+  ]);
 
   return (
     <div className="flex flex-col items-center gap-1.5">
