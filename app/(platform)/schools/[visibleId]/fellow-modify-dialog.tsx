@@ -5,7 +5,7 @@ import { Prisma } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
-import React from "react";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 

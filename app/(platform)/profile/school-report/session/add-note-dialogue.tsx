@@ -1,5 +1,6 @@
 "use client";
 
+import { addNote, revalidateFromClient } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "#/components/ui/dialog";
 import { Form, FormField } from "#/components/ui/form";
@@ -12,12 +13,22 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const FormSchema = z.object({
-  note: z.string({
-    required_error: "Please enter the drop out reason",
+  content: z.string({
+    required_error: "Please enter the note",
   }),
 });
 
-export function AddNoteDialog({ children }: { children: React.ReactNode }) {
+export function AddNoteDialog({
+  revalidatePath,
+  sessionId,
+  supervisorId,
+  children,
+}: {
+  revalidatePath: string;
+  sessionId: string;
+  supervisorId: string;
+  children: React.ReactNode;
+}) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -25,34 +36,24 @@ export function AddNoteDialog({ children }: { children: React.ReactNode }) {
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    // const response = await dropoutStudentWithReason(
-    //   student.visibleId,
-    //   student.school.visibleId,
-    //   student.fellow.visibleId,
-    //   data.reason,
-    // );
-    // if (response?.error) {
-    //   toast({
-    //     variant: "destructive",
-    //     title: response?.error,
-    //   });
-    //   return;
-    // }
-
-    // if (response) {
-    //   toast({
-    //     title: `Dropped out ${student.studentName}`,
-    //   });
-
-    //   setDialogOpen(false);
-
-    //   form.reset();
-    // } else {
-    toast({
-      variant: "destructive",
-      title: "Something went wrong",
+    const { success } = await addNote({
+      sessionId,
+      supervisorId,
+      content: data.content,
     });
-    // }
+    if (success) {
+      toast({
+        title: "Note added successfully",
+      });
+      setDialogOpen(false);
+      form.reset();
+      revalidateFromClient(revalidatePath);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+      });
+    }
   }
 
   return (
@@ -68,16 +69,16 @@ export function AddNoteDialog({ children }: { children: React.ReactNode }) {
               <div className="px-6">
                 <FormField
                   control={form.control}
-                  name="note"
+                  name="content"
                   render={({ field }) => (
                     <div className="mt-3 grid w-full gap-1.5">
                       <Label htmlFor="emails">Add note</Label>
                       <Textarea
-                        id="note"
-                        name="note"
+                        id="content"
+                        name="content"
                         onChange={field.onChange}
                         defaultValue={field.value}
-                        placeholder="Add note, write here..."
+                        placeholder="Write here..."
                         className="mt-1.5 resize-none bg-card"
                       />
                     </div>
