@@ -96,5 +96,10 @@ export async function currentSupervisor() {
     throw new Error("No supervisor found");
   }
 
-  return supervisor;
+  const { assignedSchoolId, assignedSchool } = supervisor;
+  if (!assignedSchoolId || !assignedSchool) {
+    throw new Error("Supervisor has no assigned school");
+  }
+
+  return { ...supervisor, assignedSchoolId, assignedSchool };
 }
