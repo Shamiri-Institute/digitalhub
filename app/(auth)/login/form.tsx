@@ -19,7 +19,7 @@ export function LoginForm() {
   useEffect(() => {
     const error = searchParams?.get("error");
     error && toast({ title: error });
-  }, [searchParams]);
+  }, [searchParams, toast]);
 
   return (
     <>

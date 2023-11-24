@@ -56,7 +56,7 @@ export function SessionRater({
         });
       }
     },
-    [],
+    [revalidatePath, sessionId, supervisorId, toast],
   );
 
   return (

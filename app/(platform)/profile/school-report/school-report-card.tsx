@@ -51,7 +51,7 @@ export function SchoolReportCard({
         title: `Already ${data.occurred ? "occurring" : "not occurring"}`,
       });
     }
-  }, [occurring]);
+  }, [data, toast]);
 
   const onOccurrenceDateSelect = async (date: Date) => {
     const response = await updateInterventionOccurrenceDate({
