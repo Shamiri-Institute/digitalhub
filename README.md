@@ -9,6 +9,8 @@
 ### Creating and running migrations
 
 - After making changes to the [`prisma/schema.prisma`](prisma/schema.prisma) file, run `npm run db:migrate:dev` to generate a migration file.
+- When you push your branch to GitHub, Vercel will automatically run the migrations on the preview database (`shamiri_db_preview`).
+  - As this is a shared staging database that will be capturing schema changes by multiple developers, it will be recreated from production every night. But developers can manually recreate it by running `npm run db:preview:reset`.
 
 ## Notes
 

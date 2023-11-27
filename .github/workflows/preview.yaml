@@ -1,0 +1,20 @@
+name: Preview DB Actions
+
+env:
+  PGPASSWORD: ${{ secrets.PGPASSWORD }}
+
+on:
+  schedule:
+    - cron: "0 23 * * *" # 11pm UTC || 2am EAT
+
+jobs:
+  reset-preview-db:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Drop preview db, kill sessions and create preview db
+        run: npm run db:preview:reset
