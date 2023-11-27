@@ -507,7 +507,7 @@ export const Icons = {
       className={className}
       {...props}
     >
-      <g clip-path="url(#clip0_2223_864)">
+      <g clipPath="url(#clip0_2223_864)">
         <path
           d="M7.5 5V7.5"
           stroke="currentColor"
