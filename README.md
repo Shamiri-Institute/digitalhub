@@ -1,3 +1,5 @@
+[![Preview DB](https://github.com/Shamiri-Institute/digitalhub-frontend/actions/workflows/preview.yaml/badge.svg)](https://github.com/Shamiri-Institute/digitalhub-frontend/actions/workflows/preview.yaml)
+
 # Shamiri Digital Hub
 
 ## Quickstart

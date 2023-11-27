@@ -1,4 +1,4 @@
-name: Preview DB Actions
+name: Preview DB Build
 
 env:
   PROD_DBHOST: ${{ secrets.PROD_DBHOST }}
