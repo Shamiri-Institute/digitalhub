@@ -19,10 +19,11 @@
     "db:dev:migrate": "dotenv -c development -- npx prisma migrate dev",
     "db:dev:types": "dotenv -c development -- npx prisma generate",
     "db:prod:shell": "dotenv -c development -- bash -c 'PGPASSWORD=${PROD_DBPASS} psql -h ${PROD_DBHOST} -p ${PROD_DBPORT} -U ${PROD_DBUSER} -d ${PROD_DBNAME}'",
-    "db:prod:kill-sessions": "dotenv -c development -- bash -c 'PGPASSWORD=${PROD_DBPASS} psql -h ${PROD_DBHOST} -p ${PROD_DBHOST} -U ${PROD_DBUSER} -d ${PROD_DBNAME} -c \"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '${PROD_DBNAME}' AND pid <> pg_backend_pid();\"'",
+    "db:prod:kill-sessions": "dotenv -c development -- bash -c 'DATABASE_NAME=${PROD_DBNAME} ./scripts/db/kill-sessions.sh'",
+    "db:preview:kill-sessions": "dotenv -c development -- bash -c 'DATABASE_NAME=${PROD_PREVIEWDBNAME} ./scripts/db/kill-sessions.sh'",
     "db:preview:drop": "dotenv -c development -- bash -c 'PGPASSWORD=${PROD_DBPASS} psql -h ${PROD_DBHOST} -p ${PROD_DBPORT} -U ${PROD_DBUSER} -d ${PROD_DBNAME} -c \"DROP DATABASE ${PROD_PREVIEWDBNAME};\"'",
     "db:preview:create": "dotenv -c development -- bash -c 'PGPASSWORD=${PROD_DBPASS} psql -h ${PROD_DBHOST} -p ${PROD_DBPORT} -U ${PROD_DBUSER} -d ${PROD_DBNAME} -c \"CREATE DATABASE ${PROD_PREVIEWDBNAME} WITH TEMPLATE ${PROD_DBNAME} OWNER ${PROD_DBUSER};\"'",
-    "db:preview:reset": "npm run db:preview:drop && npm run db:prod:kill-sessions && npm run db:preview:create",
+    "db:preview:reset": "npm run db:preview:kill-sessions && npm run db:preview:drop && npm run db:prod:kill-sessions && npm run db:preview:create",
     "email:dev": "email dev -p 4444"
   },
   "dependencies": {
