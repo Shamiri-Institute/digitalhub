@@ -10,16 +10,15 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { ReferralDetails } from "./referral-details";
 import { Sessions } from "./student-sessions";
+import { PresentingIssues } from "./presenting-issues";
 
 const ScreeningDetails = ({ params }: { params: { id: string } }) => {
-  return <div>
-
-    <h1>
-      {params.id}
-    </h1>
-    <IntroHeader />
-    <PresentingIssues />
-  </div>;
+  return (
+    <div>
+      <IntroHeader />
+      <StudentCaseTabs />
+    </div>
+  );
 };
 
 export default ScreeningDetails;
@@ -88,7 +87,7 @@ function IntroHeader() {
   )
 }
 
-function PresentingIssues() {
+function StudentCaseTabs() {
   return (
     <div className="mt-4">
       <Accordion type="single" collapsible>
@@ -107,43 +106,8 @@ function PresentingIssues() {
               <span className="items-center align-middle">Presenting Issues</span>
             </div>
           </AccordionTrigger>
-
           <AccordionContent>
-            <div className="pt-4">
-              <div className="flex items-center justify-between ">
-                <p className="text-sm font-normal text-brand">
-                  Student behavior
-                </p>
-                <div className="flex flex-1  justify-end">
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                </div>
-              </div>
-
-              <div className="mt-1 flex items-center justify-between">
-                <p className="text-sm font-normal text-brand">Admin support</p>
-                <div className="flex flex-1  justify-end">
-                  <div>
-                    <Icons.star className="h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7" />
-                  </div>
-                  <Icons.star className="ml-4 h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7" />
-                  <Icons.star className="ml-4 h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                </div>
-              </div>
-
-              <div className="mt-1 flex items-center justify-between">
-                <p className="text-sm font-normal text-brand">Workload</p>
-                <div className="flex flex-1  justify-end">
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                  <Icons.startOutline className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7" />
-                </div>
-              </div>
-            </div>
+            <PresentingIssues />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2">
@@ -156,10 +120,8 @@ function PresentingIssues() {
               <span className="items-center align-middle">Session</span>
             </div>
           </AccordionTrigger>
-
           <AccordionContent>
             <Sessions />
-
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3">
@@ -172,7 +134,6 @@ function PresentingIssues() {
               <span className="items-center align-middle">Referral</span>
             </div>
           </AccordionTrigger>
-
           <AccordionContent>
             <ReferralDetails />
           </AccordionContent>
@@ -183,3 +144,5 @@ function PresentingIssues() {
     </div>
   );
 }
+
+
