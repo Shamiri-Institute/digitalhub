@@ -1,7 +1,12 @@
 name: Preview DB Actions
 
 env:
-  PGPASSWORD: ${{ secrets.PGPASSWORD }}
+  PROD_DBHOST: ${{ secrets.PROD_DBHOST }}
+  PROD_DBUSER: ${{ secrets.PROD_DBUSER }}
+  PROD_DBNAME: ${{ secrets.PROD_DBNAME }}
+  PROD_DBPASS: ${{ secrets.PROD_DBPASS }}
+  PROD_DBPORT: ${{ secrets.PROD_DBPORT }}
+  PROD_PREVIEWDBNAME: ${{ secrets.PROD_PREVIEWDBNAME }}
 
 on:
   schedule:
