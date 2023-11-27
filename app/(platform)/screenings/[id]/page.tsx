@@ -11,12 +11,14 @@ import { Separator } from "#/components/ui/separator";
 import { ReferralDetails } from "./referral-details";
 import { Sessions } from "./student-sessions";
 import { PresentingIssues } from "./presenting-issues";
+import { CaseNotePlan } from "./case-notes-plan";
 
 const ScreeningDetails = ({ params }: { params: { id: string } }) => {
   return (
     <div>
       <IntroHeader />
       <StudentCaseTabs />
+      <CaseNotePlan />
     </div>
   );
 };
@@ -144,5 +146,3 @@ function StudentCaseTabs() {
     </div>
   );
 }
-
-
