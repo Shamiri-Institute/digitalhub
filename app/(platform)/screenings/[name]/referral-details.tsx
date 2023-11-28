@@ -17,7 +17,7 @@ export function ReferralDetails() {
     }
 
     return (
-        <div className="flex gap-5">
+        <div className="flex gap-5 mt-2">
             <div className="bg-shamiri-blue px-3 py-4 rounded-lg flex-1">
                 <div className="bg-shamiri-light-blue py-2 rounded-md">
                     <p className="text-sm text-center">
