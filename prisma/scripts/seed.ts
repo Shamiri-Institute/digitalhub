@@ -4,18 +4,18 @@ import { parseEuropeanDate } from "#/lib/utils";
 import { parseCsvFile } from "#/prisma/scripts/utils";
 
 async function seedDatabase() {
-  // await truncateTables();
-  // await createSystemUser(db);
-  // await createImplementers(db);
-  // // await createPermissions(db);
-  // // await createRoles(db);
-  // // await createUsers(db);
-  // await createHubs(db);
-  // await createSchools(db);
-  // await createSupervisors(db);
-  // await createFellows(db);
-  // await createFellowAttendances(db);
-  // await createStudents(db);
+  await truncateTables();
+  await createSystemUser(db);
+  await createImplementers(db);
+  // await createPermissions(db);
+  // await createRoles(db);
+  // await createUsers(db);
+  await createHubs(db);
+  await createSchools(db);
+  await createSupervisors(db);
+  await createFellows(db);
+  await createFellowAttendances(db);
+  await createStudents(db);
   await createFixtures(db);
 }
 
@@ -31,7 +31,7 @@ seedDatabase()
 
 async function truncateTables() {
   await db.$executeRaw`
-    TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, intervention_sessions,intervention_group_sessions, fellow_attendances, supervisors, schools, hub_coordinators, reimbursement_requests;
+    TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, intervention_sessions, intervention_group_sessions, intervention_session_ratings, intervention_session_notes, fellow_attendances, supervisors, schools, hub_coordinators, reimbursement_requests;
     `;
 }
 
