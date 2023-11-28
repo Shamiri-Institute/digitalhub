@@ -2,6 +2,7 @@ import { cn } from "#/lib/utils";
 import { Separator } from "#/components/ui/separator";
 import { Card } from "#/components/ui/card";
 import { Button } from "#/components/ui/button";
+import { AddClinicalSessionDialog } from "#/app/(platform)/screenings/[name]/components/add-clinical-session";
 
 
 const sample_sessions_attended = [
@@ -58,11 +59,13 @@ export function Sessions() {
                 ))}
             </Card>
             <div className="flex justify-end">
-                <Button variant="brand" className="w-fit">
-                    Add
-                </Button>
+                <AddClinicalSessionDialog>
+                    <Button variant="brand" className="w-fit">
+                        Add
+                    </Button>
+                </AddClinicalSessionDialog>
             </div>
-        </div>
+        </div >
     );
 }
 
