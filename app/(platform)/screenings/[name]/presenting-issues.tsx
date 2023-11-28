@@ -4,7 +4,6 @@ import { cn } from "#/lib/utils";
 import { useState } from "react";
 import GeneralIssues from "./general-issues";
 
-
 export function PresentingIssues() {
     return (
         <div className="mt-4">
@@ -16,9 +15,7 @@ export function PresentingIssues() {
             <GeneralIssues />
         </div>
     );
-
 }
-
 
 const emergency_options = [
     { id: 1, name: "Anxiety" },
@@ -30,14 +27,13 @@ const emergency_options = [
 
 ]
 
-
 function DiagnosingBoard() {
     return (
         <div>
             <div className="flex justify-between mt-4">
                 <div className="flex-1" />
                 <div className="flex flex-1 justify-between ml-2">
-                    <div >
+                    <div>
                         <p className="text-xs text-brand font-medium">
                             No
                         </p>
@@ -64,25 +60,18 @@ function DiagnosingBoard() {
                     <IssueOptions key={option.id} name={option.name} />
                 ))
             }
-
-
         </div>
     )
 
 }
 
-
-function SingleIssueOption({ onSelect = f => f, selected }: { selected: string; onSelect: (option: string) => void }) {
-
+function SingleIssueOption({ onSelect = f => f, selected, option }: { selected: string; onSelect: (option: string) => void; option: string }) {
     return (
-        <div className="flex ">
+        <div className="flex">
             <button className={cn("h-6 w-6 rounded-full bg-[#d9d9d9] mr-1",
-                // selected === option && "bg-muted-pink",
-                // selected === option && "bg-shamiri-light-blue"
-            )}
-                onClick={() => onSelect("a")}
+                selected === option && "bg-brand")}
+                onClick={() => onSelect(option)}
             />
-
         </div>
     )
 }
@@ -90,10 +79,15 @@ function SingleIssueOption({ onSelect = f => f, selected }: { selected: string; 
 function IssueOptions({ name }: { name: string }) {
     const [selected, setSelected] = useState<string>("")
 
+    const handlePresentingIssue = (option: string) => {
+        // TODO: API CALL - name is the presenting issue
+        let valueSelected = { name, option }
+        setSelected(option)
+    }
+
     return (
         <div className="flex justify-between mt-2">
             <div className="flex-1">
-
                 <div className="bg-muted-foreground px-4 py-2 text-center rounded-sm w-fit" >
                     <p className="text-xs text-brand font-medium min-w-[10rem]">
                         {name}
@@ -101,10 +95,11 @@ function IssueOptions({ name }: { name: string }) {
                 </div>
             </div>
             <div className="flex flex-1 justify-between">
-                <SingleIssueOption selected={selected} onSelect={setSelected} />
-                <SingleIssueOption selected={selected} onSelect={setSelected} />
-                <SingleIssueOption selected={selected} onSelect={setSelected} />
-                <SingleIssueOption selected={selected} onSelect={setSelected} />
+                {
+                    ["No", "Low", "Med", "High"].map((option, i) => (
+                        <SingleIssueOption key={i} selected={selected} onSelect={handlePresentingIssue} option={option} />
+                    ))
+                }
             </div>
         </div>
     )
