@@ -356,7 +356,6 @@ async function createStudents(db: Database) {
   // It includes students with condition NULL (meaning they weren't given an intervention) which were previously excluded in AT.
   // But the additional rows manually added here actually should be included because
   // they were actually given an intervention and are missing because of data entry errors.
-  // I'm keeping the legacy CSV file because the new one is missing some data for important columns like admission_number that we need to resolve.
   // cc: mmbone@shamiri.institute edmund@agency.fund
   await parseCsvFile("student_info_all", async (student: any) => {
     try {
