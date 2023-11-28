@@ -284,7 +284,7 @@ model StudentOutcome {
   date                 DateTime?    @map("date") @db.Date
   condition            String       @map("condition")
   implementerId        String?      @map("implementer_id")
-  implementer          Implementer? @relation(fields: [implementerId], references: [id])
+  implementer          Implementer? @relation(fields: [implementerId], references: [visibleId])
   phq1                 Int?         @map("phq_1")
   phq2                 Int?         @map("phq_2")
   phq3                 Int?         @map("phq_3")
