@@ -59,7 +59,6 @@ function StudentCaseTabs() {
             )}
             iconClass={"h-7 w-7 mr-3 text-brand"}
           >
-
             <div className="flex items-center">
               <Icons.issueIcon className="mr-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
               <span className="items-center align-middle">Presenting Issues</span>
