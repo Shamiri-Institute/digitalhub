@@ -1,9 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useFormState } from "react-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+// @ts-expect-error
+import { experimental_useFormState as useFormState } from "react-dom";
 
 import { inviteUserToImplementer } from "#/app/actions";
 import { Button } from "#/components/ui/button";
