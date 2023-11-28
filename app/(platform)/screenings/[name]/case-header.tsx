@@ -4,6 +4,7 @@ import { cn } from "#/lib/utils";
 import { Icons } from "#/components/icons";
 import { sampleReferredCasses, colors } from "./page";
 import Link from "next/link";
+import { FlagStudentDialog } from "#/app/(platform)/screenings/[name]/components/flag-reason-dialog";
 
 export default function CaseHeader({ name }: { name: string }) {
     const [selected, setSelected] = useState<string>("")
@@ -16,6 +17,10 @@ export default function CaseHeader({ name }: { name: string }) {
     }
 
     const handleFlagged = () => {
+        // todo: prevent unflagging if flagged
+        if (flagged) {
+            return
+        }
         setFlagged(!flagged)
     }
 
@@ -26,12 +31,14 @@ export default function CaseHeader({ name }: { name: string }) {
                 <Link href="/screenings">
                     <Icons.chevronLeft className="w-6 h-6 text-brand" />
                 </Link>
-
-                <button onClick={handleFlagged}>
-                    <Icons.flagcase className={cn("w-6 h-6 text-muted-foreground",
-                        flagged && "text-shamiri-red")}
-                    />
-                </button>
+                {/* TODO:  */}
+                <FlagStudentDialog>
+                    <button onClick={handleFlagged}>
+                        <Icons.flagcase className={cn("w-6 h-6 text-muted-foreground",
+                            flagged && "text-shamiri-red")}
+                        />
+                    </button>
+                </FlagStudentDialog>
             </div>
 
             <div className="flex flex-1">
