@@ -13,7 +13,7 @@ export async function parseCsvFile(
   callback: (row: any) => Promise<void>,
 ): Promise<void> {
   const duplicatesDetectorHash = new Set();
-  const filePath = path.resolve(`./prisma/scripts/airtable/${fileName}.csv`);
+  const filePath = path.resolve(`./prisma/scripts/data/${fileName}.csv`);
 
   const parser = fs
     .createReadStream(filePath)
