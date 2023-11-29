@@ -1,9 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as React from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -15,7 +11,10 @@ import { Form, FormField } from "#/components/ui/form";
 import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const FormSchema = z.object({
   reason: z.string({
@@ -45,14 +44,11 @@ export function FlagStudentDialog({
     //   });
     //   return;
     // }
-
     // if (response) {
     //   toast({
     //     // title: `Dropped out ${student.studentName}`,
     //   });
-
     //   setDialogOpen(false);
-
     //   form.reset();
     // } else {
     //   toast({

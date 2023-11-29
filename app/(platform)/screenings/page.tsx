@@ -1,18 +1,14 @@
 "use client";
 
-import { batchUploadFellows } from "#/app/actions";
-import { useSession } from "#/app/auth.client";
 import { Icons } from "#/components/icons";
-import { Button } from "#/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 
 import { ClinicalFeatureCard } from "#/app/(platform)/clinical-feature-card";
-import { cn } from "#/lib/utils";
-import { Separator } from "#/components/ui/separator";
-import { Card } from "#/components/ui/card";
-import Link from "next/link";
 import CreateClinicalCaseDialogue from "#/app/(platform)/screenings/[name]/components/create-clinical-case";
-
+import { Card } from "#/components/ui/card";
+import { Separator } from "#/components/ui/separator";
+import { cn } from "#/lib/utils";
+import Link from "next/link";
 
 type Colors = {
   [key: string]: string;
@@ -25,7 +21,7 @@ const colors: Colors = {
   terminated: "bg-muted-sky",
 };
 
-const sampleReferredCasses = [
+const sampleReferredStudentCasses = [
   { id: 1, name: "June Kasudi", status: ["Referred"], caseId: "23123kjsdf" },
   { id: 2, name: "Onyango Otieno", status: ["Referred"], caseId: "sd324234" },
   { id: 3, name: "Jonathan Smith", status: ["Referred"], caseId: "2312kdsf" },
@@ -43,34 +39,30 @@ export default function ScreeningsPage() {
   );
 }
 
-
 function CasesReferredToMe() {
   return (
     <div className="min-h-[200px]">
-      <h3 className="text-base font-semibold text-brand xl:text-2xl mt-5 mb-4">
+      <h3 className="mb-4 mt-5 text-base font-semibold text-brand xl:text-2xl">
         Cases referred to you
       </h3>
       <Separator />
-      {
-        sampleReferredCasses.map((stud) => (
-          <RefferedCasesTab key={stud.id} name={stud.name} caseId={stud.caseId} />
-        ))
-      }
+      {sampleReferredStudentCasses.map((stud) => (
+        <RefferedCasesTab key={stud.id} name={stud.name} caseId={stud.caseId} />
+      ))}
     </div>
-  )
+  );
 }
 
 function MyClinicalCases() {
   return (
     <div className="my-3">
-      <div className="flex justify-between my-4">
-
+      <div className="my-4 flex justify-between">
         <h3 className="text-base font-semibold text-brand xl:text-2xl">
           My Clinical Cases
         </h3>
 
         <div className="flex">
-          <Icons.vshapedHumberger className="h-6 w-6 text-brand mr-6" />
+          <Icons.vshapedHumberger className="mr-6 h-6 w-6 text-brand" />
           <CreateClinicalCaseDialogue>
             <Icons.add className="h-6 w-6 text-brand" />
           </CreateClinicalCaseDialogue>
@@ -78,7 +70,7 @@ function MyClinicalCases() {
       </div>
       <Separator />
     </div>
-  )
+  );
 }
 
 function TabsForScreen() {
@@ -87,8 +79,8 @@ function TabsForScreen() {
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-7xl">
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="justify-evenly bg-white w-full">
-              <TabsTrigger value="all" >All</TabsTrigger>
+            <TabsList className="w-full justify-evenly bg-white">
+              <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="active" className="">
                 Active
               </TabsTrigger>
@@ -99,44 +91,47 @@ function TabsForScreen() {
             <TabsContent value="all">
               <ClinicalCasses option={"all"} />
             </TabsContent>
-            <TabsContent value="active" >
+            <TabsContent value="active">
               <ClinicalCasses option={"active"} />
             </TabsContent>
-            <TabsContent value="follow-up" >
+            <TabsContent value="follow-up">
               <ClinicalCasses option={"follow-up"} />
             </TabsContent>
             <TabsContent value="terminated">
               <ClinicalCasses option={"terminated"} />
             </TabsContent>
-            <TabsContent value="referred"><ClinicalCasses option={"referred"} /></TabsContent>
+            <TabsContent value="referred">
+              <ClinicalCasses option={"referred"} />
+            </TabsContent>
           </Tabs>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function RefferedCasesTab({
   name = "",
-  caseId = ""
+  caseId = "",
 }: {
   name: string;
   caseId: string;
 }) {
-
   const handleAcceptReferredCase = () => {
     if (caseId) {
       // TODO: handle accept case
     }
-  }
+  };
 
   const handleRejectReferredCase = () => {
     // TODO: handle reject case
-  }
+  };
 
   return (
     <Card
-      className={cn("my-2 flex items-center  justify-between gap-5 p-4 pr-3.5bg-white")}
+      className={cn(
+        "pr-3.5bg-white my-2 flex  items-center justify-between gap-5 p-4",
+      )}
     >
       <p className="text-base font-medium text-brand">{name}</p>
       <div className="flex items-center justify-between">
@@ -148,11 +143,8 @@ function RefferedCasesTab({
         </button>
       </div>
     </Card>
-  )
+  );
 }
-
-
-
 
 const samplec_clincal_cases = [
   {
@@ -179,95 +171,82 @@ const samplec_clincal_cases = [
     risk: "Mid",
     status: "referred",
   },
+];
 
-]
-
-
-
-function ClinicalCasses({ option }: {
-  option: "all" | "active" | "follow-up" | "terminated" | "referred"
+function ClinicalCasses({
+  option,
+}: {
+  option: "all" | "active" | "follow-up" | "terminated" | "referred";
 }) {
-
-
   const newList = samplec_clincal_cases.filter((item) => {
     if (option === "all") return true;
     if (item.status === option) return true;
-
-  }
-  );
-
-
+  });
 
   return (
-    <Card
-      className={cn("my-2  gap-5 p-4 pr-3.5bg-white")}
-    >
-      <div className="flex justify-between flex-1 mb-2">
-        <p
-          className="text-base font-medium text-muted-foreground flex-1">
+    <Card className={cn("pr-3.5bg-white  my-2 gap-5 p-4")}>
+      <div className="mb-2 flex flex-1 justify-between">
+        <p className="flex-1 text-base font-medium text-muted-foreground">
           Name
         </p>
-        <p
-          className="text-base font-medium text-muted-foreground flex-1">
+        <p className="flex-1 text-base font-medium text-muted-foreground">
           Session
         </p>
-        <p
-          className="text-base font-medium text-muted-foreground  flex-1">
+        <p className="flex-1 text-base font-medium  text-muted-foreground">
           Risk
         </p>
-        <p
-          className="text-base font-medium text-muted-foreground">
-          Status
-        </p>
+        <p className="text-base font-medium text-muted-foreground">Status</p>
       </div>
       <Separator />
-      {
-        newList.map((stud) => (
-          <ClinicalCassesCard key={stud.name}
-            name={stud.name}
-            session={stud.session}
-            risk={stud.risk}
-            status={stud.status}
-          />
-        ))
-      }
+      {newList.map((stud) => (
+        <ClinicalCassesCard
+          key={stud.name}
+          name={stud.name}
+          session={stud.session}
+          risk={stud.risk}
+          status={stud.status}
+        />
+      ))}
     </Card>
-  )
+  );
 }
 
 function ClinicalCassesCard({
-  name, session, risk, status
+  name,
+  session,
+  risk,
+  status,
 }: {
   name: string;
   session: string;
   risk: string;
   status: string;
-}
-) {
+}) {
   return (
     <Link href={`/screenings/${name}`}>
       <div
-        className={cn("flex justify-between flex-1 mt-2 border-b items-center last:border-none",
+        className={cn(
+          "mt-2 flex flex-1 items-center justify-between border-b last:border-none",
           // risk === "High" && "bg-shamiri-red"
         )}
       >
+        <p className="flex-1 text-left text-sm text-brand">{name}</p>
+        <p className="0 flex-1 text-sm text-brand">{session}</p>
         <p
-          className="text-sm text-brand flex-1 text-left">
-          {name}
-        </p>
-        <p
-          className="text-sm text-brand flex-1 0">
-          {session}
-        </p>
-        <p
-          className={cn("text-sm text-brand flex-1",
-            risk === "High" ? "text-shamiri-red" : risk === "Mid" ? "text-muted-yellow" : "text-muted-green"
-          )}>
+          className={cn(
+            "flex-1 text-sm text-brand",
+            risk === "High"
+              ? "text-shamiri-red"
+              : risk === "Mid"
+              ? "text-muted-yellow"
+              : "text-muted-green",
+          )}
+        >
           {risk}
         </p>
         <div
           className={cn(
-            "mr-4 flex h-7 w-7 justify-center rounded-full mb-1 items-center",
+            "mb-1 mr-4 flex h-7 w-7 items-center justify-center rounded-full",
             colors[status],
           )}
         >
@@ -275,8 +254,7 @@ function ClinicalCassesCard({
             {status.charAt(0).toUpperCase()}
           </p>
         </div>
-
       </div>
     </Link>
-  )
+  );
 }
