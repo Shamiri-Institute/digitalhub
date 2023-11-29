@@ -3,6 +3,7 @@ import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 import { useState } from "react";
 import GeneralIssues from "./general-issues";
+import { Card } from "#/components/ui/card";
 
 export function PresentingIssues() {
     return (
@@ -24,7 +25,6 @@ const emergency_options = [
     { id: 4, name: "Bullying" },
     { id: 5, name: "Sexual abuse" },
     { id: 5, name: "Suicidality" },
-
 ]
 
 function DiagnosingBoard() {
@@ -88,11 +88,11 @@ function IssueOptions({ name }: { name: string }) {
     return (
         <div className="flex justify-between mt-2">
             <div className="flex-1">
-                <div className="bg-muted-foreground px-4 py-2 text-center rounded-sm w-fit" >
-                    <p className="text-xs text-brand font-medium min-w-[10rem]">
+                <Card className="shadow-none px-4 py-2 text-center rounded-sm w-fit" >
+                    <p className="text-xs text-brand font-medium min-w-[8.5rem]">
                         {name}
                     </p>
-                </div>
+                </Card>
             </div>
             <div className="flex flex-1 justify-between">
                 {
