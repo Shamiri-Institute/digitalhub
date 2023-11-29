@@ -11,6 +11,7 @@ import { cn } from "#/lib/utils";
 import { Separator } from "#/components/ui/separator";
 import { Card } from "#/components/ui/card";
 import Link from "next/link";
+import CreateClinicalCaseDialogue from "#/app/(platform)/screenings/[name]/components/create-clinical-case";
 
 
 type Colors = {
@@ -25,10 +26,10 @@ const colors: Colors = {
 };
 
 const sampleReferredCasses = [
-  { id: 1, name: "June Kasudi", status: ["Referred"] },
-  { id: 2, name: "Onyango Otieno", status: ["Referred"] },
-  { id: 3, name: "Jonathan Smith", status: ["Referred"] },
-  { id: 4, name: "Vivian Hongo", status: ["Referred"] },
+  { id: 1, name: "June Kasudi", status: ["Referred"], caseId: "23123kjsdf" },
+  { id: 2, name: "Onyango Otieno", status: ["Referred"], caseId: "sd324234" },
+  { id: 3, name: "Jonathan Smith", status: ["Referred"], caseId: "2312kdsf" },
+  { id: 4, name: "Vivian Hongo", status: ["Referred"], caseId: "823sdf" },
 ];
 
 export default function ScreeningsPage() {
@@ -52,7 +53,7 @@ function CasesReferredToMe() {
       <Separator />
       {
         sampleReferredCasses.map((stud) => (
-          <RefferedCasesTab key={stud.id} name={stud.name} />
+          <RefferedCasesTab key={stud.id} name={stud.name} caseId={stud.caseId} />
         ))
       }
     </div>
@@ -70,46 +71,15 @@ function MyClinicalCases() {
 
         <div className="flex">
           <Icons.vshapedHumberger className="h-6 w-6 text-brand mr-6" />
-          <Icons.add className="h-6 w-6 text-brand" />
-
+          <CreateClinicalCaseDialogue>
+            <Icons.add className="h-6 w-6 text-brand" />
+          </CreateClinicalCaseDialogue>
         </div>
       </div>
       <Separator />
     </div>
   )
 }
-
-function ScreenCard({
-  name = "",
-  status = [],
-}: {
-  name: string;
-  status: string[];
-}) {
-  return (
-    <div className="mt-4 flex items-center  justify-between rounded-lg border-t-[0.1px] px-2 py-2 shadow-lg shadow-muted-sky ">
-      <p className="text-base font-medium text-brand">{name}</p>
-      <div className="flex items-center justify-between ">
-        {status.map((stat) => (
-          <div
-            className={cn(
-              "mx-2 flex h-7 w-7 items-center justify-center rounded-full",
-              colors[stat],
-            )}
-          >
-            <p className="text-base font-medium text-white ">
-              {stat.charAt(0).toUpperCase()}
-            </p>
-          </div>
-        ))}
-
-        <Icons.referral className="mx-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
-        <Icons.delete className="mx-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
-      </div>
-    </div>
-  );
-}
-
 
 function TabsForScreen() {
   return (
@@ -148,17 +118,34 @@ function TabsForScreen() {
 
 function RefferedCasesTab({
   name = "",
+  caseId = ""
 }: {
   name: string;
+  caseId: string;
 }) {
+
+  const handleAcceptReferredCase = () => {
+    if (caseId) {
+      // TODO: handle accept case
+    }
+  }
+
+  const handleRejectReferredCase = () => {
+    // TODO: handle reject case
+  }
+
   return (
     <Card
       className={cn("my-2 flex items-center  justify-between gap-5 p-4 pr-3.5bg-white")}
     >
       <p className="text-base font-medium text-brand">{name}</p>
       <div className="flex items-center justify-between">
-        <Icons.check className="mx-2 h-6 w-6 align-baseline text-muted-green xl:h-7 xl:w-7" />
-        <Icons.xIcon className="mx-2 h-6 w-6 align-baseline text-shamiri-red xl:h-7 xl:w-7" />
+        <button onClick={handleAcceptReferredCase}>
+          <Icons.check className="mx-2 h-6 w-6 align-baseline text-muted-green xl:h-7 xl:w-7" />
+        </button>
+        <button onClick={handleRejectReferredCase}>
+          <Icons.xIcon className="mx-2 h-6 w-6 align-baseline text-shamiri-red xl:h-7 xl:w-7" />
+        </button>
       </div>
     </Card>
   )
@@ -259,8 +246,11 @@ function ClinicalCassesCard({
 ) {
   return (
     <Link href={`/screenings/${name}`}>
-      <div className="flex justify-between flex-1 mt-2 border-b items-center last:border-none" >
-
+      <div
+        className={cn("flex justify-between flex-1 mt-2 border-b items-center last:border-none",
+          // risk === "High" && "bg-shamiri-red"
+        )}
+      >
         <p
           className="text-sm text-brand flex-1 text-left">
           {name}
