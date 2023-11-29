@@ -10,6 +10,7 @@ import {
   ClipboardList,
   GraduationCap,
   GraduationCapIcon,
+  HeartPulse,
   LayoutDashboard,
   ListTodo,
   LucideProps,
@@ -61,6 +62,8 @@ export const Icons = {
   moreHorizontal: MoreHorizontal,
   xIcon: XIcon,
   startOutline: Star,
+  heartPulse: HeartPulse,
+
   // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (
     <svg
@@ -507,7 +510,7 @@ export const Icons = {
       className={className}
       {...props}
     >
-      <g clip-path="url(#clip0_2223_864)">
+      <g clipPath="url(#clip0_2223_864)">
         <path
           d="M7.5 5V7.5"
           stroke="currentColor"
@@ -694,6 +697,44 @@ export const Icons = {
         strokeLinejoin="round"
         d="M8.99935 0.666992L10.9666 6.72152H17.3327L12.1824 10.4634L14.1496 16.5179L8.99935 12.7761L3.84907 16.5179L5.8163 10.4634L0.666016 6.72152H7.03212L8.99935 0.666992Z"
       />
+    </svg>
+  ),
+  vshapedHumberger: ({ className, ...props }: LucideProps) => (
+    <svg
+      {...props}
+      className={className}
+      width="20"
+      height="10"
+      viewBox="0 0 20 10"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M1.66699 0.833252H18.3337M5.00033 4.99992H15.0003M9.16699 9.16659H10.8337"
+      />
+    </svg>
+  ),
+  waveIcon: ({ className, ...props }: LucideProps) => (
+    <svg
+      {...props}
+      className={className}
+      fill="none"
+      width="800px"
+      height="800px"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <g id="Wave_Pulse_1" data-name="Wave Pulse 1">
+        <path
+          fill="currentColor"
+          stroke="currentColor"
+          d="M8.974,18h0a1.446,1.446,0,0,1-1.259-.972L5.872,12.883c-.115-.26-.262-.378-.349-.378H2.562a.5.5,0,1,1,0-1H5.523a1.444,1.444,0,0,1,1.263.972l1.839,4.145c.116.261.258.378.349.378h0c.088,0,.229-.113.344-.368L13.7,6.956A1.423,1.423,0,0,1,14.958,6h0a1.449,1.449,0,0,1,1.26.975l1.839,4.151c.11.249.259.379.349.379h3.028a.5.5,0,0,1,0,1H18.41a1.444,1.444,0,0,1-1.263-.975L15.308,7.379c-.116-.261-.259-.378-.35-.379h0c-.088,0-.229.114-.344.368l-4.385,9.676A1.437,1.437,0,0,1,8.974,18Z"
+        />
+      </g>
     </svg>
   ),
 };
