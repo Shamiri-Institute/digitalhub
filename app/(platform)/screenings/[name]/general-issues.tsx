@@ -3,6 +3,7 @@ import { cn } from "#/lib/utils";
 import { useState } from "react";
 import { Input } from "#/components/ui/input";
 import { Card } from "#/components/ui/card";
+import { Separator } from "#/components/ui/separator";
 
 export default function GeneralIssues() {
     const [selected, setSelected] = useState<string>("");
@@ -14,7 +15,8 @@ export default function GeneralIssues() {
 
     return (
         <div>
-            <h3 className="my-4 text-muted-foreground text-sm font-medium ">
+            <Separator className="mt-4" />
+            <h3 className="mt-3 mb-2 text-muted-foreground text-sm font-medium">
                 General
             </h3>
             <div className="flex flex-col">
