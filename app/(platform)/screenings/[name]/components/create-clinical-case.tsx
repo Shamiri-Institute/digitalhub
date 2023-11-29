@@ -1,12 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-// @ts-expect-error
-import { experimental_useFormState as useFormState } from "react-dom";
-
-import { inviteUserToImplementer } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -24,7 +17,10 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const FormSchema = z.object({
   session: z.string({
@@ -35,17 +31,9 @@ const FormSchema = z.object({
   }),
 });
 
-const initialState = {
-  message: null,
-};
-
-// TODO: CLEAN UP THIS FILE
-
 export default function CreateClinicalCaseDialogue({
-  // session,
   children,
 }: {
-  // session: any;
   children: React.ReactNode;
 }) {
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -63,10 +51,7 @@ export default function CreateClinicalCaseDialogue({
     });
   }
 
-  const [state, formAction] = useFormState(
-    inviteUserToImplementer,
-    initialState,
-  );
+  const formAction = () => {};
 
   return (
     <Dialog>
