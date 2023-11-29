@@ -69,6 +69,8 @@ const config: Config = {
           foreground: "hsl(var(--active-card-foreground))",
           "foreground-accent": "hsl(var(--active-card-foreground-accent))",
         },
+        // From Figma
+        "light-grey": "rgba(173, 173, 173, 1)",
       },
       borderRadius: {
         lg: "var(--radius)",

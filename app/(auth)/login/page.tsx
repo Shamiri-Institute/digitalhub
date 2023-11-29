@@ -2,7 +2,6 @@ import * as React from "react";
 
 import { LoginForm } from "#/app/(auth)/login/form";
 import { Icons } from "#/components/icons";
-import { constants } from "#/lib/constants";
 import { constructMetadata } from "#/lib/utils";
 
 export const metadata = constructMetadata({
@@ -13,10 +12,7 @@ export default function LoginPage() {
   return (
     <div className="relative z-10 mt-[calc(30vh)] h-fit w-full max-w-md overflow-hidden border border-border sm:rounded-2xl sm:shadow-xl">
       <div className="flex flex-col items-center justify-center space-y-3 border-b border-gray-200 bg-white px-4 py-6 pt-8 text-center sm:px-16">
-        <a href={constants.APP_URL}>
-          <Icons.logo className="h-10 text-sky-600" />
-        </a>
-        {/* <h3 className="text-xl font-semibold">Sign into SDH</h3> */}
+        <Icons.logo className="h-10 text-sky-600" />
         <p className="text-sm text-gray-500">
           The platform behind the Shamiri Intervention
         </p>

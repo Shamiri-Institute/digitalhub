@@ -7,76 +7,86 @@ import { addWeeks } from "date-fns";
 import { SchoolReportCard } from "./school-report-card";
 
 export interface SessionItem {
+  id: string;
   sessionName: string;
   sessionType: string;
   sessionDate: Date;
 }
 
-let sessionItems: SessionItem[] = [
+const referenceDate = new Date();
+referenceDate.setHours(14);
+referenceDate.setMinutes(0);
+
+let referenceSessionItems: Omit<SessionItem, "id">[] = [
   {
     sessionName: "Pre session",
     sessionType: "s0",
-    sessionDate: addWeeks(new Date(), 0),
+    sessionDate: addWeeks(referenceDate, 0),
   },
   {
     sessionName: "Session 01",
     sessionType: "s1",
-    sessionDate: addWeeks(new Date(), 1),
+    sessionDate: addWeeks(referenceDate, 1),
   },
   {
     sessionName: "Session 02",
     sessionType: "s2",
-    sessionDate: addWeeks(new Date(), 2),
+    sessionDate: addWeeks(referenceDate, 2),
   },
   {
     sessionName: "Session 03",
     sessionType: "s3",
-    sessionDate: addWeeks(new Date(), 3),
+    sessionDate: addWeeks(referenceDate, 3),
   },
   {
     sessionName: "Session 04",
     sessionType: "s4",
-    sessionDate: addWeeks(new Date(), 4),
+    sessionDate: addWeeks(referenceDate, 4),
   },
   {
-    sessionName: "Follow-up 01",
-    sessionType: "fu1",
-    sessionDate: addWeeks(new Date(), 5),
+    sessionName: "Data Collection Follow-up 01",
+    sessionType: "dcfu1",
+    sessionDate: addWeeks(referenceDate, 5),
   },
   {
-    sessionName: "Follow-up 02",
-    sessionType: "fu2",
-    sessionDate: addWeeks(new Date(), 6),
+    sessionName: "Clinical Follow-up 01",
+    sessionType: "cfu1",
+    sessionDate: addWeeks(referenceDate, 5),
   },
   {
-    sessionName: "Follow-up 03",
-    sessionType: "fu3",
-    sessionDate: addWeeks(new Date(), 7),
+    sessionName: "Clinical Follow-up 02",
+    sessionType: "cfu2",
+    sessionDate: addWeeks(referenceDate, 6),
   },
   {
-    sessionName: "Follow-up 04",
-    sessionType: "fu4",
-    sessionDate: addWeeks(new Date(), 8),
+    sessionName: "Clinical Follow-up 03",
+    sessionType: "cfu3",
+    sessionDate: addWeeks(referenceDate, 7),
   },
   {
-    sessionName: "Follow-up 05",
-    sessionType: "fu5",
-    sessionDate: addWeeks(new Date(), 9),
+    sessionName: "Clinical Follow-up 04",
+    sessionType: "cfu4",
+    sessionDate: addWeeks(referenceDate, 8),
   },
   {
-    sessionName: "Follow-up 06",
-    sessionType: "fu6",
-    sessionDate: addWeeks(new Date(), 10),
+    sessionName: "Clinical Follow-up 05",
+    sessionType: "cfu5",
+    sessionDate: addWeeks(referenceDate, 9),
   },
   {
-    sessionName: "Follow-up 07",
-    sessionType: "fu7",
-    sessionDate: addWeeks(new Date(), 11),
+    sessionName: "Clinical Follow-up 06",
+    sessionType: "cfu6",
+    sessionDate: addWeeks(referenceDate, 10),
   },
   {
-    sessionName: "Follow-up 08",
-    sessionType: "fu8",
-    sessionDate: addWeeks(new Date(), 12),
+    sessionName: "Clinical Follow-up 07",
+    sessionType: "cfu7",
+    sessionDate: addWeeks(referenceDate, 11),
+  },
+  {
+    sessionName: "Clinical Follow-up 08",
+    sessionType: "cfu8",
+    sessionDate: addWeeks(referenceDate, 12),
   },
 ];
 
@@ -94,12 +104,12 @@ export default async function SchoolReport() {
       "sessionName" | "sessionDate" | "sessionType"
     >;
   }[] = await Promise.all(
-    sessionItems.map(async (sessionItem) => {
+    referenceSessionItems.map(async (sessionItem) => {
       let created = false;
 
       const interventionSession = await db.interventionSession.findUnique({
         where: {
-          findInterventionBySchoolAndSessionType: {
+          interventionBySchoolIdAndSessionType: {
             sessionType: sessionItem.sessionType,
             schoolId: assignedSchoolId,
           },
@@ -109,6 +119,7 @@ export default async function SchoolReport() {
         created = true;
         return {
           session: {
+            id: interventionSession.id,
             occurred: interventionSession.occurred,
             sessionName: interventionSession.sessionName,
             sessionType: interventionSession.sessionType,
@@ -140,13 +151,17 @@ export default async function SchoolReport() {
         <SchoolReportCard
           key={session?.sessionName ?? defaultSessionValues.sessionName}
           name={session?.sessionName ?? defaultSessionValues.sessionName}
+          saved={session !== null}
           occurring={session?.occurred || false}
+          savedSession={session}
           payload={{
             occurred: !(session?.occurred || false),
             sessionName:
               session?.sessionName ?? defaultSessionValues.sessionName,
-            sessionDate: defaultSessionValues.sessionDate,
-            sessionType: defaultSessionValues.sessionType,
+            sessionDate:
+              session?.sessionDate ?? defaultSessionValues.sessionDate,
+            sessionType:
+              session?.sessionType ?? defaultSessionValues.sessionType,
             yearOfImplementation:
               session?.sessionDate.getFullYear() || new Date().getFullYear(),
             schoolId: assignedSchoolId,
