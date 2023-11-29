@@ -53,7 +53,6 @@ async function SchoolsList() {
     },
   });
 
-
   return (
     <div>
       <div>
