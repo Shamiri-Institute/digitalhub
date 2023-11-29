@@ -1,12 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-// @ts-expect-error
-import { experimental_useFormState as useFormState } from "react-dom";
-
-import { inviteUserToImplementer } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -27,6 +20,9 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const FormSchema = z.object({
   session: z.string({
@@ -65,11 +61,6 @@ export function AddClinicalSessionDialog({
     });
   }
 
-  const [state, formAction] = useFormState(
-    inviteUserToImplementer,
-    initialState,
-  );
-
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -77,7 +68,7 @@ export function AddClinicalSessionDialog({
         <Form {...form}>
           <form
             // onSubmit={form.handleSubmit(onSubmit)}
-            action={formAction}
+            // action={formAction}
             className="overflow-hidden text-ellipsis"
           >
             <DialogHeader className="space-y-0 px-6 py-4">
@@ -104,7 +95,6 @@ export function AddClinicalSessionDialog({
                         <SelectTrigger>
                           <SelectValue
                             className="text-muted-foreground"
-                            // defaultValue={fellow?.gender || field.value}
                             onChange={field.onChange}
                             placeholder={
                               <span className="text-muted-foreground">
@@ -206,9 +196,6 @@ export function AddClinicalSessionDialog({
                 Record Session Attendance
               </Button>
             </div>
-            <p aria-live="polite" className="sr-only" role="status">
-              {state?.message}
-            </p>
           </form>
         </Form>
       </DialogContent>
