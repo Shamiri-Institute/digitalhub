@@ -4,19 +4,19 @@ import { parseEuropeanDate } from "#/lib/utils";
 import { parseCsvFile } from "#/prisma/scripts/utils";
 
 async function seedDatabase() {
-  await truncateTables();
-  await createSystemUser(db);
-  await createImplementers(db);
-  // await createPermissions(db);
-  // await createRoles(db);
-  // await createUsers(db);
-  await createHubs(db);
-  await createSchools(db);
-  await createSupervisors(db);
-  await createFellows(db);
-  await createFellowAttendances(db);
+  // await truncateTables();
+  // await createSystemUser(db);
+  // await createImplementers(db);
+  // // await createPermissions(db);
+  // // await createRoles(db);
+  // // await createUsers(db);
+  // await createHubs(db);
+  // await createSchools(db);
+  // await createSupervisors(db);
+  // await createFellows(db);
+  // await createFellowAttendances(db);
   await createStudents(db);
-  await createFixtures(db);
+  // await createFixtures(db);
 }
 
 seedDatabase()
@@ -31,7 +31,7 @@ seedDatabase()
 
 async function truncateTables() {
   await db.$executeRaw`
-    TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, fellows, intervention_sessions,intervention_group_sessions, fellow_attendances, supervisors, schools, hub_coordinators, reimbursement_requests;
+    TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, student_outcomes, fellows, intervention_sessions, intervention_group_sessions, intervention_session_ratings, intervention_session_notes, fellow_attendances, supervisors, schools, hub_coordinators, reimbursement_requests;
     `;
 }
 
@@ -351,66 +351,64 @@ async function createFellowAttendances(db: Database) {
 async function createStudents(db: Database) {
   console.log("Creating students");
 
-  await parseCsvFile("student_info", async (student: any) => {
+  // Unlike student_info_legacy, this CSV file export corrects a data entry error.
+  // It was not simply downloaded from Airtable like before, but was manually corrected.
+  // It includes students with condition NULL (meaning they weren't given an intervention) which were previously excluded in AT.
+  // But the additional rows manually added here actually should be included because
+  // they were actually given an intervention and are missing because of data entry errors.
+  // cc: mmbone@shamiri.institute edmund@agency.fund
+  await parseCsvFile("student_info_all", async (student: any) => {
     try {
       await db.student.create({
         data: {
           id: objectId("stu"),
-          studentName: student["Student_Name"],
-          visibleId: student["Shamiri_ID"],
-          fellowId: student["Fellow_ID"]
+          studentName: student["name"],
+          visibleId: student["id"],
+          fellowId: student["fellow_id"]
             ? (
                 await db.fellow.findFirst({
-                  where: { visibleId: student["Fellow_ID"] },
+                  where: { visibleId: student["fellow_id"] },
                 })
               )?.id
             : null,
-          supervisorId: student["Supervisor_ID"]
+          supervisorId: student["supervisor_id"]
             ? (
                 await db.supervisor.findFirst({
-                  where: { visibleId: student["Supervisor_ID"] },
+                  where: { visibleId: student["supervisor_id"] },
                 })
               )?.id
             : null,
           implementerId: (
-            await db.supervisor.findFirst({
-              where: { visibleId: student["Implementer_ID"] },
+            await db.implementer.findFirst({
+              where: { visibleId: student["implementer_id"] },
             })
           )?.id,
           schoolId: (
             await db.school.findFirst({
-              where: { visibleId: student["School_ID"] },
+              where: { visibleId: student["school_id"] },
             })
           )?.id,
-          yearOfImplementation: parseInt(student["Year_of_imp"]),
-          admissionNumber: student["Admission_Number"],
-          age: parseInt(student["Age"]),
-          gender: student["Gender"],
-          form: parseInt(student["Form"]),
-          stream: student["Stream"],
-          condition: student["Condition"],
-          intervention: student["intervention"],
-          tribe: student["Tribe"],
-          county: student["County"],
-          financialStatus: student["Financial_Status"],
-          home: student["Home"],
-          siblings: student["Siblings"],
-          religion: student["Religion"],
-          groupName: student["Group"],
-          survivingParents: student["Surviving_Parents"],
-          parentsDead: student["Parents_Dead"],
-          fathersEducation: student["Fathers_Education"],
-          mothersEducation: student["Mothers_Education"],
-          coCurricular: student["Co_Curricular"],
-          sports: student["Sports"],
-          isClinicalCase: Boolean(student["Create_Screening_ID"]),
-          phoneNumber: student["phone_number"],
-          mpesaNumber: student["mpesa_number"],
-          attendanceSession0: Boolean(student["Attendance_Session_0"]),
-          attendanceSession1: Boolean(student["Attendance_Session_1"]),
-          attendanceSession2: Boolean(student["Attendance_Session_2"]),
-          attendanceSession3: Boolean(student["Attendance_Session_3"]),
-          attendanceSession4: Boolean(student["Attendance_Session_4"]),
+          yearOfImplementation: parseInt(student["year_of_implementation"]),
+          admissionNumber: student["admission_number"],
+          age: parseInt(student["age"]),
+          gender: student["gender"],
+          form: parseInt(student["form"]),
+          stream: student["stream"],
+          condition: student["condition"],
+          tribe: student["tribe"],
+          county: student["county"],
+          financialStatus: student["financial_status"],
+          home: student["home"],
+          siblings: student["siblings"],
+          religion: student["religion"],
+          groupName: student["group_name"],
+          survivingParents: student["surviving_parents"],
+          parentsDead: student["parents_dead"],
+          fathersEducation: student["fathers_education"],
+          mothersEducation: student["mothers_education"],
+          coCurricular: student["co_curricular"],
+          sports: student["sports"],
+          isClinicalCase: Boolean(student["create_screening_id"]),
         },
       });
     } catch (e) {
@@ -420,7 +418,8 @@ async function createStudents(db: Database) {
 }
 
 async function createFixtures(db: Database) {
-  // console.log("creating fixtures");
+  console.log("Creating fixtures");
+
   let stDominic = await db.school.findUnique({
     where: {
       visibleId: "ANS23_School_3",
