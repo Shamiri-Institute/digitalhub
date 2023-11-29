@@ -5,7 +5,6 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-
 } from "#/components/ui/accordion";
 import { Separator } from "#/components/ui/separator";
 import { ReferralDetails } from "./referral-details";
@@ -13,6 +12,7 @@ import { Sessions } from "./student-sessions";
 import { PresentingIssues } from "./presenting-issues";
 import { CaseNotePlan } from "./case-notes-plan";
 import CaseHeader from "./case-header";
+import ConsultingClinicalExpert from "./consulting-clinical-expert";
 
 const ScreeningDetails = ({ params }: { params: { name: string } }) => {
   return (
@@ -94,6 +94,20 @@ function StudentCaseTabs() {
           </AccordionTrigger>
           <AccordionContent>
             <ReferralDetails />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="item-4">
+          <AccordionTrigger
+            className={"items-right border border-border/50 bg-white px-5"}
+            iconClass={"h-7 w-7 mr-3 text-brand"}
+          >
+            <div className="flex items-center">
+              <Icons.heartPulse className="mr-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
+              <span className="items-center align-middle">Consulting clinical expert</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <ConsultingClinicalExpert />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
