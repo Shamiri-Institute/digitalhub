@@ -80,7 +80,7 @@ export function RescheduleDialog({
             <DialogHeader className="space-y-0 px-6 py-4">
               <div className="flex items-center gap-2">
                 <span className="text-base font-medium">
-                  Reschedule {fellow.fellowName?.trim()}'s Sessions
+                  Reschedule {fellow.fellowName?.trim()}&apos; Sessions
                 </span>
               </div>
             </DialogHeader>
@@ -202,7 +202,7 @@ export function RescheduleDialog({
                 data-testid={constants.ADD_MEMBERS_SUBMIT}
                 className="w-full bg-[#AC2925]"
               >
-                Reschedule {fellow.fellowName?.trim()}'s Sessions
+                Reschedule {fellow.fellowName?.trim()}&apos;s Sessions
               </Button>
             </div>
             <p aria-live="polite" className="sr-only" role="status">

@@ -1,0 +1,26 @@
+name: Preview DB Build
+
+env:
+  PROD_DBHOST: ${{ secrets.PROD_DBHOST }}
+  PROD_DBUSER: ${{ secrets.PROD_DBUSER }}
+  PROD_DBNAME: ${{ secrets.PROD_DBNAME }}
+  PROD_DBPASS: ${{ secrets.PROD_DBPASS }}
+  PROD_DBPORT: ${{ secrets.PROD_DBPORT }}
+  PROD_PREVIEWDBNAME: ${{ secrets.PROD_PREVIEWDBNAME }}
+
+on:
+  schedule:
+    - cron: "0 23 * * *" # 11pm UTC || 2am EAT
+  workflow_dispatch:
+
+jobs:
+  reset-preview-db:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Drop preview db, kill sessions and create preview db
+        run: npm run db:preview:reset
