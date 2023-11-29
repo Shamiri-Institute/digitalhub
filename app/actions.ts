@@ -593,7 +593,7 @@ export interface OccurrenceData {
 export async function toggleInterventionOccurrence(data: OccurrenceData) {
   const interventionSession = await db.interventionSession.findUnique({
     where: {
-      findInterventionBySchoolAndSessionType: {
+      interventionBySchoolIdAndSessionType: {
         schoolId: data.schoolId,
         sessionType: data.sessionType,
       },
@@ -620,7 +620,7 @@ export async function toggleInterventionOccurrence(data: OccurrenceData) {
     } else if (interventionSession.occurred === false) {
       await db.interventionSession.update({
         where: {
-          findInterventionBySchoolAndSessionType: {
+          interventionBySchoolIdAndSessionType: {
             schoolId: data.schoolId,
             sessionType: data.sessionType,
           },
@@ -639,7 +639,7 @@ export async function toggleInterventionOccurrence(data: OccurrenceData) {
     } else {
       await db.interventionSession.update({
         where: {
-          findInterventionBySchoolAndSessionType: {
+          interventionBySchoolIdAndSessionType: {
             schoolId: data.schoolId,
             sessionType: data.sessionType,
           },
@@ -651,36 +651,6 @@ export async function toggleInterventionOccurrence(data: OccurrenceData) {
   }
 
   return success;
-}
-
-export async function revalidateFromClient(path: string) {
-  revalidatePath(path);
-}
-
-export async function dropoutSchoolWithReason(
-  schoolVisibleId: string,
-  dropoutReason: string,
-) {
-  try {
-    const school = await db.school.update({
-      where: { visibleId: schoolVisibleId },
-      data: {
-        droppedOut: true,
-        dropoutReason: dropoutReason,
-      },
-    });
-
-    return { school };
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error(error.message);
-      return {
-        error: error.message,
-      };
-    }
-    console.error(error);
-    return { error: "Something went wrong" };
-  }
 }
 
 export async function submitTransportReimbursementRequest(data: {
@@ -731,5 +701,194 @@ export async function submitTransportReimbursementRequest(data: {
       success: false,
       error: "Something went wrong",
     };
+  }
+}
+
+export async function updateInterventionOccurrenceDate(
+  data: Pick<OccurrenceData, "sessionDate" | "sessionType" | "schoolId">,
+) {
+  try {
+    const result = await db.interventionSession.update({
+      where: {
+        interventionBySchoolIdAndSessionType: {
+          schoolId: data.schoolId,
+          sessionType: data.sessionType,
+        },
+      },
+      data: {
+        sessionDate: data.sessionDate,
+      },
+    });
+
+    console.log({ result });
+
+    return true;
+  } catch (error: unknown) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      // https://www.prisma.io/docs/reference/api-reference/error-reference#p2025
+      if (error.code === "P2025") {
+        console.error(`Intervention session doesn't exist`);
+      }
+      return false;
+    }
+
+    console.error({ error });
+    throw error;
+  }
+}
+
+export async function revalidateFromClient(path: string) {
+  revalidatePath(path);
+}
+
+export async function dropoutSchoolWithReason(
+  schoolVisibleId: string,
+  dropoutReason: string,
+) {
+  try {
+    const school = await db.school.update({
+      where: { visibleId: schoolVisibleId },
+      data: {
+        droppedOut: true,
+        dropoutReason: dropoutReason,
+      },
+    });
+
+    return { school };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function rateSession(payload: {
+  kind: "student-behavior" | "admin-support" | "workload";
+  rating: number;
+  sessionId: string;
+  supervisorId: string;
+}) {
+  const ratings: {
+    studentBehaviorRating?: number;
+    adminSupportRating?: number;
+    workloadRating?: number;
+  } = {
+    studentBehaviorRating: undefined,
+    adminSupportRating: undefined,
+    workloadRating: undefined,
+  };
+
+  switch (payload.kind) {
+    case "student-behavior":
+      ratings.studentBehaviorRating = payload.rating;
+      break;
+    case "admin-support":
+      ratings.adminSupportRating = payload.rating;
+      break;
+    case "workload":
+      ratings.workloadRating = payload.rating;
+      break;
+    default:
+      throw new Error("Unhandled rating kind");
+  }
+
+  try {
+    await db.interventionSessionRating.upsert({
+      where: {
+        ratingBySessionIdAndSupervisorId: {
+          sessionId: payload.sessionId,
+          supervisorId: payload.supervisorId,
+        },
+      },
+      create: {
+        id: objectId("isr"),
+        sessionId: payload.sessionId,
+        supervisorId: payload.supervisorId,
+        studentBehaviorRating: ratings.studentBehaviorRating,
+        adminSupportRating: ratings.adminSupportRating,
+        workloadRating: ratings.workloadRating,
+      },
+      update: {
+        sessionId: payload.sessionId,
+        supervisorId: payload.supervisorId,
+        studentBehaviorRating: ratings.studentBehaviorRating,
+        adminSupportRating: ratings.adminSupportRating,
+        workloadRating: ratings.workloadRating,
+      },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
+
+export async function saveReport({
+  sessionId,
+  supervisorId,
+  positiveHighlights,
+  reportedChallenges,
+  recommendations,
+}: {
+  sessionId: string;
+  supervisorId: string;
+  positiveHighlights: string;
+  reportedChallenges: string;
+  recommendations: string;
+}) {
+  try {
+    await db.$transaction(async (tx) => {
+      const entries = [
+        { kind: "positive-highlights", content: positiveHighlights },
+        { kind: "reported-challenges", content: reportedChallenges },
+        { kind: "recommendations", content: recommendations },
+      ];
+      for (const { kind, content } of entries) {
+        const row = await tx.interventionSessionNote.findFirst({
+          where: { sessionId, supervisorId, kind },
+        });
+
+        if (row) {
+          await tx.interventionSessionNote.update({
+            where: { id: row.id },
+            data: { sessionId, supervisorId, kind, content },
+          });
+        } else {
+          await tx.interventionSessionNote.create({
+            data: { sessionId, supervisorId, kind, content },
+          });
+        }
+      }
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
+
+export async function addNote({
+  sessionId,
+  supervisorId,
+  content,
+}: {
+  sessionId: string;
+  supervisorId: string;
+  content: string;
+}) {
+  try {
+    await db.interventionSessionNote.create({
+      data: { sessionId, supervisorId, kind: "added-notes", content },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
   }
 }
