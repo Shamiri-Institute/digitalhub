@@ -1,7 +1,6 @@
 "use client";
 
 import CommentsDialogue from "#/app/(platform)/screenings/[name]/components/consulting-comments";
-import { inviteUserToImplementer } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Form, FormField } from "#/components/ui/form";
 import {
@@ -16,8 +15,6 @@ import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-// @ts-expect-error
-import { experimental_useFormState as useFormState } from "react-dom";
 
 const FormSchema = z.object({
   session: z.string({
@@ -47,11 +44,6 @@ export default function ConsultingClinicalExpert() {
       ),
     });
   }
-
-  const [state, formAction] = useFormState(
-    inviteUserToImplementer,
-    initialState,
-  );
 
   return (
     <div className="mt-2">
