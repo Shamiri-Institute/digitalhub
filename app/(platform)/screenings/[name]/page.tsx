@@ -34,8 +34,7 @@ function StudentCaseTabs() {
           <AccordionTrigger
             className={cn(
               "items-right border border-border/50 bg-white px-5",
-              // [data-state='open']  && "bg-muted-green"
-              "bg-shamiri-blue",
+              "data-[state=open]:bg-shamiri-blue",
             )}
             iconClass={"h-7 w-7 mr-3 text-brand"}
           >
@@ -52,7 +51,10 @@ function StudentCaseTabs() {
         </AccordionItem>
         <AccordionItem value="item-2">
           <AccordionTrigger
-            className={"items-right border border-border/50 bg-white px-5"}
+            className={cn(
+              "items-right border border-border/50 bg-white px-5",
+              "data-[state=open]:bg-shamiri-blue",
+            )}
             iconClass={"h-7 w-7 mr-3 text-brand"}
           >
             <div className="flex items-center">
@@ -66,7 +68,10 @@ function StudentCaseTabs() {
         </AccordionItem>
         <AccordionItem value="item-3">
           <AccordionTrigger
-            className={"items-right border border-border/50 bg-white px-5"}
+            className={cn(
+              "items-right border border-border/50 bg-white px-5",
+              "data-[state=open]:bg-shamiri-blue",
+            )}
             iconClass={"h-7 w-7 mr-3 text-brand"}
           >
             <div className="flex items-center">
@@ -80,11 +85,14 @@ function StudentCaseTabs() {
         </AccordionItem>
         <AccordionItem value="item-4">
           <AccordionTrigger
-            className={"items-right border border-border/50 bg-white px-5"}
+            className={cn(
+              "items-right border border-border/50 bg-white px-5",
+              "data-[state=open]:bg-shamiri-blue",
+            )}
             iconClass={"h-7 w-7 mr-3 text-brand"}
           >
             <div className="flex items-center">
-              <Icons.heartPulse className="mr-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
+              <Icons.waveIcon className="mr-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
               <span className="items-center align-middle">
                 Consulting clinical expert
               </span>
