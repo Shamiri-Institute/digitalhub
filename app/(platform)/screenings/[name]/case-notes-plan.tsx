@@ -33,7 +33,7 @@ export function CaseNotePlan() {
 function CaseNotePlanOption({ option, selected, setSelected }: { option: string; selected: string; setSelected: (option: string) => void }) {
     return (
         <button className={cn(" py-4 px-3 rounded-sm flex-1 even:border-x-2",
-            selected === option && "bg-shamiri-light-blue"
+            selected === option && "bg-shamiri-blue"
         )}
             onClick={() => setSelected(option)}
         >
