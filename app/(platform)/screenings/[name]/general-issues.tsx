@@ -2,6 +2,7 @@
 import { cn } from "#/lib/utils";
 import { useState } from "react";
 import { Input } from "#/components/ui/input";
+import { Card } from "#/components/ui/card";
 
 export default function GeneralIssues() {
     const [selected, setSelected] = useState<string>("");
@@ -9,8 +10,8 @@ export default function GeneralIssues() {
 
     const handleOther = (e: React.ChangeEvent<HTMLInputElement>) => {
         setOther(e.target.value)
-
     }
+
     return (
         <div>
             <h3 className="my-4 text-muted-foreground text-sm font-medium ">
@@ -47,13 +48,15 @@ export default function GeneralIssues() {
 
 function GeneralOption({ option, selected, setSelected }: { option: string; selected: string; setSelected: (option: string) => void }) {
     return (
-        <button className={cn("bg-blue-400 py-4 px-3 rounded-sm flex-1",
-            selected === option && "bg-shamiri-light-blue")}
-            onClick={() => setSelected(option)}
-        >
-            <p className="text-xs text-brand font-medium">
-                {option}
-            </p>
-        </button>
+        <Card className={cn("flex flex-1 rounded-sm",
+            selected === option && "bg-shamiri-blue")}>
+            <button className="py-4 px-3 flex-1"
+                onClick={() => setSelected(option)}
+            >
+                <p className="text-xs text-brand font-medium">
+                    {option}
+                </p>
+            </button>
+        </Card>
     )
 }
