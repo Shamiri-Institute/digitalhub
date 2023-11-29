@@ -53,41 +53,6 @@ async function SchoolsList() {
     },
   });
 
-  // const otherSchools = [
-  //   {
-  //     name: "Our Lady of Fatima High School",
-  //     population: 1400,
-  //     sessions: ["Pre", "S1", "S2", "S3"],
-  //     fellowsCount: 15,
-  //     type: "Public",
-  //     county: "Nairobi",
-  //     pointPerson: "Benny Otieno",
-  //     contactNo: "+254712342314780",
-  //     demographics: "Mixed",
-  //   },
-  //   {
-  //     name: "Alliance Sec School",
-  //     population: 124,
-  //     sessions: ["Pre"],
-  //     fellowsCount: 9,
-  //     type: "Public",
-  //     county: "Nairobi",
-  //     pointPerson: "Benny Otieno",
-  //     contactNo: "+254712342314780",
-  //     demographics: "Mixed",
-  //   },
-  //   {
-  //     name: "Maseno Sec School",
-  //     population: 124,
-  //     sessions: [],
-  //     fellowsCount: 9,
-  //     type: "Public",
-  //     county: "Nairobi",
-  //     pointPerson: "Benny Otieno",
-  //     contactNo: "+254712342314780",
-  //     demographics: "Mixed",
-  //   },
-  // ];
 
   return (
     <div>
