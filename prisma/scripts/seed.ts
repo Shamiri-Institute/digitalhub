@@ -4,19 +4,19 @@ import { parseEuropeanDate } from "#/lib/utils";
 import { parseCsvFile } from "#/prisma/scripts/utils";
 
 async function seedDatabase() {
-  // await truncateTables();
-  // await createSystemUser(db);
-  // await createImplementers(db);
-  // // await createPermissions(db);
-  // // await createRoles(db);
-  // // await createUsers(db);
-  // await createHubs(db);
-  // await createSchools(db);
-  // await createSupervisors(db);
-  // await createFellows(db);
-  // await createFellowAttendances(db);
+  await truncateTables();
+  await createSystemUser(db);
+  await createImplementers(db);
+  // await createPermissions(db);
+  // await createRoles(db);
+  // await createUsers(db);
+  await createHubs(db);
+  await createSchools(db);
+  await createSupervisors(db);
+  await createFellows(db);
+  await createFellowAttendances(db);
   await createStudents(db);
-  // await createFixtures(db);
+  await createFixtures(db);
 }
 
 seedDatabase()

@@ -14,10 +14,17 @@
 - When you push your branch to GitHub, Vercel will automatically run the migrations on the preview database (`shamiri_db_preview`).
   - As this is a shared staging database that will be capturing schema changes by multiple developers, it will be recreated from production every night. But developers can manually recreate it by running `npm run db:preview:reset`.
 
+#### Object IDs
+
+Note the use of [Object IDs] for public facing resources used throughout SDH are prefixed ids (more readable version of UUIDs, similiar to [format of Stripe ids]), which allow us to encode the type of the entity in the id itself (e.g. `sup_XXXXX` for Supervisors). This allows us to implement polymorphic relationships in the database. This also improves readability of logs and stacktraces as well as prevents enumeration attacks.
+
+[format of Stripe ids]: https://gist.github.com/fnky/76f533366f75cf75802c8052b577e2a5
+[Object IDs]: https://dev.to/stripe/designing-apis-for-humans-object-ids-3o5a
+[polymorphic relationships in the database]: https://clerk.com/blog/generating-sortable-stripe-like-ids-with-segment-ksuids?utm_source=www.google.com&utm_medium=referral&utm_campaign=none
+
 ## Notes
 
-- ## Installing `aws-crt` to get around Next app dir import error referred to in following issue:
-  - https://github.com/aws-amplify/amplify-js/issues/11030
+- Installing `aws-crt` to get around Next app dir [import issue](https://github.com/aws-amplify/amplify-js/issues/11030)
 
 # Next.js
 

@@ -26,7 +26,7 @@ interface Fixtures {
   }[];
 }
 
-const fixtures: Fixtures = {
+export const fixtures: Fixtures = {
   hubs: [
     {
       visibleId: "23_HUB_01",
@@ -401,5 +401,3 @@ const fixtures: Fixtures = {
     },
   ],
 };
-
-export default fixtures;
