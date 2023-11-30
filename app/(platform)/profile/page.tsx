@@ -246,7 +246,7 @@ function MyFellowCard({
             <Dialog>
               <DialogTrigger>Edit Details</DialogTrigger>
               <DialogContent className="max-h-screen overflow-y-scroll">
-                <FellowDetailsForm />
+                <FellowDetailsForm fellow={fellow} />
               </DialogContent>
             </Dialog>
             <div>Session History</div>

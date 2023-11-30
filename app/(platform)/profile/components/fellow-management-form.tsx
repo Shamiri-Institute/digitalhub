@@ -45,17 +45,28 @@ const FormSchema = z.object({
     .min(1, { message: "Please enter a valid county " }),
 });
 
-export default function FellowDetailsForm() {
+type FellowDetails = {
+  fellow: {
+    name: string;
+    age: string;
+    gender: 'male' | 'female' | 'other';
+    cell_number: string;
+    county: string;
+    mpesa_number: string;
+  };
+};
+
+export default function FellowDetailsForm(props: FellowDetails) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      name: "",
-      age: "",
-      gender: "",
-      contact: "",
-      mpesaName: "",
-      mpesaNumber: "",
-      county: "",
+      name: props.fellow.name,
+      age: props.fellow.age,
+      gender: props.fellow.gender,
+      contact: props.fellow.cell_number,
+      mpesaName: props.fellow.name, // TODO: mpesa name not recorded
+      mpesaNumber: props.fellow.mpesa_number,
+      county: props.fellow.county,
     },
   });
 
