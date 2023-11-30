@@ -8,6 +8,7 @@ import { cn, getInitials } from "#/lib/utils";
 import { differenceInYears } from "date-fns";
 import Link from "next/link";
 import { ReimbursementRequests } from "./reimbursement-requests";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
 
@@ -215,8 +216,7 @@ function MyFellowCard({
     >
       <div
         className={cn(
-          "flex items-center justify-between gap-4 border-b border-border/50 pb-3 pr-3",
-          "grid grid-cols-[15fr,10fr]",
+          "flex items-center justify-between border-b border-border/50 pb-3 pr-3",
           {
             "border-border/20": assigned,
           },
@@ -230,13 +230,20 @@ function MyFellowCard({
             Shamiri ID: {fellow.visibleId}
           </p>
         </div>
-        <div className={cn("flex items-start justify-end  pl-4")}>
-          <Link href={`#`} className="flex flex-col gap-[1px]">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <div>
               <Icons.moreHorizontal className="h-5 w-5 text-brand" />
             </div>
-          </Link>
-        </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="space-y-4 p-4">
+            <div>Edit Fellow</div>
+            <div>Session History</div>
+            <div>Submit complaint</div>
+            <div>Dropout fellow</div>
+            <div>Weekly Evaluation</div>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="flex flex-col ">
