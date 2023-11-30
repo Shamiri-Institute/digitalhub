@@ -34,6 +34,7 @@ const config: Config = {
         "shamiri-blue": "#0474bc",
         "shamiri-blue-darker": "#045e96",
         "shamiri-light-blue": "#b0d5ea",
+        "shamiri-dark-blue": "#002244",
         "shamiri-red": "#DE5E68",
         canvas: "hsl(var(--canvas))",
         primary: {

@@ -3,12 +3,18 @@ import { CurrentSupervisor, currentHub, currentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
+import { Dialog, DialogContent, DialogTrigger } from "#/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
 import { db } from "#/lib/db";
 import { cn, getInitials } from "#/lib/utils";
 import { differenceInYears } from "date-fns";
 import Link from "next/link";
+import FellowDetailsForm from "./components/fellow-management-form";
 import { ReimbursementRequests } from "./reimbursement-requests";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
 
@@ -237,7 +243,12 @@ function MyFellowCard({
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="space-y-4 p-4">
-            <div>Edit Fellow</div>
+            <Dialog>
+              <DialogTrigger>Edit Details</DialogTrigger>
+              <DialogContent className="max-h-screen overflow-y-scroll">
+                <FellowDetailsForm />
+              </DialogContent>
+            </Dialog>
             <div>Session History</div>
             <div>Submit complaint</div>
             <div>Dropout fellow</div>
