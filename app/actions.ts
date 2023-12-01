@@ -14,33 +14,39 @@ import { db } from "#/lib/db";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 
 export async function inviteUserToImplementer(prevState: any, formData: any) {
-  const data = z
-    .object({
-      emails: z.string().transform((val) => val.split(",")),
-      role: z.string(),
-    })
-    .parse({
-      emails: formData.get("emails"),
-      role: formData.get("role"),
+  try {
+    const data = z
+      .object({
+        emails: z.string().transform((val) => val.split(",")),
+        role: z.string(),
+      })
+      .parse({
+        emails: formData.get("emails"),
+        role: formData.get("role"),
+      });
+
+    // TODO: dummy values, use auth/cookies to pull this info
+    const currentImplementer = await db.implementer.findFirstOrThrow();
+    const currentUser = await db.user.findFirstOrThrow();
+
+    const invitations = data.emails.map(async (email) => {
+      // TODO: move this to background job, don't want to creep up on serverless fx limit if alot of invites
+      const inviteUser = new InviteUserCommand();
+      await inviteUser.run({
+        email,
+        implementerId: currentImplementer.id,
+        inviterId: currentUser.id,
+        roleId: data.role,
+      });
     });
+    await Promise.allSettled(invitations);
 
-  // TODO: dummy values, use auth/cookies to pull this info
-  const currentImplementer = await db.implementer.findFirstOrThrow();
-  const currentUser = await db.user.findFirstOrThrow();
+    revalidatePath("/admin/implementer/members");
 
-  const invitations = data.emails.map(async (email) => {
-    // TODO: move this to background job, don't want to creep up on serverless fx limit if alot of invites
-    const inviteUser = new InviteUserCommand();
-    await inviteUser.run({
-      email,
-      implementerId: currentImplementer.id,
-      inviterId: currentUser.id,
-      roleId: data.role,
-    });
-  });
-  await Promise.allSettled(invitations);
-
-  revalidatePath("/admin/implementer/members");
+    return { message: "success" };
+  } catch (e) {
+    return { message: "failed" };
+  }
 }
 
 export async function batchUploadFellows(formData: FormData) {
