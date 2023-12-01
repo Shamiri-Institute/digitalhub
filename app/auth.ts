@@ -93,7 +93,8 @@ export async function currentSupervisor() {
       assignedSchool: true,
       fellows: {
         include: {
-          hub: true
+          hub: true,
+          fellowAttendances: true
         }
       },
     },

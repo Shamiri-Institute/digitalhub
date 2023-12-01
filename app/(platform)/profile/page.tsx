@@ -325,22 +325,23 @@ function MyFellowCard({
                 County:
               </p>
               <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.county}
+                {fellow.county ?? 'N/A'}
               </p>
             </div>
           </div>
 
           <div className="flex flex-col items-end justify-end">
             <h2 className="self-end text-right text-5xl font-semibold text-shamiri-blue">
-              18
+              {fellow.fellowAttendances.reduce((acc, val) => val.attended ? acc + 1 : acc, 0)}
             </h2>
             <p className="text-right text-xs font-medium text-brand">
               Sessions attended
             </p>
           </div>
         </div>
+        {/* TODO: this should take you to the /groups */}
         <Button className="mt-4 w-full bg-shamiri-blue hover:bg-brand">
-          Schools
+          Groups
         </Button>
       </div>
     </Card>
