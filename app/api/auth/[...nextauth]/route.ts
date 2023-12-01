@@ -63,9 +63,7 @@ const authOptions: AuthOptions = {
           memberships: {
             select: {
               implementer: true,
-              roles: {
-                select: { role: true },
-              },
+              role: true,
             },
           },
         },
@@ -74,7 +72,7 @@ const authOptions: AuthOptions = {
         id: token.sub,
         name: user?.name,
         email: user?.email,
-        roles: user?.memberships.map((m) => m.roles.map((r) => r.role.name)),
+        roles: user?.memberships.map((m) => m.role),
         // @ts-ignore
         ...(token || session).user,
       };

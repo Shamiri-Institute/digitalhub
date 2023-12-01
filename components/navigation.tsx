@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { fetchAuthedUser } from "#/app/auth";
 import { Icons, type Icon } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
 import { Separator } from "#/components/ui/separator";
@@ -194,10 +193,6 @@ const navigationItems: NavigationItem[] = [
     roles: SupervisorAndAboveRoles,
   },
 ];
-
-function AppNavigation() {
-  const currentUser = fetchAuthedUser();
-}
 
 function HubCoordinatorNavigation() {
   return (

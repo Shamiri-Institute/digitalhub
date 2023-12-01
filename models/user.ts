@@ -30,9 +30,7 @@ export class UserModel extends Model {
         memberships: {
           select: {
             implementer: true,
-            roles: {
-              select: { role: true },
-            },
+            role: true,
           },
         },
       },
