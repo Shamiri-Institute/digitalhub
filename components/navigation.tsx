@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { PersonnelSwitcher } from "#/app/dev-personnel-switcher";
 import { Icons, type Icon } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
 import { Separator } from "#/components/ui/separator";
@@ -42,6 +43,43 @@ export function Navigation({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"nav">) {
+  const personnel: {
+    id: string;
+    type: "supervisor" | "hc";
+    label: string;
+  }[] = [
+    {
+      id: "sup1",
+      type: "supervisor",
+      label: "Supervisor A",
+    },
+    {
+      id: "sup2",
+      type: "supervisor",
+      label: "Supervisor B",
+    },
+    {
+      id: "sup3",
+      type: "supervisor",
+      label: "Supervisor C",
+    },
+    {
+      id: "hc1",
+      type: "hc",
+      label: "Hub Coordinator X",
+    },
+    {
+      id: "hc2",
+      type: "hc",
+      label: "Hub Coordinator Y",
+    },
+    {
+      id: "hc3",
+      type: "hc",
+      label: "Hub Coordinator Z",
+    },
+  ];
+
   return (
     <div
       className={cn("flex h-full flex-col justify-between", className)}
@@ -51,7 +89,9 @@ export function Navigation({
         <SupervisorNavigation />
       </div>
       <div>
-        <div className="mb-4">
+        <div className="mb-4 flex flex-col gap-2">
+          <PersonnelSwitcher personnel={personnel} />
+
           {/* TODO: https://ui.shadcn.com/docs/components/accordion */}
           <button
             className={cn(
@@ -69,21 +109,6 @@ export function Navigation({
               />
             </div>
           </button>
-
-          {/* <ThemeToggle>
-            <button
-              className={cn(
-                "w-full flex items-center gap-6 lg:gap-2 p-1.5 rounded-sm",
-                "text-sm leading-5 lg:font-medium",
-                "hover:bg-foreground/[0.025]"
-              )}
-            >
-              <Icons.sun className="h-6 lg:h-9" strokeWidth={1.5} />
-              <div className="flex justify-between items-center w-full">
-                <span>Light theme</span>
-              </div>
-            </button>
-          </ThemeToggle> */}
         </div>
         <Separator />
         <div>
