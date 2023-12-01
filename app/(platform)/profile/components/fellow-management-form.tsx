@@ -21,60 +21,61 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
+import { Fellow } from "@prisma/client";
+import { Loader2 } from "lucide-react";
 
+// TODO: maybe use zod-prisma generator to remove use of this
 const FormSchema = z.object({
-  name: z
+  fellowName: z
     .string({ required_error: "Please enter a name" })
     .trim()
-    .min(1, { message: "Please enter a name " }),
-  age: z
-    .string({ required_error: "Please enter a valid age" })
-    .trim()
-    .min(1, { message: "Please enter a valid age " }), // should be converted to date of birth
-  gender: z.enum(["Male", "Female", "Other"], {
-    required_error: "Please select a value",
-  }),
-  contact: z
+    .min(1, { message: "Please enter a name " })
+    .nullable(),
+  dateOfBirth: z.date().nullable(),
+  gender: z.string().nullable(),
+  cellNumber: z
     .string({ required_error: "Please enter a valid phone number " })
     .trim()
-    .min(1, { message: "Please enter a valid age " }), // validate w/ libphonenumberjs
+    .min(1, { message: "Please enter a valid age " }) // validate w/ libphonenumberjs
+    .nullable(),
   mpesaName: z
     .string({ required_error: "Please enter a name" })
     .trim()
-    .min(1, { message: "Please enter a name " }),
+    .min(1, { message: "Please enter a name " })
+    .nullable(),
   mpesaNumber: z
     .string({ required_error: "please enter a valid phone number" })
     .trim()
-    .min(1, { message: "Please enter a name " }), // validate w/ libphonenumberjs
+    .min(1, { message: "Please enter a name " }) // validate w/ libphonenumberjs
+    .nullable(),
   county: z
     .string({ required_error: "County is required" })
     .trim()
-    .min(1, { message: "Please enter a valid county " }),
+    .min(1, { message: "Please enter a valid county " })
+    .nullable(),
+  subCounty: z
+    .string({ required_error: "County is required" })
+    .trim()
+    .min(1, { message: "Please enter a valid county " })
+    .nullable(),
 });
 
 type FellowDetails = {
-  fellow: {
-    name: string;
-    age: string | number;
-    gender: "Male" | "Female" | "Other";
-    cell_number: string;
-    county: string;
-    mpesa_number: string;
-  };
+  fellow: Fellow;
 };
 
 export default function FellowDetailsForm(props: FellowDetails) {
-  console.log(props);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      name: props.fellow.name,
-      age: props.fellow.age,
+      fellowName: props.fellow.fellowName,
+      dateOfBirth: props.fellow.dateOfBirth,
       gender: props.fellow.gender,
-      contact: props.fellow.cell_number,
-      mpesaName: props.fellow.name, // TODO: mpesa name not recorded
-      mpesaNumber: props.fellow.mpesa_number,
+      cellNumber: props.fellow.cellNumber,
+      mpesaName: props.fellow.mpesaName, // TODO: mpesa name not recorded in some of the initial values
+      mpesaNumber: props.fellow.mpesaNumber,
       county: props.fellow.county,
+      subCounty: props.fellow.subCounty,
     },
   });
 
@@ -98,12 +99,16 @@ export default function FellowDetailsForm(props: FellowDetails) {
         <div className="mt-8">
           <FormField
             control={form.control}
-            name="name"
+            name="fellowName"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Papa Wemba" {...field} />
+                  <Input
+                    placeholder="Papa Wemba"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -113,12 +118,21 @@ export default function FellowDetailsForm(props: FellowDetails) {
         <div>
           <FormField
             control={form.control}
-            name="age"
+            name="dateOfBirth"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Age (should be date of birth)</FormLabel>
                 <FormControl>
-                  <Input placeholder="19" type="text" {...field} />
+                  <Input
+                    placeholder="19"
+                    type="text"
+                    {...field}
+                    value={
+                      field.value
+                        ? field.value.toString()
+                        : new Date().toString()
+                    }
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -132,7 +146,7 @@ export default function FellowDetailsForm(props: FellowDetails) {
                 <FormLabel>Gender</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  defaultValue={field.value ?? ""}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -140,9 +154,9 @@ export default function FellowDetailsForm(props: FellowDetails) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    <SelectItem value="M">Male</SelectItem>
+                    <SelectItem value="F">Female</SelectItem>
+                    <SelectItem value="O">Other</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -151,12 +165,16 @@ export default function FellowDetailsForm(props: FellowDetails) {
           />
           <FormField
             control={form.control}
-            name="contact"
+            name="cellNumber"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Contact</FormLabel>
                 <FormControl>
-                  <Input placeholder="0717266218" {...field} />
+                  <Input
+                    placeholder="0717266218"
+                    {...field}
+                    value={field.value || ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -171,7 +189,11 @@ export default function FellowDetailsForm(props: FellowDetails) {
               <FormItem>
                 <FormLabel>MPESA name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ken Walibora" {...field} />
+                  <Input
+                    placeholder="Ken Walibora"
+                    {...field}
+                    value={field.value || ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -184,7 +206,11 @@ export default function FellowDetailsForm(props: FellowDetails) {
               <FormItem>
                 <FormLabel>MPESA Number</FormLabel>
                 <FormControl>
-                  <Input placeholder="0712345678" {...field} />
+                  <Input
+                    placeholder="0712345678"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -197,16 +223,42 @@ export default function FellowDetailsForm(props: FellowDetails) {
             name="county"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>County of residence</FormLabel>
+                <FormLabel>County</FormLabel>
                 <FormControl>
-                  <Input placeholder="Nairobi" {...field} />
+                  <Input
+                    placeholder="Nairobi"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="subCounty"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sub county</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Kamkunji"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        <Button type="submit">Submit</Button>
+        <Button type="submit" disabled={!form.formState.isDirty}>
+          {form.formState.isSubmitting ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : null}
+          Submit
+        </Button>
       </form>
     </Form>
   );

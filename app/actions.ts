@@ -1,6 +1,6 @@
 "use server";
 
-import { FellowAttendance, Prisma } from "@prisma/client";
+import { Fellow, FellowAttendance, Prisma } from "@prisma/client";
 import * as csv from "csv-parse";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
