@@ -2,6 +2,7 @@
 
 import { FellowAttendance, Prisma } from "@prisma/client";
 import * as csv from "csv-parse";
+import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -924,7 +925,38 @@ export async function fetchPersonnel() {
 
   const personnel = [...supervisors, ...hubCoordinators];
 
-  const activePersonnelId = personnel[0]!.id;
+  const { membership } = await getCurrentUser();
+
+  const activePersonnelId = membership.identifier || "";
 
   return { personnel, activePersonnelId };
+}
+
+export async function selectPersonnel({ identifier }: { identifier: string }) {
+  console.log("selectPersonnel", { identifier });
+  const { membership } = await getCurrentUser();
+  await db.implementerMember.update({
+    where: { id: membership.id },
+    data: { identifier },
+  });
+}
+
+async function getCurrentUser() {
+  const session = await getServerSession();
+  if (!session) {
+    throw new Error("No session");
+  }
+
+  const user = await db.user.findUniqueOrThrow({
+    where: { email: session.user.email },
+    include: { memberships: true },
+  });
+
+  // TODO: add membership to session to know which implementer user logged in for
+  const membership = user.memberships[0];
+  if (!membership) {
+    throw new Error("No membership");
+  }
+
+  return { session, user, membership };
 }

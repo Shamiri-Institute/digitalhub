@@ -59,8 +59,9 @@ const authOptions: AuthOptions = {
             },
           });
         }
+        return true;
       }
-      return true;
+      return false;
     },
     session: async ({ session, token }) => {
       const user = await db.user.findUnique({
@@ -102,8 +103,4 @@ export type SessionUser = {
   email: string;
   name: string | null;
   avatarUrl: string | null;
-  memberships: {
-    organization: string;
-    roles: string[];
-  }[];
 };

@@ -3,6 +3,7 @@
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
 import * as React from "react";
 
+import { selectPersonnel } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
   Command,
@@ -32,13 +33,23 @@ export function PersonnelSwitcher({
   activePersonnelId: string;
 }) {
   const [open, setOpen] = React.useState(false);
-  const [selectedPersonnelId, setSelectedPersonnelId] =
-    React.useState(activePersonnelId);
+  const [loading, setLoading] = React.useState(false);
+
+  const onSelectPersonnel = React.useCallback(async (personnelId: string) => {
+    await selectPersonnel({ identifier: personnelId });
+    setLoading(true);
+    window.location.reload();
+  }, []);
 
   return (
     <div className="rounded-md border border-zinc-200/60 bg-zinc-50 bg-gradient-to-br from-zinc-50 to-white px-1.5 py-3">
-      <div className="ml-2 text-xs font-medium uppercase tracking-wider text-zinc-700">
-        Switch Supervisor or HC
+      <div className="ml-2 flex items-center justify-between">
+        <div className="text-xs font-medium uppercase tracking-wider text-zinc-700">
+          Switch Supervisor or HC
+        </div>
+        {loading && (
+          <Spinner className="-ml-1 mr-3 h-5 w-5 animate-spin text-zinc-600" />
+        )}
       </div>
       <div className="mt-2">
         <Popover open={open} onOpenChange={setOpen}>
@@ -49,27 +60,38 @@ export function PersonnelSwitcher({
               aria-expanded={open}
               className="w-full justify-between px-2"
             >
-              {selectedPersonnelId
+              {activePersonnelId
                 ? personnel.find(
-                    (personnel) => personnel.id === selectedPersonnelId,
+                    (personnel) => personnel.id === activePersonnelId,
                   )?.label
+                : loading
+                ? "Loading..."
                 : "Select personnel..."}
               <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[200px] p-0 md:w-64">
-            <Command>
+            <Command
+              filter={(value: string, search: string) => {
+                console.log({ value, search });
+                const person = personnel.find((person) => person.id === value);
+                if (!person) return 0;
+
+                if (person.label.toLowerCase().includes(search.toLowerCase())) {
+                  return 1;
+                }
+                return 0;
+              }}
+            >
               <CommandInput placeholder="Search personnel..." className="h-9" />
               <CommandEmpty>No personnel found.</CommandEmpty>
               <CommandGroup>
                 {personnel.map((person) => (
                   <CommandItem
                     key={person.id}
-                    value={person.label}
-                    onSelect={(_currentValue) => {
-                      setSelectedPersonnelId(
-                        person.id === selectedPersonnelId ? "" : person.id,
-                      );
+                    value={person.id}
+                    onSelect={async (_currentValue) => {
+                      onSelectPersonnel(person.id);
                       setOpen(false);
                     }}
                   >
@@ -86,7 +108,7 @@ export function PersonnelSwitcher({
                     <CheckIcon
                       className={cn(
                         "ml-auto h-4 w-4",
-                        selectedPersonnelId === person.id
+                        activePersonnelId === person.id
                           ? "opacity-100"
                           : "opacity-0",
                       )}
@@ -99,5 +121,30 @@ export function PersonnelSwitcher({
         </Popover>
       </div>
     </div>
+  );
+}
+
+function Spinner({ className }: { className: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      className={className}
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      ></circle>
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      ></path>
+    </svg>
   );
 }

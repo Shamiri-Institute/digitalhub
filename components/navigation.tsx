@@ -56,9 +56,9 @@ export function Navigation({
 
   React.useEffect(() => {
     const fetchData = async () => {
-      const { personnel, activePersonnelId } = await fetchPersonnel();
-      setPersonnel(personnel);
-      setActivePersonnelId(activePersonnelId);
+      const response = await fetchPersonnel();
+      setActivePersonnelId(response.activePersonnelId);
+      setPersonnel(response.personnel);
     };
 
     fetchData();
