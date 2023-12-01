@@ -412,34 +412,34 @@ model StudentOutcome {
 
 /// Fellows are the lay-providers, group leaders of the Shamiri Intervention.
 model Fellow {
-  id                       String                     @id @db.VarChar(255)
-  createdAt                DateTime                   @default(now()) @map("created_at")
-  updatedAt                DateTime                   @updatedAt @map("updated_at")
-  archivedAt               DateTime?                  @map("archived_at")
-  visibleId                String                     @unique @map("visible_id") @db.VarChar(100)
-  fellowName               String?                    @map("fellow_name") @db.VarChar(255)
-  fellowEmail              String?                    @map("fellow_email") @db.VarChar(255)
-  yearOfImplementation     Int?                       @map("year_of_implementation")
-  mpesaName                String?                    @map("mpesa_name") @db.VarChar(255)
-  mpesaNumber              String?                    @map("mpesa_number") @db.VarChar(255)
-  idNumber                 String?                    @map("id_number") @db.VarChar(255)
-  cellNumber               String?                    @map("cell_number") @db.VarChar(255)
-  county                   String?                    @map("county") @db.VarChar(255)
-  subCounty                String?                    @map("sub_county") @db.VarChar(255)
-  dateOfBirth              DateTime?                  @map("date_of_birth") @db.Date
-  gender                   String?                    @map("gender")
-  transferred              Boolean?                   @map("transferred")
-  hubId                    String?                    @map("hub_id") @db.VarChar(255)
-  hub                      Hub?                       @relation(fields: [hubId], references: [id])
-  implementerId            String?                    @map("implementer_id") @db.VarChar(255)
-  implementer              Implementer?               @relation(fields: [implementerId], references: [id])
-  supervisorId             String?                    @map("supervisor_id") @db.VarChar(255)
-  supervisor               Supervisor?                @relation(fields: [supervisorId], references: [id])
-  droppedOut               Boolean?                   @map("dropped_out")
-  dropOutReason            String?                    @map("drop_out_reason")
-  students                 Student[]
-  fellowAttendances        FellowAttendance[]
-  InterventionGroupSession InterventionGroupSession[]
+  id                   String                     @id @db.VarChar(255)
+  createdAt            DateTime                   @default(now()) @map("created_at")
+  updatedAt            DateTime                   @updatedAt @map("updated_at")
+  archivedAt           DateTime?                  @map("archived_at")
+  visibleId            String                     @unique @map("visible_id") @db.VarChar(100)
+  fellowName           String?                    @map("fellow_name") @db.VarChar(255)
+  fellowEmail          String?                    @map("fellow_email") @db.VarChar(255)
+  yearOfImplementation Int?                       @map("year_of_implementation")
+  mpesaName            String?                    @map("mpesa_name") @db.VarChar(255)
+  mpesaNumber          String?                    @map("mpesa_number") @db.VarChar(255)
+  idNumber             String?                    @map("id_number") @db.VarChar(255)
+  cellNumber           String?                    @map("cell_number") @db.VarChar(255)
+  county               String?                    @map("county") @db.VarChar(255)
+  subCounty            String?                    @map("sub_county") @db.VarChar(255)
+  dateOfBirth          DateTime?                  @map("date_of_birth") @db.Date
+  gender               String?                    @map("gender")
+  transferred          Boolean?                   @map("transferred")
+  hubId                String?                    @map("hub_id") @db.VarChar(255)
+  hub                  Hub?                       @relation(fields: [hubId], references: [id])
+  implementerId        String?                    @map("implementer_id") @db.VarChar(255)
+  implementer          Implementer?               @relation(fields: [implementerId], references: [id])
+  supervisorId         String?                    @map("supervisor_id") @db.VarChar(255)
+  supervisor           Supervisor?                @relation(fields: [supervisorId], references: [id])
+  droppedOut           Boolean?                   @map("dropped_out")
+  dropOutReason        String?                    @map("drop_out_reason")
+  students             Student[]
+  fellowAttendances    FellowAttendance[]
+  groupSessions        InterventionGroupSession[]
 
   @@map("fellows")
 }
