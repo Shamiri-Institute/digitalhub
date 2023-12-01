@@ -12,6 +12,7 @@
     "start": "next start",
     "format": "prettier --write .",
     "stylecheck": "prettier --check .",
+    "typecheck": "tsc --noEmit",
     "lint": "next lint",
     "test": "playwright test",
     "db:dev:up": "docker-compose down && docker-compose up db",
