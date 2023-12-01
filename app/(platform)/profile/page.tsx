@@ -5,9 +5,9 @@ import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { db } from "#/lib/db";
 import { cn, getInitials } from "#/lib/utils";
+import { differenceInYears } from "date-fns";
 import Link from "next/link";
 import { ReimbursementRequests } from "./reimbursement-requests";
-import { differenceInYears } from "date-fns";
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
 
@@ -215,7 +215,7 @@ async function MySchools() {
 }
 
 // only show fellows assigned to this supervisor
-function MyFellows({ fellows }: { fellows: CurrentSupervisor['fellows'] }) {
+function MyFellows({ fellows }: { fellows: CurrentSupervisor["fellows"] }) {
   return (
     <>
       <div className="mt-5 flex items-center justify-between">
@@ -241,7 +241,7 @@ function MyFellowCard({
   fellow,
   assigned,
 }: {
-  fellow: CurrentSupervisor['fellows'][number];
+  fellow: CurrentSupervisor["fellows"][number];
   assigned?: boolean;
 }) {
   return (
@@ -285,7 +285,9 @@ function MyFellowCard({
                 Age:
               </p>
               <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.dateOfBirth ? differenceInYears(new Date(), fellow.dateOfBirth) : 'N/A'}
+                {fellow.dateOfBirth
+                  ? differenceInYears(new Date(), fellow.dateOfBirth)
+                  : "N/A"}
               </p>
             </div>
             <div className="flex justify-start gap-2">
@@ -325,14 +327,17 @@ function MyFellowCard({
                 County:
               </p>
               <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.county ?? 'N/A'}
+                {fellow.county ?? "N/A"}
               </p>
             </div>
           </div>
 
           <div className="flex flex-col items-end justify-end">
             <h2 className="self-end text-right text-5xl font-semibold text-shamiri-blue">
-              {fellow.fellowAttendances.reduce((acc, val) => val.attended ? acc + 1 : acc, 0)}
+              {fellow.fellowAttendances.reduce(
+                (acc, val) => (val.attended ? acc + 1 : acc),
+                0,
+              )}
             </h2>
             <p className="text-right text-xs font-medium text-brand">
               Sessions attended

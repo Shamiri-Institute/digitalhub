@@ -94,8 +94,8 @@ export async function currentSupervisor() {
       fellows: {
         include: {
           hub: true,
-          fellowAttendances: true
-        }
+          fellowAttendances: true,
+        },
       },
     },
   });
