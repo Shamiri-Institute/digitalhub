@@ -82,6 +82,8 @@ export async function currentHub() {
   return await db.hub.findFirst();
 }
 
+export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
+
 export async function currentSupervisor() {
   const supervisor = await db.supervisor.findFirst({
     where: {
@@ -89,6 +91,12 @@ export async function currentSupervisor() {
     },
     include: {
       assignedSchool: true,
+      fellows: {
+        include: {
+          hub: true,
+          fellowAttendances: true,
+        },
+      },
     },
   });
 
