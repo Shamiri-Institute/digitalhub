@@ -892,3 +892,39 @@ export async function addNote({
     return { success: false };
   }
 }
+
+export async function fetchPersonnel() {
+  const supervisors: {
+    id: string;
+    type: "supervisor" | "hc";
+    label: string;
+  }[] = (
+    await db.supervisor.findMany({
+      orderBy: { supervisorName: "desc" },
+    })
+  ).map((sup) => ({
+    id: sup.id,
+    type: "supervisor",
+    label: `${sup.supervisorName} - ${sup.visibleId}`,
+  }));
+
+  const hubCoordinators: {
+    id: string;
+    type: "supervisor" | "hc";
+    label: string;
+  }[] = (
+    await db.hubCoordinator.findMany({
+      orderBy: { coordinatorName: "desc" },
+    })
+  ).map((hc) => ({
+    id: hc.id,
+    type: "hc" as const,
+    label: `${hc.coordinatorName} - ${hc.visibleId}`,
+  }));
+
+  const personnel = [...supervisors, ...hubCoordinators];
+
+  const activePersonnelId = personnel[0]!.id;
+
+  return { personnel, activePersonnelId };
+}

@@ -24,9 +24,16 @@ type Personnel = {
   label: string;
 };
 
-export function PersonnelSwitcher({ personnel }: { personnel: Personnel[] }) {
+export function PersonnelSwitcher({
+  personnel,
+  activePersonnelId,
+}: {
+  personnel: Personnel[];
+  activePersonnelId: string;
+}) {
   const [open, setOpen] = React.useState(false);
-  const [selectedPersonnelId, setSelectedPersonnelId] = React.useState("hc3");
+  const [selectedPersonnelId, setSelectedPersonnelId] =
+    React.useState(activePersonnelId);
 
   return (
     <div className="rounded-md border border-zinc-200/60 bg-zinc-50 bg-gradient-to-br from-zinc-50 to-white px-1.5 py-3">
@@ -50,25 +57,32 @@ export function PersonnelSwitcher({ personnel }: { personnel: Personnel[] }) {
               <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0 md:w-56 lg:w-64">
+          <PopoverContent className="w-[200px] p-0 md:w-64">
             <Command>
               <CommandInput placeholder="Search personnel..." className="h-9" />
-              <CommandEmpty>No framework found.</CommandEmpty>
+              <CommandEmpty>No personnel found.</CommandEmpty>
               <CommandGroup>
                 {personnel.map((person) => (
                   <CommandItem
                     key={person.id}
-                    value={person.id}
-                    onSelect={(currentValue) => {
+                    value={person.label}
+                    onSelect={(_currentValue) => {
                       setSelectedPersonnelId(
-                        currentValue === selectedPersonnelId
-                          ? ""
-                          : currentValue,
+                        person.id === selectedPersonnelId ? "" : person.id,
                       );
                       setOpen(false);
                     }}
                   >
-                    {person.label}
+                    <div className="flex flex-col gap-0.5">
+                      <div className="text-[8px] font-medium uppercase tracking-widest">
+                        {person.type === "supervisor"
+                          ? "Supervisor"
+                          : "Hub Coordinator"}
+                      </div>
+                      <span className="truncate text-ellipsis">
+                        {person.label}
+                      </span>
+                    </div>
                     <CheckIcon
                       className={cn(
                         "ml-auto h-4 w-4",

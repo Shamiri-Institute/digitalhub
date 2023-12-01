@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import * as React from "react";
 
+import { fetchPersonnel } from "#/app/actions";
 import { PersonnelSwitcher } from "#/app/dev-personnel-switcher";
 import { Icons, type Icon } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
@@ -43,42 +45,24 @@ export function Navigation({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"nav">) {
-  const personnel: {
-    id: string;
-    type: "supervisor" | "hc";
-    label: string;
-  }[] = [
+  const [personnel, setPersonnel] = React.useState<
     {
-      id: "sup1",
-      type: "supervisor",
-      label: "Supervisor A",
-    },
-    {
-      id: "sup2",
-      type: "supervisor",
-      label: "Supervisor B",
-    },
-    {
-      id: "sup3",
-      type: "supervisor",
-      label: "Supervisor C",
-    },
-    {
-      id: "hc1",
-      type: "hc",
-      label: "Hub Coordinator X",
-    },
-    {
-      id: "hc2",
-      type: "hc",
-      label: "Hub Coordinator Y",
-    },
-    {
-      id: "hc3",
-      type: "hc",
-      label: "Hub Coordinator Z",
-    },
-  ];
+      id: string;
+      type: "supervisor" | "hc";
+      label: string;
+    }[]
+  >([]);
+  const [activePersonnelId, setActivePersonnelId] = React.useState("");
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      const { personnel, activePersonnelId } = await fetchPersonnel();
+      setPersonnel(personnel);
+      setActivePersonnelId(activePersonnelId);
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div
@@ -90,10 +74,13 @@ export function Navigation({
       </div>
       <div>
         <div className="mb-4 flex flex-col gap-2">
-          <PersonnelSwitcher personnel={personnel} />
+          <PersonnelSwitcher
+            personnel={personnel}
+            activePersonnelId={activePersonnelId}
+          />
 
           {/* TODO: https://ui.shadcn.com/docs/components/accordion */}
-          <button
+          {/* <button
             className={cn(
               "flex w-full items-center gap-6 rounded-sm p-1.5 lg:gap-2",
               "text-sm leading-5 text-secondary-foreground lg:font-medium",
@@ -108,7 +95,7 @@ export function Navigation({
                 strokeWidth={1.5}
               />
             </div>
-          </button>
+          </button> */}
         </div>
         <Separator />
         <div>
