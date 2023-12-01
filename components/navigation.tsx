@@ -7,6 +7,7 @@ import { PersonnelSwitcher } from "#/app/dev-personnel-switcher";
 import { Icons, type Icon } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
 import { Separator } from "#/components/ui/separator";
+import { constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 
 export const navigation: Array<any> = [];
@@ -73,29 +74,14 @@ export function Navigation({
         <SupervisorNavigation />
       </div>
       <div>
-        <div className="mb-4 flex flex-col gap-2">
-          <PersonnelSwitcher
-            personnel={personnel}
-            activePersonnelId={activePersonnelId}
-          />
-
-          {/* TODO: https://ui.shadcn.com/docs/components/accordion */}
-          {/* <button
-            className={cn(
-              "flex w-full items-center gap-6 rounded-sm p-1.5 lg:gap-2",
-              "text-sm leading-5 text-secondary-foreground lg:font-medium",
-              "hover:bg-foreground/[0.025]",
-            )}
-          >
-            <Icons.settings className="h-6 lg:h-9" strokeWidth={1.5} />
-            <div className="flex w-full items-center justify-between">
-              <span>Settings</span>
-              <Icons.chevronDown
-                className="h-4 text-foreground/50 lg:h-5"
-                strokeWidth={1.5}
-              />
-            </div>
-          </button> */}
+        <div className="mb-4">
+          {/* TODO: possibly enable devs to use this in prod */}
+          {constants.NEXT_PUBLIC_ENV === "development" && (
+            <PersonnelSwitcher
+              personnel={personnel}
+              activePersonnelId={activePersonnelId}
+            />
+          )}
         </div>
         <Separator />
         <div>

@@ -3,22 +3,24 @@
 import { Icons } from "#/components/icons";
 
 export function Header({
-  userName,
+  personnelName,
   hubName,
+  roleName,
 }: {
-  userName: string;
+  personnelName: string;
   hubName: string;
+  roleName: string;
 }) {
   return (
     <header className="mb-4">
       <div className="flex items-center">
         <h1 className="pr-3 text-2xl font-semibold text-brand">
-          Hello, {userName}
+          Hello, {personnelName}
         </h1>
         <Icons.smileyface className="h-6 w-6 text-brand" />
       </div>
       <p className="text-xl text-muted-foreground">
-        Supervisor — {hubName} Hub
+        {roleName} — {hubName} Hub
       </p>
     </header>
   );

@@ -42,10 +42,10 @@ export function PersonnelSwitcher({
   }, []);
 
   return (
-    <div className="rounded-md border border-zinc-200/60 bg-zinc-50 bg-gradient-to-br from-zinc-50 to-white px-1.5 py-3">
+    <div className="rounded-md border border-zinc-200/60 bg-gradient-to-br from-zinc-50 to-transparent px-1.5 py-3">
       <div className="ml-2 flex items-center justify-between">
-        <div className="text-xs font-medium uppercase tracking-wider text-zinc-700">
-          Switch Supervisor or HC
+        <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-700">
+          Switch to Supervisor or HC
         </div>
         {loading && (
           <Spinner className="-ml-1 mr-3 h-5 w-5 animate-spin text-zinc-600" />
@@ -72,7 +72,7 @@ export function PersonnelSwitcher({
               <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[200px] p-0 md:w-64">
+          <PopoverContent className="w-[360px] p-0 md:w-64">
             <Command
               filter={(value: string, search: string) => {
                 console.log({ value, search });
@@ -103,7 +103,7 @@ export function PersonnelSwitcher({
                           ? "Supervisor"
                           : "Hub Coordinator"}
                       </div>
-                      <span className="truncate text-ellipsis">
+                      <span className="truncate text-ellipsis text-sm">
                         {person.label}
                       </span>
                     </div>

@@ -1,26 +1,12 @@
-import { db } from "#/lib/db";
 import { getServerSession } from "next-auth";
 
-export interface CurrentUser {
-  email: string | null;
-  name: string | null;
-  activeOrgId: string;
-  organizations: {
-    id: string;
-    name: string;
-    roles: {
-      id: string;
-      name: string;
-      description: string;
-    }[];
-  }[];
-  avatarUrl: string | null;
-  isRole: (role: string) => boolean;
-}
+import { db } from "#/lib/db";
 
 export async function currentHub() {
   return await db.hub.findFirst();
 }
+
+export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
 
 export async function currentSupervisor() {
   const { membership } = await getCurrentUser();
@@ -31,7 +17,7 @@ export async function currentSupervisor() {
 
   const supervisor = await db.supervisor.findFirst({
     where: { id: identifier },
-    include: { assignedSchool: true },
+    include: { assignedSchool: true, hub: true },
   });
 
   if (!supervisor) {
@@ -46,6 +32,8 @@ export async function currentSupervisor() {
   return { ...supervisor, assignedSchoolId, assignedSchool };
 }
 
+export type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>;
+
 export async function getCurrentUser() {
   const session = await getServerSession();
   if (!session) {
@@ -57,11 +45,33 @@ export async function getCurrentUser() {
     include: { memberships: true },
   });
 
-  // TODO: add membership to session to know which implementer user logged in for
+  // TODO: add membership to next-auth session to know which implementer, a user is logged in for
   const membership = user.memberships[0];
   if (!membership) {
     throw new Error("No membership");
   }
 
-  return { session, user, membership };
+  let personnelRole: "supervisor" | "hc" | null = null;
+  if (membership.identifier) {
+    if (membership.identifier.startsWith("sup")) {
+      personnelRole = "supervisor";
+    } else if (membership.identifier.startsWith("hc")) {
+      personnelRole = "hc";
+    }
+  }
+
+  return { session, user, membership, personnelRole };
+}
+
+export async function getCurrentPersonnel(): Promise<CurrentSupervisor | null> {
+  const { personnelRole } = await getCurrentUser();
+  if (!personnelRole) {
+    throw new Error("No personnel role");
+  }
+
+  if (personnelRole === "supervisor") {
+    return await currentSupervisor();
+  }
+
+  return null;
 }
