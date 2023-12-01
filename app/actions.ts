@@ -998,7 +998,6 @@ export async function editFellowDetails(
     revalidatePath("/profile");
     return { success: true };
   } catch (e) {
-    console.log(e);
     return { success: false, error: "Something went wrong" };
   }
 }

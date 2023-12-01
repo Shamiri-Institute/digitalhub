@@ -84,8 +84,12 @@ export default function FellowDetailsForm(props: FellowDetails) {
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     const result = await editFellowDetails(data);
-    props.closeDialog();
-    console.log(result);
+
+    if (result.success) {
+      props.closeDialog();
+    }
+
+    // TODO: show a toast or something to explain the errors
   }
 
   return (
