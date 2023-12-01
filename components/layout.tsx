@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 import { Footer } from "#/components/footer";
 import { Header } from "#/components/header";
@@ -10,8 +9,6 @@ import { Icons } from "#/components/icons";
 import { Navigation } from "#/components/navigation";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  let pathname = usePathname();
-
   return (
     <div className="h-full lg:ml-72 xl:ml-80">
       <motion.header

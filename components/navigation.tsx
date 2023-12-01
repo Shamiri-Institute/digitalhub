@@ -48,7 +48,7 @@ export function Navigation({
       {...props}
     >
       <div className="flex flex-1 flex-col">
-        <HubCoordinatorNavigation />
+        <SupervisorNavigation />
       </div>
       <div>
         <div className="mb-4">
@@ -139,47 +139,16 @@ interface NavigationItem {
 const navigationItems: NavigationItem[] = [
   {
     path: "/",
-    title: "Dashboard",
-    Icon: Icons.layoutDashboard,
+    title: "Home",
+    Icon: Icons.home,
     roles: AllRoles,
-  },
-  {
-    path: "/supervisors",
-    title: "Supervisors",
-    Icon: Icons.clipboardList,
-    roles: HubCoordinatorAndAboveRoles,
-  },
-  {
-    path: "/fellows",
-    title: "Fellows",
-    Icon: Icons.graduationCapIcon,
-    roles: SupervisorAndAboveRoles,
   },
   {
     path: "/schools",
     title: "Schools",
-    Icon: Icons.backpack,
+    Icon: Icons.schoolMinusOutline,
     roles: SupervisorAndAboveRoles,
   },
-  {
-    path: "/payouts",
-    title: "Payouts",
-    Icon: Icons.banknote,
-    roles: SupervisorAndAboveRoles,
-  },
-  {
-    path: "/hubs",
-    title: "Hubs",
-    Icon: Icons.network,
-    roles: HubCoordinatorAndAboveRoles,
-  },
-  {
-    path: "/reports",
-    title: "Reports",
-    Icon: Icons.pieChart,
-    roles: HubCoordinatorAndAboveRoles,
-  },
-  // todo: take to supervisor
   {
     path: "/screenings",
     title: "Screenings",
@@ -194,7 +163,7 @@ const navigationItems: NavigationItem[] = [
   },
 ];
 
-function HubCoordinatorNavigation() {
+function SupervisorNavigation() {
   return (
     <nav className="flex-1 lg:pt-6">
       <ul role="list" className="space-y-0">
