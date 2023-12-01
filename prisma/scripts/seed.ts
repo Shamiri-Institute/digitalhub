@@ -395,26 +395,22 @@ async function createFixtures(db: Database) {
 
   // Assign a school to each supervisor
   for (let supervisor of supervisors) {
-    const school = randomSchool(supervisor.hub!.schools);
-    await db.supervisor.update({
-      where: { id: supervisor.id },
-      data: { assignedSchoolId: school?.id },
-    });
+    if (supervisor.hub) {
+      const school = randomSchool(supervisor.hub.schools);
+      await db.supervisor.update({
+        where: { id: supervisor.id },
+        data: { assignedSchoolId: school?.id },
+      });
+    }
   }
 
   let stDominic = await db.school.findUnique({
-    where: {
-      visibleId: "ANS23_School_3",
-    },
+    where: { visibleId: "ANS23_School_3" },
     include: { hub: true },
   });
   const supervisorMichelle = await db.supervisor.update({
-    where: {
-      visibleId: "SPV23_S_25",
-    },
-    data: {
-      assignedSchoolId: stDominic?.id,
-    },
+    where: { visibleId: "SPV23_S_25" },
+    data: { assignedSchoolId: stDominic?.id },
   });
 
   const data = [
@@ -471,6 +467,6 @@ async function createFixtures(db: Database) {
   });
 }
 
-function randomSchool(schools: any[]) {
+function randomSchool<T>(schools: T[]) {
   return schools[Math.floor(Math.random() * schools.length)];
 }

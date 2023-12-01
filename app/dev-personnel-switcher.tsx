@@ -60,13 +60,15 @@ export function PersonnelSwitcher({
               aria-expanded={open}
               className="w-full justify-between px-2"
             >
-              {activePersonnelId
-                ? personnel.find(
-                    (personnel) => personnel.id === activePersonnelId,
-                  )?.label
-                : loading
-                ? "Loading..."
-                : "Select personnel..."}
+              <span className="text-left">
+                {activePersonnelId
+                  ? personnel.find(
+                      (personnel) => personnel.id === activePersonnelId,
+                    )?.label
+                  : loading
+                  ? "Loading..."
+                  : "Select personnel..."}
+              </span>
               <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
