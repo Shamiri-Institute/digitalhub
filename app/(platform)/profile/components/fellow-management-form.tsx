@@ -23,6 +23,7 @@ import {
 } from "#/components/ui/select";
 import { Fellow } from "@prisma/client";
 import { Loader2 } from "lucide-react";
+import { toast } from "#/components/ui/use-toast";
 
 // TODO: maybe use zod-prisma generator to remove use of this
 const FormSchema = z.object({
@@ -87,9 +88,12 @@ export default function FellowDetailsForm(props: FellowDetails) {
 
     if (result.success) {
       props.closeDialog();
+    } else {
+      toast({
+        variant: 'destructive',
+        message: 'Failed to submit edits'
+      });
     }
-
-    // TODO: show a toast or something to explain the errors
   }
 
   return (
