@@ -51,7 +51,7 @@ const FormSchema = z.object({
 });
 
 const initialState = {
-  message: null,
+  message: "",
 };
 
 export function AddMemberDialog({ children }: { children: React.ReactNode }) {
