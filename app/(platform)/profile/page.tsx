@@ -68,7 +68,7 @@ export default async function SupervisorProfile() {
   });
 
   return (
-    <main>
+    <main className="max-w-3xl">
       <IntroHeader />
       <ProfileHeader
         fellowsCount={fellowsCount}
@@ -85,7 +85,7 @@ export default async function SupervisorProfile() {
 
 function IntroHeader() {
   return (
-    <div className="mt-2 flex items-center  justify-between">
+    <div className="mt-2 flex items-center justify-between">
       <div className="flex items-center">
         <Icons.user className="h-5 w-5 align-baseline text-brand xl:h-7 xl:w-7" />
         <h3 className="pl-3 text-base font-semibold text-brand xl:text-2xl">
@@ -120,24 +120,30 @@ function ProfileHeader({
       <p className="pl-3 text-base font-semibold text-shamiri-blue-darker xl:text-2xl">
         {supervisorName}
       </p>
-      <div className="my-4 flex">
-        <div className="pr-4">
-          <p className="text-base font-semibold text-shamiri-blue">
+      <div className="my-4 flex divide-x divide-border">
+        <div className="w-full px-3">
+          <p className="text-center text-base font-semibold text-shamiri-blue lg:text-lg xl:text-xl">
             {fellowsCount.toString().padStart(2, "0")}
           </p>
-          <p className="text-xs text-brand">Fellows</p>
+          <p className="text-center text-xs text-brand lg:text-base xl:text-lg">
+            Fellows
+          </p>
         </div>
-        <div className=" border-l border-border/50 pl-4">
-          <p className="text-base font-semibold text-shamiri-blue">
+        <div className="w-full px-3">
+          <p className="text-center text-base font-semibold text-shamiri-blue lg:text-lg xl:text-xl">
             {schoolCount.toString().padStart(2, "0")}
           </p>
-          <p className="text-xs text-brand">Schools</p>
+          <p className="text-center text-xs text-brand lg:text-base xl:text-lg">
+            Schools
+          </p>
         </div>
-        <div className=" border-l border-border/50 pl-4">
-          <p className="text-base font-semibold text-shamiri-blue">
+        <div className="w-full px-3">
+          <p className="text-center text-base font-semibold text-shamiri-blue lg:text-lg xl:text-xl">
             {studentCount.toString().padStart(2, "0")}
           </p>
-          <p className="text-xs text-brand">Students</p>
+          <p className="text-center text-xs text-brand lg:text-base xl:text-lg">
+            Students
+          </p>
         </div>
       </div>
     </div>
@@ -189,7 +195,7 @@ function MyFellows({ fellows }: { fellows: CurrentSupervisor["fellows"] }) {
         </button>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:items-center  sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:items-center sm:gap-6 md:grid-cols-2">
         {fellows.map((fellow) => (
           <MyFellowCard key={fellow.id} fellow={fellow} />
         ))}
@@ -198,7 +204,21 @@ function MyFellows({ fellows }: { fellows: CurrentSupervisor["fellows"] }) {
   );
 }
 
-// todo: fix types
+function CardDetailLineItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null;
+}) {
+  return (
+    <div className="flex justify-start gap-2">
+      <p className="text-sm font-medium text-muted-foreground">{label}:</p>
+      <p className="text-sm font-semibold text-brand">{value || "N/A"}</p>
+    </div>
+  );
+}
+
 function MyFellowCard({
   fellow,
   assigned,
@@ -215,7 +235,7 @@ function MyFellowCard({
     >
       <div
         className={cn(
-          "flex items-center justify-between gap-4 border-b border-border/50 pb-3 pr-3",
+          "flex items-center justify-between gap-4 border-b border-border/50 pb-3 ",
           "grid grid-cols-[15fr,10fr]",
           {
             "border-border/20": assigned,
@@ -223,75 +243,49 @@ function MyFellowCard({
         )}
       >
         <div>
-          <h3 className={cn("font-semibold text-brand xl:text-xl")}>
+          <h3 className="text-lg font-semibold text-brand">
             {fellow.fellowName}
           </h3>
-          <p className="text-xs font-medium text-muted-foreground xl:text-lg">
+          <p className="text-xs font-medium text-muted-foreground lg:text-sm">
             Shamiri ID: {fellow.visibleId}
           </p>
         </div>
-        <div className={cn("flex items-start justify-end  pl-4")}>
-          <Link href={`#`} className="flex flex-col gap-[1px]">
+        <div className={cn("flex items-start justify-end")}>
+          <button className="flex flex-col gap-[1px]">
             <div>
-              <Icons.moreHorizontal className="h-5 w-5 text-brand" />
+              <Icons.moreVertical className="h-5 w-5 text-brand" />
             </div>
-          </Link>
+          </button>
         </div>
       </div>
 
-      <div className="flex flex-col ">
+      <div className="flex flex-col">
         <div className="flex justify-between">
-          <div className="flex flex-col ">
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Age:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.dateOfBirth
-                  ? differenceInYears(new Date(), fellow.dateOfBirth)
-                  : "N/A"}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Gender:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.gender}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Contact:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.cellNumber}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Mpesa:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.mpesaNumber}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Hub:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.hub?.hubName}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                County:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.county ?? "N/A"}
-              </p>
-            </div>
+          <div className="flex flex-col">
+            <CardDetailLineItem
+              label="Age"
+              value={
+                fellow.dateOfBirth
+                  ? differenceInYears(new Date(), fellow.dateOfBirth).toString()
+                  : null
+              }
+            />
+            <CardDetailLineItem label="Gender" value={fellow.gender} />
+            <CardDetailLineItem
+              label="Contact"
+              value={fellow.cellNumber || null}
+            />
+            {fellow.cellNumber !== fellow.mpesaNumber && (
+              <CardDetailLineItem
+                label="MPESA"
+                value={fellow.mpesaNumber || null}
+              />
+            )}
+            <CardDetailLineItem
+              label="Hub"
+              value={fellow.hub?.hubName || null}
+            />
+            <CardDetailLineItem label="County" value={fellow.county || null} />
           </div>
 
           <div className="flex flex-col items-end justify-end">
