@@ -383,15 +383,31 @@ async function createStudents(db: Database) {
 async function createFixtures(db: Database) {
   console.log("Creating fixtures");
 
+  const supervisors = await db.supervisor.findMany({
+    include: {
+      hub: {
+        include: {
+          schools: true,
+        },
+      },
+    },
+  });
+
+  // Assign a school to each supervisor
+  for (let supervisor of supervisors) {
+    const school = randomSchool(supervisor.hub!.schools);
+    await db.supervisor.update({
+      where: { id: supervisor.id },
+      data: { assignedSchoolId: school?.id },
+    });
+  }
+
   let stDominic = await db.school.findUnique({
     where: {
       visibleId: "ANS23_School_3",
     },
-    include: {
-      hub: true,
-    },
+    include: { hub: true },
   });
-
   const supervisorMichelle = await db.supervisor.update({
     where: {
       visibleId: "SPV23_S_25",
@@ -453,4 +469,8 @@ async function createFixtures(db: Database) {
   await db.reimbursementRequest.createMany({
     data,
   });
+}
+
+function randomSchool(schools: any[]) {
+  return schools[Math.floor(Math.random() * schools.length)];
 }

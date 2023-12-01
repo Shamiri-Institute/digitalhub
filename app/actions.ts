@@ -2,13 +2,13 @@
 
 import { FellowAttendance, Prisma } from "@prisma/client";
 import * as csv from "csv-parse";
-import { getServerSession } from "next-auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { ModifyFellowData } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
 import type { ModifyStudentData } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
+import { getCurrentUser } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -902,6 +902,7 @@ export async function fetchPersonnel() {
   }[] = (
     await db.supervisor.findMany({
       orderBy: { supervisorName: "desc" },
+      where: { NOT: { assignedSchoolId: null } },
     })
   ).map((sup) => ({
     id: sup.id,
@@ -939,24 +940,4 @@ export async function selectPersonnel({ identifier }: { identifier: string }) {
     where: { id: membership.id },
     data: { identifier },
   });
-}
-
-async function getCurrentUser() {
-  const session = await getServerSession();
-  if (!session) {
-    throw new Error("No session");
-  }
-
-  const user = await db.user.findUniqueOrThrow({
-    where: { email: session.user.email },
-    include: { memberships: true },
-  });
-
-  // TODO: add membership to session to know which implementer user logged in for
-  const membership = user.memberships[0];
-  if (!membership) {
-    throw new Error("No membership");
-  }
-
-  return { session, user, membership };
 }
