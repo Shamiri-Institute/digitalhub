@@ -11,44 +11,6 @@ import { ReimbursementRequests } from "./reimbursement-requests";
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
 
-const fellowDetails = [
-  {
-    id: "FE_001",
-    name: "Jean Kasudi",
-    gender: "Female",
-    cell_number: "0790-000-100",
-    mpesa_number: "0792000000",
-    hub: "Nairobi",
-    county: "Nairobi",
-    age: 18,
-    sessions_attended: 7,
-  },
-  {
-    id: "FE_003",
-
-    name: "Faith Mwende",
-    gender: "Female",
-    cell_number: "0790-000-100",
-    mpesa_number: "0792000000",
-    hub: "Nairobi",
-    county: "Nairobi",
-    age: 23,
-    sessions_attended: 16,
-  },
-  {
-    id: "FE_005",
-
-    name: "Innocent Kilonzo",
-    gender: "Male",
-    cell_number: "0790-000-100",
-    mpesa_number: "0792000000",
-    hub: "Nairobi",
-    county: "Nairobi",
-    age: 25,
-    sessions_attended: 12,
-  },
-];
-
 export default async function SupervisorProfile() {
   let supervisor = await currentSupervisor();
 
