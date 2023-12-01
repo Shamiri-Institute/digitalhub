@@ -1,52 +1,15 @@
 import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
-import { currentHub, currentSupervisor } from "#/app/auth";
+import { CurrentSupervisor, currentHub, currentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { db } from "#/lib/db";
 import { cn, getInitials } from "#/lib/utils";
+import { differenceInYears } from "date-fns";
 import Link from "next/link";
 import { ReimbursementRequests } from "./reimbursement-requests";
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
-
-const fellowDetails = [
-  {
-    id: "FE_001",
-    name: "Jean Kasudi",
-    gender: "Female",
-    cell_number: "0790-000-100",
-    mpesa_number: "0792000000",
-    hub: "Nairobi",
-    county: "Nairobi",
-    age: 18,
-    sessions_attended: 7,
-  },
-  {
-    id: "FE_003",
-
-    name: "Faith Mwende",
-    gender: "Female",
-    cell_number: "0790-000-100",
-    mpesa_number: "0792000000",
-    hub: "Nairobi",
-    county: "Nairobi",
-    age: 23,
-    sessions_attended: 16,
-  },
-  {
-    id: "FE_005",
-
-    name: "Innocent Kilonzo",
-    gender: "Male",
-    cell_number: "0790-000-100",
-    mpesa_number: "0792000000",
-    hub: "Nairobi",
-    county: "Nairobi",
-    age: 25,
-    sessions_attended: 12,
-  },
-];
 
 export default async function SupervisorProfile() {
   let supervisor = await currentSupervisor();
@@ -114,7 +77,7 @@ export default async function SupervisorProfile() {
         studentCount={studentCount}
       />
       <MySchools />
-      <MyFellows />
+      <MyFellows fellows={supervisor.fellows} />
       <ReimbursementRequests requests={reimbursementRequests} />
     </main>
   );
@@ -191,6 +154,7 @@ async function MySchools() {
     throw new Error("Assigned school not found");
   }
 
+  // TODO: what is this doing
   const otherSchools = await db.school.findMany({
     where: { visibleId: { not: assignedSchoolId }, hubId: hub!.id },
   });
@@ -212,16 +176,8 @@ async function MySchools() {
   );
 }
 
-async function MyFellows() {
-  const hub = await currentHub();
-  const assignedSchoolId = "ANS23_School_17";
-  const assignedSchool = await db.school.findFirst({
-    where: { visibleId: assignedSchoolId, hubId: hub!.id },
-  });
-  if (!assignedSchool) {
-    throw new Error("Assigned school not found");
-  }
-
+// only show fellows assigned to this supervisor
+function MyFellows({ fellows }: { fellows: CurrentSupervisor["fellows"] }) {
   return (
     <>
       <div className="mt-5 flex items-center justify-between">
@@ -234,19 +190,20 @@ async function MyFellows() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:items-center  sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {fellowDetails.map((fellow) => (
-          <MyFellowCard key={fellow.name} fellow={fellow} />
+        {fellows.map((fellow) => (
+          <MyFellowCard key={fellow.id} fellow={fellow} />
         ))}
       </div>
     </>
   );
 }
 
+// todo: fix types
 function MyFellowCard({
   fellow,
   assigned,
 }: {
-  fellow: any;
+  fellow: CurrentSupervisor["fellows"][number];
   assigned?: boolean;
 }) {
   return (
@@ -267,10 +224,10 @@ function MyFellowCard({
       >
         <div>
           <h3 className={cn("font-semibold text-brand xl:text-xl")}>
-            {fellow.name}
+            {fellow.fellowName}
           </h3>
           <p className="text-xs font-medium text-muted-foreground xl:text-lg">
-            Shamiri ID: 123456
+            Shamiri ID: {fellow.visibleId}
           </p>
         </div>
         <div className={cn("flex items-start justify-end  pl-4")}>
@@ -290,7 +247,9 @@ function MyFellowCard({
                 Age:
               </p>
               <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.age}
+                {fellow.dateOfBirth
+                  ? differenceInYears(new Date(), fellow.dateOfBirth)
+                  : "N/A"}
               </p>
             </div>
             <div className="flex justify-start gap-2">
@@ -306,7 +265,7 @@ function MyFellowCard({
                 Contact:
               </p>
               <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.cell_number}
+                {fellow.cellNumber}
               </p>
             </div>
             <div className="flex justify-start gap-2">
@@ -314,7 +273,7 @@ function MyFellowCard({
                 Mpesa:
               </p>
               <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.mpesa_number}
+                {fellow.mpesaNumber}
               </p>
             </div>
             <div className="flex justify-start gap-2">
@@ -322,7 +281,7 @@ function MyFellowCard({
                 Hub:
               </p>
               <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.hub}
+                {fellow.hub?.hubName}
               </p>
             </div>
             <div className="flex justify-start gap-2">
@@ -330,22 +289,26 @@ function MyFellowCard({
                 County:
               </p>
               <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.county}
+                {fellow.county ?? "N/A"}
               </p>
             </div>
           </div>
 
           <div className="flex flex-col items-end justify-end">
             <h2 className="self-end text-right text-5xl font-semibold text-shamiri-blue">
-              18
+              {fellow.fellowAttendances.reduce(
+                (acc, val) => (val.attended ? acc + 1 : acc),
+                0,
+              )}
             </h2>
             <p className="text-right text-xs font-medium text-brand">
               Sessions attended
             </p>
           </div>
         </div>
+        {/* TODO: this should take you to the /groups */}
         <Button className="mt-4 w-full bg-shamiri-blue hover:bg-brand">
-          Schools
+          Groups
         </Button>
       </div>
     </Card>

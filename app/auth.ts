@@ -17,7 +17,16 @@ export async function currentSupervisor() {
 
   const supervisor = await db.supervisor.findFirst({
     where: { id: identifier },
-    include: { assignedSchool: true, hub: true },
+    include: {
+      hub: true,
+      assignedSchool: true,
+      fellows: {
+        include: {
+          hub: true,
+          fellowAttendances: true,
+        },
+      },
+    },
   });
 
   if (!supervisor) {
