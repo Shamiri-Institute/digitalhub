@@ -13,6 +13,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
 
 const FormSchema = z.object({
@@ -24,7 +31,7 @@ const FormSchema = z.object({
     .string({ required_error: "Please enter a valid age" })
     .trim()
     .min(1, { message: "Please enter a valid age " }), // should be converted to date of birth
-  gender: z.enum(["male", "female", "other"], {
+  gender: z.enum(["Male", "Female", "Other"], {
     required_error: "Please select a value",
   }),
   contact: z
@@ -48,8 +55,8 @@ const FormSchema = z.object({
 type FellowDetails = {
   fellow: {
     name: string;
-    age: string;
-    gender: 'male' | 'female' | 'other';
+    age: string | number;
+    gender: "Male" | "Female" | "Other";
     cell_number: string;
     county: string;
     mpesa_number: string;
@@ -57,6 +64,7 @@ type FellowDetails = {
 };
 
 export default function FellowDetailsForm(props: FellowDetails) {
+  console.log(props);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -86,6 +94,7 @@ export default function FellowDetailsForm(props: FellowDetails) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
         <h2>Fellow information</h2>
+        <p className="mt-4">ShamirI ID: sham_123</p>
         <div className="mt-8">
           <FormField
             control={form.control}
@@ -100,7 +109,6 @@ export default function FellowDetailsForm(props: FellowDetails) {
               </FormItem>
             )}
           />
-          <Input placeholder="SHAMIRI_ID" disabled />
         </div>
         <div>
           <FormField
@@ -110,7 +118,7 @@ export default function FellowDetailsForm(props: FellowDetails) {
               <FormItem>
                 <FormLabel>Age (should be date of birth)</FormLabel>
                 <FormControl>
-                  <Input placeholder="19" {...field} />
+                  <Input placeholder="19" type="text" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -121,10 +129,22 @@ export default function FellowDetailsForm(props: FellowDetails) {
             name="gender"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Gender (change to dropdown)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Female" {...field} />
-                </FormControl>
+                <FormLabel>Gender</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Gender" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
