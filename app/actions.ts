@@ -89,18 +89,18 @@ async function parseCsvFile(file: File) {
     });
 
     const records: any[] = [];
-    parser.on("readable", function () {
+    parser.on("readable", function() {
       let record;
       while ((record = parser.read())) {
         records.push(record);
       }
     });
 
-    parser.on("error", function (err) {
+    parser.on("error", function(err) {
       reject(err.message);
     });
 
-    parser.on("end", function () {
+    parser.on("end", function() {
       resolve(records);
     });
 
@@ -932,4 +932,67 @@ export async function updateAssignedSchoolDetails(
     console.error(error);
     return { error: "Something went wrong" };
   }
+}
+
+export async function editFellowDetails(
+  fellowDetails: Pick<
+    Fellow,
+    | "id"
+    | "fellowName"
+    | "dateOfBirth"
+    | "mpesaNumber"
+    | "gender"
+    | "county"
+    | "mpesaName"
+    | "cellNumber"
+  >,
+) {
+  const schema = z.object({
+    id: z.string().trim(),
+    fellowName: z
+      .string({ required_error: "Please enter a name" })
+      .trim()
+      .min(1, { message: "Please enter a name " })
+      .nullable(),
+    dateOfBirth: z.date().nullable(),
+    gender: z.string().nullable(),
+    cellNumber: z
+      .string({ required_error: "Please enter a valid phone number " })
+      .trim()
+      .min(1, { message: "Please enter a valid age " }) // validate w/ libphonenumberjs
+      .nullable(),
+    mpesaName: z
+      .string({ required_error: "Please enter a name" })
+      .trim()
+      .min(1, { message: "Please enter a name " })
+      .nullable(),
+    mpesaNumber: z
+      .string({ required_error: "please enter a valid phone number" })
+      .trim()
+      .min(1, { message: "Please enter a name " }) // validate w/ libphonenumberjs
+      .nullable(),
+    county: z
+      .string({ required_error: "County is required" })
+      .trim()
+      .min(1, { message: "Please enter a valid county " })
+      .nullable(),
+  });
+
+  const result = schema.safeParse(fellowDetails);
+
+  if (!result.success) {
+    throw new Error("no bueno");
+  }
+
+  const { data: parsedFellow } = result;
+
+  try {
+    await db.fellow.update({
+      where: {
+        id: parsedFellow.id,
+      },
+      data: parsedFellow,
+    });
+    revalidateFromClient("/profile");
+  } catch (e) { }
 }
