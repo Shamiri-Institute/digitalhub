@@ -1,10 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useFormState } from "react-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-// @ts-expect-error
-import { experimental_useFormState as useFormState } from "react-dom";
 
 import { inviteUserToImplementer } from "#/app/actions";
 import { OrganizationAvatar } from "#/components/ui/avatar";
@@ -52,7 +51,7 @@ const FormSchema = z.object({
 });
 
 const initialState = {
-  message: null,
+  message: "",
 };
 
 export function AddMemberDialog({ children }: { children: React.ReactNode }) {
