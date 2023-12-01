@@ -13,6 +13,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
+import { editFellowDetails } from "#/app/actions";
 import {
   Select,
   SelectContent,
@@ -20,12 +21,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { toast } from "#/components/ui/use-toast";
 import { Fellow } from "@prisma/client";
 import { Loader2 } from "lucide-react";
 
 // TODO: maybe use zod-prisma generator to remove use of this
 const FormSchema = z.object({
+  id: z.string(),
   fellowName: z
     .string({ required_error: "Please enter a name" })
     .trim()
@@ -62,12 +63,14 @@ const FormSchema = z.object({
 
 type FellowDetails = {
   fellow: Fellow;
+  closeDialog: () => void;
 };
 
 export default function FellowDetailsForm(props: FellowDetails) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
+      id: props.fellow.id,
       fellowName: props.fellow.fellowName,
       dateOfBirth: props.fellow.dateOfBirth,
       gender: props.fellow.gender,
@@ -79,16 +82,10 @@ export default function FellowDetailsForm(props: FellowDetails) {
     },
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log(data);
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    const result = await editFellowDetails(data);
+    props.closeDialog();
+    console.log(result);
   }
 
   return (
@@ -253,7 +250,11 @@ export default function FellowDetailsForm(props: FellowDetails) {
             )}
           />
         </div>
-        <Button type="submit" disabled={!form.formState.isDirty}>
+        <Button
+          variant="brand"
+          type="submit"
+          disabled={!form.formState.isDirty}
+        >
           {form.formState.isSubmitting ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : null}

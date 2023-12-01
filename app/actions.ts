@@ -943,6 +943,7 @@ export async function editFellowDetails(
     | "mpesaNumber"
     | "gender"
     | "county"
+    | "subCounty"
     | "mpesaName"
     | "cellNumber"
   >,
@@ -976,6 +977,7 @@ export async function editFellowDetails(
       .trim()
       .min(1, { message: "Please enter a valid county " })
       .nullable(),
+    subCounty: z.string(),
   });
 
   const result = schema.safeParse(fellowDetails);
@@ -987,12 +989,16 @@ export async function editFellowDetails(
   const { data: parsedFellow } = result;
 
   try {
-    await db.fellow.update({
+    const updatedDetails = await db.fellow.update({
       where: {
         id: parsedFellow.id,
       },
       data: parsedFellow,
     });
-    revalidateFromClient("/profile");
-  } catch (e) { }
+    revalidatePath("/profile");
+    return { success: true };
+  } catch (e) {
+    console.log(e);
+    return { success: false, error: "Something went wrong" };
+  }
 }
