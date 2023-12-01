@@ -1,5 +1,5 @@
 import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
-import { currentHub, currentSupervisor } from "#/app/auth";
+import { CurrentSupervisor, currentHub, currentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
@@ -7,6 +7,7 @@ import { db } from "#/lib/db";
 import { cn, getInitials } from "#/lib/utils";
 import Link from "next/link";
 import { ReimbursementRequests } from "./reimbursement-requests";
+import { differenceInYears } from "date-fns";
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
 
@@ -114,7 +115,7 @@ export default async function SupervisorProfile() {
         studentCount={studentCount}
       />
       <MySchools />
-      <MyFellows />
+      <MyFellows fellows={supervisor.fellows} />
       <ReimbursementRequests requests={reimbursementRequests} />
     </main>
   );
@@ -191,6 +192,7 @@ async function MySchools() {
     throw new Error("Assigned school not found");
   }
 
+  // TODO: what is this doing
   const otherSchools = await db.school.findMany({
     where: { visibleId: { not: assignedSchoolId }, hubId: hub!.id },
   });
@@ -212,16 +214,8 @@ async function MySchools() {
   );
 }
 
-async function MyFellows() {
-  const hub = await currentHub();
-  const assignedSchoolId = "ANS23_School_17";
-  const assignedSchool = await db.school.findFirst({
-    where: { visibleId: assignedSchoolId, hubId: hub!.id },
-  });
-  if (!assignedSchool) {
-    throw new Error("Assigned school not found");
-  }
-
+// only show fellows assigned to this supervisor
+function MyFellows({ fellows }: { fellows: CurrentSupervisor['fellows'] }) {
   return (
     <>
       <div className="mt-5 flex items-center justify-between">
@@ -234,19 +228,20 @@ async function MyFellows() {
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:items-center  sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {fellowDetails.map((fellow) => (
-          <MyFellowCard key={fellow.name} fellow={fellow} />
+        {fellows.map((fellow) => (
+          <MyFellowCard key={fellow.id} fellow={fellow} />
         ))}
       </div>
     </>
   );
 }
 
+// todo: fix types
 function MyFellowCard({
   fellow,
   assigned,
 }: {
-  fellow: any;
+  fellow: CurrentSupervisor['fellows'][number];
   assigned?: boolean;
 }) {
   return (
@@ -267,10 +262,10 @@ function MyFellowCard({
       >
         <div>
           <h3 className={cn("font-semibold text-brand xl:text-xl")}>
-            {fellow.name}
+            {fellow.fellowName}
           </h3>
           <p className="text-xs font-medium text-muted-foreground xl:text-lg">
-            Shamiri ID: 123456
+            Shamiri ID: {fellow.visibleId}
           </p>
         </div>
         <div className={cn("flex items-start justify-end  pl-4")}>
@@ -290,7 +285,7 @@ function MyFellowCard({
                 Age:
               </p>
               <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.age}
+                {fellow.dateOfBirth ? differenceInYears(new Date(), fellow.dateOfBirth) : 'N/A'}
               </p>
             </div>
             <div className="flex justify-start gap-2">
@@ -306,7 +301,7 @@ function MyFellowCard({
                 Contact:
               </p>
               <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.cell_number}
+                {fellow.cellNumber}
               </p>
             </div>
             <div className="flex justify-start gap-2">
@@ -314,7 +309,7 @@ function MyFellowCard({
                 Mpesa:
               </p>
               <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.mpesa_number}
+                {fellow.mpesaNumber}
               </p>
             </div>
             <div className="flex justify-start gap-2">
@@ -322,7 +317,7 @@ function MyFellowCard({
                 Hub:
               </p>
               <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.hub}
+                {fellow.hub?.hubName}
               </p>
             </div>
             <div className="flex justify-start gap-2">
