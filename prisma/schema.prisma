@@ -467,7 +467,7 @@ model Fellow {
   yearOfImplementation     Int?                       @map("year_of_implementation")
   mpesaName                String?                    @map("mpesa_name") @db.VarChar(255)
   mpesaNumber              String?                    @map("mpesa_number") @db.VarChar(255)
-  idNumber                 String?                    @map("id_number") @db.VarChar(255) // consider having this as required, and probably encrypted at the db level
+  idNumber                 String?                    @map("id_number") @db.VarChar(255) // consider having this as required when we can establish 100% collection of this field, and probably encrypted at the db level
   cellNumber               String?                    @map("cell_number") @db.VarChar(255)
   county                   String?                    @map("county") @db.VarChar(255)
   subCounty                String?                    @map("sub_county") @db.VarChar(255)
