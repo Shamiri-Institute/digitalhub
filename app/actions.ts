@@ -89,18 +89,18 @@ async function parseCsvFile(file: File) {
     });
 
     const records: any[] = [];
-    parser.on("readable", function() {
+    parser.on("readable", function () {
       let record;
       while ((record = parser.read())) {
         records.push(record);
       }
     });
 
-    parser.on("error", function(err) {
+    parser.on("error", function (err) {
       reject(err.message);
     });
 
-    parser.on("end", function() {
+    parser.on("end", function () {
       resolve(records);
     });
 
@@ -983,13 +983,15 @@ export async function editFellowDetails(
   const result = schema.safeParse(fellowDetails);
 
   if (!result.success) {
-    throw new Error("no bueno");
+    throw new Error(
+      "Invalid fields supplied, please review submission details",
+    );
   }
 
   const { data: parsedFellow } = result;
 
   try {
-    const updatedDetails = await db.fellow.update({
+    await db.fellow.update({
       where: {
         id: parsedFellow.id,
       },
