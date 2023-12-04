@@ -166,7 +166,7 @@ export default function FellowDetailsForm(props: FellowDetails) {
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={field.value ?? null}
+                      selected={field.value ?? undefined}
                       onSelect={field.onChange}
                     />
                   </PopoverContent>
