@@ -1,4 +1,4 @@
-import { PersonnelTool } from "#/components/navigation";
+import { PersonnelTool } from "#/app/dev-personnel-switcher";
 
 export function InvalidPersonnelRole({
   role,

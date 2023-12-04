@@ -4,12 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
-import { PersonnelSwitcher } from "#/app/dev-personnel-switcher";
+import { PersonnelTool } from "#/app/dev-personnel-switcher";
 import { Icons, type Icon } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
 import { Separator } from "#/components/ui/separator";
-import { fetchPersonnel } from "#/lib/actions/fetch-personnel";
-import { constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 
 export const navigation: Array<any> = [];
@@ -68,41 +66,6 @@ export function Navigation({
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-export function PersonnelTool() {
-  const [personnel, setPersonnel] = React.useState<
-    {
-      id: string;
-      type: "supervisor" | "hc";
-      label: string;
-    }[]
-  >([]);
-  const [activePersonnelId, setActivePersonnelId] = React.useState("");
-
-  React.useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetchPersonnel();
-      if (response) {
-        setActivePersonnelId(response.activePersonnelId);
-        setPersonnel(response.personnel);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  return (
-    <div>
-      {/* TODO: possibly enable devs to use this in prod */}
-      {constants.NEXT_PUBLIC_ENV === "development" && (
-        <PersonnelSwitcher
-          personnel={personnel}
-          activePersonnelId={activePersonnelId}
-        />
-      )}
     </div>
   );
 }

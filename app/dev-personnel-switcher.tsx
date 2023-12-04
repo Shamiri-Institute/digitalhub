@@ -17,6 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "#/components/ui/popover";
+import { fetchPersonnel } from "#/lib/actions/fetch-personnel";
+import { constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 
 type Personnel = {
@@ -148,5 +150,41 @@ function Spinner({ className }: { className: string }) {
         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
       ></path>
     </svg>
+  );
+}
+export function PersonnelTool() {
+  const [personnel, setPersonnel] = React.useState<
+    {
+      id: string;
+      type: "supervisor" | "hc";
+      label: string;
+    }[]
+  >([]);
+  const [activePersonnelId, setActivePersonnelId] = React.useState("");
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetchPersonnel();
+      if (response) {
+        setActivePersonnelId(response.activePersonnelId);
+        setPersonnel(response.personnel);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const visible = constants.NEXT_PUBLIC_ENV !== "production";
+
+  return (
+    <>
+      {/* TODO: enable devs to use this in prod for user support / debugging */}
+      {visible && (
+        <PersonnelSwitcher
+          personnel={personnel}
+          activePersonnelId={activePersonnelId}
+        />
+      )}
+    </>
   );
 }
