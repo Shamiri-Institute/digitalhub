@@ -111,9 +111,13 @@ export default function FellowDetailsForm(props: FellowDetails) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="w-2/3 space-y-6">
-        <h2>Fellow information</h2>
-        <p className="mt-4">ShamirI ID: sham_123</p>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <h2 className="text-xl font-medium text-shamiri-dark-blue">
+          Fellow information
+        </h2>
+        <p className="mt-4 font-bold text-shamiri-dark-blue">
+          Shamiri ID: sham_123
+        </p>
         <div className="mt-8">
           <FormField
             control={form.control}
@@ -146,7 +150,7 @@ export default function FellowDetailsForm(props: FellowDetails) {
                       <Button
                         variant={"outline"}
                         className={cn(
-                          "w-[240px] pl-3 text-left font-normal",
+                          "text-left font-normal",
                           !field.value && "text-muted-foreground",
                         )}
                       >
@@ -162,9 +166,8 @@ export default function FellowDetailsForm(props: FellowDetails) {
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={field.value}
+                      selected={field.value ?? null}
                       onSelect={field.onChange}
-                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
