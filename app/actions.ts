@@ -898,3 +898,46 @@ export async function addNote({
     return { success: false };
   }
 }
+
+export async function updateOwnSupervisorBioDetails(
+  visibleId: string,
+  data: {
+    bankAccountNumber?: string;
+    bankAccountHolder?: string;
+    bankBranch?: string;
+    bankName?: string;
+    cellNumber?: string;
+    county?: string;
+    dateOfBirth?: Date;
+    idNumber?: string;
+    kra?: string;
+    mpesaName?: string;
+    mpesaNumber?: string;
+    nhif?: string;
+    nssf?: string;
+    subCounty?: string;
+    supervisorEmail?: string;
+    gender?: string;
+  },
+) {
+  try {
+    const supervisor = await db.supervisor.findUnique({
+      where: { visibleId },
+    });
+
+    if (!supervisor) {
+      throw new Error("Supervisor not found");
+    }
+
+    const updatedSupervisor = await db.supervisor.update({
+      where: { visibleId },
+      data: {
+        ...data,
+      },
+    });
+    return { supervisor: updatedSupervisor };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
