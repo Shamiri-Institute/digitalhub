@@ -7,18 +7,21 @@ import { z } from "zod";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
-import { FormField } from "#/components/ui/form";
+import { FormField, Form } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
+import { cn } from "#/lib/utils";
+import { useState } from "react";
+import { useToast } from "#/components/ui/use-toast";
 
 const FormSchema = z.object({
   personalEmail: z.string({
-    required_error: "Please enter the promise number of students.",
+    required_error: "Please enter your email address.",
   }),
   contactNumber: z.string({
-    required_error: "Please enter the promise number of students.",
+    required_error: "Please enter your contact number.",
   }),
   nationalId: z.string({
-    required_error: "Please enter the point person's name.",
+    required_error: "Please enter your national ID.",
   }),
   dateOfBirth: z.string({
     required_error: "Please enter the point person's email.",
@@ -67,6 +70,59 @@ export default function EditBio() {
   });
 
   const router = useRouter();
+  const { toast } = useToast();
+
+  const [gender, setGender] = useState<string>("");
+
+
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    console.log(data, "data")
+    toast({
+      variant: "destructive",
+      title: "No school details updated",
+    });
+    if (
+      !form.formState.isDirty
+
+    ) {
+      toast({
+        variant: "destructive",
+        title: "No school details updated",
+      });
+      return;
+    }
+
+    let updatedData = {
+      ...data,
+
+    };
+
+    // if (!school?.visibleId) {
+    //   return;
+    // }
+
+    // const response = await updateAssignedSchoolDetails(
+    //   school?.visibleId,
+    //   updatedData,
+    // );
+
+    // if (response.school) {
+    //   toast({
+    //     variant: "default",
+    //     title: "Assigned school details updated",
+    //   });
+
+    //   await revalidateFromClient("/profile/myschool");
+
+    //   form.reset();
+    // } else {
+    //   toast({
+    //     variant: "destructive",
+    //     title: "Something went wrong",
+    //   });
+    // }
+  }
+
 
   return (
     <div className="flex flex-col">
@@ -85,318 +141,350 @@ export default function EditBio() {
         </h3>
         <div className=" space-y-6">
           <div className="mt-6 space-y-6">
-            <div>
-              <FormField
-                control={form.control}
-                name="personalEmail"
-                render={({ field }) => (
-                  <div className="mt-2 grid w-full gap-1.5">
-                    <Input
-                      id="personalEmail"
-                      name="personalEmail"
-                      onChange={field.onChange}
-                      type="email"
-                      // defaultValue={fellow?.mpesaName || field.value}
-                      placeholder="Personal email address"
-                      className="resize-none bg-card"
+            <Form {...form}>
+              <form
+                id="modifyFellowForm"
+                onSubmit={form.handleSubmit(onSubmit, (errors) => {
+                  console.error({ errors });
+                })}
+                className="overflow-hidden text-ellipsis px-1"
+              >
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="personalEmail"
+                    render={({ field }) => (
+                      <div className="mt-2 grid w-full gap-1.5">
+                        <Input
+                          id="personalEmail"
+                          name="personalEmail"
+                          onChange={field.onChange}
+                          type="email"
+                          // defaultValue={fellow?.mpesaName || field.value}
+                          placeholder="Personal email address"
+                          className="resize-none bg-card"
+                        />
+                      </div>
+                    )}
+                  />
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="contactNumber"
+                      render={({ field }) => (
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="contactNumber"
+                            name="contactNumber"
+                            type="text"
+                            onChange={field.onChange}
+                            // defaultValue={fellow?.mpesaName || field.value}
+                            placeholder="Contact number"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
                     />
                   </div>
-                )}
-              />
-              <div>
-                <FormField
-                  control={form.control}
-                  name="contactNumber"
-                  render={({ field }) => (
-                    <div className="mt-2 grid w-full gap-1.5">
-                      <Input
-                        id="contactNumber"
-                        name="contactNumber"
-                        type="text"
-                        onChange={field.onChange}
-                        // defaultValue={fellow?.mpesaName || field.value}
-                        placeholder="Contact number"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-              <div>
-                <FormField
-                  control={form.control}
-                  name="nationalId"
-                  render={({ field }) => (
-                    <div className="mt-2 grid w-full gap-1.5">
-                      <Input
-                        id="nationalId"
-                        name="nationalId"
-                        type="text"
-                        onChange={field.onChange}
-                        // defaultValue={fellow?.mpesaName || field.value}
-                        placeholder="National ID"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-              <div>
-                <FormField
-                  control={form.control}
-                  name="dateOfBirth"
-                  render={({ field }) => (
-                    <div className="mt-2 grid w-full gap-1.5">
-                      <Input
-                        id="dateOfBirth"
-                        name="dateOfBirth"
-                        type="date"
-                        onChange={field.onChange}
-                        // defaultValue={fellow?.mpesaName || field.value}
-                        placeholder="MM/DD/YYYY"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-            </div>
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="nationalId"
+                      render={({ field }) => (
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="nationalId"
+                            name="nationalId"
+                            type="text"
+                            onChange={field.onChange}
+                            // defaultValue={fellow?.mpesaName || field.value}
+                            placeholder="National ID"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="dateOfBirth"
+                      render={({ field }) => (
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="dateOfBirth"
+                            name="dateOfBirth"
+                            type="date"
+                            onChange={field.onChange}
+                            // defaultValue={fellow?.mpesaName || field.value}
+                            placeholder="MM/DD/YYYY"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <h3 className="mb-4 text-gray-400">Gender</h3>
-              <div className="grid grid-cols-3 gap-x-2 gap-y-2">
-                <Button
-                  type="submit"
-                  className="mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-shamiri-blue-darker active:scale-95"
-                >
-                  Girls
-                </Button>
-                <Button
-                  type="submit"
-                  className="mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-shamiri-blue-darker active:scale-95"
-                >
-                  Boys
-                </Button>
-                <Button
-                  type="submit"
-                  className="mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-shamiri-blue-darker active:scale-95"
-                >
-                  Both
-                </Button>
-              </div>
-            </div>
-            <div>
-              <h3 className="mb-4  text-gray-400">Mpesa</h3>
-              <FormField
-                control={form.control}
-                name="mpesaName"
-                render={({ field }) => (
-                  <div className="mt-2 grid w-full gap-1.5">
-                    <Input
-                      id="mpesaName"
-                      name="mpesaName"
-                      type="text"
-                      onChange={field.onChange}
-                      // defaultValue={fellow?.mpesaName || field.value}
-                      placeholder="Mpesa Name"
-                      className="resize-none bg-card"
+                <div>
+                  <h3 className="mb-4 text-gray-400">Gender</h3>
+                  <div className="grid grid-cols-3 gap-x-2 gap-y-2">
+                    <Button
+                      className={cn(
+                        "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
+                        gender === "Female" &&
+                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      )}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setGender("Female");
+                      }}
+                    >
+                      Female
+                    </Button>
+                    <Button
+                      className={cn(
+                        "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
+                        gender === "Male" &&
+                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      )}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setGender("Male");
+                      }}
+                    >
+                      Male
+                    </Button>
+
+                    <Button
+                      className={cn(
+                        "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
+                        gender === "Other" &&
+                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      )}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setGender("Other");
+                      }}
+                    >
+                      Other
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <h3 className="mb-4  text-gray-400">Mpesa</h3>
+                  <FormField
+                    control={form.control}
+                    name="mpesaName"
+                    render={({ field }) => (
+                      <div className="mt-2 grid w-full gap-1.5">
+                        <Input
+                          id="mpesaName"
+                          name="mpesaName"
+                          type="text"
+                          onChange={field.onChange}
+                          // defaultValue={fellow?.mpesaName || field.value}
+                          placeholder="Mpesa Name"
+                          className="resize-none bg-card"
+                        />
+                      </div>
+                    )}
+                  />
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="mpesaNumber"
+                      render={({ field }) => (
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="mpesaNumber"
+                            name="mpesaNumber"
+                            type="text"
+                            onChange={field.onChange}
+                            // defaultValue={fellow?.mpesaName || field.value}
+                            placeholder="Mpesa Number"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
                     />
                   </div>
-                )}
-              />
-              <div>
-                <FormField
-                  control={form.control}
-                  name="mpesaNumber"
-                  render={({ field }) => (
-                    <div className="mt-2 grid w-full gap-1.5">
-                      <Input
-                        id="mpesaNumber"
-                        name="mpesaNumber"
-                        type="text"
-                        onChange={field.onChange}
-                        // defaultValue={fellow?.mpesaName || field.value}
-                        placeholder="Mpesa Number"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-            </div>
-            <div>
-              <h3 className="mb-4  text-gray-400">Bank</h3>
-              <FormField
-                control={form.control}
-                name="bankName"
-                render={({ field }) => (
-                  <div className="mt-2 grid w-full gap-1.5">
-                    <Input
-                      id="bankName"
-                      name="bankName"
-                      type="text"
-                      onChange={field.onChange}
-                      // defaultValue={fellow?.mpesaName || field.value}
-                      placeholder="Bank Name"
-                      className="resize-none bg-card"
+                </div>
+                <div>
+                  <h3 className="mb-4  text-gray-400">Bank</h3>
+                  <FormField
+                    control={form.control}
+                    name="bankName"
+                    render={({ field }) => (
+                      <div className="mt-2 grid w-full gap-1.5">
+                        <Input
+                          id="bankName"
+                          name="bankName"
+                          type="text"
+                          onChange={field.onChange}
+                          // defaultValue={fellow?.mpesaName || field.value}
+                          placeholder="Bank Name"
+                          className="resize-none bg-card"
+                        />
+                      </div>
+                    )}
+                  />
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="bankBranch"
+                      render={({ field }) => (
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="bankBranch"
+                            name="bankBranch"
+                            type="text"
+                            onChange={field.onChange}
+                            // defaultValue={fellow?.mpesaName || field.value}
+                            placeholder="Branch Branch"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
                     />
                   </div>
-                )}
-              />
-              <div>
-                <FormField
-                  control={form.control}
-                  name="bankBranch"
-                  render={({ field }) => (
-                    <div className="mt-2 grid w-full gap-1.5">
-                      <Input
-                        id="bankBranch"
-                        name="bankBranch"
-                        type="text"
-                        onChange={field.onChange}
-                        // defaultValue={fellow?.mpesaName || field.value}
-                        placeholder="Branch Branch"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-              <div>
-                <FormField
-                  control={form.control}
-                  name="bankAccount"
-                  render={({ field }) => (
-                    <div className="mt-2 grid w-full gap-1.5">
-                      <Input
-                        id="bankAccount"
-                        name="bankAccount"
-                        type="text"
-                        onChange={field.onChange}
-                        // defaultValue={fellow?.mpesaName || field.value}
-                        placeholder="Branch Account"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-              <div>
-                <FormField
-                  control={form.control}
-                  name="bankAccountHolder"
-                  render={({ field }) => (
-                    <div className="mt-2 grid w-full gap-1.5">
-                      <Input
-                        id="bankAccountHolder"
-                        name="bankAccountHolder"
-                        type="text"
-                        onChange={field.onChange}
-                        // defaultValue={fellow?.mpesaName || field.value}
-                        placeholder="Branch Account Holder"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-            </div>
-            <div>
-              <h3 className="mb-4  text-gray-400">Statutory</h3>
-              <FormField
-                control={form.control}
-                name="nssf"
-                render={({ field }) => (
-                  <div className="mt-2 grid w-full gap-1.5">
-                    <Input
-                      id="nssf"
-                      name="nssf"
-                      type="text"
-                      onChange={field.onChange}
-                      // defaultValue={fellow?.mpesaName || field.value}
-                      placeholder="NSSF"
-                      className="resize-none bg-card"
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="bankAccount"
+                      render={({ field }) => (
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="bankAccount"
+                            name="bankAccount"
+                            type="text"
+                            onChange={field.onChange}
+                            // defaultValue={fellow?.mpesaName || field.value}
+                            placeholder="Branch Account"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
                     />
                   </div>
-                )}
-              />
-              <div>
-                <FormField
-                  control={form.control}
-                  name="nhif"
-                  render={({ field }) => (
-                    <div className="mt-2 grid w-full gap-1.5">
-                      <Input
-                        id="nhif"
-                        name="nhif"
-                        type="text"
-                        onChange={field.onChange}
-                        // defaultValue={fellow?.mpesaName || field.value}
-                        placeholder="NHIF"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-              <div>
-                <FormField
-                  control={form.control}
-                  name="kra"
-                  render={({ field }) => (
-                    <div className="mt-2 grid w-full gap-1.5">
-                      <Input
-                        id="kra"
-                        name="kra"
-                        type="text"
-                        onChange={field.onChange}
-                        // defaultValue={fellow?.mpesaName || field.value}
-                        placeholder="KRA"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-              <div>
-                <FormField
-                  control={form.control}
-                  name="county"
-                  render={({ field }) => (
-                    <div className="mt-8 grid w-full gap-1.5">
-                      <Input
-                        id="county"
-                        name="county"
-                        type="text"
-                        onChange={field.onChange}
-                        // defaultValue={fellow?.mpesaName || field.value}
-                        placeholder="County"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-              <div>
-                <FormField
-                  control={form.control}
-                  name="subCounty"
-                  render={({ field }) => (
-                    <div className="mt-2 grid w-full gap-1.5">
-                      <Input
-                        id="subCounty"
-                        name="subCounty"
-                        type="text"
-                        onChange={field.onChange}
-                        // defaultValue={fellow?.mpesaName || field.value}
-                        placeholder="Sub County"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-            </div>
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="bankAccountHolder"
+                      render={({ field }) => (
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="bankAccountHolder"
+                            name="bankAccountHolder"
+                            type="text"
+                            onChange={field.onChange}
+                            // defaultValue={fellow?.mpesaName || field.value}
+                            placeholder="Branch Account Holder"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="mb-4  text-gray-400">Statutory</h3>
+                  <FormField
+                    control={form.control}
+                    name="nssf"
+                    render={({ field }) => (
+                      <div className="mt-2 grid w-full gap-1.5">
+                        <Input
+                          id="nssf"
+                          name="nssf"
+                          type="text"
+                          onChange={field.onChange}
+                          // defaultValue={fellow?.mpesaName || field.value}
+                          placeholder="NSSF"
+                          className="resize-none bg-card"
+                        />
+                      </div>
+                    )}
+                  />
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="nhif"
+                      render={({ field }) => (
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="nhif"
+                            name="nhif"
+                            type="text"
+                            onChange={field.onChange}
+                            // defaultValue={fellow?.mpesaName || field.value}
+                            placeholder="NHIF"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="kra"
+                      render={({ field }) => (
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="kra"
+                            name="kra"
+                            type="text"
+                            onChange={field.onChange}
+                            // defaultValue={fellow?.mpesaName || field.value}
+                            placeholder="KRA"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="county"
+                      render={({ field }) => (
+                        <div className="mt-8 grid w-full gap-1.5">
+                          <Input
+                            id="county"
+                            name="county"
+                            type="text"
+                            onChange={field.onChange}
+                            // defaultValue={fellow?.mpesaName || field.value}
+                            placeholder="County"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="subCounty"
+                      render={({ field }) => (
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="subCounty"
+                            name="subCounty"
+                            type="text"
+                            onChange={field.onChange}
+                            // defaultValue={fellow?.mpesaName || field.value}
+                            placeholder="Sub County"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
+                    />
+                  </div>
+                </div>
+              </form>
+            </Form>
           </div>
 
           <Button className="mt-4 w-full bg-shamiri-blue hover:bg-shamiri-blue">
