@@ -1,47 +1,64 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { School } from "@prisma/client";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { SchoolDropoutDialog } from "#/app/(platform)/profile/myschool/school-dropout-dialog";
+import {
+  revalidateFromClient,
+  updateAssignedSchoolDetails,
+} from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
-import { FormField, Form } from "#/components/ui/form";
+import { Form, FormField } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { useState } from "react";
-import { cn } from "#/lib/utils";
 import { useToast } from "#/components/ui/use-toast";
-import { revalidateFromClient, updateAssignedSchoolDetails } from "#/app/actions";
+import { cn } from "#/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { School } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 export const FormSchema = z.object({
-
-  numbersExpected: z.coerce.number({
-    required_error: "Please enter the promise number of students.",
-  }).optional(),
-  pointPersonName: z.string({
-    required_error: "Please enter the point person's name.",
-  }).optional(),
-  pointPersonEmail: z.string({
-    required_error: "Please enter the point person's email.",
-  }).optional(),
-  pointPersonPhone: z.string({
-    required_error: "Please enter the point person's email.",
-  }).optional(),
-  pointPersonCounty: z.string({
-    required_error: "Please enter the point person's county.",
-  }).optional(),
-  schoolEmail: z.string({
-    required_error: "Please enter the school's email.",
-  }).optional(),
-  schoolCounty: z.string({
-    required_error: "Please enter the school's county.",
-  }).optional(),
-  schoolContact: z.string({
-    required_error: "Please enter the school's contact number.",
-  }).optional(),
-
+  numbersExpected: z.coerce
+    .number({
+      required_error: "Please enter the promise number of students.",
+    })
+    .optional(),
+  pointPersonName: z
+    .string({
+      required_error: "Please enter the point person's name.",
+    })
+    .optional(),
+  pointPersonEmail: z
+    .string({
+      required_error: "Please enter the point person's email.",
+    })
+    .optional(),
+  pointPersonPhone: z
+    .string({
+      required_error: "Please enter the point person's email.",
+    })
+    .optional(),
+  pointPersonCounty: z
+    .string({
+      required_error: "Please enter the point person's county.",
+    })
+    .optional(),
+  schoolEmail: z
+    .string({
+      required_error: "Please enter the school's email.",
+    })
+    .optional(),
+  schoolCounty: z
+    .string({
+      required_error: "Please enter the school's county.",
+    })
+    .optional(),
+  schoolContact: z
+    .string({
+      required_error: "Please enter the school's contact number.",
+    })
+    .optional(),
 });
 
 export function MySchool({ school }: { school: School | null }) {
@@ -52,36 +69,45 @@ export function MySchool({ school }: { school: School | null }) {
 
   const router = useRouter();
 
-  const [schoolGender, setSchoolGender] = useState<string>(school?.schoolDemographics || "")
-  const [schoolBordingDay, setSchoolBoardingDay] = useState<string>(school?.boardingDay || "")
-  const [schoolType, setSchoolType] = useState<string>(school?.schoolType || "")
-
+  const [schoolGender, setSchoolGender] = useState<string>(
+    school?.schoolDemographics || "",
+  );
+  const [schoolBordingDay, setSchoolBoardingDay] = useState<string>(
+    school?.boardingDay || "",
+  );
+  const [schoolType, setSchoolType] = useState<string>(
+    school?.schoolType || "",
+  );
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-
-    if (!form.formState.isDirty &&
+    if (
+      !form.formState.isDirty &&
       schoolGender === school?.schoolDemographics &&
       schoolBordingDay === school?.boardingDay &&
-      schoolType === school?.schoolType) {
+      schoolType === school?.schoolType
+    ) {
       toast({
         variant: "destructive",
         title: "No school details updated",
       });
-      return
+      return;
     }
 
     let updatedData = {
       ...data,
       schoolDemographics: schoolGender,
       boardingDay: schoolBordingDay,
-      schoolType
-    }
+      schoolType,
+    };
 
     if (!school?.visibleId) {
-      return
+      return;
     }
 
-    const response = await updateAssignedSchoolDetails(school?.visibleId, updatedData)
+    const response = await updateAssignedSchoolDetails(
+      school?.visibleId,
+      updatedData,
+    );
 
     if (response.school) {
       toast({
@@ -175,7 +201,9 @@ export function MySchool({ school }: { school: School | null }) {
                             name="pointPersonEmail"
                             type="pointPersonEmail"
                             onChange={field.onChange}
-                            defaultValue={school?.pointPersonEmail || field.value}
+                            defaultValue={
+                              school?.pointPersonEmail || field.value
+                            }
                             placeholder="Point Person Email"
                             className="resize-none bg-card"
                           />
@@ -195,7 +223,9 @@ export function MySchool({ school }: { school: School | null }) {
                             name="pointPersonPhone"
                             type="text"
                             onChange={field.onChange}
-                            defaultValue={school?.pointPersonPhone || field.value}
+                            defaultValue={
+                              school?.pointPersonPhone || field.value
+                            }
                             placeholder="Point Person Contact Number"
                             className="resize-none bg-card"
                           />
@@ -242,9 +272,7 @@ export function MySchool({ school }: { school: School | null }) {
                       )}
                     />
                   </div>
-
                 </div>
-
 
                 <div>
                   <h3 className="my-6 text-gray-400">School Gender</h3>
@@ -253,7 +281,7 @@ export function MySchool({ school }: { school: School | null }) {
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
                         schoolGender === "Girls" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                          "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
@@ -266,7 +294,7 @@ export function MySchool({ school }: { school: School | null }) {
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
                         schoolGender === "Boys" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                          "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
@@ -279,7 +307,7 @@ export function MySchool({ school }: { school: School | null }) {
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
                         schoolGender === "Mixed" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                          "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
@@ -292,12 +320,11 @@ export function MySchool({ school }: { school: School | null }) {
                   <h3 className="my-6 text-gray-400">School Boarding Status</h3>
 
                   <div className="grid grid-cols-3 gap-x-2 gap-y-2">
-
                     <Button
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
                         schoolBordingDay === "Day" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                          "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
@@ -310,7 +337,7 @@ export function MySchool({ school }: { school: School | null }) {
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
                         schoolBordingDay === "Boarding" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                          "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
@@ -322,12 +349,15 @@ export function MySchool({ school }: { school: School | null }) {
                     <Button
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
-                        schoolBordingDay === "Day and Boarding".toLocaleLowerCase() &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                        schoolBordingDay ===
+                          "Day and Boarding".toLocaleLowerCase() &&
+                          "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
-                        setSchoolBoardingDay("Day and Boarding".toLocaleLowerCase());
+                        setSchoolBoardingDay(
+                          "Day and Boarding".toLocaleLowerCase(),
+                        );
                       }}
                     >
                       Both
@@ -336,12 +366,11 @@ export function MySchool({ school }: { school: School | null }) {
                   <h3 className="my-6 text-gray-400">School Type</h3>
 
                   <div className="grid grid-cols-3 gap-x-2 gap-y-2">
-
                     <Button
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
                         schoolType === "County" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                          "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
@@ -354,7 +383,7 @@ export function MySchool({ school }: { school: School | null }) {
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
                         schoolType === "Sub-county" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                          "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
@@ -367,7 +396,7 @@ export function MySchool({ school }: { school: School | null }) {
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
                         schoolType === "Extra-county" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                          "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
@@ -380,7 +409,7 @@ export function MySchool({ school }: { school: School | null }) {
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
                         schoolType === "Community" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                          "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
@@ -393,7 +422,7 @@ export function MySchool({ school }: { school: School | null }) {
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
                         schoolType === "National" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                          "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
@@ -410,7 +439,6 @@ export function MySchool({ school }: { school: School | null }) {
                   >
                     Save
                   </Button>
-
                 </div>
               </form>
             </Form>
@@ -428,7 +456,7 @@ export function MySchool({ school }: { school: School | null }) {
             )}
           </div>
         </div>
-      </Card >
-    </div >
+      </Card>
+    </div>
   );
 }
