@@ -116,7 +116,7 @@ export default function FellowDetailsForm(props: FellowDetails) {
           Fellow information
         </h2>
         <p className="mt-4 font-bold text-shamiri-dark-blue">
-          Shamiri ID: sham_123
+          Shamiri ID: {props.fellow.visibleId}
         </p>
         <div className="mt-8">
           <FormField
