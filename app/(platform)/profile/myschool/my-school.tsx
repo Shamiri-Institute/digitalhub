@@ -145,7 +145,7 @@ export function MySchool({ school }: { school: School | null }) {
           <div className=" space-y-6">
             <Form {...form}>
               <form
-                id="modifyFellowForm"
+                id="modifyAssignedSchoolForm"
                 onSubmit={form.handleSubmit(onSubmit, (errors) => {
                   console.error({ errors });
                 })}
