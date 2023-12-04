@@ -35,11 +35,11 @@ export function PersonnelSwitcher({
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
 
-  const onSelectPersonnel = React.useCallback(async (personnelId: string) => {
+  const onSelectPersonnel = async (personnelId: string) => {
     await selectPersonnel({ identifier: personnelId });
     setLoading(true);
     window.location.reload();
-  }, []);
+  };
 
   return (
     <div className="rounded-md border border-zinc-200/60 bg-gradient-to-br from-zinc-50 to-transparent px-1.5 py-3">

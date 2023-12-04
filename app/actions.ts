@@ -933,7 +933,11 @@ export async function fetchPersonnel() {
 
   const personnel = [...supervisors];
 
-  const { membership } = await getCurrentUser();
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { membership } = user;
 
   const activePersonnelId = membership.identifier || "";
 
@@ -942,7 +946,11 @@ export async function fetchPersonnel() {
 
 export async function selectPersonnel({ identifier }: { identifier: string }) {
   console.log("selectPersonnel", { identifier });
-  const { membership } = await getCurrentUser();
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { membership } = user;
   await db.implementerMember.update({
     where: { id: membership.id },
     data: { identifier },

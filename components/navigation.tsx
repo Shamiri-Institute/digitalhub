@@ -46,6 +46,30 @@ export function Navigation({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"nav">) {
+  return (
+    <div
+      className={cn("flex h-full flex-col justify-between", className)}
+      {...props}
+    >
+      <div className="flex flex-1 flex-col">
+        <SupervisorNavigation />
+      </div>
+      <div>
+        <div className="mb-4">
+          <PersonnelTool />
+        </div>
+        <Separator />
+        <div>
+          <div className="m-4 md:mx-0">
+            <ProfileSwitcher />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function PersonnelTool() {
   const [personnel, setPersonnel] = React.useState<
     {
       id: string;
@@ -58,39 +82,25 @@ export function Navigation({
   React.useEffect(() => {
     const fetchData = async () => {
       const response = await fetchPersonnel();
-      setActivePersonnelId(response.activePersonnelId);
-      setPersonnel(response.personnel);
+      if (response) {
+        setActivePersonnelId(response.activePersonnelId);
+        setPersonnel(response.personnel);
+      }
     };
 
     fetchData();
   }, []);
 
   return (
-    <div
-      className={cn("flex h-full flex-col justify-between", className)}
-      {...props}
-    >
-      <div className="flex flex-1 flex-col">
-        <SupervisorNavigation />
-      </div>
-      <div>
-        <div className="mb-4">
-          {/* TODO: possibly enable devs to use this in prod */}
-          {constants.NEXT_PUBLIC_ENV === "development" && (
-            <PersonnelSwitcher
-              personnel={personnel}
-              activePersonnelId={activePersonnelId}
-            />
-          )}
-        </div>
-        <Separator />
-        <div>
-          <div className="m-4 md:mx-0">
-            <ProfileSwitcher />
-          </div>
-        </div>
-      </div>
-    </div>
+    <>
+      {/* TODO: possibly enable devs to use this in prod */}
+      {constants.NEXT_PUBLIC_ENV === "development" && (
+        <PersonnelSwitcher
+          personnel={personnel}
+          activePersonnelId={activePersonnelId}
+        />
+      )}
+    </>
   );
 }
 

@@ -9,7 +9,12 @@ export async function currentHub() {
 export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
 
 export async function currentSupervisor() {
-  const { membership } = await getCurrentUser();
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { membership } = user;
+
   const { identifier } = membership;
   if (!identifier) {
     throw new Error("No identifier");
@@ -46,7 +51,7 @@ export type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>;
 export async function getCurrentUser() {
   const session = await getServerSession();
   if (!session) {
-    throw new Error("No session");
+    return null;
   }
 
   const user = await db.user.findUniqueOrThrow({
@@ -73,7 +78,12 @@ export async function getCurrentUser() {
 }
 
 export async function getCurrentPersonnel(): Promise<CurrentSupervisor | null> {
-  const { personnelRole } = await getCurrentUser();
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { personnelRole } = user;
+
   if (!personnelRole) {
     throw new Error("No personnel role");
   }
