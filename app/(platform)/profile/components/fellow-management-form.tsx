@@ -96,6 +96,10 @@ export default function FellowDetailsForm(props: FellowDetails) {
     const result = await editFellowDetails(data);
 
     if (result.success) {
+      toast({
+        variant: "default",
+        description: "successfully edited fellow details",
+      });
       props.closeDialog();
     } else {
       toast({
