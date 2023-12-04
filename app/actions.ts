@@ -960,7 +960,7 @@ export async function editFellowDetails(
     cellNumber: z
       .string({ required_error: "Please enter a valid phone number " })
       .trim()
-      .min(1, { message: "Please enter a valid age " }) // validate w/ libphonenumberjs
+      .min(1, { message: "Please enter a valid phone number " }) // validate w/ libphonenumberjs
       .nullable(),
     mpesaName: z
       .string({ required_error: "Please enter a name" })
@@ -970,14 +970,14 @@ export async function editFellowDetails(
     mpesaNumber: z
       .string({ required_error: "please enter a valid phone number" })
       .trim()
-      .min(1, { message: "Please enter a name " }) // validate w/ libphonenumberjs
+      .min(1, { message: "Please enter a valid phone number" }) // validate w/ libphonenumberjs
       .nullable(),
     county: z
       .string({ required_error: "County is required" })
       .trim()
       .min(1, { message: "Please enter a valid county " })
       .nullable(),
-    subCounty: z.string(),
+    subCounty: z.string({ required_error: "Sub county is required" }),
   });
 
   const result = schema.safeParse(fellowDetails);
