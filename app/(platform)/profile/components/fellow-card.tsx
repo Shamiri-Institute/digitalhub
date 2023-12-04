@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
+import Link from "next/link";
 
 export function FellowCard({
   fellow,
@@ -45,7 +46,7 @@ export function FellowCard({
           </p>
         </div>
         <div className={cn("flex items-start justify-end")}>
-          <FellowCardMenu>
+          <FellowCardMenu fellow={fellow}>
             <button className="flex flex-col gap-[1px]">
               <div>
                 <Icons.moreVertical className="h-5 w-5 text-brand" />
@@ -122,26 +123,48 @@ function CardDetailLineItem({
 
 interface MenuItem {
   label: string;
+  path?: string;
 }
 
-const mainOptions: MenuItem[] = [
-  { label: "Session Attended" },
+const buildMainOptions: (
+  fellow: CurrentSupervisor["fellows"][number],
+) => MenuItem[] = (fellow) => [
+  {
+    label: "Session Attended",
+    path: `fellows/sessions?fid=${fellow.visibleId}`,
+  },
   { label: "Edit Fellow" },
   { label: "Weekly Evaluation" },
 ];
 
-const secondaryOptions: MenuItem[] = [
+const bulidSecondaryOptions: (
+  fellow: CurrentSupervisor["fellows"][number],
+) => MenuItem[] = (_fellow) => [
   { label: "Submit a Complaint" },
   { label: "Dropout Fellow" },
 ];
 
-function FellowCardMenu({ children }: { children: React.ReactNode }) {
+function FellowCardMenu({
+  fellow,
+  children,
+}: {
+  fellow: CurrentSupervisor["fellows"][number];
+  children: React.ReactNode;
+}) {
+  const mainOptions = buildMainOptions(fellow);
+  const secondaryOptions = bulidSecondaryOptions(fellow);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent>
         {mainOptions.map((option) => (
-          <DropdownMenuItem key={option.label}>{option.label}</DropdownMenuItem>
+          <DropdownMenuItem key={option.label}>
+            {option.path ? (
+              <Link href={option.path}>{option.label}</Link>
+            ) : (
+              option.label
+            )}
+          </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
         {secondaryOptions.map((option) => (
