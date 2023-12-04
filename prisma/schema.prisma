@@ -467,19 +467,20 @@ model Fellow {
   yearOfImplementation     Int?                       @map("year_of_implementation")
   mpesaName                String?                    @map("mpesa_name") @db.VarChar(255)
   mpesaNumber              String?                    @map("mpesa_number") @db.VarChar(255)
-  idNumber                 String?                    @map("id_number") @db.VarChar(255)
+  idNumber                 String?                    @map("id_number") @db.VarChar(255) // consider having this as required when we can establish 100% collection of this field, and probably encrypted at the db level
   cellNumber               String?                    @map("cell_number") @db.VarChar(255)
   county                   String?                    @map("county") @db.VarChar(255)
   subCounty                String?                    @map("sub_county") @db.VarChar(255)
   dateOfBirth              DateTime?                  @map("date_of_birth") @db.Date
   gender                   String?                    @map("gender")
-  transferred              Boolean?                   @map("transferred")
+  transferred              Boolean?                   @map("transferred") // What does this do?
   hubId                    String?                    @map("hub_id") @db.VarChar(255)
   hub                      Hub?                       @relation(fields: [hubId], references: [id])
   implementerId            String?                    @map("implementer_id") @db.VarChar(255)
   implementer              Implementer?               @relation(fields: [implementerId], references: [id])
   supervisorId             String?                    @map("supervisor_id") @db.VarChar(255)
   supervisor               Supervisor?                @relation(fields: [supervisorId], references: [id])
+  // worth adding a field to track the date when someone dropped out
   droppedOut               Boolean?                   @map("dropped_out")
   dropOutReason            String?                    @map("drop_out_reason")
   students                 Student[]
@@ -490,12 +491,13 @@ model Fellow {
 }
 
 /// FellowAttendance is a representation of the attendance of a fellow in a session. It is used to track the attendance of fellows in sessions but also track the session in the future.
+
 model FellowAttendance {
   id                   Int        @id @default(autoincrement())
   visibleId            String     @unique @map("visible_id") @db.VarChar(100)
   createdAt            DateTime   @default(now()) @map("created_at")
   updatedAt            DateTime   @updatedAt @map("updated_at")
-  archivedAt           DateTime?  @map("archived_at")
+  archivedAt           DateTime?  @map("archived_at") // can we actually mark attendance as archived?
   fellowId             String     @map("fellow_id") @db.VarChar(255)
   fellow               Fellow     @relation(fields: [fellowId], references: [id])
   sessionNumber        Int        @map("session_number")
@@ -508,6 +510,7 @@ model FellowAttendance {
   attended             Boolean?   @map("attended")
   absenceReason        String?    @map("absence_reason")
   paymentInitiated     Boolean?   @map("payment_initiated")
+  // TODO: the attendance should be tied to an intervention session
 
   @@map("fellow_attendances")
 }
