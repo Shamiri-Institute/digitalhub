@@ -911,6 +911,7 @@ export async function selectPersonnel({ identifier }: { identifier: string }) {
     where: { id: membership.id },
     data: { identifier },
   });
+}
 
 export async function updateAssignedSchoolDetails(
   schoolVisibleId: string,
