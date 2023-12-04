@@ -43,16 +43,16 @@ export default function FellowDetailsForm(props: FellowDetails) {
     resolver: zodResolver(EditFellowSchema),
     defaultValues: {
       id: props.fellow.id,
-      fellowName: props.fellow.fellowName,
+      fellowName: props.fellow.fellowName ?? undefined,
       dateOfBirth: props.fellow.dateOfBirth
         ? new Date(props.fellow.dateOfBirth)
-        : null,
-      gender: props.fellow.gender,
-      cellNumber: props.fellow.cellNumber,
-      mpesaName: props.fellow.mpesaName, // TODO: mpesa name not recorded in some of the initial values
-      mpesaNumber: props.fellow.mpesaNumber,
-      county: props.fellow.county,
-      subCounty: props.fellow.subCounty,
+        : undefined,
+      gender: props.fellow.gender ?? undefined,
+      cellNumber: props.fellow.cellNumber ?? undefined,
+      mpesaName: props.fellow.mpesaName ?? undefined, // TODO: mpesa name not recorded in some of the initial values
+      mpesaNumber: props.fellow.mpesaNumber ?? undefined,
+      county: props.fellow.county ?? undefined,
+      subCounty: props.fellow.subCounty ?? undefined,
     },
   });
 
