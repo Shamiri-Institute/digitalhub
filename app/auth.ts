@@ -85,7 +85,7 @@ export async function getCurrentPersonnel(): Promise<CurrentSupervisor | null> {
   const { personnelRole } = user;
 
   if (!personnelRole) {
-    throw new Error("No personnel role");
+    return null;
   }
 
   if (personnelRole === "supervisor") {
