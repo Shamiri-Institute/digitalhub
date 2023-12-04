@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import {
   revalidateFromClient,
-  updateOwnSupervisorBioDetails,
+  updateLoggedInSupervisorDetails,
 } from "#/app/actions";
 import { CurrentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
@@ -131,10 +131,13 @@ export default function EditProfileBio({
       return;
     }
 
-    const response = await updateOwnSupervisorBioDetails(supervisor.visibleId, {
-      ...data,
-      gender,
-    });
+    const response = await updateLoggedInSupervisorDetails(
+      supervisor.visibleId,
+      {
+        ...data,
+        gender,
+      },
+    );
 
     if (response.supervisor) {
       toast({
@@ -142,7 +145,7 @@ export default function EditProfileBio({
         title: "Your info has been updated",
       });
 
-      await revalidateFromClient("/profile/profile/edit-profile");
+      await revalidateFromClient("/profile/edit-profile");
       form.reset();
       router.push("/profile");
     } else {

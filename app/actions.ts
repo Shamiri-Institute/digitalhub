@@ -899,7 +899,7 @@ export async function addNote({
   }
 }
 
-export async function updateOwnSupervisorBioDetails(
+export async function updateLoggedInSupervisorDetails(
   visibleId: string,
   data: {
     bankAccountNumber?: string;
