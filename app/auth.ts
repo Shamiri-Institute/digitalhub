@@ -17,7 +17,7 @@ export async function currentSupervisor() {
 
   const { identifier } = membership;
   if (!identifier) {
-    throw new Error("No identifier");
+    return null;
   }
 
   const supervisor = await db.supervisor.findFirst({
@@ -35,7 +35,7 @@ export async function currentSupervisor() {
   });
 
   if (!supervisor) {
-    throw new Error("No supervisor found");
+    return null;
   }
 
   const { assignedSchoolId, assignedSchool } = supervisor;
