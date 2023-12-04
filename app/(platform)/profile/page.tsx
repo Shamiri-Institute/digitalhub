@@ -4,7 +4,7 @@ import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
 import { getInitials } from "#/lib/utils";
 import Link from "next/link";
-import FellowCard from "./components/FellowCard";
+import FellowCard from "./components/fellow-card";
 import { ReimbursementRequests } from "./reimbursement-requests";
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
