@@ -25,6 +25,7 @@ import {
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
+import { EditFellowSchema } from "#/lib/validators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Fellow } from "@prisma/client";
 import format from "date-fns/format";
@@ -32,51 +33,14 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
-// TODO: maybe use zod-prisma generator to remove use of this
-const FormSchema = z.object({
-  id: z.string(),
-  fellowName: z
-    .string({ required_error: "Please enter a name" })
-    .trim()
-    .min(1, { message: "Please enter a name" })
-    .nullable(),
-  dateOfBirth: z.date().nullable(),
-  gender: z.string().nullable(),
-  cellNumber: z
-    .string({ required_error: "Please enter a valid phone number" })
-    .trim()
-    .min(1, { message: "Please enter a valid phone number" }) // validate w/ libphonenumberjs
-    .nullable(),
-  mpesaName: z
-    .string({ required_error: "Please enter a name" })
-    .trim()
-    .min(1, { message: "Please enter a name" })
-    .nullable(),
-  mpesaNumber: z
-    .string({ required_error: "please enter a valid phone number" })
-    .trim()
-    .min(1, { message: "Please enter a valid phone number" }) // validate w/ libphonenumberjs
-    .nullable(),
-  county: z
-    .string({ required_error: "County is required" })
-    .trim()
-    .min(1, { message: "Please enter a valid county" })
-    .nullable(),
-  subCounty: z
-    .string({ required_error: "Sub county is required" })
-    .trim()
-    .min(1, { message: "Please enter a valid sub county" })
-    .nullable(),
-});
-
 type FellowDetails = {
   fellow: Fellow;
   closeDialog: () => void;
 };
 
 export default function FellowDetailsForm(props: FellowDetails) {
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+  const form = useForm<z.infer<typeof EditFellowSchema>>({
+    resolver: zodResolver(EditFellowSchema),
     defaultValues: {
       id: props.fellow.id,
       fellowName: props.fellow.fellowName,
@@ -92,7 +56,7 @@ export default function FellowDetailsForm(props: FellowDetails) {
     },
   });
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof EditFellowSchema>) {
     const result = await editFellowDetails(data);
 
     if (result.success) {

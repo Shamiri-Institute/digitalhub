@@ -11,6 +11,7 @@ import type { ModifyStudentData } from "#/app/(platform)/schools/[visibleId]/stu
 import { InviteUserCommand } from "#/commands/invite-user";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { EditFellowSchema } from "#/lib/validators";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 
 export async function inviteUserToImplementer(prevState: any, formData: any) {
@@ -948,39 +949,7 @@ export async function editFellowDetails(
     | "cellNumber"
   >,
 ) {
-  const schema = z.object({
-    id: z.string().trim(),
-    fellowName: z
-      .string({ required_error: "Please enter a name" })
-      .trim()
-      .min(1, { message: "Please enter a name " })
-      .nullable(),
-    dateOfBirth: z.date().nullable(),
-    gender: z.string().nullable(),
-    cellNumber: z
-      .string({ required_error: "Please enter a valid phone number " })
-      .trim()
-      .min(1, { message: "Please enter a valid phone number " }) // validate w/ libphonenumberjs
-      .nullable(),
-    mpesaName: z
-      .string({ required_error: "Please enter a name" })
-      .trim()
-      .min(1, { message: "Please enter a name " })
-      .nullable(),
-    mpesaNumber: z
-      .string({ required_error: "please enter a valid phone number" })
-      .trim()
-      .min(1, { message: "Please enter a valid phone number" }) // validate w/ libphonenumberjs
-      .nullable(),
-    county: z
-      .string({ required_error: "County is required" })
-      .trim()
-      .min(1, { message: "Please enter a valid county " })
-      .nullable(),
-    subCounty: z.string({ required_error: "Sub county is required" }),
-  });
-
-  const result = schema.safeParse(fellowDetails);
+  const result = EditFellowSchema.safeParse(fellowDetails);
 
   if (!result.success) {
     throw new Error(
