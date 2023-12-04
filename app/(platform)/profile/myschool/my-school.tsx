@@ -4,7 +4,6 @@ import { School } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
 import { SchoolDropoutDialog } from "#/app/(platform)/profile/myschool/school-dropout-dialog";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -14,11 +13,11 @@ import { Input } from "#/components/ui/input";
 import { useState } from "react";
 import { cn } from "#/lib/utils";
 import { useToast } from "#/components/ui/use-toast";
-import { revalidateFromClient } from "#/app/actions";
+import { revalidateFromClient, updateAssignedSchoolDetails } from "#/app/actions";
 
 export const FormSchema = z.object({
 
-  promisedNoOfStudents: z.string({
+  numbersExpected: z.coerce.number({
     required_error: "Please enter the promise number of students.",
   }).optional(),
   pointPersonName: z.string({
@@ -27,11 +26,17 @@ export const FormSchema = z.object({
   pointPersonEmail: z.string({
     required_error: "Please enter the point person's email.",
   }).optional(),
+  pointPersonPhone: z.string({
+    required_error: "Please enter the point person's email.",
+  }).optional(),
   pointPersonCounty: z.string({
     required_error: "Please enter the point person's county.",
   }).optional(),
   schoolEmail: z.string({
     required_error: "Please enter the school's email.",
+  }).optional(),
+  schoolCounty: z.string({
+    required_error: "Please enter the school's county.",
   }).optional(),
   schoolContact: z.string({
     required_error: "Please enter the school's contact number.",
@@ -46,26 +51,53 @@ export function MySchool({ school }: { school: School | null }) {
   const { toast } = useToast();
 
   const router = useRouter();
-  const [schoolGender, setSchoolGender] = useState("")
-  const [schoolDemographics, setSchoolDemographics] = useState<string>(school?.schoolDemographics | "")
+
+  const [schoolGender, setSchoolGender] = useState<string>(school?.schoolDemographics || "")
+  const [schoolBordingDay, setSchoolBoardingDay] = useState<string>(school?.boardingDay || "")
+  const [schoolType, setSchoolType] = useState<string>(school?.schoolType || "")
 
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    // await submitTransportReimbursementRequest({
-    //   supervisorId,
-    //   hubId,
-    //   ...data,
-    // });
-    console.log("onSubmit", data);
 
-    toast({
-      variant: "default",
-      title: "Assigned school details updated",
-    });
+    if (!form.formState.isDirty &&
+      schoolGender === school?.schoolDemographics &&
+      schoolBordingDay === school?.boardingDay &&
+      schoolType === school?.schoolType) {
+      toast({
+        variant: "destructive",
+        title: "No school details updated",
+      });
+      return
+    }
 
-    await revalidateFromClient("/profile/myschool");
+    let updatedData = {
+      ...data,
+      schoolDemographics: schoolGender,
+      boardingDay: schoolBordingDay,
+      schoolType
+    }
 
-    form.reset();
+    if (!school?.visibleId) {
+      return
+    }
+
+    const response = await updateAssignedSchoolDetails(school?.visibleId, updatedData)
+
+    if (response.school) {
+      toast({
+        variant: "default",
+        title: "Assigned school details updated",
+      });
+
+      await revalidateFromClient("/profile/myschool");
+
+      form.reset();
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+      });
+    }
   }
 
   return (
@@ -76,9 +108,7 @@ export function MySchool({ school }: { school: School | null }) {
         </button>
       </div>
       <h3 className="mb-2 text-base font-semibold text-brand xl:text-2xl">
-        My School {
-          JSON.stringify(school)
-        }
+        My School
       </h3>
       <Card className="mb-4 flex flex-col gap-5 bg-brand p-5 py-8 pr-3.5">
         <p className="text-gray-400">Info</p>
@@ -98,12 +128,12 @@ export function MySchool({ school }: { school: School | null }) {
                 <div>
                   <FormField
                     control={form.control}
-                    name="promisedNoOfStudents"
+                    name="numbersExpected"
                     render={({ field }) => (
                       <div className="mt-3 grid w-full gap-1.5">
                         <Input
-                          id="promisedNoOfStudents"
-                          name="promisedNoOfStudents"
+                          id="numbersExpected"
+                          name="numbersExpected"
                           onChange={field.onChange}
                           type="number"
                           defaultValue={school?.numbersExpected || field.value}
@@ -146,26 +176,27 @@ export function MySchool({ school }: { school: School | null }) {
                             type="pointPersonEmail"
                             onChange={field.onChange}
                             defaultValue={school?.pointPersonEmail || field.value}
-                            placeholder="Email"
+                            placeholder="Point Person Email"
                             className="resize-none bg-card"
                           />
                         </div>
                       )}
                     />
                   </div>
+
                   <div>
                     <FormField
                       control={form.control}
-                      name="pointPersonCounty"
+                      name="pointPersonPhone"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
                           <Input
-                            id="pointPersonCounty"
-                            name="pointPersonCounty"
+                            id="pointPersonPhone"
+                            name="pointPersonPhone"
                             type="text"
                             onChange={field.onChange}
-                            defaultValue={school?.schoolCounty || field.value}
-                            placeholder="County"
+                            defaultValue={school?.pointPersonPhone || field.value}
+                            placeholder="Point Person Contact Number"
                             className="resize-none bg-card"
                           />
                         </div>
@@ -186,7 +217,7 @@ export function MySchool({ school }: { school: School | null }) {
                           type="email"
                           onChange={field.onChange}
                           defaultValue={school?.schoolEmail || field.value}
-                          placeholder="Email"
+                          placeholder="School Email"
                           className="resize-none bg-card"
                         />
                       </div>
@@ -195,27 +226,28 @@ export function MySchool({ school }: { school: School | null }) {
                   <div>
                     <FormField
                       control={form.control}
-                      name="schoolContact"
+                      name="schoolCounty"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
                           <Input
-                            id="schoolContact"
-                            name="schoolContact"
+                            id="schoolCounty"
+                            name="schoolCounty"
                             type="text"
                             onChange={field.onChange}
-                            // defaultValue={school?. || field.value}
-                            placeholder="Contact number"
+                            defaultValue={school?.schoolCounty || field.value}
+                            placeholder="School County"
                             className="resize-none bg-card"
                           />
                         </div>
                       )}
                     />
                   </div>
+
                 </div>
 
 
                 <div>
-                  <h3 className="my-6 text-gray-400">School Type</h3>
+                  <h3 className="my-6 text-gray-400">School Gender</h3>
                   <div className="mt-2 grid grid-cols-3 gap-x-2 gap-y-2">
                     <Button
                       className={cn(
@@ -246,27 +278,30 @@ export function MySchool({ school }: { school: School | null }) {
                     <Button
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
-                        schoolGender === "Both" &&
+                        schoolGender === "Mixed" &&
                         "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
-                        setSchoolGender("Both");
+                        setSchoolGender("Mixed");
                       }}
                     >
-                      Both
+                      Mixed
                     </Button>
                   </div>
+                  <h3 className="my-6 text-gray-400">School Boarding Status</h3>
+
                   <div className="grid grid-cols-3 gap-x-2 gap-y-2">
+
                     <Button
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
-                        schoolDemographics === "Day" &&
+                        schoolBordingDay === "Day" &&
                         "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
-                        setSchoolDemographics("Day");
+                        setSchoolBoardingDay("Day");
                       }}
                     >
                       Day
@@ -274,12 +309,12 @@ export function MySchool({ school }: { school: School | null }) {
                     <Button
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
-                        schoolDemographics === "Boarding" &&
+                        schoolBordingDay === "Boarding" &&
                         "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
-                        setSchoolDemographics("Boarding");
+                        setSchoolBoardingDay("Boarding");
                       }}
                     >
                       Boarding
@@ -287,15 +322,85 @@ export function MySchool({ school }: { school: School | null }) {
                     <Button
                       className={cn(
                         "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
-                        schoolDemographics === "Mixed" &&
+                        schoolBordingDay === "Day and Boarding".toLocaleLowerCase() &&
                         "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                       )}
                       onClick={(e) => {
                         e.preventDefault();
-                        setSchoolDemographics("Mixed");
+                        setSchoolBoardingDay("Day and Boarding".toLocaleLowerCase());
                       }}
                     >
-                      Mixed
+                      Both
+                    </Button>
+                  </div>
+                  <h3 className="my-6 text-gray-400">School Type</h3>
+
+                  <div className="grid grid-cols-3 gap-x-2 gap-y-2">
+
+                    <Button
+                      className={cn(
+                        "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
+                        schoolType === "County" &&
+                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      )}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSchoolType("County");
+                      }}
+                    >
+                      County
+                    </Button>
+                    <Button
+                      className={cn(
+                        "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
+                        schoolType === "Sub-county" &&
+                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      )}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSchoolType("Sub-county");
+                      }}
+                    >
+                      Sub-county
+                    </Button>
+                    <Button
+                      className={cn(
+                        "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
+                        schoolType === "Extra-county" &&
+                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      )}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSchoolType("Extra-county");
+                      }}
+                    >
+                      Extra-county
+                    </Button>
+                    <Button
+                      className={cn(
+                        "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
+                        schoolType === "Community" &&
+                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      )}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSchoolType("Community");
+                      }}
+                    >
+                      Community
+                    </Button>
+                    <Button
+                      className={cn(
+                        "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-white active:scale-95",
+                        schoolType === "National" &&
+                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      )}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setSchoolType("National");
+                      }}
+                    >
+                      National
                     </Button>
                   </div>
 
