@@ -2,11 +2,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
-import { fetchPersonnel } from "#/app/actions";
 import { PersonnelSwitcher } from "#/app/dev-personnel-switcher";
 import { Icons, type Icon } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
 import { Separator } from "#/components/ui/separator";
+import { fetchPersonnel } from "#/lib/actions/fetch-personnel";
 import { constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 
@@ -92,7 +92,7 @@ export function PersonnelTool() {
   }, []);
 
   return (
-    <>
+    <div>
       {/* TODO: possibly enable devs to use this in prod */}
       {constants.NEXT_PUBLIC_ENV === "development" && (
         <PersonnelSwitcher
@@ -100,7 +100,7 @@ export function PersonnelTool() {
           activePersonnelId={activePersonnelId}
         />
       )}
-    </>
+    </div>
   );
 }
 
