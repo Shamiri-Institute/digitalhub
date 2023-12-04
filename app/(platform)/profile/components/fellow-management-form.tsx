@@ -1,5 +1,7 @@
 "use client";
+import { editFellowDetails } from "#/app/actions";
 import { Button } from "#/components/ui/button";
+import { Calendar } from "#/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -9,11 +11,11 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-
-import { editFellowDetails } from "#/app/actions";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -21,9 +23,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { Fellow } from "@prisma/client";
-import { Loader2 } from "lucide-react";
 import { toast } from "#/components/ui/use-toast";
+import { cn } from "#/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Fellow } from "@prisma/client";
+import format from "date-fns/format";
+import { CalendarIcon, Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 // TODO: maybe use zod-prisma generator to remove use of this
 const FormSchema = z.object({
@@ -56,9 +63,9 @@ const FormSchema = z.object({
     .min(1, { message: "Please enter a valid county " })
     .nullable(),
   subCounty: z
-    .string({ required_error: "County is required" })
+    .string({ required_error: "Sub county is required" })
     .trim()
-    .min(1, { message: "Please enter a valid county " })
+    .min(1, { message: "Please enter a valid sub county" })
     .nullable(),
 });
 
@@ -73,7 +80,9 @@ export default function FellowDetailsForm(props: FellowDetails) {
     defaultValues: {
       id: props.fellow.id,
       fellowName: props.fellow.fellowName,
-      dateOfBirth: props.fellow.dateOfBirth,
+      dateOfBirth: props.fellow.dateOfBirth
+        ? new Date(props.fellow.dateOfBirth)
+        : null,
       gender: props.fellow.gender,
       cellNumber: props.fellow.cellNumber,
       mpesaName: props.fellow.mpesaName, // TODO: mpesa name not recorded in some of the initial values
@@ -90,8 +99,8 @@ export default function FellowDetailsForm(props: FellowDetails) {
       props.closeDialog();
     } else {
       toast({
-        variant: 'destructive',
-        message: 'Failed to submit edits'
+        variant: "destructive",
+        description: "Failed to submit edits",
       });
     }
   }
@@ -125,20 +134,36 @@ export default function FellowDetailsForm(props: FellowDetails) {
             control={form.control}
             name="dateOfBirth"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel>Age (should be date of birth)</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="19"
-                    type="text"
-                    {...field}
-                    value={
-                      field.value
-                        ? field.value.toString()
-                        : new Date().toString()
-                    }
-                  />
-                </FormControl>
+              <FormItem className="flex flex-col">
+                <FormLabel>Date of birth</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-[240px] pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground",
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
               </FormItem>
             )}
