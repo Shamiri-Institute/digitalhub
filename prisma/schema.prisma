@@ -464,7 +464,7 @@ model Fellow {
   visibleId                String                     @unique @map("visible_id") @db.VarChar(100)
   fellowName               String?                    @map("fellow_name") @db.VarChar(255)
   fellowEmail              String?                    @map("fellow_email") @db.VarChar(255)
-  yearOfImplementation     Int?                       @map("year_of_implementation") // why is this being tracked here? can it change
+  yearOfImplementation     Int?                       @map("year_of_implementation")
   mpesaName                String?                    @map("mpesa_name") @db.VarChar(255)
   mpesaNumber              String?                    @map("mpesa_number") @db.VarChar(255)
   idNumber                 String?                    @map("id_number") @db.VarChar(255) // consider having this as required, and probably encrypted at the db level
