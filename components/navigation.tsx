@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
@@ -22,6 +24,7 @@ function NavItem({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+
   return (
     <li>
       <Link
