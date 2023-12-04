@@ -1,3 +1,5 @@
+"use server";
+
 import { getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
 
