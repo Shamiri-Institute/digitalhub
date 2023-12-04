@@ -21,7 +21,7 @@ import { z } from "zod";
 export const FormSchema = z.object({
   numbersExpected: z.coerce
     .number({
-      required_error: "Please enter the promise number of students.",
+      required_error: "Please enter the promised number of students.",
     })
     .optional(),
   pointPersonName: z
@@ -36,7 +36,7 @@ export const FormSchema = z.object({
     .optional(),
   pointPersonPhone: z
     .string({
-      required_error: "Please enter the point person's email.",
+      required_error: "Please enter the point person's phone number.",
     })
     .optional(),
   pointPersonCounty: z
