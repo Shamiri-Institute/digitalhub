@@ -941,3 +941,38 @@ export async function updateOwnSupervisorBioDetails(
     return { error: "Something went wrong" };
   }
 }
+
+export async function updateAssignedSchoolDetails(
+  schoolVisibleId: string,
+  data: {
+    numbersExpected?: number;
+    pointPersonName?: string;
+    pointPersonEmail?: string;
+    pointPersonPhone?: string;
+    schoolEmail?: string;
+    schoolCounty?: string;
+    schoolDemographics?: string;
+    boardingDay?: string;
+    schoolType?: string;
+  },
+) {
+  try {
+    const school = await db.school.update({
+      where: { visibleId: schoolVisibleId },
+      data: {
+        ...data,
+      },
+    });
+
+    return { school };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: "Something went wrong",
+      };
+    }
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
