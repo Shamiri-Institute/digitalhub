@@ -920,7 +920,7 @@ export async function updateAssignedSchoolDetails(
     if (error instanceof Error) {
       console.error(error.message);
       return {
-        error: error.message,
+        error: "Something went wrong",
       };
     }
     console.error(error);
