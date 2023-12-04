@@ -948,3 +948,7 @@ export async function selectPersonnel({ identifier }: { identifier: string }) {
     data: { identifier },
   });
 }
+
+export async function fetchFellow(visibleId: string) {
+  return await db.fellow.findUnique({ where: { visibleId } });
+}
