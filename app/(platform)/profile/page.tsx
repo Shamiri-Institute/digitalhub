@@ -1,12 +1,12 @@
+import Link from "next/link";
+
 import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
 import { CurrentSupervisor, currentHub, currentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
-import { Button } from "#/components/ui/button";
-import { Card } from "#/components/ui/card";
 import { db } from "#/lib/db";
-import { cn, getInitials } from "#/lib/utils";
-import { differenceInYears } from "date-fns";
-import Link from "next/link";
+import { getInitials } from "#/lib/utils";
+
+import { FellowCard } from "./components/fellow-card";
 import { ReimbursementRequests } from "./reimbursement-requests";
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
@@ -197,114 +197,9 @@ function MyFellows({ fellows }: { fellows: CurrentSupervisor["fellows"] }) {
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:items-center sm:gap-6 md:grid-cols-2">
         {fellows.map((fellow) => (
-          <MyFellowCard key={fellow.id} fellow={fellow} />
+          <FellowCard key={fellow.id} fellow={fellow} />
         ))}
       </div>
     </>
-  );
-}
-
-function CardDetailLineItem({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null;
-}) {
-  return (
-    <div className="flex justify-start gap-2">
-      <p className="text-sm font-medium text-muted-foreground">{label}:</p>
-      <p className="text-sm font-semibold text-brand">{value || "N/A"}</p>
-    </div>
-  );
-}
-
-function MyFellowCard({
-  fellow,
-  assigned,
-}: {
-  fellow: CurrentSupervisor["fellows"][number];
-  assigned?: boolean;
-}) {
-  return (
-    <Card
-      className={cn("mb-4 flex flex-col gap-5 p-5 pr-3.5", {
-        "bg-white": !assigned,
-        "bg-brand": assigned,
-      })}
-    >
-      <div
-        className={cn(
-          "flex items-center justify-between gap-4 border-b border-border/50 pb-3 ",
-          "grid grid-cols-[15fr,10fr]",
-          {
-            "border-border/20": assigned,
-          },
-        )}
-      >
-        <div>
-          <h3 className="text-lg font-semibold text-brand">
-            {fellow.fellowName}
-          </h3>
-          <p className="text-xs font-medium text-muted-foreground lg:text-sm">
-            Shamiri ID: {fellow.visibleId}
-          </p>
-        </div>
-        <div className={cn("flex items-start justify-end")}>
-          <button className="flex flex-col gap-[1px]">
-            <div>
-              <Icons.moreVertical className="h-5 w-5 text-brand" />
-            </div>
-          </button>
-        </div>
-      </div>
-
-      <div className="flex flex-col">
-        <div className="flex justify-between">
-          <div className="flex flex-col">
-            <CardDetailLineItem
-              label="Age"
-              value={
-                fellow.dateOfBirth
-                  ? differenceInYears(new Date(), fellow.dateOfBirth).toString()
-                  : null
-              }
-            />
-            <CardDetailLineItem label="Gender" value={fellow.gender} />
-            <CardDetailLineItem
-              label="Contact"
-              value={fellow.cellNumber || null}
-            />
-            {fellow.cellNumber !== fellow.mpesaNumber && (
-              <CardDetailLineItem
-                label="MPESA"
-                value={fellow.mpesaNumber || null}
-              />
-            )}
-            <CardDetailLineItem
-              label="Hub"
-              value={fellow.hub?.hubName || null}
-            />
-            <CardDetailLineItem label="County" value={fellow.county || null} />
-          </div>
-
-          <div className="flex flex-col items-end justify-end">
-            <h2 className="self-end text-right text-5xl font-semibold text-shamiri-blue">
-              {fellow.fellowAttendances.reduce(
-                (acc, val) => (val.attended ? acc + 1 : acc),
-                0,
-              )}
-            </h2>
-            <p className="text-right text-xs font-medium text-brand">
-              Sessions attended
-            </p>
-          </div>
-        </div>
-        {/* TODO: this should take you to the /groups */}
-        <Button className="mt-4 w-full bg-shamiri-blue hover:bg-brand">
-          Groups
-        </Button>
-      </div>
-    </Card>
   );
 }
