@@ -62,10 +62,9 @@ export const FormSchema = z.object({
   receiptUrl: z.string({
     required_error: "Please enter the receipt url.",
   }),
-  school: z
-    .string({
-      required_error: "Please enter the receipt url.",
-    }),
+  school: z.string({
+    required_error: "Please enter the receipt url.",
+  }),
 });
 
 export function RefundForm({
@@ -327,7 +326,10 @@ export function RefundForm({
                         </SelectTrigger>
                         <SelectContent>
                           {hubSchools.map((school: School) => (
-                            <SelectItem key={school.id} value={school.schoolName}>
+                            <SelectItem
+                              key={school.id}
+                              value={school.schoolName}
+                            >
                               {school.schoolName}
                             </SelectItem>
                           ))}
