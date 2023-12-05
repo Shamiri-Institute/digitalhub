@@ -27,7 +27,7 @@ import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -62,9 +62,11 @@ export const FormSchema = z.object({
   receiptUrl: z.string({
     required_error: "Please enter the receipt url.",
   }),
-  school: z.string({
-    required_error: "Please enter the receipt url.",
-  }).optional(),
+  school: z
+    .string({
+      required_error: "Please enter the receipt url.",
+    })
+    .optional(),
 });
 
 export function RefundForm({
@@ -99,10 +101,10 @@ export function RefundForm({
   useEffect(() => {
     const fetchHubSchools = async () => {
       const { schools } = await getSchoolsByHubId(hubId);
-      setHubSchools(schools as School[])
-    }
+      setHubSchools(schools as School[]);
+    };
     fetchHubSchools();
-  }, [hubId])
+  }, [hubId]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     await submitTransportReimbursementRequest({
@@ -122,8 +124,6 @@ export function RefundForm({
 
     router.push("/profile");
   }
-
-
 
   return (
     <div>
@@ -276,7 +276,6 @@ export function RefundForm({
                       onValueChange={(value) => {
                         field.onChange(value);
                         setDestination(value);
-
                       }}
                     >
                       <SelectTrigger>
@@ -304,7 +303,7 @@ export function RefundForm({
                 )}
               />
             </div>
-            {destination == "school" &&
+            {destination == "school" && (
               <div>
                 <FormField
                   control={form.control}
@@ -330,14 +329,17 @@ export function RefundForm({
                         </SelectTrigger>
                         <SelectContent>
                           {hubSchools.map((school: School) => (
-                            <SelectItem key={school.id} value={school.id}>{school.schoolName}</SelectItem>
+                            <SelectItem key={school.id} value={school.id}>
+                              {school.schoolName}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                   )}
                 />
-              </div>}
+              </div>
+            )}
 
             <div>
               <FormField
