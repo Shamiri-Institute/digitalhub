@@ -1,5 +1,9 @@
 "use client";
 
+import differenceInYears from "date-fns/differenceInYears";
+import Link from "next/link";
+import { useState } from "react";
+
 import type { CurrentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -12,8 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
-import differenceInYears from "date-fns/differenceInYears";
-import { useState } from "react";
 import FellowDetailsForm from "./fellow-management-form";
 
 export default function FellowCard({
@@ -136,21 +138,38 @@ function FellowCardMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-      <DropdownMenuContent>
-        <div>Session History</div>
-        <div>
+      <DropdownMenuContent className="p-1 text-sm">
+        <MenuLineItem>
+          <Link href={`/fellows/sessions?fid=${fellow.visibleId}`}>
+            Session History
+          </Link>
+        </MenuLineItem>
+        <MenuLineItem>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger>Edit Details</DialogTrigger>
             <DialogContent className="max-h-screen overflow-y-scroll">
               <FellowDetailsForm fellow={fellow} closeDialog={closeDialog} />
             </DialogContent>
           </Dialog>
-        </div>
-        <div>Weekly Evaluation</div>
-        <DropdownMenuSeparator />
-        <div>Submit a Complaint</div>
-        <div>Dropout Fellow</div>
+        </MenuLineItem>
+        <MenuLineItem>Weekly Evaluation</MenuLineItem>
+        <DropdownMenuSeparator className="my-2" />
+        <MenuLineItem>Submit a Complaint</MenuLineItem>
+        <MenuLineItem>Dropout Fellow</MenuLineItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+function MenuLineItem({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className={cn(
+        "rounded-md p-1 hover:bg-zinc-100",
+        "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      )}
+    >
+      {children}
+    </div>
   );
 }
