@@ -2,12 +2,10 @@ import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-ca
 import { CurrentSupervisor, currentHub, currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
-import { Button } from "#/components/ui/button";
-import { Card } from "#/components/ui/card";
 import { db } from "#/lib/db";
-import { cn, getInitials } from "#/lib/utils";
-import { differenceInYears } from "date-fns";
+import { getInitials } from "#/lib/utils";
 import Link from "next/link";
+import FellowCard from "./components/fellow-card";
 import { ReimbursementRequests } from "./reimbursement-requests";
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
@@ -199,126 +197,9 @@ function MyFellows({
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:items-center  sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
         {fellows.map((fellow) => (
-          <MyFellowCard key={fellow.id} fellow={fellow} />
+          <FellowCard key={fellow.id} fellow={fellow} />
         ))}
       </div>
     </>
-  );
-}
-
-// todo: fix types
-function MyFellowCard({
-  fellow,
-  assigned,
-}: {
-  fellow: NonNullable<CurrentSupervisor>["fellows"][number];
-  assigned?: boolean;
-}) {
-  return (
-    <Card
-      className={cn("mb-4 flex flex-col gap-5 p-5 pr-3.5", {
-        "bg-white": !assigned,
-        "bg-brand": assigned,
-      })}
-    >
-      <div
-        className={cn(
-          "flex items-center justify-between gap-4 border-b border-border/50 pb-3 pr-3",
-          "grid grid-cols-[15fr,10fr]",
-          {
-            "border-border/20": assigned,
-          },
-        )}
-      >
-        <div>
-          <h3 className={cn("font-semibold text-brand xl:text-xl")}>
-            {fellow.fellowName}
-          </h3>
-          <p className="text-xs font-medium text-muted-foreground xl:text-lg">
-            Shamiri ID: {fellow.visibleId}
-          </p>
-        </div>
-        <div className={cn("flex items-start justify-end  pl-4")}>
-          <Link href={`#`} className="flex flex-col gap-[1px]">
-            <div>
-              <Icons.moreHorizontal className="h-5 w-5 text-brand" />
-            </div>
-          </Link>
-        </div>
-      </div>
-
-      <div className="flex flex-col ">
-        <div className="flex justify-between">
-          <div className="flex flex-col ">
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Age:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.dateOfBirth
-                  ? differenceInYears(new Date(), fellow.dateOfBirth)
-                  : "N/A"}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Gender:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.gender}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Contact:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.cellNumber}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Mpesa:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.mpesaNumber}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Hub:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.hub?.hubName}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                County:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.county ?? "N/A"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-end justify-end">
-            <h2 className="self-end text-right text-5xl font-semibold text-shamiri-blue">
-              {fellow.fellowAttendances.reduce(
-                (acc, val) => (val.attended ? acc + 1 : acc),
-                0,
-              )}
-            </h2>
-            <p className="text-right text-xs font-medium text-brand">
-              Sessions attended
-            </p>
-          </div>
-        </div>
-        {/* TODO: this should take you to the /groups */}
-        <Button className="mt-4 w-full bg-shamiri-blue hover:bg-brand">
-          Groups
-        </Button>
-      </div>
-    </Card>
   );
 }
