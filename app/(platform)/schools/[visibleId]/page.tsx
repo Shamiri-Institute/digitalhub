@@ -9,6 +9,7 @@ import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-
 import { RescheduleDialog } from "#/app/(platform)/schools/[visibleId]/reschedule-dialog";
 import { currentSupervisor } from "#/app/auth";
 import { Back } from "#/components/common/back";
+import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
@@ -43,6 +44,9 @@ export default async function SchoolDetailPage({
   const total = await db.student.count({ where: { schoolId: school.id } });
 
   const supervisor = await currentSupervisor();
+  if (!supervisor) {
+    return <InvalidPersonnelRole role="supervisor" />;
+  }
 
   return (
     <main className="pt-2">

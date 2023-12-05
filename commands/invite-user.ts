@@ -4,6 +4,7 @@ import { Command } from "#/commands";
 import { sendEmail } from "#/emails";
 import UserWelcomer from "#/emails/user-welcomer";
 import { db as database, Database } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 
 const InviteMaxAge = 1000 * 60 * 60 * 24 * 7; // 1 week
 
@@ -42,11 +43,20 @@ export class InviteUserCommand extends Command<
     const digest = await crypto.subtle.digest("SHA-256", array);
     const secureToken = Buffer.from(digest).toString("base64");
 
+    let implementerRole: ImplementerRole = ImplementerRole.ADMIN;
+    if (roleId === "supervisor") {
+      implementerRole = ImplementerRole.SUPERVISOR;
+    } else if (roleId === "hub-coordinator") {
+      implementerRole = ImplementerRole.HUB_COORDINATOR;
+    } else if (roleId === "deliver") {
+      implementerRole = ImplementerRole.DELIVER;
+    }
+
     const invitation = await this.db.implementerInvite.create({
       data: {
         email,
         implementerId,
-        roleId,
+        implementerRole,
         expiresAt: new Date(Date.now() + InviteMaxAge),
         secureToken,
       },

@@ -21,6 +21,7 @@ const authOptions: AuthOptions = {
     GoogleProvider({
       clientId: config.GOOGLE_ID,
       clientSecret: config.GOOGLE_SECRET,
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   adapter: PrismaAdapter(db),
@@ -31,23 +32,36 @@ const authOptions: AuthOptions = {
       }
       if (account?.provider === "google") {
         const userExists = await db.user.findUnique({
-          // where: { email: user.email },
-          where: { email: "tech+system@shamiri.institute" },
+          where: { email: user.email },
           select: { name: true },
         });
         if (userExists && !userExists.name) {
           await db.user.update({
-            // where: { email: user.email },
-            where: { email: "tech+system@shamiri.institute" },
+            where: { email: user.email },
             data: {
               name: profile?.name,
               // @ts-ignore - this is a bug in the types, `picture` is a valid on the `Profile` type
               image: profile?.picture,
+              accounts: {
+                create: {
+                  provider: "google",
+                  type: "oauth",
+                  providerAccountId: account.providerAccountId,
+                  refresh_token: account.refresh_token,
+                  access_token: account.access_token,
+                  expires_at: account.expires_at,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                  session_state: account.session_state,
+                },
+              },
             },
           });
         }
+        return true;
       }
-      return true;
+      return false;
     },
     session: async ({ session, token }) => {
       const user = await db.user.findUnique({
@@ -63,9 +77,7 @@ const authOptions: AuthOptions = {
           memberships: {
             select: {
               implementer: true,
-              roles: {
-                select: { role: true },
-              },
+              role: true,
             },
           },
         },
@@ -74,7 +86,7 @@ const authOptions: AuthOptions = {
         id: token.sub,
         name: user?.name,
         email: user?.email,
-        roles: user?.memberships.map((m) => m.roles.map((r) => r.role.name)),
+        roles: user?.memberships.map((m) => m.role),
         // @ts-ignore
         ...(token || session).user,
       };
@@ -91,8 +103,4 @@ export type SessionUser = {
   email: string;
   name: string | null;
   avatarUrl: string | null;
-  memberships: {
-    organization: string;
-    roles: string[];
-  }[];
 };

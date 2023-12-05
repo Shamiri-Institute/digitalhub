@@ -4,11 +4,10 @@ import { SessionSchedule } from "#/app/(platform)/(dashboard)/session-schedule";
 import { ClinicalFeatureCard } from "#/app/(platform)/clinical-feature-card";
 import { Header } from "#/app/(platform)/common";
 import { HubCoordinatorView } from "#/app/(platform)/hub-coordinator-view";
-import { currentHub } from "#/app/auth";
+import { getCurrentPersonnel } from "#/app/auth";
 import { Icon, Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
 import { db } from "#/lib/db";
-import { getServerSession } from "next-auth";
 
 export default async function HomePage() {
   let demoRole = "supervisor";
@@ -25,17 +24,33 @@ export default async function HomePage() {
 }
 
 async function SupervisorView() {
-  const session = await getServerSession();
-  const hub = await currentHub();
+  const supervisor = await getCurrentPersonnel();
+  if (!supervisor) {
+    return <div>Not a supervisor</div>;
+  }
+
+  const fellowCount = await db.fellow.count({
+    where: { supervisorId: supervisor.id },
+  });
+  const schoolCount = await db.school.count({
+    where: { hubId: supervisor.hubId },
+  });
 
   return (
     <div>
       <div className="mb-8 mt-8 md:mt-0">
-        <Header userName={session?.user.name!} hubName={hub?.hubName!} />
+        <Header
+          personnelName={supervisor.supervisorName || "N/A"}
+          hubName={supervisor.hub?.hubName || "N/A"}
+          roleName={"Supervisor"}
+        />
       </div>
 
       <div className="mt-8">
-        <OverviewCards />
+        <SupervisorOverviewCards
+          fellowCount={fellowCount}
+          schoolCount={schoolCount}
+        />
       </div>
 
       <div className="mt-8 max-w-3xl">
@@ -67,20 +82,17 @@ async function SupervisorView() {
   );
 }
 
-async function OverviewCards() {
-  const hub = await currentHub();
-
-  const fellowCount = await db.fellow.count({
-    where: { hubId: hub?.id },
-  });
-  const schoolCount = await db.school.count({
-    where: { hubId: hub?.id },
-  });
-
+async function SupervisorOverviewCards({
+  fellowCount,
+  schoolCount,
+}: {
+  fellowCount: number;
+  schoolCount: number;
+}) {
   return (
     <div className="mb-4 grid grid-cols-1 gap-4 xs:grid-cols-2 sm:grid-cols-3 sm:gap-6">
       <FeatureCard
-        href="/fellows"
+        href="/fellows" // TODO: see if these are supposed to be clickable
         title="Fellows"
         stat={fellowCount}
         Icon={Icons.users}
