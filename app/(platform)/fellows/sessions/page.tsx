@@ -1,61 +1,33 @@
-"use client";
-
-import { useQueryState } from "next-usequerystate";
 import Link from "next/link";
-import * as React from "react";
 
-import { fetchFellow } from "#/app/actions";
+import { currentSupervisor } from "#/app/auth";
+import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
+import { db } from "#/lib/db";
+import { SessionHistory } from "./session-history";
 
-export default function FellowSessionsPage() {
-  const [fellowId, setFellowId] = useQueryState("fid");
-  const [fellow, setFellow] = React.useState<Awaited<
-    ReturnType<typeof fetchFellow>
-  > | null>(null);
-
-  React.useEffect(() => {
-    async function getFellow() {
-      if (!fellowId) return;
-      const fellow = await fetchFellow(fellowId);
-      setFellow(fellow);
-    }
-
-    getFellow();
-  }, [fellowId]);
-
-  if (!fellowId) {
-    return (
-      <div>
-        <h1>No fellow specified</h1>
-      </div>
-    );
+export default async function FellowSessionsPage() {
+  const supervisor = await currentSupervisor();
+  if (!supervisor) {
+    return <InvalidPersonnelRole role="supervisor" />;
   }
+
+  const allFellowsInHub = await db.fellow.findMany({
+    where: {
+      hubId: supervisor.hubId,
+    },
+    include: {
+      hub: true,
+      fellowAttendances: true,
+    },
+  });
 
   return (
     <main>
       <Header />
-      <FellowSwitcher fellowId={fellowId} setFellowId={setFellowId} />
-      <button
-        onClick={() => {
-          setFellowId(
-            `new-fid-${Math.floor(Math.random() * 16777215).toString(8)}`,
-          );
-        }}
-      >
-        Change fid
-      </button>
+      <SessionHistory fellows={allFellowsInHub} />
     </main>
   );
-}
-
-function FellowSwitcher({
-  fellowId,
-  setFellowId,
-}: {
-  fellowId: string;
-  setFellowId: (fid: string) => void;
-}) {
-  return <div>{fellowId}</div>;
 }
 
 function Header() {

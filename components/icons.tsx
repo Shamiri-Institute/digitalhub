@@ -145,28 +145,28 @@ export const Icons = {
     >
       <path
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1.25"
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M9.83317 12.25V11.0833C9.83317 10.4645 9.58734 9.871 9.14975 9.43342C8.71217 8.99583 8.11868 8.75 7.49984 8.75H3.99984C3.381 8.75 2.78751 8.99583 2.34992 9.43342C1.91234 9.871 1.6665 10.4645 1.6665 11.0833V12.25"
       />
       <path
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1.25"
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M5.74984 6.41667C7.0385 6.41667 8.08317 5.372 8.08317 4.08333C8.08317 2.79467 7.0385 1.75 5.74984 1.75C4.46117 1.75 3.4165 2.79467 3.4165 4.08333C3.4165 5.372 4.46117 6.41667 5.74984 6.41667Z"
       />
       <path
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1.25"
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M13.3335 12.25V11.0833C13.3331 10.5663 13.161 10.0641 12.8443 9.65549C12.5275 9.24689 12.0841 8.95505 11.5835 8.82581"
       />
       <path
         stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="1.25"
         strokeLinecap="round"
         strokeLinejoin="round"
         d="M9.8335 1.82581C10.3354 1.95431 10.7803 2.24621 11.098 2.65549C11.4156 3.06476 11.5881 3.56812 11.5881 4.08622C11.5881 4.60432 11.4156 5.10769 11.098 5.51696C10.7803 5.92623 10.3354 6.21813 9.8335 6.34664"
