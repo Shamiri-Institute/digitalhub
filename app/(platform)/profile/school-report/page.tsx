@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { currentSupervisor } from "#/app/auth";
+import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
 import { addWeeks } from "date-fns";
@@ -91,7 +92,11 @@ let referenceSessionItems: Omit<SessionItem, "id">[] = [
 ];
 
 export default async function SchoolReport() {
-  const { assignedSchoolId } = await currentSupervisor();
+  const supervisor = await currentSupervisor();
+  if (!supervisor) {
+    return <InvalidPersonnelRole role="supervisor" />;
+  }
+  const { assignedSchoolId } = supervisor;
 
   if (assignedSchoolId === null) {
     throw Error("Supervisor has no assigned school");
@@ -173,7 +178,11 @@ export default async function SchoolReport() {
 }
 
 async function IntroHeader() {
-  const { assignedSchool } = await currentSupervisor();
+  const supervisor = await currentSupervisor();
+  if (!supervisor) {
+    return <InvalidPersonnelRole role="supervisor" />;
+  }
+  const { assignedSchool } = supervisor;
 
   return (
     <div>

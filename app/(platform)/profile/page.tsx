@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
 import { CurrentSupervisor, currentHub, currentSupervisor } from "#/app/auth";
+import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
 import { getInitials } from "#/lib/utils";
@@ -13,6 +14,9 @@ const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
 
 export default async function SupervisorProfile() {
   let supervisor = await currentSupervisor();
+  if (!supervisor) {
+    return <InvalidPersonnelRole role="supervisor" />;
+  }
 
   const fellowsCount = (
     await db.fellowAttendance.groupBy({
@@ -183,7 +187,11 @@ async function MySchools() {
 }
 
 // only show fellows assigned to this supervisor
-function MyFellows({ fellows }: { fellows: CurrentSupervisor["fellows"] }) {
+function MyFellows({
+  fellows,
+}: {
+  fellows: NonNullable<CurrentSupervisor>["fellows"];
+}) {
   return (
     <>
       <div className="mt-5 flex items-center justify-between">

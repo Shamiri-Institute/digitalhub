@@ -1,13 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
-import { fetchPersonnel } from "#/app/actions";
-import { PersonnelSwitcher } from "#/app/dev-personnel-switcher";
+import { PersonnelTool } from "#/app/dev-personnel-switcher";
 import { Icons, type Icon } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
 import { Separator } from "#/components/ui/separator";
-import { constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 
 export const navigation: Array<any> = [];
@@ -22,6 +22,7 @@ function NavItem({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+
   return (
     <li>
       <Link
@@ -46,25 +47,6 @@ export function Navigation({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"nav">) {
-  const [personnel, setPersonnel] = React.useState<
-    {
-      id: string;
-      type: "supervisor" | "hc";
-      label: string;
-    }[]
-  >([]);
-  const [activePersonnelId, setActivePersonnelId] = React.useState("");
-
-  React.useEffect(() => {
-    const fetchData = async () => {
-      const response = await fetchPersonnel();
-      setActivePersonnelId(response.activePersonnelId);
-      setPersonnel(response.personnel);
-    };
-
-    fetchData();
-  }, []);
-
   return (
     <div
       className={cn("flex h-full flex-col justify-between", className)}
@@ -75,13 +57,7 @@ export function Navigation({
       </div>
       <div>
         <div className="mb-4">
-          {/* TODO: possibly enable devs to use this in prod */}
-          {constants.NEXT_PUBLIC_ENV === "development" && (
-            <PersonnelSwitcher
-              personnel={personnel}
-              activePersonnelId={activePersonnelId}
-            />
-          )}
+          <PersonnelTool />
         </div>
         <Separator />
         <div>

@@ -900,49 +900,13 @@ export async function addNote({
   }
 }
 
-export async function fetchPersonnel() {
-  const supervisors: {
-    id: string;
-    type: "supervisor" | "hc";
-    label: string;
-  }[] = (
-    await db.supervisor.findMany({
-      orderBy: { supervisorName: "desc" },
-      where: { NOT: { assignedSchoolId: null } },
-    })
-  ).map((sup) => ({
-    id: sup.id,
-    type: "supervisor",
-    label: `${sup.supervisorName} - ${sup.visibleId}`,
-  }));
-
-  // TODO: add back when implementing hub coordinator flow
-  // const hubCoordinators: {
-  //   id: string;
-  //   type: "supervisor" | "hc";
-  //   label: string;
-  // }[] = (
-  //   await db.hubCoordinator.findMany({
-  //     orderBy: { coordinatorName: "desc" },
-  //   })
-  // ).map((hc) => ({
-  //   id: hc.id,
-  //   type: "hc" as const,
-  //   label: `${hc.coordinatorName} - ${hc.visibleId}`,
-  // }));
-
-  const personnel = [...supervisors];
-
-  const { membership } = await getCurrentUser();
-
-  const activePersonnelId = membership.identifier || "";
-
-  return { personnel, activePersonnelId };
-}
-
 export async function selectPersonnel({ identifier }: { identifier: string }) {
   console.log("selectPersonnel", { identifier });
-  const { membership } = await getCurrentUser();
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { membership } = user;
   await db.implementerMember.update({
     where: { id: membership.id },
     data: { identifier },
@@ -951,4 +915,39 @@ export async function selectPersonnel({ identifier }: { identifier: string }) {
 
 export async function fetchFellow(visibleId: string) {
   return await db.fellow.findUnique({ where: { visibleId } });
+}
+
+export async function updateAssignedSchoolDetails(
+  schoolVisibleId: string,
+  data: {
+    numbersExpected?: number;
+    pointPersonName?: string;
+    pointPersonEmail?: string;
+    pointPersonPhone?: string;
+    schoolEmail?: string;
+    schoolCounty?: string;
+    schoolDemographics?: string;
+    boardingDay?: string;
+    schoolType?: string;
+  },
+) {
+  try {
+    const school = await db.school.update({
+      where: { visibleId: schoolVisibleId },
+      data: {
+        ...data,
+      },
+    });
+
+    return { school };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: "Something went wrong",
+      };
+    }
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
 }
