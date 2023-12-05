@@ -1015,3 +1015,17 @@ export async function editFellowDetails(
     return { success: false, error: "Something went wrong" };
   }
 }
+
+export async function getSchoolsByHubId(hubId: string) {
+  try {
+    const schools = await db.school.findMany({
+      where: {
+        hubId,
+      },
+    });
+    return { schools };
+  } catch (e) {
+    console.error(e);
+    return { error: "Something went wrong" };
+  }
+}
