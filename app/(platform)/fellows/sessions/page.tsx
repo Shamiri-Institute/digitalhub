@@ -12,15 +12,12 @@ export default function FellowSessionsPage() {
   const [fellow, setFellow] = React.useState<Awaited<
     ReturnType<typeof fetchFellow>
   > | null>(null);
-  const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
     async function getFellow() {
       if (!fellowId) return;
-      setLoading(false);
       const fellow = await fetchFellow(fellowId);
       setFellow(fellow);
-      setLoading(true);
     }
 
     getFellow();
@@ -45,7 +42,7 @@ export default function FellowSessionsPage() {
           );
         }}
       >
-        {loading ? "loading" : "Change fid"}
+        Change fid
       </button>
     </main>
   );

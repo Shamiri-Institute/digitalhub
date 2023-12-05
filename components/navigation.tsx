@@ -94,46 +94,37 @@ function AdminNavigation() {
   );
 }
 
-type Role = "admin" | "hub-coordinator" | "supervisor";
-const AllRoles: Role[] = ["admin", "hub-coordinator", "supervisor"];
-const HubCoordinatorAndAboveRoles: Role[] = ["admin", "hub-coordinator"];
-const SupervisorAndAboveRoles: Role[] = [
-  "admin",
-  "hub-coordinator",
-  "supervisor",
-];
-
 interface NavigationItem {
   path: string;
   title: string;
   Icon: Icon;
-  roles: Role[];
 }
 
-const navigationItems: NavigationItem[] = [
+const supervisorNavigationItems: NavigationItem[] = [
   {
     path: "/",
     title: "Home",
     Icon: Icons.home,
-    roles: AllRoles,
   },
   {
     path: "/schools",
     title: "Schools",
     Icon: Icons.schoolMinusOutline,
-    roles: SupervisorAndAboveRoles,
+  },
+  {
+    path: "/fellows",
+    title: "Fellows",
+    Icon: Icons.users,
   },
   {
     path: "/screenings",
     title: "Screenings",
     Icon: Icons.heartHandshake,
-    roles: SupervisorAndAboveRoles,
   },
   {
     path: "/profile",
     title: "Profile",
     Icon: Icons.user,
-    roles: SupervisorAndAboveRoles,
   },
 ];
 
@@ -141,7 +132,7 @@ function SupervisorNavigation() {
   return (
     <nav className="flex-1 lg:pt-6">
       <ul role="list" className="space-y-0">
-        {navigationItems.map((item) => {
+        {supervisorNavigationItems.map((item) => {
           return (
             <NavItem key={item.path} href={item.path} Icon={item.Icon}>
               {item.title}
