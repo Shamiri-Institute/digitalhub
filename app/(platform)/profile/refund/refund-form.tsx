@@ -65,8 +65,7 @@ export const FormSchema = z.object({
   school: z
     .string({
       required_error: "Please enter the receipt url.",
-    })
-    .optional(),
+    }),
 });
 
 export function RefundForm({
@@ -272,7 +271,6 @@ export function RefundForm({
                     <Select
                       name="destination"
                       defaultValue={field.value}
-                      // onValueChange={field.onChange}
                       onValueChange={(value) => {
                         field.onChange(value);
                         setDestination(value);
@@ -329,7 +327,7 @@ export function RefundForm({
                         </SelectTrigger>
                         <SelectContent>
                           {hubSchools.map((school: School) => (
-                            <SelectItem key={school.id} value={school.id}>
+                            <SelectItem key={school.id} value={school.schoolName}>
                               {school.schoolName}
                             </SelectItem>
                           ))}
