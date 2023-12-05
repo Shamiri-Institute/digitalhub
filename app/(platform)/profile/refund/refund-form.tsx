@@ -63,7 +63,7 @@ export const FormSchema = z.object({
     required_error: "Please enter the receipt url.",
   }),
   school: z.string({
-    required_error: "Please enter the receipt url.",
+    required_error: "Please select a school.",
   }),
 });
 
