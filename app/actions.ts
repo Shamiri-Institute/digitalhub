@@ -1,6 +1,6 @@
 "use server";
 
-import { FellowAttendance, Prisma } from "@prisma/client";
+import { Fellow, FellowAttendance, Prisma } from "@prisma/client";
 import * as csv from "csv-parse";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -12,6 +12,7 @@ import { getCurrentUser } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { EditFellowSchema } from "#/lib/validators";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 
 export async function inviteUserToImplementer(prevState: any, formData: any) {
@@ -917,6 +918,49 @@ export async function fetchFellow(visibleId: string) {
   return await db.fellow.findUnique({ where: { visibleId } });
 }
 
+export async function updateLoggedInSupervisorDetails(
+  visibleId: string,
+  data: {
+    bankAccountNumber?: string;
+    bankAccountHolder?: string;
+    bankBranch?: string;
+    bankName?: string;
+    cellNumber?: string;
+    county?: string;
+    dateOfBirth?: Date;
+    idNumber?: string;
+    kra?: string;
+    mpesaName?: string;
+    mpesaNumber?: string;
+    nhif?: string;
+    nssf?: string;
+    subCounty?: string;
+    supervisorEmail?: string;
+    gender?: string;
+  },
+) {
+  try {
+    const supervisor = await db.supervisor.findUnique({
+      where: { visibleId },
+    });
+
+    if (!supervisor) {
+      throw new Error("Supervisor not found");
+    }
+
+    const updatedSupervisor = await db.supervisor.update({
+      where: { visibleId },
+      data: {
+        ...data,
+      },
+    });
+    return { supervisor: updatedSupervisor };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
 export async function updateAssignedSchoolDetails(
   schoolVisibleId: string,
   data: {
@@ -949,5 +993,43 @@ export async function updateAssignedSchoolDetails(
     }
     console.error(error);
     return { error: "Something went wrong" };
+  }
+}
+
+export async function editFellowDetails(
+  fellowDetails: Pick<
+    Fellow,
+    | "id"
+    | "fellowName"
+    | "dateOfBirth"
+    | "mpesaNumber"
+    | "gender"
+    | "county"
+    | "subCounty"
+    | "mpesaName"
+    | "cellNumber"
+  >,
+) {
+  const result = EditFellowSchema.safeParse(fellowDetails);
+
+  if (!result.success) {
+    throw new Error(
+      "Invalid fields supplied, please review submission details",
+    );
+  }
+
+  const { data: parsedFellow } = result;
+
+  try {
+    await db.fellow.update({
+      where: {
+        id: parsedFellow.id,
+      },
+      data: parsedFellow,
+    });
+    revalidatePath("/profile");
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: "Something went wrong" };
   }
 }

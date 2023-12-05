@@ -6,8 +6,7 @@ import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
 import { getInitials } from "#/lib/utils";
-
-import { FellowCard } from "./components/fellow-card";
+import FellowCard from "./components/fellow-card";
 import { ReimbursementRequests } from "./reimbursement-requests";
 
 const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];

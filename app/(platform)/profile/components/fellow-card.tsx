@@ -1,24 +1,26 @@
-import { differenceInYears } from "date-fns";
+"use client";
 
 import type { CurrentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
+import { Dialog, DialogContent, DialogTrigger } from "#/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
-import Link from "next/link";
+import differenceInYears from "date-fns/differenceInYears";
+import { useState } from "react";
+import FellowDetailsForm from "./fellow-management-form";
 
-export function FellowCard({
+export default function FellowCard({
   fellow,
   assigned,
 }: {
-  fellow: CurrentSupervisor["fellows"][number];
+  fellow: NonNullable<CurrentSupervisor>["fellows"][number];
   assigned?: boolean;
 }) {
   return (
@@ -121,55 +123,33 @@ function CardDetailLineItem({
   );
 }
 
-interface MenuItem {
-  label: string;
-  path?: string;
-}
-
-const buildMainOptions: (
-  fellow: CurrentSupervisor["fellows"][number],
-) => MenuItem[] = (fellow) => [
-  {
-    label: "Session Attended",
-    path: `fellows/sessions?fid=${fellow.visibleId}`,
-  },
-  { label: "Edit Fellow" },
-  { label: "Weekly Evaluation" },
-];
-
-const bulidSecondaryOptions: (
-  fellow: CurrentSupervisor["fellows"][number],
-) => MenuItem[] = (_fellow) => [
-  { label: "Submit a Complaint" },
-  { label: "Dropout Fellow" },
-];
-
 function FellowCardMenu({
   fellow,
   children,
 }: {
-  fellow: CurrentSupervisor["fellows"][number];
+  fellow: NonNullable<CurrentSupervisor>["fellows"][number];
   children: React.ReactNode;
 }) {
-  const mainOptions = buildMainOptions(fellow);
-  const secondaryOptions = bulidSecondaryOptions(fellow);
+  const [open, setOpen] = useState(false);
+  const closeDialog = () => setOpen(false);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent>
-        {mainOptions.map((option) => (
-          <DropdownMenuItem key={option.label}>
-            {option.path ? (
-              <Link href={option.path}>{option.label}</Link>
-            ) : (
-              option.label
-            )}
-          </DropdownMenuItem>
-        ))}
+        <div>Session History</div>
+        <div>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger>Edit Details</DialogTrigger>
+            <DialogContent className="max-h-screen overflow-y-scroll">
+              <FellowDetailsForm fellow={fellow} closeDialog={closeDialog} />
+            </DialogContent>
+          </Dialog>
+        </div>
+        <div>Weekly Evaluation</div>
         <DropdownMenuSeparator />
-        {secondaryOptions.map((option) => (
-          <DropdownMenuItem key={option.label}>{option.label}</DropdownMenuItem>
-        ))}
+        <div>Submit a Complaint</div>
+        <div>Dropout Fellow</div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
