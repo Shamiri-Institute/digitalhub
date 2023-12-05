@@ -61,26 +61,26 @@ export class OnboardUserCommand extends Command<
         throw new implementerNotFoundError();
       }
 
-      const role = await tx.role.findFirst({
-        where: { id: input.role },
-      });
-      if (!role) {
-        throw new Error(`Role ${input.role} not found`);
-      }
+      // const role = await tx.role.findFirst({
+      //   where: { id: input.role },
+      // });
+      // if (!role) {
+      //   throw new Error(`Role ${input.role} not found`);
+      // }
 
-      const membership = await tx.implementerMember.create({
-        data: {
-          implementerId: implementer.id,
-          userId: user.id,
-        },
-      });
+      // const membership = await tx.implementerMember.create({
+      //   data: {
+      //     implementerId: implementer.id,
+      //     userId: user.id,
+      //   },
+      // });
 
-      await tx.memberRole.create({
-        data: {
-          memberId: membership.id,
-          roleId: role.id,
-        },
-      });
+      // await tx.memberRole.create({
+      //   data: {
+      //     memberId: membership.id,
+      //     roleId: role.id,
+      //   },
+      // });
 
       return { user, implementer };
     });

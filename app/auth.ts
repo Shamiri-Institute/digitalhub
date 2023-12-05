@@ -1,82 +1,6 @@
+import { getServerSession } from "next-auth";
+
 import { db } from "#/lib/db";
-
-export interface CurrentUser {
-  email: string | null;
-  name: string | null;
-  activeOrgId: string;
-  organizations: {
-    id: string;
-    name: string;
-    roles: {
-      id: string;
-      name: string;
-      description: string;
-    }[];
-  }[];
-  avatarUrl: string | null;
-  isRole: (role: string) => boolean;
-}
-
-export async function fetchAuthedUser() {
-  const user = await fetchCurrentUser();
-  if (user === null) {
-    throw new Error("User not found");
-  }
-
-  return user;
-}
-
-// TODO: dummy values, use auth/cookies to pull this info
-async function fetchCurrentUser(): Promise<CurrentUser | null> {
-  const user = await db.user.findFirst({
-    where: { email: "jackline@shamiri.institute" },
-    select: {
-      email: true,
-      name: true,
-      avatar: {
-        select: { file: true },
-      },
-      memberships: {
-        select: {
-          implementer: true,
-          roles: {
-            select: { role: true },
-          },
-        },
-      },
-    },
-  });
-  if (!user) {
-    return null;
-  }
-
-  let avatarUrl: string | null = null;
-  if (user.avatar) {
-    const fileIdHash = user.avatar.file.id.slice(5);
-    const fileName = user.avatar.file.fileName;
-    avatarUrl = `/api/files/${fileIdHash}/${fileName}`;
-  }
-
-  return {
-    email: user.email,
-    name: user.name,
-    // TODO: pull from separate cookie to allow switching orgs without logging out
-    activeOrgId: user.memberships[0]!.implementer.id,
-    organizations: user.memberships.map((m) => {
-      return {
-        id: m.implementer.id,
-        name: m.implementer.implementerName,
-        roles: m.roles.map((r) => r.role),
-      };
-    }),
-    avatarUrl,
-    isRole: (roleId: string) => {
-      return user.memberships.some((m) => {
-        return m.roles.some((r) => r.role.id === roleId);
-      });
-    },
-  };
-}
 
 export async function currentHub() {
   return await db.hub.findFirst();
@@ -85,11 +9,21 @@ export async function currentHub() {
 export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
 
 export async function currentSupervisor() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { membership } = user;
+
+  const { identifier } = membership;
+  if (!identifier) {
+    return null;
+  }
+
   const supervisor = await db.supervisor.findFirst({
-    where: {
-      visibleId: "SPV23_S_25",
-    },
+    where: { id: identifier },
     include: {
+      hub: true,
       assignedSchool: true,
       fellows: {
         include: {
@@ -101,7 +35,7 @@ export async function currentSupervisor() {
   });
 
   if (!supervisor) {
-    throw new Error("No supervisor found");
+    return null;
   }
 
   const { assignedSchoolId, assignedSchool } = supervisor;
@@ -110,4 +44,53 @@ export async function currentSupervisor() {
   }
 
   return { ...supervisor, assignedSchoolId, assignedSchool };
+}
+
+export type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>;
+
+export async function getCurrentUser() {
+  const session = await getServerSession();
+  if (!session) {
+    return null;
+  }
+
+  const user = await db.user.findUniqueOrThrow({
+    where: { email: session.user.email },
+    include: { memberships: true },
+  });
+
+  // TODO: add membership to next-auth session to know which implementer, a user is logged in for
+  const membership = user.memberships[0];
+  if (!membership) {
+    throw new Error("No membership");
+  }
+
+  let personnelRole: "supervisor" | "hc" | null = null;
+  if (membership.identifier) {
+    if (membership.identifier.startsWith("sup")) {
+      personnelRole = "supervisor";
+    } else if (membership.identifier.startsWith("hc")) {
+      personnelRole = "hc";
+    }
+  }
+
+  return { session, user, membership, personnelRole };
+}
+
+export async function getCurrentPersonnel(): Promise<CurrentSupervisor | null> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { personnelRole } = user;
+
+  if (!personnelRole) {
+    return null;
+  }
+
+  if (personnelRole === "supervisor") {
+    return await currentSupervisor();
+  }
+
+  return null;
 }

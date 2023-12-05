@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { currentSupervisor } from "#/app/auth";
+import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
 import { SessionNavigationHeader } from "./session-navigation-header";
 import { SessionNotes } from "./session-notes";
@@ -29,6 +30,9 @@ export default async function ReportDetails({
   }
 
   const supervisor = await currentSupervisor();
+  if (!supervisor) {
+    return <InvalidPersonnelRole role="supervisor" />;
+  }
 
   const session = await db.interventionSession.findUnique({
     where: {

@@ -19,7 +19,7 @@ export default function FellowCard({
   fellow,
   assigned,
 }: {
-  fellow: CurrentSupervisor["fellows"][number];
+  fellow: NonNullable<CurrentSupervisor>["fellows"][number];
   assigned?: boolean;
 }) {
   const [open, setOpen] = useState(false);
