@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { ModifyFellowData } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
 import type { ModifyStudentData } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
+import { getCurrentUser } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -898,6 +899,19 @@ export async function addNote({
     console.error(error);
     return { success: false };
   }
+}
+
+export async function selectPersonnel({ identifier }: { identifier: string }) {
+  console.log("selectPersonnel", { identifier });
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { membership } = user;
+  await db.implementerMember.update({
+    where: { id: membership.id },
+    data: { identifier },
+  });
 }
 
 export async function updateLoggedInSupervisorDetails(

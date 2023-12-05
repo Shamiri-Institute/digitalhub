@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import * as React from "react";
 
-import { fetchAuthedUser } from "#/app/auth";
+import { PersonnelTool } from "#/app/dev-personnel-switcher";
 import { Icons, type Icon } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
 import { Separator } from "#/components/ui/separator";
@@ -19,6 +22,7 @@ function NavItem({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+
   return (
     <li>
       <Link
@@ -49,42 +53,11 @@ export function Navigation({
       {...props}
     >
       <div className="flex flex-1 flex-col">
-        <HubCoordinatorNavigation />
+        <SupervisorNavigation />
       </div>
       <div>
         <div className="mb-4">
-          {/* TODO: https://ui.shadcn.com/docs/components/accordion */}
-          <button
-            className={cn(
-              "flex w-full items-center gap-6 rounded-sm p-1.5 lg:gap-2",
-              "text-sm leading-5 text-secondary-foreground lg:font-medium",
-              "hover:bg-foreground/[0.025]",
-            )}
-          >
-            <Icons.settings className="h-6 lg:h-9" strokeWidth={1.5} />
-            <div className="flex w-full items-center justify-between">
-              <span>Settings</span>
-              <Icons.chevronDown
-                className="h-4 text-foreground/50 lg:h-5"
-                strokeWidth={1.5}
-              />
-            </div>
-          </button>
-
-          {/* <ThemeToggle>
-            <button
-              className={cn(
-                "w-full flex items-center gap-6 lg:gap-2 p-1.5 rounded-sm",
-                "text-sm leading-5 lg:font-medium",
-                "hover:bg-foreground/[0.025]"
-              )}
-            >
-              <Icons.sun className="h-6 lg:h-9" strokeWidth={1.5} />
-              <div className="flex justify-between items-center w-full">
-                <span>Light theme</span>
-              </div>
-            </button>
-          </ThemeToggle> */}
+          <PersonnelTool />
         </div>
         <Separator />
         <div>
@@ -140,47 +113,16 @@ interface NavigationItem {
 const navigationItems: NavigationItem[] = [
   {
     path: "/",
-    title: "Dashboard",
-    Icon: Icons.layoutDashboard,
+    title: "Home",
+    Icon: Icons.home,
     roles: AllRoles,
-  },
-  {
-    path: "/supervisors",
-    title: "Supervisors",
-    Icon: Icons.clipboardList,
-    roles: HubCoordinatorAndAboveRoles,
-  },
-  {
-    path: "/fellows",
-    title: "Fellows",
-    Icon: Icons.graduationCapIcon,
-    roles: SupervisorAndAboveRoles,
   },
   {
     path: "/schools",
     title: "Schools",
-    Icon: Icons.backpack,
+    Icon: Icons.schoolMinusOutline,
     roles: SupervisorAndAboveRoles,
   },
-  {
-    path: "/payouts",
-    title: "Payouts",
-    Icon: Icons.banknote,
-    roles: SupervisorAndAboveRoles,
-  },
-  {
-    path: "/hubs",
-    title: "Hubs",
-    Icon: Icons.network,
-    roles: HubCoordinatorAndAboveRoles,
-  },
-  {
-    path: "/reports",
-    title: "Reports",
-    Icon: Icons.pieChart,
-    roles: HubCoordinatorAndAboveRoles,
-  },
-  // todo: take to supervisor
   {
     path: "/screenings",
     title: "Screenings",
@@ -195,11 +137,7 @@ const navigationItems: NavigationItem[] = [
   },
 ];
 
-function AppNavigation() {
-  const currentUser = fetchAuthedUser();
-}
-
-function HubCoordinatorNavigation() {
+function SupervisorNavigation() {
   return (
     <nav className="flex-1 lg:pt-6">
       <ul role="list" className="space-y-0">

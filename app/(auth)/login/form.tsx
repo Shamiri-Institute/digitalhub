@@ -21,6 +21,9 @@ export function LoginForm() {
     error && toast({ title: error });
   }, [searchParams, toast]);
 
+  // TODO: see if all we need is google sign in for now
+  const enableMagicLink = false;
+
   return (
     <>
       <Button
@@ -103,21 +106,23 @@ export function LoginForm() {
             />
           </div>
         )}
-        <Button
-          variant="secondary"
-          {...(!showEmailOption && {
-            type: "button",
-            onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
-              e.preventDefault();
-              setShowEmailOption(true);
-            },
-          })}
-          disabled={clickedGoogle}
-          className="flex gap-2"
-        >
-          <Icons.mail className="h-4 w-4" />
-          Continue with Email
-        </Button>
+        {enableMagicLink && (
+          <Button
+            variant="secondary"
+            {...(!showEmailOption && {
+              type: "button",
+              onClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+                e.preventDefault();
+                setShowEmailOption(true);
+              },
+            })}
+            disabled={clickedGoogle}
+            className="flex gap-2"
+          >
+            <Icons.mail className="h-4 w-4" />
+            Continue with Email
+          </Button>
+        )}
       </form>
     </>
   );
