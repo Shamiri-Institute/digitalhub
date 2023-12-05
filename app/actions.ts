@@ -671,6 +671,7 @@ export async function submitTransportReimbursementRequest(data: {
   session: string;
   destination: string;
   reason: string;
+  school: string;
 }) {
   try {
     if (!data.receiptDate) {
@@ -695,6 +696,7 @@ export async function submitTransportReimbursementRequest(data: {
           receiptUrl: data.receiptUrl,
           session: data.session,
           destination: data.destination,
+          school: data.school,
         },
       },
     });
