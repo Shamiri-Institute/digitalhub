@@ -109,7 +109,7 @@ export default function EditProfileBio({
   supervisor,
 }: {
   supervisor: Omit<
-    CurrentSupervisor,
+    NonNullable<CurrentSupervisor>,
     "createdAt" | "updatedAt" | "assignedSchool" | "assignedSchoolId"
   >;
 }) {

@@ -1,22 +1,22 @@
 import { objectId } from "#/lib/crypto";
 import { Database, db } from "#/lib/db";
 import { parseEuropeanDate } from "#/lib/utils";
+import { fixtures } from "#/prisma/scripts/fixtures";
 import { parseCsvFile } from "#/prisma/scripts/utils";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 async function seedDatabase() {
-  // await truncateTables();
-  // await createSystemUser(db);
-  // await createImplementers(db);
-  // // await createPermissions(db);
-  // // await createRoles(db);
-  // // await createUsers(db);
-  // await createHubs(db);
-  // await createSchools(db);
-  // await createSupervisors(db);
-  // await createFellows(db);
-  // await createFellowAttendances(db);
+  await truncateTables();
+  await createSystemUser(db);
+  await createImplementers(db);
+  await createUsers(db);
+  await createHubs(db);
+  await createSchools(db);
+  await createSupervisors(db);
+  await createFellows(db);
+  await createFellowAttendances(db);
   await createStudents(db);
-  // await createFixtures(db);
+  await createFixtures(db);
 }
 
 seedDatabase()
@@ -31,7 +31,7 @@ seedDatabase()
 
 async function truncateTables() {
   await db.$executeRaw`
-    TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, roles, member_roles, permissions, role_permissions, user_recent_opens, member_permissions, hubs, students, student_outcomes, fellows, intervention_sessions, intervention_group_sessions, intervention_session_ratings, intervention_session_notes, fellow_attendances, supervisors, schools, hub_coordinators, reimbursement_requests;
+    TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, user_recent_opens, hubs, students, student_outcomes, fellows, intervention_sessions, intervention_group_sessions, intervention_session_ratings, intervention_session_notes, fellow_attendances, supervisors, schools, hub_coordinators, reimbursement_requests;
     `;
 }
 
@@ -64,69 +64,33 @@ async function createImplementers(db: Database) {
   });
 }
 
-// async function createPermissions(db: Database) {
-//   for (let permission of fixtures.permissions) {
-//     await db.permission.create({
-//       data: {
-//         permissionLabel: permission,
-//       },
-//     });
-//   }
-// }
-
-// async function createRoles(db: Database) {
-//   for (let roleFixture of fixtures.roles) {
-//     const role = await db.role.create({
-//       data: {
-//         id: roleFixture.roleId,
-//         name: roleFixture.roleName,
-//         description: roleFixture.roleDescription,
-//       },
-//     });
-
-//     for (let permissionFixture of roleFixture.permissions) {
-//       const permission = await db.permission.findFirstOrThrow({
-//         where: { permissionLabel: permissionFixture },
-//       });
-
-//       await db.rolePermission.create({
-//         data: {
-//           roleId: role.id,
-//           permissionId: permission.id,
-//         },
-//       });
-//     }
-//   }
-// }
-
-// async function createUsers(db: Database) {
-//   const onboard = new OnboardUserCommand(db);
-//   for (let { implementerByEmail, ...user } of fixtures.users) {
-//     const implementer = await db.implementer.findFirstOrThrow({
-//       where: { contactEmail: implementerByEmail },
-//     });
-
-//     const response = await onboard.run({
-//       email: user.email,
-//       name: user.name,
-//       implementerId: implementer.id,
-//       inviterId: "system",
-//       role: user.implementerRole,
-//       avatarUrl: user.avatarUrl ?? undefined,
-//     });
-
-//     if (user.account) {
-//       await db.account.create({
-//         data: {
-//           type: user.account.type,
-//           provider: user.account.provider,
-//           providerAccountId: user.account.providerAccountId,
-//           userId: response.userId,
-//         },
-//       });
-//     }
-//   }
-// }
+async function createUsers(db: Database) {
+  const adapter = PrismaAdapter(db);
+  for (let user of fixtures.users) {
+    console.log({ user });
+    if (adapter.createUser) {
+      const implementer = await db.implementer.findFirstOrThrow({
+        where: { visibleId: user.implementerByVisibleId },
+      });
+      await adapter.createUser({
+        name: user.name,
+        email: user.email,
+        emailVerified: new Date(),
+        image: user.avatarUrl,
+      });
+      const createdUser = await db.user.findFirstOrThrow({
+        where: { email: user.email },
+      });
+      await db.implementerMember.create({
+        data: {
+          implementerId: implementer.id,
+          userId: createdUser.id,
+          role: user.implementerRole,
+        },
+      });
+    }
+  }
+}
 
 async function createHubs(db: Database) {
   console.log("Creating hubs");
@@ -282,7 +246,6 @@ async function createSupervisors(db: Database) {
                 })
               )?.id
             : null,
-          memberId: null,
           county: supervisor["County"],
           subCounty: supervisor["Sub-County"],
           bankName: supervisor["Bank_Name"],
@@ -420,22 +383,34 @@ async function createStudents(db: Database) {
 async function createFixtures(db: Database) {
   console.log("Creating fixtures");
 
-  let stDominic = await db.school.findUnique({
-    where: {
-      visibleId: "ANS23_School_3",
-    },
+  const supervisors = await db.supervisor.findMany({
     include: {
-      hub: true,
+      hub: {
+        include: {
+          schools: true,
+        },
+      },
     },
   });
 
+  // Assign a school to each supervisor
+  for (let supervisor of supervisors) {
+    if (supervisor.hub) {
+      const school = randomSchool(supervisor.hub.schools);
+      await db.supervisor.update({
+        where: { id: supervisor.id },
+        data: { assignedSchoolId: school?.id },
+      });
+    }
+  }
+
+  let stDominic = await db.school.findUnique({
+    where: { visibleId: "ANS23_School_3" },
+    include: { hub: true },
+  });
   const supervisorMichelle = await db.supervisor.update({
-    where: {
-      visibleId: "SPV23_S_25",
-    },
-    data: {
-      assignedSchoolId: stDominic?.id,
-    },
+    where: { visibleId: "SPV23_S_25" },
+    data: { assignedSchoolId: stDominic?.id },
   });
 
   const data = [
@@ -490,4 +465,8 @@ async function createFixtures(db: Database) {
   await db.reimbursementRequest.createMany({
     data,
   });
+}
+
+function randomSchool<T>(schools: T[]) {
+  return schools[Math.floor(Math.random() * schools.length)];
 }
