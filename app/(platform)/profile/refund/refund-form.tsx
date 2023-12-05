@@ -98,8 +98,11 @@ export function RefundForm({
 
   useEffect(() => {
     const fetchHubSchools = async () => {
-      const { schools } = await getSchoolsByHubId(hubId);
-      setHubSchools(schools as School[]);
+      const result = await getSchoolsByHubId(hubId);
+      if (!result) return;
+      const { schools } = result;
+      if (!schools) return;
+      setHubSchools(schools);
     };
     fetchHubSchools();
   }, [hubId]);
