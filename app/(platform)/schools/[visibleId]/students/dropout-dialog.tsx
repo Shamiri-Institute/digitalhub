@@ -19,12 +19,14 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { StudentWithFellow } from "#/types/prisma";
+import { Loader2 } from "lucide-react";
 
 const FormSchema = z
   .object({
@@ -32,10 +34,19 @@ const FormSchema = z
     other_reason: z.string(),
   })
   .partial()
-  .refine((val) => !val.reason && !val.other_reason, {
-    message:
-      "Please select one of the dropout reasons or input a custom reason",
-  });
+  .refine(
+    (val) => {
+      if (val.reason === "other" && !val.other_reason) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message:
+        "Please select one of the options. If you select other please fill in a reason in the input field",
+      path: ["other_reason"],
+    },
+  );
 
 export function StudentDropoutDialog({
   student,
@@ -57,7 +68,7 @@ export function StudentDropoutDialog({
   const reasonRadioValue = form.watch("reason", "");
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    const reason = data.reason || data.other_reason;
+    const reason = data.reason === "other" ? data.other_reason : data.reason;
 
     if (!reason) {
       toast({
@@ -181,12 +192,16 @@ export function StudentDropoutDialog({
                     <FormControl>
                       <Input placeholder="Other reason" {...field} />
                     </FormControl>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
             <div className="flex justify-end px-6 py-6">
               <Button variant="destructive" type="submit" className="w-full">
+                {form.formState.isSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
                 Drop out {student.studentName}
               </Button>
             </div>

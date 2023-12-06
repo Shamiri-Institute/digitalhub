@@ -200,7 +200,7 @@ function StudentCard({
                       implementerVisibleId: fellow.implementer?.visibleId!,
                     }}
                   >
-                    <div>Edit Student</div>
+                    <div className="cursor-pointer">Edit Student</div>
                   </StudentModifyDialog>
                 </div>
 
@@ -208,7 +208,7 @@ function StudentCard({
                 <div>Record complaint</div>
                 {!student.droppedOut ? (
                   <StudentDropoutDialog student={student}>
-                    <div>Dropout student</div>
+                    <div className="cursor-pointer">Dropout student</div>
                   </StudentDropoutDialog>
                 ) : null}
               </DropdownMenuContent>
