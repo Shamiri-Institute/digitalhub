@@ -726,7 +726,7 @@ export function StudentModifyDialog({
                 />
               </div>
 
-              {(student.droppedOut || student?.droppedOutAt) && (
+              {(student?.droppedOut || student?.droppedOutAt) && (
                 <div>
                   <FormField
                     control={form.control}
