@@ -36,6 +36,10 @@ export function SessionHistory({
             setFellowVisibleId={setFellowId}
             fellows={fellows}
           />
+          <div className="mt-4 flex flex-col text-center text-sm">
+            <div className="font-medium">MPESA</div>
+            <div className="text-xl font-semibold">{fellow?.mpesaNumber}</div>
+          </div>
         </div>
       </div>
     </>
