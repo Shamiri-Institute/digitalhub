@@ -23,7 +23,7 @@ export default async function FellowSessionsPage() {
   });
 
   return (
-    <main>
+    <main className="max-w-3xl">
       <Header />
       <SessionHistory fellows={allFellowsInHub} />
     </main>

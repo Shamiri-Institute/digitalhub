@@ -3,6 +3,7 @@
 import { useQueryState } from "next-usequerystate";
 import * as React from "react";
 
+import { FellowSwitcher } from "#/app/(platform)/fellows/sessions/fellow-switcher";
 import type { CurrentSupervisor } from "#/app/auth";
 import { fetchFellow } from "#/lib/actions/fetch-fellow";
 
@@ -11,6 +12,8 @@ export function SessionHistory({
 }: {
   fellows: NonNullable<CurrentSupervisor>["fellows"];
 }) {
+  const [open, setOpen] = React.useState(false);
+
   const [fellowId, setFellowId] = useQueryState("fid");
   const [fellow, setFellow] = React.useState<Awaited<
     ReturnType<typeof fetchFellow>
@@ -26,41 +29,18 @@ export function SessionHistory({
     getFellow();
   }, [fellowId]);
 
-  if (!fellowId) {
-    return (
-      <div>
-        <h1>No fellow specified</h1>
-      </div>
-    );
-  }
-
   return (
     <>
-      <FellowSwitcher
-        fellowId={fellowId}
-        setFellowId={setFellowId}
-        fellows={fellows}
-      />
-      <button
-        onClick={() => {
-          setFellowId(
-            `new-fid-${Math.floor(Math.random() * 16777215).toString(8)}`,
-          );
-        }}
-      >
-        Change fid
-      </button>
+      <div className="flex justify-center">
+        <div className="w-[min(200px,90vw)]">
+          <FellowSwitcher
+            open={open}
+            fellowId={fellowId}
+            setFellowId={setFellowId}
+            fellows={fellows}
+          />
+        </div>
+      </div>
     </>
   );
-}
-export function FellowSwitcher({
-  fellowId,
-  setFellowId,
-  fellows,
-}: {
-  fellowId: string;
-  setFellowId: (fid: string) => void;
-  fellows: NonNullable<CurrentSupervisor>["fellows"];
-}) {
-  return <div>{fellowId}</div>;
 }
