@@ -206,7 +206,7 @@ function StudentCard({
 
                 <div>Sessions attended</div>
                 <div>Record complaint</div>
-                {!student.droppedOut ? (
+                {!student.droppedOut || !student.droppedOutAt ? (
                   <StudentDropoutDialog student={student}>
                     <div className="cursor-pointer">Dropout student</div>
                   </StudentDropoutDialog>
