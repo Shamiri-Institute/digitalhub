@@ -445,6 +445,7 @@ export async function dropoutStudentWithReason(
       data: {
         droppedOut: true,
         dropOutReason: dropoutReason,
+        droppedOutAt: new Date(),
       },
     });
 
