@@ -3,6 +3,7 @@
 import { useQueryState } from "next-usequerystate";
 import * as React from "react";
 
+import { AttendancePieChart } from "#/app/(platform)/fellows/sessions/attendance-pie-chart";
 import { FellowSwitcher } from "#/app/(platform)/fellows/sessions/fellow-switcher";
 import { CurrentSupervisor } from "#/app/auth";
 import { fetchFellow } from "#/lib/actions/fetch-fellow";
@@ -27,6 +28,16 @@ export function SessionHistory({
     getFellow();
   }, [fellowId]);
 
+  console.log({ fellowAttendances: fellow?.fellowAttendances || [] });
+
+  const presentCount =
+    fellow?.fellowAttendances.filter((attendance) => attendance.attended)
+      .length || 0;
+
+  const absentCount =
+    fellow?.fellowAttendances.filter((attendance) => !attendance.attended)
+      .length || 0;
+
   return (
     <>
       <div className="flex justify-center">
@@ -38,7 +49,15 @@ export function SessionHistory({
           />
           <div className="mt-4 flex flex-col text-center text-sm">
             <div className="font-medium">MPESA</div>
-            <div className="text-xl font-semibold">{fellow?.mpesaNumber}</div>
+            <div className="h-[28px] text-xl font-semibold">
+              {fellow?.mpesaNumber ?? "N/A"}
+            </div>
+          </div>
+          <div>
+            <AttendancePieChart
+              presentCount={presentCount}
+              absentCount={absentCount}
+            />
           </div>
         </div>
       </div>

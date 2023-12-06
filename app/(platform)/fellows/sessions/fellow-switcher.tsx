@@ -58,12 +58,22 @@ export function FellowSwitcher({
         <PopoverContent className="w-[360px] p-0 md:w-64">
           <Command
             filter={(value: string, search: string) => {
-              const fellow = fellows.find((fellow) => fellow.id === value);
+              console.log({ value, search });
+              const fellow = fellows.find(
+                (fellow) => fellow.visibleId === value,
+              );
               if (!fellow) return 0;
 
-              if (
-                fellow?.fellowName?.toLowerCase().includes(search.toLowerCase())
-              ) {
+              const fellowName = fellow?.fellowName?.toLowerCase() ?? "";
+              const fellowVisibleId = fellow?.visibleId?.toLowerCase() ?? "";
+
+              const searchHit =
+                fellowName.includes(search.toLowerCase()) ||
+                fellowVisibleId.includes(search.toLowerCase());
+
+              console.log({ searchHit });
+
+              if (searchHit) {
                 return 1;
               }
               return 0;
@@ -76,7 +86,7 @@ export function FellowSwitcher({
                 <CommandItem
                   key={fellow.visibleId}
                   value={fellow.visibleId}
-                  onSelect={async (_currentValue) => {
+                  onSelect={async (_) => {
                     onSelectFellow(fellow.visibleId);
                     setOpen(false);
                   }}
