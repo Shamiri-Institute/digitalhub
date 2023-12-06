@@ -149,5 +149,12 @@ export const fixtures: Fixtures = {
       implementerByVisibleId: "Imp_2",
       implementerRole: ImplementerRole.SUPERVISOR,
     },
+    {
+      email: "shadrack.lilan@shamiri.institute",
+      name: "Shadrack Lilan",
+      avatarUrl: null,
+      implementerByVisibleId: "Imp_1",
+      implementerRole: ImplementerRole.ADMIN,
+    },
   ],
 };
