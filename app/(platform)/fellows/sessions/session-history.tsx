@@ -4,7 +4,7 @@ import { useQueryState } from "next-usequerystate";
 import * as React from "react";
 
 import { FellowSwitcher } from "#/app/(platform)/fellows/sessions/fellow-switcher";
-import type { CurrentSupervisor } from "#/app/auth";
+import { CurrentSupervisor } from "#/app/auth";
 import { fetchFellow } from "#/lib/actions/fetch-fellow";
 
 export function SessionHistory({
@@ -12,8 +12,6 @@ export function SessionHistory({
 }: {
   fellows: NonNullable<CurrentSupervisor>["fellows"];
 }) {
-  const [open, setOpen] = React.useState(false);
-
   const [fellowId, setFellowId] = useQueryState("fid");
   const [fellow, setFellow] = React.useState<Awaited<
     ReturnType<typeof fetchFellow>
@@ -34,9 +32,8 @@ export function SessionHistory({
       <div className="flex justify-center">
         <div className="w-[min(200px,90vw)]">
           <FellowSwitcher
-            open={open}
-            fellowId={fellowId}
-            setFellowId={setFellowId}
+            fellowVisibleId={fellowId}
+            setFellowVisibleId={setFellowId}
             fellows={fellows}
           />
         </div>

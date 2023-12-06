@@ -4,7 +4,6 @@ import differenceInYears from "date-fns/differenceInYears";
 import Link from "next/link";
 import { useState } from "react";
 
-import type { CurrentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
@@ -16,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
+import type { CurrentSupervisor } from "#/types/app";
 import FellowDetailsForm from "./fellow-management-form";
 
 export default function FellowCard({

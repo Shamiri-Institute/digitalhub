@@ -1,11 +1,12 @@
 import Link from "next/link";
 
 import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
-import { CurrentSupervisor, currentHub, currentSupervisor } from "#/app/auth";
+import { currentHub, currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
 import { getInitials } from "#/lib/utils";
+import { CurrentSupervisor } from "#/types/app";
 import FellowCard from "./components/fellow-card";
 import { ReimbursementRequests } from "./reimbursement-requests";
 
