@@ -13,18 +13,29 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { Form, FormField } from "#/components/ui/form";
-import { Label } from "#/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "#/components/ui/form";
+import { Input } from "#/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { Separator } from "#/components/ui/separator";
-import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { StudentWithFellow } from "#/types/prisma";
 
-const FormSchema = z.object({
-  reason: z.string({
-    required_error: "Please enter the drop out reason",
-  }),
-});
+const FormSchema = z
+  .object({
+    reason: z.string(),
+    other_reason: z.string(),
+  })
+  .partial()
+  .refine((val) => !val.reason && !val.other_reason, {
+    message:
+      "Please select one of the dropout reasons or input a custom reason",
+  });
 
 export function StudentDropoutDialog({
   student,
@@ -37,14 +48,31 @@ export function StudentDropoutDialog({
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
+    defaultValues: {
+      reason: "",
+      other_reason: "",
+    },
   });
 
+  const reasonRadioValue = form.watch("reason", "");
+
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    const reason = data.reason || data.other_reason;
+
+    if (!reason) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description: "The reason must be specified",
+      });
+      return;
+    }
+
     const response = await dropoutStudentWithReason(
       student.visibleId,
       student.school.visibleId,
       student.fellow.visibleId,
-      data.reason,
+      reason,
     );
     if (response?.error) {
       toast({
@@ -94,22 +122,70 @@ export function StudentDropoutDialog({
                   control={form.control}
                   name="reason"
                   render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="emails">Reason</Label>
-                      <Textarea
-                        id="reason"
-                        name="reason"
-                        onChange={field.onChange}
-                        defaultValue={field.value}
-                        placeholder="e.g. Student has entered the workforce"
-                        className="mt-1.5 resize-none bg-card"
-                      />
-                    </div>
+                    <FormItem>
+                      <FormLabel>Reason for dropping out</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={(e) => {
+                            if (form.getValues("other_reason")) {
+                              form.resetField("other_reason");
+                            }
+                            field.onChange(e);
+                          }}
+                          defaultValue={field.value}
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="mistrust/ethical concerns" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Mistrust/Ethical Concerns
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="other committments" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Other commitments
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="transferred schools" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Transferred schools
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="other" />
+                            </FormControl>
+                            <FormLabel className="font-normal">Other</FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                    </FormItem>
                   )}
                 />
               </div>
             </div>
-            <div className="flex justify-end px-6 pb-6">
+            <div className="px-6">
+              <FormField
+                control={form.control}
+                name="other_reason"
+                disabled={reasonRadioValue !== "other"}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input placeholder="Other reason" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="flex justify-end px-6 py-6">
               <Button variant="destructive" type="submit" className="w-full">
                 Drop out {student.studentName}
               </Button>
