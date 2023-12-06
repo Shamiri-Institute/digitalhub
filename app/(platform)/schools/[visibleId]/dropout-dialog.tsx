@@ -13,18 +13,39 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { Form, FormField } from "#/components/ui/form";
-import { Label } from "#/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "#/components/ui/form";
+import { Input } from "#/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { Separator } from "#/components/ui/separator";
-import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
-import { constants } from "#/tests/constants";
+import { Loader2 } from "lucide-react";
 
-const FormSchema = z.object({
-  reason: z.string({
-    required_error: "Please select the email(s) to invite.",
-  }),
-});
+const FormSchema = z
+  .object({
+    reason: z.string(),
+    other_reason: z.string(),
+  })
+  .partial()
+  .refine(
+    (val) => {
+      if (val.reason === "other" && !val.other_reason) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message:
+        "Please select one of the options. If you select other please fill in a reason in the input field",
+      path: ["other_reason"],
+    },
+  );
 
 export function FellowDropoutDialog({
   fellow,
@@ -39,17 +60,41 @@ export function FellowDropoutDialog({
     resolver: zodResolver(FormSchema),
   });
 
+  const reasonRadioValue = form.watch("reason", "");
+
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    const reason = data.reason === "other" ? data.other_reason : data.reason;
+
+    if (!reason) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description: "Please enter a valid reason",
+      });
+
+      return;
+    }
+
     const response = await dropoutFellowWithReason(
       fellow.visibleId,
       school.visibleId,
-      data.reason,
+      reason,
     );
-    console.log({ response });
+
+    if (response.error) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description: response.error,
+      });
+      return;
+    }
 
     toast({
       title: `Dropped out ${fellow.fellowName}`,
     });
+
+    return;
   }
 
   return (
@@ -75,25 +120,85 @@ export function FellowDropoutDialog({
                   control={form.control}
                   name="reason"
                   render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="reason">Reason</Label>
-                      <Textarea
-                        id="reason"
-                        name="reason"
-                        onChange={field.onChange}
-                        defaultValue={field.value}
-                        placeholder="e.g. Fellow is not interested in the program"
-                        className="mt-1.5 resize-none bg-card"
-                        data-testid={constants.ADD_MEMBERS_EMAILS}
-                        data-1p-ignore="true"
-                      />
-                    </div>
+                    <FormItem>
+                      <FormLabel>Reason for dropping out</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={(e) => {
+                            if (form.getValues("other_reason")) {
+                              form.resetField("other_reason");
+                            }
+                            field.onChange(e);
+                          }}
+                          defaultValue={field.value}
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="another job" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Another Job
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="dress code" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Dress code
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="prolonged absence" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Prolonged absence
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="prolonged absence" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Prolonged absence
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="program extension issue" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Program extension issue
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                    </FormItem>
                   )}
                 />
               </div>
             </div>
+            <div className="px-6">
+              <FormField
+                control={form.control}
+                name="other_reason"
+                disabled={reasonRadioValue !== "other"}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input placeholder="Other reason" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="flex justify-end px-6 pb-6">
               <Button variant="destructive" type="submit" className="w-full">
+                {form.formState.isSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
                 Drop out {fellow.fellowName}
               </Button>
             </div>
