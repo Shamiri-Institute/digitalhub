@@ -222,6 +222,7 @@ model Student {
   attendanceSession3   Boolean?         @map("attendance_session_3")
   attendanceSession4   Boolean?         @map("attendance_session_4")
   droppedOut           Boolean?         @map("dropped_out")
+  droppedOutAt         DateTime?        @map("dropped_out_at") @db.Timestamptz()
   dropOutReason        String?          @map("drop_out_reason")
   StudentOutcome       StudentOutcome[]
 
