@@ -436,8 +436,8 @@ model Fellow {
   implementer          Implementer?               @relation(fields: [implementerId], references: [id])
   supervisorId         String?                    @map("supervisor_id") @db.VarChar(255)
   supervisor           Supervisor?                @relation(fields: [supervisorId], references: [id])
-  // worth adding a field to track the date when someone dropped out
-  droppedOut           Boolean?                   @map("dropped_out")
+  droppedOut           Boolean?                   @map("dropped_out") // keeping this here for historical data that didn't track droppedOutDates
+  droppedOutAt         DateTime?                  @map("dropped_out_at") @db.Timestamptz()
   dropOutReason        String?                    @map("drop_out_reason")
   students             Student[]
   fellowAttendances    FellowAttendance[]
