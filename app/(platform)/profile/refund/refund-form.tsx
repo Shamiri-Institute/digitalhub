@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  getSchoolsByHubId,
   revalidateFromClient,
   submitTransportReimbursementRequest,
 } from "#/app/actions";
@@ -21,11 +22,12 @@ import {
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { School } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -60,6 +62,9 @@ export const FormSchema = z.object({
   receiptUrl: z.string({
     required_error: "Please enter the receipt url.",
   }),
+  school: z.string({
+    required_error: "Please select a school.",
+  }),
 });
 
 export function RefundForm({
@@ -70,6 +75,8 @@ export function RefundForm({
   hubId: string;
 }) {
   const [transportSubtype, setTransportSubtype] = useState("");
+  const [destination, setDestination] = useState("");
+  const [hubSchools, setHubSchools] = useState<School[]>([]);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -83,10 +90,22 @@ export function RefundForm({
       mpesaName: "",
       mpesaNumber: "",
       receiptUrl: "",
+      school: "",
     },
   });
 
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchHubSchools = async () => {
+      const result = await getSchoolsByHubId(hubId);
+      if (!result) return;
+      const { schools } = result;
+      if (!schools) return;
+      setHubSchools(schools);
+    };
+    fetchHubSchools();
+  }, [hubId]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     await submitTransportReimbursementRequest({
@@ -254,7 +273,10 @@ export function RefundForm({
                     <Select
                       name="destination"
                       defaultValue={field.value}
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setDestination(value);
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue
@@ -281,6 +303,46 @@ export function RefundForm({
                 )}
               />
             </div>
+            {destination == "school" && (
+              <div>
+                <FormField
+                  control={form.control}
+                  name="school"
+                  render={({ field }) => (
+                    <div className="mt-3 grid w-full gap-1.5">
+                      <Select
+                        name="school"
+                        defaultValue={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            className="text-muted-foreground"
+                            defaultValue={field.value}
+                            onChange={field.onChange}
+                            placeholder={
+                              <span className="text-muted-foreground">
+                                Select school
+                              </span>
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {hubSchools.map((school: School) => (
+                            <SelectItem
+                              key={school.id}
+                              value={school.schoolName}
+                            >
+                              {school.schoolName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                />
+              </div>
+            )}
 
             <div>
               <FormField
