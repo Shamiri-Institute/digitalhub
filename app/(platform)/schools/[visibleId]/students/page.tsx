@@ -42,7 +42,7 @@ export default async function SchoolStudentsPage({
 
   const students: StudentWithSchoolAndFellow[] = await db.student.findMany({
     where: { schoolId: school.id, fellowId: fellow.id },
-    include: { fellow: true, school: true },
+    include: { fellow: true, school: true, StudentComplaints: true },
     orderBy: { visibleId: "asc" },
   });
 
@@ -210,6 +210,7 @@ function StudentCard({
                   fellowId={fellow.visibleId}
                   schoolId={school.visibleId}
                   studentId={student.id}
+                  complaints={student.StudentComplaints}
                 >
                   <div className="cursor-pointer">Record complaint</div>
                 </ComplaintDialog>

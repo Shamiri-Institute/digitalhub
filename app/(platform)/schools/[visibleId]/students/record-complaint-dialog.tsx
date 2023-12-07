@@ -18,6 +18,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Prisma } from "@prisma/client";
 import { Loader2 } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
@@ -30,6 +31,7 @@ type Props = {
   fellowId: string;
   schoolId: string;
   studentId: string;
+  complaints: Prisma.StudentComplaintsSelect;
 };
 
 const inputSchema = ComplaintSchema.pick({ complaint: true });
@@ -123,6 +125,14 @@ export default function ComplaintDialog(props: Props) {
             </div>
           </form>
         </Form>
+        <div>
+          <h2 className="font-medium text-shamiri-dark-blue">
+            Past Complaints
+          </h2>
+          {props.complaints?.length
+            ? props?.complaints.map((c, idx) => <div></div>)
+            : null}
+        </div>
       </DialogContent>
     </Dialog>
   );
