@@ -13,9 +13,9 @@ async function seedDatabase() {
   await createHubs(db);
   await createSchools(db);
   await createInterventionSessions(db);
-  await createInterventionGroupSessions(db);
   await createSupervisors(db);
   await createFellows(db);
+  await createInterventionGroupSessions(db);
   await createFellowAttendances(db);
   await createStudents(db);
   await createFixtures(db);
