@@ -15,6 +15,7 @@ import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import { AttendanceStatus, SessionLabel } from "#/types/app";
 import { StudentWithSchoolAndFellow } from "#/types/prisma";
+import ComplaintDialog from "./record-complaint-dialog";
 
 export default async function SchoolStudentsPage({
   params: { visibleId },
@@ -205,7 +206,9 @@ function StudentCard({
                 </div>
 
                 <div>Sessions attended</div>
-                <div>Record complaint</div>
+                <ComplaintDialog>
+                  <div className="cursor-pointer">Record complaint</div>
+                </ComplaintDialog>
                 {!student.droppedOut || !student.droppedOutAt ? (
                   <StudentDropoutDialog student={student}>
                     <div className="cursor-pointer">Dropout student</div>

@@ -1,3 +1,4 @@
+'use client'
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -28,7 +29,7 @@ export default function ComplaintDialog(props: Props) {
 
   const form = useForm();
 
-  async function onSubmit() {}
+  async function onSubmit() { }
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -40,14 +41,11 @@ export default function ComplaintDialog(props: Props) {
             className="overflow-hidden text-ellipsis"
           >
             <DialogHeader className="space-y-0 px-6 py-4">
-              <div className="flex items-center gap-2">
-                <span className="text-base font-medium">
-                  Complaints go here
-                </span>
+              <div className="flex items-center gap-2 text-base font-medium">
+                2 Complaints
               </div>
             </DialogHeader>
             <Separator />
-
             <div className="my-6 space-y-6">
               <div className="px-6">
                 <FormField
