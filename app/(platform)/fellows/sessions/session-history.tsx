@@ -47,7 +47,7 @@ export function SessionHistory({
             fellows={fellows}
           />
           <div className="mt-4 flex flex-col text-center text-sm">
-            <div className="font-medium">MPESA</div>
+            <div className="font-medium">MPESA Number</div>
             <div className="h-[28px] text-xl font-semibold">
               {fellow?.mpesaNumber ?? "N/A"}
             </div>

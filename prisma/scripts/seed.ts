@@ -12,6 +12,7 @@ async function seedDatabase() {
   await createUsers(db);
   await createHubs(db);
   await createSchools(db);
+  await createInterventionSessions(db);
   await createSupervisors(db);
   await createFellows(db);
   await createFellowAttendances(db);
@@ -213,6 +214,43 @@ async function createFellows(db: Database) {
       });
     } catch (error: unknown) {
       console.error("fellow", fellow);
+      throw error;
+    }
+  });
+}
+
+async function createInterventionSessions(db: Database) {
+  console.log("Creating intervention sessions");
+
+  // This csv was created with the following SQL query in
+  // an effort to reverse engineer the scheduled intervention session dates per school
+  // SELECT s.visible_id, fa.session_number, fa.session_date, bool_or(fa.attended) as any_attended
+  // FROM fellow_attendances fa
+  // INNER JOIN schools s ON s.id = fa.school_id
+  // GROUP BY s.visible_id, fa.session_number, fa.session_date
+  // ORDER BY s.visible_id, fa.session_number;
+  await parseCsvFile("intervention_sessions", async (session: any) => {
+    try {
+      const sessionDate = new Date(session["session_date"]);
+      await db.interventionSession.create({
+        data: {
+          id: objectId("isess"),
+          sessionDate,
+          sessionName: `${
+            session["session_number"] === "0"
+              ? "Presession"
+              : `Session ${session["session_number"]}`
+          }`,
+          sessionType: `s${session["session_number"]}`,
+          schoolId: (await db.school.findFirst({
+            where: { visibleId: session["visible_id"] },
+          }))!.id,
+          occurred: parseCsvBoolean(session["any_attended"]),
+          yearOfImplementation: sessionDate.getFullYear(),
+        },
+      });
+    } catch (error) {
+      console.error(error);
       throw error;
     }
   });
@@ -469,4 +507,8 @@ async function createFixtures(db: Database) {
 
 function randomSchool<T>(schools: T[]) {
   return schools[Math.floor(Math.random() * schools.length)];
+}
+
+function parseCsvBoolean(value: string) {
+  return value === "true";
 }
