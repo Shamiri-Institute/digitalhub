@@ -39,7 +39,7 @@ type Props = {
   fellowId: string;
   schoolId: string;
   studentId: string;
-  complaints: Prisma.StudentComplaintsSelect[];
+  complaints: Prisma.StudentComplaintsGetPayload<{}>[];
 };
 
 const inputSchema = ComplaintSchema.pick({ complaint: true });
@@ -149,7 +149,7 @@ export default function ComplaintDialog(props: Props) {
               <TableBody>
                 {props.complaints.map((c, idx) => (
                   <TableRow key={idx}>
-                    <TableCell>{c.createdAt?.toLocaleDateString()}</TableCell>
+                    <TableCell>{c.createdAt.toLocaleDateString()}</TableCell>
                     <TableCell>{c.complaint}</TableCell>
                   </TableRow>
                 ))}
