@@ -15,6 +15,7 @@ import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import { AttendanceStatus, SessionLabel } from "#/types/app";
 import { StudentWithSchoolAndFellow } from "#/types/prisma";
+import ComplaintDialog from "./record-complaint-dialog";
 
 export default async function SchoolStudentsPage({
   params: { visibleId },
@@ -41,7 +42,7 @@ export default async function SchoolStudentsPage({
 
   const students: StudentWithSchoolAndFellow[] = await db.student.findMany({
     where: { schoolId: school.id, fellowId: fellow.id },
-    include: { fellow: true, school: true },
+    include: { fellow: true, school: true, StudentComplaints: true },
     orderBy: { visibleId: "asc" },
   });
 
@@ -205,7 +206,14 @@ function StudentCard({
                 </div>
 
                 <div>Sessions attended</div>
-                <div>Record complaint</div>
+                <ComplaintDialog
+                  fellowId={fellow.visibleId}
+                  schoolId={school.visibleId}
+                  studentId={student.id}
+                  complaints={student.StudentComplaints}
+                >
+                  <div className="cursor-pointer">Record complaint</div>
+                </ComplaintDialog>
                 {!student.droppedOut || !student.droppedOutAt ? (
                   <StudentDropoutDialog student={student}>
                     <div className="cursor-pointer">Dropout student</div>
