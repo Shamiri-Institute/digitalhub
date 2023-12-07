@@ -70,8 +70,6 @@ export function FellowSwitcher({
                 fellowName.includes(search.toLowerCase()) ||
                 fellowVisibleId.includes(search.toLowerCase());
 
-              console.log({ searchHit });
-
               if (searchHit) {
                 return 1;
               }

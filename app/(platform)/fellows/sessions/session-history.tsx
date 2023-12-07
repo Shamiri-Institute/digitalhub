@@ -5,6 +5,7 @@ import * as React from "react";
 
 import { AttendancePieChart } from "#/app/(platform)/fellows/sessions/attendance-pie-chart";
 import { FellowSwitcher } from "#/app/(platform)/fellows/sessions/fellow-switcher";
+import { WeeklySessionsAttendedChart } from "#/app/(platform)/fellows/sessions/weekly-sessions-attended-chart";
 import { CurrentSupervisor } from "#/app/auth";
 import { fetchFellow } from "#/lib/actions/fetch-fellow";
 
@@ -28,8 +29,6 @@ export function SessionHistory({
     getFellow();
   }, [fellowId]);
 
-  console.log({ fellowAttendances: fellow?.fellowAttendances || [] });
-
   const presentCount =
     fellow?.fellowAttendances.filter((attendance) => attendance.attended)
       .length || 0;
@@ -41,7 +40,7 @@ export function SessionHistory({
   return (
     <>
       <div className="flex justify-center">
-        <div className="w-[min(200px,90vw)]">
+        <div className="w-[min(300px,90vw)]">
           <FellowSwitcher
             fellowVisibleId={fellowId?.toLocaleUpperCase() ?? null}
             setFellowVisibleId={setFellowId}
@@ -61,6 +60,24 @@ export function SessionHistory({
             <div className="text-center text-sm text-zinc-400">
               Total Sessions
             </div>
+          </div>
+          <div className="-ml-16 -mr-10 mt-16 h-96">
+            <WeeklySessionsAttendedChart
+              data={[
+                {
+                  week: "1st",
+                  sessions: 2,
+                },
+                {
+                  week: "2nd",
+                  sessions: 2,
+                },
+                {
+                  week: "3rd",
+                  sessions: 3,
+                },
+              ]}
+            />
           </div>
         </div>
       </div>

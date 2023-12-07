@@ -38,33 +38,36 @@ export function AttendancePieChart({
 
   return (
     <div className="relative">
-      <PieChart width={200} height={200}>
-        <Pie
-          activeIndex={activeIndex}
-          data={data}
-          cx={100}
-          cy={100}
-          innerRadius={60}
-          outerRadius={80}
-          fill="#002244"
-          dataKey="value"
-          onMouseEnter={onPieEnter}
-        >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-          ))}
-        </Pie>
-      </PieChart>
-      <div className="absolute bottom-0 left-0 right-0 top-0 -mb-3 -mr-2.5 flex items-center justify-center">
+      <div className="flex justify-center">
+        <PieChart width={200} height={200}>
+          <Pie
+            activeIndex={activeIndex}
+            data={data}
+            cx={100}
+            cy={100}
+            innerRadius={60}
+            outerRadius={80}
+            fill="#002244"
+            dataKey="value"
+            onMouseEnter={onPieEnter}
+          >
+            {data.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
+            ))}
+          </Pie>
+        </PieChart>
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="flex items-end">
             {totalCount === 0 ? (
-              <div className="-mb-[3px] text-4xl font-semibold">0</div>
+              <div className="text-4xl font-semibold">0</div>
             ) : (
               <>
-                <div className="-mb-[3px] text-4xl font-semibold">
-                  {presentCount}
-                </div>
+                <div className="text-4xl font-semibold">{presentCount}</div>
                 <div className="text-base font-medium">/{totalCount}</div>
               </>
             )}
