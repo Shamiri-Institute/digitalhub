@@ -302,7 +302,8 @@ export async function dropoutFellowWithReason(
     const fellow = await db.fellow.update({
       where: { visibleId: fellowVisibleId },
       data: {
-        droppedOut: true,
+        droppedOut: true, // for consistency w/ old data
+        droppedOutAt: new Date(),
         dropOutReason: dropoutReason,
       },
     });
