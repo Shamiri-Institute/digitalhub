@@ -204,7 +204,7 @@ function FellowCard({
       <div className="flex justify-between">
         <div className="flex gap-2">
           <h2 className="text-lg font-bold">{fellow.fellowName}</h2>
-          {fellow.droppedOut && (
+          {(fellow.droppedOutAt || fellow.droppedOut) && (
             <div>
               <span className="inline-flex items-center rounded-md bg-zinc-50 px-1.5 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-inset ring-zinc-500/10">
                 Dropped Out
@@ -228,7 +228,7 @@ function FellowCard({
           >
             <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
           </FellowModifyDialog>
-          {!fellow.droppedOut && (
+          {(!fellow.droppedOutAt || !fellow.droppedOut) && (
             <FellowDropoutDialog fellow={fellow} school={school}>
               <Icons.delete className="h-6 w-6 cursor-pointer text-brand" />
             </FellowDropoutDialog>
