@@ -168,9 +168,7 @@ export function FellowDropoutDialog({
                             <FormControl>
                               <RadioGroupItem value="other" />
                             </FormControl>
-                            <FormLabel className="font-normal">
-                              Other
-                            </FormLabel>
+                            <FormLabel className="font-normal">Other</FormLabel>
                           </FormItem>
                         </RadioGroup>
                       </FormControl>
@@ -194,7 +192,7 @@ export function FellowDropoutDialog({
                 )}
               />
             </div>
-            <div className="flex justify-end px-6 pb-6 mt-6">
+            <div className="mt-6 flex justify-end px-6 pb-6">
               <Button variant="destructive" type="submit" className="w-full">
                 {form.formState.isSubmitting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
