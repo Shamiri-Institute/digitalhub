@@ -15,6 +15,14 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Separator } from "#/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "#/components/ui/table";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,7 +39,7 @@ type Props = {
   fellowId: string;
   schoolId: string;
   studentId: string;
-  complaints: Prisma.StudentComplaintsSelect;
+  complaints: Prisma.StudentComplaintsSelect[];
 };
 
 const inputSchema = ComplaintSchema.pick({ complaint: true });
@@ -125,13 +133,30 @@ export default function ComplaintDialog(props: Props) {
             </div>
           </form>
         </Form>
-        <div>
+        <div className="p-6">
           <h2 className="font-medium text-shamiri-dark-blue">
             Past Complaints
           </h2>
-          {props.complaints?.length
-            ? props?.complaints.map((c, idx) => <div></div>)
-            : null}
+          {props.complaints?.length ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Created At</TableHead>
+                  <TableHead>Complaint</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {props.complaints.map((c, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell>{c.createdAt?.toLocaleDateString()}</TableCell>
+                    <TableCell>{c.complaint}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <div>No complaints recorded</div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
