@@ -158,14 +158,6 @@ export function FellowDropoutDialog({
                           </FormItem>
                           <FormItem className="flex items-center space-x-3 space-y-0">
                             <FormControl>
-                              <RadioGroupItem value="prolonged absence" />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              Prolonged absence
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
                               <RadioGroupItem value="program extension issue" />
                             </FormControl>
                             <FormLabel className="font-normal">
