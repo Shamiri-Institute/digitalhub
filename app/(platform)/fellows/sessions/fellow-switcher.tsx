@@ -47,7 +47,7 @@ export function FellowSwitcher({
           >
             {selectedFellow ? (
               <span className="truncate text-left">
-                {selectedFellow.fellowName}
+                {selectedFellow.fellowName} — {selectedFellow.visibleId}
               </span>
             ) : (
               <span className="text-left">Select Fellow</span>

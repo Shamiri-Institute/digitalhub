@@ -448,24 +448,24 @@ model Fellow {
 /// FellowAttendance is a representation of the attendance of a fellow in a session. It is used to track the attendance of fellows in sessions but also track the session in the future.
 
 model FellowAttendance {
-  id                   Int        @id @default(autoincrement())
-  visibleId            String     @unique @map("visible_id") @db.VarChar(100)
-  createdAt            DateTime   @default(now()) @map("created_at")
-  updatedAt            DateTime   @updatedAt @map("updated_at")
-  archivedAt           DateTime?  @map("archived_at") // can we actually mark attendance as archived?
-  fellowId             String     @map("fellow_id") @db.VarChar(255)
-  fellow               Fellow     @relation(fields: [fellowId], references: [id])
-  sessionNumber        Int        @map("session_number")
-  sessionDate          DateTime   @map("session_date")
-  yearOfImplementation Int        @map("year_of_implementation")
-  schoolId             String     @map("school_id") @db.VarChar(255)
-  school               School     @relation(fields: [schoolId], references: [id])
-  supervisorId         String     @map("supervisor_id") @db.VarChar(255)
-  supervisor           Supervisor @relation(fields: [supervisorId], references: [id])
-  attended             Boolean?   @map("attended")
-  absenceReason        String?    @map("absence_reason")
-  paymentInitiated     Boolean?   @map("payment_initiated")
-  // TODO: the attendance should be tied to an intervention session
+  id                   Int                       @id @default(autoincrement())
+  visibleId            String                    @unique @map("visible_id") @db.VarChar(100)
+  createdAt            DateTime                  @default(now()) @map("created_at")
+  updatedAt            DateTime                  @updatedAt @map("updated_at")
+  fellowId             String                    @map("fellow_id") @db.VarChar(255)
+  fellow               Fellow                    @relation(fields: [fellowId], references: [id])
+  sessionNumber        Int                       @map("session_number")
+  sessionDate          DateTime                  @map("session_date")
+  yearOfImplementation Int                       @map("year_of_implementation")
+  schoolId             String                    @map("school_id") @db.VarChar(255)
+  school               School                    @relation(fields: [schoolId], references: [id])
+  supervisorId         String                    @map("supervisor_id") @db.VarChar(255)
+  supervisor           Supervisor                @relation(fields: [supervisorId], references: [id])
+  attended             Boolean?                  @map("attended")
+  absenceReason        String?                   @map("absence_reason")
+  paymentInitiated     Boolean?                  @map("payment_initiated")
+  groupSessionId       String?                   @map("group_session_id") @db.VarChar(255)
+  groupSession         InterventionGroupSession? @relation(fields: [groupSessionId], references: [id])
 
   @@map("fellow_attendances")
 }
@@ -664,15 +664,16 @@ model InterventionSessionNote {
 
 /// Intervention group sessions are group sessions where the Shamiri Intervention is delivered to high school students by run by fellows (a group leader)
 model InterventionGroupSession {
-  id         String              @id @db.VarChar(255)
-  createdAt  DateTime            @default(now()) @map("created_at")
-  updatedAt  DateTime            @updatedAt @map("updated_at")
-  archivedAt DateTime?           @map("archived_at")
-  groupName  String              @map("group_name") @db.VarChar(100)
-  leaderId   String?             @map("leader_id") @db.VarChar(255)
-  leader     Fellow?             @relation(fields: [leaderId], references: [id])
-  sessionId  String              @db.VarChar(255)
-  sesssion   InterventionSession @relation(fields: [sessionId], references: [id])
+  id                String              @id @db.VarChar(255)
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  archivedAt        DateTime?           @map("archived_at")
+  groupName         String              @map("group_name") @db.VarChar(100)
+  leaderId          String?             @map("leader_id") @db.VarChar(255)
+  leader            Fellow?             @relation(fields: [leaderId], references: [id])
+  sessionId         String              @map("session_id") @db.VarChar(255)
+  session           InterventionSession @relation(fields: [sessionId], references: [id])
+  fellowAttendances FellowAttendance[]
 
   @@map("intervention_group_sessions")
 }

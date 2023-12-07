@@ -1,4 +1,4 @@
-visible_id,session_number,session_date,any_attended
+school_visible_id,session_number,session_date,any_attended
 ANS23_School_1,0,2023-05-14 21:00:00,true
 ANS23_School_1,1,2023-05-21 21:00:00,true
 ANS23_School_1,2,2023-05-28 21:00:00,true

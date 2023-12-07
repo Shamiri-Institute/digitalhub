@@ -37,7 +37,9 @@ function Header() {
         <Link href="/profile">
           <Icons.chevronLeft className="h-5 w-5 text-brand" />
         </Link>
-        <h1 className="text-lg font-bold text-brand">Sessions Attended</h1>
+        <h1 className="text-lg font-bold text-brand">
+          Fellows — Sessions Attended
+        </h1>
         <div className="h-5 w-5"></div>
       </div>
     </header>

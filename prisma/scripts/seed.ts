@@ -1,9 +1,11 @@
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { endOfDay, startOfDay } from "date-fns";
+
 import { objectId } from "#/lib/crypto";
 import { Database, db } from "#/lib/db";
 import { parseEuropeanDate } from "#/lib/utils";
 import { fixtures } from "#/prisma/scripts/fixtures";
 import { parseCsvFile } from "#/prisma/scripts/utils";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 async function seedDatabase() {
   await truncateTables();
@@ -244,7 +246,7 @@ async function createInterventionSessions(db: Database) {
           }`,
           sessionType: `s${session["session_number"]}`,
           schoolId: (await db.school.findFirst({
-            where: { visibleId: session["visible_id"] },
+            where: { visibleId: session["school_visible_id"] },
           }))!.id,
           occurred: parseCsvBoolean(session["any_attended"]),
           yearOfImplementation: sessionDate.getFullYear(),
@@ -301,7 +303,7 @@ async function createInterventionGroupSessions(db: Database) {
       if (interventionSessions.length !== 1) {
         throw new Error(
           `Expected 1 intervention session for school ${
-            session["sch_visible_id"]
+            session["school_visible_id"]
           } on ${sessionDate.toISOString()}, but found ${
             interventionSessions.length
           }`,
@@ -382,6 +384,41 @@ async function createFellowAttendances(db: Database) {
   await parseCsvFile(
     "fellow_attendance_temp",
     async (fellowAttendance: any) => {
+      const targetDate = parseEuropeanDate(fellowAttendance["Date"])!;
+
+      const fellow = await db.fellow.findFirst({
+        where: {
+          visibleId: fellowAttendance["Fellow_ID"],
+        },
+      })!;
+
+      const groupSessions = await db.interventionGroupSession.findMany({
+        include: {
+          leader: true,
+          session: {
+            include: {
+              school: true,
+            },
+          },
+        },
+        where: {
+          leaderId: fellow!.id,
+          session: {
+            sessionDate: {
+              gte: startOfDay(targetDate),
+              lt: endOfDay(targetDate),
+            },
+          },
+        },
+      });
+
+      const sessionNumber = parseInt(fellowAttendance["Session"]);
+
+      const groupSession = groupSessions.find(
+        (groupSession) =>
+          groupSession.session.sessionType === `s${sessionNumber}`,
+      );
+
       try {
         const fellowId = (await db.fellow.findFirst({
           where: { visibleId: fellowAttendance["Fellow_ID"] },
@@ -392,25 +429,34 @@ async function createFellowAttendances(db: Database) {
         const supervisorId = (await db.supervisor.findFirst({
           where: { visibleId: fellowAttendance["Supervisor_ID"] },
         }))!.id!;
-        await db.fellowAttendance.create({
-          data: {
-            visibleId: fellowAttendance["Attendance_ID"],
-            fellow: {
-              connect: { id: fellowId },
-            },
-            sessionNumber: parseInt(fellowAttendance["Session"]),
-            sessionDate: parseEuropeanDate(fellowAttendance["Date"]) as Date,
-            yearOfImplementation: parseInt(fellowAttendance["Year_of_imp"]),
-            school: {
-              connect: { id: schoolId },
-            },
-            supervisor: {
-              connect: { id: supervisorId },
-            },
-            attended: Boolean(fellowAttendance["Attendance"]),
-            absenceReason: fellowAttendance["Absence_Reason"],
-            paymentInitiated: Boolean(fellowAttendance["Payment_Initiated"]),
+
+        const fellowAttendanceData: any = {
+          visibleId: fellowAttendance["Attendance_ID"],
+          fellow: {
+            connect: { id: fellowId },
           },
+          sessionNumber: parseInt(fellowAttendance["Session"]),
+          sessionDate: parseEuropeanDate(fellowAttendance["Date"]) as Date,
+          yearOfImplementation: parseInt(fellowAttendance["Year_of_imp"]),
+          school: {
+            connect: { id: schoolId },
+          },
+          supervisor: {
+            connect: { id: supervisorId },
+          },
+          attended: Boolean(fellowAttendance["Attendance"]),
+          absenceReason: fellowAttendance["Absence_Reason"],
+          paymentInitiated: Boolean(fellowAttendance["Payment_Initiated"]),
+        };
+
+        if (groupSession?.id) {
+          fellowAttendanceData.groupSession = {
+            connect: { id: groupSession.id },
+          };
+        }
+
+        await db.fellowAttendance.create({
+          data: fellowAttendanceData,
         });
       } catch (e) {
         throw e;
