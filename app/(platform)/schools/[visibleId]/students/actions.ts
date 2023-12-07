@@ -24,7 +24,6 @@ export async function recordStudentComplaint(
   }
 
   try {
-    console.log("We got hear with some data", complaint);
     await db.studentComplaints.create({
       data: {
         supervisorId: signedInSupervisor?.id,
