@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -16,20 +16,61 @@ import {
 } from "#/components/ui/form";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
+import { toast } from "#/components/ui/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { recordStudentComplaint } from "./actions";
+import { ComplaintSchema } from "./schema";
 
 type Props = {
   children: React.ReactNode;
+  fellowId: string;
+  schoolId: string;
+  studentId: string;
 };
+
+const inputSchema = ComplaintSchema.pick({ complaint: true });
 
 export default function ComplaintDialog(props: Props) {
   const [dialogOpen, setDialogOpen] = React.useState<boolean>(false);
 
-  const form = useForm();
+  const form = useForm<z.infer<typeof inputSchema>>({
+    resolver: zodResolver(inputSchema),
+  });
 
-  async function onSubmit() { }
+  async function onSubmit(data: z.infer<typeof inputSchema>) {
+    const complaintData: z.infer<typeof ComplaintSchema> = {
+      complaint: data.complaint,
+      fellowId: props.fellowId,
+      studentId: props.studentId,
+      schoolId: props.schoolId,
+    };
+
+    const response = await recordStudentComplaint(complaintData);
+
+    if (!response.success) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description:
+          response.message ??
+          "Something went wrong during submission, please try again",
+      });
+      return;
+    }
+
+    toast({
+      variant: "default",
+      title: "Success",
+      description: "Successfully added complaint",
+    });
+
+    form.reset();
+    setDialogOpen(false);
+  }
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -50,7 +91,7 @@ export default function ComplaintDialog(props: Props) {
               <div className="px-6">
                 <FormField
                   control={form.control}
-                  name="reason"
+                  name="complaint"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Record Complaint</FormLabel>
@@ -68,11 +109,16 @@ export default function ComplaintDialog(props: Props) {
               </div>
             </div>
             <div className="flex justify-end px-6 py-6">
-              <Button variant="brand" type="submit" className="w-full">
+              <Button
+                disabled={form.formState.isSubmitting}
+                variant="brand"
+                type="submit"
+                className="w-full"
+              >
                 {form.formState.isSubmitting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
-                Record Compaint
+                Add Compaint
               </Button>
             </div>
           </form>

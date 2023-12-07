@@ -206,7 +206,11 @@ function StudentCard({
                 </div>
 
                 <div>Sessions attended</div>
-                <ComplaintDialog>
+                <ComplaintDialog
+                  fellowId={fellow.visibleId}
+                  schoolId={school.visibleId}
+                  studentId={student.id}
+                >
                   <div className="cursor-pointer">Record complaint</div>
                 </ComplaintDialog>
                 {!student.droppedOut || !student.droppedOutAt ? (

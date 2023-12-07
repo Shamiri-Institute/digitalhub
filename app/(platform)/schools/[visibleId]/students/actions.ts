@@ -1,41 +1,44 @@
-'use server'
-import { z } from 'zod';
-import { db } from '#/lib/db';
-import { currentSupervisor } from '#/app/auth';
-import { revalidatePath } from 'next/cache';
+"use server";
+import { currentSupervisor } from "#/app/auth";
+import { db } from "#/lib/db";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { ComplaintSchema } from "./schema";
 
-export const ComplaintSchema = z.object({
-  complaint: z.string(),
-  studentId: z.string(),
-  schoolId: z.string(),
-  fellowId: z.string(),
-});
-
-export async function recordStudentComplaint(data: z.infer<typeof ComplaintSchema>) {
+export async function recordStudentComplaint(
+  data: z.infer<typeof ComplaintSchema>,
+) {
   const complaint = ComplaintSchema.safeParse(data);
 
   if (!complaint.success) {
-    return;
+    return { success: false, message: "Invalid data submitted" };
   }
 
-  const signedInSupervisor = await currentSupervisor()
+  const signedInSupervisor = await currentSupervisor();
 
   if (!signedInSupervisor) {
-    return;
+    return {
+      success: false,
+      message: "The current user is not logged in as a supervisor",
+    };
   }
 
   try {
-    const newComplaint = await db.studentComplaints.create({
+    console.log("We got hear with some data", complaint);
+    await db.studentComplaints.create({
       data: {
         supervisorId: signedInSupervisor?.id,
         complaint: complaint.data.complaint,
         studentId: complaint.data.studentId,
-      }
-    })
+      },
+    });
 
-    revalidatePath(`/schools/${complaint.data.schoolId}/students?fellowId=${complaint.data.fellowId}`);
-    return { success: true }
+    revalidatePath(
+      `/schools/${complaint.data.schoolId}/students?fellowId=${complaint.data.fellowId}`,
+    );
+    return { success: true };
   } catch (e) {
-    return { success: false }
+    console.error(e);
+    return { success: false };
   }
 }
