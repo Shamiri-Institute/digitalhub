@@ -164,6 +164,14 @@ export function FellowDropoutDialog({
                               Program extension issue
                             </FormLabel>
                           </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="other" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              Other
+                            </FormLabel>
+                          </FormItem>
                         </RadioGroup>
                       </FormControl>
                     </FormItem>
@@ -186,7 +194,7 @@ export function FellowDropoutDialog({
                 )}
               />
             </div>
-            <div className="flex justify-end px-6 pb-6">
+            <div className="flex justify-end px-6 pb-6 mt-6">
               <Button variant="destructive" type="submit" className="w-full">
                 {form.formState.isSubmitting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
