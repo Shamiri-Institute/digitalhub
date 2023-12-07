@@ -13,6 +13,7 @@ async function seedDatabase() {
   await createHubs(db);
   await createSchools(db);
   await createInterventionSessions(db);
+  await createInterventionGroupSessions(db);
   await createSupervisors(db);
   await createFellows(db);
   await createFellowAttendances(db);
@@ -247,6 +248,75 @@ async function createInterventionSessions(db: Database) {
           }))!.id,
           occurred: parseCsvBoolean(session["any_attended"]),
           yearOfImplementation: sessionDate.getFullYear(),
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  });
+}
+
+async function createInterventionGroupSessions(db: Database) {
+  console.log("Creating intervention group sessions");
+
+  const interventionSessionCache: Record<string, any> = {};
+
+  // This csv was created with the following SQL query in
+  // an effort to reverse engineer the intervention session groups per school
+  // SELECT
+  //   sch.visible_id AS sch_visible_id,
+  //   fel.visible_id AS fel_visible_id,
+  //   stu.group_name,
+  //   fa.session_number,
+  //   fa.session_date
+  // FROM fellow_attendances fa
+  // INNER JOIN schools sch ON sch.id = fa.school_id
+  // INNER JOIN fellows fel ON fel.id = fa.fellow_id
+  // INNER JOIN students stu ON stu.fellow_id = fa.fellow_id
+  // GROUP BY sch.visible_id, fel.visible_id, stu.group_name, fa.session_number, fa.session_date
+  // ORDER BY sch.visible_id, stu.group_name;
+  await parseCsvFile("intervention_group_sessions", async (session: any) => {
+    try {
+      const sessionDate = new Date(session["session_date"]);
+      const sessionType = `s${session["session_number"]}`;
+      const schoolVisibleId = session["school_visible_id"];
+
+      const cacheKey = `${sessionDate.toISOString()}-${sessionType}-${schoolVisibleId}`;
+
+      let interventionSessions = interventionSessionCache[cacheKey];
+      if (!interventionSessions) {
+        interventionSessions = await db.interventionSession.findMany({
+          where: {
+            sessionDate: sessionDate,
+            sessionType: sessionType,
+            schoolId: (await db.school.findFirst({
+              where: { visibleId: schoolVisibleId },
+            }))!.id,
+          },
+        });
+        interventionSessionCache[cacheKey] = interventionSessions;
+      }
+
+      if (interventionSessions.length !== 1) {
+        throw new Error(
+          `Expected 1 intervention session for school ${
+            session["sch_visible_id"]
+          } on ${sessionDate.toISOString()}, but found ${
+            interventionSessions.length
+          }`,
+        );
+      }
+      const interventionSession = interventionSessions[0]!;
+
+      await db.interventionGroupSession.create({
+        data: {
+          id: objectId("igsess"),
+          sessionId: interventionSession.id,
+          groupName: session["group_name"],
+          leaderId: (await db.fellow.findFirst({
+            where: { visibleId: session["fellow_visible_id"] },
+          }))!.id,
         },
       });
     } catch (error) {

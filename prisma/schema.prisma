@@ -668,6 +668,7 @@ model InterventionGroupSession {
   createdAt  DateTime            @default(now()) @map("created_at")
   updatedAt  DateTime            @updatedAt @map("updated_at")
   archivedAt DateTime?           @map("archived_at")
+  groupName  String              @map("group_name") @db.VarChar(100)
   leaderId   String?             @map("leader_id") @db.VarChar(255)
   leader     Fellow?             @relation(fields: [leaderId], references: [id])
   sessionId  String              @db.VarChar(255)
