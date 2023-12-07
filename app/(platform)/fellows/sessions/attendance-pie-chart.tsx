@@ -55,7 +55,7 @@ export function AttendancePieChart({
           ))}
         </Pie>
       </PieChart>
-      <div className="absolute bottom-0 left-0 right-0 top-0 -mb-3 -mr-3 flex items-center justify-center">
+      <div className="absolute bottom-0 left-0 right-0 top-0 -mb-3 -mr-2.5 flex items-center justify-center">
         <div className="flex flex-col items-center">
           <div className="flex items-end">
             {totalCount === 0 ? (

@@ -58,9 +58,8 @@ export function FellowSwitcher({
         <PopoverContent className="w-[360px] p-0 md:w-64">
           <Command
             filter={(value: string, search: string) => {
-              console.log({ value, search });
               const fellow = fellows.find(
-                (fellow) => fellow.visibleId === value,
+                (fellow) => fellow.visibleId.toLowerCase() === value, // useQueryState lowercases the url value
               );
               if (!fellow) return 0;
 

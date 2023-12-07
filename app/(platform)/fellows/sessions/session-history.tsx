@@ -43,7 +43,7 @@ export function SessionHistory({
       <div className="flex justify-center">
         <div className="w-[min(200px,90vw)]">
           <FellowSwitcher
-            fellowVisibleId={fellowId}
+            fellowVisibleId={fellowId?.toLocaleUpperCase() ?? null}
             setFellowVisibleId={setFellowId}
             fellows={fellows}
           />
@@ -58,6 +58,9 @@ export function SessionHistory({
               presentCount={presentCount}
               absentCount={absentCount}
             />
+            <div className="text-center text-sm text-zinc-400">
+              Total Sessions
+            </div>
           </div>
         </div>
       </div>
