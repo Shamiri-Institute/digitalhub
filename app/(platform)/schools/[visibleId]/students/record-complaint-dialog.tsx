@@ -93,7 +93,8 @@ export default function ComplaintDialog(props: Props) {
           >
             <DialogHeader className="space-y-0 px-6 py-4">
               <div className="flex items-center gap-2 text-base font-medium">
-                2 Complaints
+                {props.complaints.length} Complaint
+                {props.complaints.length > 1 ? "s" : ""}
               </div>
             </DialogHeader>
             <Separator />
@@ -128,7 +129,7 @@ export default function ComplaintDialog(props: Props) {
                 {form.formState.isSubmitting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
-                Add Compaint
+                Add Complaint
               </Button>
             </div>
           </form>
