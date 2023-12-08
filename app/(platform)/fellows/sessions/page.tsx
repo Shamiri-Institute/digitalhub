@@ -4,12 +4,37 @@ import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
+import { redirect } from "next/navigation";
 import { SessionHistory } from "./session-history";
 
-export default async function FellowSessionsPage() {
+export default async function FellowSessionsPage({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
+  const fid = searchParams?.fid as string | undefined;
+
   const supervisor = await currentSupervisor();
   if (!supervisor) {
     return <InvalidPersonnelRole role="supervisor" />;
+  }
+
+  if (!fid) {
+    const firstFellow = supervisor.fellows[0];
+    if (!firstFellow) {
+      return <p>No fellows assigned to you</p>;
+    }
+    redirect(`/profile/fellows?fid=${firstFellow.visibleId}`);
+  }
+
+  const fellow = await db.fellow.findUnique({
+    where: { visibleId: fid },
+    include: {
+      fellowAttendances: true,
+    },
+  });
+  if (!fellow) {
+    return <p>Fellow not found with id: {fid}</p>;
   }
 
   const allFellowsInHub = await db.fellow.findMany({
@@ -25,7 +50,11 @@ export default async function FellowSessionsPage() {
   return (
     <main className="max-w-3xl">
       <Header />
-      <SessionHistory fellows={allFellowsInHub} />
+      <SessionHistory
+        fellow={fellow}
+        fellows={allFellowsInHub}
+        sessionsAttended={fellow?.fellowAttendances ?? []}
+      />
     </main>
   );
 }

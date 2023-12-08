@@ -29,7 +29,6 @@ const processData = (data: SessionData[]): SessionData[] => {
 
 export function WeeklySessionsAttendedChart({ data }: { data: SessionData[] }) {
   const processedData = processData(data);
-  console.log({ data, processedData });
 
   return (
     <>
