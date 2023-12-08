@@ -8,6 +8,7 @@ import {
   revalidateFromClient,
   updateLoggedInSupervisorDetails,
 } from "#/app/actions";
+import type { CurrentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
@@ -15,7 +16,6 @@ import { Form, FormField } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import { CurrentSupervisor } from "#/types/app";
 import { format } from "date-fns";
 import { useState } from "react";
 
