@@ -302,7 +302,8 @@ export async function dropoutFellowWithReason(
     const fellow = await db.fellow.update({
       where: { visibleId: fellowVisibleId },
       data: {
-        droppedOut: true,
+        droppedOut: true, // for consistency w/ old data
+        droppedOutAt: new Date(),
         dropOutReason: dropoutReason,
       },
     });
@@ -445,6 +446,7 @@ export async function dropoutStudentWithReason(
       data: {
         droppedOut: true,
         dropOutReason: dropoutReason,
+        droppedOutAt: new Date(),
       },
     });
 
@@ -672,6 +674,7 @@ export async function submitTransportReimbursementRequest(data: {
   session: string;
   destination: string;
   reason: string;
+  school: string;
 }) {
   try {
     if (!data.receiptDate) {
@@ -696,6 +699,7 @@ export async function submitTransportReimbursementRequest(data: {
           receiptUrl: data.receiptUrl,
           session: data.session,
           destination: data.destination,
+          school: data.school,
         },
       },
     });
@@ -1027,5 +1031,19 @@ export async function editFellowDetails(
     return { success: true };
   } catch (e) {
     return { success: false, error: "Something went wrong" };
+  }
+}
+
+export async function getSchoolsByHubId(hubId: string) {
+  try {
+    const schools = await db.school.findMany({
+      where: {
+        hubId,
+      },
+    });
+    return { schools };
+  } catch (e) {
+    console.error(e);
+    return { error: "Something went wrong" };
   }
 }

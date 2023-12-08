@@ -6,10 +6,16 @@ import { StudentAttendanceDot } from "#/app/(platform)/schools/[visibleId]/stude
 import { StudentModifyDialog } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
 import { Back } from "#/components/common/back";
 import { Icons } from "#/components/icons";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import { AttendanceStatus, SessionLabel } from "#/types/app";
 import { StudentWithSchoolAndFellow } from "#/types/prisma";
+import ComplaintDialog from "./record-complaint-dialog";
 
 export default async function SchoolStudentsPage({
   params: { visibleId },
@@ -36,7 +42,7 @@ export default async function SchoolStudentsPage({
 
   const students: StudentWithSchoolAndFellow[] = await db.student.findMany({
     where: { schoolId: school.id, fellowId: fellow.id },
-    include: { fellow: true, school: true },
+    include: { fellow: true, school: true, StudentComplaints: true },
     orderBy: { visibleId: "asc" },
   });
 
@@ -176,25 +182,46 @@ function StudentCard({
           )}
         </div>
         <div className="flex gap-0.5">
-          <StudentModifyDialog
-            mode="edit"
-            student={student}
-            fellowName={fellow.fellowName ?? "N/A"}
-            schoolName={school.schoolName}
-            info={{
-              schoolVisibleId: school.visibleId,
-              fellowVisibleId: fellow.visibleId,
-              supervisorVisibleId: fellow.supervisor?.visibleId!,
-              implementerVisibleId: fellow.implementer?.visibleId!,
-            }}
-          >
-            <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
-          </StudentModifyDialog>
-          {!student.droppedOut && (
-            <StudentDropoutDialog student={student}>
-              <Icons.delete className="h-6 w-6 cursor-pointer text-brand" />
-            </StudentDropoutDialog>
-          )}
+          <div>
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Icons.moreHorizontal className="h-5 w-5 text-brand" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="space-y-4 p-4">
+                <div>
+                  <StudentModifyDialog
+                    mode="edit"
+                    student={student}
+                    fellowName={fellow.fellowName ?? "N/A"}
+                    schoolName={school.schoolName}
+                    info={{
+                      schoolVisibleId: school.visibleId,
+                      fellowVisibleId: fellow.visibleId,
+                      supervisorVisibleId: fellow.supervisor?.visibleId!,
+                      implementerVisibleId: fellow.implementer?.visibleId!,
+                    }}
+                  >
+                    <div className="cursor-pointer">Edit Student</div>
+                  </StudentModifyDialog>
+                </div>
+
+                <div>Sessions attended</div>
+                <ComplaintDialog
+                  fellowId={fellow.visibleId}
+                  schoolId={school.visibleId}
+                  studentId={student.id}
+                  complaints={student.StudentComplaints}
+                >
+                  <div className="cursor-pointer">Record complaint</div>
+                </ComplaintDialog>
+                {!student.droppedOut || !student.droppedOutAt ? (
+                  <StudentDropoutDialog student={student}>
+                    <div className="cursor-pointer">Dropout student</div>
+                  </StudentDropoutDialog>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
       <p className="mt-2 text-sm text-gray-600">

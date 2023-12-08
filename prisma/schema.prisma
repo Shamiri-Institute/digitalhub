@@ -178,52 +178,54 @@ model ImplementerInvite {
 }
 
 model Student {
-  id                   String           @id @db.VarChar(255)
-  createdAt            DateTime         @default(now()) @map("created_at")
-  updatedAt            DateTime         @updatedAt @map("updated_at")
-  archivedAt           DateTime?        @map("archived_at")
-  studentName          String?          @map("student_name") @db.VarChar(255)
-  visibleId            String           @unique @map("visible_id") @db.VarChar(100)
-  fellowId             String?          @map("fellow_id") @db.VarChar(255) // TODO: we may need to remove this, intervention_group_sessions.leader_id is more reliable
-  fellow               Fellow?          @relation(fields: [fellowId], references: [id])
-  supervisorId         String?          @map("supervisor_id") @db.VarChar(255)
-  supervisor           Supervisor?      @relation(fields: [supervisorId], references: [id])
-  implementerId        String?          @map("implementer_id") @db.VarChar(255)
-  implementer          Implementer?     @relation(fields: [implementerId], references: [id])
-  schoolId             String?          @map("school_id") @db.VarChar(255)
-  school               School?          @relation(fields: [schoolId], references: [id])
-  yearOfImplementation Int?             @map("year_of_implementation")
-  admissionNumber      String?          @map("admission_number") @db.VarChar(255)
+  id                   String              @id @db.VarChar(255)
+  createdAt            DateTime            @default(now()) @map("created_at")
+  updatedAt            DateTime            @updatedAt @map("updated_at")
+  archivedAt           DateTime?           @map("archived_at")
+  studentName          String?             @map("student_name") @db.VarChar(255)
+  visibleId            String              @unique @map("visible_id") @db.VarChar(100)
+  fellowId             String?             @map("fellow_id") @db.VarChar(255) // TODO: we may need to remove this, intervention_group_sessions.leader_id is more reliable
+  fellow               Fellow?             @relation(fields: [fellowId], references: [id])
+  supervisorId         String?             @map("supervisor_id") @db.VarChar(255)
+  supervisor           Supervisor?         @relation(fields: [supervisorId], references: [id])
+  implementerId        String?             @map("implementer_id") @db.VarChar(255)
+  implementer          Implementer?        @relation(fields: [implementerId], references: [id])
+  schoolId             String?             @map("school_id") @db.VarChar(255)
+  school               School?             @relation(fields: [schoolId], references: [id])
+  yearOfImplementation Int?                @map("year_of_implementation")
+  admissionNumber      String?             @map("admission_number") @db.VarChar(255)
   age                  Int?
-  gender               String?          @db.VarChar(10)
+  gender               String?             @db.VarChar(10)
   form                 Int?
-  stream               String?          @db.VarChar(255)
-  condition            String?          @db.VarChar(255)
-  intervention         String?          @db.VarChar(255)
-  tribe                String?          @db.VarChar(255)
-  county               String?          @db.VarChar(255)
-  financialStatus      String?          @map("financial_status") @db.VarChar(255)
-  home                 String?          @db.VarChar(255)
-  siblings             String?          @db.VarChar(255)
-  religion             String?          @db.VarChar(255)
-  groupName            String?          @map("group_name") @db.VarChar(255) // TODO: move to intervention_groups & intervention_group_students table
-  survivingParents     String?          @map("surviving_parents") @db.VarChar(255)
-  parentsDead          String?          @map("parents_dead") @db.VarChar(255)
-  fathersEducation     String?          @map("fathers_education") @db.VarChar(255)
-  mothersEducation     String?          @map("mothers_education") @db.VarChar(255)
-  coCurricular         String?          @map("co_curricular") @db.VarChar(255)
-  sports               String?          @db.VarChar(255)
-  isClinicalCase       Boolean?         @map("is_clinical_case")
-  phoneNumber          String?          @map("phone_number") @db.VarChar(255)
-  mpesaNumber          String?          @map("mpesa_number") @db.VarChar(255)
-  attendanceSession0   Boolean?         @map("attendance_session_0")
-  attendanceSession1   Boolean?         @map("attendance_session_1")
-  attendanceSession2   Boolean?         @map("attendance_session_2")
-  attendanceSession3   Boolean?         @map("attendance_session_3")
-  attendanceSession4   Boolean?         @map("attendance_session_4")
-  droppedOut           Boolean?         @map("dropped_out")
-  dropOutReason        String?          @map("drop_out_reason")
+  stream               String?             @db.VarChar(255)
+  condition            String?             @db.VarChar(255)
+  intervention         String?             @db.VarChar(255)
+  tribe                String?             @db.VarChar(255)
+  county               String?             @db.VarChar(255)
+  financialStatus      String?             @map("financial_status") @db.VarChar(255)
+  home                 String?             @db.VarChar(255)
+  siblings             String?             @db.VarChar(255)
+  religion             String?             @db.VarChar(255)
+  groupName            String?             @map("group_name") @db.VarChar(255) // TODO: move to intervention_groups & intervention_group_students table
+  survivingParents     String?             @map("surviving_parents") @db.VarChar(255)
+  parentsDead          String?             @map("parents_dead") @db.VarChar(255)
+  fathersEducation     String?             @map("fathers_education") @db.VarChar(255)
+  mothersEducation     String?             @map("mothers_education") @db.VarChar(255)
+  coCurricular         String?             @map("co_curricular") @db.VarChar(255)
+  sports               String?             @db.VarChar(255)
+  isClinicalCase       Boolean?            @map("is_clinical_case")
+  phoneNumber          String?             @map("phone_number") @db.VarChar(255)
+  mpesaNumber          String?             @map("mpesa_number") @db.VarChar(255)
+  attendanceSession0   Boolean?            @map("attendance_session_0")
+  attendanceSession1   Boolean?            @map("attendance_session_1")
+  attendanceSession2   Boolean?            @map("attendance_session_2")
+  attendanceSession3   Boolean?            @map("attendance_session_3")
+  attendanceSession4   Boolean?            @map("attendance_session_4")
+  droppedOut           Boolean?            @map("dropped_out")
+  droppedOutAt         DateTime?           @map("dropped_out_at") @db.Timestamptz()
+  dropOutReason        String?             @map("drop_out_reason")
   StudentOutcome       StudentOutcome[]
+  StudentComplaints    StudentComplaints[]
 
   @@map("students")
 }
@@ -435,8 +437,8 @@ model Fellow {
   implementer          Implementer?               @relation(fields: [implementerId], references: [id])
   supervisorId         String?                    @map("supervisor_id") @db.VarChar(255)
   supervisor           Supervisor?                @relation(fields: [supervisorId], references: [id])
-  // worth adding a field to track the date when someone dropped out
-  droppedOut           Boolean?                   @map("dropped_out")
+  droppedOut           Boolean?                   @map("dropped_out") // keeping this here for historical data that didn't track droppedOutDates
+  droppedOutAt         DateTime?                  @map("dropped_out_at") @db.Timestamptz()
   dropOutReason        String?                    @map("drop_out_reason")
   students             Student[]
   fellowAttendances    FellowAttendance[]
@@ -507,6 +509,7 @@ model Supervisor {
   sessionRatings        InterventionSessionRating[]
   sessionNotes          InterventionSessionNote[]
   reimbursementRequests ReimbursementRequest[]
+  StudentComplaints     StudentComplaints[]
 
   @@map("supervisors")
 }
@@ -699,4 +702,17 @@ model ReimbursementRequest {
   mpesaNumber      String          @map("mpesa_number") @db.VarChar(20)
 
   @@map("reimbursement_requests")
+}
+
+model StudentComplaints {
+  id           String     @id @default(cuid())
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+  supervisorId String     @map("supervisor_id") @db.VarChar(255)
+  supervisor   Supervisor @relation(fields: [supervisorId], references: [id])
+  studentId    String     @map("student_id") @db.VarChar(255)
+  student      Student    @relation(fields: [studentId], references: [id])
+  complaint    String
+
+  @@map("student_complaints")
 }
