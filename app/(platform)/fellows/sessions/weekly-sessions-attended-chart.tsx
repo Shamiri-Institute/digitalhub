@@ -32,9 +32,14 @@ export function WeeklySessionsAttendedChart({ data }: { data: SessionData[] }) {
 
   return (
     <>
-      <div className="flex justify-center">
+      {/* <div className="flex justify-center">
         <h2 className="mb-2 ml-[50px] text-base font-medium text-brand">
           Number of sessions attended per week
+        </h2>
+      </div> */}
+      <div className="flex justify-start">
+        <h2 className="mb-6 ml-[50px] text-xl font-semibold text-brand">
+          Sessions attended per week
         </h2>
       </div>
       <ResponsiveContainer width="90%" height={200}>

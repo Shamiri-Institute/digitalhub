@@ -32,7 +32,7 @@ export function SessionHistory({
     let attendanceData = [];
     for (let i = 0; i <= 4; i++) {
       const weekSessions = data.filter(
-        (d) => d.sessionNumber === i && d.fellowId === fellow?.id,
+        (d) => d.sessionNumber === i && d.fellowId === fellow?.id && d.attended,
       );
       attendanceData.push({
         week: `${ordinalSuffixOf(i + 1)}`,
@@ -47,7 +47,7 @@ export function SessionHistory({
   return (
     <>
       <div className="flex justify-center">
-        <div className="w-[min(350px,90vw)]">
+        <div className="w-[min(350px,90vw)] pb-20">
           <FellowSwitcher
             fellowVisibleId={fellow.visibleId.toLocaleUpperCase() ?? null}
             setFellowVisibleId={(visibleId) => {
