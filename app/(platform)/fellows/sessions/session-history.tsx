@@ -3,6 +3,7 @@
 import { Prisma } from "@prisma/client";
 
 import { AttendancePieChart } from "#/app/(platform)/fellows/sessions/attendance-pie-chart";
+import { FellowAttendanceTable } from "#/app/(platform)/fellows/sessions/fellow-attendance-table";
 import { FellowSwitcher } from "#/app/(platform)/fellows/sessions/fellow-switcher";
 import { WeeklySessionsAttendedChart } from "#/app/(platform)/fellows/sessions/weekly-sessions-attended-chart";
 import { CurrentSupervisor } from "#/app/auth";
@@ -15,7 +16,9 @@ export function SessionHistory({
 }: {
   fellow: Prisma.FellowGetPayload<{ include: { fellowAttendances: true } }>;
   fellows: NonNullable<CurrentSupervisor>["fellows"];
-  sessionsAttended: Prisma.FellowAttendanceGetPayload<{}>[];
+  sessionsAttended: Prisma.FellowAttendanceGetPayload<{
+    include: { school: true };
+  }>[];
 }) {
   const presentCount =
     fellow.fellowAttendances.filter((attendance) => attendance.attended)
@@ -44,7 +47,7 @@ export function SessionHistory({
   return (
     <>
       <div className="flex justify-center">
-        <div className="w-[min(300px,90vw)]">
+        <div className="w-[min(350px,90vw)]">
           <FellowSwitcher
             fellowVisibleId={fellow.visibleId.toLocaleUpperCase() ?? null}
             setFellowVisibleId={(visibleId) => {
@@ -72,8 +75,11 @@ export function SessionHistory({
               Total Sessions
             </div>
           </div>
-          <div className="-ml-16 -mr-10 mt-16 h-96">
+          <div className="-ml-16 -mr-8 mt-16 h-72">
             <WeeklySessionsAttendedChart data={attendanceData} />
+          </div>
+          <div>
+            <FellowAttendanceTable attendance={sessionsAttended} />
           </div>
         </div>
       </div>

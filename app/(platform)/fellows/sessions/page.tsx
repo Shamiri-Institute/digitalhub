@@ -30,7 +30,14 @@ export default async function FellowSessionsPage({
   const fellow = await db.fellow.findUnique({
     where: { visibleId: fid },
     include: {
-      fellowAttendances: true,
+      fellowAttendances: {
+        include: {
+          school: true,
+        },
+        orderBy: {
+          sessionNumber: "asc",
+        },
+      },
     },
   });
   if (!fellow) {
