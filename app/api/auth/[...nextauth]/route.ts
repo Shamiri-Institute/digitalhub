@@ -74,6 +74,7 @@ const authOptions: AuthOptions = {
           avatar: {
             select: { file: true },
           },
+          image: true,
           memberships: {
             select: {
               implementer: true,
@@ -82,14 +83,26 @@ const authOptions: AuthOptions = {
           },
         },
       });
-      session.user = {
-        id: token.sub,
-        name: user?.name,
-        email: user?.email,
-        roles: user?.memberships.map((m) => m.role),
+
+      if (!user) {
+        return session;
+      }
+
+      const sessionUser: SessionUser = {
+        id: token.sub || null,
+        email: user.email,
+        name: user.name,
+        roles: user.memberships.map((m) => m.role),
+        image: user.image,
+        implementer: {
+          id: user.memberships[0]!.implementer.id,
+          name: user.memberships[0]!.implementer.implementerName,
+        },
         // @ts-ignore
-        ...(token || session).user,
+        // ...(token || session).user,
       };
+
+      session.user = sessionUser;
       return session;
     },
   },
@@ -100,7 +113,13 @@ const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
 
 export type SessionUser = {
-  email: string;
+  id: string | null;
+  email: string | null;
   name: string | null;
-  avatarUrl: string | null;
+  roles: string[];
+  image: string | null;
+  implementer: {
+    id: string;
+    name: string;
+  };
 };

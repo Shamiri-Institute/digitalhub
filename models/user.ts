@@ -11,7 +11,7 @@ export class UserModel extends Model {
   prefix = "user";
 
   static avatarUrl(user: SessionUser) {
-    return user.avatarUrl ?? null;
+    return user.image ?? null;
   }
 
   async findCurrentUser(email: string) {
