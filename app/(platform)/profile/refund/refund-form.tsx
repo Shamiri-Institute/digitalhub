@@ -45,7 +45,7 @@ export const FormSchema = z.object({
       required_error: "Please enter the fellow's MPESA number.",
     })
     .refine((val) => isValidPhoneNumber(val, "KE"), {
-      message: "Please enter a valid Kenyan phone number",
+      message: "Please enter a valid Kenyan phone number (e.g. 0712345678).",
     }),
   session: z.string({
     required_error: "Please select a session.",

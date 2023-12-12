@@ -77,7 +77,6 @@ export function PersonnelSwitcher({
           <PopoverContent className="w-[360px] p-0 md:w-64">
             <Command
               filter={(value: string, search: string) => {
-                console.log({ value, search });
                 const person = personnel.find((person) => person.id === value);
                 if (!person) return 0;
 
@@ -152,6 +151,7 @@ function Spinner({ className }: { className: string }) {
     </svg>
   );
 }
+
 export function PersonnelTool() {
   const [personnel, setPersonnel] = React.useState<
     {

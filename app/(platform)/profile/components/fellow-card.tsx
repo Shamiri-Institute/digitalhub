@@ -1,6 +1,10 @@
 "use client";
 
-import { CurrentSupervisor } from "#/app/auth";
+import differenceInYears from "date-fns/differenceInYears";
+import Link from "next/link";
+import { useState } from "react";
+
+import type { CurrentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
@@ -8,11 +12,10 @@ import { Dialog, DialogContent, DialogTrigger } from "#/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
-import differenceInYears from "date-fns/differenceInYears";
-import { useState } from "react";
 import FellowDetailsForm from "./fellow-management-form";
 
 export default function FellowCard({
@@ -22,9 +25,6 @@ export default function FellowCard({
   fellow: NonNullable<CurrentSupervisor>["fellows"][number];
   assigned?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const closeDialog = () => setOpen(false);
-
   return (
     <Card
       className={cn("mb-4 flex flex-col gap-5 p-5 pr-3.5", {
@@ -34,94 +34,59 @@ export default function FellowCard({
     >
       <div
         className={cn(
-          "flex items-center justify-between border-b border-border/50 pb-3 pr-3",
+          "flex items-center justify-between gap-4 border-b border-border/50 pb-3 ",
+          "grid grid-cols-[15fr,10fr]",
           {
             "border-border/20": assigned,
           },
         )}
       >
         <div>
-          <h3 className={cn("font-semibold text-brand xl:text-xl")}>
+          <h3 className="text-lg font-semibold text-brand">
             {fellow.fellowName}
           </h3>
-          <p className="text-xs font-medium text-muted-foreground xl:text-lg">
+          <p className="text-xs font-medium text-muted-foreground lg:text-sm">
             Shamiri ID: {fellow.visibleId}
           </p>
         </div>
-        <DropdownMenu modal={false}>
-          <DropdownMenuTrigger asChild>
-            <div>
-              <Icons.moreHorizontal className="h-5 w-5 text-brand" />
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="space-y-4 p-4">
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger>Edit Details</DialogTrigger>
-              <DialogContent className="max-h-screen overflow-y-scroll">
-                <FellowDetailsForm fellow={fellow} closeDialog={closeDialog} />
-              </DialogContent>
-            </Dialog>
-            <div>Session History</div>
-            <div>Submit complaint</div>
-            <div>Dropout fellow</div>
-            <div>Weekly Evaluation</div>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className={cn("flex items-start justify-end")}>
+          <FellowCardMenu fellow={fellow}>
+            <button className="flex flex-col gap-[1px]">
+              <div>
+                <Icons.moreVertical className="h-5 w-5 text-brand" />
+              </div>
+            </button>
+          </FellowCardMenu>
+        </div>
       </div>
 
-      <div className="flex flex-col ">
+      <div className="flex flex-col">
         <div className="flex justify-between">
-          <div className="flex flex-col ">
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Age:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.dateOfBirth
-                  ? differenceInYears(new Date(), fellow.dateOfBirth)
-                  : "N/A"}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Gender:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.gender}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Contact:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.cellNumber}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Mpesa:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.mpesaNumber}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                Hub:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.hub?.hubName}
-              </p>
-            </div>
-            <div className="flex justify-start gap-2">
-              <p className="text-base font-medium text-muted-foreground xl:text-lg">
-                County:
-              </p>
-              <p className="text-base font-semibold text-brand xl:text-lg">
-                {fellow.county ?? "N/A"}
-              </p>
-            </div>
+          <div className="flex flex-col">
+            <CardDetailLineItem
+              label="Age"
+              value={
+                fellow.dateOfBirth
+                  ? differenceInYears(new Date(), fellow.dateOfBirth).toString()
+                  : null
+              }
+            />
+            <CardDetailLineItem label="Gender" value={fellow.gender} />
+            <CardDetailLineItem
+              label="Contact"
+              value={fellow.cellNumber || null}
+            />
+            {fellow.cellNumber !== fellow.mpesaNumber && (
+              <CardDetailLineItem
+                label="MPESA"
+                value={fellow.mpesaNumber || null}
+              />
+            )}
+            <CardDetailLineItem
+              label="Hub"
+              value={fellow.hub?.hubName || null}
+            />
+            <CardDetailLineItem label="County" value={fellow.county || null} />
           </div>
 
           <div className="flex flex-col items-end justify-end">
@@ -142,5 +107,69 @@ export default function FellowCard({
         </Button>
       </div>
     </Card>
+  );
+}
+
+function CardDetailLineItem({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null;
+}) {
+  return (
+    <div className="flex justify-start gap-2">
+      <p className="text-sm font-medium text-muted-foreground">{label}:</p>
+      <p className="text-sm font-semibold text-brand">{value || "N/A"}</p>
+    </div>
+  );
+}
+
+function FellowCardMenu({
+  fellow,
+  children,
+}: {
+  fellow: NonNullable<CurrentSupervisor>["fellows"][number];
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const closeDialog = () => setOpen(false);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
+      <DropdownMenuContent className="p-1 text-sm">
+        <MenuLineItem>
+          <Link href={`/fellows/sessions?fid=${fellow.visibleId}`}>
+            Session History
+          </Link>
+        </MenuLineItem>
+        <MenuLineItem>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger>Edit Details</DialogTrigger>
+            <DialogContent className="max-h-screen overflow-y-scroll">
+              <FellowDetailsForm fellow={fellow} closeDialog={closeDialog} />
+            </DialogContent>
+          </Dialog>
+        </MenuLineItem>
+        <MenuLineItem>Weekly Evaluation</MenuLineItem>
+        <DropdownMenuSeparator className="my-2" />
+        <MenuLineItem>Submit a Complaint</MenuLineItem>
+        <MenuLineItem>Dropout Fellow</MenuLineItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function MenuLineItem({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      className={cn(
+        "rounded-md p-1 hover:bg-zinc-100",
+        "flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      )}
+    >
+      {children}
+    </div>
   );
 }
