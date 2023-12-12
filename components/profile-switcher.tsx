@@ -10,7 +10,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 import { constants } from "#/tests/constants";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 
 const demoProfile = {
   organization: {
@@ -18,15 +18,11 @@ const demoProfile = {
     name: "Team Shamiri",
     email: "team@shamiri.institute",
   },
-  user: {
-    avatarUrl:
-      "https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-    name: "Kenya Shamiri",
-    email: "kenya@shamiri.institute",
-  },
 };
 
 export function ProfileSwitcher() {
+  const session = useSession();
+
   return (
     <div className="-ml-1.5 flex justify-between">
       <OrganizationDialog>
@@ -39,7 +35,7 @@ export function ProfileSwitcher() {
             fallback={demoProfile.organization.name}
           />
           <div className="text-sm font-medium">
-            {demoProfile.organization.name}
+            {session?.data?.user?.implementer?.name}
           </div>
           <Icons.chevronsUpDown
             className={cn("h-5 text-foreground/50", "animate-in hover:fade-in")}
@@ -49,8 +45,8 @@ export function ProfileSwitcher() {
       </OrganizationDialog>
       <button className="rounded p-1 transition hover:bg-card active:scale-95">
         <UserAvatar
-          src={demoProfile.user.avatarUrl}
-          fallback={demoProfile.user.name}
+          src={session?.data?.user?.image || ""}
+          fallback={session?.data?.user?.name || "??"}
         />
       </button>
     </div>
@@ -58,6 +54,8 @@ export function ProfileSwitcher() {
 }
 
 function OrganizationDialog({ children }: { children: React.ReactNode }) {
+  const session = useSession();
+
   return (
     <Popover>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
@@ -71,7 +69,7 @@ function OrganizationDialog({ children }: { children: React.ReactNode }) {
         <div>
           <div className="flex w-full flex-col p-3 pl-3.5">
             <div className="text-sm text-muted-foreground">
-              {demoProfile.user.email}
+              {session?.data?.user?.email}
             </div>
             <button className="my-2 flex w-full items-center justify-between rounded-md px-1.5 py-1 hover:bg-foreground/[0.025]">
               <div className="flex items-center gap-2">
