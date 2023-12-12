@@ -77,7 +77,7 @@ export function SchoolCard({
             className="flex flex-col gap-[1px]"
           >
             <p
-              className={cn("font-semibold xl:text-2xl", {
+              className={cn("font-semibold", {
                 "text-white": assigned,
                 "text-brand": !assigned,
               })}
@@ -86,7 +86,7 @@ export function SchoolCard({
             </p>
             <p
               className={cn(
-                "text-xs font-medium text-muted-foreground xl:text-lg",
+                "text-xs font-medium text-muted-foreground xl:text-base",
                 {
                   "text-[#cccccc]": assigned,
                 },

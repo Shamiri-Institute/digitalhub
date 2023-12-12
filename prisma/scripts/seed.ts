@@ -1,9 +1,11 @@
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { endOfDay, startOfDay } from "date-fns";
+
 import { objectId } from "#/lib/crypto";
 import { Database, db } from "#/lib/db";
 import { parseEuropeanDate } from "#/lib/utils";
 import { fixtures } from "#/prisma/scripts/fixtures";
 import { parseCsvFile } from "#/prisma/scripts/utils";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
 
 async function seedDatabase() {
   await truncateTables();
@@ -12,8 +14,10 @@ async function seedDatabase() {
   await createUsers(db);
   await createHubs(db);
   await createSchools(db);
+  await createInterventionSessions(db);
   await createSupervisors(db);
   await createFellows(db);
+  await createInterventionGroupSessions(db);
   await createFellowAttendances(db);
   await createStudents(db);
   await createFixtures(db);
@@ -218,6 +222,112 @@ async function createFellows(db: Database) {
   });
 }
 
+async function createInterventionSessions(db: Database) {
+  console.log("Creating intervention sessions");
+
+  // This csv was created with the following SQL query in
+  // an effort to reverse engineer the scheduled intervention session dates per school
+  // SELECT s.visible_id, fa.session_number, fa.session_date, bool_or(fa.attended) as any_attended
+  // FROM fellow_attendances fa
+  // INNER JOIN schools s ON s.id = fa.school_id
+  // GROUP BY s.visible_id, fa.session_number, fa.session_date
+  // ORDER BY s.visible_id, fa.session_number;
+  await parseCsvFile("intervention_sessions", async (session: any) => {
+    try {
+      const sessionDate = new Date(session["session_date"]);
+      await db.interventionSession.create({
+        data: {
+          id: objectId("isess"),
+          sessionDate,
+          sessionName: `${
+            session["session_number"] === "0"
+              ? "Presession"
+              : `Session ${session["session_number"]}`
+          }`,
+          sessionType: `s${session["session_number"]}`,
+          schoolId: (await db.school.findFirst({
+            where: { visibleId: session["school_visible_id"] },
+          }))!.id,
+          occurred: parseCsvBoolean(session["any_attended"]),
+          yearOfImplementation: sessionDate.getFullYear(),
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  });
+}
+
+async function createInterventionGroupSessions(db: Database) {
+  console.log("Creating intervention group sessions");
+
+  const interventionSessionCache: Record<string, any> = {};
+
+  // This csv was created with the following SQL query in
+  // an effort to reverse engineer the intervention session groups per school
+  // SELECT
+  //   sch.visible_id AS sch_visible_id,
+  //   fel.visible_id AS fel_visible_id,
+  //   stu.group_name,
+  //   fa.session_number,
+  //   fa.session_date
+  // FROM fellow_attendances fa
+  // INNER JOIN schools sch ON sch.id = fa.school_id
+  // INNER JOIN fellows fel ON fel.id = fa.fellow_id
+  // INNER JOIN students stu ON stu.fellow_id = fa.fellow_id
+  // GROUP BY sch.visible_id, fel.visible_id, stu.group_name, fa.session_number, fa.session_date
+  // ORDER BY sch.visible_id, stu.group_name;
+  await parseCsvFile("intervention_group_sessions", async (session: any) => {
+    try {
+      const sessionDate = new Date(session["session_date"]);
+      const sessionType = `s${session["session_number"]}`;
+      const schoolVisibleId = session["school_visible_id"];
+
+      const cacheKey = `${sessionDate.toISOString()}-${sessionType}-${schoolVisibleId}`;
+
+      let interventionSessions = interventionSessionCache[cacheKey];
+      if (!interventionSessions) {
+        interventionSessions = await db.interventionSession.findMany({
+          where: {
+            sessionDate: sessionDate,
+            sessionType: sessionType,
+            schoolId: (await db.school.findFirst({
+              where: { visibleId: schoolVisibleId },
+            }))!.id,
+          },
+        });
+        interventionSessionCache[cacheKey] = interventionSessions;
+      }
+
+      if (interventionSessions.length !== 1) {
+        throw new Error(
+          `Expected 1 intervention session for school ${
+            session["school_visible_id"]
+          } on ${sessionDate.toISOString()}, but found ${
+            interventionSessions.length
+          }`,
+        );
+      }
+      const interventionSession = interventionSessions[0]!;
+
+      await db.interventionGroupSession.create({
+        data: {
+          id: objectId("igsess"),
+          sessionId: interventionSession.id,
+          groupName: session["group_name"],
+          leaderId: (await db.fellow.findFirst({
+            where: { visibleId: session["fellow_visible_id"] },
+          }))!.id,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  });
+}
+
 async function createSupervisors(db: Database) {
   console.log("Creating supervisors");
 
@@ -274,6 +384,41 @@ async function createFellowAttendances(db: Database) {
   await parseCsvFile(
     "fellow_attendance_temp",
     async (fellowAttendance: any) => {
+      const targetDate = parseEuropeanDate(fellowAttendance["Date"])!;
+
+      const fellow = await db.fellow.findFirst({
+        where: {
+          visibleId: fellowAttendance["Fellow_ID"],
+        },
+      })!;
+
+      const groupSessions = await db.interventionGroupSession.findMany({
+        include: {
+          leader: true,
+          session: {
+            include: {
+              school: true,
+            },
+          },
+        },
+        where: {
+          leaderId: fellow!.id,
+          session: {
+            sessionDate: {
+              gte: startOfDay(targetDate),
+              lt: endOfDay(targetDate),
+            },
+          },
+        },
+      });
+
+      const sessionNumber = parseInt(fellowAttendance["Session"]);
+
+      const groupSession = groupSessions.find(
+        (groupSession) =>
+          groupSession.session.sessionType === `s${sessionNumber}`,
+      );
+
       try {
         const fellowId = (await db.fellow.findFirst({
           where: { visibleId: fellowAttendance["Fellow_ID"] },
@@ -284,25 +429,34 @@ async function createFellowAttendances(db: Database) {
         const supervisorId = (await db.supervisor.findFirst({
           where: { visibleId: fellowAttendance["Supervisor_ID"] },
         }))!.id!;
-        await db.fellowAttendance.create({
-          data: {
-            visibleId: fellowAttendance["Attendance_ID"],
-            fellow: {
-              connect: { id: fellowId },
-            },
-            sessionNumber: parseInt(fellowAttendance["Session"]),
-            sessionDate: parseEuropeanDate(fellowAttendance["Date"]) as Date,
-            yearOfImplementation: parseInt(fellowAttendance["Year_of_imp"]),
-            school: {
-              connect: { id: schoolId },
-            },
-            supervisor: {
-              connect: { id: supervisorId },
-            },
-            attended: Boolean(fellowAttendance["Attendance"]),
-            absenceReason: fellowAttendance["Absence_Reason"],
-            paymentInitiated: Boolean(fellowAttendance["Payment_Initiated"]),
+
+        const fellowAttendanceData: any = {
+          visibleId: fellowAttendance["Attendance_ID"],
+          fellow: {
+            connect: { id: fellowId },
           },
+          sessionNumber: parseInt(fellowAttendance["Session"]),
+          sessionDate: parseEuropeanDate(fellowAttendance["Date"]) as Date,
+          yearOfImplementation: parseInt(fellowAttendance["Year_of_imp"]),
+          school: {
+            connect: { id: schoolId },
+          },
+          supervisor: {
+            connect: { id: supervisorId },
+          },
+          attended: Boolean(fellowAttendance["Attendance"]),
+          absenceReason: fellowAttendance["Absence_Reason"],
+          paymentInitiated: Boolean(fellowAttendance["Payment_Initiated"]),
+        };
+
+        if (groupSession?.id) {
+          fellowAttendanceData.groupSession = {
+            connect: { id: groupSession.id },
+          };
+        }
+
+        await db.fellowAttendance.create({
+          data: fellowAttendanceData,
         });
       } catch (e) {
         throw e;
@@ -469,4 +623,8 @@ async function createFixtures(db: Database) {
 
 function randomSchool<T>(schools: T[]) {
   return schools[Math.floor(Math.random() * schools.length)];
+}
+
+function parseCsvBoolean(value: string) {
+  return value === "true";
 }
