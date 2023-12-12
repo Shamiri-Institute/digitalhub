@@ -8,7 +8,7 @@ import {
   revalidateFromClient,
   updateLoggedInSupervisorDetails,
 } from "#/app/actions";
-import { CurrentSupervisor } from "#/app/auth";
+import type { CurrentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
