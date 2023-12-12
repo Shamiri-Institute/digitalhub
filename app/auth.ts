@@ -55,7 +55,7 @@ export async function getCurrentUser() {
   }
 
   const user = await db.user.findUniqueOrThrow({
-    where: { email: session.user.email },
+    where: { email: session.user.email ?? undefined },
     include: { memberships: true },
   });
 
