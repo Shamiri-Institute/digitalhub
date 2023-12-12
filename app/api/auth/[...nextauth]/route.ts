@@ -99,7 +99,7 @@ const authOptions: AuthOptions = {
           name: user.memberships[0]!.implementer.implementerName,
         },
         // @ts-ignore
-        // ...(token || session).user,
+        ...(token || session).user,
       };
 
       session.user = sessionUser;
