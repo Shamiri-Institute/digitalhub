@@ -10,7 +10,7 @@ import { Navigation } from "#/components/navigation";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="h-full lg:ml-72 xl:ml-80">
+    <div className="h-full max-w-3xl lg:ml-72 xl:ml-80">
       <motion.header
         layoutScroll
         className="contents lg:pointer-events-none lg:fixed lg:inset-0 lg:z-40 lg:flex"

@@ -1,3 +1,5 @@
+import { currentSupervisor } from "#/app/auth";
+import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
 import { SchoolCard } from "./school-card";
@@ -37,14 +39,11 @@ async function SchoolsList() {
   //   demographics: "Mixed",
   // };
   const assignedSchoolId = "ANS23_School_17";
-  const assignedSchool = await db.school.findFirst({
-    where: {
-      visibleId: assignedSchoolId,
-    },
-  });
-  if (!assignedSchool) {
-    throw new Error("Assigned school not found");
+  const supervisor = await currentSupervisor();
+  if (!supervisor) {
+    return <InvalidPersonnelRole role="supervisor" />;
   }
+  const { assignedSchool } = supervisor;
 
   const otherSchools = await db.school.findMany({
     where: {
