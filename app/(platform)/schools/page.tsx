@@ -56,7 +56,7 @@ async function SchoolsList() {
     <div>
       <div>
         <h2 className="py-3 text-xl font-semibold">My School</h2>
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
           <SchoolCard
             key={assignedSchool.schoolName}
             school={assignedSchool}
@@ -69,7 +69,7 @@ async function SchoolsList() {
       </div>
       <div>
         <h2 className="py-3 text-xl font-semibold">Others</h2>
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
           {otherSchools.map((school) => (
             <SchoolCard
               key={school.schoolName}
