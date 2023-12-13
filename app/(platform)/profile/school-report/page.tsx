@@ -192,7 +192,7 @@ async function IntroHeader() {
             <Icons.chevronLeft className="h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
           </button>
         </Link>
-        <h3 className="text-xl font-bold text-brand">My School Report</h3>
+        <h3 className="text-xl font-bold text-brand">Session Dates</h3>
         {/* <button>
                     <Icons.add className='h-6 w-6 align-baseline xl:h-7 xl:w-7 text-shamiri-blue' />
                 </button> */}
