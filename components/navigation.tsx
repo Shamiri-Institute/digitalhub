@@ -118,7 +118,7 @@ const supervisorNavigationItems: NavigationItem[] = [
   },
   {
     path: "/screenings",
-    title: "Screenings",
+    title: "Clinical Cases",
     Icon: Icons.heartHandshake,
   },
   {
