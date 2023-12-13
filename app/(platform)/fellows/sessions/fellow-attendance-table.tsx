@@ -41,6 +41,16 @@ export function FellowAttendanceTable({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
+                  {!attendance.length && (
+                    <tr>
+                      <td
+                        colSpan={3}
+                        className="py-4 pl-4 pr-3 text-center text-sm font-medium text-gray-500 sm:pl-6"
+                      >
+                        No sessions attended
+                      </td>
+                    </tr>
+                  )}
                   {attendance
                     .filter((att) => att.attended)
                     .map((att) => (
