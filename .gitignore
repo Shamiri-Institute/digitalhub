@@ -46,3 +46,6 @@ next-env.d.ts
 /playwright/.cache/
 .vscode/*
 vscode
+
+# Sentry Config File
+.sentryclirc
