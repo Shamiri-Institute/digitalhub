@@ -10,7 +10,7 @@ import { Navigation } from "#/components/navigation";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="h-full max-w-3xl lg:ml-72 xl:ml-80">
+    <div className="h-full max-w-7xl lg:ml-72 xl:ml-80">
       <motion.header
         layoutScroll
         className="contents lg:pointer-events-none lg:fixed lg:inset-0 lg:z-40 lg:flex"
@@ -25,7 +25,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <Navigation className="hidden lg:flex" />
         </div>
       </motion.header>
-      <div className="relative mx-auto flex h-full max-w-7xl flex-col px-4 pt-14 sm:px-6 lg:px-8">
+      <div className="relative mx-auto flex h-full flex-col px-4 pt-14 sm:px-6 lg:px-8">
         <main className="flex-auto">{children}</main>
         <Footer />
       </div>
