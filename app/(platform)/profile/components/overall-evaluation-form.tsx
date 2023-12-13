@@ -27,12 +27,12 @@ type Props = {
   fellowId: string;
   supervisorId: string;
   pastEvaluations: any[];
-}
+};
 
 export default function FellowEvaluationForm(props: Props) {
-  const [open, setDialogOpen] = React.useState<boolean>(false)
+  const [open, setDialogOpen] = React.useState<boolean>(false);
 
-  const form = useForm();
+  const form = useForm({});
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -46,7 +46,10 @@ export default function FellowEvaluationForm(props: Props) {
             <Separator />
             <div>
               <div>Chart goes here</div>
-              <div>{props.pastEvaluations.length} Reporting Note{props.pastEvaluations.length === 1 ? '' : 's'}</div>
+              <div>
+                {props.pastEvaluations.length} Reporting Note
+                {props.pastEvaluations.length === 1 ? "" : "s"}
+              </div>
               <div>
                 <p>Fellow Behaviour</p>
                 <FormField
@@ -55,10 +58,7 @@ export default function FellowEvaluationForm(props: Props) {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Textarea
-                          className="resize-none"
-                          {...field}
-                        />
+                        <Textarea className="resize-none" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -73,10 +73,7 @@ export default function FellowEvaluationForm(props: Props) {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Textarea
-                          className="resize-none"
-                          {...field}
-                        />
+                        <Textarea className="resize-none" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -91,10 +88,7 @@ export default function FellowEvaluationForm(props: Props) {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Textarea
-                          className="resize-none"
-                          {...field}
-                        />
+                        <Textarea className="resize-none" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -109,10 +103,7 @@ export default function FellowEvaluationForm(props: Props) {
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
-                        <Textarea
-                          className="resize-none"
-                          {...field}
-                        />
+                        <Textarea className="resize-none" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
