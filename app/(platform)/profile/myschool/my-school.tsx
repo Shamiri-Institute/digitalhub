@@ -80,19 +80,6 @@ export function MySchool({ school }: { school: School | null }) {
   );
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    if (
-      !form.formState.isDirty &&
-      schoolGender === school?.schoolDemographics &&
-      schoolBordingDay === school?.boardingDay &&
-      schoolType === school?.schoolType
-    ) {
-      toast({
-        variant: "destructive",
-        title: "No school details updated",
-      });
-      return;
-    }
-
     let updatedData = {
       ...data,
       schoolDemographics: schoolGender,
