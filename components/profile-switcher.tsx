@@ -15,13 +15,15 @@ import { signOut, useSession } from "next-auth/react";
 const demoProfile = {
   organization: {
     avatarUrl: "https://i.imgur.com/1s8jfQi.png",
-    name: "Team Shamiri",
-    email: "team@shamiri.institute",
+    name: "Shamiri Institute",
+    email: "tech@shamiri.institute",
   },
 };
 
 export function ProfileSwitcher() {
   const session = useSession();
+
+  console.log({ session });
 
   return (
     <div className="-ml-1.5 flex justify-between">
@@ -35,7 +37,8 @@ export function ProfileSwitcher() {
             fallback={demoProfile.organization.name}
           />
           <div className="text-sm font-medium">
-            {session?.data?.user?.implementer?.name}
+            {session?.data?.user?.implementer?.name ||
+              demoProfile.organization.name}
           </div>
           <Icons.chevronsUpDown
             className={cn("h-5 text-foreground/50", "animate-in hover:fade-in")}
