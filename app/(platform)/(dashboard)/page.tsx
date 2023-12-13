@@ -74,8 +74,10 @@ async function SupervisorView() {
         <h3 className="mt-4 text-base font-semibold text-brand xl:text-2xl">
           Recently opened
         </h3>
-        <div className="mt-4">
-          <SchoolsList />
+        <div className="mb-10 mt-4">
+          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2  xl:grid-cols-3">
+            Coming soon...
+          </div>
         </div>
       </div>
     </div>
