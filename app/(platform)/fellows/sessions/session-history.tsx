@@ -47,7 +47,7 @@ export function SessionHistory({
   return (
     <>
       <div className="flex justify-center">
-        <div className="w-[min(350px,90vw)] pb-20">
+        <div className="w-[min(400px,90vw)] pb-20">
           <FellowSwitcher
             fellowVisibleId={fellow.visibleId.toLocaleUpperCase() ?? null}
             setFellowVisibleId={(visibleId) => {
