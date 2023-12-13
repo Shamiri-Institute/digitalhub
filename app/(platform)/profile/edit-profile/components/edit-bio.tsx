@@ -123,14 +123,6 @@ export default function EditProfileBio({
   const [gender, setGender] = useState<string>(supervisor.gender || "");
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    if (!form.formState.isDirty && gender === supervisor.gender) {
-      toast({
-        variant: "destructive",
-        title: "No info changes made",
-      });
-      return;
-    }
-
     const response = await updateLoggedInSupervisorDetails(
       supervisor.visibleId,
       {
