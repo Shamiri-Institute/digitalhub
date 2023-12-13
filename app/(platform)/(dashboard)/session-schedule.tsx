@@ -112,7 +112,11 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
           ))}
         </div>
       </div>
-      <div className="mt-4 grid grid-rows-5 gap-2 overflow-scroll">
+      <div
+        className={cn("mt-4 grid gap-2 overflow-scroll", {
+          "grid-rows-5": thisWeekSessions.length,
+        })}
+      >
         {scheduleHoursRange.map((hour) =>
           thisWeekSessions.map((session, index) => {
             const isSessionThisHour = session.date.getHours() === hour;
@@ -145,6 +149,13 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
               </div>
             );
           }),
+        )}
+        {!thisWeekSessions.length && (
+          <div className="flex justify-center pb-5 pt-2">
+            <span className="text-center text-xl text-gray-500">
+              No sessions today
+            </span>
+          </div>
         )}
       </div>
     </div>
