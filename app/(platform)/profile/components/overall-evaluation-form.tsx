@@ -1,25 +1,21 @@
-'use client';
-import React from 'react'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "#/components/ui/form";
-import { Textarea } from "#/components/ui/textarea";
-import { LineChart } from "recharts";
+"use client";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { z } from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { Separator } from '#/components/ui/separator';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "#/components/ui/form";
+import { Separator } from "#/components/ui/separator";
+import { Textarea } from "#/components/ui/textarea";
+import React from "react";
+import { useForm } from "react-hook-form";
 
 type Props = {
   children: React.ReactNode;
@@ -47,8 +43,8 @@ export default function FellowEvaluationForm(props: Props) {
             <div>
               <div>Chart goes here</div>
               <div>
-                {props.pastEvaluations.length} Reporting Note
-                {props.pastEvaluations.length === 1 ? "" : "s"}
+                {props.pastEvaluations?.length} Reporting Note
+                {props.pastEvaluations?.length === 1 ? "" : "s"}
               </div>
               <div>
                 <p>Fellow Behaviour</p>
