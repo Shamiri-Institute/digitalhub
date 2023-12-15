@@ -771,4 +771,6 @@ model OverallFellowEvaluation {
   dressingAndGroomingRating Int        @map("dressing_and_grooming_rating")
   dressingAndGroomingNotes  String     @map("dressing_and_grooming_notes") @db.Text()
   attendanceNotes           String     @map("attendance_notes") @db.Text()
+
+  @@map("overall_fellow_evaluation")
 }
