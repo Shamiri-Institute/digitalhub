@@ -38,8 +38,10 @@ type Props = {
   children: ReactNode;
   fellowId: string;
   supervisorId: string;
-  fellowName?: string;
-  reportingNotes?: Prisma.FellowReportingNotesGetPayload<{}>;
+  fellowName: string;
+  reportingNotes: (Prisma.FellowReportingNotesGetPayload<{}> & {
+    supervisor: Prisma.SupervisorGetPayload<{}>;
+  })[];
 };
 
 const InputSchema = ReportingNotesSchema.pick({ notes: true });

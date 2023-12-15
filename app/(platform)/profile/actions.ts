@@ -12,7 +12,7 @@ export async function submitReportingNotes(
     const parsedData = ReportingNotesSchema.parse(data);
 
     await db.fellowReportingNotes.create({
-      data: parsedData
+      data: parsedData,
     });
 
     revalidatePath("/profile");
