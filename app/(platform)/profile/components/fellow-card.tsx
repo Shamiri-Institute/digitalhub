@@ -17,6 +17,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 import FellowDetailsForm from "./fellow-management-form";
+import ReportingNotesForm from "./reporting-notes-form";
 
 export default function FellowCard({
   fellow,
@@ -156,6 +157,11 @@ function FellowCardMenu({
         <DropdownMenuSeparator className="my-2" />
         <MenuLineItem>Submit a Complaint</MenuLineItem>
         <MenuLineItem>Dropout Fellow</MenuLineItem>
+        <MenuLineItem>
+          <ReportingNotesForm>
+            <div className="cursor-pointer">Add reporting notes</div>
+          </ReportingNotesForm>
+        </MenuLineItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
