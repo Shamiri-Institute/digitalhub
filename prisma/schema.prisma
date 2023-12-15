@@ -756,21 +756,18 @@ model FellowReportingNotes {
 }
 
 model OverallFellowEvaluation {
-  id                        String     @id @default(cuid())
-  createdAt                 DateTime   @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt                 DateTime   @updatedAt @map("updated_at")
-  archivedAt                DateTime?  @map("archived_at") @db.Timestamptz()
-  supervisorId              String     @map("supervisor_id") @db.VarChar(255)
-  supervisor                Supervisor @relation(fields: [supervisorId], references: [id])
-  fellowId                  String     @map("fellow_id") @db.VarChar(255)
-  fellow                    Fellow     @relation(fields: [fellowId], references: [id])
-  fellowBehaviourRating     Int        @map("fellow_behaviour_rating")
-  fellowBehaviourNotes      String     @map("fellow_behaviour_notes") @db.Text()
-  programDeliveryRating     Int        @map("program_delivery_rating")
-  programDeliveryNotes      String     @map("program_delivery_notes") @db.Text()
-  dressingAndGroomingRating Int        @map("dressing_and_grooming_rating")
-  dressingAndGroomingNotes  String     @map("dressing_and_grooming_notes") @db.Text()
-  attendanceNotes           String     @map("attendance_notes") @db.Text()
+  id                       String     @id @default(cuid())
+  createdAt                DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                DateTime   @updatedAt @map("updated_at")
+  archivedAt               DateTime?  @map("archived_at") @db.Timestamptz()
+  supervisorId             String     @map("supervisor_id") @db.VarChar(255)
+  supervisor               Supervisor @relation(fields: [supervisorId], references: [id])
+  fellowId                 String     @map("fellow_id") @db.VarChar(255)
+  fellow                   Fellow     @relation(fields: [fellowId], references: [id])
+  fellowBehaviourNotes     String     @map("fellow_behaviour_notes") @db.Text()
+  programDeliveryNotes     String     @map("program_delivery_notes") @db.Text()
+  dressingAndGroomingNotes String     @map("dressing_and_grooming_notes") @db.Text()
+  attendanceNotes          String     @map("attendance_notes") @db.Text()
 
   @@map("overall_fellow_evaluation")
 }

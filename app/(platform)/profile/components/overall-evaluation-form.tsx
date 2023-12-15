@@ -14,8 +14,10 @@ import {
 } from "#/components/ui/form";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { useForm } from "react-hook-form";
+import * as z from 'zod';
 
 type Props = {
   children: React.ReactNode;
@@ -26,10 +28,20 @@ type Props = {
   pastAttendances: any[]; // TODO: tighten types
 };
 
+const InputSchema = z.object({
+  fellowBehaviourNotes: z.string(),
+  programDeliveryNotes: z.string(),
+  dressingAndGroomingNotes: z.string(),
+  attendanceNotes: z.string()
+});
+
+
 export default function FellowEvaluationForm(props: Props) {
   const [open, setDialogOpen] = React.useState<boolean>(false);
 
-  const form = useForm({});
+  const form = useForm<z.infer<typeof InputSchema>>({
+    resolver: zodResolver(InputSchema)
+  });
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -48,7 +60,10 @@ export default function FellowEvaluationForm(props: Props) {
                 {props.pastEvaluations?.length === 1 ? "" : "s"}
               </div>
               <div>
-                <p>Fellow Behaviour</p>
+                <div className="flex gap-4">
+                  <p>Fellow Behaviour</p>
+                  <div></div>
+                </div>
                 <FormField
                   control={form.control}
                   name="fellowBehaviourNotes"
@@ -63,7 +78,9 @@ export default function FellowEvaluationForm(props: Props) {
                 />
               </div>
               <div>
-                <p>Program delivery</p>
+                <div className="flex gap-4">
+                  <p>Program delivery</p>
+                </div>
                 <FormField
                   control={form.control}
                   name="programDeliveryNotes"
