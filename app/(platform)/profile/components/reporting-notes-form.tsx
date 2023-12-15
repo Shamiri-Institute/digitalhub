@@ -1,6 +1,5 @@
-'use client'
-import type { ReactNode } from 'react';
-import { useState } from 'react';
+"use client";
+import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,55 +11,92 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "#/components/ui/form";
-import { useForm } from 'react-hook-form';
-import { Separator } from '#/components/ui/separator';
-import { Textarea } from '#/components/ui/textarea';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '#/components/ui/card';
-import { Button } from '#/components/ui/button';
-
+import { Separator } from "#/components/ui/separator";
+import { Textarea } from "#/components/ui/textarea";
+import { toast } from "#/components/ui/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { ReactNode } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { submitReportingNotes } from "../actions";
+import { ReportingNotesSchema } from "../schema";
 
 type Props = {
   children: ReactNode;
-}
+  fellowId: string;
+  supervisorId: string;
+  fellowName?: string;
+};
+
+const InputSchema = ReportingNotesSchema.pick({ notes: true });
 
 export default function ReportingNotesForm(props: Props) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
-  const form = useForm();
+  const form = useForm<z.infer<typeof InputSchema>>({
+    resolver: zodResolver(InputSchema),
+    defaultValues: {
+      notes: "",
+    },
+  });
+
+  async function onSubmit(data: z.infer<typeof InputSchema>) {
+    const result = await submitReportingNotes({
+      ...data,
+      fellowId: props.fellowId,
+      supervisorId: props.supervisorId,
+    });
+
+    if (!result.success) {
+      toast({
+        variant: "destructive",
+        title: "Form submission error",
+        description: `Failed to submit reporting notes for ${props.fellowName}`,
+      });
+      return;
+    }
+
+    toast({
+      variant: "default",
+      title: "Successful submission",
+      description: `Reporting notes have been added for the ${props.fellowName}`,
+    });
+    form.reset();
+    setDialogOpen(false);
+  }
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger>{props.children}</DialogTrigger>
       <DialogContent>
         <Form {...form}>
-          <form>
-            <Card>
-              <CardHeader>
-                <CardTitle>Reporting Notes</CardTitle>
-              </CardHeader>
-              <Separator />
-              <CardContent>
-                <div>
-                  Past complaints go here
-                </div>
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <DialogHeader>
+              <h2>Reporting Notes</h2>
+            </DialogHeader>
+            <Separator />
+            <div className="my-6">Past complaints go here</div>
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
                     <Textarea placeholder="write notes here" {...field} />
-                  )}
-                />
-              </CardContent>
-              <CardFooter>
-                <Button type="submit" variant="brand">Add Reporting Note</Button>
-              </CardFooter>
-            </Card>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" variant="brand" className="mt-6 w-full">
+              Add Reporting Note
+            </Button>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -158,7 +158,10 @@ function FellowCardMenu({
         <MenuLineItem>Submit a Complaint</MenuLineItem>
         <MenuLineItem>Dropout Fellow</MenuLineItem>
         <MenuLineItem>
-          <ReportingNotesForm>
+          <ReportingNotesForm
+            supervisorId={fellow.supervisorId ?? ""}
+            fellowId={fellow.id ?? ""}
+          >
             <div className="cursor-pointer">Add reporting notes</div>
           </ReportingNotesForm>
         </MenuLineItem>
