@@ -22,7 +22,8 @@ type Props = {
   fellowName: string;
   fellowId: string;
   supervisorId: string;
-  pastEvaluations: any[];
+  pastEvaluations: any[]; // TODO: tighten types
+  pastAttendances: any[]; // TODO: tighten types
 };
 
 export default function FellowEvaluationForm(props: Props) {

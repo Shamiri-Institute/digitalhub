@@ -56,6 +56,7 @@ export async function currentSupervisor() {
               },
             },
           },
+          overallFellowEvaluation: true,
         },
       },
     },

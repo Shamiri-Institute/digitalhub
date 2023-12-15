@@ -158,8 +158,14 @@ function FellowCardMenu({
         <MenuLineItem>Weekly Evaluation</MenuLineItem>
         <DropdownMenuSeparator className="my-2" />
         <MenuLineItem>
-          <FellowEvaluationForm>
-            <div className="cursor-pointer">Complete Overall Evaluation</div>
+          <FellowEvaluationForm
+            fellowName={fellow.fellowName ?? ""}
+            fellowId={fellow.id}
+            supervisorId={fellow.supervisorId ?? ""}
+            pastEvaluations={fellow.overallFellowEvaluation ?? []}
+            pastAttendances={fellow.fellowAttendances ?? []}
+          >
+            Complete Overall Evaluation
           </FellowEvaluationForm>
         </MenuLineItem>
         <MenuLineItem>Submit Complaint</MenuLineItem>
