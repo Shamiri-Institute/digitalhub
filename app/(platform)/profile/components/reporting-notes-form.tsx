@@ -14,10 +14,19 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Separator } from "#/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "#/components/ui/table";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
+import { Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -81,13 +90,30 @@ export default function ReportingNotesForm(props: Props) {
             </DialogHeader>
             <Separator />
             {props.reportingNotes?.length ? (
-              <div className="my-6">
-                {props.reportingNotes.map((n) => (
-                  <div>{n.notes}</div>
-                ))}
-              </div>
+              <Table className="my-6">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Notes</TableHead>
+                    <TableHead className="whitespace-nowrap">
+                      Recorded by
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {props.reportingNotes.map((n) => (
+                    <TableRow key={n.id}>
+                      <TableCell>{n.createdAt.toLocaleString()}</TableCell>
+                      <TableCell>{n.notes}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {n.supervisor.supervisorName}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             ) : (
-              <p>No notes recorded</p>
+              <p className="my-6">No notes recorded</p>
             )}
             <FormField
               control={form.control}
@@ -101,7 +127,15 @@ export default function ReportingNotesForm(props: Props) {
                 </FormItem>
               )}
             />
-            <Button type="submit" variant="brand" className="mt-6 w-full">
+            <Button
+              type="submit"
+              variant="brand"
+              disabled={form.formState.isSubmitting}
+              className="mt-6 w-full"
+            >
+              {form.formState.isSubmitting && !form.formState.isSubmitted ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Add Reporting Note
             </Button>
           </form>

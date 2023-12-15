@@ -12,11 +12,13 @@ export async function submitReportingNotes(
     const parsedData = ReportingNotesSchema.parse(data);
 
     await db.fellowReportingNotes.create({
-      data: parsedData,
+      data: parsedData
     });
+
     revalidatePath("/profile");
     return { success: true, message: "successfully added reporting notes " };
   } catch (e) {
-    return { success: false, errors: e };
+    console.error(e);
+    return { success: false, message: "something went wrong" };
   }
 }
