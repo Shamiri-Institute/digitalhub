@@ -155,7 +155,8 @@ function FellowCardMenu({
         </MenuLineItem>
         <MenuLineItem>Weekly Evaluation</MenuLineItem>
         <DropdownMenuSeparator className="my-2" />
-        <MenuLineItem>Submit a Complaint</MenuLineItem>
+        <MenuLineItem>Submit Complaint</MenuLineItem>
+        <MenuLineItem>Request Repayment</MenuLineItem>
         <MenuLineItem>Dropout Fellow</MenuLineItem>
         <MenuLineItem>
           <ReportingNotesForm

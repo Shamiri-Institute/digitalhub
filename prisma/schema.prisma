@@ -444,6 +444,7 @@ model Fellow {
   fellowAttendances    FellowAttendance[]
   groupSessions        InterventionGroupSession[]
   fellowReportingNotes FellowReportingNotes[]
+  repaymentRequests    RepaymentRequest[]
 
   @@map("fellows")
 }
@@ -512,6 +513,7 @@ model Supervisor {
   reimbursementRequests ReimbursementRequest[]
   studentComplaints     StudentComplaints[]
   fellowReportingNotes  FellowReportingNotes[]
+  repaymentRequests     RepaymentRequest[]
 
   @@map("supervisors")
 }
@@ -579,6 +581,7 @@ model Hub {
   supervisors           Supervisor[]
   schools               School[]
   reimbursementRequests ReimbursementRequest[]
+  repaymentRequests     RepaymentRequest[]
 
   @@map("hubs")
 }
@@ -679,6 +682,7 @@ model InterventionGroupSession {
   sessionId         String              @map("session_id") @db.VarChar(255)
   session           InterventionSession @relation(fields: [sessionId], references: [id])
   fellowAttendances FellowAttendance[]
+  repaymentRequests RepaymentRequest[]
 
   @@map("intervention_group_sessions")
 }
@@ -704,6 +708,22 @@ model ReimbursementRequest {
   mpesaNumber      String          @map("mpesa_number") @db.VarChar(20)
 
   @@map("reimbursement_requests")
+}
+
+model RepaymentRequest {
+  id             String                   @id @default(cuid())
+  createdAt      DateTime                 @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime                 @updatedAt @map("updated_at") @db.Timestamptz()
+  supervisorId   String                   @map("supervisor_id") @db.VarChar(255)
+  supervisor     Supervisor               @relation(fields: [supervisorId], references: [id])
+  fellowId       String                   @map("fellow_id") @db.VarChar(255)
+  fellow         Fellow                   @relation(fields: [fellowId], references: [id])
+  hubId          String                   @map("hub_id") @db.VarChar(255)
+  hub            Hub                      @relation(fields: [hubId], references: [id])
+  groupSessionId String                   @map("group_session_id") @db.VarChar(255)
+  groupSession   InterventionGroupSession @relation(fields: [groupSessionId], references: [id])
+
+  @@map("repayment_requests")
 }
 
 model StudentComplaints {
