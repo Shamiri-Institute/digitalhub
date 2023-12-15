@@ -17,6 +17,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Prisma } from "@prisma/client";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -29,6 +30,7 @@ type Props = {
   fellowId: string;
   supervisorId: string;
   fellowName?: string;
+  reportingNotes?: Prisma.FellowReportingNotesGetPayload<{}>;
 };
 
 const InputSchema = ReportingNotesSchema.pick({ notes: true });
@@ -78,7 +80,15 @@ export default function ReportingNotesForm(props: Props) {
               <h2>Reporting Notes</h2>
             </DialogHeader>
             <Separator />
-            <div className="my-6">Past complaints go here</div>
+            {props.reportingNotes?.length ? (
+              <div className="my-6">
+                {props.reportingNotes.map((n) => (
+                  <div>{n.notes}</div>
+                ))}
+              </div>
+            ) : (
+              <p>No notes recorded</p>
+            )}
             <FormField
               control={form.control}
               name="notes"
