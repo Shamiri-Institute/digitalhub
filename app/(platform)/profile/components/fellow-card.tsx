@@ -158,7 +158,9 @@ function FellowCardMenu({
         <DropdownMenuSeparator className="my-2" />
         <MenuLineItem>Submit Complaint</MenuLineItem>
         <MenuLineItem>
-          <RequestRepaymentDialog>Request Repayment</RequestRepaymentDialog>
+          <RequestRepaymentDialog fellow={fellow}>
+            Request Repayment
+          </RequestRepaymentDialog>
         </MenuLineItem>
         <MenuLineItem>Dropout Fellow</MenuLineItem>
         <MenuLineItem>
