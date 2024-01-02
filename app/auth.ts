@@ -34,7 +34,19 @@ export async function currentSupervisor() {
               supervisor: true,
             },
           },
-          repaymentRequests: true,
+          repaymentRequests: {
+            include: {
+              groupSession: {
+                include: {
+                  session: {
+                    include: {
+                      school: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
           groupSessions: {
             include: {
               session: {
