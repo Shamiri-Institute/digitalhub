@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { AlertTriangleIcon } from "lucide-react";
 import * as React from "react";
 
+import { Combobox } from "#/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -15,9 +16,54 @@ export function RequestRepaymentDialog({
   fellow,
   children,
 }: {
-  fellow: Prisma.FellowGetPayload<{}>;
+  fellow: Prisma.FellowGetPayload<{
+    include: {
+      repaymentRequests: {
+        include: {
+          groupSession: {
+            include: {
+              session: {
+                include: {
+                  school: true;
+                };
+              };
+            };
+          };
+        };
+      };
+      groupSessions: {
+        include: {
+          session: {
+            include: {
+              school: true;
+            };
+          };
+        };
+      };
+    };
+  }>;
   children: React.ReactNode;
 }) {
+  const [activeSchoolId, setActiveSchoolId] = React.useState<string | null>(
+    null,
+  );
+
+  // This dedupes the schools in the group sessions
+  const schools = fellow.groupSessions.reduce<{ id: string; name: string }[]>(
+    (unique, groupSession) => {
+      if (
+        !unique.find((school) => school.id === groupSession.session.school.id)
+      ) {
+        unique.push({
+          id: groupSession.session.school.id,
+          name: groupSession.session.school.schoolName,
+        });
+      }
+      return unique;
+    },
+    [],
+  );
+
   return (
     <Dialog>
       <DialogTrigger>{children}</DialogTrigger>
@@ -31,27 +77,47 @@ export function RequestRepaymentDialog({
         <div className="my-2 space-y-6">
           <MPESADisclaimer />
         </div>
+        <div className="-mb-3.5 flex justify-center text-sm font-medium">
+          MPESA Number
+        </div>
         <div className="flex justify-center text-4xl font-bold">
           {fellow.mpesaNumber}
         </div>
-        <RepaymentRequestHistory
-          repaymentRequests={[
-            {
-              date: "2022-01-01",
-              schoolName: "School 1",
-              sessionNumber: 1,
-              mpesaNumber: "1234567890",
-            },
-            {
-              date: "2022-02-01",
-              schoolName: "School 2",
-              sessionNumber: 2,
-              mpesaNumber: "0987654321",
-            },
-          ]}
-        />
+        <RepaymentRequestHistory repaymentRequests={fellow.repaymentRequests} />
+        <div>
+          <SchoolSelector
+            schools={schools}
+            activeSchoolId={activeSchoolId || ""}
+            onSelectSchool={(schoolId) => {
+              setActiveSchoolId(schoolId);
+            }}
+          />
+        </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+type SchoolSelectorProps = {
+  schools: { id: string; name: string }[];
+  activeSchoolId: string;
+  onSelectSchool: (schoolId: string) => void;
+};
+
+export function SchoolSelector({
+  schools,
+  activeSchoolId,
+  onSelectSchool,
+}: SchoolSelectorProps) {
+  return (
+    <Combobox
+      items={schools.map((school) => ({
+        id: school.id,
+        label: school.name,
+      }))}
+      activeItemId={activeSchoolId}
+      onSelectItem={onSelectSchool}
+    />
   );
 }
 
@@ -77,17 +143,24 @@ function MPESADisclaimer() {
   );
 }
 
-interface RepaymentRequest {
-  date: string;
-  schoolName: string;
-  sessionNumber: number;
-  mpesaNumber: string;
-}
-
 function RepaymentRequestHistory({
+  fellow,
   repaymentRequests,
 }: {
-  repaymentRequests: RepaymentRequest[];
+  fellow: Prisma.FellowGetPayload<{}>;
+  repaymentRequests: Prisma.RepaymentRequestGetPayload<{
+    include: {
+      groupSession: {
+        include: {
+          session: {
+            include: {
+              school: true;
+            };
+          };
+        };
+      };
+    };
+  }>[];
 }) {
   if (repaymentRequests.length === 0) {
     return null;
@@ -107,15 +180,16 @@ function RepaymentRequestHistory({
           </tr>
         </thead>
         <tbody>
-          {repaymentRequests.map((request, index) => (
-            <tr key={index} className="border-gray-200 text-center">
+          {repaymentRequests.map((request) => (
+            <tr key={request.id} className="border-gray-200 text-center">
               <td className="px-2 py-1">
-                {format(new Date(request.date), "dd/MM/yyyy")}
+                {format(new Date(request.createdAt), "dd/MM/yyyy")}
               </td>
               <td className="px-2 py-1">
-                {request.schoolName} — Session {request.sessionNumber}
+                {request.groupSession.session.school.schoolName} — Session{" "}
+                {request.groupSession.session.sessionType}
               </td>
-              <td className="px-2 py-1">{request.mpesaNumber}</td>
+              <td className="px-2 py-1">{fellow.mpesaNumber}</td>
             </tr>
           ))}
         </tbody>
