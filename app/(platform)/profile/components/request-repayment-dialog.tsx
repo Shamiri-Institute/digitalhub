@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { AlertTriangleIcon } from "lucide-react";
 import * as React from "react";
 
+import { Button } from "#/components/ui/button";
 import { Combobox } from "#/components/ui/combobox";
 import {
   Dialog,
@@ -120,7 +121,6 @@ export function RequestRepaymentDialog({
             }}
           />
         </div>
-
         <div>
           <SessionSelector
             sessions={sessions}
@@ -129,6 +129,11 @@ export function RequestRepaymentDialog({
               setActiveSessionId(sessionId);
             }}
           />
+        </div>
+        <div>
+          <Button className="mt-4 w-full bg-shamiri-blue py-6 text-lg hover:bg-brand">
+            Request Repayment
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
