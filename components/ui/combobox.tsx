@@ -43,7 +43,7 @@ export function Combobox({
             <span className="text-left text-base">
               {activeItemId
                 ? items.find((item) => item.id === activeItemId)?.label
-                : "Select item..."}
+                : placeholder || "Select item..."}
             </span>
             <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>

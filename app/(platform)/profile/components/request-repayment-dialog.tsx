@@ -64,6 +64,30 @@ export function RequestRepaymentDialog({
     [],
   );
 
+  const [activeSessionId, setActiveSessionId] = React.useState<string | null>(
+    null,
+  );
+
+  // Sessions based on school selected
+  const sessions = fellow.groupSessions
+    .filter((groupSession) => groupSession.session.school.id === activeSchoolId)
+    .reduce<{ id: string; name: string }[]>((unique, groupSession) => {
+      const sessionExists = unique.some(
+        (session) => session.id === groupSession.session.id,
+      );
+      const sessionDate = groupSession.session.occurringAt
+        ? format(new Date(groupSession.session.occurringAt), "dd/MM/yyyy")
+        : "Unscheduled";
+
+      if (!sessionExists && groupSession.session.occurringAt) {
+        unique.push({
+          id: groupSession.session.id,
+          name: `${groupSession.session.sessionName} - ${sessionDate}`,
+        });
+      }
+      return unique;
+    }, []);
+
   return (
     <Dialog>
       <DialogTrigger>{children}</DialogTrigger>
@@ -83,13 +107,26 @@ export function RequestRepaymentDialog({
         <div className="flex justify-center text-4xl font-bold">
           {fellow.mpesaNumber}
         </div>
-        <RepaymentRequestHistory repaymentRequests={fellow.repaymentRequests} />
+        <RepaymentRequestHistory
+          fellow={fellow}
+          repaymentRequests={fellow.repaymentRequests}
+        />
         <div>
           <SchoolSelector
             schools={schools}
             activeSchoolId={activeSchoolId || ""}
             onSelectSchool={(schoolId) => {
               setActiveSchoolId(schoolId);
+            }}
+          />
+        </div>
+
+        <div>
+          <SessionSelector
+            sessions={sessions}
+            activeSessionId={activeSessionId || ""}
+            onSelectSession={(sessionId) => {
+              setActiveSessionId(sessionId);
             }}
           />
         </div>
@@ -117,13 +154,38 @@ export function SchoolSelector({
       }))}
       activeItemId={activeSchoolId}
       onSelectItem={onSelectSchool}
+      placeholder="Select school..."
+    />
+  );
+}
+
+type SessionSelectorProps = {
+  sessions: { id: string; name: string }[];
+  activeSessionId: string;
+  onSelectSession: (sessionId: string) => void;
+};
+
+export function SessionSelector({
+  sessions,
+  activeSessionId,
+  onSelectSession,
+}: SessionSelectorProps) {
+  return (
+    <Combobox
+      items={sessions.map((session) => ({
+        id: session.id,
+        label: session.name,
+      }))}
+      activeItemId={activeSessionId}
+      onSelectItem={onSelectSession}
+      placeholder="Select session..."
     />
   );
 }
 
 function MPESADisclaimer() {
   return (
-    <div className="rounded-md bg-yellow-50 p-4">
+    <div className="rounded-lg bg-yellow-50 p-4">
       <div className="flex">
         <div className="flex-shrink-0">
           <AlertTriangleIcon
