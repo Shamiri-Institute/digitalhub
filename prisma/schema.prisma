@@ -443,6 +443,7 @@ model Fellow {
   students             Student[]
   fellowAttendances    FellowAttendance[]
   groupSessions        InterventionGroupSession[]
+  FellowReportingNotes FellowReportingNotes[]
 
   @@map("fellows")
 }
@@ -510,6 +511,7 @@ model Supervisor {
   sessionNotes          InterventionSessionNote[]
   reimbursementRequests ReimbursementRequest[]
   StudentComplaints     StudentComplaints[]
+  fellowReportingNotes  FellowReportingNotes[]
 
   @@map("supervisors")
 }
@@ -715,4 +717,15 @@ model StudentComplaints {
   complaint    String
 
   @@map("student_complaints")
+}
+
+model FellowReportingNotes {
+  id           String     @id @default(cuid())
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+  supervisorId String     @map("supervisor_id") @db.VarChar(255)
+  supervisor   Supervisor @relation(fields: [supervisorId], references: [id])
+  fellowId     String     @map("fellow_id") @db.VarChar(255)
+  fellow       Fellow     @relation(fields: [fellowId], references: [id])
+  notes        String     @db.Text()
 }
