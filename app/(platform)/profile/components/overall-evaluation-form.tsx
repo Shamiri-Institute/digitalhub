@@ -17,6 +17,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Prisma } from "@prisma/client";
 import React from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -28,8 +29,9 @@ type Props = {
   fellowName: string;
   fellowId: string;
   supervisorId: string;
-  pastEvaluations?: any[]; // TODO: tighten types
-  pastAttendances?: any[]; // TODO: tighten types
+  previousReportingNotes?: (Prisma.FellowReportingNotesGetPayload<{}> & {
+    supervisor: Prisma.SupervisorGetPayload<{}>;
+  })[];
 };
 
 const InputSchema = OverallFellowSchema.pick({
@@ -90,8 +92,8 @@ export default function FellowEvaluationForm(props: Props) {
             <div className="space-y-6">
               <div>Chart goes here</div>
               <div>
-                {props.pastEvaluations?.length} Reporting Note
-                {props.pastEvaluations?.length === 1 ? "" : "s"}
+                {props.previousReportingNotes?.length} Reporting Note
+                {props.previousReportingNotes?.length === 1 ? "" : "s"}
               </div>
               <div>
                 <div className="flex gap-4">

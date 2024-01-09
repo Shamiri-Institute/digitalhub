@@ -162,8 +162,7 @@ function FellowCardMenu({
             fellowName={fellow.fellowName ?? ""}
             fellowId={fellow.id}
             supervisorId={fellow.supervisorId ?? ""}
-            pastEvaluations={fellow.overallFellowEvaluation ?? []}
-            pastAttendances={fellow.fellowAttendances ?? []}
+            previousReportingNotes={fellow.FellowReportingNotes ?? []}
           >
             <div className="cursor-pointer">Complete Overall Evaluation</div>
           </FellowEvaluationForm>
