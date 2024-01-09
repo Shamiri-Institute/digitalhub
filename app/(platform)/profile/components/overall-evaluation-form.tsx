@@ -15,25 +15,28 @@ import {
 } from "#/components/ui/form";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
+import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { submitOverallFellowReport } from "../actions";
+import { OverallFellowSchema } from "../schema";
 
 type Props = {
   children: React.ReactNode;
   fellowName: string;
   fellowId: string;
   supervisorId: string;
-  pastEvaluations: any[]; // TODO: tighten types
-  pastAttendances: any[]; // TODO: tighten types
+  pastEvaluations?: any[]; // TODO: tighten types
+  pastAttendances?: any[]; // TODO: tighten types
 };
 
-const InputSchema = z.object({
-  fellowBehaviourNotes: z.string(),
-  programDeliveryNotes: z.string(),
-  dressingAndGroomingNotes: z.string(),
-  attendanceNotes: z.string(),
+const InputSchema = OverallFellowSchema.pick({
+  fellowBehaviourNotes: true,
+  programDeliveryNotes: true,
+  dressingAndGroomingNotes: true,
+  attendanceNotes: true,
 });
 
 export default function FellowEvaluationForm(props: Props) {
@@ -41,14 +44,45 @@ export default function FellowEvaluationForm(props: Props) {
 
   const form = useForm<z.infer<typeof InputSchema>>({
     resolver: zodResolver(InputSchema),
+    defaultValues: {
+      fellowBehaviourNotes: "",
+      programDeliveryNotes: "",
+      dressingAndGroomingNotes: "",
+      attendanceNotes: "",
+    },
   });
+
+  async function onSubmit(data: z.infer<typeof InputSchema>) {
+    const result = await submitOverallFellowReport({
+      ...data,
+      fellowId: props.fellowId,
+      supervisorId: props.supervisorId,
+    });
+
+    if (!result.success) {
+      toast({
+        variant: "destructive",
+        title: "Form submission error",
+        description: `Failed to submit overall fellow report for ${props.fellowName}`,
+      });
+      return;
+    }
+
+    toast({
+      variant: "default",
+      title: "Successful submission",
+      description: `Successfully added overall fellow report for ${props.fellowName}`,
+    });
+    form.reset();
+    setDialogOpen(false);
+  }
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{props.children}</DialogTrigger>
       <DialogContent>
         <Form {...form}>
-          <form>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
               <h2>{props.fellowName} Overall Report</h2>
             </DialogHeader>
