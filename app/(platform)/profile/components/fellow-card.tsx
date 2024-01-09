@@ -165,9 +165,7 @@ function FellowCardMenu({
             pastEvaluations={fellow.overallFellowEvaluation ?? []}
             pastAttendances={fellow.fellowAttendances ?? []}
           >
-            <div className="cursor-pointer">
-              Complete Overall Evaluation
-            </div>
+            <div className="cursor-pointer">Complete Overall Evaluation</div>
           </FellowEvaluationForm>
         </MenuLineItem>
         <MenuLineItem>Submit Complaint</MenuLineItem>
