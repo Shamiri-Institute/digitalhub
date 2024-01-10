@@ -131,7 +131,10 @@ export function RequestRepaymentDialog({
           />
         </div>
         <div>
-          <Button className="mt-4 w-full bg-shamiri-blue py-6 text-lg hover:bg-brand">
+          <Button
+            disabled={!activeSchoolId || !activeSessionId}
+            className="mt-4 w-full bg-shamiri-blue py-6 text-lg hover:bg-brand"
+          >
             Request Repayment
           </Button>
         </div>
