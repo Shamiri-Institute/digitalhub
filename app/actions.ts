@@ -1047,3 +1047,60 @@ export async function getSchoolsByHubId(hubId: string) {
     return { error: "Something went wrong" };
   }
 }
+
+export async function AcceptRefferedClinicalCase(
+  currentSupervisorId: string,
+  referredToSupervisorId: string | null,
+  caseId: string,
+) {
+  try {
+    const currentcase = await db.clinicalScreeningInfo.update({
+      where: {
+        id: caseId,
+      },
+      data: {
+        currentSupervisorId: currentSupervisorId,
+        referredToSupervisorId: null,
+        acceptCase: true,
+        caseTransferTrail: {
+          //TODO: ADJUST to correct data
+          create: {
+            from: currentSupervisorId,
+            fromRole: "Supervisor",
+            to: referredToSupervisorId ?? "",
+            toRole: "Supervisor",
+            date: new Date(),
+          },
+        },
+      },
+    });
+
+    revalidatePath("/screenings");
+
+    return { success: true, data: currentcase };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function RejectRefferedClinicalCase(caseId: string) {
+  try {
+    console.log("inside reject case");
+    const currentcase = await db.clinicalScreeningInfo.update({
+      where: {
+        id: caseId,
+      },
+      data: {
+        referredToSupervisorId: null,
+        acceptCase: false,
+      },
+    });
+
+    revalidatePath("/screenings");
+    return { success: true, data: currentcase };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
