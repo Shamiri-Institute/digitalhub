@@ -49,7 +49,7 @@ export class InviteUserCommand extends Command<
     } else if (roleId === "hub-coordinator") {
       implementerRole = ImplementerRole.HUB_COORDINATOR;
     } else if (roleId === "deliver") {
-      implementerRole = ImplementerRole.DELIVER;
+      implementerRole = ImplementerRole.OPERATIONS;
     }
 
     const invitation = await this.db.implementerInvite.create({

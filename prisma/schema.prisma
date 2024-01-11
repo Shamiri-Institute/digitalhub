@@ -69,7 +69,7 @@ model Implementer {
   createdAt          DateTime            @default(now()) @map("created_at")
   updatedAt          DateTime            @updatedAt @map("updated_at")
   archivedAt         DateTime?           @map("archived_at")
-  visibleId          String              @unique @map("visible_id") @db.VarChar(10) // e.g. Imp_1
+  visibleId          String              @unique @map("visible_id") @db.VarChar(100) // e.g. Imp_1
   implementerName    String              @map("implementer_name")
   implementerType    String              @map("implementer_type") // e.g. NGO
   implementerAddress String?             @map("implementer_address") // e.g. MAWEHSI GARDENS, OFF Matumbato Rd, Nairobi
@@ -145,7 +145,7 @@ enum ImplementerRole {
   ADMIN
   HUB_COORDINATOR
   SUPERVISOR
-  DELIVER
+  OPERATIONS
 
   @@map("implementer_roles")
 }
@@ -443,7 +443,7 @@ model Fellow {
   students             Student[]
   fellowAttendances    FellowAttendance[]
   groupSessions        InterventionGroupSession[]
-  FellowReportingNotes FellowReportingNotes[]
+  fellowReportingNotes FellowReportingNotes[]
 
   @@map("fellows")
 }
@@ -510,7 +510,7 @@ model Supervisor {
   sessionRatings        InterventionSessionRating[]
   sessionNotes          InterventionSessionNote[]
   reimbursementRequests ReimbursementRequest[]
-  StudentComplaints     StudentComplaints[]
+  studentComplaints     StudentComplaints[]
   fellowReportingNotes  FellowReportingNotes[]
 
   @@map("supervisors")
@@ -568,7 +568,7 @@ model Hub {
   createdAt             DateTime               @default(now()) @map("created_at")
   updatedAt             DateTime               @updatedAt @map("updated_at")
   archivedAt            DateTime?              @map("archived_at")
-  visibleId             String                 @unique @map("visible_id") @db.VarChar(10)
+  visibleId             String                 @unique @map("visible_id") @db.VarChar(100)
   hubName               String                 @map("hub_name") @db.VarChar(255)
   coordinatorId         String?                @map("coordinator_id")
   coordinator           HubCoordinator?        @relation(fields: [coordinatorId], references: [id])
@@ -588,7 +588,7 @@ model HubCoordinator {
   createdAt             DateTime               @default(now()) @map("created_at")
   updatedAt             DateTime               @updatedAt @map("updated_at")
   archivedAt            DateTime?              @map("archived_at")
-  visibleId             String                 @unique @map("visible_id") @db.VarChar(10) // e.g. 23_HC_01
+  visibleId             String                 @unique @map("visible_id") @db.VarChar(100) // e.g. 23_HC_01
   coordinatorName       String                 @map("coordinator_name") @db.VarChar(255) // e.g. Beverly
   coordinatorEmail      String?                @unique @map("coordinator_email") @db.VarChar(255) // e.g. nalietujoy@gmail.com
   idNumber              String?                @map("id_number") @db.VarChar(255)
@@ -728,4 +728,6 @@ model FellowReportingNotes {
   fellowId     String     @map("fellow_id") @db.VarChar(255)
   fellow       Fellow     @relation(fields: [fellowId], references: [id])
   notes        String     @db.Text()
+
+  @@map("fellow_reporting_notes")
 }
