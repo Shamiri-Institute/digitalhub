@@ -22,7 +22,6 @@ export default async function Page() {
   const my_cases = await db.clinicalScreeningInfo.findMany({
     where: {
       currentSupervisorId: supervisor?.id,
-      // acceptCase: true,
     },
     include: {
       student: true,
