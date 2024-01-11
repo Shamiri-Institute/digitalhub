@@ -51,7 +51,7 @@ export default async function FellowSessionsPage({
     include: {
       hub: true,
       fellowAttendances: true,
-      FellowReportingNotes: {
+      fellowReportingNotes: {
         include: {
           supervisor: true,
         },
