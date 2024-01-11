@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { AlertTriangleIcon } from "lucide-react";
 import * as React from "react";
 
+import { submitRepaymentRequest } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Combobox } from "#/components/ui/combobox";
 import {
@@ -12,37 +13,40 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
+import { useToast } from "#/components/ui/use-toast";
 
-export function RequestRepaymentDialog({
-  fellow,
-  children,
-}: {
-  fellow: Prisma.FellowGetPayload<{
-    include: {
-      repaymentRequests: {
-        include: {
-          groupSession: {
-            include: {
-              session: {
-                include: {
-                  school: true;
-                };
+type RequestRepaymentFellow = Prisma.FellowGetPayload<{
+  include: {
+    repaymentRequests: {
+      include: {
+        groupSession: {
+          include: {
+            session: {
+              include: {
+                school: true;
               };
             };
           };
         };
       };
-      groupSessions: {
-        include: {
-          session: {
-            include: {
-              school: true;
-            };
+    };
+    groupSessions: {
+      include: {
+        session: {
+          include: {
+            school: true;
           };
         };
       };
     };
-  }>;
+  };
+}>;
+
+export function RequestRepaymentDialog({
+  fellow,
+  children,
+}: {
+  fellow: RequestRepaymentFellow;
   children: React.ReactNode;
 }) {
   const [activeSchoolId, setActiveSchoolId] = React.useState<string | null>(
@@ -80,14 +84,53 @@ export function RequestRepaymentDialog({
         ? format(new Date(groupSession.session.occurringAt), "dd/MM/yyyy")
         : "Unscheduled";
 
-      if (!sessionExists && groupSession.session.occurringAt) {
+      if (!sessionExists) {
         unique.push({
-          id: groupSession.session.id,
+          id: groupSession.id,
           name: `${groupSession.session.sessionName} - ${sessionDate}`,
         });
       }
       return unique;
     }, []);
+
+  const { toast } = useToast();
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (!activeSessionId) {
+      toast({ title: "Please select a session" });
+      return;
+    }
+
+    if (!fellow.supervisorId) {
+      toast({ title: "This fellow does not have a supervisor" });
+      return;
+    }
+
+    if (!fellow.hubId) {
+      toast({ title: "This fellow does not have a hub" });
+      return;
+    }
+
+    const response = await submitRepaymentRequest({
+      supervisorId: fellow.supervisorId,
+      fellowId: fellow.id,
+      hubId: fellow.hubId,
+      groupSessionId: activeSessionId,
+    });
+
+    if (response.success) {
+      setActiveSchoolId(null);
+      setActiveSessionId(null);
+      window.location.reload();
+    } else {
+      toast({
+        title: "Failed to submit repayment request",
+        description: response.error,
+      });
+    }
+  }
 
   return (
     <Dialog>
@@ -112,32 +155,35 @@ export function RequestRepaymentDialog({
           fellow={fellow}
           repaymentRequests={fellow.repaymentRequests}
         />
-        <div>
-          <SchoolSelector
-            schools={schools}
-            activeSchoolId={activeSchoolId || ""}
-            onSelectSchool={(schoolId) => {
-              setActiveSchoolId(schoolId);
-            }}
-          />
-        </div>
-        <div>
-          <SessionSelector
-            sessions={sessions}
-            activeSessionId={activeSessionId || ""}
-            onSelectSession={(sessionId) => {
-              setActiveSessionId(sessionId);
-            }}
-          />
-        </div>
-        <div>
-          <Button
-            disabled={!activeSchoolId || !activeSessionId}
-            className="mt-4 w-full bg-shamiri-blue py-6 text-lg hover:bg-brand"
-          >
-            Request Repayment
-          </Button>
-        </div>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div>
+            <SchoolSelector
+              schools={schools}
+              activeSchoolId={activeSchoolId || ""}
+              onSelectSchool={(schoolId) => {
+                setActiveSchoolId(schoolId);
+              }}
+            />
+          </div>
+          <div>
+            <SessionSelector
+              sessions={sessions}
+              activeSessionId={activeSessionId || ""}
+              onSelectSession={(sessionId) => {
+                setActiveSessionId(sessionId);
+              }}
+            />
+          </div>
+          <div>
+            <Button
+              type="submit"
+              disabled={!activeSchoolId || !activeSessionId}
+              className="mt-4 w-full bg-shamiri-blue py-6 text-lg hover:bg-brand"
+            >
+              Request Repayment
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

@@ -25,6 +25,8 @@ async function seedDatabase() {
   await createFellowAttendances(db);
   await createStudents(db);
   await createFixtures(db);
+
+  console.log("Development database seeding complete 🌱");
 }
 
 seedDatabase()
@@ -317,12 +319,7 @@ async function createInterventionGroupSessions(db: Database) {
       where: { hubId: school.hubId },
     });
 
-    // Randomly get up to 4 fellows
-    const randomFellows = fellows
-      .slice()
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 4);
-    for (let fellow of randomFellows) {
+    for (let fellow of fellows) {
       await db.interventionGroupSession.create({
         data: {
           id: objectId("igsess"),
