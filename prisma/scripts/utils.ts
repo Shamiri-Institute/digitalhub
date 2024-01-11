@@ -129,3 +129,15 @@ function replaceEmptyStringsWithNull(obj: GenericObject): GenericObject {
     return newObj;
   }, {});
 }
+
+export function parseCsvBoolean(value: string) {
+  return value === "true";
+}
+
+export function mapSessionTypeToSessionNumber(sessionType: string): number {
+  if (sessionType[0] === "s" && sessionType.length === 2) {
+    return parseInt(sessionType[1]!);
+  }
+
+  throw new Error(`Invalid session type: ${sessionType}`);
+}

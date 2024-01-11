@@ -162,7 +162,7 @@ function FellowCardMenu({
             supervisorId={fellow.supervisorId ?? ""}
             fellowId={fellow.id ?? ""}
             fellowName={fellow.fellowName ?? ""}
-            reportingNotes={fellow.FellowReportingNotes}
+            reportingNotes={fellow.fellowReportingNotes}
           >
             <div className="cursor-pointer">Add reporting notes</div>
           </ReportingNotesForm>
