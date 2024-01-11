@@ -1,13 +1,17 @@
 import { CasesReferredToMe } from "#/app/(platform)/screenings/components/cases-referred-to-me";
 import { CreateClinicalCases } from "#/app/(platform)/screenings/components/create-clinical-cases";
 import { ListViewOfClinicalCases } from "#/app/(platform)/screenings/components/view-clinical-cases";
+import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
 
 export default async function Page() {
 
+  const supervisor = await currentSupervisor();
+
+
   const referred_cases = await db.clinicalScreeningInfo.findMany({
     where: {
-      referredToSupervisorId: "sup_01hkm7xfggej5rwjwkwafp3xwc",
+      referredToSupervisorId: supervisor?.id,
       acceptCase: false,
     },
     include: {
@@ -17,8 +21,8 @@ export default async function Page() {
 
   const my_cases = await db.clinicalScreeningInfo.findMany({
     where: {
-      currentSupervisorId: "sup_01hkm7xfggej5rwjwkwafp3xwc",
-      acceptCase: true,
+      currentSupervisorId: supervisor?.id,
+      // acceptCase: true,
     },
     include: {
       student: true,
@@ -30,9 +34,12 @@ export default async function Page() {
     },
   });
 
+  console.log(my_cases);
+  console.log(referred_cases);
+
   return (
     <div>
-      <CasesReferredToMe cases={referred_cases} />
+      <CasesReferredToMe cases={referred_cases} currentSupervisorId={supervisor.id} />
       <CreateClinicalCases />
       <ListViewOfClinicalCases cases={my_cases} />
     </div>
