@@ -1047,3 +1047,27 @@ export async function getSchoolsByHubId(hubId: string) {
     return { error: "Something went wrong" };
   }
 }
+
+export async function submitRepaymentRequest(data: {
+  supervisorId: string;
+  fellowId: string;
+  hubId: string;
+  groupSessionId: string;
+}) {
+  try {
+    console.log({ data });
+    await db.repaymentRequest.create({
+      data: {
+        id: objectId("repay"),
+        supervisorId: data.supervisorId,
+        fellowId: data.fellowId,
+        hubId: data.hubId,
+        groupSessionId: data.groupSessionId,
+      },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Something went wrong" };
+  }
+}
