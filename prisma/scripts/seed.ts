@@ -25,6 +25,8 @@ async function seedDatabase() {
   await createFellowAttendances(db);
   await createStudents(db);
   await createFixtures(db);
+
+  console.log("Development database seeding complete 🌱");
 }
 
 seedDatabase()
@@ -40,7 +42,7 @@ seedDatabase()
 async function truncateTables() {
   console.log("Truncating tables");
   await db.$executeRaw`
-          TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, user_recent_opens, hubs, students, student_outcomes, fellows, intervention_sessions, intervention_group_sessions, intervention_session_ratings, intervention_session_notes, fellow_attendances, supervisors, schools, hub_coordinators, reimbursement_requests CASCADE;
+          TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, user_recent_opens, hubs, students, student_outcomes, fellows, intervention_sessions, intervention_group_sessions, intervention_session_ratings, intervention_session_notes, fellow_attendances, supervisors, schools, hub_coordinators, student_complaints, repayment_requests, reimbursement_requests CASCADE;
           `;
 }
 
@@ -317,12 +319,7 @@ async function createInterventionGroupSessions(db: Database) {
       where: { hubId: school.hubId },
     });
 
-    // Randomly get up to 4 fellows
-    const randomFellows = fellows
-      .slice()
-      .sort(() => 0.5 - Math.random())
-      .slice(0, 4);
-    for (let fellow of randomFellows) {
+    for (let fellow of fellows) {
       await db.interventionGroupSession.create({
         data: {
           id: objectId("igsess"),

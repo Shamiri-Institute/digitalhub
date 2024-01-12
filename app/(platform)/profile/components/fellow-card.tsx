@@ -4,6 +4,7 @@ import differenceInYears from "date-fns/differenceInYears";
 import Link from "next/link";
 import { useState } from "react";
 
+import { RequestRepaymentDialog } from "#/app/(platform)/profile/components/request-repayment-dialog";
 import type { CurrentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -155,7 +156,12 @@ function FellowCardMenu({
         </MenuLineItem>
         <MenuLineItem>Weekly Evaluation</MenuLineItem>
         <DropdownMenuSeparator className="my-2" />
-        <MenuLineItem>Submit a Complaint</MenuLineItem>
+        <MenuLineItem>Submit Complaint</MenuLineItem>
+        <MenuLineItem>
+          <RequestRepaymentDialog fellow={fellow}>
+            Request Repayment
+          </RequestRepaymentDialog>
+        </MenuLineItem>
         <MenuLineItem>Dropout Fellow</MenuLineItem>
         <MenuLineItem>
           <ReportingNotesForm
