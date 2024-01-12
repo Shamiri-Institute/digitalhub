@@ -2,6 +2,8 @@
 
 # Shamiri Digital Hub
 
+Shamiri Institute is aiming for a digital solution that will help expand its reach and impact. This solution will allow Shamiri to streamline its processes, such as engaging teachers and parents, collecting and reporting data, addressing clinical concerns and monitoring & evaluation of its program.
+
 ## Quickstart
 
 - Install [docker compose](https://docs.docker.com/compose/install/)
