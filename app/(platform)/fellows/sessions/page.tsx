@@ -56,6 +56,28 @@ export default async function FellowSessionsPage({
           supervisor: true,
         },
       },
+      repaymentRequests: {
+        include: {
+          groupSession: {
+            include: {
+              session: {
+                include: {
+                  school: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      groupSessions: {
+        include: {
+          session: {
+            include: {
+              school: true,
+            },
+          },
+        },
+      },
     },
   });
 
