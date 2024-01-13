@@ -38,7 +38,6 @@ type CurrentCase = ClinicalScreeningInfo & {
     sessions: ClinicalSessionAttendance[]
     caseTransferTrail: ClinicalCaseTransferTrail[]
     currentSupervisor: Supervisor
-
 }
 
 type SupervisorWithFellows = Supervisor & {
@@ -87,31 +86,28 @@ export function ReferralFrom({
 
             toast({
                 variant: "default",
-                title: "Request for referal has been sent",
+                title: "Initial case history recorded successfully",
             });
+
             form.reset();
         } catch (error) {
             toast({
                 variant: "destructive",
-                title: "Error sending request for referal. Please try again",
+                title: "Error recording initial case history. Please try again",
             });
         }
-
     }
 
 
     useEffect((
     ) => {
-        // filter and get supervisor who that id matches
         const selectedSupervisor = supervisors.filter((supervisor) => supervisor.id == selectedSupervisorId)
         setSelectedSupervisor(selectedSupervisor)
-    }
-        , [selectedSupervisorId])
+    }, [selectedSupervisorId])
 
     return (
         <div className="mt-2 flex flex-col gap-5 px-1">
             <div>
-                {currentcase.initialCaseHistoryId}
                 <Form {...form}>
                     <form
                         id="submitReferralForm"
@@ -141,6 +137,7 @@ export function ReferralFrom({
                                                     }
 
                                                 }}
+                                                disabled={currentcase.initialCaseHistoryOwnerId !== currentSupId}
                                             >
                                                 <SelectTrigger>
                                                     <SelectValue
@@ -273,6 +270,7 @@ export function ReferralFrom({
                                 type="submit"
                                 form="submitReferralForm"
                                 className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
+                                disabled={currentcase.initialCaseHistoryOwnerId !== currentSupId}
                             >
                                 Save
                             </Button>
@@ -312,8 +310,8 @@ function SingleHistory({
         <li>
             <p className="mb-2 ml-2 text-xs text-brand">
                 {
-                    new Date(date).toLocaleDateString()
-                } - Referred from {referredFrom} to {referredTo}.
+                    referredFrom === "Other" ? `${new Date(date).toLocaleDateString()}  Referred from ${referredFrom} reason: ${referredTo}` : `${new Date(date).toLocaleDateString()} - Referred from ${referredFrom} to ${referredTo}.`
+                }
             </p>
         </li>
     );
