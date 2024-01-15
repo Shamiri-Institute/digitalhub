@@ -27,6 +27,7 @@ import { format } from "date-fns";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { updateClinicalCaseSessionAttendance } from "#/app/actions";
+import { useState } from "react";
 
 const FormSchema = z.object({
   session: z.string({
@@ -47,6 +48,7 @@ export function AddClinicalSessionDialog({
   supervisorId: string;
   children: React.ReactNode;
 }) {
+  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
 
   const { toast } = useToast();
 
@@ -72,13 +74,14 @@ export function AddClinicalSessionDialog({
     });
 
     form.reset();
+    setDialogOpen(false);
 
   }
 
   return (
-    <Dialog>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="gap-0 p-0">
+      <DialogContent className="gap-0 p-4">
 
 
         <DialogHeader className="space-y-0 px-1 py-4">
