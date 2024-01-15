@@ -8,23 +8,35 @@ import {
 } from "#/components/ui/accordion";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
-import { ClinicalScreeningInfo, ClinicalSessionAttendance, Student, ClinicalExpertCaseNotes, Supervisor } from "@prisma/client";
+import { ClinicalScreeningInfo, ClinicalSessionAttendance, Student, ClinicalExpertCaseNotes, Supervisor, Fellow, ClinicalCaseTransferTrail } from "@prisma/client";
 import ConsultingClinicalExpertComments from "./consulting-clinical-expert";
 import { PresentingIssues } from "./presenting-issues";
-import { ReferralDetails } from "./referral-details";
+import { ReferralToDetails } from "./referral-details";
 import { Sessions } from "./student-sessions";
+import { ReferralFrom } from "#/app/(platform)/screenings/[caseId]/reffered-from";
 
 type CurrentCase = ClinicalScreeningInfo & {
     student: Student
     sessions: ClinicalSessionAttendance[]
     consultationComments: ClinicalExpertCaseNotes[]
+    currentSupervisor: Supervisor
+    caseTransferTrail: ClinicalCaseTransferTrail[]
+    consultingClinicalExpert: ClinicalExpertCaseNotes[]
 }
+
+type SupervisorWithFellows = Supervisor & {
+    fellows: Fellow[]
+}
+
+
 export function StudentCaseTabs({
     currentcase,
-    supervisors = []
+    supervisors = [],
+    currentSupId,
 }: {
     currentcase: CurrentCase,
-    supervisors: Supervisor[]
+    supervisors: SupervisorWithFellows[]
+    currentSupId: string | undefined
 }) {
     return (
         <div className="mt-4">
@@ -74,15 +86,32 @@ export function StudentCaseTabs({
                         iconClass={"h-7 w-7 mr-3 text-brand"}
                     >
                         <div className="flex items-center">
-                            <Icons.referral className="mr-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
-                            <span className="items-center align-middle">Referral</span>
+                            <Icons.network className="mr-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
+                            <span className="items-center align-middle">Referral From</span>
                         </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                        <ReferralDetails currentcase={currentcase} supervisors={supervisors} />
+                        <ReferralFrom currentcase={currentcase} supervisors={supervisors} currentSupId={currentSupId} />
                     </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-4">
+                    <AccordionTrigger
+                        className={cn(
+                            "items-right border border-border/50 bg-white px-5",
+                            "data-[state=open]:bg-shamiri-blue"
+                        )}
+                        iconClass={"h-7 w-7 mr-3 text-brand"}
+                    >
+                        <div className="flex items-center">
+                            <Icons.referral className="mr-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
+                            <span className="items-center align-middle">Refer To </span>
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <ReferralToDetails currentcase={currentcase} supervisors={supervisors} currentSupId={currentSupId} />
+                    </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-5">
                     <AccordionTrigger
                         className={cn(
                             "items-right border border-border/50 bg-white px-5",

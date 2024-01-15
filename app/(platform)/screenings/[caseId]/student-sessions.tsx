@@ -5,30 +5,7 @@ import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 import { ClinicalSessionAttendance } from "@prisma/client";
 
-// const sample_sessions_attended = [
-//   {
-//     name: "Nishan",
-//     session: "1",
-//     date: "20 Aug 2021",
-//   },
-//   {
-//     name: "Sweet",
-//     session: "4",
-//     date: "19 Jan 2021",
-//   },
-//   {
-//     name: "Orion",
-//     session: "3",
-//     date: "03 Aug 2021",
-//   },
-//   {
-//     name: "Esther",
-//     session: "2",
-//     date: "20 Feb 2021",
-//   },
-// ];
-
-type SessionsType = ClinicalSessionAttendance[]
+type SessionsType = ClinicalSessionAttendance
 
 export function Sessions({ caseId, sessions, supervisorId }: { caseId: string, sessions: SessionsType[], supervisorId: string }) {
   return (
@@ -42,14 +19,6 @@ export function Sessions({ caseId, sessions, supervisorId }: { caseId: string, s
           <p className="text-base font-medium text-muted-foreground">Date</p>
         </div>
         <Separator />
-        {/* {sessions.map((stud: SessionsType, index) => (
-          <SessionsCard
-            key={stud.id}
-            id={index}
-            session={stud.session}
-            date={stud.date}
-          />
-        ))} */}
         <>
           {
             sessions.map((session, index) => (
