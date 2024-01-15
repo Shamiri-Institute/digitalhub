@@ -18,6 +18,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 import FellowDetailsForm from "./fellow-management-form";
+import FellowEvaluationForm from "./overall-evaluation-form";
 import ReportingNotesForm from "./reporting-notes-form";
 
 export default function FellowCard({
@@ -156,6 +157,16 @@ function FellowCardMenu({
         </MenuLineItem>
         <MenuLineItem>Weekly Evaluation</MenuLineItem>
         <DropdownMenuSeparator className="my-2" />
+        <MenuLineItem>
+          <FellowEvaluationForm
+            fellowName={fellow.fellowName ?? ""}
+            fellowId={fellow.id}
+            supervisorId={fellow.supervisorId ?? ""}
+            previousReportingNotes={fellow.fellowReportingNotes ?? []}
+          >
+            <div className="cursor-pointer">Complete Overall Evaluation</div>
+          </FellowEvaluationForm>
+        </MenuLineItem>
         <MenuLineItem>Submit Complaint</MenuLineItem>
         <MenuLineItem>
           <RequestRepaymentDialog fellow={fellow}>
