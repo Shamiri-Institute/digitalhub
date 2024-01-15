@@ -8,7 +8,6 @@ export default async function Page() {
 
   const supervisor = await currentSupervisor();
 
-
   const referred_cases = await db.clinicalScreeningInfo.findMany({
     where: {
       referredToSupervisorId: supervisor?.id,
@@ -23,6 +22,9 @@ export default async function Page() {
     where: {
       currentSupervisorId: supervisor?.id,
     },
+    orderBy: {
+      createdAt: "desc"
+    },
     include: {
       student: true,
       sessions: {
@@ -33,13 +35,28 @@ export default async function Page() {
     },
   });
 
-  console.log(my_cases);
-  console.log(referred_cases);
+  const schools = await db.school.findMany({
+    where: {
+      hubId: supervisor?.hubId
+    },
+    include: {
+      students: true,
+      supervisors: {
+        include: {
+          fellows: {
+            include: {
+              students: true
+            }
+          }
+        }
+      }
+    }
+  })
 
   return (
     <div>
-      <CasesReferredToMe cases={referred_cases} currentSupervisorId={supervisor.id} />
-      <CreateClinicalCases />
+      <CasesReferredToMe cases={referred_cases} currentSupervisorId={supervisor?.id} />
+      <CreateClinicalCases currentSupervisorId={supervisor?.id} schools={schools} />
       <ListViewOfClinicalCases cases={my_cases} />
     </div>
   )
