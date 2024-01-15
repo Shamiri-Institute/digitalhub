@@ -8,13 +8,14 @@ import {
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
 import { useEffect, useState } from "react";
-import { Form, FormField } from "#/components/ui/form";
+import { Form, FormField, } from "#/components/ui/form";
 import { z } from "zod";
 import { useToast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { referClinicalCaseSupervisor } from "#/app/actions";
 import { ClinicalCaseTransferTrail, ClinicalScreeningInfo, ClinicalSessionAttendance, Student, Supervisor } from "@prisma/client";
+import { Input } from "#/components/ui/input";
 
 export const FormSchema = z.object({
   referredTo: z
@@ -27,6 +28,9 @@ export const FormSchema = z.object({
   }),
   referralNotes: z.string({
     required_error: "Please enter the referral notes.",
+  }).optional(),
+  externalCare: z.string({
+    required_error: "Please enter the external care.",
   }).optional(),
 
 });
@@ -71,6 +75,7 @@ export function ReferralToDetails({
       referredFromSpecified: currentcase.currentSupervisor.supervisorName ?? "",
       referredFrom: currentSupId,
       referredToPerson: selectedOption !== "Supervisor" ? null : data.referredToPerson, //todo: @hinn254 update to clinical leads/external care id's once we have them
+      externalCare: selectedOption !== "External Care" ? null : data.externalCare,
     });
 
     toast({
@@ -112,6 +117,9 @@ export function ReferralToDetails({
                         onValueChange={(value) => {
                           field.onChange(value);
                           setSelectedOption(value);
+                          setSelectedSupervisorId("");
+                          setSelectedSupervisor("");
+
                         }}
                       >
                         <SelectTrigger>
@@ -175,6 +183,27 @@ export function ReferralToDetails({
                   )}
                 />
               </div>}
+
+              {
+                selectedOption == "External Care" && <div>
+                  <FormField
+                    control={form.control}
+                    name="externalCare"
+                    render={({ field }) => (
+                      <div className="mt-3 grid w-full gap-1.5">
+                        <Input
+                          id="externalCare"
+                          className="mt-1.5 resize-none bg-card"
+                          placeholder="Write external care here..."
+                          data-1p-ignore="true"
+                          {...field}
+                        />
+                      </div>
+                    )}
+                  />
+                </div>
+              }
+
 
               <div>
                 <FormField
