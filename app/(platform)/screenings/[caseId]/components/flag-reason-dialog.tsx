@@ -56,6 +56,8 @@ export function FlagStudentDialog({
         variant: "default",
         title: "Case flagged for follow up",
       });
+      form.reset();
+      setDialogOpen(false);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -98,7 +100,8 @@ export function FlagStudentDialog({
                         id="reason"
                         name="reason"
                         onChange={field.onChange}
-                        defaultValue={field.value}
+                        // defaultValue={field.value}
+                        defaultValue={reason ?? field.value}
                         placeholder="e.g. This case needs the police because..."
                         className="mt-1.5 resize-none bg-card"
                       />
