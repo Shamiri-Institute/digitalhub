@@ -52,7 +52,7 @@ export function ReferralFrom({
 }: {
     currentcase: CurrentCase;
     supervisors: SupervisorWithFellows[];
-    currentSupId: string;
+    currentSupId: string | undefined;
 }) {
 
     const { toast } = useToast();
