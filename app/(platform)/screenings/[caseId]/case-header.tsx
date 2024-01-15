@@ -35,6 +35,7 @@ type CasesType = ClinicalScreeningInfo & {
   sessions: ClinicalSessionAttendance[]
 }
 
+
 export default function CaseHeader({ currentcase }: { currentcase: CasesType }) {
   const [selected, setSelected] = useState<string>(currentcase.caseStatus);
   const [color, setColor] = useState<string | undefined>("");

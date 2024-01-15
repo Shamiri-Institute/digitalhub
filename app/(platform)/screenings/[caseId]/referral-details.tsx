@@ -48,7 +48,7 @@ export function ReferralToDetails({
 }: {
   currentcase: CurrentCase;
   supervisors: Supervisor[];
-  currentSupId: string;
+  currentSupId: string | undefined;
 }) {
 
   const { toast } = useToast();
@@ -73,7 +73,7 @@ export function ReferralToDetails({
       ...data,
       referralNotes: data.referralNotes ?? "",
       referredFromSpecified: currentcase.currentSupervisor.supervisorName ?? "",
-      referredFrom: currentSupId,
+      referredFrom: currentSupId ?? "",
       referredToPerson: selectedOption !== "Supervisor" ? null : data.referredToPerson, //todo: @hinn254 update to clinical leads/external care id's once we have them
       externalCare: selectedOption !== "External Care" ? null : data.externalCare,
     });
