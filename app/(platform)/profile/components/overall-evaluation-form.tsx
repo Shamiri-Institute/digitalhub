@@ -85,12 +85,12 @@ export default function FellowEvaluationForm(props: Props) {
       <DialogContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <DialogHeader>
-              <h2>{props.fellowName} Overall Report</h2>
+            <DialogHeader className="mb-4">
+              <h2 className="text-brand text-2xl">{props.fellowName} Overall Report</h2>
             </DialogHeader>
             <Separator />
-            <div className="space-y-6">
-              <div>Chart goes here</div>
+            <div className="space-y-6 mt-4">
+              {/*TODO: <div>Chart goes here</div>*/}
               <div>
                 {props.previousReportingNotes?.length} Reporting Note
                 {props.previousReportingNotes?.length === 1 ? "" : "s"}
