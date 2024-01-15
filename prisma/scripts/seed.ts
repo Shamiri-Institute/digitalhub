@@ -25,6 +25,7 @@ async function seedDatabase() {
   await createFellowAttendances(db);
   await createStudents(db);
   await createFixtures(db);
+  await createOverallEvaluationRatings(db);
 
   console.log("Development database seeding complete 🌱");
 }
@@ -527,4 +528,24 @@ async function createFixtures(db: Database) {
   await db.reimbursementRequest.createMany({
     data,
   });
+}
+
+async function createOverallEvaluationRatings(db: Database) {
+  console.log("Adding overall evaluation ratings");
+  const fellows = await db.fellow.findMany();
+
+  const data = [];
+  for (const fellow of fellows) {
+    if (fellow.supervisorId) {
+      data.push({
+        supervisorId: fellow.supervisorId,
+        fellowId: fellow.id,
+        fellowBehaviourNotes: faker.lorem.paragraph({ min: 3, max: 3 }),
+        programDeliveryNotes: faker.lorem.paragraph({ min: 3, max: 3 }),
+        dressingAndGroomingNotes: faker.lorem.paragraph({ min: 3, max: 3 }),
+        attendanceNotes: faker.lorem.paragraph({ min: 3, max: 3 }),
+      });
+    }
+  }
+  await db.overallFellowEvaluation.createMany({ data });
 }
