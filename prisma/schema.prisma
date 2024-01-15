@@ -769,5 +769,5 @@ model OverallFellowEvaluation {
   dressingAndGroomingNotes String     @map("dressing_and_grooming_notes") @db.Text()
   attendanceNotes          String     @map("attendance_notes") @db.Text()
 
-  @@map("overall_fellow_evaluation")
+  @@map("overall_fellow_evaluations")
 }
