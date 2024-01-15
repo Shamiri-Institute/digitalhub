@@ -14,7 +14,7 @@ type CasesType = ClinicalScreeningInfo & {
 
 export function CasesReferredToMe({ cases = [], currentSupervisorId }: {
     cases: CasesType[];
-    currentSupervisorId: string;
+    currentSupervisorId: string | undefined;
 }) {
 
     return (
@@ -28,14 +28,14 @@ export function CasesReferredToMe({ cases = [], currentSupervisorId }: {
                     key={stud.id}
                     name={stud?.student.studentName}
                     caseId={stud.id}
-                    currentSupervisorId={currentSupervisorId}
+                    currentSupervisorId={currentSupervisorId || ""}
                     referredToSupervisorId={stud.referredToSupervisorId}
                 />
             ))}
             {cases.length === 0 && (
                 <div className="flex justify-center items-center h-40">
                     <p className="text-base font-medium text-muted-foreground">
-                        No cases referred to you
+                        No cases referred to you yet...
                     </p>
                 </div>
             )
