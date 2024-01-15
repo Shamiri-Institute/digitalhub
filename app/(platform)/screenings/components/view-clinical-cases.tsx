@@ -99,11 +99,18 @@ function ClinicalCasses({
           caseId={stud.id}
           name={stud.student.studentName}
           session={stud.sessions.findLast((session) => session.session)?.session.toString() ?? "0"}
-          // session={"1"}
           risk={stud.riskStatus}
           status={stud.caseStatus}
         />
       ))}
+
+      {newList.length === 0 && (
+        <div className="flex justify-center items-center h-40">
+          <p className="text-base font-medium text-muted-foreground">
+            No clinical cases yet...
+          </p>
+        </div>
+      )}
     </Card>
   );
 }
