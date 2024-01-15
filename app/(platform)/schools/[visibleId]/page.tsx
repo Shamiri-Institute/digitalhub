@@ -83,27 +83,7 @@ export default async function SchoolDetailPage({
           <div className="h-4 w-4 rounded-full bg-shamiri-red" />
         </div>
       </div>
-      <div className="mt-8">
-        <div className="mx-4 flex justify-between border-b border-border/50 pb-3">
-          <div className="text-2xl font-semibold">Fellows</div>
-          <FellowModifyDialog
-            mode="create"
-            info={{
-              hubVisibleId: school?.hub?.visibleId!,
-              supervisorVisibleId: supervisor.visibleId,
-              implementerVisibleId: school?.implementer?.visibleId!,
-              schoolVisibleId: school.visibleId,
-            }}
-          >
-            <button className="transition-transform active:scale-95">
-              <Icons.plusCircle
-                className="h-6 w-6 text-shamiri-blue"
-                strokeWidth={1.5}
-              />
-            </button>
-          </FellowModifyDialog>
-        </div>
-      </div>
+      <div className="mt-8 text-2xl font-semibold">Fellows</div>
       <div className="mx-4 mt-8">
         <FellowsList school={school} supervisor={supervisor} />
       </div>
