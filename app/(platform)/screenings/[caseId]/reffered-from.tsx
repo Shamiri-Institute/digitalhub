@@ -60,10 +60,12 @@ export function ReferralFrom({
     const [selectedSupervisorId, setSelectedSupervisorId] = useState<string>("");
     const [selectedSupervisor, setSelectedSupervisor] = useState<SupervisorWithFellows[]>([])
 
+    const referralFrom = currentcase.caseTransferTrail.filter(case_item => case_item.id === currentcase.initialCaseHistoryId)[0]
+
     const form = useForm<z.infer<typeof FormSchema>>({
         resolver: zodResolver(FormSchema),
         defaultValues: {
-            referredFrom: currentcase.referredFrom ?? "",
+            referredFrom: "",
             supervisor: "",
             fellow: "",
             other: ""
@@ -78,7 +80,7 @@ export function ReferralFrom({
                 caseId: currentcase.id,
                 referredFrom: data.referredFrom, //supervisor or fellow or teacher
                 referredFromSpecified: data.fellow ?? "", // like fellow name but blank if not
-                referredTo: "Supervisor", // since its the logged in supervisor
+                referredTo: currentcase?.currentSupervisor?.supervisorName || "Supervisor", // since its the logged in supervisor
                 referredToSpecified: data.other ? data.other : currentcase?.currentSupervisor?.supervisorName ?? "",
                 supervisorId: currentSupId ?? "",
                 initialCaseId: currentcase.initialCaseHistoryId ?? "",
@@ -126,7 +128,8 @@ export function ReferralFrom({
                                         <div className="mt-3 grid w-full gap-1.5">
                                             <Select
                                                 name="referredFrom"
-                                                defaultValue={field.value}
+                                                // defaultValue={field.value}
+                                                defaultValue={referralFrom?.fromRole ?? field.value}
                                                 onValueChange={(value) => {
                                                     field.onChange(value);
                                                     setReferredSelected(value);
@@ -137,7 +140,7 @@ export function ReferralFrom({
                                                     }
 
                                                 }}
-                                                disabled={currentcase.initialCaseHistoryOwnerId !== currentSupId}
+                                                disabled={!!currentcase.initialCaseHistoryOwnerId && currentcase.initialCaseHistoryOwnerId !== currentSupId}
                                             >
                                                 <SelectTrigger>
                                                     <SelectValue
@@ -270,7 +273,7 @@ export function ReferralFrom({
                                 type="submit"
                                 form="submitReferralForm"
                                 className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
-                                disabled={currentcase.initialCaseHistoryOwnerId !== currentSupId}
+                                disabled={!!currentcase.initialCaseHistoryOwnerId && currentcase.initialCaseHistoryOwnerId !== currentSupId}
                             >
                                 Save
                             </Button>
@@ -282,14 +285,19 @@ export function ReferralFrom({
             <div>
                 <h3 className="mb-2 text-sm font-semibold text-brand">Initial case history</h3>
                 <ul>
-                    {currentcase.caseTransferTrail.map((case_item, i) => (
-                        <SingleHistory
-                            key={case_item.id}
-                            date={case_item.date}
-                            referredFrom={case_item.from == "" ? case_item.fromRole : case_item.from}
-                            referredTo={case_item.to == "" ? case_item.toRole : case_item.to}
-                        />
-                    ))}
+                    {currentcase.caseTransferTrail.map((case_item, i) => {
+                        if (case_item.id === currentcase.initialCaseHistoryId) {
+                            return (
+                                <SingleHistory
+                                    key={case_item.id}
+                                    date={case_item.date}
+                                    referredFrom={case_item.from == "" ? case_item.fromRole : case_item.from}
+                                    referredTo={case_item.to == "" ? case_item.toRole : case_item.to}
+                                />
+                            )
+                        }
+                    }
+                    )}
                 </ul>
             </div>
 
