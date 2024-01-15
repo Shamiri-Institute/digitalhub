@@ -111,11 +111,13 @@ const supervisorNavigationItems: NavigationItem[] = [
     title: "Schools",
     Icon: Icons.schoolMinusOutline,
   },
+  /* FIXME: revisit if we have any flows that need to sit at this page. As per the requirements, all fellow flows should happen from the my profile page
   {
     path: "/fellows",
     title: "Fellows",
     Icon: Icons.users,
   },
+  */
   {
     path: "/screenings",
     title: "Clinical Cases",
