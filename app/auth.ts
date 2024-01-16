@@ -29,11 +29,34 @@ export async function currentSupervisor() {
         include: {
           hub: true,
           fellowAttendances: true,
-          FellowReportingNotes: {
+          fellowReportingNotes: {
             include: {
               supervisor: true,
             },
           },
+          repaymentRequests: {
+            include: {
+              groupSession: {
+                include: {
+                  session: {
+                    include: {
+                      school: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          groupSessions: {
+            include: {
+              session: {
+                include: {
+                  school: true,
+                },
+              },
+            },
+          },
+          overallFellowEvaluation: true,
         },
       },
     },

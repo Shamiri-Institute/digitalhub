@@ -25,7 +25,7 @@ export const fixtures: Fixtures = {
       email: "benny@shamiri.institute",
       name: "Benny H. Otieno",
       implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.ADMIN,
+      implementerRole: ImplementerRole.OPERATIONS,
       avatarUrl:
         "https://shamiridigitalhub-public.s3.af-south-1.amazonaws.com/benny-h-otieno-headshot.jpeg",
     },
@@ -41,7 +41,7 @@ export const fixtures: Fixtures = {
       name: "Edmund Korley",
       avatarUrl: null,
       implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.ADMIN,
+      implementerRole: ImplementerRole.HUB_COORDINATOR,
     },
     {
       email: "dmndetei@amhf.or.ke",
@@ -154,7 +154,7 @@ export const fixtures: Fixtures = {
       name: "Shadrack Lilan",
       avatarUrl: null,
       implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.ADMIN,
+      implementerRole: ImplementerRole.SUPERVISOR,
     },
   ],
 };

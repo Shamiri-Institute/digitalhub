@@ -1,12 +1,6 @@
 "use server";
 
-import {
-  Fellow,
-  FellowAttendance,
-  Prisma,
-  caseStatusOptions,
-  riskStatusOptions,
-} from "@prisma/client";
+import { Fellow, FellowAttendance, Prisma } from "@prisma/client";
 import * as csv from "csv-parse";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -18,7 +12,6 @@ import { getCurrentUser } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { getHighestValue } from "#/lib/utils";
 import { EditFellowSchema } from "#/lib/validators";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 
@@ -1052,6 +1045,30 @@ export async function getSchoolsByHubId(hubId: string) {
   } catch (e) {
     console.error(e);
     return { error: "Something went wrong" };
+  }
+}
+
+export async function submitRepaymentRequest(data: {
+  supervisorId: string;
+  fellowId: string;
+  hubId: string;
+  groupSessionId: string;
+}) {
+  try {
+    console.log({ data });
+    await db.repaymentRequest.create({
+      data: {
+        id: objectId("repay"),
+        supervisorId: data.supervisorId,
+        fellowId: data.fellowId,
+        hubId: data.hubId,
+        groupSessionId: data.groupSessionId,
+      },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Something went wrong" };
   }
 }
 
