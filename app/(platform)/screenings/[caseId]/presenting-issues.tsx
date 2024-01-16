@@ -1,18 +1,26 @@
 "use client";
+import { updateClinicalCaseEmergencyPresentingIssue } from "#/app/actions";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
+import {
+  ClinicalScreeningInfo,
+  ClinicalSessionAttendance,
+  Prisma,
+  Student,
+} from "@prisma/client";
 import { useState } from "react";
 import GeneralIssues from "./general-issues";
-import { ClinicalScreeningInfo, ClinicalSessionAttendance, Prisma, Student } from "@prisma/client";
-import { updateClinicalCaseEmergencyPresentingIssue } from "#/app/actions";
-
 
 type CurrentCase = ClinicalScreeningInfo & {
-  student: Student
-  sessions: ClinicalSessionAttendance[]
-}
-export function PresentingIssues({ currentcase }: { currentcase: CurrentCase }) {
+  student: Student;
+  sessions: ClinicalSessionAttendance[];
+};
+export function PresentingIssues({
+  currentcase,
+}: {
+  currentcase: CurrentCase;
+}) {
   return (
     <div className="mt-4">
       <h3 className="mb-2 text-sm font-medium text-muted-foreground">
@@ -54,7 +62,12 @@ function DiagnosingBoard({ currentcase }: { currentcase: CurrentCase }) {
         </div>
       </div>
       {emergency_options.map((option) => (
-        <IssueOptions emergency_options={currentcase.emergencyPresentingIssues} caseId={currentcase.id} key={option.id} name={option.name} />
+        <IssueOptions
+          emergency_options={currentcase.emergencyPresentingIssues}
+          caseId={currentcase.id}
+          key={option.id}
+          name={option.name}
+        />
       ))}
     </div>
   );
@@ -69,7 +82,6 @@ function SingleIssueOption({
   onSelect: (option: string) => void;
   option: string;
 }) {
-
   return (
     <div className="flex">
       <button
@@ -83,15 +95,22 @@ function SingleIssueOption({
   );
 }
 
-function IssueOptions({ name, caseId, emergency_options = {} }: {
-  name: string, caseId: string, emergency_options: { [key: string]: string } | Prisma.JsonValue | null
+function IssueOptions({
+  name,
+  caseId,
+  emergency_options = {},
+}: {
+  name: string;
+  caseId: string;
+  emergency_options: { [key: string]: string } | Prisma.JsonValue | null;
 }) {
-
   if (!emergency_options) {
-    emergency_options = {}
+    emergency_options = {};
   }
 
-  const [selected, setSelected] = useState<string>(emergency_options[name] ?? "");
+  const [selected, setSelected] = useState<string>(
+    emergency_options[name] ?? "",
+  );
 
   const handlePresentingIssue = async (option: string) => {
     let valueSelected = { name, option };
@@ -105,24 +124,22 @@ function IssueOptions({ name, caseId, emergency_options = {} }: {
           caseId: caseId,
           presentingIssues: {
             ...result,
-            [valueSelected.name]: ""
-          }
-        })
+            [valueSelected.name]: "",
+          },
+        });
         return;
       } else {
-
         setSelected(option);
         await updateClinicalCaseEmergencyPresentingIssue({
           caseId: caseId,
           presentingIssues: {
-            ...result
-          }
-        })
+            ...result,
+          },
+        });
       }
     } catch (error) {
       console.log(error);
     }
-
   };
 
   return (

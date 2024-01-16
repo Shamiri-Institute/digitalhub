@@ -6,7 +6,13 @@ import {
 } from "#/components/ui/dialog";
 import { ClinicalExpertCaseNotes } from "@prisma/client";
 
-const CommentsDialogue = ({ children, consultingClinicalExpert }: { children: React.ReactNode, consultingClinicalExpert: ClinicalExpertCaseNotes[] }) => {
+const CommentsDialogue = ({
+  children,
+  consultingClinicalExpert,
+}: {
+  children: React.ReactNode;
+  consultingClinicalExpert: ClinicalExpertCaseNotes[];
+}) => {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -14,7 +20,8 @@ const CommentsDialogue = ({ children, consultingClinicalExpert }: { children: Re
         <DialogHeader className="space-y-0 px-6 py-4">
           <div className="flex items-center gap-2">
             <span className="text-base font-medium">
-              {consultingClinicalExpert.length} {consultingClinicalExpert.length > 1 ? "Comments" : "Comment"}
+              {consultingClinicalExpert.length}{" "}
+              {consultingClinicalExpert.length > 1 ? "Comments" : "Comment"}
             </span>
           </div>
         </DialogHeader>

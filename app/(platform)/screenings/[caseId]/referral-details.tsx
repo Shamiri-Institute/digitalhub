@@ -1,4 +1,7 @@
+import { referClinicalCaseSupervisor } from "#/app/actions";
 import { Button } from "#/components/ui/button";
+import { Form, FormField } from "#/components/ui/form";
+import { Input } from "#/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -7,53 +10,56 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
-import { useEffect, useState } from "react";
-import { Form, FormField, } from "#/components/ui/form";
-import { z } from "zod";
 import { useToast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  ClinicalCaseTransferTrail,
+  ClinicalScreeningInfo,
+  ClinicalSessionAttendance,
+  Student,
+  Supervisor,
+} from "@prisma/client";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { referClinicalCaseSupervisor } from "#/app/actions";
-import { ClinicalCaseTransferTrail, ClinicalScreeningInfo, ClinicalSessionAttendance, Student, Supervisor } from "@prisma/client";
-import { Input } from "#/components/ui/input";
+import { z } from "zod";
 
 export const FormSchema = z.object({
-  referredTo: z
-    .string({
-      required_error: "Please enter the referred to.",
-    })
-  ,
+  referredTo: z.string({
+    required_error: "Please enter the referred to.",
+  }),
   referredToPerson: z.string({
     required_error: "Please select the referred to person.",
   }),
-  referralNotes: z.string({
-    required_error: "Please enter the referral notes.",
-  }).optional(),
-  externalCare: z.string({
-    required_error: "Please enter the external care.",
-  }).optional(),
-
+  referralNotes: z
+    .string({
+      required_error: "Please enter the referral notes.",
+    })
+    .optional(),
+  externalCare: z
+    .string({
+      required_error: "Please enter the external care.",
+    })
+    .optional(),
 });
 
 type CurrentCase = ClinicalScreeningInfo & {
-  student: Student
-  sessions: ClinicalSessionAttendance[]
-  caseTransferTrail: ClinicalCaseTransferTrail[]
-  currentSupervisor: Supervisor
-}
+  student: Student;
+  sessions: ClinicalSessionAttendance[];
+  caseTransferTrail: ClinicalCaseTransferTrail[];
+  currentSupervisor: Supervisor;
+};
 export function ReferralToDetails({
   currentcase,
   supervisors,
-  currentSupId
+  currentSupId,
 }: {
   currentcase: CurrentCase;
   supervisors: Supervisor[];
   currentSupId: string | undefined;
 }) {
-
   const { toast } = useToast();
   const [selectedSupervisorId, setSelectedSupervisorId] = useState<string>("");
-  const [selectedSupervisor, setSelectedSupervisor] = useState<string>("")
+  const [selectedSupervisor, setSelectedSupervisor] = useState<string>("");
   const [selectedOption, setSelectedOption] = useState<string>("");
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -65,7 +71,6 @@ export function ReferralToDetails({
     },
   });
 
-
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     await referClinicalCaseSupervisor({
       caseId: currentcase.id,
@@ -74,23 +79,25 @@ export function ReferralToDetails({
       referralNotes: data.referralNotes ?? "",
       referredFromSpecified: currentcase.currentSupervisor.supervisorName ?? "",
       referredFrom: currentSupId ?? "",
-      referredToPerson: selectedOption !== "Supervisor" ? null : data.referredToPerson, //todo: @hinn254 update to clinical leads/external care id's once we have them
-      externalCare: selectedOption !== "External Care" ? null : data.externalCare,
+      referredToPerson:
+        selectedOption !== "Supervisor" ? null : data.referredToPerson, //todo: @hinn254 update to clinical leads/external care id's once we have them
+      externalCare:
+        selectedOption !== "External Care" ? null : data.externalCare,
     });
 
     toast({
       variant: "default",
       title: "Request for referal has been sent",
     });
-
   }
 
-  useEffect((
-  ) => {
-    const selectedSupervisor = supervisors.filter((supervisor) => supervisor.id == selectedSupervisorId)
-    let supervisorName = selectedSupervisor[0]?.supervisorName ?? ''
-    setSelectedSupervisor(supervisorName)
-  }, [selectedSupervisorId])
+  useEffect(() => {
+    const selectedSupervisor = supervisors.filter(
+      (supervisor) => supervisor.id == selectedSupervisorId,
+    );
+    let supervisorName = selectedSupervisor[0]?.supervisorName ?? "";
+    setSelectedSupervisor(supervisorName);
+  }, [selectedSupervisorId]);
 
   return (
     <div className="mt-2 flex flex-col gap-5 px-1">
@@ -104,7 +111,6 @@ export function ReferralToDetails({
             className="overflow-hidden text-ellipsis px-1"
           >
             <div className="mt-6 space-y-6">
-
               <div>
                 <FormField
                   control={form.control}
@@ -119,7 +125,6 @@ export function ReferralToDetails({
                           setSelectedOption(value);
                           setSelectedSupervisorId("");
                           setSelectedSupervisor("");
-
                         }}
                       >
                         <SelectTrigger>
@@ -136,9 +141,15 @@ export function ReferralToDetails({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Supervisor">Supervisor</SelectItem>
-                          <SelectItem value="Shamiri Clinical Team">Shamiri Clinical Team</SelectItem>
-                          <SelectItem value="External Care">External Care</SelectItem>
-                          <SelectItem value="Clinical Leads">Clinical Leads</SelectItem>
+                          <SelectItem value="Shamiri Clinical Team">
+                            Shamiri Clinical Team
+                          </SelectItem>
+                          <SelectItem value="External Care">
+                            External Care
+                          </SelectItem>
+                          <SelectItem value="Clinical Leads">
+                            Clinical Leads
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -146,46 +157,52 @@ export function ReferralToDetails({
                 />
               </div>
 
+              {selectedOption == "Supervisor" && (
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="referredToPerson"
+                    render={({ field }) => (
+                      <div className="mt-3 grid w-full gap-1.5">
+                        <Select
+                          name="referredToPerson"
+                          defaultValue={field.value}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setSelectedSupervisorId(value);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue
+                              className="text-muted-foreground"
+                              defaultValue={field.value}
+                              onChange={field.onChange}
+                              placeholder={
+                                <span className="text-muted-foreground">
+                                  Select Supervisor
+                                </span>
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {supervisors.map((supervisor) => (
+                              <SelectItem
+                                key={supervisor.id}
+                                value={supervisor.id}
+                              >
+                                {supervisor.supervisorName}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  />
+                </div>
+              )}
 
-              {selectedOption == "Supervisor" && <div>
-                <FormField
-                  control={form.control}
-                  name="referredToPerson"
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Select
-                        name="referredToPerson"
-                        defaultValue={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedSupervisorId(value);
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue
-                            className="text-muted-foreground"
-                            defaultValue={field.value}
-                            onChange={field.onChange}
-                            placeholder={
-                              <span className="text-muted-foreground">
-                                Select Supervisor
-                              </span>
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {supervisors.map((supervisor) => (
-                            <SelectItem key={supervisor.id} value={supervisor.id}>{supervisor.supervisorName}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                />
-              </div>}
-
-              {
-                selectedOption == "External Care" && <div>
+              {selectedOption == "External Care" && (
+                <div>
                   <FormField
                     control={form.control}
                     name="externalCare"
@@ -202,8 +219,7 @@ export function ReferralToDetails({
                     )}
                   />
                 </div>
-              }
-
+              )}
 
               <div>
                 <FormField
@@ -235,7 +251,6 @@ export function ReferralToDetails({
         </Form>
       </div>
 
-
       <div>
         <h3 className="mb-2 text-sm font-semibold text-brand">History</h3>
         <ul>
@@ -245,10 +260,14 @@ export function ReferralToDetails({
                 <SingleHistory
                   key={case_item.id}
                   date={case_item.date}
-                  referredFrom={case_item.from == "" ? case_item.fromRole : case_item.from}
-                  referredTo={case_item.to == "" ? case_item.toRole : case_item.to}
+                  referredFrom={
+                    case_item.from == "" ? case_item.fromRole : case_item.from
+                  }
+                  referredTo={
+                    case_item.to == "" ? case_item.toRole : case_item.to
+                  }
                 />
-              )
+              );
             }
           })}
         </ul>
@@ -259,7 +278,7 @@ export function ReferralToDetails({
 
 function SingleHistory({
   date = new Date(),
-  referredFrom = '',
+  referredFrom = "",
   referredTo = "",
 }: {
   date: Date;
@@ -269,9 +288,8 @@ function SingleHistory({
   return (
     <li>
       <p className="mb-2 ml-2 text-xs text-brand">
-        {
-          new Date(date).toLocaleDateString()
-        } - Referred from {referredFrom} to {referredTo}.
+        {new Date(date).toLocaleDateString()} - Referred from {referredFrom} to{" "}
+        {referredTo}.
       </p>
     </li>
   );

@@ -1,20 +1,23 @@
-"use client"
+"use client";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { cn } from "#/lib/utils";
-import { ClinicalScreeningInfo, ClinicalSessionAttendance, Student } from "@prisma/client";
+import {
+  ClinicalScreeningInfo,
+  ClinicalSessionAttendance,
+  Student,
+} from "@prisma/client";
 import Link from "next/link";
 
 type Colors = {
   [key: string]: string;
 };
 
-
 type CasesType = ClinicalScreeningInfo & {
-  student: Student
-  sessions: ClinicalSessionAttendance[]
-}
+  student: Student;
+  sessions: ClinicalSessionAttendance[];
+};
 
 const colors: Colors = {
   Active: "bg-muted-green",
@@ -23,11 +26,10 @@ const colors: Colors = {
   Terminated: "bg-muted-sky",
 };
 
-
 export function ListViewOfClinicalCases({
-  cases = []
+  cases = [],
 }: {
-  cases: CasesType[]
+  cases: CasesType[];
 }) {
   return (
     <div>
@@ -67,11 +69,10 @@ export function ListViewOfClinicalCases({
 
 function ClinicalCasses({
   option,
-  cases = []
+  cases = [],
 }: {
-
   option: "all" | "Active" | "FollowUp" | "Terminated" | "Referred";
-  cases?: CasesType[]
+  cases?: CasesType[];
 }) {
   const newList = cases.filter((item) => {
     if (option === "all") return true;
@@ -98,14 +99,18 @@ function ClinicalCasses({
           key={stud.id}
           caseId={stud.id}
           name={stud.student.studentName}
-          session={stud.sessions.findLast((session) => session.session)?.session.toString() ?? "0"}
+          session={
+            stud.sessions
+              .findLast((session) => session.session)
+              ?.session.toString() ?? "0"
+          }
           risk={stud.riskStatus}
           status={stud.caseStatus}
         />
       ))}
 
       {newList.length === 0 && (
-        <div className="flex justify-center items-center h-40">
+        <div className="flex h-40 items-center justify-center">
           <p className="text-base font-medium text-muted-foreground">
             No clinical cases yet...
           </p>
@@ -115,19 +120,18 @@ function ClinicalCasses({
   );
 }
 
-
 function ClinicalCassesCard({
   name = "",
   session,
   risk,
   status,
-  caseId
+  caseId,
 }: {
   name: string | null;
   session: string;
   risk: string;
   status: string;
-  caseId: string
+  caseId: string;
 }) {
   return (
     <Link href={`/screenings/${caseId}`}>
@@ -145,8 +149,8 @@ function ClinicalCassesCard({
             risk === "High"
               ? "text-shamiri-red"
               : risk === "Mid"
-                ? "text-muted-yellow"
-                : "text-muted-green",
+              ? "text-muted-yellow"
+              : "text-muted-green",
           )}
         >
           {risk}

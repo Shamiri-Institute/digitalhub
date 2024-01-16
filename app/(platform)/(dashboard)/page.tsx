@@ -94,12 +94,10 @@ async function SupervisorOverviewCards({
   schoolCount: number;
   supervisorId: string;
 }) {
-
   const clinical_cases = await db.clinicalScreeningInfo.findMany({
     where: {
       currentSupervisorId: supervisorId,
-    }
-
+    },
   });
 
   return (

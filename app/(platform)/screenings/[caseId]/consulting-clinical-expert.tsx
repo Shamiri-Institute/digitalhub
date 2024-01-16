@@ -14,7 +14,7 @@ import {
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ClinicalExpertCaseNotes, ClinicalScreeningInfo, ClinicalSessionAttendance, Student } from "@prisma/client";
+import { ClinicalExpertCaseNotes, ClinicalScreeningInfo } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -27,28 +27,25 @@ const FormSchema = z.object({
   }),
 });
 
-
 type CurrentCase = ClinicalScreeningInfo & {
-  consultingClinicalExpert: ClinicalExpertCaseNotes[]
-}
+  consultingClinicalExpert: ClinicalExpertCaseNotes[];
+};
 
 export default function ConsultingClinicalExpertComments({
   currentcase,
 }: {
-  currentcase: CurrentCase,
+  currentcase: CurrentCase;
 }) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    await SupConsultClinicalexpert(
-      {
-        caseId: currentcase.id,
-        name: data.clinicalExpert,
-        commment: data.clincalNotes
-      }
-    )
+    await SupConsultClinicalexpert({
+      caseId: currentcase.id,
+      name: data.clinicalExpert,
+      commment: data.clincalNotes,
+    });
 
     toast({
       variant: "default",
@@ -122,20 +119,21 @@ export default function ConsultingClinicalExpertComments({
             </div>
           </div>
           <div className="flex justify-end px-6 pb-6">
-            <Button variant="brand" type="submit" className="w-full"
+            <Button
+              variant="brand"
+              type="submit"
+              className="w-full"
               form="submitConsultingExpert"
             >
               Save Consulting Note
             </Button>
           </div>
-
         </form>
       </Form>
-      <CommentsDialogue consultingClinicalExpert={currentcase.consultingClinicalExpert} >
-        <button
-          className="mt-4 w-full text-xs text-shamiri-blue"
-
-        >
+      <CommentsDialogue
+        consultingClinicalExpert={currentcase.consultingClinicalExpert}
+      >
+        <button className="mt-4 w-full text-xs text-shamiri-blue">
           READ {currentcase.consultingClinicalExpert.length} COMMENTS
         </button>
       </CommentsDialogue>

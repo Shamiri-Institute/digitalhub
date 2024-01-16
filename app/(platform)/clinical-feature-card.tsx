@@ -12,11 +12,10 @@ import { ClinicalScreeningInfo } from "@prisma/client";
 const colors = ["#7EA16B", "#FABC2A", "#B0D5EA"];
 
 export function ClinicalFeatureCard({
-  clinical_cases
+  clinical_cases,
 }: {
-  clinical_cases: ClinicalScreeningInfo[]
+  clinical_cases: ClinicalScreeningInfo[];
 }) {
-
   type CaseData = { name: "Active" | "FollowUp" | "Terminated"; value: number };
 
   const data: CaseData[] = [
@@ -24,7 +23,6 @@ export function ClinicalFeatureCard({
     { name: "FollowUp", value: 0 },
     { name: "Terminated", value: 0 },
   ];
-
 
   clinical_cases.forEach((case_) => {
     if (case_.caseStatus === "Active") {
@@ -67,12 +65,14 @@ export function ClinicalFeatureCard({
             />
             <div className="flex justify-between border-b border-border/40 pb-1 last:border-none">
               <p className="text-sm font-semibold text-white">Total</p>
-              <div className={cn("rounded-sm px-3",)}>
+              <div className={cn("rounded-sm px-3")}>
                 <p className="text-sm font-semibold text-white">
-                  {data.reduce((acc, curr) => acc + curr.value, 0).toString().padStart(2, "0")}
+                  {data
+                    .reduce((acc, curr) => acc + curr.value, 0)
+                    .toString()
+                    .padStart(2, "0")}
                 </p>
               </div>
-
             </div>
           </div>
         </div>
@@ -85,9 +85,8 @@ function formatNumber(num: number | undefined) {
   if (num === undefined) {
     return "".padStart(2, "0");
   }
-  return num.toLocaleString().padStart(2, "0")
+  return num.toLocaleString().padStart(2, "0");
 }
-
 
 function LegendItem({
   colorClass,
@@ -111,9 +110,9 @@ function LegendItem({
 }
 
 function ClinicalCasesDonutChart({
-  data = []
+  data = [],
 }: {
-  data: { name: string; value: number; }[]
+  data: { name: string; value: number }[];
 }) {
   const isServerSide = useIsServerSide();
   if (isServerSide) {

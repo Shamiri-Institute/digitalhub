@@ -6,7 +6,6 @@ import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
 
 export default async function Page() {
-
   const supervisor = await currentSupervisor();
 
   const referred_cases = await db.clinicalScreeningInfo.findMany({
@@ -24,21 +23,21 @@ export default async function Page() {
       currentSupervisorId: supervisor?.id,
     },
     orderBy: {
-      createdAt: "desc"
+      createdAt: "desc",
     },
     include: {
       student: true,
       sessions: {
         orderBy: {
-          date: "desc"
-        }
-      }
+          date: "desc",
+        },
+      },
     },
   });
 
   const schools = await db.school.findMany({
     where: {
-      hubId: supervisor?.hubId
+      hubId: supervisor?.hubId,
     },
     include: {
       students: true,
@@ -46,26 +45,32 @@ export default async function Page() {
         include: {
           fellows: {
             include: {
-              students: true
-            }
-          }
-        }
-      }
-    }
-  })
+              students: true,
+            },
+          },
+        },
+      },
+    },
+  });
 
   const clinical_cases = await db.clinicalScreeningInfo.findMany({
     where: {
       currentSupervisorId: supervisor?.id,
-    }
+    },
   });
 
   return (
     <div>
       <ClinicalFeatureCard clinical_cases={clinical_cases} />
-      <CasesReferredToMe cases={referred_cases} currentSupervisorId={supervisor?.id} />
-      <CreateClinicalCases currentSupervisorId={supervisor?.id} schools={schools} />
+      <CasesReferredToMe
+        cases={referred_cases}
+        currentSupervisorId={supervisor?.id}
+      />
+      <CreateClinicalCases
+        currentSupervisorId={supervisor?.id}
+        schools={schools}
+      />
       <ListViewOfClinicalCases cases={my_cases} />
     </div>
-  )
+  );
 }

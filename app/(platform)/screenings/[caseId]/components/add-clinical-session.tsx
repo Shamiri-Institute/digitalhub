@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { Form, FormField } from "#/components/ui/form";
+import { Popover, PopoverContent } from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -18,15 +19,14 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Popover, PopoverContent } from "#/components/ui/popover";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
+import { updateClinicalCaseSessionAttendance } from "#/app/actions";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import { updateClinicalCaseSessionAttendance } from "#/app/actions";
 import { useState } from "react";
 
 const FormSchema = z.object({
@@ -37,7 +37,6 @@ const FormSchema = z.object({
     required_error: "Please select the date of session.",
   }),
 });
-
 
 export function AddClinicalSessionDialog({
   caseId,
@@ -75,15 +74,12 @@ export function AddClinicalSessionDialog({
 
     form.reset();
     setDialogOpen(false);
-
   }
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="gap-0 p-4">
-
-
         <DialogHeader className="space-y-0 px-1 py-4">
           <div className="flex items-center gap-2">
             <span className="text-base font-medium">
@@ -91,8 +87,6 @@ export function AddClinicalSessionDialog({
             </span>
           </div>
         </DialogHeader>
-
-
 
         <Form {...form}>
           <form
@@ -103,8 +97,6 @@ export function AddClinicalSessionDialog({
             className="overflow-hidden text-ellipsis px-1 pb-6"
           >
             <div className="mt-6 space-y-6">
-
-
               <div>
                 <FormField
                   control={form.control}
@@ -190,7 +182,7 @@ export function AddClinicalSessionDialog({
               <Button
                 type="submit"
                 form="recordClinicalSessionAttendance"
-                className="mt-4 mb-6 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
+                className="mb-6 mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
               >
                 Record Session Attendance
               </Button>
@@ -201,7 +193,3 @@ export function AddClinicalSessionDialog({
     </Dialog>
   );
 }
-
-
-
-

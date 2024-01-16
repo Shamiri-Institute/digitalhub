@@ -4,17 +4,29 @@ import { Card } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
-import { ClinicalScreeningInfo, ClinicalSessionAttendance, Student } from "@prisma/client";
+import {
+  ClinicalScreeningInfo,
+  ClinicalSessionAttendance,
+  Student,
+} from "@prisma/client";
 import { useState } from "react";
 
 type CurrentCase = ClinicalScreeningInfo & {
-  student: Student
-  sessions: ClinicalSessionAttendance[]
-}
+  student: Student;
+  sessions: ClinicalSessionAttendance[];
+};
 
-export default function GeneralIssues({ currentcase }: { currentcase: CurrentCase }) {
-  const [selected, setSelected] = useState<string>(currentcase.generalPresentingIssues || "");
-  const [other, setOther] = useState<string>(currentcase.generalPresentingIssuesOtherSpecified || "");
+export default function GeneralIssues({
+  currentcase,
+}: {
+  currentcase: CurrentCase;
+}) {
+  const [selected, setSelected] = useState<string>(
+    currentcase.generalPresentingIssues || "",
+  );
+  const [other, setOther] = useState<string>(
+    currentcase.generalPresentingIssuesOtherSpecified || "",
+  );
 
   const handleOther = (e: React.ChangeEvent<HTMLInputElement>) => {
     setOther(e.target.value);
@@ -27,31 +39,28 @@ export default function GeneralIssues({ currentcase }: { currentcase: CurrentCas
         await updateClinicalCaseGeneralPresentingIssue(
           currentcase.id,
           option,
-          other
-        )
+          other,
+        );
       }
-
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   const handleOtherOption = async () => {
     try {
-
       if (other.trim() === currentcase.generalPresentingIssuesOtherSpecified) {
         return;
       }
       await updateClinicalCaseGeneralPresentingIssue(
         currentcase.id,
         selected,
-        other.trim()
-      )
+        other.trim(),
+      );
     } catch (error) {
       console.log(error);
     }
-  }
-
+  };
 
   return (
     <div>
@@ -109,8 +118,13 @@ export default function GeneralIssues({ currentcase }: { currentcase: CurrentCas
               className="resize-none bg-card"
             />
           </div>
-          <Button onClick={handleOtherOption} variant="brand" className="w-full mt-2"
-            disabled={other.trim() === currentcase.generalPresentingIssuesOtherSpecified}
+          <Button
+            onClick={handleOtherOption}
+            variant="brand"
+            className="mt-2 w-full"
+            disabled={
+              other.trim() === currentcase.generalPresentingIssuesOtherSpecified
+            }
           >
             Add Note
           </Button>

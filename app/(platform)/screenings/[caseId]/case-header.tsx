@@ -4,7 +4,7 @@ import { CurrentCase } from "#/app/(platform)/screenings/screen";
 import { updateClinicalCaseStatus } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { cn, getInitials } from "#/lib/utils";
-import { ClinicalCaseTransferTrail, ClinicalExpertCaseNotes, ClinicalScreeningInfo, ClinicalSessionAttendance, Prisma, Student, Supervisor, caseStatusOptions } from "@prisma/client";
+import { caseStatusOptions } from "@prisma/client";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -22,19 +22,18 @@ const colors: Colors = {
 const casesColorOptions: {
   id: number;
   status: caseStatusOptions;
-}[]
-  = [
-    { id: 1, status: "Active" },
-    { id: 2, status: "Referred" },
-    { id: 3, status: "FollowUp" },
-    { id: 4, status: "Terminated" },
-  ];
+}[] = [
+  { id: 1, status: "Active" },
+  { id: 2, status: "Referred" },
+  { id: 3, status: "FollowUp" },
+  { id: 4, status: "Terminated" },
+];
 
-
-export default function CaseHeader({ currentcase }: {
-  currentcase: CurrentCase
+export default function CaseHeader({
+  currentcase,
+}: {
+  currentcase: CurrentCase;
 }) {
-
   const [selected, setSelected] = useState<string>(currentcase.caseStatus);
   const [color, setColor] = useState<string | undefined>("");
   const [flagged, setFlagged] = useState<boolean>(currentcase.flagged);
@@ -81,10 +80,10 @@ export default function CaseHeader({ currentcase }: {
         <div
           className={cn(
             "flex h-24 w-24 items-center justify-center rounded-full bg-muted-green",
-            colors[selected]
+            colors[selected],
           )}
         >
-          <div className="h-20 w-20 rounded-full bg-muted-foreground flex justify-center" >
+          <div className="flex h-20 w-20 justify-center rounded-full bg-muted-foreground">
             <h3 className="self-center text-center text-4xl font-semibold text-brand">
               {getInitials(currentcase?.student?.studentName ?? "")}
             </h3>
@@ -92,7 +91,9 @@ export default function CaseHeader({ currentcase }: {
         </div>
         <div className="ml-6 flex flex-1 flex-col justify-center ">
           <div className="flex flex-col">
-            <p className="text-base font-bold text-brand">{currentcase.student.studentName}</p>
+            <p className="text-base font-bold text-brand">
+              {currentcase.student.studentName}
+            </p>
             <p className="text-sm font-medium text-muted-foreground">
               Shamiri ID: {currentcase.student.visibleId}
             </p>
@@ -103,7 +104,7 @@ export default function CaseHeader({ currentcase }: {
                 key={stud.id}
                 className={cn(
                   "flex h-7 w-12 items-center justify-center rounded-md bg-[#bbb]",
-                  stud.status == selected && colors[selected]
+                  stud.status == selected && colors[selected],
                 )}
                 onClick={() => handleOption(stud.status)}
               >

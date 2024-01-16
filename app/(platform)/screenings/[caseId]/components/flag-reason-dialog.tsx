@@ -12,11 +12,11 @@ import { Form, FormField } from "#/components/ui/form";
 import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
+import { useToast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useToast } from "#/components/ui/use-toast";
 
 const FormSchema = z.object({
   reason: z.string({
@@ -44,9 +44,7 @@ export function FlagStudentDialog({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-
     try {
-
       await flagClinicalCaseForFollowUp({
         caseId,
         reason: data.reason,
@@ -64,7 +62,6 @@ export function FlagStudentDialog({
         title: "Error flagging case for follow up. Please try again",
       });
     }
-
   }
 
   return (
@@ -113,7 +110,10 @@ export function FlagStudentDialog({
             <div className="flex justify-end px-6 pb-6">
               <Button
                 form="modifyFlagAction"
-                variant="brand" type="submit" className="w-full">
+                variant="brand"
+                type="submit"
+                className="w-full"
+              >
                 Submit
               </Button>
             </div>

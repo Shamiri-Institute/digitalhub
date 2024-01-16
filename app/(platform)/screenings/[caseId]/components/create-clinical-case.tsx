@@ -1,5 +1,6 @@
 "use client";
 
+import { createClinicalCase } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -20,10 +21,9 @@ import { useToast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Fellow, School, Student, Supervisor } from "@prisma/client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useEffect, useState } from "react"
-import { createClinicalCase } from "#/app/actions";
 
 const FormSchema = z.object({
   school: z.string({
@@ -41,18 +41,16 @@ const FormSchema = z.object({
 });
 
 type FellowWithStudents = Fellow & {
-  students: Student[]
-}
+  students: Student[];
+};
 
 type SupervisorWithFellows = Supervisor & {
-  fellows: FellowWithStudents[]
-}
+  fellows: FellowWithStudents[];
+};
 
 type SchoolsWithSupervisors = School & {
-  supervisors: SupervisorWithFellows[]
-}
-
-
+  supervisors: SupervisorWithFellows[];
+};
 
 export default function CreateClinicalCaseDialogue({
   children,
@@ -61,7 +59,7 @@ export default function CreateClinicalCaseDialogue({
 }: {
   children: React.ReactNode;
   currentSupervisorId: string | undefined;
-  schools: SchoolsWithSupervisors[]
+  schools: SchoolsWithSupervisors[];
 }) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -72,16 +70,15 @@ export default function CreateClinicalCaseDialogue({
       student: "",
     },
   });
-  const [selectedSchoolId, setSelectedSchoolId] = useState<string>("")
-  const [selectedSupId, setSelectedSupId] = useState<string>("")
-  const [selectedFellowId, setSelectedFellowId] = useState<string>("")
-  const [supervisors, setSupervisors] = useState<SupervisorWithFellows[]>()
-  const [fellows, setFellows] = useState<FellowWithStudents[]>()
-  const [students, setStudents] = useState<Student[]>()
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
+  const [selectedSupId, setSelectedSupId] = useState<string>("");
+  const [selectedFellowId, setSelectedFellowId] = useState<string>("");
+  const [supervisors, setSupervisors] = useState<SupervisorWithFellows[]>();
+  const [fellows, setFellows] = useState<FellowWithStudents[]>();
+  const [students, setStudents] = useState<Student[]>();
   const { toast } = useToast();
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-
     try {
       await createClinicalCase({
         schoolId: data.school,
@@ -94,35 +91,35 @@ export default function CreateClinicalCaseDialogue({
         variant: "default",
         title: "Case created successfully",
       });
-
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Error creating case. Please try again",
       });
     }
-
   }
 
   useEffect(() => {
     // from the selected fellow id, get the fellow
-    const students = fellows?.find(fellow => fellow.id === selectedFellowId)?.students
-    setStudents(students)
-  }, [selectedFellowId])
+    const students = fellows?.find((fellow) => fellow.id === selectedFellowId)
+      ?.students;
+    setStudents(students);
+  }, [selectedFellowId]);
 
   useEffect(() => {
-    // from the selected supervisor id, get the fellow  
-    const fellow = supervisors?.find(sup => sup.id === selectedSupId)?.fellows
-    console.log({ fellow })
-    setFellows(fellow)
-  }, [selectedSupId])
+    // from the selected supervisor id, get the fellow
+    const fellow = supervisors?.find((sup) => sup.id === selectedSupId)
+      ?.fellows;
+    console.log({ fellow });
+    setFellows(fellow);
+  }, [selectedSupId]);
 
   useEffect(() => {
     // from the selected school id, get the supervisors
-    const supervisors = schools.find(school => school.id === selectedSchoolId)?.supervisors
-    setSupervisors(supervisors)
-  }, [selectedSchoolId])
-
+    const supervisors = schools.find((school) => school.id === selectedSchoolId)
+      ?.supervisors;
+    setSupervisors(supervisors);
+  }, [selectedSchoolId]);
 
   return (
     <Dialog>
@@ -140,7 +137,6 @@ export default function CreateClinicalCaseDialogue({
               <div className="flex items-center gap-2">
                 <span className="text-base font-medium">
                   Create Clinical Case
-
                 </span>
               </div>
             </DialogHeader>
@@ -155,12 +151,10 @@ export default function CreateClinicalCaseDialogue({
                       <Select
                         name="school"
                         defaultValue={field.value}
-                        onValueChange={
-                          (value) => {
-                            field.onChange(value)
-                            setSelectedSchoolId(value)
-                          }
-                        }
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setSelectedSchoolId(value);
+                        }}
                         required
                       >
                         <SelectTrigger>
@@ -176,11 +170,11 @@ export default function CreateClinicalCaseDialogue({
                           />
                         </SelectTrigger>
                         <SelectContent>
-                          {
-                            schools.map((school) => (
-                              <SelectItem key={school.id} value={school.id}>{school.schoolName}</SelectItem>
-                            ))
-                          }
+                          {schools.map((school) => (
+                            <SelectItem key={school.id} value={school.id}>
+                              {school.schoolName}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -197,12 +191,10 @@ export default function CreateClinicalCaseDialogue({
                       <Select
                         name="supervisor"
                         defaultValue={field.value}
-                        onValueChange={
-                          (value) => {
-                            field.onChange(value)
-                            setSelectedSupId(value)
-                          }
-                        }
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setSelectedSupId(value);
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue
@@ -218,11 +210,14 @@ export default function CreateClinicalCaseDialogue({
                           />
                         </SelectTrigger>
                         <SelectContent>
-                          {
-                            supervisors?.map((supervisor) => (
-                              <SelectItem key={supervisor.id} value={supervisor.id}>{supervisor.supervisorName}</SelectItem>
-                            ))
-                          }
+                          {supervisors?.map((supervisor) => (
+                            <SelectItem
+                              key={supervisor.id}
+                              value={supervisor.id}
+                            >
+                              {supervisor.supervisorName}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -238,13 +233,10 @@ export default function CreateClinicalCaseDialogue({
                       <Select
                         name="fellow"
                         defaultValue={field.value}
-                        onValueChange={
-                          (value) => {
-                            field.onChange(value)
-                            setSelectedFellowId(value)
-                          }
-                        }
-
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setSelectedFellowId(value);
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue
@@ -260,11 +252,11 @@ export default function CreateClinicalCaseDialogue({
                           />
                         </SelectTrigger>
                         <SelectContent>
-                          {
-                            fellows?.map((fellow) => (
-                              <SelectItem key={fellow.id} value={fellow.id}>{fellow.fellowName}</SelectItem>
-                            ))
-                          }
+                          {fellows?.map((fellow) => (
+                            <SelectItem key={fellow.id} value={fellow.id}>
+                              {fellow.fellowName}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -280,11 +272,9 @@ export default function CreateClinicalCaseDialogue({
                       <Select
                         name="student"
                         defaultValue={field.value}
-                        onValueChange={
-                          (value) => {
-                            field.onChange(value)
-                          }
-                        }
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue
@@ -299,11 +289,11 @@ export default function CreateClinicalCaseDialogue({
                           />
                         </SelectTrigger>
                         <SelectContent>
-                          {
-                            students?.map((student) => (
-                              <SelectItem key={student.id} value={student.id}>{student.studentName}</SelectItem>
-                            ))
-                          }
+                          {students?.map((student) => (
+                            <SelectItem key={student.id} value={student.id}>
+                              {student.studentName}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -312,9 +302,12 @@ export default function CreateClinicalCaseDialogue({
               </div>
             </div>
             <div className="flex justify-end px-6 pb-3">
-              <Button variant="brand"
+              <Button
+                variant="brand"
                 form="addClincalCase"
-                type="submit" className="w-full">
+                type="submit"
+                className="w-full"
+              >
                 Create Case
               </Button>
             </div>
@@ -323,7 +316,7 @@ export default function CreateClinicalCaseDialogue({
         </Form>
         <div className="flex justify-end px-6 pb-6">
           <Link href={"/screenings/create-student"} className="flex flex-1">
-            <Button variant="brand" onClick={() => { }} className="w-full">
+            <Button variant="brand" onClick={() => {}} className="w-full">
               Non-Shamiri Student
             </Button>
           </Link>
