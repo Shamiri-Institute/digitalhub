@@ -1,3 +1,4 @@
+import { ClinicalFeatureCard } from "#/app/(platform)/clinical-feature-card";
 import { CasesReferredToMe } from "#/app/(platform)/screenings/components/cases-referred-to-me";
 import { CreateClinicalCases } from "#/app/(platform)/screenings/components/create-clinical-cases";
 import { ListViewOfClinicalCases } from "#/app/(platform)/screenings/components/view-clinical-cases";
@@ -53,8 +54,15 @@ export default async function Page() {
     }
   })
 
+  const clinical_cases = await db.clinicalScreeningInfo.findMany({
+    where: {
+      currentSupervisorId: supervisor?.id,
+    }
+  });
+
   return (
     <div>
+      <ClinicalFeatureCard clinical_cases={clinical_cases} />
       <CasesReferredToMe cases={referred_cases} currentSupervisorId={supervisor?.id} />
       <CreateClinicalCases currentSupervisorId={supervisor?.id} schools={schools} />
       <ListViewOfClinicalCases cases={my_cases} />
