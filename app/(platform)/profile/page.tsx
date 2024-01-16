@@ -1,15 +1,13 @@
 import Link from "next/link";
 
 import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
-import { CurrentSupervisor, currentHub, currentSupervisor } from "#/app/auth";
+import { CurrentSupervisor, currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
 import { getInitials } from "#/lib/utils";
 import FellowCard from "./components/fellow-card";
 import { ReimbursementRequests } from "./reimbursement-requests";
-
-const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
 
 export default async function SupervisorProfile() {
   let supervisor = await currentSupervisor();
@@ -56,11 +54,9 @@ export default async function SupervisorProfile() {
   )
     .map((fellow) => fellow.students.length)
     .reduce((a, b) => a + b, 0);
-  console.debug({ studentCount });
 
   let supervisorName = supervisor.supervisorName ?? "N/A";
 
-  // console.log({ supervisor, fellowsCount, schoolCount })
   const reimbursementRequests = await db.reimbursementRequest.findMany({
     where: {
       supervisorId: supervisor.id,
@@ -79,7 +75,7 @@ export default async function SupervisorProfile() {
         supervisorName={supervisorName}
         studentCount={studentCount}
       />
-      <MySchools />
+      <MySchools supervisor={supervisor} />
       <MyFellows fellows={supervisor.fellows} />
       <ReimbursementRequests requests={reimbursementRequests} />
     </main>
@@ -153,19 +149,15 @@ function ProfileHeader({
   );
 }
 
-async function MySchools() {
-  const hub = await currentHub();
-  const assignedSchoolId = "ANS23_School_17";
-  const assignedSchool = await db.school.findFirst({
-    where: { visibleId: assignedSchoolId, hubId: hub!.id },
-  });
-  if (!assignedSchool) {
-    throw new Error("Assigned school not found");
-  }
-
-  // TODO: what is this doing
-  const otherSchools = await db.school.findMany({
-    where: { visibleId: { not: assignedSchoolId }, hubId: hub!.id },
+async function MySchools({
+  supervisor,
+}: {
+  supervisor: NonNullable<CurrentSupervisor>;
+}) {
+  const interventionSessions = await db.interventionSession.findMany({
+    where: {
+      schoolId: supervisor.assignedSchoolId,
+    },
   });
 
   return (
@@ -175,9 +167,10 @@ async function MySchools() {
           My School
         </h3>
         <SchoolCardProfile
-          key={assignedSchool.schoolName}
-          school={assignedSchool}
-          sessionTypes={sessionTypes}
+          key={supervisor.assignedSchool.schoolName}
+          school={supervisor.assignedSchool}
+          sessionTypes={interventionSessions}
+          fellowsCount={supervisor.fellows.length}
           assigned
         />
       </div>

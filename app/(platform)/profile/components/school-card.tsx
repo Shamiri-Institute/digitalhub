@@ -12,19 +12,28 @@ import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 
 import { Icons } from "#/components/icons";
+import { Prisma, School } from "@prisma/client";
 
-const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
+type sessionTypes = Prisma.InterventionSessionGetPayload<{}>[];
 
 export function SchoolCardProfile({
   school,
   sessionTypes,
   assigned,
+  fellowsCount,
 }: {
-  school: any;
-  sessionTypes: any;
+  school: School;
+  sessionTypes: sessionTypes;
   assigned?: boolean;
+  fellowsCount?: number;
 }) {
-  const SchoolDetail = ({ label, value }: { label: string; value: string }) => (
+  const SchoolDetail = ({
+    label,
+    value,
+  }: {
+    label: string;
+    value: string | null;
+  }) => (
     <p
       className={cn("pb-2 text-sm font-medium", {
         "text-white": assigned,
@@ -111,15 +120,15 @@ export function SchoolCardProfile({
 
       <div className="flex justify-between gap-2">
         <div className="flex gap-3">
-          {sessionTypes.map((sessiontype: any) => (
-            <div key={sessiontype} className="flex flex-col items-center">
+          {sessionTypes.map((sessiontype) => (
+            <div key={sessiontype.id} className="flex flex-col items-center">
               <p className="text-xs font-medium text-muted-foreground">
-                {sessiontype}
+                {sessiontype.sessionName}
               </p>
               <div
-                className={cn("h-4 w-4 rounded-full", {
-                  "bg-green-600": true,
-                  "bg-gray-300": !false,
+                className={cn("mt-2 h-4 w-4 rounded-full", {
+                  "bg-gray-300": !sessiontype.sessionName,
+                  "bg-green-600": sessiontype.sessionName,
                 })}
               ></div>
             </div>
@@ -128,9 +137,7 @@ export function SchoolCardProfile({
         <Link href={`/schools/${school.visibleId}`}>
           <Button className="flex gap-1 bg-shamiri-blue text-white hover:bg-shamiri-blue-darker">
             <Icons.users className="h-4 w-4" />
-            <p className="whitespace-nowrap text-sm">
-              {school.fellowsCount} Fellows
-            </p>
+            <p className="whitespace-nowrap text-sm">{fellowsCount} Fellows</p>
           </Button>
         </Link>
       </div>
@@ -179,13 +186,19 @@ export function SchoolCardProfile({
 
             <AccordionContent>
               <div className="pt-4">
-                <SchoolDetail label="Type" value={school.type} />
-                <SchoolDetail label="County" value={school.county} />
-                <SchoolDetail label="Point person" value={school.pointPerson} />
-                <SchoolDetail label="Contact number" value={school.contactNo} />
+                <SchoolDetail label="Type" value={school.schoolType} />
+                <SchoolDetail label="County" value={school.schoolCounty} />
+                <SchoolDetail
+                  label="Point person"
+                  value={school.pointPersonName}
+                />
+                <SchoolDetail
+                  label="Contact number"
+                  value={school.pointPersonPhone}
+                />
                 <SchoolDetail
                   label="School demographics"
-                  value={school.demographics}
+                  value={school.schoolDemographics}
                 />
               </div>
             </AccordionContent>
