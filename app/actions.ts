@@ -1061,12 +1061,6 @@ export async function AcceptRefferedClinicalCase(
   caseId: string,
 ) {
   try {
-    console.log({
-      currentSupervisorId,
-      referredToSupervisorId,
-      caseId,
-    });
-
     const currentcase = await db.clinicalScreeningInfo.update({
       where: {
         id: caseId,
@@ -1088,10 +1082,6 @@ export async function AcceptRefferedClinicalCase(
       },
     });
 
-    console.log({
-      currentcase,
-    });
-
     revalidatePath("/screenings");
 
     return { success: true, data: currentcase };
@@ -1103,7 +1093,6 @@ export async function AcceptRefferedClinicalCase(
 
 export async function RejectRefferedClinicalCase(caseId: string) {
   try {
-    console.log("inside reject case");
     const currentcase = await db.clinicalScreeningInfo.update({
       where: {
         id: caseId,
@@ -1148,14 +1137,6 @@ export async function updateClinicalCaseGeneralPresentingIssue(
   presentingIssue: string,
   presentingIssueOtherSpecified: string,
 ) {
-  console.log("inisiiiiii");
-
-  console.log({
-    caseId,
-    presentingIssue,
-    presentingIssueOtherSpecified,
-  });
-
   try {
     await db.clinicalScreeningInfo.update({
       where: {
@@ -1185,11 +1166,7 @@ export async function referClinicalCaseSupervisor(data: {
   externalCare?: string | null;
 }) {
   try {
-    console.log({ data });
-    const { supervisorName } = data;
-    console.log(supervisorName);
-
-    const currentcase = await db.clinicalScreeningInfo.update({
+    await db.clinicalScreeningInfo.update({
       where: {
         id: data.caseId,
       },
@@ -1213,7 +1190,7 @@ export async function referClinicalCaseSupervisor(data: {
         acceptCase: false,
       },
     });
-    console.log({ currentcase });
+
     revalidatePath("/screenings");
     return { success: true };
   } catch (error) {
@@ -1318,7 +1295,6 @@ export async function SupConsultClinicalexpert(data: {
   commment: string;
 }) {
   try {
-    console.log({ data });
     await db.clinicalScreeningInfo.update({
       where: {
         id: data.caseId,
@@ -1356,7 +1332,8 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
       result_data?.emergencyPresentingIssues ?? {};
 
     let combinedPresentingIssues = {
-      ...emergencyPresentingIssues,
+      // ...(emergencyPresentingIssues as { [k: string]: string }),
+      ...(emergencyPresentingIssues as Record<string, any>),
       ...data.presentingIssues,
     };
 
@@ -1430,7 +1407,6 @@ export async function createClinicalCase(data: {
         caseStatus: "Active",
       },
     });
-    console.log({ result });
 
     revalidatePath("/screenings");
     return { success: true, data: result };
@@ -1444,7 +1420,6 @@ export async function flagClinicalCaseForFollowUp(data: {
   caseId: string;
   reason: string;
 }) {
-  console.log({ data });
   try {
     await db.clinicalScreeningInfo.update({
       where: {
