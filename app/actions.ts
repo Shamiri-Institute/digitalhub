@@ -1,6 +1,12 @@
 "use server";
 
-import { Fellow, FellowAttendance, Prisma } from "@prisma/client";
+import {
+  Fellow,
+  FellowAttendance,
+  Prisma,
+  caseStatusOptions,
+  riskStatusOptions,
+} from "@prisma/client";
 import * as csv from "csv-parse";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -12,6 +18,7 @@ import { getCurrentUser } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { getHighestValue } from "#/lib/utils";
 import { EditFellowSchema } from "#/lib/validators";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 
