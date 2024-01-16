@@ -1,6 +1,12 @@
 "use server";
 
-import { Fellow, FellowAttendance, Prisma } from "@prisma/client";
+import {
+  Fellow,
+  FellowAttendance,
+  Prisma,
+  caseStatusOptions,
+  riskStatusOptions,
+} from "@prisma/client";
 import * as csv from "csv-parse";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -12,6 +18,7 @@ import { getCurrentUser } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { getHighestValue } from "#/lib/utils";
 import { EditFellowSchema } from "#/lib/validators";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 
@@ -1054,6 +1061,12 @@ export async function AcceptRefferedClinicalCase(
   caseId: string,
 ) {
   try {
+    console.log({
+      currentSupervisorId,
+      referredToSupervisorId,
+      caseId,
+    });
+
     const currentcase = await db.clinicalScreeningInfo.update({
       where: {
         id: caseId,
@@ -1073,6 +1086,10 @@ export async function AcceptRefferedClinicalCase(
           },
         },
       },
+    });
+
+    console.log({
+      currentcase,
     });
 
     revalidatePath("/screenings");
@@ -1101,6 +1118,347 @@ export async function RejectRefferedClinicalCase(caseId: string) {
     return { success: true, data: currentcase };
   } catch (error) {
     console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function updateClinicalCaseStatus(
+  caseId: string,
+  status: caseStatusOptions,
+) {
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: caseId,
+      },
+      data: {
+        caseStatus: status,
+      },
+    });
+    revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function updateClinicalCaseGeneralPresentingIssue(
+  caseId: string,
+  presentingIssue: string,
+  presentingIssueOtherSpecified: string,
+) {
+  console.log("inisiiiiii");
+
+  console.log({
+    caseId,
+    presentingIssue,
+    presentingIssueOtherSpecified,
+  });
+
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: caseId,
+      },
+      data: {
+        generalPresentingIssues: presentingIssue,
+        generalPresentingIssuesOtherSpecified: presentingIssueOtherSpecified,
+      },
+    });
+    revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function referClinicalCaseSupervisor(data: {
+  caseId: string;
+  referredTo: string;
+  referredToPerson: string | null;
+  referredFrom: string;
+  referralNotes: string;
+  referredFromSpecified: string;
+  supervisorName: string;
+  externalCare?: string | null;
+}) {
+  try {
+    console.log({ data });
+    const { supervisorName } = data;
+    console.log(supervisorName);
+
+    const currentcase = await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: {
+        referredFrom: data.referredFrom,
+        referredFromSpecified: data.supervisorName,
+        referredTo: data.referredTo,
+        referredToSpecified: data.referredToPerson ?? data.externalCare,
+        referralNotes: data.referralNotes,
+        referredToSupervisorId: data.referredToPerson ?? null,
+        caseTransferTrail: {
+          create: {
+            from: data.referredFromSpecified ?? "",
+            fromRole: data.referredFrom,
+            // to: data.referredToPerson,
+            to: data.supervisorName,
+            toRole: data.referredTo,
+            date: new Date(),
+          },
+        },
+        acceptCase: false,
+      },
+    });
+    console.log({ currentcase });
+    revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function initialReferralFromClinicalCaseSupervisor(data: {
+  caseId: string;
+  referredFrom: string;
+  referredFromSpecified: string;
+  referredTo: string;
+  referredToSpecified: string;
+  supervisorId: string;
+  initialCaseId?: string;
+}) {
+  try {
+    if (data.initialCaseId) {
+      await db.clinicalScreeningInfo.update({
+        where: {
+          id: data.caseId,
+        },
+        data: {
+          referredFrom: data.referredFrom,
+          referredFromSpecified: data.referredFromSpecified,
+          referredTo: data.referredTo,
+          referredToSpecified: data.referredToSpecified,
+          caseTransferTrail: {
+            update: {
+              where: {
+                id: data.initialCaseId,
+              },
+              data: {
+                from: data.referredFromSpecified ?? "",
+                fromRole: data.referredFrom,
+                to: data.referredToSpecified,
+                toRole: data.referredTo,
+                date: new Date(),
+              },
+            },
+          },
+        },
+      });
+    } else {
+      const currentcase = await db.clinicalScreeningInfo.update({
+        where: {
+          id: data.caseId,
+        },
+        data: {
+          referredFrom: data.referredFrom,
+          referredFromSpecified: data.referredToSpecified,
+
+          initialCaseHistoryOwnerId: data.supervisorId,
+
+          caseTransferTrail: {
+            create: {
+              from: data.referredFromSpecified ?? "",
+              fromRole: data.referredFrom,
+              to: data.referredTo,
+              toRole: data.referredToSpecified,
+              date: new Date(),
+            },
+          },
+          acceptCase: false,
+        },
+        include: {
+          caseTransferTrail: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      });
+
+      if (currentcase?.caseTransferTrail.length > 0) {
+        const initialCaseHistoryId =
+          currentcase?.caseTransferTrail[0]?.id ?? null;
+
+        await db.clinicalScreeningInfo.update({
+          where: {
+            id: data.caseId,
+          },
+          data: {
+            initialCaseHistoryId: initialCaseHistoryId,
+          },
+        });
+      }
+    }
+
+    revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function SupConsultClinicalexpert(data: {
+  caseId: string;
+  name: string;
+  commment: string;
+}) {
+  try {
+    console.log({ data });
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: {
+        consultingClinicalExpert: {
+          create: {
+            commment: data.commment,
+            date: new Date(),
+            name: data.name,
+          },
+        },
+      },
+    });
+    revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function updateClinicalCaseEmergencyPresentingIssue(data: {
+  caseId: string;
+  presentingIssues: { [k: string]: string };
+}) {
+  try {
+    const result_data = await db.clinicalScreeningInfo.findUnique({
+      where: {
+        id: data.caseId,
+      },
+    });
+
+    const emergencyPresentingIssues =
+      result_data?.emergencyPresentingIssues ?? {};
+
+    let combinedPresentingIssues = {
+      ...emergencyPresentingIssues,
+      ...data.presentingIssues,
+    };
+
+    const highestValue: riskStatusOptions = getHighestValue(
+      combinedPresentingIssues,
+    );
+
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: {
+        emergencyPresentingIssues: {
+          ...combinedPresentingIssues,
+        },
+        ...(highestValue && { riskStatus: highestValue }),
+      },
+    });
+
+    revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function updateClinicalCaseSessionAttendance(data: {
+  caseId: string;
+  session: string;
+  supervisorId: string;
+  dateOfSession: Date;
+}) {
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: {
+        sessions: {
+          create: {
+            date: data.dateOfSession,
+            session: data.session,
+            supervisorId: data.supervisorId,
+          },
+        },
+      },
+    });
+
+    revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function createClinicalCase(data: {
+  studentId: string;
+  schoolId: string;
+  currentSupervisorId: string;
+}) {
+  try {
+    const result = await db.clinicalScreeningInfo.create({
+      data: {
+        studentId: data.studentId,
+        schoolId: data.schoolId,
+        currentSupervisorId: data.currentSupervisorId,
+        flagged: false,
+        riskStatus: "No",
+        caseStatus: "Active",
+      },
+    });
+    console.log({ result });
+
+    revalidatePath("/screenings");
+    return { success: true, data: result };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function flagClinicalCaseForFollowUp(data: {
+  caseId: string;
+  reason: string;
+}) {
+  console.log({ data });
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: {
+        flagged: true,
+        caseReport: data.reason,
+      },
+    });
+
+    revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
     return { error: "Something went wrong" };
   }
 }
