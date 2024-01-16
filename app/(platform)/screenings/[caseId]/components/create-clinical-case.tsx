@@ -70,6 +70,7 @@ export default function CreateClinicalCaseDialogue({
       student: "",
     },
   });
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
   const [selectedSupId, setSelectedSupId] = useState<string>("");
   const [selectedFellowId, setSelectedFellowId] = useState<string>("");
@@ -91,6 +92,7 @@ export default function CreateClinicalCaseDialogue({
         variant: "default",
         title: "Case created successfully",
       });
+      setDialogOpen(false);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -122,7 +124,7 @@ export default function CreateClinicalCaseDialogue({
   }, [selectedSchoolId]);
 
   return (
-    <Dialog>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="gap-0 p-0">
         <Form {...form}>
