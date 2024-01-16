@@ -109,6 +109,7 @@ function IssueOptions({
   }
 
   const [selected, setSelected] = useState<string>(
+    // @ts-ignore TODO: fix this type
     emergency_options[name] ?? "",
   );
 
