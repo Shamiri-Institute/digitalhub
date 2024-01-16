@@ -1,9 +1,10 @@
 "use client";
 import { FlagStudentDialog } from "#/app/(platform)/screenings/[caseId]/components/flag-reason-dialog";
+import { CurrentCase } from "#/app/(platform)/screenings/screen";
 import { updateClinicalCaseStatus } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { cn, getInitials } from "#/lib/utils";
-import { ClinicalScreeningInfo, ClinicalSessionAttendance, Student, caseStatusOptions } from "@prisma/client";
+import { ClinicalCaseTransferTrail, ClinicalExpertCaseNotes, ClinicalScreeningInfo, ClinicalSessionAttendance, Prisma, Student, Supervisor, caseStatusOptions } from "@prisma/client";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -30,13 +31,10 @@ const casesColorOptions: {
   ];
 
 
-type CasesType = ClinicalScreeningInfo & {
-  student: Student
-  sessions: ClinicalSessionAttendance[]
-}
+export default function CaseHeader({ currentcase }: {
+  currentcase: CurrentCase
+}) {
 
-
-export default function CaseHeader({ currentcase }: { currentcase: CasesType }) {
   const [selected, setSelected] = useState<string>(currentcase.caseStatus);
   const [color, setColor] = useState<string | undefined>("");
   const [flagged, setFlagged] = useState<boolean>(currentcase.flagged);
