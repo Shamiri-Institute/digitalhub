@@ -8,26 +8,18 @@ import {
 } from "#/components/ui/accordion";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
-import { ClinicalScreeningInfo, ClinicalSessionAttendance, Student, ClinicalExpertCaseNotes, Supervisor, Fellow, ClinicalCaseTransferTrail } from "@prisma/client";
+import { Supervisor, Fellow } from "@prisma/client";
 import ConsultingClinicalExpertComments from "./consulting-clinical-expert";
 import { PresentingIssues } from "./presenting-issues";
 import { ReferralToDetails } from "./referral-details";
 import { Sessions } from "./student-sessions";
 import { ReferralFrom } from "#/app/(platform)/screenings/[caseId]/reffered-from";
+import { CurrentCase } from "#/app/(platform)/screenings/screen";
 
-type CurrentCase = ClinicalScreeningInfo & {
-    student: Student
-    sessions: ClinicalSessionAttendance[]
-    consultationComments: ClinicalExpertCaseNotes[]
-    currentSupervisor: Supervisor
-    caseTransferTrail: ClinicalCaseTransferTrail[]
-    consultingClinicalExpert: ClinicalExpertCaseNotes[]
-}
 
 type SupervisorWithFellows = Supervisor & {
     fellows: Fellow[]
 }
-
 
 export function StudentCaseTabs({
     currentcase,

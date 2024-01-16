@@ -16,20 +16,33 @@ export default async function Page({ params }: { params: { caseId: string } }) {
     },
     include: {
       student: true,
+      currentSupervisor: true,
       sessions: {
         orderBy: {
           date: "desc"
         }
       },
-      caseTransferTrail: true,
+      caseTransferTrail: {
+        orderBy: {
+          createdAt: "desc"
+        }
+      },
       consultingClinicalExpert: true,
-      // currentSupervisor:true,
       referredToSupervisor: true,
-
     }
   })
 
-  const supervisors = await db.supervisor.findMany({
+
+  const all_supervisors = await db.supervisor.findMany({
+    where: {
+      hubId: supervisor?.hubId
+    },
+    include: {
+      fellows: true
+    }
+  })
+
+  const fellows = await db.fellow.findMany({
     where: {
       hubId: supervisor?.hubId
     }
@@ -38,8 +51,8 @@ export default async function Page({ params }: { params: { caseId: string } }) {
 
   return (
     <div>
-      <CaseHeader currentcase={currentcase} />
-      <StudentCaseTabs currentcase={currentcase} supervisors={supervisors} />
+      {currentcase && <CaseHeader currentcase={currentcase} />}
+      {currentcase && <StudentCaseTabs currentcase={currentcase} supervisors={all_supervisors} currentSupId={supervisor?.id} />}
       <CaseNotePlan />
     </div>
 
