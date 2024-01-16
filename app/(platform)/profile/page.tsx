@@ -6,6 +6,7 @@ import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
 import { getInitials } from "#/lib/utils";
+import { FellowModifyDialog } from "../schools/[visibleId]/fellow-modify-dialog";
 import FellowCard from "./components/fellow-card";
 import { ReimbursementRequests } from "./reimbursement-requests";
 
@@ -70,6 +71,12 @@ export default async function SupervisorProfile() {
     },
   });
 
+  const implementer = await db.implementer.findFirst({
+    where: {
+      id: supervisor.hub?.implementerId,
+    },
+  });
+
   return (
     <main className="max-w-3xl">
       <IntroHeader />
@@ -80,6 +87,27 @@ export default async function SupervisorProfile() {
         studentCount={studentCount}
       />
       <MySchools />
+      <div className="mt-5 flex items-center justify-between">
+        <h3 className="text-base font-semibold text-brand xl:text-2xl">
+          My Fellows
+        </h3>
+        <FellowModifyDialog
+          mode="create"
+          info={{
+            hubVisibleId: supervisor.hub?.visibleId!,
+            supervisorVisibleId: supervisor.visibleId,
+            implementerVisibleId: implementer?.visibleId!,
+            schoolVisibleId: supervisor.assignedSchool.visibleId,
+          }}
+        >
+          <button className="transition-transform active:scale-95">
+            <Icons.plusCircle
+              className="h-6 w-6 text-shamiri-blue"
+              strokeWidth={1.5}
+            />
+          </button>
+        </FellowModifyDialog>
+      </div>
       <MyFellows fellows={supervisor.fellows} />
       <ReimbursementRequests requests={reimbursementRequests} />
     </main>
@@ -185,28 +213,16 @@ async function MySchools() {
   );
 }
 
-// only show fellows assigned to this supervisor
 function MyFellows({
   fellows,
 }: {
   fellows: NonNullable<CurrentSupervisor>["fellows"];
 }) {
   return (
-    <>
-      <div className="mt-5 flex items-center justify-between">
-        <h3 className="text-base font-semibold text-brand xl:text-2xl">
-          My Fellows
-        </h3>
-        <button>
-          <Icons.add className="h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
-        </button>
-      </div>
-
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:items-center sm:gap-6 md:grid-cols-2">
-        {fellows.map((fellow) => (
-          <FellowCard key={fellow.id} fellow={fellow} />
-        ))}
-      </div>
-    </>
+    <div className="mt-6 grid grid-cols-1 gap-4 sm:items-center sm:gap-6 md:grid-cols-2">
+      {fellows.map((fellow) => (
+        <FellowCard key={fellow.id} fellow={fellow} />
+      ))}
+    </div>
   );
 }
