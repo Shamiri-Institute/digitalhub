@@ -12,19 +12,19 @@ import { ClinicalScreeningInfo } from "@prisma/client";
 const colors = ["#7EA16B", "#FABC2A", "#B0D5EA"];
 
 export function ClinicalFeatureCard({
-  clinical_cases,
+  clinicalCases,
 }: {
-  clinical_cases: ClinicalScreeningInfo[];
+  clinicalCases: ClinicalScreeningInfo[];
 }) {
   type CaseData = { name: "Active" | "FollowUp" | "Terminated"; value: number };
 
-  const data: CaseData[] = [
+  const data = [
     { name: "Active", value: 0 },
     { name: "FollowUp", value: 0 },
     { name: "Terminated", value: 0 },
   ];
 
-  clinical_cases.forEach((case_) => {
+  clinicalCases.forEach((case_) => {
     if (case_.caseStatus === "Active") {
       (data[0] as CaseData).value += 1;
     } else if (case_.caseStatus === "FollowUp") {
@@ -85,7 +85,7 @@ function formatNumber(num: number | undefined) {
   if (num === undefined) {
     return "".padStart(2, "0");
   }
-  return num.toLocaleString().padStart(2, "0");
+  return num.toString().padStart(2, "0");
 }
 
 function LegendItem({
