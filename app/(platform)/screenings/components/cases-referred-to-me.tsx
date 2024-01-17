@@ -8,7 +8,6 @@ import { Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
-import { cn } from "#/lib/utils";
 import { ClinicalScreeningInfo, Student } from "@prisma/client";
 
 type CasesType = ClinicalScreeningInfo & {
@@ -99,10 +98,7 @@ export function RefferedCasesTab({
 
   return (
     <Card
-      className={cn(
-        "pr-3.5bg-white my-2 flex  items-center justify-between gap-5 p-4",
-      )}
-    >
+      className="pr-3.5bg-white my-2 flex  items-center justify-between gap-5 p-4">
       <p className="text-base font-medium text-brand">{name}</p>
       <div className="flex items-center justify-between">
         <button onClick={handleAcceptReferredCase}>
