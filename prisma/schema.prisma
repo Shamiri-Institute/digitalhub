@@ -519,6 +519,7 @@ model Supervisor {
   referredToMeClinicalCases ClinicalScreeningInfo[]     @relation("referredtocases")
   repaymentRequests         RepaymentRequest[]
   overallFellowEvaluation   OverallFellowEvaluation[]
+  fellowComplaints          FellowComplaints[]
 
   @@map("supervisors")
 }
@@ -866,4 +867,13 @@ model ClinicalSessionAttendance {
   case         ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
 
   @@map("clinical_session_attendance")
+}
+
+model FellowComplaints {
+  id           String     @id @default(cuid())
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  complaint    String     @db.Text()
+  supervisorId String     @map("supervisor_id") @db.VarChar(255)
+  supervisor   Supervisor @relation(fields: [supervisorId], references: [id])
 }
