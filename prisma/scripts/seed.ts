@@ -211,6 +211,7 @@ async function createInterventionSessions(db: Database) {
 async function createSupervisors(db: Database) {
   console.log("Creating supervisors");
 
+  let count = 0;
   await parseCsvFile("supervisor_info", async (supervisor: any) => {
     try {
       await db.supervisor.create({
@@ -229,13 +230,11 @@ async function createSupervisors(db: Database) {
           idNumber: supervisor["ID_No"],
           cellNumber: supervisor["Cell_No"],
           mpesaNumber: supervisor["MPESA_No"],
-          implementerId: supervisor["Implementer_ID"]
-            ? (
-                await db.implementer.findUnique({
-                  where: { visibleId: supervisor["Implementer_ID"] },
-                })
-              )?.id
-            : null,
+          implementerId: (
+            await db.implementer.findUnique({
+              where: { visibleId: supervisor["Implementer_ID"] },
+            })
+          )?.id!,
           county: supervisor["County"],
           subCounty: supervisor["Sub-County"],
           bankName: supervisor["Bank_Name"],
