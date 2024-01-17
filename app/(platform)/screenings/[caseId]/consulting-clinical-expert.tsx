@@ -1,6 +1,7 @@
 "use client";
 
-import CommentsDialogue from "#/app/(platform)/screenings/[name]/components/consulting-comments";
+import CommentsDialogue from "#/app/(platform)/screenings/[caseId]/components/consulting-comments";
+import { supConsultClinicalexpert } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Form, FormField } from "#/components/ui/form";
 import {
@@ -13,35 +14,42 @@ import {
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ClinicalExpertCaseNotes, ClinicalScreeningInfo } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const FormSchema = z.object({
-  session: z.string({
-    required_error: "Please select the session to reschedule.",
+  clinicalExpert: z.string({
+    required_error: "Please select the clinical expert.",
   }),
-  role: z.string({
-    required_error: "Please select the role to invite as.",
+  clincalNotes: z.string({
+    required_error: "Please enter the clinical notes.",
   }),
 });
 
-const initialState = {
-  message: null,
+type CurrentCase = ClinicalScreeningInfo & {
+  consultingClinicalExpert: ClinicalExpertCaseNotes[];
 };
 
-export default function ConsultingClinicalExpert() {
+export default function ConsultingClinicalExpertComments({
+  currentcase,
+}: {
+  currentcase: CurrentCase;
+}) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    await supConsultClinicalexpert({
+      caseId: currentcase.id,
+      name: data.clinicalExpert,
+      comment: data.clincalNotes,
+    });
+
     toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
+      variant: "default",
+      title: "Consulting clinical expert sent successfully",
     });
   }
 
@@ -49,26 +57,28 @@ export default function ConsultingClinicalExpert() {
     <div className="mt-2">
       <Form {...form}>
         <form
-          // onSubmit={form.handleSubmit(onSubmit)}
-          // action={formAction}
-          className="overflow-hidden text-ellipsis"
+          id="submitConsultingExpert"
+          onSubmit={form.handleSubmit(onSubmit, (errors) => {
+            console.error({ errors });
+          })}
+          className="overflow-hidden text-ellipsis px-1"
         >
           <div className="my-6 space-y-6">
             <div className="px-4">
               <FormField
-                // control={form.control}
-                name="session"
+                control={form.control}
+                name="clinicalExpert"
                 render={({ field }) => (
                   <div className="mt-3 grid w-full gap-1.5">
                     <Select
-                      name="session"
-                      // defaultValue={fellow?.gender || field.value}
+                      name="clinicalExpert"
+                      defaultValue={field.value}
                       onValueChange={field.onChange}
                     >
                       <SelectTrigger>
                         <SelectValue
                           className="text-muted-foreground"
-                          // defaultValue={fellow?.gender || field.value}
+                          defaultValue={field.value}
                           onChange={field.onChange}
                           placeholder={
                             <span className="text-muted-foreground">
@@ -92,17 +102,16 @@ export default function ConsultingClinicalExpert() {
 
             <div className="px-4">
               <FormField
-                // control={form.control}
-                name="session"
+                control={form.control}
+                name="clincalNotes"
                 render={({ field }) => (
                   <div className="mt-3 grid w-full gap-1.5">
                     <Textarea
-                      id="reason"
-                      name="reason"
-                      //   onChange={(event) => setReason(event.target.value)}
-                      //   defaultValue={reason}
-                      placeholder="Write in any consulting notes, especially the reason why this clinical expert needs to be involved in this case..."
+                      id="clincalNotes"
                       className="mt-1.5 resize-none bg-card"
+                      placeholder="Write referral notes here..."
+                      data-1p-ignore="true"
+                      {...field}
                     />
                   </div>
                 )}
@@ -110,31 +119,24 @@ export default function ConsultingClinicalExpert() {
             </div>
           </div>
           <div className="flex justify-end px-6 pb-6">
-            <Button variant="brand" type="submit" className="w-full">
+            <Button
+              variant="brand"
+              type="submit"
+              className="w-full"
+              form="submitConsultingExpert"
+            >
               Save Consulting Note
             </Button>
           </div>
-          {/* {comments.length > 3 && <button className="mt-4 w-full text-xs text-shamiri-blue" onClick={() => setShowMore((showMore) => !showMore)}>
-                            {showMore ? 'Show Less' : 'Show More'}
-                        </button>
-                        } */}
-          <CommentsDialogue>
-            <button
-              className="mt-4 w-full text-xs text-shamiri-blue"
-              // onClick={() => setShowMore((showMore) => !showMore)}
-              // onClick={(e) => {
-              // e.preventDefault();
-              // setDialogOpen(true);
-              // }}
-            >
-              READ 5 COMMENTS
-            </button>
-          </CommentsDialogue>
-          <p aria-live="polite" className="sr-only" role="status">
-            {/* {state?.message} */}
-          </p>
         </form>
       </Form>
+      <CommentsDialogue
+        consultingClinicalExpert={currentcase.consultingClinicalExpert}
+      >
+        <button className="mt-4 w-full text-xs text-shamiri-blue">
+          READ {currentcase.consultingClinicalExpert.length} COMMENTS
+        </button>
+      </CommentsDialogue>
     </div>
   );
 }

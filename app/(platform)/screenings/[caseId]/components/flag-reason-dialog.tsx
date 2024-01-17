@@ -1,5 +1,6 @@
 "use client";
 
+import { flagClinicalCaseForFollowUp } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -11,6 +12,7 @@ import { Form, FormField } from "#/components/ui/form";
 import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
+import { useToast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as React from "react";
 import { useForm } from "react-hook-form";
@@ -23,39 +25,43 @@ const FormSchema = z.object({
 });
 
 export function FlagStudentDialog({
-  // case,
+  caseId,
+  reason,
   children,
 }: {
-  // case: ;
+  caseId: string;
+  reason: string | null;
   children: React.ReactNode;
 }) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
+    defaultValues: {
+      reason: reason || "",
+    },
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    // TODO: AFTER SUBMITTING, SEND EMAIL TO CLINICAL OPERATIONS TEAM
-    // if (response?.error) {
-    //   toast({
-    //     variant: "destructive",
-    //     title: response?.error,
-    //   });
-    //   return;
-    // }
-    // if (response) {
-    //   toast({
-    //     // title: `Dropped out ${student.studentName}`,
-    //   });
-    //   setDialogOpen(false);
-    //   form.reset();
-    // } else {
-    //   toast({
-    //     variant: "destructive",
-    //     title: "Something went wrong",
-    //   });
-    // }
+    try {
+      await flagClinicalCaseForFollowUp({
+        caseId,
+        reason: data.reason,
+      });
+
+      toast({
+        variant: "default",
+        title: "Case flagged for follow up",
+      });
+      form.reset();
+      setDialogOpen(false);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error flagging case for follow up. Please try again",
+      });
+    }
   }
 
   return (
@@ -64,7 +70,10 @@ export function FlagStudentDialog({
       <DialogContent className="gap-0 p-0">
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            id="modifyFlagAction"
+            onSubmit={form.handleSubmit(onSubmit, (errors) => {
+              console.error({ errors });
+            })}
             className="overflow-hidden text-ellipsis"
           >
             <DialogHeader className="space-y-0 px-6 py-4">
@@ -83,12 +92,12 @@ export function FlagStudentDialog({
                   name="reason"
                   render={({ field }) => (
                     <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="emails">Reason</Label>
+                      <Label htmlFor="reason">Reason</Label>
                       <Textarea
                         id="reason"
                         name="reason"
                         onChange={field.onChange}
-                        defaultValue={field.value}
+                        defaultValue={reason ?? field.value}
                         placeholder="e.g. This case needs the police because..."
                         className="mt-1.5 resize-none bg-card"
                       />
@@ -98,7 +107,12 @@ export function FlagStudentDialog({
               </div>
             </div>
             <div className="flex justify-end px-6 pb-6">
-              <Button variant="brand" type="submit" className="w-full">
+              <Button
+                form="modifyFlagAction"
+                variant="brand"
+                type="submit"
+                className="w-full"
+              >
                 Submit
               </Button>
             </div>

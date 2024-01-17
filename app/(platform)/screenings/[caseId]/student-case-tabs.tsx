@@ -1,3 +1,6 @@
+"use client";
+import { ReferralFrom } from "#/app/(platform)/screenings/[caseId]/reffered-from";
+import { CurrentCase } from "#/app/(platform)/screenings/screen";
 import { Icons } from "#/components/icons";
 import {
   Accordion,
@@ -7,26 +10,25 @@ import {
 } from "#/components/ui/accordion";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
-import CaseHeader from "./case-header";
-import { CaseNotePlan } from "./case-notes-plan";
-import ConsultingClinicalExpert from "./consulting-clinical-expert";
+import { Fellow, Supervisor } from "@prisma/client";
+import ConsultingClinicalExpertComments from "./consulting-clinical-expert";
 import { PresentingIssues } from "./presenting-issues";
-import { ReferralDetails } from "./referral-details";
+import { ReferralToDetails } from "./referral-details";
 import { Sessions } from "./student-sessions";
 
-const ScreeningDetails = ({ params }: { params: { name: string } }) => {
-  return (
-    <div>
-      <CaseHeader name={params.name} />
-      <StudentCaseTabs />
-      <CaseNotePlan />
-    </div>
-  );
+type SupervisorWithFellows = Supervisor & {
+  fellows: Fellow[];
 };
 
-export default ScreeningDetails;
-
-function StudentCaseTabs() {
+export function StudentCaseTabs({
+  currentcase,
+  supervisors = [],
+  currentSupId,
+}: {
+  currentcase: CurrentCase;
+  supervisors: SupervisorWithFellows[];
+  currentSupId: string | undefined;
+}) {
   return (
     <div className="mt-4">
       <Accordion type="single" collapsible>
@@ -46,7 +48,7 @@ function StudentCaseTabs() {
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <PresentingIssues />
+            <PresentingIssues currentcase={currentcase} />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2">
@@ -63,7 +65,11 @@ function StudentCaseTabs() {
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <Sessions />
+            <Sessions
+              sessions={currentcase.sessions}
+              caseId={currentcase.id}
+              supervisorId={currentcase.currentSupervisorId}
+            />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3">
@@ -75,15 +81,40 @@ function StudentCaseTabs() {
             iconClass={"h-7 w-7 mr-3 text-brand"}
           >
             <div className="flex items-center">
-              <Icons.referral className="mr-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
-              <span className="items-center align-middle">Referral</span>
+              <Icons.network className="mr-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
+              <span className="items-center align-middle">Referral From</span>
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <ReferralDetails />
+            <ReferralFrom
+              currentcase={currentcase}
+              supervisors={supervisors}
+              currentSupId={currentSupId}
+            />
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-4">
+          <AccordionTrigger
+            className={cn(
+              "items-right border border-border/50 bg-white px-5",
+              "data-[state=open]:bg-shamiri-blue",
+            )}
+            iconClass={"h-7 w-7 mr-3 text-brand"}
+          >
+            <div className="flex items-center">
+              <Icons.referral className="mr-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
+              <span className="items-center align-middle">Refer To </span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <ReferralToDetails
+              currentcase={currentcase}
+              supervisors={supervisors}
+              currentSupId={currentSupId}
+            />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="item-5">
           <AccordionTrigger
             className={cn(
               "items-right border border-border/50 bg-white px-5",
@@ -99,7 +130,7 @@ function StudentCaseTabs() {
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <ConsultingClinicalExpert />
+            <ConsultingClinicalExpertComments currentcase={currentcase} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
