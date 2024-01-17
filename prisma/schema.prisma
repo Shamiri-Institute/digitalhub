@@ -490,7 +490,7 @@ model Supervisor {
   cellNumber                String?                     @map("cell_number") @db.VarChar(255)
   mpesaName                 String?                     @map("mpesa_name") @db.VarChar(255)
   mpesaNumber               String?                     @map("mpesa_number") @db.VarChar(20)
-  implementerId             String?                     @map("implementer_id") @db.VarChar(255)
+  implementerId             String                      @map("implementer_id") @db.VarChar(255)
   implementer               Implementer?                @relation(fields: [implementerId], references: [id])
   county                    String?                     @map("county") @db.VarChar(255)
   subCounty                 String?                     @map("sub_county") @db.VarChar(255)
