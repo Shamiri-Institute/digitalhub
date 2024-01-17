@@ -2,7 +2,6 @@ import { AddClinicalSessionDialog } from "#/app/(platform)/screenings/[caseId]/c
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
-import { cn } from "#/lib/utils";
 import { ClinicalSessionAttendance } from "@prisma/client";
 
 type SessionsType = ClinicalSessionAttendance;
@@ -18,7 +17,7 @@ export function Sessions({
 }) {
   return (
     <div className="flex flex-col">
-      <Card className={cn("pr-3.5bg-white  my-2 gap-5 p-4")}>
+      <Card className="pr-3.5bg-white  my-2 gap-5 p-4">
         <div className="mb-2 flex justify-between">
           <p className="text-base font-medium text-muted-foreground">No.</p>
           <p className="text-base font-medium text-muted-foreground">
