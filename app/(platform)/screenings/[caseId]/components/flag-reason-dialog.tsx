@@ -92,12 +92,11 @@ export function FlagStudentDialog({
                   name="reason"
                   render={({ field }) => (
                     <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="emails">Reason</Label>
+                      <Label htmlFor="reason">Reason</Label>
                       <Textarea
                         id="reason"
                         name="reason"
                         onChange={field.onChange}
-                        // defaultValue={field.value}
                         defaultValue={reason ?? field.value}
                         placeholder="e.g. This case needs the police because..."
                         className="mt-1.5 resize-none bg-card"
