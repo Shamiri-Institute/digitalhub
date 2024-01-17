@@ -1,33 +1,47 @@
 "use client";
+import { updateClinicalCaseEmergencyPresentingIssue } from "#/app/actions";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
+import {
+  ClinicalScreeningInfo,
+  ClinicalSessionAttendance,
+  Prisma,
+  Student,
+} from "@prisma/client";
 import { useState } from "react";
 import GeneralIssues from "./general-issues";
 
-export function PresentingIssues() {
+type CurrentCase = ClinicalScreeningInfo & {
+  student: Student;
+  sessions: ClinicalSessionAttendance[];
+};
+export function PresentingIssues({
+  currentcase,
+}: {
+  currentcase: CurrentCase;
+}) {
   return (
     <div className="mt-4">
       <h3 className="mb-2 text-sm font-medium text-muted-foreground">
         Emergency
       </h3>
       <Separator />
-      <DiagnosingBoard />
-      <GeneralIssues />
+      <DiagnosingBoard currentcase={currentcase} />
+      <GeneralIssues currentcase={currentcase} />
     </div>
   );
 }
 
 const emergency_options = [
-  { id: 1, name: "Anxiety" },
-  { id: 2, name: "Self-harm" },
-  { id: 3, name: "Stress" },
+  { id: 1, name: "Child Abuse" },
+  { id: 2, name: "Self-harm/Suicidality" },
+  { id: 3, name: "Sexual Abuse" },
   { id: 4, name: "Bullying" },
-  { id: 5, name: "Sexual abuse" },
-  { id: 5, name: "Suicidality" },
+  { id: 5, name: "Substance Abuse" },
 ];
 
-function DiagnosingBoard() {
+function DiagnosingBoard({ currentcase }: { currentcase: CurrentCase }) {
   return (
     <div>
       <div className="mt-4 flex justify-between">
@@ -48,7 +62,12 @@ function DiagnosingBoard() {
         </div>
       </div>
       {emergency_options.map((option) => (
-        <IssueOptions key={option.id} name={option.name} />
+        <IssueOptions
+          emergency_options={currentcase.emergencyPresentingIssues}
+          caseId={currentcase.id}
+          key={option.id}
+          name={option.name}
+        />
       ))}
     </div>
   );
@@ -76,13 +95,52 @@ function SingleIssueOption({
   );
 }
 
-function IssueOptions({ name }: { name: string }) {
-  const [selected, setSelected] = useState<string>("");
+function IssueOptions({
+  name,
+  caseId,
+  emergency_options = {},
+}: {
+  name: string;
+  caseId: string;
+  emergency_options: { [key: string]: string } | Prisma.JsonValue | null;
+}) {
+  if (!emergency_options) {
+    emergency_options = {};
+  }
 
-  const handlePresentingIssue = (option: string) => {
-    // TODO: API CALL - name is the presenting issue
+  const [selected, setSelected] = useState<string>(
+    // @ts-ignore TODO: fix this type
+    emergency_options[name] ?? "",
+  );
+
+  const handlePresentingIssue = async (option: string) => {
     let valueSelected = { name, option };
-    setSelected(option);
+
+    let result = { [valueSelected.name]: valueSelected.option };
+    try {
+      if (option === selected) {
+        setSelected("");
+
+        await updateClinicalCaseEmergencyPresentingIssue({
+          caseId: caseId,
+          presentingIssues: {
+            ...result,
+            [valueSelected.name]: "",
+          },
+        });
+        return;
+      } else {
+        setSelected(option);
+        await updateClinicalCaseEmergencyPresentingIssue({
+          caseId: caseId,
+          presentingIssues: {
+            ...result,
+          },
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
