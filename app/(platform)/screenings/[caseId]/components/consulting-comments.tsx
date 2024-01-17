@@ -31,8 +31,8 @@ const CommentsDialogue = ({
               <Comment
                 key={comment.id}
                 clinicalExpertName={comment.name}
-                date={comment.date}
-                comment={comment.commment}
+                date={comment.createdAt}
+                comment={comment.comment}
               />
             ))}
           </div>
