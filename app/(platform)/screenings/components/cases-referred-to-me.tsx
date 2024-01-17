@@ -97,8 +97,7 @@ export function RefferedCasesTab({
   };
 
   return (
-    <Card
-      className="pr-3.5bg-white my-2 flex  items-center justify-between gap-5 p-4">
+    <Card className="pr-3.5bg-white my-2 flex  items-center justify-between gap-5 p-4">
       <p className="text-base font-medium text-brand">{name}</p>
       <div className="flex items-center justify-between">
         <button onClick={handleAcceptReferredCase}>

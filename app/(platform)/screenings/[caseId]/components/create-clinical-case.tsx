@@ -80,7 +80,6 @@ export default function CreateClinicalCaseDialogue({
   const { toast } = useToast();
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-
     if (!currentSupervisorId) {
       toast({
         variant: "destructive",
@@ -327,7 +326,7 @@ export default function CreateClinicalCaseDialogue({
         </Form>
         <div className="flex justify-end px-6 pb-6">
           <Link href={"/screenings/create-student"} className="flex flex-1">
-            <Button variant="brand" onClick={() => { }} className="w-full">
+            <Button variant="brand" onClick={() => {}} className="w-full">
               Non-Shamiri Student
             </Button>
           </Link>

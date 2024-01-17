@@ -133,8 +133,7 @@ function ClinicalCassesCard({
 }) {
   return (
     <Link href={`/screenings/${caseId}`}>
-      <div
-        className="mt-2 flex flex-1 items-center justify-between border-b last:border-none">
+      <div className="mt-2 flex flex-1 items-center justify-between border-b last:border-none">
         <p className="flex-1 text-left text-sm text-brand">{name}</p>
         <p className="flex-1 text-sm text-brand">{session}</p>
         <p
@@ -143,8 +142,8 @@ function ClinicalCassesCard({
             risk === "High"
               ? "text-shamiri-red"
               : risk === "Mid"
-                ? "text-muted-yellow"
-                : "text-muted-green",
+              ? "text-muted-yellow"
+              : "text-muted-green",
           )}
         >
           {risk}

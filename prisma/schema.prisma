@@ -517,8 +517,8 @@ model Supervisor {
   fellowReportingNotes      FellowReportingNotes[]
   clinicalScreeningCases    ClinicalScreeningInfo[]
   referredToMeClinicalCases ClinicalScreeningInfo[]     @relation("referredtocases")
-  repaymentRequests       RepaymentRequest[]
-  overallFellowEvaluation OverallFellowEvaluation[]
+  repaymentRequests         RepaymentRequest[]
+  overallFellowEvaluation   OverallFellowEvaluation[]
 
   @@map("supervisors")
 }
@@ -847,9 +847,8 @@ model ClinicalExpertCaseNotes {
   id        String                @id @default(cuid())
   createdAt DateTime              @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt DateTime              @updatedAt @map("updated_at")
-  date      DateTime              @default(now()) @map("date") @db.Timestamptz()
   name      String                @map("name") @db.VarChar(255)
-  commment  String                @map("commment") @db.Text()
+  comment   String                @map("comment") @db.Text()
   caseId    String
   case      ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
 
