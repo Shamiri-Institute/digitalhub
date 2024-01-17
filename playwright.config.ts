@@ -9,14 +9,11 @@ const slowMo = process.env.SLOW ? parseInt(process.env.SLOW) : undefined;
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  forbidOnly: isCI,
+  retries: isCI ? 2 : 0,
+  workers: isCI ? 1 : undefined,
   reporter: "html",
-  use: {
-    // trace: "on-first-retry",
-    // headless: isCI,
-  },
+  globalSetup: "./tests/global-setup.ts",
   projects: [
     {
       name: "chromium",

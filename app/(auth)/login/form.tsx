@@ -41,6 +41,7 @@ export function LoginForm() {
         // loading={clickedGoogle}
         disabled={clickedEmail}
         className="flex gap-2"
+        data-testid="google-login"
       >
         <Icons.google className="h-4 w-4" />
         Continue with Google

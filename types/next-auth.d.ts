@@ -9,3 +9,9 @@ declare module "next-auth" {
     user: SessionUser;
   }
 }
+
+declare module "next-auth/jwt" {
+  interface JWT extends DefaultJWT {
+    memberships?: JWTMembership[];
+  }
+}
