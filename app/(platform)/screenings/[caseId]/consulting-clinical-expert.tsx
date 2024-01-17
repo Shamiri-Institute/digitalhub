@@ -1,7 +1,7 @@
 "use client";
 
 import CommentsDialogue from "#/app/(platform)/screenings/[caseId]/components/consulting-comments";
-import { SupConsultClinicalexpert } from "#/app/actions";
+import { supConsultClinicalexpert } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Form, FormField } from "#/components/ui/form";
 import {
@@ -20,10 +20,10 @@ import { z } from "zod";
 
 const FormSchema = z.object({
   clinicalExpert: z.string({
-    required_error: "Please select the session to reschedule.",
+    required_error: "Please select the clinical expert.",
   }),
   clincalNotes: z.string({
-    required_error: "Please select the role to invite as.",
+    required_error: "Please enter the clinical notes.",
   }),
 });
 
@@ -41,10 +41,10 @@ export default function ConsultingClinicalExpertComments({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    await SupConsultClinicalexpert({
+    await supConsultClinicalexpert({
       caseId: currentcase.id,
       name: data.clinicalExpert,
-      commment: data.clincalNotes,
+      comment: data.clincalNotes,
     });
 
     toast({
