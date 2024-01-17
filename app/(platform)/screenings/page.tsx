@@ -8,7 +8,7 @@ import { db } from "#/lib/db";
 export default async function Page() {
   const supervisor = await currentSupervisor();
 
-  const referred_cases = await db.clinicalScreeningInfo.findMany({
+  const referredCases = await db.clinicalScreeningInfo.findMany({
     where: {
       referredToSupervisorId: supervisor?.id,
       acceptCase: false,
@@ -18,7 +18,7 @@ export default async function Page() {
     },
   });
 
-  const my_cases = await db.clinicalScreeningInfo.findMany({
+  const myCases = await db.clinicalScreeningInfo.findMany({
     where: {
       currentSupervisorId: supervisor?.id,
     },
@@ -53,7 +53,7 @@ export default async function Page() {
     },
   });
 
-  const clinical_cases = await db.clinicalScreeningInfo.findMany({
+  const clinicalCases = await db.clinicalScreeningInfo.findMany({
     where: {
       currentSupervisorId: supervisor?.id,
     },
@@ -61,16 +61,16 @@ export default async function Page() {
 
   return (
     <div>
-      <ClinicalFeatureCard clinical_cases={clinical_cases} />
+      <ClinicalFeatureCard clinicalCases={clinicalCases} />
       <CasesReferredToMe
-        cases={referred_cases}
+        cases={referredCases}
         currentSupervisorId={supervisor?.id}
       />
       <CreateClinicalCases
         currentSupervisorId={supervisor?.id}
         schools={schools}
       />
-      <ListViewOfClinicalCases cases={my_cases} />
+      <ListViewOfClinicalCases cases={myCases} />
     </div>
   );
 }
