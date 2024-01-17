@@ -50,6 +50,7 @@ async function SupervisorView() {
         <SupervisorOverviewCards
           fellowCount={fellowCount}
           schoolCount={schoolCount}
+          supervisorId={supervisor.id}
         />
       </div>
 
@@ -87,10 +88,18 @@ async function SupervisorView() {
 async function SupervisorOverviewCards({
   fellowCount,
   schoolCount,
+  supervisorId,
 }: {
   fellowCount: number;
   schoolCount: number;
+  supervisorId: string;
 }) {
+  const clinicalCases = await db.clinicalScreeningInfo.findMany({
+    where: {
+      currentSupervisorId: supervisorId,
+    },
+  });
+
   return (
     <div className="mb-4 grid grid-cols-1 gap-4 xs:grid-cols-2 sm:grid-cols-3 sm:gap-6">
       <FeatureCard
@@ -105,7 +114,7 @@ async function SupervisorOverviewCards({
         stat={schoolCount}
         Icon={Icons.schoolMinusOutline}
       />
-      <ClinicalFeatureCard />
+      <ClinicalFeatureCard clinicalCases={clinicalCases} />
     </div>
   );
 }

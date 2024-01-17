@@ -1,3 +1,4 @@
+import { riskStatusOptions } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx";
 import { Metadata } from "next";
 import { twMerge } from "tailwind-merge";
@@ -58,4 +59,20 @@ export function ordinalSuffixOf(i: number): string {
     return i + "rd";
   }
   return i + "th";
+}
+
+export function getHighestValue(data: {
+  [k: string]: string;
+}): riskStatusOptions {
+  const values = Object.values(data);
+
+  if (values.includes("High")) {
+    return "High";
+  } else if (values.includes("Med")) {
+    return "Medium";
+  } else if (values.includes("Low")) {
+    return "Low";
+  } else {
+    return "No";
+  }
 }
