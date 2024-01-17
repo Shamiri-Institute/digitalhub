@@ -16,6 +16,29 @@ import { Prisma, School } from "@prisma/client";
 
 type sessionTypes = Prisma.InterventionSessionGetPayload<{}>[];
 
+const expectedSessionTypesOnCard = [
+  {
+    id: 1,
+    sessionName: "Presession",
+  },
+  {
+    id: 2,
+    sessionName: "Session 1",
+  },
+  {
+    id: 3,
+    sessionName: "Session 2",
+  },
+  {
+    id: 4,
+    sessionName: "Session 3",
+  },
+  {
+    id: 5,
+    sessionName: "Session 4",
+  },
+];
+
 export function SchoolCardProfile({
   school,
   sessionTypes,
@@ -120,15 +143,21 @@ export function SchoolCardProfile({
 
       <div className="flex justify-between gap-2">
         <div className="flex gap-3">
-          {sessionTypes.map((sessiontype) => (
+          {expectedSessionTypesOnCard.map((sessiontype) => (
             <div key={sessiontype.id} className="flex flex-col items-center">
               <p className="text-xs font-medium text-muted-foreground">
                 {sessiontype.sessionName}
               </p>
               <div
                 className={cn("mt-2 h-4 w-4 rounded-full", {
-                  "bg-gray-300": !sessiontype.sessionName,
-                  "bg-green-600": sessiontype.sessionName,
+                  "bg-gray-300": !doesSessionExist(
+                    sessionTypes,
+                    sessiontype.sessionName,
+                  ),
+                  "bg-green-600": doesSessionExist(
+                    sessionTypes,
+                    sessiontype.sessionName,
+                  ),
                 })}
               ></div>
             </div>
@@ -137,7 +166,9 @@ export function SchoolCardProfile({
         <Link href={`/schools/${school.visibleId}`}>
           <Button className="flex gap-1 bg-shamiri-blue text-white hover:bg-shamiri-blue-darker">
             <Icons.users className="h-4 w-4" />
-            <p className="whitespace-nowrap text-sm">{fellowsCount} Fellows</p>
+            <p className="whitespace-nowrap text-sm">
+              {fellowsCount} {fellowsCount === 1 ? "Fellow" : "Fellows"}
+            </p>
           </Button>
         </Link>
       </div>
@@ -207,4 +238,8 @@ export function SchoolCardProfile({
       </div>
     </Card>
   );
+}
+
+function doesSessionExist(sessionTypes: sessionTypes, sessionName: string) {
+  return sessionTypes.some((session) => session.sessionName === sessionName);
 }
