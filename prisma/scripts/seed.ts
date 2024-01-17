@@ -26,6 +26,7 @@ async function seedDatabase() {
   await createStudents(db);
   await createFixtures(db);
   await createOverallEvaluationRatings(db);
+  await createFellowComplaints(db);
 
   console.log("Development database seeding complete 🌱");
 }
@@ -43,7 +44,7 @@ seedDatabase()
 async function truncateTables() {
   console.log("Truncating tables");
   await db.$executeRaw`
-          TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, user_recent_opens, hubs, students, student_outcomes, fellows, intervention_sessions, intervention_group_sessions, intervention_session_ratings, intervention_session_notes, fellow_attendances, supervisors, schools, hub_coordinators, student_complaints, repayment_requests, reimbursement_requests CASCADE;
+          TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, user_recent_opens, hubs, students, student_outcomes, fellows, intervention_sessions, intervention_group_sessions, intervention_session_ratings, intervention_session_notes, fellow_attendances, supervisors, schools, hub_coordinators, student_complaints, repayment_requests, reimbursement_requests, overall_fellow_evaluations, fellow_complaints CASCADE;
           `;
 }
 
@@ -540,12 +541,33 @@ async function createOverallEvaluationRatings(db: Database) {
       data.push({
         supervisorId: fellow.supervisorId,
         fellowId: fellow.id,
-        fellowBehaviourNotes: faker.lorem.paragraph({ min: 3, max: 3 }),
-        programDeliveryNotes: faker.lorem.paragraph({ min: 3, max: 3 }),
-        dressingAndGroomingNotes: faker.lorem.paragraph({ min: 3, max: 3 }),
-        attendanceNotes: faker.lorem.paragraph({ min: 3, max: 3 }),
+        fellowBehaviourNotes: faker.lorem.paragraph(3),
+        programDeliveryNotes: faker.lorem.paragraph(3),
+        dressingAndGroomingNotes: faker.lorem.paragraph(3),
+        attendanceNotes: faker.lorem.paragraph(3),
       });
     }
   }
   await db.overallFellowEvaluation.createMany({ data });
+}
+
+async function createFellowComplaints(db: Database) {
+  const supervisors = await db.supervisor.findMany({
+    include: {
+      fellows: true,
+    },
+  });
+
+  const data = [];
+  for (const supervisor of supervisors.slice(0, 4)) {
+    for (const fellow of supervisor.fellows.slice(0, 4)) {
+      data.push({
+        complaint: faker.lorem.paragraph(3),
+        fellowId: fellow.id,
+        supervisorId: supervisor.id,
+      });
+    }
+  }
+
+  await db.fellowComplaints.createMany({ data });
 }

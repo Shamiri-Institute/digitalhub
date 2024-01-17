@@ -879,4 +879,6 @@ model FellowComplaints {
   supervisor   Supervisor @relation(fields: [supervisorId], references: [id])
   fellowId     String     @map("fellow_id") @db.VarChar(255)
   fellow       Fellow     @relation(fields: [fellowId], references: [id])
+
+  @@map("fellow_complaints")
 }
