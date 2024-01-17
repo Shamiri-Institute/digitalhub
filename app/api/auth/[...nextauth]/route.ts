@@ -106,6 +106,26 @@ const authOptions: AuthOptions = {
       session.user = sessionUser;
       return session;
     },
+    jwt: async ({ token, user, account, trigger }) => {
+      if (trigger === "signIn") {
+        console.log("jwt", { token, user, account });
+        if (user.email) {
+          const userExists = await db.user.findUnique({
+            where: { email: user.email },
+            select: {
+              memberships: {
+                select: {
+                  implementer: true,
+                  role: true,
+                },
+              },
+            },
+          });
+          console.log("jwt", { userExists });
+        }
+      }
+      return token;
+    },
   },
 };
 

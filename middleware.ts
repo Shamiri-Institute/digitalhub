@@ -1,8 +1,7 @@
-import { NextFetchEvent, NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { NextRequest } from "next/server";
 
-import { APP_HOSTNAMES } from "#/lib/constants";
 import AppMiddleware from "#/lib/middleware/app";
-import { parse } from "#/lib/middleware/utils";
 
 export const config = {
   matcher: [
@@ -17,10 +16,8 @@ export const config = {
   ],
 };
 
-export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
-  const { domain, path, fullPath, key } = parse(req);
+export default async function middleware(request: NextRequest) {
+  const token = await getToken({ req: request });
 
-  if (APP_HOSTNAMES.has(domain)) {
-    return AppMiddleware(req);
-  }
+  return AppMiddleware(request);
 }
