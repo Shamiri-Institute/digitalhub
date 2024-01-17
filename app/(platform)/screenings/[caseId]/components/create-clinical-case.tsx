@@ -80,6 +80,15 @@ export default function CreateClinicalCaseDialogue({
   const { toast } = useToast();
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+
+    if (!currentSupervisorId) {
+      toast({
+        variant: "destructive",
+        title: "Error creating case. No supervisor found.",
+      });
+      return;
+    }
+
     try {
       await createClinicalCase({
         schoolId: data.school,
@@ -106,7 +115,7 @@ export default function CreateClinicalCaseDialogue({
     const students = fellows?.find((fellow) => fellow.id === selectedFellowId)
       ?.students;
     setStudents(students);
-  }, [selectedFellowId]);
+  }, [selectedFellowId, fellows]);
 
   useEffect(() => {
     // from the selected supervisor id, get the fellow
@@ -114,14 +123,14 @@ export default function CreateClinicalCaseDialogue({
       ?.fellows;
     console.log({ fellow });
     setFellows(fellow);
-  }, [selectedSupId]);
+  }, [selectedSupId, supervisors]);
 
   useEffect(() => {
     // from the selected school id, get the supervisors
     const supervisors = schools.find((school) => school.id === selectedSchoolId)
       ?.supervisors;
     setSupervisors(supervisors);
-  }, [selectedSchoolId]);
+  }, [selectedSchoolId, schools]);
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -318,7 +327,7 @@ export default function CreateClinicalCaseDialogue({
         </Form>
         <div className="flex justify-end px-6 pb-6">
           <Link href={"/screenings/create-student"} className="flex flex-1">
-            <Button variant="brand" onClick={() => {}} className="w-full">
+            <Button variant="brand" onClick={() => { }} className="w-full">
               Non-Shamiri Student
             </Button>
           </Link>
