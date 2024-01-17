@@ -447,6 +447,7 @@ model Fellow {
   fellowReportingNotes    FellowReportingNotes[]
   repaymentRequests       RepaymentRequest[]
   overallFellowEvaluation OverallFellowEvaluation[]
+  fellowComplaints        FellowComplaints[]
 
   @@map("fellows")
 }
@@ -876,4 +877,6 @@ model FellowComplaints {
   complaint    String     @db.Text()
   supervisorId String     @map("supervisor_id") @db.VarChar(255)
   supervisor   Supervisor @relation(fields: [supervisorId], references: [id])
+  fellowId     String     @map("fellow_id") @db.VarChar(255)
+  fellow       Fellow     @relation(fields: [fellowId], references: [id])
 }
