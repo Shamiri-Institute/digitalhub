@@ -1313,10 +1313,10 @@ export async function initialReferralFromClinicalCaseSupervisor(data: {
   }
 }
 
-export async function SupConsultClinicalexpert(data: {
+export async function supConsultClinicalexpert(data: {
   caseId: string;
   name: string;
-  commment: string;
+  comment: string;
 }) {
   try {
     await db.clinicalScreeningInfo.update({
@@ -1326,8 +1326,7 @@ export async function SupConsultClinicalexpert(data: {
       data: {
         consultingClinicalExpert: {
           create: {
-            commment: data.commment,
-            date: new Date(),
+            comment: data.comment,
             name: data.name,
           },
         },
