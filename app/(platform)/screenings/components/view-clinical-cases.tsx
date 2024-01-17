@@ -34,34 +34,32 @@ export function ListViewOfClinicalCases({
   return (
     <div>
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-7xl">
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="w-full justify-evenly bg-white">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="Active" className="">
-                Active
-              </TabsTrigger>
-              <TabsTrigger value="FollowUp">Follow-up</TabsTrigger>
-              <TabsTrigger value="Terminated">Terminated</TabsTrigger>
-              <TabsTrigger value="Referred">Referred</TabsTrigger>
-            </TabsList>
-            <TabsContent value="all">
-              <ClinicalCasses cases={cases} option={"all"} />
-            </TabsContent>
-            <TabsContent value="Active">
-              <ClinicalCasses cases={cases} option={"Active"} />
-            </TabsContent>
-            <TabsContent value="FollowUp">
-              <ClinicalCasses cases={cases} option={"FollowUp"} />
-            </TabsContent>
-            <TabsContent value="Terminated">
-              <ClinicalCasses cases={cases} option={"Terminated"} />
-            </TabsContent>
-            <TabsContent value="Referred">
-              <ClinicalCasses cases={cases} option={"Referred"} />
-            </TabsContent>
-          </Tabs>
-        </div>
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList className="w-full justify-evenly bg-white">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="Active" className="">
+              Active
+            </TabsTrigger>
+            <TabsTrigger value="FollowUp">Follow-up</TabsTrigger>
+            <TabsTrigger value="Terminated">Terminated</TabsTrigger>
+            <TabsTrigger value="Referred">Referred</TabsTrigger>
+          </TabsList>
+          <TabsContent value="all">
+            <ClinicalCasses cases={cases} option={"all"} />
+          </TabsContent>
+          <TabsContent value="Active">
+            <ClinicalCasses cases={cases} option={"Active"} />
+          </TabsContent>
+          <TabsContent value="FollowUp">
+            <ClinicalCasses cases={cases} option={"FollowUp"} />
+          </TabsContent>
+          <TabsContent value="Terminated">
+            <ClinicalCasses cases={cases} option={"Terminated"} />
+          </TabsContent>
+          <TabsContent value="Referred">
+            <ClinicalCasses cases={cases} option={"Referred"} />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
@@ -80,7 +78,7 @@ function ClinicalCasses({
   });
 
   return (
-    <Card className={cn("pr-3.5bg-white  my-2 gap-5 p-4")}>
+    <Card className="pr-3.5bg-white  my-2 gap-5 p-4">
       <div className="mb-2 flex flex-1 justify-between">
         <p className="flex-1 text-base font-medium text-muted-foreground">
           Name
@@ -136,21 +134,17 @@ function ClinicalCassesCard({
   return (
     <Link href={`/screenings/${caseId}`}>
       <div
-        className={cn(
-          "mt-2 flex flex-1 items-center justify-between border-b last:border-none",
-          // risk === "High" && "bg-shamiri-red"
-        )}
-      >
+        className="mt-2 flex flex-1 items-center justify-between border-b last:border-none">
         <p className="flex-1 text-left text-sm text-brand">{name}</p>
-        <p className="0 flex-1 text-sm text-brand">{session}</p>
+        <p className="flex-1 text-sm text-brand">{session}</p>
         <p
           className={cn(
             "flex-1 text-sm text-brand",
             risk === "High"
               ? "text-shamiri-red"
               : risk === "Mid"
-              ? "text-muted-yellow"
-              : "text-muted-green",
+                ? "text-muted-yellow"
+                : "text-muted-green",
           )}
         >
           {risk}
