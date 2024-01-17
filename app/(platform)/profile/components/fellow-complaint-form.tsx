@@ -15,7 +15,6 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Separator } from "#/components/ui/separator";
-import { toast } from "#/components/ui/use-toast";
 import {
   Table,
   TableBody,
@@ -25,6 +24,7 @@ import {
   TableRow,
 } from "#/components/ui/table";
 import { Textarea } from "#/components/ui/textarea";
+import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FellowComplaints } from "@prisma/client";
 import { Loader2 } from "lucide-react";

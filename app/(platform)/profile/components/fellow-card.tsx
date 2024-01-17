@@ -17,10 +17,10 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
+import FellowComplaintForm from "./fellow-complaint-form";
 import FellowDetailsForm from "./fellow-management-form";
 import FellowEvaluationForm from "./overall-evaluation-form";
 import ReportingNotesForm from "./reporting-notes-form";
-import FellowComplaintForm from "./fellow-complaint-form";
 
 export default function FellowCard({
   fellow,
@@ -169,10 +169,12 @@ function FellowCardMenu({
           </FellowEvaluationForm>
         </MenuLineItem>
         <MenuLineItem>
-          <FellowComplaintForm fellowId={fellow.id} supervisorId={fellow.supervisorId ?? ""} complaints={fellow.fellowComplaints}>
-            <div className="cursor-pointer">
-              Submit Complaint
-            </div>
+          <FellowComplaintForm
+            fellowId={fellow.id}
+            supervisorId={fellow.supervisorId ?? ""}
+            complaints={fellow.fellowComplaints}
+          >
+            <div className="cursor-pointer">Submit Complaint</div>
           </FellowComplaintForm>
         </MenuLineItem>
         <MenuLineItem>
