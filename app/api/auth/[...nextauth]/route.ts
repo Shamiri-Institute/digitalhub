@@ -88,7 +88,7 @@ const authOptions: AuthOptions = {
         return session;
       }
 
-      console.error(`User ${user.email} has no memberships`);
+      console.warn(`User ${user.email} has no memberships`);
 
       const sessionUser: SessionUser = {
         id: token.sub || null,
