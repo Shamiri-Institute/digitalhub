@@ -1,11 +1,16 @@
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
+import { notFound } from "next/navigation";
 import CaseHeader from "./case-header";
 import { CaseNotePlan } from "./case-notes-plan";
 import { StudentCaseTabs } from "./student-case-tabs";
 
 export default async function Page({ params }: { params: { caseId: string } }) {
   const supervisor = await currentSupervisor();
+
+  if (!supervisor) {
+    return <div>Not a supervisor</div>;
+  }
 
   const currentcase = await db.clinicalScreeningInfo.findUnique({
     where: {
@@ -28,6 +33,10 @@ export default async function Page({ params }: { params: { caseId: string } }) {
       referredToSupervisor: true,
     },
   });
+
+  if (!currentcase) {
+    notFound();
+  }
 
   const all_supervisors = await db.supervisor.findMany({
     where: {

@@ -8,6 +8,10 @@ import { db } from "#/lib/db";
 export default async function Page() {
   const supervisor = await currentSupervisor();
 
+  if (!supervisor) {
+    return <div>Not a supervisor</div>;
+  }
+
   const referredCases = await db.clinicalScreeningInfo.findMany({
     where: {
       referredToSupervisorId: supervisor?.id,
