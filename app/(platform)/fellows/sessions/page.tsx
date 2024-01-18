@@ -56,6 +56,7 @@ export default async function FellowSessionsPage({
           supervisor: true,
         },
       },
+      fellowComplaints: true,
       overallFellowEvaluation: true,
       repaymentRequests: {
         include: {
