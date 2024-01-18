@@ -1,9 +1,6 @@
 "use client";
 import { SchoolDropoutDialog } from "#/app/(platform)/profile/myschool/school-dropout-dialog";
-import {
-  revalidateFromClient,
-  updateAssignedSchoolDetails,
-} from "#/app/actions";
+import { updateAssignedSchoolDetails } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
@@ -102,9 +99,7 @@ export function MySchool({ school }: { school: School | null }) {
         title: "Assigned school details updated",
       });
 
-      await revalidateFromClient("/profile/myschool");
-
-      form.reset();
+      window.location.href = "/profile/myschool";
     } else {
       toast({
         variant: "destructive",
