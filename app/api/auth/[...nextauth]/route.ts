@@ -88,6 +88,8 @@ const authOptions: AuthOptions = {
         return session;
       }
 
+      console.error(`User ${user.email} has no memberships`);
+
       const sessionUser: SessionUser = {
         id: token.sub || null,
         email: user.email,
@@ -95,8 +97,8 @@ const authOptions: AuthOptions = {
         roles: user.memberships.map((m) => m.role),
         image: user.image,
         implementer: {
-          id: user.memberships[0]!.implementer.id,
-          name: user.memberships[0]!.implementer.implementerName,
+          id: user.memberships[0]?.implementer.id || "",
+          name: user.memberships[0]?.implementer.implementerName || "",
         },
         // @ts-ignore
         ...(token || session).user,
