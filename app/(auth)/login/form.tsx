@@ -9,7 +9,11 @@ import { useEffect, useState } from "react";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
-  const next = searchParams?.get("next");
+  let next = searchParams?.get("next");
+  console.log({ next });
+  if (next?.includes("login")) {
+    next = "/";
+  }
   const [showEmailOption, setShowEmailOption] = useState(false);
   const [email, setEmail] = useState("");
   const [clickedGoogle, setClickedGoogle] = useState(false);
