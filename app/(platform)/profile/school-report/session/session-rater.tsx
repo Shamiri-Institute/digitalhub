@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { rateSession, revalidateFromClient } from "#/app/actions";
+import { rateSession } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import {
   Accordion,
@@ -48,7 +48,7 @@ export function SessionRater({
         toast({
           title: "Rating successfully recorded",
         });
-        revalidateFromClient(revalidatePath);
+        window.location.href = revalidatePath;
       } else {
         toast({
           variant: "destructive",

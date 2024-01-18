@@ -2,7 +2,6 @@
 
 import {
   getSchoolsByHubId,
-  revalidateFromClient,
   submitTransportReimbursementRequest,
 } from "#/app/actions";
 import { Icons } from "#/components/icons";
@@ -119,11 +118,7 @@ export function RefundForm({
       title: "Request for refund has been sent",
     });
 
-    await revalidateFromClient("/profile/refund");
-
-    form.reset();
-
-    router.push("/profile");
+    window.location.href = "/profile/refund";
   }
 
   return (

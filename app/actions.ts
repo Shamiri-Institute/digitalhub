@@ -756,10 +756,6 @@ export async function updateInterventionOccurrenceDate(
   }
 }
 
-export async function revalidateFromClient(path: string) {
-  revalidatePath(path);
-}
-
 export async function dropoutSchoolWithReason(
   schoolVisibleId: string,
   dropoutReason: string,
