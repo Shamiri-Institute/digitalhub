@@ -4,10 +4,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import {
-  revalidateFromClient,
-  updateLoggedInSupervisorDetails,
-} from "#/app/actions";
+import { updateLoggedInSupervisorDetails } from "#/app/actions";
 import type { CurrentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -137,9 +134,7 @@ export default function EditProfileBio({
         title: "Your info has been updated",
       });
 
-      await revalidateFromClient("/profile/edit-profile");
-      form.reset();
-      router.push("/profile");
+      window.location.href = "/profile";
     } else {
       toast({
         variant: "destructive",
