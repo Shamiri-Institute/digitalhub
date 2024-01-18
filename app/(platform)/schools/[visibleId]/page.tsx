@@ -148,7 +148,7 @@ function FellowCard({
     );
 
   if (filteredAttendances.length !== 5) {
-    console.error(
+    console.warn(
       `Fellow ${fellow.fellowName} has ${filteredAttendances.length} attendances`,
     );
   }
@@ -159,13 +159,13 @@ function FellowCard({
         (attendance: FellowWithAttendance["attendances"][number]) =>
           attendance.sessionNumber === sessionNumber,
       );
-    if (attendance.attended === true) {
+    if (attendance?.attended === true) {
       return "present";
     }
-    if (attendance.attended === false) {
+    if (attendance?.attended === false) {
       return "absent";
     }
-    if (attendance.attended === null) {
+    if (attendance?.attended === null) {
       return "not-marked";
     }
     return "not-marked";
