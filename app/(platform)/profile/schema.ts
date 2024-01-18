@@ -35,3 +35,12 @@ export const OverallFellowSchema = z.object({
 });
 
 export type OverallFellowSchema = z.infer<typeof OverallFellowSchema>;
+
+export const FellowComplaintSchema = z.object({
+  complaint: z
+    .string({ required_error: "Please input a complaint" })
+    .trim()
+    .min(1, { message: "Please input a complaint " }),
+  fellowId: z.string(),
+  supervisorId: z.string(),
+});
