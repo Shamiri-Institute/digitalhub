@@ -1,6 +1,6 @@
 "use client";
 
-import { addNote, revalidateFromClient } from "#/app/actions";
+import { addNote } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "#/components/ui/dialog";
 import { Form, FormField } from "#/components/ui/form";
@@ -45,9 +45,7 @@ export function AddNoteDialog({
       toast({
         title: "Note added successfully",
       });
-      setDialogOpen(false);
-      form.reset();
-      revalidateFromClient(revalidatePath);
+      window.location.href = revalidatePath;
     } else {
       toast({
         variant: "destructive",

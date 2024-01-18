@@ -8,7 +8,6 @@ import { SessionItem } from "#/app/(platform)/profile/school-report/page";
 import { Timepicker } from "#/app/(platform)/profile/school-report/timepicker";
 import {
   OccurrenceData,
-  revalidateFromClient,
   toggleInterventionOccurrence,
   updateInterventionOccurrenceDate,
 } from "#/app/actions";
@@ -44,7 +43,7 @@ export function SchoolReportCard({
           ? "Marked as occurring"
           : "Marked as not occurring",
       });
-      await revalidateFromClient("/profile/school-report");
+      window.location.href = "/profile/school-report";
     } else {
       toast({
         variant: "destructive",
@@ -63,7 +62,7 @@ export function SchoolReportCard({
     if (response) {
       console.log({ response });
       toast({ title: "Date updated" });
-      await revalidateFromClient("/profile/school-report");
+      window.location.href = "/profile/school-report";
     } else {
       toast({
         variant: "destructive",

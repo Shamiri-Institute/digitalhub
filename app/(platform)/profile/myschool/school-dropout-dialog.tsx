@@ -5,7 +5,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { dropoutSchoolWithReason, revalidateFromClient } from "#/app/actions";
+import { dropoutSchoolWithReason } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "#/components/ui/dialog";
 import { Form, FormField } from "#/components/ui/form";
@@ -48,8 +48,8 @@ export function SchoolDropoutDialog({
         variant: "destructive",
         title: "School has been dropped out",
       });
-      await revalidateFromClient("/profile/myschool");
-      setDialogOpen(false);
+
+      window.location.href = "/profile/myschool";
     } else {
       toast({
         variant: "destructive",

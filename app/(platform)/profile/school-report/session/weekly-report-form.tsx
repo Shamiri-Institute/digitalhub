@@ -5,7 +5,7 @@ import { Prisma } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { revalidateFromClient, saveReport } from "#/app/actions";
+import { saveReport } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Form, FormField } from "#/components/ui/form";
 import { Label } from "#/components/ui/label";
@@ -64,7 +64,7 @@ export function WeeklyReportForm({
 
     if (success) {
       toast({ title: `Point supervisor report saved` });
-      revalidateFromClient(revalidatePath);
+      window.location.href = revalidatePath;
     } else {
       toast({
         variant: "destructive",
