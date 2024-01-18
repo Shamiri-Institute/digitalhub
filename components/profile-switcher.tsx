@@ -104,7 +104,7 @@ function OrganizationDialog({ children }: { children: React.ReactNode }) {
                 className="flex-start flex rounded-md p-2 hover:bg-foreground/3"
                 onClick={() => {
                   signOut({
-                    callbackUrl: "/",
+                    callbackUrl: "/login",
                   });
                 }}
               >
