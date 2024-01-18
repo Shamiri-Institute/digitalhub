@@ -85,7 +85,9 @@ const authOptions: AuthOptions = {
         return session;
       }
 
-      console.warn(`User ${user.email} has no memberships`);
+      if (user.memberships.length === 0) {
+        console.warn(`User ${user.email} has no memberships`);
+      }
 
       const sessionUser: SessionUser = {
         id: token.sub || null,
