@@ -68,13 +68,10 @@ const authOptions: AuthOptions = {
         where: {
           id: token.sub,
         },
-        select: {
-          email: true,
-          name: true,
+        include: {
           avatar: {
             select: { file: true },
           },
-          image: true,
           memberships: {
             select: {
               implementer: true,
