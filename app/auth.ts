@@ -29,6 +29,7 @@ export async function currentSupervisor() {
         include: {
           hub: true,
           fellowAttendances: true,
+          fellowComplaints: true,
           fellowReportingNotes: {
             include: {
               supervisor: true,

@@ -3,7 +3,11 @@
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { OverallFellowSchema, ReportingNotesSchema } from "./schema";
+import {
+  FellowComplaintSchema,
+  OverallFellowSchema,
+  ReportingNotesSchema,
+} from "./schema";
 
 export async function submitReportingNotes(
   data: z.infer<typeof ReportingNotesSchema>,
@@ -34,6 +38,23 @@ export async function submitOverallFellowReport(
 
     revalidatePath("/profile");
     return { success: true, message: "successfully added reporting notes" };
+  } catch (e) {
+    console.error(e);
+    return { success: false, message: "something went wrong" };
+  }
+}
+
+export async function submitFellowComplaint(
+  data: z.infer<typeof FellowComplaintSchema>,
+) {
+  try {
+    const parsedData = FellowComplaintSchema.parse(data);
+    await db.fellowComplaints.create({
+      data: parsedData,
+    });
+
+    revalidatePath("/profile");
+    return { success: true, message: "successfully added fellow complaint" };
   } catch (e) {
     console.error(e);
     return { success: false, message: "something went wrong" };
