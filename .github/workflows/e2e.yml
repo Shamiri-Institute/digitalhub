@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  GOOGLE_ID: mock-google-client-id
+  GOOGLE_SECRET: mock-google-secret
+  NEXTAUTH_URL: http://localhost:3000
+  NEXTAUTH_SECRET: test-jwt-secret
+
 jobs:
   e2e-tests:
     runs-on: ubuntu-latest

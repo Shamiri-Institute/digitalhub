@@ -8,6 +8,10 @@ const slowMo = process.env.SLOW ? parseInt(process.env.SLOW) : undefined;
  */
 export default defineConfig({
   testDir: "./tests",
+  webServer: {
+    command: "npm run dev",
+    port: 3000,
+  },
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
