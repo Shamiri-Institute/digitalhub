@@ -14,6 +14,7 @@ env:
   NEXTAUTH_URL: http://localhost:3000
   NEXTAUTH_SECRET: test-jwt-secret
   PLAYWRIGHT_VERSION: ""
+  DATABASE_URL: postgres://youth:thriving@localhost:5432/shamiri_db?pool_timeout=30
 
 jobs:
   e2e-tests:
