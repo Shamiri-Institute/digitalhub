@@ -20,6 +20,8 @@ jobs:
         run: npx playwright install --with-deps
       - name: Build
         run: npm run build
+      - name: Seed database
+        run: npm run db:dev:seed
       - name: Run tests
         run: npm run test:ci
       - uses: actions/upload-artifact@v3
