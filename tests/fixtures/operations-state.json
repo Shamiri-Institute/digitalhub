@@ -2,10 +2,10 @@
   "cookies": [
     {
       "name": "next-auth.session-token",
-      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..bDGF-fBjRTQrkFkH.yz4qCnLmilPfGdug6QP-QIrElJiBrYIXnDbBPn9gj1MZ3jtJPUHXI5K0PfSzPpbHkiLYNAWHViZxUN4lXWor3r8-V4tTpd-xGl7wG_TxPx_ilOHBDE_rtWycm6zzHBb8T74Bi3e1DxoUvvTSzlAynpB2GMcnvS9jpt46lJBerRrY23wl-p4R6IolGLysxJz2_yoJaoWaLgJXXpJrMGFcuZ4VEWDdzRCnkXjyL4mlyy1K64pVxv_ZT2eYavmUY6K4DiC2tWDAyfFRL3nD_59I4kabjGrqcccK3PeSv0tcQm-cIJgsccqkGQqDK3dGa8-5aWZuDqF-7eiqz7t3aMxI38ApUPyA-WSW6FKzoddvJMaRHhRSWQ7niAP0qZ-jn9qoQnbMLsW1my7JZ7PQnsNROVINEXgJhcRLIDRzM95ZvLKk.SuVIkcShQyC_XgyrzDL--A",
+      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..FEFZpAbaqsQFzpk0.4FBsGOXVIUIErMu0KoScg967ugKsKfvPzxlCUdqadGq4aKQpFynQVQjVdseEXaACsm8D-PSPF2eFSo1uzLYCI5kiBsw72WJ9FxuSTTQpCeXYgNWyMWUcj08SmZxyjsPdJJ14Sa4FCFNVaNH-2VDM6SxXgqmMVvyMjiPZrqUhaXOr3qrLahEiO1m_ZARu4fnq1hLhzs7HW58ex21UkmV8CbV85YZ6Ql-vVV3aUo0B-B9lQw2wyodsK0bUaQfnfQxQwU1q4vLuChIR8dSSuusuR2sYHAnYSMo2dapQPqIzf68UlyTzQ2cE1T4ZkvgM2CqrmURRprkg6a_lRO9q_95ZUBTwykN9Pk7B65NwpREDiZ-ctRwu2HVrD5aRhouVIa0YLGYS9jun.SfUHiE-KcV7KscT-THVC3w",
       "domain": "localhost",
       "path": "/",
-      "expires": 1737282763,
+      "expires": 1737297604,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"

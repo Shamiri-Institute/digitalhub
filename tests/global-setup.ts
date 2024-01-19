@@ -1,15 +1,13 @@
 import { chromium } from "@playwright/test";
 import { encode } from "next-auth/jwt";
-import path from "node:path";
 
 import { db } from "#/lib/db";
+import { Fixtures } from "#/tests/helpers";
 
 async function generateSessionToken(email: string) {
   const user = await db.user.findUniqueOrThrow({
     where: { email },
-    include: {
-      memberships: true,
-    },
+    include: { memberships: true },
   });
 
   const jwtPayload = {
@@ -33,15 +31,15 @@ async function generateSessionToken(email: string) {
 const sessionFixtures = [
   {
     userEmail: "shadrack.lilan@shamiri.institute",
-    stateFile: "supervisor-state.json",
+    stateFile: Fixtures.supervisor.stateFile,
   },
   {
     userEmail: "edmund@shamiri.institute",
-    stateFile: "hub-coordinator-state.json",
+    stateFile: Fixtures.hubCoordinator.stateFile,
   },
   {
     userEmail: "benny@shamiri.institute",
-    stateFile: "operations-state.json",
+    stateFile: Fixtures.operations.stateFile,
   },
 ];
 
@@ -51,7 +49,7 @@ async function globalSetup() {
   for (let { userEmail, stateFile } of sessionFixtures) {
     const sessionToken = await generateSessionToken(userEmail);
     const context = await browser.newContext({
-      storageState: path.join(__dirname, `./fixtures/${stateFile}`),
+      storageState: stateFile,
     });
 
     let futureDate = new Date();

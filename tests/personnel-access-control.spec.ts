@@ -1,38 +1,38 @@
 import { test } from "@playwright/test";
 
+import { Fixtures } from "#/tests/helpers";
 import { HomePage } from "#/tests/pages/home-page";
 import { HubCoordinatorHomePage } from "#/tests/pages/hub-coordinator/home-page";
 import { OperationsHomePage } from "#/tests/pages/operations/home-page";
-import { newSession } from "#/tests/helpers";
 
 test.describe("personnel can only access routes based on their role", () => {
   test.describe("supervisors", () => {
-    test("can access unprefixed home page", async ({ browser }) => {
-      const session = await newSession(browser, "supervisor");
+    test.use({ storageState: Fixtures.supervisor.stateFile });
 
-      const page = HomePage.new(session);
-      await page.visit();
-      await page.isShown();
+    test("can access unprefixed home page", async ({ page }) => {
+      const homePage = HomePage.new(page);
+      await homePage.visit();
+      await homePage.isShown();
     });
   });
 
   test.describe("hub coordinators", () => {
-    test("can access hub coordinator home page", async ({ browser }) => {
-      const session = await newSession(browser, "hub-coordinator");
+    test.use({ storageState: Fixtures.hubCoordinator.stateFile });
 
-      const page = HubCoordinatorHomePage.new(session);
-      await page.visit();
-      await page.isShown();
+    test("can access hub coordinator home page", async ({ page }) => {
+      const homePage = HubCoordinatorHomePage.new(page);
+      await homePage.visit();
+      await homePage.isShown();
     });
   });
 
   test.describe("operations", () => {
-    test("can access operations home page", async ({ browser }) => {
-      const session = await newSession(browser, "operations");
+    test.use({ storageState: Fixtures.operations.stateFile });
 
-      const page = OperationsHomePage.new(session);
-      await page.visit();
-      await page.isShown();
+    test("can access operations home page", async ({ page }) => {
+      const homePage = OperationsHomePage.new(page);
+      await homePage.visit();
+      await homePage.isShown();
     });
   });
 });
