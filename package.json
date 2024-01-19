@@ -16,6 +16,7 @@
     "lint": "next lint",
     "test:ci": "playwright test",
     "test:dev": "dotenv -c development -- playwright test",
+    "test:db:dump": "docker-compose exec db pg_dump -U youth -d shamiri_db -f /var/lib/postgresql/data/dump.sql && docker cp $(docker-compose ps -q db):/var/lib/postgresql/data/dump.sql ./tests/db/dump.sql",
     "db:dev:up": "docker-compose down && docker-compose up db",
     "db:dev:seed": "dotenv -c development -- tsx prisma/scripts/seed.ts",
     "db:dev:migrate": "dotenv -c development -- npx prisma migrate dev",
