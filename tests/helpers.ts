@@ -1,6 +1,6 @@
 import path from "node:path";
 
-export const Fixtures = {
+export const PersonnelFixtures = {
   supervisor: {
     stateFile: path.join(__dirname, `./fixtures/supervisor-state.json`),
   },

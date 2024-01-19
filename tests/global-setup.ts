@@ -2,7 +2,7 @@ import { chromium } from "@playwright/test";
 import { encode } from "next-auth/jwt";
 
 import { db } from "#/lib/db";
-import { Fixtures } from "#/tests/helpers";
+import { PersonnelFixtures } from "#/tests/helpers";
 
 async function generateSessionToken(email: string) {
   const user = await db.user.findUniqueOrThrow({
@@ -31,15 +31,15 @@ async function generateSessionToken(email: string) {
 const sessionFixtures = [
   {
     userEmail: "shadrack.lilan@shamiri.institute",
-    stateFile: Fixtures.supervisor.stateFile,
+    stateFile: PersonnelFixtures.supervisor.stateFile,
   },
   {
     userEmail: "edmund@shamiri.institute",
-    stateFile: Fixtures.hubCoordinator.stateFile,
+    stateFile: PersonnelFixtures.hubCoordinator.stateFile,
   },
   {
     userEmail: "benny@shamiri.institute",
-    stateFile: Fixtures.operations.stateFile,
+    stateFile: PersonnelFixtures.operations.stateFile,
   },
 ];
 

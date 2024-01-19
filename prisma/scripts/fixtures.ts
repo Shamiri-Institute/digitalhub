@@ -11,7 +11,7 @@ interface Fixtures {
   }[];
 }
 
-export const fixtures: Fixtures = {
+export const userFixtures: Fixtures = {
   users: [
     {
       email: "mmbone@shamiri.institute",
@@ -42,7 +42,6 @@ export const fixtures: Fixtures = {
       avatarUrl: null,
       implementerByVisibleId: "Imp_1",
       implementerRole: ImplementerRole.SUPERVISOR,
-      identifier: "SPV23_S_01",
     },
     {
       email: "dmndetei@amhf.or.ke",
@@ -156,6 +155,7 @@ export const fixtures: Fixtures = {
       avatarUrl: null,
       implementerByVisibleId: "Imp_1",
       implementerRole: ImplementerRole.SUPERVISOR,
+      identifier: "SPV23_S_01",
     },
   ],
 };

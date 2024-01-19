@@ -1,13 +1,13 @@
 import { test } from "@playwright/test";
 
-import { Fixtures } from "#/tests/helpers";
+import { PersonnelFixtures } from "#/tests/helpers";
 import { HomePage } from "#/tests/pages/home-page";
 import { HubCoordinatorHomePage } from "#/tests/pages/hub-coordinator/home-page";
 import { OperationsHomePage } from "#/tests/pages/operations/home-page";
 
 test.describe("personnel can only access routes based on their role", () => {
   test.describe("supervisors", () => {
-    test.use({ storageState: Fixtures.supervisor.stateFile });
+    test.use({ storageState: PersonnelFixtures.supervisor.stateFile });
 
     test("can access unprefixed home page", async ({ page }) => {
       const homePage = HomePage.new(page);
@@ -17,7 +17,7 @@ test.describe("personnel can only access routes based on their role", () => {
   });
 
   test.describe("hub coordinators", () => {
-    test.use({ storageState: Fixtures.hubCoordinator.stateFile });
+    test.use({ storageState: PersonnelFixtures.hubCoordinator.stateFile });
 
     test("can access hub coordinator home page", async ({ page }) => {
       const homePage = HubCoordinatorHomePage.new(page);
@@ -27,7 +27,7 @@ test.describe("personnel can only access routes based on their role", () => {
   });
 
   test.describe("operations", () => {
-    test.use({ storageState: Fixtures.operations.stateFile });
+    test.use({ storageState: PersonnelFixtures.operations.stateFile });
 
     test("can access operations home page", async ({ page }) => {
       const homePage = OperationsHomePage.new(page);
