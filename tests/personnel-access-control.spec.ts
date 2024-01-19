@@ -1,18 +1,9 @@
-import { Browser, test } from "@playwright/test";
-import path from "node:path";
+import { test } from "@playwright/test";
 
 import { HomePage } from "#/tests/pages/home-page";
 import { HubCoordinatorHomePage } from "#/tests/pages/hub-coordinator/home-page";
 import { OperationsHomePage } from "#/tests/pages/operations/home-page";
-
-async function newSession(
-  browser: Browser,
-  role: "supervisor" | "hub-coordinator" | "operations",
-) {
-  const state = path.resolve(__dirname, `${role}-state.json`);
-  const context = await browser.newContext({ storageState: state });
-  return await context.newPage();
-}
+import { newSession } from "#/tests/helpers";
 
 test.describe("personnel can only access routes based on their role", () => {
   test.describe("supervisors", () => {

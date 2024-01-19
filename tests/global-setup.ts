@@ -51,7 +51,7 @@ async function globalSetup() {
   for (let { userEmail, stateFile } of sessionFixtures) {
     const sessionToken = await generateSessionToken(userEmail);
     const context = await browser.newContext({
-      storageState: path.join(__dirname, stateFile),
+      storageState: path.join(__dirname, `./fixtures/${stateFile}`),
     });
 
     let futureDate = new Date();
