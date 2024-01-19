@@ -1,3 +1,3 @@
 export default function OpsPage() {
-  return <div>Ops</div>;
+  return <div>Ops Home Page</div>;
 }

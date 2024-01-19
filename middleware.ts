@@ -2,7 +2,6 @@ import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 
 import AppMiddleware from "#/lib/middleware/app";
-import { ImplementerRole } from "@prisma/client";
 
 export const config = {
   matcher: [
@@ -19,40 +18,41 @@ export const config = {
 
 export default async function middleware(request: NextRequest) {
   const token = await getToken({ req: request });
+  console.debug({ token });
 
   // TODO: token.memberships could have multiple entries, show implementer chooser and store that in the session
   // For now, we will just use the first one
-  if (token && isNotSentryRequest(request)) {
-    console.debug({ token });
-    const memberships = token.memberships;
-    if (!memberships || memberships.length === 0) {
-      return redirectToLogin(request, "no_implementer");
-    }
+  // if (token && isNotSentryRequest(request)) {
+  //   console.debug({ token });
+  //   const memberships = token.memberships;
+  //   if (!memberships || memberships.length === 0) {
+  //     return redirectToLogin(request, "no_implementer");
+  //   }
 
-    const membership = memberships[0];
+  //   const membership = memberships[0];
 
-    const roleRouteGroup = request.nextUrl.pathname.split("/")[0];
+  //   const roleRouteGroup = request.nextUrl.pathname.split("/")[0];
 
-    console.debug({ prg: roleRouteGroup, role: membership.role });
+  //   console.debug({ prg: roleRouteGroup, role: membership.role });
 
-    // Make sure the user is accessing the correct page
-    if (
-      roleRouteGroup === "hc" &&
-      membership.role !== ImplementerRole.HUB_COORDINATOR
-    ) {
-      return redirectToLogin(request, "not_hc");
-    } else if (
-      roleRouteGroup === "ops" &&
-      membership.role !== ImplementerRole.OPERATIONS
-    ) {
-      return redirectToLogin(request, "not_ops");
-    } else if (
-      membership.role === ImplementerRole.SUPERVISOR ||
-      membership.role === ImplementerRole.ADMIN
-    ) {
-      return AppMiddleware(request);
-    }
-  }
+  //   // Make sure the user is accessing the correct page
+  //   if (
+  //     roleRouteGroup === "hc" &&
+  //     membership.role !== ImplementerRole.HUB_COORDINATOR
+  //   ) {
+  //     return redirectToLogin(request, "not_hc");
+  //   } else if (
+  //     roleRouteGroup === "ops" &&
+  //     membership.role !== ImplementerRole.OPERATIONS
+  //   ) {
+  //     return redirectToLogin(request, "not_ops");
+  //   } else if (
+  //     membership.role === ImplementerRole.SUPERVISOR ||
+  //     membership.role === ImplementerRole.ADMIN
+  //   ) {
+  //     return AppMiddleware(request);
+  //   }
+  // }
 
   return AppMiddleware(request);
 }

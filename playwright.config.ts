@@ -12,7 +12,6 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
   workers: isCI ? 1 : undefined,
-  reporter: "html",
   globalSetup: "./tests/global-setup.ts",
   projects: [
     {

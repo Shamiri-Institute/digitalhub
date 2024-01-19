@@ -1,3 +1,3 @@
 export default function HubCoordinatorPage() {
-  return <div>Hub Coordinator</div>;
+  return <div>Hub Coordinator Home Page</div>;
 }

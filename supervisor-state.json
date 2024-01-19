@@ -1,0 +1,15 @@
+{
+  "cookies": [
+    {
+      "name": "next-auth.session-token",
+      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..sQGQD3iesINQ1j1l.IODiPkxN1G0OvCTj1Fb3Z01k9sqUlCMdwtKKKfgM9TojDbkU46_XNclSVCoUZc89FlmyDgzl9llmOmBgGFRWsHeT6lUrwPlVVWPxGxJnT_HyIcfuZnVOZm5UEzXDwVjcRpz0ZWgpIa90-zcLS5GBVtlzM7pZ8qVwN443j5IdLsZOrlJrN_o_ntSsplbey_TSLcqq8YAjUFYVrrel1aZQf0UEkme4wSz79nuMxC0teXO1IrbviVKUUd4Ioh0wN2hNyxrV6UOjVu088G_tSnbZ9MryvAVnJCISXWbpNRsMjXR7Vh5Rw-HPN1YQri_tl7DegNA1k8misAmAaYh5Jh3Uxw0nvgJpLWyTkHSAkVgweVxWfr9aC6Tj1VL_bKUkXP-5m-eCgax9JvEPhpjq9Vw.nVJ60ox56KuJeC-TxUVtqg",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1737285411,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}
