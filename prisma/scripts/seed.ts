@@ -88,6 +88,7 @@ async function createUsers(db: Database) {
           implementerId: implementer.id,
           userId: createdUser.id,
           role: user.implementerRole,
+          identifier: user.identifier,
         },
       });
     }
@@ -212,7 +213,6 @@ async function createInterventionSessions(db: Database) {
 async function createSupervisors(db: Database) {
   console.log("Creating supervisors");
 
-  let count = 0;
   await parseCsvFile("supervisor_info", async (supervisor: any) => {
     try {
       await db.supervisor.create({
@@ -409,7 +409,7 @@ async function createStudents(db: Database) {
             studentName,
             visibleId: `Stu_${admissionNumber}`,
             fellowId: randomFellow?.id,
-            supervisorId: randomSupervisor.id,
+            supervisorId: randomSupervisor?.id,
             schoolId: school.id,
             yearOfImplementation: randomFellow?.yearOfImplementation,
             admissionNumber,

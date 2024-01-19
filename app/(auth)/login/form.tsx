@@ -10,7 +10,6 @@ import { useEffect, useState } from "react";
 export function LoginForm() {
   const searchParams = useSearchParams();
   let next = searchParams?.get("next");
-  console.log({ next });
   if (next?.includes("login")) {
     next = "/";
   }

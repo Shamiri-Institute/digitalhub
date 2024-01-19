@@ -41,7 +41,8 @@ export const fixtures: Fixtures = {
       name: "Edmund Korley",
       avatarUrl: null,
       implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.HUB_COORDINATOR,
+      implementerRole: ImplementerRole.SUPERVISOR,
+      identifier: "SPV23_S_01",
     },
     {
       email: "dmndetei@amhf.or.ke",

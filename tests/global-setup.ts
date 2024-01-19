@@ -1,33 +1,86 @@
-// global-setup.ts
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { chromium } from "@playwright/test";
+import path from "node:path";
 
-async function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { db } from "#/lib/db";
 
 async function globalSetup() {
-  // const browser = await chromium.launch();
-  // const page = await browser.newPage();
-  // const googleResponse = await requestContext.post(
-  //   "https://www.googleapis.com/oauth2/v4/token",
-  //   {
-  //     data: {
-  //       grant_type: "refresh_token",
-  //       client_id: process.env.GOOGLE__ID,
-  //       client_secret: process.env.GOOGLE_SECRET,
-  //       // refresh_token: ??
+  const supervisorStatePath = path.resolve(__dirname, "supervisor-state.json");
+  const date = new Date();
+
+  const sessionToken = "a1b2c3d4-e5f6-47a8-b9c0-d1e2f3a4b5c6";
+
+  const testSupervisorUser = await db.user.findUniqueOrThrow({
+    where: { email: "edmund@shamiri.institute" },
+  });
+  const adapter = PrismaAdapter(db);
+  if (!adapter.createSession) {
+    throw new Error("Adapter does not have a createSession method");
+  }
+
+  await adapter.createSession({
+    userId: testSupervisorUser.id,
+    sessionToken,
+    expires: new Date(date.getFullYear(), date.getMonth() + 1, 0),
+  });
+
+  if (!adapter.linkAccount) {
+    throw new Error("Adapter does not have a linkAccount method");
+  }
+  await adapter.linkAccount({
+    userId: testSupervisorUser.id,
+    type: "oauth",
+    provider: "google",
+    providerAccountId: "112748200714719142639",
+  });
+
+  // await db.user.upsert({
+  //   where: { email: "edmund@shamiri.institute" },
+  //   create: {
+  //     sessions: {
+  //       create: {
+  //         expires: new Date(date.getFullYear(), date.getMonth() + 1, 0),
+  //         sessionToken,
+  //       },
+  //     },
+  //     accounts: {
+  //       create: {
+  //         type: "oauth",
+  //         provider: "google",
+  //         providerAccountId: "112748200714719142639",
+  //         access_token:
+  //           "ya29.a0AfB_byBp1egTRagy938KJ-SlrIm0BgR16y1bU_B17_Usuzz1vBym6I6t6N5CWbOlI3iPr7mrxYMhibOqlTRwfzw4DFF3e4f6SoOkifd_uC6bLxbWSiXJMwfQnhna0gFHqweDg7DxfMMG3gwzzDDsGZ6IaPB_tHsESd9iaCgYKAXkSARESFQHGX2Mi5r_MqaqaVEjq5PBSTuQryg0171",
+  //         token_type: "bearer",
+  //         scope:
+  //           "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile openid",
+  //       },
   //     },
   //   },
-  // );
-  // expect(googleResponse.ok()).toBeTruthy;
-  // const data = await googleResponse.json();
-  // expect(data.id_token).toBeDefined();
-  // const appResponse = await page.request.post("http://localhost:3000/signin", {
-  //   form: { credential: data.id_token },
+  //   update: {},
   // });
-  // expect(appResponse.ok()).toBeTruthy;
-  // // Save signed-in state to 'storageState.json'.
-  // await page.context().storageState({ path: "storageState.json" });
-  // await browser.close();
+
+  const browser = await chromium.launch();
+  const context = await browser.newContext({
+    storageState: supervisorStatePath,
+  });
+
+  let futureDate = new Date();
+  futureDate.setFullYear(futureDate.getFullYear() + 1);
+  const futureTimestamp = Math.floor(futureDate.getTime() / 1000);
+
+  await context.addCookies([
+    {
+      name: "next-auth.session-token",
+      value: sessionToken,
+      domain: "localhost",
+      path: "/",
+      httpOnly: true,
+      sameSite: "Lax",
+      expires: futureTimestamp,
+    },
+  ]);
+  await context.storageState({ path: supervisorStatePath });
+  await browser.close();
 }
 
 export default globalSetup;

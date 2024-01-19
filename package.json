@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "next lint",
     "test": "playwright test",
+    "test:dev": "dotenv -c development -- playwright test",
     "db:dev:up": "docker-compose down && docker-compose up db",
     "db:dev:seed": "dotenv -c development -- tsx prisma/scripts/seed.ts",
     "db:dev:migrate": "dotenv -c development -- npx prisma migrate dev",
