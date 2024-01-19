@@ -14,6 +14,7 @@ const config = z
   .parse(process.env);
 
 const authOptions: AuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET!,
   session: {
     strategy: "jwt",
     maxAge: 7 * 24 * 60 * 60, // 7 days
