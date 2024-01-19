@@ -12,7 +12,7 @@ env:
   AWS_ACCESS_KEY_ID: mock-aws-access-key-id
   AWS_SECRET_ACCESS_KEY: mock-aws-secret-access-key
   NEXTAUTH_URL: http://localhost:3000
-  NEXTAUTH_SECRET: test-jwt-secret
+  NEXTAUTH_SECRET: CglSocvPpgvYBtK1gcFHlOHvVI15nJqw02W2m5G7yGg="
   PLAYWRIGHT_VERSION: ""
   DATABASE_URL: postgres://youth:thriving@localhost:5432/shamiri_db?pool_timeout=30
 
