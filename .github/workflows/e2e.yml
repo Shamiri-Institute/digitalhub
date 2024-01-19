@@ -9,6 +9,8 @@ on:
 env:
   GOOGLE_ID: mock-google-client-id
   GOOGLE_SECRET: mock-google-secret
+  AWS_ACCESS_KEY_ID: mock-aws-access-key-id
+  AWS_SECRET_ACCESS_KEY: mock-aws-secret-access-key
   NEXTAUTH_URL: http://localhost:3000
   NEXTAUTH_SECRET: test-jwt-secret
 
