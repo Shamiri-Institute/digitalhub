@@ -1,16 +1,14 @@
-# Run the Playwright end-to-end tests
-name: E2E
+name: Playwright end-to-end tests
 
 on:
   push:
-    branches: [main]
+    branches: [main, role-switcher]
   pull_request:
     branches: [main]
 
 jobs:
-  Run-E2E-Tests:
+  e2e-tests:
     runs-on: ubuntu-latest
-    if: false
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
