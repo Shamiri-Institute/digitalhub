@@ -6,7 +6,11 @@ import { Input } from "#/components/ui/input";
 import { cn } from "#/lib/utils";
 import { useState } from "react";
 
-export function CaseNotePlan() {
+export function CaseNotePlan({
+  currentSupId
+}: {
+  currentSupId: string
+}) {
   const [selected, setSelected] = useState<string>("");
   return (
     <>
@@ -15,6 +19,7 @@ export function CaseNotePlan() {
           option="Progress Notes"
           selected={selected}
           setSelected={setSelected}
+
         />
         <CaseNotePlanOption
           option="Treatment Plan"
@@ -70,8 +75,13 @@ function CaseNotePlanOption({
 }
 
 function ProgressNotes() {
+
+  const handleFileGeneration = () => {
+    console.log("File generated");
+  }
+
   return (
-    <Button className="hover:bg-shamiri-brand w-full rounded-sm bg-shamiri-blue px-3 py-2 text-white">
+    <Button className="hover:bg-shamiri-brand w-full rounded-sm bg-shamiri-blue px-3 py-2 text-white" onClick={handleFileGeneration}>
       <Icons.upload className="mr-2 h-4 w-4" />
       Generate File
     </Button>

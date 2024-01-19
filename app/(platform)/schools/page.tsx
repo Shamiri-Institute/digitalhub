@@ -45,6 +45,13 @@ async function SchoolsList() {
   }
   const { assignedSchool } = supervisor;
 
+  const interventionSessions = await db.interventionSession.findMany({
+    where: {
+      schoolId: supervisor.assignedSchoolId,
+    },
+  });
+
+
   const otherSchools = await db.school.findMany({
     where: {
       visibleId: { not: assignedSchoolId },
@@ -60,7 +67,8 @@ async function SchoolsList() {
           <SchoolCard
             key={assignedSchool.schoolName}
             school={assignedSchool}
-            sessionTypes={sessionTypes}
+            sessionTypes={interventionSessions}
+            fellowsCount={supervisor.fellows.length}
             assigned
           />
           <div />
@@ -74,7 +82,9 @@ async function SchoolsList() {
             <SchoolCard
               key={school.schoolName}
               school={school}
-              sessionTypes={sessionTypes}
+              sessionTypes={interventionSessions}
+              fellowsCount={supervisor.fellows.length}
+
             />
           ))}
         </div>

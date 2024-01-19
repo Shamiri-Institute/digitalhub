@@ -1,4 +1,4 @@
-import { riskStatusOptions } from "@prisma/client";
+import { Prisma, riskStatusOptions } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx";
 import { Metadata } from "next";
 import { twMerge } from "tailwind-merge";
@@ -75,4 +75,11 @@ export function getHighestValue(data: {
   } else {
     return "No";
   }
+}
+
+export function doesSessionExist(
+  sessionTypes: Prisma.InterventionSessionGetPayload<{}>[],
+  sessionName: string,
+) {
+  return sessionTypes.some((session) => session.sessionName === sessionName);
 }

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "shamiri-digital-hub-clinical",
+  "private_key_id": "ceedcbb102435f847c11910e6a3f34cb534e1110",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC/7Mx9Hkg8Uq7x\n6cUpDoozRM3IXLR2w5vGeAs8uOzpZiCabR7uFMejsPTV9qp+tDZNeVxsemNJYClP\nU2DjOVBbsQtuMdkC5/0PynEN5IYYPv89eiDvsGUmH6M9qeLHaqLR4my4ESWAJFql\nOZ9ge6CJ25/HO+FJCrQLYuxZxoJOhsp4dqi3Ew7of0IDdMXwBqwIuoEL6iYIOGPq\n5eJOVdTfuubQ64+HT5kxTq8f5S45RT86kGFR7LjfbhNU8p+Vgw3p9KGPksEJvABd\nX+YOJE1nH32dflqMahyEG5PnV+Cv0Z9GnXL+M5LecpYh45u/gsZ75H0AAZdiK4L5\ni7n/1PXtAgMBAAECggEAHWWhr8Nw6I54nfTC3oZL3Ez8YSVz/eH5zQVLoVYo8ZoT\nQdwXefukVZoP8mr5E/W6AJVndvUrGozYXv5kL4GyoYzFdbA8b3HFxQKq3OglMvcJ\nROsdOuFvqM59RD9ujUFz5YaTRQFZV16aJMcl9pMRFLSXbV6qY/P3/mt9TMX3ZRwD\nNESajQvjhgedP0TLgzFNKmH2PvKi6q4Whu/sIikP/XnVe+SL7EAOelumKnrsFrWC\n8OcQV7ZpfW0E43Ut906Q0ezfUg0U1yqAC561JdPrAJHE3YZ55rCI/jUaiMb0Mkom\ncwmXO448ujwpuEocaJbpHtuc9iQwD/blBB45WNR3qQKBgQD/o9Rk9nPB6mBnSVMS\nIwrljIgy8ZkmKo2bZnhQVo/c9mtoLDL8x0fKTsg6yx7RGHoYA8mbbarNM1YpGB5f\np3ZiThVEq61UAjL8yue46952inHqmtiR8sDfJ5yiJUbzjTnAl3gqj0Bm+F4Tc8bV\nNz+8LqScC5k7d0ZelPBfyf1kpQKBgQDAMf8xn2trrJeQLhV3fNwKiKNxhYnAlHFt\n6a4vavtmCU7Ooeo5j3sRKVrjpWRp2bjYT8MqHzm1w6HHlJMuohiTpkkNLytPz2Bi\nFmmlVRj3N/UHBRZNYyUU0ah2ayKK9Qy902pcuSZpVBgYPzGcwrFOt845q9fOUvV9\nXuhEx89hqQKBgA0eOBDyQKBryYSjU5rzp2R+IKMUmLpHprqZuITO3FUHZB2VXwxv\noXR1NHsn3y31ppZC436RUxlyj/JN5YkdC8shnJ/Ie317G2izdM6dc+37TrsuNPzQ\nSytoWfZMGWb4EUWbwDPW5AQkrJcs8sAQNLoQXqwPQE634SmLVQZlVBZtAoGBAJOu\nVz8UFoC4MAXzwz77TEEz2RND3yOBbN9eLh/1fpNbF5kjRU1ReOko89P0pIHJcIWW\nVIqrT7bhShCHk8jDeUsK/RsKYaeD27XDLw6Boxtjff4U5Jw2UKn8qAvGKtbHkTDT\noOj6xA8vNQx8kmy4FXI9PlOGPd8mU8gwAx3Gww1xAoGBAPvLBzhHAEvi2wq29FgW\nKOSbpAsRry4R44jMHwbFTzqhVW/xunE3g90SMHl+k9qivDFAVnJEAMlkGQpbICNg\nEJhzkjUzgzOIcSNR6opYL1G5F3/uI3Ki3obJIHNSwwjX1dewUsp405S4mrcLtK2c\nAFkfvSQyclxrosDvTvFCxKX2\n-----END PRIVATE KEY-----\n",
+  "client_email": "sdh-clinical-files@shamiri-digital-hub-clinical.iam.gserviceaccount.com",
+  "client_id": "108282374142205180841",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/sdh-clinical-files%40shamiri-digital-hub-clinical.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

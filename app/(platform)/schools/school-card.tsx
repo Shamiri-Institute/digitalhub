@@ -9,18 +9,51 @@ import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
+import { Prisma, School } from "@prisma/client";
 import Link from "next/link";
+
+type sessionTypes = Prisma.InterventionSessionGetPayload<{}>[];
+
+
+const expectedSessionTypesOnCard = [
+  {
+    id: 1,
+    sessionName: "Presession",
+  },
+  {
+    id: 2,
+    sessionName: "Session 1",
+  },
+  {
+    id: 3,
+    sessionName: "Session 2",
+  },
+  {
+    id: 4,
+    sessionName: "Session 3",
+  },
+  {
+    id: 5,
+    sessionName: "Session 4",
+  },
+];
+
 
 export function SchoolCard({
   school,
   sessionTypes,
   assigned,
+  fellowsCount
 }: {
-  school: any;
-  sessionTypes: any;
+  school: School;
+  sessionTypes: sessionTypes;
   assigned?: boolean;
+  fellowsCount?: number;
+
 }) {
-  const SchoolDetail = ({ label, value }: { label: string; value: string }) => (
+
+
+  const SchoolDetail = ({ label, value }: { label: string; value: string | null }) => (
     <p
       className={cn("pb-2 text-sm font-medium", {
         "text-white": assigned,
@@ -123,7 +156,7 @@ export function SchoolCard({
           <Button className="flex gap-1 bg-shamiri-blue text-white hover:bg-shamiri-blue-darker">
             <Icons.users className="h-4 w-4" />
             <p className="whitespace-nowrap text-sm">
-              {school.fellowsCount} Fellows
+              {fellowsCount} {fellowsCount === 1 ? "Fellow" : "Fellows"}
             </p>
           </Button>
         </Link>
@@ -153,7 +186,7 @@ export function SchoolCard({
           </div>
         )}
         <Accordion type="single" collapsible>
-          <AccordionItem value="item-1">
+          <AccordionItem value={`/schools/${school.visibleId}`}>
             <AccordionTrigger
               className={cn(
                 "items-right border-b border-border/50 px-5 pb-6  pt-0",
@@ -171,13 +204,13 @@ export function SchoolCard({
 
             <AccordionContent>
               <div className="pt-4">
-                <SchoolDetail label="Type" value={school.type} />
-                <SchoolDetail label="County" value={school.county} />
-                <SchoolDetail label="Point person" value={school.pointPerson} />
-                <SchoolDetail label="Contact number" value={school.contactNo} />
+                <SchoolDetail label="Type" value={school.schoolType} />
+                <SchoolDetail label="County" value={school.schoolCounty} />
+                <SchoolDetail label="Point person" value={school.pointPersonName} />
+                <SchoolDetail label="Contact number" value={school.pointPersonPhone} />
                 <SchoolDetail
                   label="School demographics"
-                  value={school.demographics}
+                  value={school.schoolDemographics}
                 />
               </div>
             </AccordionContent>

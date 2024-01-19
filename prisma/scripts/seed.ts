@@ -409,7 +409,7 @@ async function createStudents(db: Database) {
             studentName,
             visibleId: `Stu_${admissionNumber}`,
             fellowId: randomFellow?.id,
-            supervisorId: randomSupervisor.id,
+            supervisorId: randomSupervisor?.id,
             schoolId: school.id,
             yearOfImplementation: randomFellow?.yearOfImplementation,
             admissionNumber,
@@ -436,7 +436,13 @@ async function createStudents(db: Database) {
         });
       }
     } catch (error) {
-      console.error({ randomSupervisor, randomFellow, school });
+      if (!randomSupervisor) {
+        console.error("randomSupervisor undefined", {
+          supervisors,
+          randomSupervisor,
+          hubId,
+        });
+      }
       throw error;
     }
   }

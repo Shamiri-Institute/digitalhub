@@ -58,7 +58,9 @@ export default async function Page({ params }: { params: { caseId: string } }) {
           currentSupId={supervisor?.id}
         />
       )}
-      <CaseNotePlan />
+      <CaseNotePlan
+        currentSupId={supervisor?.id}
+      />
     </div>
   );
 }
