@@ -13,6 +13,7 @@ env:
   AWS_SECRET_ACCESS_KEY: mock-aws-secret-access-key
   NEXTAUTH_URL: http://localhost:3000
   NEXTAUTH_SECRET: test-jwt-secret
+  PLAYWRIGHT_VERSION: ""
 
 jobs:
   e2e-tests:
@@ -49,7 +50,6 @@ jobs:
           path: |
             ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
-      - run: npm ci
       - run: npx playwright install --with-deps
         if: steps.playwright-cache.outputs.cache-hit != 'true'
       - run: npx playwright install-deps
