@@ -24,9 +24,8 @@ const casesColorOptions: {
   status: caseStatusOptions;
 }[] = [
   { id: 1, status: "Active" },
-  { id: 2, status: "Referred" },
-  { id: 3, status: "FollowUp" },
-  { id: 4, status: "Terminated" },
+  { id: 2, status: "FollowUp" },
+  { id: 3, status: "Terminated" },
 ];
 
 export default function CaseHeader({
