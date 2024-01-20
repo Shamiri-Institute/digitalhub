@@ -103,7 +103,7 @@ async function SupervisorOverviewCards({
   return (
     <div className="mb-4 grid grid-cols-1 gap-4 xs:grid-cols-2 sm:grid-cols-3 sm:gap-6">
       <FeatureCard
-        href="/fellows" // TODO: see if these are supposed to be clickable
+        href="/profile" // TODO: see if these are supposed to be clickable
         title="Fellows"
         stat={fellowCount}
         Icon={Icons.users}
@@ -150,45 +150,6 @@ function FeatureCard({
     </Link>
   );
 }
-
-const schools = [
-  {
-    name: "Maranda Sec School",
-    population: 1400,
-    sessions: ["Pre", "S1"],
-    fellowsCount: 15,
-  },
-  {
-    name: "Kanjeru Sec School",
-    population: 23,
-    sessions: ["Pre", "S1", "S2"],
-    fellowsCount: 0,
-  },
-  {
-    name: "Allaince Sec School",
-    population: 100,
-    sessions: ["Pre", "S1", "S3", "S4"],
-    fellowsCount: 9,
-  },
-  {
-    name: "Maseno Sec School",
-    population: 400,
-    sessions: ["Pre"],
-    fellowsCount: 4,
-  },
-  {
-    name: "Kamukunji Sec School",
-    population: 900,
-    sessions: ["Pre", "S1", "S2"],
-    fellowsCount: 11,
-  },
-  {
-    name: "Starehe Sec School",
-    population: 1400,
-    sessions: ["Pre"],
-    fellowsCount: 7,
-  },
-];
 
 function SchoolsList() {
   const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
