@@ -9,7 +9,7 @@ import {
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
-import { cn, doesSessionExist } from "#/lib/utils";
+import { cn } from "#/lib/utils";
 
 import { Icons } from "#/components/icons";
 import { Prisma, School } from "@prisma/client";
@@ -238,4 +238,8 @@ export function SchoolCardProfile({
       </div>
     </Card>
   );
+}
+
+function doesSessionExist(sessionTypes: sessionTypes, sessionName: string) {
+  return sessionTypes.some((session) => session.sessionName === sessionName);
 }
