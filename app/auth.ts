@@ -24,7 +24,16 @@ export async function currentSupervisor() {
     where: { id: identifier },
     include: {
       hub: true,
-      assignedSchool: true,
+      assignedSchool: {
+        include: {
+          interventionSessions: true,
+          _count: {
+            select: {
+              students: true,
+            },
+          },
+        },
+      },
       fellows: {
         include: {
           hub: true,
