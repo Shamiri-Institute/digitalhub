@@ -6,7 +6,7 @@ import { ClinicalScreeningPage } from "#/tests/pages/supervisors/clinical-screen
 test.describe("clinical screenings", () => {
   test.use({ storageState: PersonnelFixtures.supervisor.stateFile });
 
-  test.only("supervisor can submit a clinical screening", async ({ page }) => {
+  test("supervisor can submit a clinical screening", async ({ page }) => {
     const clinicalScreeningPage = new ClinicalScreeningPage(page);
     await clinicalScreeningPage.visit();
     await clinicalScreeningPage.isShown();
