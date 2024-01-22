@@ -47,12 +47,6 @@ export default async function Page({ params }: { params: { caseId: string } }) {
     },
   });
 
-  const fellows = await db.fellow.findMany({
-    where: {
-      hubId: supervisor?.hubId,
-    },
-  });
-
   return (
     <div>
       {currentcase && <CaseHeader currentcase={currentcase} />}
