@@ -139,7 +139,6 @@ export default function CreateClinicalCaseDialogue({
     // from the selected supervisor id, get the fellow
     const fellow = supervisors?.find((sup) => sup.id === selectedSupId)
       ?.fellows;
-    console.log({ fellow });
     setFellows(fellow);
   }, [selectedSupId, supervisors]);
 

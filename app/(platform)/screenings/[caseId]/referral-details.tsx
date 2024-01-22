@@ -52,10 +52,12 @@ export function ReferralToDetails({
   currentcase,
   supervisors,
   currentSupId,
+  canReferCase
 }: {
   currentcase: CurrentCase;
   supervisors: Supervisor[];
   currentSupId: string | undefined;
+  canReferCase: boolean;
 }) {
   const { toast } = useToast();
   const [selectedSupervisorId, setSelectedSupervisorId] = useState<string>("");
@@ -120,6 +122,7 @@ export function ReferralToDetails({
                       <Select
                         name="referredTo"
                         defaultValue={field.value}
+                        disabled={!canReferCase}
                         onValueChange={(value) => {
                           field.onChange(value);
                           setSelectedOption(value);
@@ -228,6 +231,8 @@ export function ReferralToDetails({
                   render={({ field }) => (
                     <div className="mt-3 grid w-full gap-1.5">
                       <Textarea
+                        disabled={!canReferCase}
+
                         id="referralNotes"
                         className="mt-1.5 resize-none bg-card"
                         placeholder="Write referral notes here..."
@@ -242,6 +247,7 @@ export function ReferralToDetails({
               <Button
                 type="submit"
                 form="submitReferralForm"
+                disabled={!canReferCase}
                 className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
               >
                 Submit Referral
