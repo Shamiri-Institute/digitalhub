@@ -1,8 +1,8 @@
-import { NextFetchEvent, NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { NextRequest, NextResponse } from "next/server";
 
-import { APP_HOSTNAMES } from "#/lib/constants";
 import AppMiddleware from "#/lib/middleware/app";
-import { parse } from "#/lib/middleware/utils";
+import { ImplementerRole } from "@prisma/client";
 
 export const config = {
   matcher: [
@@ -17,10 +17,64 @@ export const config = {
   ],
 };
 
-export default async function middleware(req: NextRequest, ev: NextFetchEvent) {
-  const { domain, path, fullPath, key } = parse(req);
+const roleRouteMap = {
+  [ImplementerRole.HUB_COORDINATOR]: "hc",
+  [ImplementerRole.OPERATIONS]: "ops",
+  [ImplementerRole.ADMIN]: "admin",
+};
 
-  if (APP_HOSTNAMES.has(domain)) {
-    return AppMiddleware(req);
+export enum AuthErrors {
+  NO_MEMBERSHIPS = "no_memberships",
+  NO_ROLE = "no_role",
+  NO_ACCESS = "no_access",
+}
+
+function hasAccessToRoute(role: ImplementerRole, routeGroup: string) {
+  if (role === ImplementerRole.SUPERVISOR) {
+    return routeGroup !== "hc" && routeGroup !== "ops";
   }
+
+  return roleRouteMap[role] === routeGroup;
+}
+
+function redirectTo(url: string, request: NextRequest, error: AuthErrors) {
+  const redirectUrl = new URL(url, request.url);
+  redirectUrl.searchParams.append("error", error);
+  return NextResponse.redirect(redirectUrl);
+}
+
+export default async function middleware(request: NextRequest) {
+  const token = await getToken({ req: request });
+
+  if (
+    request.nextUrl.pathname === "/login" ||
+    !token ||
+    request.nextUrl.pathname.startsWith("/monitoring") // Sentry
+  ) {
+    return AppMiddleware(request);
+  }
+
+  const { memberships } = token;
+  if (!memberships || memberships.length === 0) {
+    return redirectTo("/login", request, AuthErrors.NO_MEMBERSHIPS);
+  }
+
+  const { role } = memberships[0];
+  if (!role) {
+    return redirectTo("/login", request, AuthErrors.NO_ROLE);
+  }
+
+  const routeGroup = request.nextUrl.pathname.split("/")[1] || "";
+  if (!hasAccessToRoute(role, routeGroup)) {
+    switch (role) {
+      case ImplementerRole.OPERATIONS:
+        return redirectTo("/ops", request, AuthErrors.NO_ACCESS);
+      case ImplementerRole.HUB_COORDINATOR:
+        return redirectTo("/hc", request, AuthErrors.NO_ACCESS);
+      case ImplementerRole.SUPERVISOR:
+        return redirectTo("/", request, AuthErrors.NO_ACCESS);
+    }
+  }
+
+  return AppMiddleware(request);
 }
