@@ -30,11 +30,6 @@ export enum AuthErrors {
 }
 
 function hasAccessToRoute(role: ImplementerRole, routeGroup: string) {
-  if (role === ImplementerRole.ADMIN) {
-    return true;
-  }
-
-  // Allow supervisors to access non-hc and non-ops to avoid massive code diff
   if (role === ImplementerRole.SUPERVISOR) {
     return routeGroup !== "hc" && routeGroup !== "ops";
   }
@@ -42,55 +37,44 @@ function hasAccessToRoute(role: ImplementerRole, routeGroup: string) {
   return roleRouteMap[role] === routeGroup;
 }
 
+function redirectTo(url: string, request: NextRequest, error: AuthErrors) {
+  const redirectUrl = new URL(url, request.url);
+  redirectUrl.searchParams.append("error", error);
+  return NextResponse.redirect(redirectUrl);
+}
+
 export default async function middleware(request: NextRequest) {
   const token = await getToken({ req: request });
 
-  // TODO: token.memberships could have multiple entries, show implementer chooser and store that in the session
-  // For now, we will just use the first one
-  if (token && isNotSentryRequest(request)) {
-    const { memberships } = token;
-    if (!memberships || memberships.length === 0) {
-      return redirectToLogin(request, AuthErrors.NO_MEMBERSHIPS);
-    }
-
-    const membership = memberships[0];
-    const { role } = membership;
-    if (!role) {
-      return redirectToLogin(request, AuthErrors.NO_ROLE);
-    }
-
-    // "/hc".split("/")[1] => ["", "hc"][1] === "hc"
-    const roleRouteGroup = request.nextUrl.pathname.split("/")[1] || "";
-    console.log({});
-    if (!hasAccessToRoute(role, roleRouteGroup)) {
-      // If trying to access home page just redirect them to role-specific home page
-      if (role === ImplementerRole.OPERATIONS && roleRouteGroup === "") {
-        const redirectUrl = new URL("/ops", request.url);
-        return NextResponse.redirect(redirectUrl);
-      }
-
-      if (role === ImplementerRole.HUB_COORDINATOR && roleRouteGroup === "") {
-        const redirectUrl = new URL("/hc", request.url);
-        return NextResponse.redirect(redirectUrl);
-      }
-
-      console.log({ role: membership.role, roleRouteGroup });
-
-      return redirectToLogin(request, `not_${roleRouteGroup}`);
-    }
-
+  if (
+    request.nextUrl.pathname === "/login" ||
+    !token ||
+    request.nextUrl.pathname.startsWith("/monitoring") // Sentry
+  ) {
     return AppMiddleware(request);
   }
 
+  const { memberships } = token;
+  if (!memberships || memberships.length === 0) {
+    return redirectTo("/login", request, AuthErrors.NO_MEMBERSHIPS);
+  }
+
+  const { role } = memberships[0];
+  if (!role) {
+    return redirectTo("/login", request, AuthErrors.NO_ROLE);
+  }
+
+  const routeGroup = request.nextUrl.pathname.split("/")[1] || "";
+  if (!hasAccessToRoute(role, routeGroup)) {
+    switch (role) {
+      case ImplementerRole.OPERATIONS:
+        return redirectTo("/ops", request, AuthErrors.NO_ACCESS);
+      case ImplementerRole.HUB_COORDINATOR:
+        return redirectTo("/hc", request, AuthErrors.NO_ACCESS);
+      case ImplementerRole.SUPERVISOR:
+        return redirectTo("/", request, AuthErrors.NO_ACCESS);
+    }
+  }
+
   return AppMiddleware(request);
-}
-
-function isNotSentryRequest(request: NextRequest) {
-  return !request.nextUrl.pathname.startsWith("/monitoring");
-}
-
-function redirectToLogin(request: NextRequest, error: string) {
-  const redirectUrl = new URL("/login", request.url);
-  redirectUrl.searchParams.append("error", error);
-  return NextResponse.redirect(redirectUrl);
 }
