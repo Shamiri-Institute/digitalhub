@@ -60,20 +60,39 @@ export function AddClinicalSessionDialog({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    await updateClinicalCaseSessionAttendance({
-      supervisorId,
-      caseId,
-      session: data.session ?? "",
-      dateOfSession: data.dateOfSession,
-    });
+    if (data.session === "" || data.dateOfSession === undefined) {
+      toast({
+        variant: "default",
+        title: "Please fill in the fields",
+      });
+      return;
+    }
+    try {
+      const response = await updateClinicalCaseSessionAttendance({
+        supervisorId,
+        caseId,
+        session: data.session ?? "",
+        dateOfSession: data.dateOfSession,
+      });
 
-    toast({
-      variant: "default",
-      title: "Session attendance recorded successfully",
-    });
+      if (!response.success) {
+        toast({
+          variant: "default",
+          title: "Something went wrong, please try again",
+        });
+        return;
+      }
 
-    form.reset();
-    setDialogOpen(false);
+      toast({
+        variant: "default",
+        title: "Session attendance recorded successfully",
+      });
+
+      form.reset();
+      setDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   return (

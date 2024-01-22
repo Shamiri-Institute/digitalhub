@@ -8,7 +8,13 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { Form, FormField, FormItem, FormMessage, FormControl } from "#/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "#/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -20,12 +26,11 @@ import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Fellow, School, Student, Supervisor } from "@prisma/client";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Loader2 } from "lucide-react";
-
 
 const FormSchema = z.object({
   school: z.string({
@@ -82,7 +87,6 @@ export default function CreateClinicalCaseDialogue({
   const { toast } = useToast();
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-
     if (!data.school || !data.supervisor || !data.fellow || !data.student) {
       toast({
         variant: "destructive",
@@ -172,7 +176,6 @@ export default function CreateClinicalCaseDialogue({
                 <FormField
                   control={form.control}
                   name="school"
-
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>
@@ -188,7 +191,6 @@ export default function CreateClinicalCaseDialogue({
                           >
                             <SelectTrigger>
                               <SelectValue
-
                                 className="text-muted-foreground"
                                 defaultValue={field.value}
                                 onChange={field.onChange}
@@ -353,7 +355,7 @@ export default function CreateClinicalCaseDialogue({
         </Form>
         <div className="flex justify-end px-6 pb-6">
           <Link href={"/screenings/create-student"} className="flex flex-1">
-            <Button variant="brand" onClick={() => { }} className="w-full">
+            <Button variant="brand" onClick={() => {}} className="w-full">
               Non-Shamiri Student
             </Button>
           </Link>
