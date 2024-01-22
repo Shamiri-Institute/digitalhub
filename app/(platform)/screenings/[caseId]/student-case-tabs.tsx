@@ -29,8 +29,10 @@ export function StudentCaseTabs({
   supervisors: SupervisorWithFellows[];
   currentSupId: string | undefined;
 }) {
-
-  const canReferCase = !!(currentcase.initialCaseHistoryId && (currentcase.emergencyPresentingIssues !== null));
+  const canReferCase = !!(
+    currentcase.initialCaseHistoryId &&
+    currentcase.emergencyPresentingIssues !== null
+  );
 
   return (
     <div className="mt-4">
@@ -112,7 +114,6 @@ export function StudentCaseTabs({
           <AccordionContent>
             <ReferralToDetails
               canReferCase={canReferCase}
-
               currentcase={currentcase}
               supervisors={supervisors}
               currentSupId={currentSupId}
