@@ -11,6 +11,7 @@ import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 import { constants } from "#/tests/constants";
 import { signOut, useSession } from "next-auth/react";
+import React from "react";
 
 const demoProfile = {
   organization: {
@@ -21,9 +22,24 @@ const demoProfile = {
 };
 
 export function ProfileSwitcher() {
-  const session = useSession();
+  const { data: session, status } = useSession();
 
-  console.log({ session });
+  console.log({ profileSwitcherSession: session });
+
+  if (status !== "authenticated") {
+    console.error("ProfileSwitcher: not authenticated");
+  }
+  const implementerId = session?.user?.activeMembership?.implementerId;
+
+  const [implementerInfo, setImplementerInfo] = React.useState<string>();
+
+  React.useEffect(() => {
+    fetch(`/api/implementers/${implementerId}`)
+      .then((response) => response.json())
+      .then((data) => setImplementerInfo(data));
+  }, [implementerId]);
+
+  console.log({ implementerInfo });
 
   return (
     <div className="-ml-1.5 flex justify-between">
@@ -37,7 +53,7 @@ export function ProfileSwitcher() {
             fallback={demoProfile.organization.name}
           />
           <div className="text-sm font-medium">
-            {session?.data?.user?.implementer?.name ||
+            {session?.user?.activeMembership?.implementerId ||
               demoProfile.organization.name}
           </div>
           <Icons.chevronsUpDown

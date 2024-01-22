@@ -1,5 +1,7 @@
 "use client";
 
+import { ImplementerRole } from "@prisma/client";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
@@ -12,15 +14,13 @@ import { cn } from "#/lib/utils";
 
 export const navigation: Array<any> = [];
 
-function NavItem({
-  href,
-  Icon,
-  children,
-}: {
+interface NavItemProps {
   href: string;
   Icon: Icon;
   children: React.ReactNode;
-}) {
+}
+
+const NavItem: React.FC<NavItemProps> = ({ href, Icon, children }) => {
   const pathname = usePathname();
 
   return (
@@ -28,11 +28,12 @@ function NavItem({
       <Link
         href={href}
         className={cn(
-          "flex items-center gap-6 rounded-sm p-1.5 lg:gap-2",
+          "flex items-center gap-6 rounded-xl p-1.5 lg:gap-2 lg:pl-3",
           "text-base leading-5 lg:text-[1rem] lg:font-medium",
-          "hover:bg-foreground/[0.025]",
+          "hover:bg-foreground/[0.035]",
           {
-            "bg-foreground/[0.025]": pathname === href,
+            "bg-shamiri-blue/[0.075] hover:bg-shamiri-blue/[0.1]":
+              pathname === href,
           },
         )}
       >
@@ -41,20 +42,47 @@ function NavItem({
       </Link>
     </li>
   );
-}
+};
 
 export function Navigation({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"nav">) {
+  const session = useSession();
+  if (session.status !== "authenticated") {
+    return null;
+  }
+
+  const user = session.data.user;
+  const { activeMembership } = user;
+  if (!activeMembership) {
+    return null;
+  }
+
+  let navigationDiv: React.ReactNode = null;
+  switch (activeMembership.role) {
+    case ImplementerRole.SUPERVISOR:
+      navigationDiv = <SupervisorNavigation />;
+      break;
+    case ImplementerRole.HUB_COORDINATOR:
+      navigationDiv = <HubCoordinatorNavigation />;
+      break;
+    case ImplementerRole.OPERATIONS:
+      navigationDiv = <OperationsNavigation />;
+      break;
+    case ImplementerRole.ADMIN:
+      navigationDiv = <AdminNavigation />;
+      break;
+    default:
+      break;
+  }
+
   return (
     <div
       className={cn("flex h-full flex-col justify-between", className)}
       {...props}
     >
-      <div className="flex flex-1 flex-col">
-        <SupervisorNavigation />
-      </div>
+      <div className="flex flex-1 flex-col">{navigationDiv}</div>
       <div>
         <div className="mb-4">
           <PersonnelTool />
@@ -111,13 +139,6 @@ const supervisorNavigationItems: NavigationItem[] = [
     title: "Schools",
     Icon: Icons.schoolMinusOutline,
   },
-  /* FIXME: revisit if we have any flows that need to sit at this page. As per the requirements, all fellow flows should happen from the my profile page
-  {
-    path: "/fellows",
-    title: "Fellows",
-    Icon: Icons.users,
-  },
-  */
   {
     path: "/screenings",
     title: "Clinical Cases",
@@ -133,14 +154,62 @@ const supervisorNavigationItems: NavigationItem[] = [
 function SupervisorNavigation() {
   return (
     <nav className="flex-1 lg:pt-6">
-      <ul role="list" className="space-y-0">
-        {supervisorNavigationItems.map((item) => {
-          return (
-            <NavItem key={item.path} href={item.path} Icon={item.Icon}>
-              {item.title}
-            </NavItem>
-          );
-        })}
+      <ul role="list" className="space-y-2">
+        {supervisorNavigationItems.map((item) => (
+          <NavItem key={item.path} href={item.path} Icon={item.Icon}>
+            {item.title}
+          </NavItem>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+const hubCoordinatorNavigationItems: NavigationItem[] = [
+  {
+    path: "/hc",
+    title: "Home",
+    Icon: Icons.home,
+  },
+  {
+    path: "/hc/hubs",
+    title: "Hubs",
+    Icon: Icons.hubspot,
+  },
+  {
+    path: "/hc/expenses",
+    title: "Expenses",
+    Icon: Icons.wallet,
+  },
+];
+
+function HubCoordinatorNavigation() {
+  return (
+    <nav className="flex-1 lg:pt-6">
+      <ul role="list" className="space-y-2">
+        {hubCoordinatorNavigationItems.map((item) => (
+          <NavItem key={item.path} href={item.path} Icon={item.Icon}>
+            {item.title}
+          </NavItem>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+const operationsNavigationItems: NavigationItem[] = [
+  // TODO: Add the navigation items for the Operations role here
+];
+
+function OperationsNavigation() {
+  return (
+    <nav className="flex-1 lg:pt-6">
+      <ul role="list" className="space-y-2">
+        {operationsNavigationItems.map((item) => (
+          <NavItem key={item.path} href={item.path} Icon={item.Icon}>
+            {item.title}
+          </NavItem>
+        ))}
       </ul>
     </nav>
   );

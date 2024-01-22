@@ -75,8 +75,10 @@ const authOptions: AuthOptions = {
           },
           memberships: {
             select: {
+              id: true,
               implementer: true,
               role: true,
+              identifier: true,
             },
           },
         },
@@ -90,16 +92,17 @@ const authOptions: AuthOptions = {
         console.warn(`User ${user.email} has no memberships`);
       }
 
+      const memberships = parseMembershipsForJWT(user);
+      const activeMembership = memberships[0];
+
       const sessionUser: SessionUser = {
         id: token.sub || null,
         email: user.email,
         name: user.name,
         roles: user.memberships.map((m) => m.role),
         image: user.image,
-        implementer: {
-          id: user.memberships[0]?.implementer.id || "",
-          name: user.memberships[0]?.implementer.implementerName || "",
-        },
+        activeMembership,
+        memberships,
         // @ts-ignore
         ...(token || session).user,
       };
@@ -115,6 +118,7 @@ const authOptions: AuthOptions = {
             select: {
               memberships: {
                 select: {
+                  id: true,
                   implementer: true,
                   role: true,
                   identifier: true,
@@ -128,7 +132,8 @@ const authOptions: AuthOptions = {
           }
 
           if (currentUser) {
-            token.memberships = parseRolesForJWT(currentUser);
+            token.memberships = parseMembershipsForJWT(currentUser) || [];
+            token.activeMembership = token.memberships[0];
           }
         }
       }
@@ -137,11 +142,12 @@ const authOptions: AuthOptions = {
   },
 };
 
-function parseRolesForJWT(
-  userWithRoles: Prisma.UserGetPayload<{
+function parseMembershipsForJWT(
+  userWithMemberships: Prisma.UserGetPayload<{
     select: {
       memberships: {
         select: {
+          id: true;
           implementer: true;
           role: true;
           identifier: true;
@@ -149,8 +155,9 @@ function parseRolesForJWT(
       };
     };
   }>,
-) {
-  return userWithRoles.memberships.map((m) => ({
+): JWTMembership[] {
+  return userWithMemberships.memberships.map((m) => ({
+    id: m.id,
     implementerId: m.implementer.id,
     role: m.role,
     identifier: m.identifier,
@@ -167,13 +174,12 @@ export type SessionUser = {
   name: string | null;
   roles: string[];
   image: string | null;
-  implementer: {
-    id: string;
-    name: string;
-  };
+  activeMembership?: JWTMembership;
+  memberships?: JWTMembership[];
 };
 
 export interface JWTMembership {
+  id: number;
   implementerId: string;
   role: ImplementerRole;
   identifier: string | null;
