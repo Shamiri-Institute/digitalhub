@@ -156,7 +156,7 @@ export const userFixtures: Fixtures = {
       avatarUrl: null,
       implementerByVisibleId: "Imp_1",
       implementerRole: ImplementerRole.SUPERVISOR,
-      identifier: "SPV23_S_01",
+      identifier: "SPV23_S_09",
     },
   ],
 };

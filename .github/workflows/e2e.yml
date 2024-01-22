@@ -64,7 +64,7 @@ jobs:
       - name: Migrate database
         run: npm run db:dev:migrate
       - name: Load test database dump
-        run: psql -U youth -d shamiri_db -h localhost -p 5432 -f ./tests/fixtures/dump.sql
+        run: npm run test:db:load
         env:
           PGPASSWORD: thriving
 
