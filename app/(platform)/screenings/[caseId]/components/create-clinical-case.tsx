@@ -62,24 +62,6 @@ export default function CreateClinicalCaseDialogue({
   currentSupervisorId: string | undefined;
   schools: SchoolsWithSupervisors[];
 }) {
-  schools.forEach((school) => {
-    school.supervisors.forEach((supervisor) => {
-      supervisor.fellows.forEach((fellow) => {
-        if (fellow.students.length === 0) {
-          console.debug("No students found for fellow", fellow.fellowName);
-        }
-        console.debug({
-          school: school.schoolName,
-          supervisor: supervisor.supervisorName,
-          fellow: fellow.fellowName,
-        });
-        fellow.students.forEach((student) => {
-          console.debug("Student", student.studentName);
-        });
-      });
-    });
-  });
-
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
