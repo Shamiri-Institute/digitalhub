@@ -1,5 +1,12 @@
 import { initialReferralFromClinicalCaseSupervisor } from "#/app/actions";
 import { Button } from "#/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import {
   Select,
@@ -18,24 +25,20 @@ import {
   Student,
   Supervisor,
 } from "@prisma/client";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "#/components/ui/form";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 export const FormSchema = z.object({
-  referredFrom: z.string({
-    required_error: "Please enter the referred from.",
-  }).trim().min(1, {
-    message: "Required. Please select the initial contact person.",
-  }),
+  referredFrom: z
+    .string({
+      required_error: "Please enter the referred from.",
+    })
+    .trim()
+    .min(1, {
+      message: "Required. Please select the initial contact person.",
+    }),
   supervisor: z
     .string({
       required_error: "Please enter the supervisor.",
@@ -95,8 +98,10 @@ export function ReferralFrom({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-
-    if (data.referredFrom == "Fellow" && data.fellow == "" || data.referredFrom == "Fellow" && data.supervisor == "") {
+    if (
+      (data.referredFrom == "Fellow" && data.fellow == "") ||
+      (data.referredFrom == "Fellow" && data.supervisor == "")
+    ) {
       toast({
         variant: "destructive",
         title: "Please select a fellow or supervisor",
@@ -152,8 +157,7 @@ export function ReferralFrom({
             id="submitReferralForm"
             onSubmit={form.handleSubmit(onSubmit, (errors) => {
               console.error({ errors });
-            }
-            )}
+            })}
             className="overflow-hidden text-ellipsis px-1"
           >
             <div className="mt-6 space-y-6">
@@ -180,7 +184,8 @@ export function ReferralFrom({
                             }}
                             disabled={
                               !!currentcase.initialCaseHistoryOwnerId &&
-                              currentcase.initialCaseHistoryOwnerId !== currentSupId
+                              currentcase.initialCaseHistoryOwnerId !==
+                                currentSupId
                             }
                           >
                             <SelectTrigger>
@@ -319,14 +324,16 @@ export function ReferralFrom({
                                 />
                               </SelectTrigger>
                               <SelectContent>
-                                {selectedSupervisor[0]?.fellows.map((fellow) => (
-                                  <SelectItem
-                                    key={fellow.id}
-                                    value={fellow.fellowName ?? ""}
-                                  >
-                                    {fellow.fellowName}
-                                  </SelectItem>
-                                ))}
+                                {selectedSupervisor[0]?.fellows.map(
+                                  (fellow) => (
+                                    <SelectItem
+                                      key={fellow.id}
+                                      value={fellow.fellowName ?? ""}
+                                    >
+                                      {fellow.fellowName}
+                                    </SelectItem>
+                                  ),
+                                )}
                               </SelectContent>
                             </Select>
                           </div>
@@ -398,11 +405,11 @@ function SingleHistory({
       <p className="mb-2 ml-2 text-xs text-brand">
         {referredFrom === "Other"
           ? `${new Date(
-            date,
-          ).toLocaleDateString()}  Referred from ${referredFrom} reason: ${referredTo}`
+              date,
+            ).toLocaleDateString()}  Referred from ${referredFrom} reason: ${referredTo}`
           : `${new Date(
-            date,
-          ).toLocaleDateString()} - Referred from ${referredFrom} to ${referredTo}.`}
+              date,
+            ).toLocaleDateString()} - Referred from ${referredFrom} to ${referredTo}.`}
       </p>
     </li>
   );

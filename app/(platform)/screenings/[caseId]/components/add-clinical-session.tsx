@@ -33,18 +33,21 @@ import { z } from "zod";
 import { updateClinicalCaseSessionAttendance } from "#/app/actions";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 const FormSchema = z.object({
-  session: z.string({
-    required_error: "Please select the session.",
-  }).trim().min(1, {
-    message: "Required. Please select the session.",
-  }),
+  session: z
+    .string({
+      required_error: "Please select the session.",
+    })
+    .trim()
+    .min(1, {
+      message: "Required. Please select the session.",
+    }),
   dateOfSession: z.date({
     required_error: "Please select the date of session.",
-  })
+  }),
 });
 
 export function AddClinicalSessionDialog({
@@ -69,7 +72,6 @@ export function AddClinicalSessionDialog({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-
     try {
       const response = await updateClinicalCaseSessionAttendance({
         supervisorId,
@@ -165,7 +167,6 @@ export function AddClinicalSessionDialog({
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-
                   )}
                 />
               </div>

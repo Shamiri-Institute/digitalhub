@@ -34,18 +34,30 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const FormSchema = z.object({
-  school: z.string({
-    required_error: "Please select the school.",
-  }).trim().min(1, { message: 'Required. Please select the school.' }),
-  supervisor: z.string({
-    required_error: "Please select the supervisor.",
-  }).trim().min(1, { message: 'Required. Please select the supervisor.' }),
-  fellow: z.string({
-    required_error: "Please select the fellow.",
-  }).trim().min(1, { message: 'Required. Please select the fellow.' }),
-  student: z.string({
-    required_error: "Please select the student.",
-  }).trim().min(1, { message: 'Required. Please select the student.' }),
+  school: z
+    .string({
+      required_error: "Please select the school.",
+    })
+    .trim()
+    .min(1, { message: "Required. Please select the school." }),
+  supervisor: z
+    .string({
+      required_error: "Please select the supervisor.",
+    })
+    .trim()
+    .min(1, { message: "Required. Please select the supervisor." }),
+  fellow: z
+    .string({
+      required_error: "Please select the fellow.",
+    })
+    .trim()
+    .min(1, { message: "Required. Please select the fellow." }),
+  student: z
+    .string({
+      required_error: "Please select the student.",
+    })
+    .trim()
+    .min(1, { message: "Required. Please select the student." }),
 });
 
 type FellowWithStudents = Fellow & {
@@ -88,7 +100,6 @@ export default function CreateClinicalCaseDialogue({
   const { toast } = useToast();
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-
     if (!currentSupervisorId) {
       toast({
         variant: "destructive",
@@ -189,7 +200,9 @@ export default function CreateClinicalCaseDialogue({
                             required
                           >
                             <SelectTrigger
-                              data-testid={constants.SELECT_CLINICAL_CASE_SCHOOL}
+                              data-testid={
+                                constants.SELECT_CLINICAL_CASE_SCHOOL
+                              }
                             >
                               <SelectValue
                                 className="text-muted-foreground"
@@ -293,7 +306,9 @@ export default function CreateClinicalCaseDialogue({
                             }}
                           >
                             <SelectTrigger
-                              data-testid={constants.SELECT_CLINICAL_CASE_FELLOW}
+                              data-testid={
+                                constants.SELECT_CLINICAL_CASE_FELLOW
+                              }
                             >
                               <SelectValue
                                 className="text-muted-foreground"
@@ -342,7 +357,9 @@ export default function CreateClinicalCaseDialogue({
                             }}
                           >
                             <SelectTrigger
-                              data-testid={constants.SELECT_CLINICAL_CASE_STUDENT}
+                              data-testid={
+                                constants.SELECT_CLINICAL_CASE_STUDENT
+                              }
                             >
                               <SelectValue
                                 className="text-muted-foreground"
@@ -395,7 +412,7 @@ export default function CreateClinicalCaseDialogue({
         </Form>
         <div className="flex justify-end px-6 pb-6">
           <Link href={"/screenings/create-student"} className="flex flex-1">
-            <Button variant="brand" onClick={() => { }} className="w-full">
+            <Button variant="brand" onClick={() => {}} className="w-full">
               Non-Shamiri Student
             </Button>
           </Link>

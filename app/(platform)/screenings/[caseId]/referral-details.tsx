@@ -31,10 +31,12 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 export const FormSchema = z.object({
-  referredTo: z.string({
-    required_error: "Please enter the referred to.",
-  }).trim().
-    min(1, {
+  referredTo: z
+    .string({
+      required_error: "Please enter the referred to.",
+    })
+    .trim()
+    .min(1, {
       message: "Required. Please enter the referred to.",
     }),
   referredToPerson: z.string({
@@ -180,7 +182,9 @@ export function ReferralToDetails({
                               />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Supervisor">Supervisor</SelectItem>
+                              <SelectItem value="Supervisor">
+                                Supervisor
+                              </SelectItem>
                               <SelectItem value="Shamiri Clinical Team">
                                 Shamiri Clinical Team
                               </SelectItem>
