@@ -36,16 +36,16 @@ import { z } from "zod";
 const FormSchema = z.object({
   school: z.string({
     required_error: "Please select the school.",
-  }),
+  }).trim().min(1, { message: 'Required. Please select the school.' }),
   supervisor: z.string({
     required_error: "Please select the supervisor.",
-  }),
+  }).trim().min(1, { message: 'Required. Please select the supervisor.' }),
   fellow: z.string({
     required_error: "Please select the fellow.",
-  }),
+  }).trim().min(1, { message: 'Required. Please select the fellow.' }),
   student: z.string({
     required_error: "Please select the student.",
-  }),
+  }).trim().min(1, { message: 'Required. Please select the student.' }),
 });
 
 type FellowWithStudents = Fellow & {
@@ -88,13 +88,6 @@ export default function CreateClinicalCaseDialogue({
   const { toast } = useToast();
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    if (!data.school || !data.supervisor || !data.fellow || !data.student) {
-      toast({
-        variant: "destructive",
-        title: "Please select all fields",
-      });
-      return;
-    }
 
     if (!currentSupervisorId) {
       toast({
@@ -103,7 +96,7 @@ export default function CreateClinicalCaseDialogue({
       });
       return;
     }
-    // todo: update this to show error based on the error message from the server
+
     try {
       const response = await createClinicalCase({
         schoolId: data.school,
@@ -195,9 +188,9 @@ export default function CreateClinicalCaseDialogue({
                             }}
                             required
                           >
-                          <SelectTrigger
-                          data-testid={constants.SELECT_CLINICAL_CASE_SCHOOL}
-                        >
+                            <SelectTrigger
+                              data-testid={constants.SELECT_CLINICAL_CASE_SCHOOL}
+                            >
                               <SelectValue
                                 className="text-muted-foreground"
                                 defaultValue={field.value}
@@ -209,18 +202,18 @@ export default function CreateClinicalCaseDialogue({
                                 }
                               />
                             </SelectTrigger>
-                              
-                        <SelectContent>
-                          {schools.map((school) => (
-                            <SelectItem
-                              key={school.id}
-                              value={school.id}
-                              data-testid={`${constants.SELECT_CLINICAL_CASE_SCHOOL}-${school.visibleId}`}
-                            >
-                              {school.schoolName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
+
+                            <SelectContent>
+                              {schools.map((school) => (
+                                <SelectItem
+                                  key={school.id}
+                                  value={school.id}
+                                  data-testid={`${constants.SELECT_CLINICAL_CASE_SCHOOL}-${school.visibleId}`}
+                                >
+                                  {school.schoolName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
                           </Select>
                         </div>
                       </FormControl>
@@ -235,90 +228,101 @@ export default function CreateClinicalCaseDialogue({
                   control={form.control}
                   name="supervisor"
                   render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Select
-                        name="supervisor"
-                        defaultValue={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedSupId(value);
-                        }}
-                      >
-                        <SelectTrigger
-                          data-testid={
-                            constants.SELECT_CLINICAL_CASE_SUPERVISOR
-                          }
-                        >
-                          <SelectValue
-                            className="text-muted-foreground"
+                    <FormItem>
+                      <FormControl>
+                        <div className="mt-3 grid w-full gap-1.5">
+                          <Select
+                            name="supervisor"
                             defaultValue={field.value}
-                            onChange={field.onChange}
-                            placeholder={
-                              //todo: should be group but they are not linked to schools
-                              <span className="text-muted-foreground">
-                                Select Supervisor
-                              </span>
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {supervisors?.map((supervisor) => (
-                            <SelectItem
-                              key={supervisor.id}
-                              value={supervisor.id}
-                              data-testid={`${constants.SELECT_CLINICAL_CASE_SUPERVISOR}-${supervisor.visibleId}`}
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              setSelectedSupId(value);
+                            }}
+                          >
+                            <SelectTrigger
+                              data-testid={
+                                constants.SELECT_CLINICAL_CASE_SUPERVISOR
+                              }
                             >
-                              {supervisor.supervisorName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                              <SelectValue
+                                className="text-muted-foreground"
+                                defaultValue={field.value}
+                                onChange={field.onChange}
+                                placeholder={
+                                  //todo: should be group but they are not linked to schools
+                                  <span className="text-muted-foreground">
+                                    Select Supervisor
+                                  </span>
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {supervisors?.map((supervisor) => (
+                                <SelectItem
+                                  key={supervisor.id}
+                                  value={supervisor.id}
+                                  data-testid={`${constants.SELECT_CLINICAL_CASE_SUPERVISOR}-${supervisor.visibleId}`}
+                                >
+                                  {supervisor.supervisorName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
               </div>
+
               <div className="px-4">
                 <FormField
                   control={form.control}
                   name="fellow"
                   render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Select
-                        name="fellow"
-                        defaultValue={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedFellowId(value);
-                        }}
-                      >
-                        <SelectTrigger
-                          data-testid={constants.SELECT_CLINICAL_CASE_FELLOW}
-                        >
-                          <SelectValue
-                            className="text-muted-foreground"
+                    <FormItem>
+                      <FormControl>
+                        <div className="mt-3 grid w-full gap-1.5">
+                          <Select
+                            name="fellow"
                             defaultValue={field.value}
-                            onChange={field.onChange}
-                            placeholder={
-                              //todo: should be group but they are not linked to schools
-                              <span className="text-muted-foreground">
-                                Select Fellow
-                              </span>
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {fellows?.map((fellow) => (
-                            <SelectItem
-                              key={fellow.id}
-                              value={fellow.id}
-                              data-testid={`${constants.SELECT_CLINICAL_CASE_FELLOW}-${fellow.visibleId}`}
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              setSelectedFellowId(value);
+                            }}
+                          >
+                            <SelectTrigger
+                              data-testid={constants.SELECT_CLINICAL_CASE_FELLOW}
                             >
-                              {fellow.fellowName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                              <SelectValue
+                                className="text-muted-foreground"
+                                defaultValue={field.value}
+                                onChange={field.onChange}
+                                placeholder={
+                                  //todo: should be group but they are not linked to schools
+                                  <span className="text-muted-foreground">
+                                    Select Fellow
+                                  </span>
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {fellows?.map((fellow) => (
+                                <SelectItem
+                                  key={fellow.id}
+                                  value={fellow.id}
+                                  data-testid={`${constants.SELECT_CLINICAL_CASE_FELLOW}-${fellow.visibleId}`}
+                                >
+                                  {fellow.fellowName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
               </div>
@@ -327,41 +331,46 @@ export default function CreateClinicalCaseDialogue({
                   control={form.control}
                   name="student"
                   render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Select
-                        name="student"
-                        defaultValue={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                        }}
-                      >
-                        <SelectTrigger
-                          data-testid={constants.SELECT_CLINICAL_CASE_STUDENT}
-                        >
-                          <SelectValue
-                            className="text-muted-foreground"
+                    <FormItem>
+                      <FormControl>
+                        <div className="mt-3 grid w-full gap-1.5">
+                          <Select
+                            name="student"
                             defaultValue={field.value}
-                            onChange={field.onChange}
-                            placeholder={
-                              <span className="text-muted-foreground">
-                                Select Student
-                              </span>
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {students?.map((student) => (
-                            <SelectItem
-                              key={student.id}
-                              value={student.id}
-                              data-testid={`${constants.SELECT_CLINICAL_CASE_STUDENT}-${student.visibleId}`}
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                            }}
+                          >
+                            <SelectTrigger
+                              data-testid={constants.SELECT_CLINICAL_CASE_STUDENT}
                             >
-                              {student.studentName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                              <SelectValue
+                                className="text-muted-foreground"
+                                defaultValue={field.value}
+                                onChange={field.onChange}
+                                placeholder={
+                                  <span className="text-muted-foreground">
+                                    Select Student
+                                  </span>
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {students?.map((student) => (
+                                <SelectItem
+                                  key={student.id}
+                                  value={student.id}
+                                  data-testid={`${constants.SELECT_CLINICAL_CASE_STUDENT}-${student.visibleId}`}
+                                >
+                                  {student.studentName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
               </div>
@@ -386,7 +395,7 @@ export default function CreateClinicalCaseDialogue({
         </Form>
         <div className="flex justify-end px-6 pb-6">
           <Link href={"/screenings/create-student"} className="flex flex-1">
-            <Button variant="brand" onClick={() => {}} className="w-full">
+            <Button variant="brand" onClick={() => { }} className="w-full">
               Non-Shamiri Student
             </Button>
           </Link>
