@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { Form, FormField } from "#/components/ui/form";
+import { Form, FormField, FormItem, FormMessage, FormControl } from "#/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -24,6 +24,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Loader2 } from "lucide-react";
+
 
 const FormSchema = z.object({
   school: z.string({
@@ -80,6 +82,15 @@ export default function CreateClinicalCaseDialogue({
   const { toast } = useToast();
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+
+    if (!data.school || !data.supervisor || !data.fellow || !data.student) {
+      toast({
+        variant: "destructive",
+        title: "Please select all fields",
+      });
+      return;
+    }
+
     if (!currentSupervisorId) {
       toast({
         variant: "destructive",
@@ -87,19 +98,27 @@ export default function CreateClinicalCaseDialogue({
       });
       return;
     }
-
+    // todo: update this to show error based on the error message from the server
     try {
-      await createClinicalCase({
+      const response = await createClinicalCase({
         schoolId: data.school,
         currentSupervisorId: currentSupervisorId ?? "",
         studentId: data.student,
       });
 
-      form.reset();
+      if (!response.success) {
+        toast({
+          variant: "destructive",
+          title: "Error creating case. Please try again",
+        });
+        return;
+      }
+
       toast({
         variant: "default",
         title: "Case created successfully",
       });
+      form.reset();
       setDialogOpen(false);
     } catch (error) {
       toast({
@@ -138,9 +157,7 @@ export default function CreateClinicalCaseDialogue({
         <Form {...form}>
           <form
             id="addClincalCase"
-            onSubmit={form.handleSubmit(onSubmit, (errors) => {
-              console.error({ errors });
-            })}
+            onSubmit={form.handleSubmit(onSubmit)}
             className="overflow-hidden text-ellipsis"
           >
             <DialogHeader className="space-y-0 px-6 py-4">
@@ -156,38 +173,45 @@ export default function CreateClinicalCaseDialogue({
                 <FormField
                   control={form.control}
                   name="school"
+
                   render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Select
-                        name="school"
-                        defaultValue={field.value}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedSchoolId(value);
-                        }}
-                        required
-                      >
-                        <SelectTrigger>
-                          <SelectValue
-                            className="text-muted-foreground"
+                    <FormItem>
+                      <FormControl>
+                        <div className="mt-3 grid w-full gap-1.5">
+                          <Select
+                            name="school"
                             defaultValue={field.value}
-                            onChange={field.onChange}
-                            placeholder={
-                              <span className="text-muted-foreground">
-                                Select School
-                              </span>
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {schools.map((school) => (
-                            <SelectItem key={school.id} value={school.id}>
-                              {school.schoolName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              setSelectedSchoolId(value);
+                            }}
+                            required
+                          >
+                            <SelectTrigger>
+                              <SelectValue
+
+                                className="text-muted-foreground"
+                                defaultValue={field.value}
+                                onChange={field.onChange}
+                                placeholder={
+                                  <span className="text-muted-foreground">
+                                    Select School
+                                  </span>
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {schools.map((school) => (
+                                <SelectItem key={school.id} value={school.id}>
+                                  {school.schoolName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
               </div>
@@ -317,7 +341,11 @@ export default function CreateClinicalCaseDialogue({
                 form="addClincalCase"
                 type="submit"
                 className="w-full"
+                disabled={form.formState.isSubmitting}
               >
+                {form.formState.isSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
                 Create Case
               </Button>
             </div>
@@ -326,7 +354,7 @@ export default function CreateClinicalCaseDialogue({
         </Form>
         <div className="flex justify-end px-6 pb-6">
           <Link href={"/screenings/create-student"} className="flex flex-1">
-            <Button variant="brand" onClick={() => {}} className="w-full">
+            <Button variant="brand" onClick={() => { }} className="w-full">
               Non-Shamiri Student
             </Button>
           </Link>
