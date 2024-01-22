@@ -1,6 +1,12 @@
 import { referClinicalCaseSupervisor } from "#/app/actions";
 import { Button } from "#/components/ui/button";
-import { Form, FormField } from "#/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import {
   Select,
@@ -27,7 +33,10 @@ import { z } from "zod";
 export const FormSchema = z.object({
   referredTo: z.string({
     required_error: "Please enter the referred to.",
-  }),
+  }).trim().
+    min(1, {
+      message: "Required. Please enter the referred to.",
+    }),
   referredToPerson: z.string({
     required_error: "Please select the referred to person.",
   }),
@@ -75,12 +84,12 @@ export function ReferralToDetails({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    if (data.referredTo == "") {
+    // edge case: if supervisor is selected but no supervisor is selected
+    if (selectedOption == "Supervisor" && selectedSupervisorId == "") {
       toast({
-        variant: "default",
-        title: "Please fill in the fields",
+        variant: "destructive",
+        title: "Please select a supervisor to refer to",
       });
-
       return;
     }
 
@@ -127,7 +136,7 @@ export function ReferralToDetails({
     );
     let supervisorName = selectedSupervisor[0]?.supervisorName ?? "";
     setSelectedSupervisor(supervisorName);
-  }, [selectedSupervisorId]);
+  }, [selectedSupervisorId, supervisors]);
 
   return (
     <div className="mt-2 flex flex-col gap-5 px-1">
@@ -144,44 +153,49 @@ export function ReferralToDetails({
                   control={form.control}
                   name="referredTo"
                   render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Select
-                        name="referredTo"
-                        defaultValue={field.value}
-                        disabled={!canReferCase}
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedOption(value);
-                          setSelectedSupervisorId("");
-                          setSelectedSupervisor("");
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue
-                            className="text-muted-foreground"
+                    <FormItem>
+                      <FormControl>
+                        <div className="mt-3 grid w-full gap-1.5">
+                          <Select
+                            name="referredTo"
                             defaultValue={field.value}
-                            onChange={field.onChange}
-                            placeholder={
-                              <span className="text-muted-foreground">
-                                Referred To
-                              </span>
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Supervisor">Supervisor</SelectItem>
-                          <SelectItem value="Shamiri Clinical Team">
-                            Shamiri Clinical Team
-                          </SelectItem>
-                          <SelectItem value="External Care">
-                            External Care
-                          </SelectItem>
-                          <SelectItem value="Clinical Leads">
-                            Clinical Leads
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                            disabled={!canReferCase}
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              setSelectedOption(value);
+                              setSelectedSupervisorId("");
+                              setSelectedSupervisor("");
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue
+                                className="text-muted-foreground"
+                                defaultValue={field.value}
+                                onChange={field.onChange}
+                                placeholder={
+                                  <span className="text-muted-foreground">
+                                    Referred To
+                                  </span>
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Supervisor">Supervisor</SelectItem>
+                              <SelectItem value="Shamiri Clinical Team">
+                                Shamiri Clinical Team
+                              </SelectItem>
+                              <SelectItem value="External Care">
+                                External Care
+                              </SelectItem>
+                              <SelectItem value="Clinical Leads">
+                                Clinical Leads
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
               </div>
@@ -192,39 +206,44 @@ export function ReferralToDetails({
                     control={form.control}
                     name="referredToPerson"
                     render={({ field }) => (
-                      <div className="mt-3 grid w-full gap-1.5">
-                        <Select
-                          name="referredToPerson"
-                          defaultValue={field.value}
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            setSelectedSupervisorId(value);
-                          }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue
-                              className="text-muted-foreground"
+                      <FormItem>
+                        <FormControl>
+                          <div className="mt-3 grid w-full gap-1.5">
+                            <Select
+                              name="referredToPerson"
                               defaultValue={field.value}
-                              onChange={field.onChange}
-                              placeholder={
-                                <span className="text-muted-foreground">
-                                  Select Supervisor
-                                </span>
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {supervisors.map((supervisor) => (
-                              <SelectItem
-                                key={supervisor.id}
-                                value={supervisor.id}
-                              >
-                                {supervisor.supervisorName}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                setSelectedSupervisorId(value);
+                              }}
+                            >
+                              <SelectTrigger>
+                                <SelectValue
+                                  className="text-muted-foreground"
+                                  defaultValue={field.value}
+                                  onChange={field.onChange}
+                                  placeholder={
+                                    <span className="text-muted-foreground">
+                                      Select Supervisor
+                                    </span>
+                                  }
+                                />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {supervisors.map((supervisor) => (
+                                  <SelectItem
+                                    key={supervisor.id}
+                                    value={supervisor.id}
+                                  >
+                                    {supervisor.supervisorName}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
                   />
                 </div>
@@ -236,15 +255,21 @@ export function ReferralToDetails({
                     control={form.control}
                     name="externalCare"
                     render={({ field }) => (
-                      <div className="mt-3 grid w-full gap-1.5">
-                        <Input
-                          id="externalCare"
-                          className="mt-1.5 resize-none bg-card"
-                          placeholder="Write external care here..."
-                          data-1p-ignore="true"
-                          {...field}
-                        />
-                      </div>
+                      <FormItem>
+                        <FormControl>
+                          <div className="mt-3 grid w-full gap-1.5">
+                            <Input
+                              id="externalCare"
+                              className="mt-1.5 resize-none bg-card"
+                              placeholder="Write external care here..."
+                              data-1p-ignore="true"
+                              {...field}
+                              required
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
                   />
                 </div>
@@ -255,17 +280,22 @@ export function ReferralToDetails({
                   control={form.control}
                   name="referralNotes"
                   render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Textarea
-                        disabled={!canReferCase}
-                        id="referralNotes"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="Write referral notes here..."
-                        data-1p-ignore="true"
-                        required
-                        {...field}
-                      />
-                    </div>
+                    <FormItem>
+                      <FormControl>
+                        <div className="mt-3 grid w-full gap-1.5">
+                          <Textarea
+                            disabled={!canReferCase}
+                            id="referralNotes"
+                            className="mt-1.5 resize-none bg-card"
+                            placeholder="Write referral notes here..."
+                            data-1p-ignore="true"
+                            required
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
               </div>
