@@ -2,7 +2,7 @@ name: Formatting and lint checks
 
 on:
   push:
-    pull_request:
+  pull_request:
 
 jobs:
   formatting_and_lint_checks:

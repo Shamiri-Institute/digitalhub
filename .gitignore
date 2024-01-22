@@ -7,6 +7,9 @@
 
 # testing
 /coverage
+supervisor-state.json
+hub-coordinator-state.json
+operations-state.json
 
 # next.js
 /.next/

@@ -14,7 +14,7 @@ export default function LoginPage() {
       <div className="flex flex-col items-center justify-center space-y-3 border-b border-gray-200 bg-white px-4 py-6 pt-8 text-center sm:px-16">
         <Icons.logo className="h-10 text-sky-600" />
         <p className="text-sm text-gray-500">
-          The platform behind the Shamiri Intervention
+          The platform powering the Shamiri Intervention
         </p>
       </div>
       <div className="flex flex-col space-y-3 bg-gray-50 px-4 py-8 sm:px-16">
