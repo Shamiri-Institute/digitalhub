@@ -9,7 +9,13 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { Form, FormField } from "#/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "#/components/ui/form";
 import { Popover, PopoverContent } from "#/components/ui/popover";
 import {
   Select,
@@ -28,14 +34,17 @@ import { updateClinicalCaseSessionAttendance } from "#/app/actions";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 const FormSchema = z.object({
   session: z.string({
     required_error: "Please select the session.",
+  }).trim().min(1, {
+    message: "Required. Please select the session.",
   }),
   dateOfSession: z.date({
     required_error: "Please select the date of session.",
-  }),
+  })
 });
 
 export function AddClinicalSessionDialog({
@@ -60,18 +69,12 @@ export function AddClinicalSessionDialog({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    if (data.session === "" || data.dateOfSession === undefined) {
-      toast({
-        variant: "default",
-        title: "Please fill in the fields",
-      });
-      return;
-    }
+
     try {
       const response = await updateClinicalCaseSessionAttendance({
         supervisorId,
         caseId,
-        session: data.session ?? "",
+        session: data.session,
         dateOfSession: data.dateOfSession,
       });
 
@@ -121,42 +124,48 @@ export function AddClinicalSessionDialog({
                   control={form.control}
                   name="session"
                   render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Select
-                        name="session"
-                        defaultValue={field.value}
-                        onValueChange={field.onChange}
-                        required
-                      >
-                        <SelectTrigger>
-                          <SelectValue
-                            className="text-muted-foreground"
+                    <FormItem>
+                      <FormControl>
+                        <div className="mt-3 grid w-full gap-1.5">
+                          <Select
+                            name="session"
                             defaultValue={field.value}
-                            onChange={field.onChange}
-                            placeholder={
-                              <span className="text-muted-foreground">
-                                Select Session
-                              </span>
-                            }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pre">Pre</SelectItem>
-                          <SelectItem value="S1">S1</SelectItem>
-                          <SelectItem value="S2">S2</SelectItem>
-                          <SelectItem value="S3">S3</SelectItem>
-                          <SelectItem value="S4">S4</SelectItem>
-                          <SelectItem value="F1">Follow-Up 1</SelectItem>
-                          <SelectItem value="F2">Follow-Up 2</SelectItem>
-                          <SelectItem value="F3">Follow-Up 3</SelectItem>
-                          <SelectItem value="F4">Follow-Up 4</SelectItem>
-                          <SelectItem value="F5">Follow-Up 5</SelectItem>
-                          <SelectItem value="F6">Follow-Up 6</SelectItem>
-                          <SelectItem value="F7">Follow-Up 7</SelectItem>
-                          <SelectItem value="F8">Follow-Up 8</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                            onValueChange={field.onChange}
+                            required
+                          >
+                            <SelectTrigger>
+                              <SelectValue
+                                className="text-muted-foreground"
+                                defaultValue={field.value}
+                                onChange={field.onChange}
+                                placeholder={
+                                  <span className="text-muted-foreground">
+                                    Select Session
+                                  </span>
+                                }
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Pre">Pre</SelectItem>
+                              <SelectItem value="S1">S1</SelectItem>
+                              <SelectItem value="S2">S2</SelectItem>
+                              <SelectItem value="S3">S3</SelectItem>
+                              <SelectItem value="S4">S4</SelectItem>
+                              <SelectItem value="F1">Follow-Up 1</SelectItem>
+                              <SelectItem value="F2">Follow-Up 2</SelectItem>
+                              <SelectItem value="F3">Follow-Up 3</SelectItem>
+                              <SelectItem value="F4">Follow-Up 4</SelectItem>
+                              <SelectItem value="F5">Follow-Up 5</SelectItem>
+                              <SelectItem value="F6">Follow-Up 6</SelectItem>
+                              <SelectItem value="F7">Follow-Up 7</SelectItem>
+                              <SelectItem value="F8">Follow-Up 8</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+
                   )}
                 />
               </div>
@@ -166,34 +175,39 @@ export function AddClinicalSessionDialog({
                   control={form.control}
                   name="dateOfSession"
                   render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                              !field.value && "text-muted-foreground",
-                            )}
-                          >
-                            <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                            {field.value ? (
-                              format(field.value, "dd/MM/yyyy")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                    <FormItem>
+                      <FormControl>
+                        <div className="mt-3 grid w-full gap-1.5">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground",
+                                )}
+                              >
+                                <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                                {field.value ? (
+                                  format(field.value, "dd/MM/yyyy")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
                 />
               </div>
@@ -203,6 +217,9 @@ export function AddClinicalSessionDialog({
                 form="recordClinicalSessionAttendance"
                 className="mb-6 mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
               >
+                {form.formState.isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Record Session Attendance
               </Button>
             </div>
