@@ -1,8 +1,10 @@
 "use client";
+
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { cn } from "#/lib/utils";
+import { constants } from "#/tests/constants";
 import {
   ClinicalScreeningInfo,
   ClinicalSessionAttendance,
@@ -78,7 +80,10 @@ function ClinicalCasses({
   });
 
   return (
-    <Card className="pr-3.5bg-white  my-2 gap-5 p-4">
+    <Card
+      className="my-2 gap-5 bg-white p-4 pr-3.5"
+      data-testid={constants.CLINICAL_CASES_LIST}
+    >
       <div className="mb-2 flex flex-1 justify-between">
         <p className="flex-1 text-base font-medium text-muted-foreground">
           Name
@@ -134,7 +139,12 @@ function ClinicalCassesCard({
   return (
     <Link href={`/screenings/${caseId}`}>
       <div className="mt-2 flex flex-1 items-center justify-between border-b last:border-none">
-        <p className="flex-1 text-left text-sm text-brand">{name}</p>
+        <p
+          className="flex-1 text-left text-sm text-brand"
+          data-testid={constants.CLINICAL_CASES_LIST_NAME}
+        >
+          {name}
+        </p>
         <p className="flex-1 text-sm text-brand">{session}</p>
         <p
           className={cn(

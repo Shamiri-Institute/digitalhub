@@ -4,12 +4,13 @@ import { format } from "date-fns";
 
 import { objectId } from "#/lib/crypto";
 import { Database, db } from "#/lib/db";
-import { fixtures } from "#/prisma/scripts/fixtures";
+import { userFixtures } from "#/prisma/scripts/fixtures";
 import {
   mapSessionTypeToSessionNumber,
   parseCsvBoolean,
   parseCsvFile,
 } from "#/prisma/scripts/utils";
+import { ImplementerRole } from "@prisma/client";
 
 async function seedDatabase() {
   await truncateTables();
@@ -69,7 +70,7 @@ async function createImplementers(db: Database) {
 
 async function createUsers(db: Database) {
   const adapter = PrismaAdapter(db);
-  for (let user of fixtures.users) {
+  for (let user of userFixtures.users) {
     if (adapter.createUser) {
       const implementer = await db.implementer.findFirstOrThrow({
         where: { visibleId: user.implementerByVisibleId },
@@ -212,7 +213,6 @@ async function createInterventionSessions(db: Database) {
 async function createSupervisors(db: Database) {
   console.log("Creating supervisors");
 
-  let count = 0;
   await parseCsvFile("supervisor_info", async (supervisor: any) => {
     try {
       await db.supervisor.create({
@@ -408,8 +408,8 @@ async function createStudents(db: Database) {
             id: objectId("stu"),
             studentName,
             visibleId: `Stu_${admissionNumber}`,
-            fellowId: randomFellow?.id || null,
-            supervisorId: randomSupervisor?.id || null,
+            fellowId: randomFellow?.id,
+            supervisorId: randomSupervisor?.id,
             schoolId: school.id,
             yearOfImplementation: randomFellow?.yearOfImplementation,
             admissionNumber,
@@ -444,6 +444,47 @@ async function createStudents(db: Database) {
 
 async function createFixtures(db: Database) {
   console.log("Creating fixtures");
+
+  for (let userFixture of userFixtures.users) {
+    if (userFixture.identifier) {
+      const user = await db.user.findUniqueOrThrow({
+        where: { email: userFixture.email },
+        include: { memberships: true },
+      });
+
+      if (userFixture.implementerRole === ImplementerRole.SUPERVISOR) {
+        const supervisor = await db.supervisor.findUniqueOrThrow({
+          where: { visibleId: userFixture.identifier },
+        });
+
+        const [membership] = user.memberships;
+        if (!membership) {
+          throw new Error(`User ${user.email} has no membership`);
+        }
+
+        await db.implementerMember.update({
+          where: { id: membership.id, userId: user.id },
+          data: { identifier: supervisor.id },
+        });
+      }
+
+      if (userFixture.implementerRole === ImplementerRole.HUB_COORDINATOR) {
+        const hubCoordinator = await db.hubCoordinator.findUniqueOrThrow({
+          where: { visibleId: userFixture.identifier },
+        });
+
+        const [membership] = user.memberships;
+        if (!membership) {
+          throw new Error(`User ${user.email} has no membership`);
+        }
+
+        await db.implementerMember.update({
+          where: { id: membership.id, userId: user.id },
+          data: { identifier: hubCoordinator.id },
+        });
+      }
+    }
+  }
 
   const supervisors = await db.supervisor.findMany({
     include: {

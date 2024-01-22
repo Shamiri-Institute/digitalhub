@@ -24,6 +24,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
+import { constants } from "#/tests/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Fellow, School, Student, Supervisor } from "@prisma/client";
 import { Loader2 } from "lucide-react";
@@ -155,7 +156,12 @@ export default function CreateClinicalCaseDialogue({
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger
+        asChild
+        data-testid={constants.OPEN_CLINICAL_CASE_DIALOGUE_BUTTON}
+      >
+        {children}
+      </DialogTrigger>
       <DialogContent className="gap-0 p-0">
         <Form {...form}>
           <form
@@ -189,7 +195,9 @@ export default function CreateClinicalCaseDialogue({
                             }}
                             required
                           >
-                            <SelectTrigger>
+                          <SelectTrigger
+                          data-testid={constants.SELECT_CLINICAL_CASE_SCHOOL}
+                        >
                               <SelectValue
                                 className="text-muted-foreground"
                                 defaultValue={field.value}
@@ -201,13 +209,18 @@ export default function CreateClinicalCaseDialogue({
                                 }
                               />
                             </SelectTrigger>
-                            <SelectContent>
-                              {schools.map((school) => (
-                                <SelectItem key={school.id} value={school.id}>
-                                  {school.schoolName}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
+                              
+                        <SelectContent>
+                          {schools.map((school) => (
+                            <SelectItem
+                              key={school.id}
+                              value={school.id}
+                              data-testid={`${constants.SELECT_CLINICAL_CASE_SCHOOL}-${school.visibleId}`}
+                            >
+                              {school.schoolName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                           </Select>
                         </div>
                       </FormControl>
@@ -231,7 +244,11 @@ export default function CreateClinicalCaseDialogue({
                           setSelectedSupId(value);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger
+                          data-testid={
+                            constants.SELECT_CLINICAL_CASE_SUPERVISOR
+                          }
+                        >
                           <SelectValue
                             className="text-muted-foreground"
                             defaultValue={field.value}
@@ -249,6 +266,7 @@ export default function CreateClinicalCaseDialogue({
                             <SelectItem
                               key={supervisor.id}
                               value={supervisor.id}
+                              data-testid={`${constants.SELECT_CLINICAL_CASE_SUPERVISOR}-${supervisor.visibleId}`}
                             >
                               {supervisor.supervisorName}
                             </SelectItem>
@@ -273,7 +291,9 @@ export default function CreateClinicalCaseDialogue({
                           setSelectedFellowId(value);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger
+                          data-testid={constants.SELECT_CLINICAL_CASE_FELLOW}
+                        >
                           <SelectValue
                             className="text-muted-foreground"
                             defaultValue={field.value}
@@ -288,7 +308,11 @@ export default function CreateClinicalCaseDialogue({
                         </SelectTrigger>
                         <SelectContent>
                           {fellows?.map((fellow) => (
-                            <SelectItem key={fellow.id} value={fellow.id}>
+                            <SelectItem
+                              key={fellow.id}
+                              value={fellow.id}
+                              data-testid={`${constants.SELECT_CLINICAL_CASE_FELLOW}-${fellow.visibleId}`}
+                            >
                               {fellow.fellowName}
                             </SelectItem>
                           ))}
@@ -311,7 +335,9 @@ export default function CreateClinicalCaseDialogue({
                           field.onChange(value);
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger
+                          data-testid={constants.SELECT_CLINICAL_CASE_STUDENT}
+                        >
                           <SelectValue
                             className="text-muted-foreground"
                             defaultValue={field.value}
@@ -325,7 +351,11 @@ export default function CreateClinicalCaseDialogue({
                         </SelectTrigger>
                         <SelectContent>
                           {students?.map((student) => (
-                            <SelectItem key={student.id} value={student.id}>
+                            <SelectItem
+                              key={student.id}
+                              value={student.id}
+                              data-testid={`${constants.SELECT_CLINICAL_CASE_STUDENT}-${student.visibleId}`}
+                            >
                               {student.studentName}
                             </SelectItem>
                           ))}
@@ -343,6 +373,7 @@ export default function CreateClinicalCaseDialogue({
                 type="submit"
                 className="w-full"
                 disabled={form.formState.isSubmitting}
+                data-testid={constants.CREATE_CLINICAL_CASE_BUTTON}
               >
                 {form.formState.isSubmitting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
