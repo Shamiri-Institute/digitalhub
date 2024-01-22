@@ -19,6 +19,7 @@ import {
   Student,
   Supervisor,
 } from "@prisma/client";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -86,8 +87,16 @@ export function ReferralFrom({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    if (data.referredFrom === "" && data.fellow === "") {
+      toast({
+        variant: "default",
+        title: "Please select all the fields.",
+      });
+      return;
+    }
+
     try {
-      await initialReferralFromClinicalCaseSupervisor({
+      const response = await initialReferralFromClinicalCaseSupervisor({
         caseId: currentcase.id,
         referredFrom: data.referredFrom, //supervisor or fellow or teacher
         referredFromSpecified: data.fellow ?? "", // like fellow name but blank if not
@@ -100,6 +109,14 @@ export function ReferralFrom({
         initialCaseId: currentcase.initialCaseHistoryId ?? "",
       });
 
+      if (!response.success) {
+        toast({
+          variant: "destructive",
+          title: "Something went wrong, please try again",
+        });
+        return;
+      }
+
       toast({
         variant: "default",
         title: "Initial case history recorded successfully",
@@ -107,10 +124,7 @@ export function ReferralFrom({
 
       form.reset();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error recording initial case history. Please try again",
-      });
+      console.error(error);
     }
   }
 
@@ -127,9 +141,7 @@ export function ReferralFrom({
         <Form {...form}>
           <form
             id="submitReferralForm"
-            onSubmit={form.handleSubmit(onSubmit, (errors) => {
-              console.error({ errors });
-            })}
+            onSubmit={form.handleSubmit(onSubmit)}
             className="overflow-hidden text-ellipsis px-1"
           >
             <div className="mt-6 space-y-6">
@@ -302,6 +314,9 @@ export function ReferralFrom({
                   currentcase.initialCaseHistoryOwnerId !== currentSupId
                 }
               >
+                {form.formState.isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Save
               </Button>
             </div>

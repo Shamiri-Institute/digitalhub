@@ -19,6 +19,7 @@ import {
   Student,
   Supervisor,
 } from "@prisma/client";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -52,7 +53,7 @@ export function ReferralToDetails({
   currentcase,
   supervisors,
   currentSupId,
-  canReferCase
+  canReferCase,
 }: {
   currentcase: CurrentCase;
   supervisors: Supervisor[];
@@ -74,23 +75,50 @@ export function ReferralToDetails({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    await referClinicalCaseSupervisor({
-      caseId: currentcase.id,
-      supervisorName: selectedSupervisor,
-      ...data,
-      referralNotes: data.referralNotes ?? "",
-      referredFromSpecified: currentcase.currentSupervisor.supervisorName ?? "",
-      referredFrom: currentSupId ?? "",
-      referredToPerson:
-        selectedOption !== "Supervisor" ? null : data.referredToPerson, //todo: @hinn254 update to clinical leads/external care id's once we have them
-      externalCare:
-        selectedOption !== "External Care" ? null : data.externalCare,
-    });
+    if (data.referredTo == "") {
+      toast({
+        variant: "default",
+        title: "Please fill in the fields",
+      });
 
-    toast({
-      variant: "default",
-      title: "Request for referal has been sent",
-    });
+      return;
+    }
+
+    try {
+      const response = await referClinicalCaseSupervisor({
+        caseId: currentcase.id,
+        supervisorName: selectedSupervisor,
+        ...data,
+        referralNotes: data.referralNotes ?? "",
+        referredFromSpecified:
+          currentcase.currentSupervisor.supervisorName ?? "",
+        referredFrom: currentSupId ?? "",
+        referredToPerson:
+          selectedOption !== "Supervisor" ? null : data.referredToPerson, //todo: @hinn254 update to clinical leads/external care id's once we have them
+        externalCare:
+          selectedOption !== "External Care" ? null : data.externalCare,
+      });
+
+      if (!response.success) {
+        toast({
+          variant: "default",
+          title: "Something went wrong, please try again",
+        });
+        return;
+      }
+
+      toast({
+        variant: "default",
+        title: "Request for referal has been sent",
+      });
+
+      form.reset();
+      setSelectedSupervisorId("");
+      setSelectedSupervisor("");
+      setSelectedOption("");
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   useEffect(() => {
@@ -107,9 +135,7 @@ export function ReferralToDetails({
         <Form {...form}>
           <form
             id="submitReferralForm"
-            onSubmit={form.handleSubmit(onSubmit, (errors) => {
-              console.error({ errors });
-            })}
+            onSubmit={form.handleSubmit(onSubmit)}
             className="overflow-hidden text-ellipsis px-1"
           >
             <div className="mt-6 space-y-6">
@@ -232,11 +258,11 @@ export function ReferralToDetails({
                     <div className="mt-3 grid w-full gap-1.5">
                       <Textarea
                         disabled={!canReferCase}
-
                         id="referralNotes"
                         className="mt-1.5 resize-none bg-card"
                         placeholder="Write referral notes here..."
                         data-1p-ignore="true"
+                        required
                         {...field}
                       />
                     </div>
@@ -250,6 +276,9 @@ export function ReferralToDetails({
                 disabled={!canReferCase}
                 className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
               >
+                {form.formState.isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Submit Referral
               </Button>
             </div>
