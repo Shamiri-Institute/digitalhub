@@ -1,4 +1,5 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import NextAuth, { type AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
@@ -106,8 +107,55 @@ const authOptions: AuthOptions = {
       session.user = sessionUser;
       return session;
     },
+    jwt: async ({ token, user, account, trigger }) => {
+      if (trigger === "signIn") {
+        if (user.email) {
+          const currentUser = await db.user.findUnique({
+            where: { email: user.email },
+            select: {
+              memberships: {
+                select: {
+                  implementer: true,
+                  role: true,
+                  identifier: true,
+                },
+              },
+            },
+          });
+          if (!currentUser) {
+            console.error("User not found in database");
+            return token;
+          }
+
+          if (currentUser) {
+            token.memberships = parseRolesForJWT(currentUser);
+          }
+        }
+      }
+      return token;
+    },
   },
 };
+
+function parseRolesForJWT(
+  userWithRoles: Prisma.UserGetPayload<{
+    select: {
+      memberships: {
+        select: {
+          implementer: true;
+          role: true;
+          identifier: true;
+        };
+      };
+    };
+  }>,
+) {
+  return userWithRoles.memberships.map((m) => ({
+    implementerId: m.implementer.id,
+    role: m.role,
+    identifier: m.identifier,
+  }));
+}
 
 const handler = NextAuth(authOptions);
 
@@ -124,3 +172,9 @@ export type SessionUser = {
     name: string;
   };
 };
+
+export interface JWTMembership {
+  implementerId: string;
+  role: ImplementerRole;
+  identifier: string | null;
+}

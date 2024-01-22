@@ -4,7 +4,7 @@ import { endOfDay, startOfDay } from "date-fns";
 import { objectId } from "#/lib/crypto";
 import { Database, db } from "#/lib/db";
 import { parseEuropeanDate } from "#/lib/utils";
-import { fixtures } from "#/prisma/scripts/fixtures";
+import { userFixtures } from "#/prisma/scripts/fixtures";
 import { parseCsvFile } from "#/prisma/scripts/utils";
 
 async function seedDatabase() {
@@ -70,7 +70,7 @@ async function createImplementers(db: Database) {
 
 async function createUsers(db: Database) {
   const adapter = PrismaAdapter(db);
-  for (let user of fixtures.users) {
+  for (let user of userFixtures.users) {
     console.log({ user });
     if (adapter.createUser) {
       const implementer = await db.implementer.findFirstOrThrow({

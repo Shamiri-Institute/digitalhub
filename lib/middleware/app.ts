@@ -5,7 +5,7 @@ import { parse } from "#/lib/middleware/utils";
 
 export default async function AppMiddleware(req: NextRequest) {
   const { path } = parse(req);
-  const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const session = await getToken({ req });
   if (!session?.email && path !== "/login" && path !== "/register") {
     return NextResponse.redirect(
       new URL(

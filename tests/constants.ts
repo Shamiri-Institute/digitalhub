@@ -5,4 +5,12 @@ export const constants = {
   ADD_MEMBERS_EMAILS: "add-members-emails",
   ADD_MEMBERS_ROLE: "add-members-role",
   ADD_MEMBERS_SUBMIT: "add-members-submit",
+  OPEN_CLINICAL_CASE_DIALOGUE_BUTTON: "open-clinical-case-dialogue-button",
+  SELECT_CLINICAL_CASE_SCHOOL: "select-clinical-case-school",
+  SELECT_CLINICAL_CASE_SUPERVISOR: "select-clinical-case-supervisor",
+  SELECT_CLINICAL_CASE_FELLOW: "select-clinical-case-fellow",
+  SELECT_CLINICAL_CASE_STUDENT: "select-clinical-case-student",
+  CREATE_CLINICAL_CASE_BUTTON: "create-clinical-case-button",
+  CLINICAL_CASES_LIST: "clinical-cases-list",
+  CLINICAL_CASES_LIST_NAME: "clinical-cases-list-name",
 };
