@@ -19,6 +19,10 @@ export abstract class AppPage {
     await expect(this.page).toHaveURL(this.route);
   }
 
+  async isNotShown() {
+    await expect(this.page).not.toHaveURL(this.route);
+  }
+
   async openOrganizationSwitcher() {
     await this.page.getByTestId(constants.ORGANIZATION_SWITCHER).click();
   }

@@ -1,4 +1,5 @@
 "use client";
+
 import CreateClinicalCaseDialogue from "#/app/(platform)/screenings/[caseId]/components/create-clinical-case";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
