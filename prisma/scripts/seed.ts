@@ -467,6 +467,22 @@ async function createFixtures(db: Database) {
           data: { identifier: supervisor.id },
         });
       }
+
+      if (userFixture.implementerRole === ImplementerRole.HUB_COORDINATOR) {
+        const hubCoordinator = await db.hubCoordinator.findUniqueOrThrow({
+          where: { visibleId: userFixture.identifier },
+        });
+
+        const [membership] = user.memberships;
+        if (!membership) {
+          throw new Error(`User ${user.email} has no membership`);
+        }
+
+        await db.implementerMember.update({
+          where: { id: membership.id, userId: user.id },
+          data: { identifier: hubCoordinator.id },
+        });
+      }
     }
   }
 

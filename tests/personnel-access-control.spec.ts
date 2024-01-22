@@ -14,6 +14,22 @@ test.describe("personnel can only access routes based on their role", () => {
       await homePage.visit();
       await homePage.isShown();
     });
+
+    test("cannot access hub coordinator home page", async ({ page }) => {
+      const hcHomePage = HubCoordinatorHomePage.new(page);
+      await hcHomePage.visit();
+
+      const homePage = HomePage.new(page);
+      await homePage.isShown();
+    });
+
+    test("cannot access operations home page", async ({ page }) => {
+      const opsHomePage = OperationsHomePage.new(page);
+      await opsHomePage.visit();
+
+      const homePage = HomePage.new(page);
+      await homePage.isShown();
+    });
   });
 
   test.describe("hub coordinators", () => {

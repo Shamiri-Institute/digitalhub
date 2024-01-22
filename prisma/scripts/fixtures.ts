@@ -41,7 +41,8 @@ export const userFixtures: Fixtures = {
       name: "Edmund Korley",
       avatarUrl: null,
       implementerByVisibleId: "Imp_1",
-      implementerRole: ImplementerRole.SUPERVISOR,
+      implementerRole: ImplementerRole.HUB_COORDINATOR,
+      identifier: "23_HC_01",
     },
     {
       email: "dmndetei@amhf.or.ke",
