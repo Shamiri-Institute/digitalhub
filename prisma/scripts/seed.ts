@@ -374,7 +374,7 @@ async function createFellowAttendances(db: Database) {
         ),
         sessionDate: groupSession.session.sessionDate,
         schoolId: groupSession.session.schoolId,
-        supervisorId: randomSupervisor.id,
+        supervisorId: randomSupervisor?.id,
         attended,
         absenceReason: attended ? null : "Random reason",
         groupSessionId: groupSession.id,

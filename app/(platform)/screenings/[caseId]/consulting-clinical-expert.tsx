@@ -15,6 +15,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ClinicalExpertCaseNotes, ClinicalScreeningInfo } from "@prisma/client";
+import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -41,16 +42,38 @@ export default function ConsultingClinicalExpertComments({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    await supConsultClinicalexpert({
-      caseId: currentcase.id,
-      name: data.clinicalExpert,
-      comment: data.clincalNotes,
-    });
+    if (data.clincalNotes == "" || data.clinicalExpert == "") {
+      toast({
+        variant: "destructive",
+        title: "Please fill in all the fields",
+      });
+      return;
+    }
 
-    toast({
-      variant: "default",
-      title: "Consulting clinical expert sent successfully",
-    });
+    try {
+      const response = await supConsultClinicalexpert({
+        caseId: currentcase.id,
+        name: data.clinicalExpert,
+        comment: data.clincalNotes,
+      });
+
+      if (!response.success) {
+        toast({
+          variant: "destructive",
+          title: "Submission error",
+        });
+        return;
+      }
+
+      toast({
+        variant: "default",
+        title: "Consulting clinical expert sent successfully",
+      });
+
+      form.reset();
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   return (
@@ -74,6 +97,7 @@ export default function ConsultingClinicalExpertComments({
                       name="clinicalExpert"
                       defaultValue={field.value}
                       onValueChange={field.onChange}
+                      required
                     >
                       <SelectTrigger>
                         <SelectValue
@@ -88,11 +112,9 @@ export default function ConsultingClinicalExpertComments({
                         />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="DrW">Dr Wasanga</SelectItem>
-                        <SelectItem value="Exp 2">Expert 2</SelectItem>
-                        <SelectItem value="Exp 3">Expert 3</SelectItem>
-                        <SelectItem value="Exp 4">Expert 4</SelectItem>
-                        <SelectItem value="Exp 5">Expert 5</SelectItem>
+                        <SelectItem value="Shamiri Clinical Experts">
+                          Shamiri Clinical Experts
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -125,6 +147,9 @@ export default function ConsultingClinicalExpertComments({
               className="w-full"
               form="submitConsultingExpert"
             >
+              {form.formState.isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Save Consulting Note
             </Button>
           </div>

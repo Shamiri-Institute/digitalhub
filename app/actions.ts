@@ -1431,7 +1431,7 @@ export async function createClinicalCase(data: {
     return { success: true, data: result };
   } catch (error) {
     console.error(error);
-    return { error: "Something went wrong" };
+    return { success: false, error: "Something went wrong" };
   }
 }
 

@@ -37,7 +37,7 @@ export function CreateClinicalCases({
             currentSupervisorId={currentSupervisorId}
             schools={schools}
           >
-            <Icons.add className="h-6 w-6 text-brand" />
+            <Icons.add className="h-6 w-6 cursor-pointer text-brand" />
           </CreateClinicalCaseDialogue>
         </div>
       </div>
