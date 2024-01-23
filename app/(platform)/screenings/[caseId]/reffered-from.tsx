@@ -119,7 +119,7 @@ export function ReferralFrom({
       (supervisor) => supervisor.id == selectedSupervisorId,
     );
     setSelectedSupervisor(selectedSupervisor);
-  }, [selectedSupervisorId]);
+  }, [selectedSupervisorId, supervisors]);
 
   return (
     <div className="mt-2 flex flex-col gap-5 px-1">

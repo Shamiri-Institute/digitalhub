@@ -103,6 +103,15 @@ async function createHubs(db: Database) {
       where: { visibleId: hub["implementer_id"] },
     });
 
+    const createdHub = await db.hub.create({
+      data: {
+        id: objectId("hub"),
+        visibleId: hub["Hub_ID"],
+        hubName: hub["Hub_Name"],
+        implementerId: implementer.id,
+      },
+    });
+
     let hubCoordinatorId: string | null = null;
     if (hub["Hub_coordinator_ID"]) {
       const hubCoordinator = await db.hubCoordinator.create({
@@ -111,20 +120,11 @@ async function createHubs(db: Database) {
           visibleId: hub["Hub_coordinator_ID"],
           coordinatorName: hub["Hub_coordinator_Name"],
           implementerId: implementer.id,
+          assignedHubId: createdHub.id,
         },
       });
       hubCoordinatorId = hubCoordinator.id;
     }
-
-    await db.hub.create({
-      data: {
-        id: objectId("hub"),
-        visibleId: hub["Hub_ID"],
-        hubName: hub["Hub_Name"],
-        implementerId: implementer.id,
-        coordinatorId: hubCoordinatorId,
-      },
-    });
   });
 }
 
@@ -510,7 +510,13 @@ async function createFixtures(db: Database) {
 
   let stDominic = await db.school.findUnique({
     where: { visibleId: "ANS23_School_3" },
-    include: { hub: true },
+    include: {
+      hub: {
+        include: {
+          coordinators: true,
+        },
+      },
+    },
   });
   const supervisorMichelle = await db.supervisor.update({
     where: { visibleId: "SPV23_S_25" },
@@ -550,7 +556,7 @@ async function createFixtures(db: Database) {
     id: objectId("reim"),
     supervisorId: supervisorMichelle.id,
     hubId: stDominic!.hubId!,
-    hubCoordinatorId: stDominic!.hub!.coordinatorId!,
+    hubCoordinatorId: stDominic!.hub!.coordinators[0]!.id,
     incurredAt: reimbursement.date,
     amount: reimbursement.amount,
     kind: "transport",

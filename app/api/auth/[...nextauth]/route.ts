@@ -99,7 +99,6 @@ const authOptions: AuthOptions = {
         id: token.sub || null,
         email: user.email,
         name: user.name,
-        roles: user.memberships.map((m) => m.role),
         image: user.image,
         activeMembership,
         memberships,
@@ -172,7 +171,6 @@ export type SessionUser = {
   id: string | null;
   email: string | null;
   name: string | null;
-  roles: string[];
   image: string | null;
   activeMembership?: JWTMembership;
   memberships?: JWTMembership[];

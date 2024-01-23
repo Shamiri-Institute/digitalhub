@@ -55,12 +55,9 @@ export function Navigation({
 
   const user = session.data.user;
   const { activeMembership } = user;
-  if (!activeMembership) {
-    return null;
-  }
 
   let navigationDiv: React.ReactNode = null;
-  switch (activeMembership.role) {
+  switch (activeMembership?.role) {
     case ImplementerRole.SUPERVISOR:
       navigationDiv = <SupervisorNavigation />;
       break;
