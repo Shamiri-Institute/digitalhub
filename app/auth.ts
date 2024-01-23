@@ -89,6 +89,7 @@ export async function currentSupervisor() {
             },
           },
           overallFellowEvaluation: true,
+          weeklyFellowRatings: true,
         },
       },
     },
