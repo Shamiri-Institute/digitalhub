@@ -4,7 +4,7 @@ import { SessionSchedule } from "#/app/(platform)/(dashboard)/session-schedule";
 import { ClinicalFeatureCard } from "#/app/(platform)/clinical-feature-card";
 import { Header } from "#/app/(platform)/common";
 import { HubCoordinatorView } from "#/app/(platform)/hub-coordinator-view";
-import { getCurrentPersonnel } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { Icon, Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
 import { db } from "#/lib/db";
@@ -24,7 +24,7 @@ export default async function HomePage() {
 }
 
 async function SupervisorView() {
-  const supervisor = await getCurrentPersonnel();
+  const supervisor = await currentSupervisor();
   if (!supervisor) {
     return <div>Not a supervisor</div>;
   }
@@ -35,6 +35,20 @@ async function SupervisorView() {
   const schoolCount = await db.school.count({
     where: { hubId: supervisor.hubId },
   });
+
+  const interventionSessions =
+    supervisor.hub?.schools
+      .flatMap((school) =>
+        school.interventionSessions.map((is) => ({
+          ...is,
+          schoolName: school.schoolName,
+        })),
+      )
+      .map((session) => ({
+        title: `${session.schoolName}, ${session.sessionType}`,
+        date: session.sessionDate,
+        duration: 1,
+      })) || [];
 
   return (
     <div>
@@ -60,13 +74,8 @@ async function SupervisorView() {
         </h3>
         <div className="mt-4">
           <SessionSchedule
-            sessions={[
-              {
-                title: "Kamkunji, S01",
-                date: new Date("2023-11-05T19:30:00Z"),
-                duration: 1,
-              },
-            ]}
+            anchorDate={new Date("2023-05-17")}
+            sessions={interventionSessions}
           />
         </div>
       </div>

@@ -21,19 +21,23 @@ interface SessionEvent {
   duration: number;
 }
 
-export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
-  const currentDate = new Date();
-
-  const currentWeekStart = startOfWeek(currentDate);
-  const currentWeekEnd = endOfWeek(currentDate);
+export function SessionSchedule({
+  anchorDate,
+  sessions,
+}: {
+  anchorDate: Date;
+  sessions: SessionEvent[];
+}) {
+  const anchorWeekStart = startOfWeek(anchorDate);
+  const anchorWeekEnd = endOfWeek(anchorDate);
 
   const firstSessionStartDate = sessions[0]?.date!;
   const firstSessionStartHour = getHours(firstSessionStartDate);
-  const threeHoursBeforeStartHour = new Date(currentDate);
+  const threeHoursBeforeStartHour = new Date(anchorDate);
   threeHoursBeforeStartHour.setHours(firstSessionStartHour - 3);
   const lastSessionEndDate = new Date(sessions[sessions.length - 1]?.date!);
   const lastSessionEndHour = getHours(lastSessionEndDate);
-  const threeHoursAfterEndHour = new Date(currentDate);
+  const threeHoursAfterEndHour = new Date(anchorDate);
   threeHoursAfterEndHour.setHours(lastSessionEndHour + 3);
 
   let scheduleHoursRange: number[] = [];
@@ -52,20 +56,20 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
 
   const thisWeekSessions = sessions.filter((session) =>
     isWithinInterval(session.date, {
-      start: currentWeekStart,
-      end: currentWeekEnd,
+      start: anchorWeekStart,
+      end: anchorWeekEnd,
     }),
   );
   console.log({
     date: sessions[0]!.date,
-    currentWeekStart,
-    currentWeekEnd,
+    currentWeekStart: anchorWeekStart,
+    currentWeekEnd: anchorWeekEnd,
     thisWeekSessions,
   });
 
   const daysOfWeek = eachDayOfInterval({
-    start: currentWeekStart,
-    end: currentWeekEnd,
+    start: anchorWeekStart,
+    end: anchorWeekEnd,
   }).map((date) => ({
     dayOfMonth: format(date, "d"),
     dayName: format(date, "EEEEE"),
@@ -87,7 +91,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
     <div className="max-w-4xl rounded-md bg-white shadow-md">
       <div className="rounded-t-md bg-active-card text-white">
         <div className="p-4 pb-0 font-semibold">
-          <span>{format(currentDate, "MMM yyyy")}</span>
+          <span>{format(anchorDate, "MMM yyyy")}</span>
         </div>
         <div className="mt-2 grid grid-cols-7 gap-1 px-1 text-center">
           {daysOfWeek.map(({ dayOfMonth, dayName, isToday }) => (
