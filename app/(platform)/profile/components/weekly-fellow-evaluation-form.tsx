@@ -26,7 +26,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { WeeklyFellowRatings } from "@prisma/client";
-import { format, startOfISOWeek, subWeeks } from "date-fns";
+import { format, startOfWeek, subWeeks } from "date-fns";
 import { Loader2 } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
@@ -42,9 +42,9 @@ function generateWeekFieldValues() {
 
   for (let i = numWeeks; i >= 0; i--) {
     const date = subWeeks(today, i);
-    const week = startOfISOWeek(date);
+    const week = startOfWeek(date, { weekStartsOn: 1 })
     selectValues.push(
-      <SelectItem value={week.toISOString()}>
+      <SelectItem value={format(week, "yyyy-MM-dd")}>
         Week {numWeeks - i + 1} - {format(week, "dd/MM/yyyy")}
       </SelectItem>,
     );
@@ -146,7 +146,7 @@ export default function WeeklyEvaluationForm({
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a verified email to display" />
+                            <SelectValue placeholder="Select a week" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>

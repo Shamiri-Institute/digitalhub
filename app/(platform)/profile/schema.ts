@@ -1,7 +1,6 @@
+import { stringValidation } from "#/lib/utils";
 import * as z from "zod";
 
-const stringValidation = (message: string) =>
-  z.string({ required_error: message }).trim().min(1, { message });
 
 export const ReportingNotesSchema = z.object({
   fellowId: z.string(),
@@ -49,7 +48,7 @@ export const FellowComplaintSchema = z.object({
 });
 
 export const WeeklyFellowRatingSchema = z.object({
-  week: z.coerce.date(),
+  week: z.coerce.date({ required_error: "Please select a week" }),
   behaviourNotes: stringValidation("Please input behaviour notes"),
   programDeliveryNotes: stringValidation("Please input program delivery notes"),
   dressingAndGroomingNotes: stringValidation(
