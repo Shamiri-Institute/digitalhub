@@ -1011,6 +1011,8 @@ export async function editFellowDetails(
     | "subCounty"
     | "mpesaName"
     | "cellNumber"
+    | "idNumber"
+    | "fellowEmail"
   >,
 ) {
   const result = EditFellowSchema.safeParse(fellowDetails);
