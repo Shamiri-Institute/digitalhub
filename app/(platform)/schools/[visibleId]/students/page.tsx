@@ -42,7 +42,7 @@ export default async function SchoolStudentsPage({
 
   const students: StudentWithSchoolAndFellow[] = await db.student.findMany({
     where: { schoolId: school.id, fellowId: fellow.id },
-    include: { fellow: true, school: true, StudentComplaints: true },
+    include: { fellow: true, school: true, studentComplaints: true },
     orderBy: { visibleId: "asc" },
   });
 
