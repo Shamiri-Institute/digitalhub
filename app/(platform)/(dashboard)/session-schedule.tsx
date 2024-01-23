@@ -24,9 +24,7 @@ interface SessionEvent {
 }
 
 export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
-  const [anchorDate, setAnchorDate] = React.useState<Date>(
-    new Date("2023-05-17"),
-  );
+  const [anchorDate, setAnchorDate] = React.useState<Date>(new Date());
   const anchorWeekStart = startOfWeek(anchorDate);
   const anchorWeekEnd = endOfWeek(anchorDate);
 
@@ -135,27 +133,42 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
           </div>
         </div>
         <div className="mt-2 grid grid-cols-7 gap-1 px-1 text-center">
-          {daysOfWeek.map(({ date, dayOfMonth, dayName, isAnchorDay }) => (
-            <div
-              key={dayOfMonth}
-              className={cn(
-                "flex cursor-pointer flex-col items-center gap-px rounded-t-md pb-2.5 pt-1 text-left",
-                {
-                  "bg-white text-active-card": isAnchorDay,
-                },
-              )}
-              onClick={() => setAnchorDate(date)}
-            >
-              <span className="font-semibold">{dayOfMonth}</span>
-              <span
-                className={cn("text-blue-300/80", {
-                  "text-gray-800": isAnchorDay,
-                })}
+          {daysOfWeek.map(({ date, dayOfMonth, dayName, isAnchorDay }) => {
+            const hasSessions = sessions.some((session) =>
+              isSameDay(session.date, date),
+            );
+            return (
+              <div
+                key={dayOfMonth}
+                className={cn(
+                  "relative flex cursor-pointer flex-col items-center gap-px rounded-t-md pb-2.5 pt-1 text-left",
+                  {
+                    "bg-white text-active-card": isAnchorDay,
+                  },
+                )}
+                onClick={() => setAnchorDate(date)}
               >
-                {dayName}
-              </span>
-            </div>
-          ))}
+                <span className="font-semibold">{dayOfMonth}</span>
+                {hasSessions && (
+                  <span
+                    className={cn(
+                      "absolute bottom-2 inline-block h-1 w-1 rounded-full bg-white/50",
+                      {
+                        "bg-shamiri-dark-blue/90": isAnchorDay,
+                      },
+                    )}
+                  ></span>
+                )}
+                <span
+                  className={cn("text-blue-300/80", {
+                    "text-gray-800": isAnchorDay,
+                  })}
+                >
+                  {dayName}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
       <div className={cn("relative mt-4 overflow-scroll overflow-x-hidden")}>
