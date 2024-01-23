@@ -42,7 +42,7 @@ function generateWeekFieldValues() {
 
   for (let i = numWeeks; i >= 0; i--) {
     const date = subWeeks(today, i);
-    const week = startOfWeek(date, { weekStartsOn: 1 })
+    const week = startOfWeek(date, { weekStartsOn: 1 });
     selectValues.push(
       <SelectItem value={format(week, "yyyy-MM-dd")}>
         Week {numWeeks - i + 1} - {format(week, "dd/MM/yyyy")}
@@ -142,6 +142,8 @@ export default function WeeklyEvaluationForm({
                       <FormLabel>Week</FormLabel>
                       <Select
                         onValueChange={field.onChange}
+                        /*
+                        // @ts-ignore */
                         defaultValue={field.value}
                       >
                         <FormControl>

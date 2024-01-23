@@ -1,7 +1,6 @@
 import { stringValidation } from "#/lib/utils";
 import * as z from "zod";
 
-
 export const ReportingNotesSchema = z.object({
   fellowId: z.string(),
   supervisorId: z.string(),
