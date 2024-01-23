@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { stringValidation } from "./utils";
 
 export const EditFellowSchema = z.object({
   id: z.string(),
@@ -11,6 +12,8 @@ export const EditFellowSchema = z.object({
     .min(1, { message: "Please enter a name" }),
   dateOfBirth: z.date(),
   gender: z.string(),
+  fellowEmail: stringValidation("Please provide fellow email").email(),
+  idNumber: stringValidation("Please input the fellow's ID"),
   cellNumber: z
     .string({
       required_error: "Please enter a valid phone number",
