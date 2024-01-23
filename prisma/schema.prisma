@@ -793,6 +793,12 @@ enum riskStatusOptions {
   High
 }
 
+enum referralStatusOptions {
+  Approved
+  Declined
+  Pending
+}
+
 model ClinicalScreeningInfo {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
@@ -809,8 +815,8 @@ model ClinicalScreeningInfo {
   referredToSupervisorId String?     @map("referredTo_supervisor_id") @db.VarChar(255)
   referredToSupervisor   Supervisor? @relation("referredtocases", fields: [referredToSupervisorId], references: [id])
 
-  acceptCase     Boolean @default(false) @map("accept_case")
-  referralStatus String? @map("referral_status") @db.VarChar(255)
+  acceptCase     Boolean                @default(false) @map("accept_case")
+  referralStatus referralStatusOptions? @map("referral_status")
 
   sessions                              ClinicalSessionAttendance[]
   generalPresentingIssues               String?                     @map("general_presenting_issues") @db.VarChar(255)
@@ -845,9 +851,9 @@ model ClinicalCaseTransferTrail {
   toRole         String                 @map("to_role") @db.VarChar(255)
   caseId         String
   case           ClinicalScreeningInfo? @relation(fields: [caseId], references: [id])
-  referralStatus String?                @map("referral_status") @db.VarChar(255)
+  referralStatus referralStatusOptions? @map("referral_status")
 
-  @@map("clinical_case_transfer_history")
+  @@map("clinical_case_transfer_trail")
 }
 
 model ClinicalExpertCaseNotes {
