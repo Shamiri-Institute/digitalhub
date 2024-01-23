@@ -448,6 +448,7 @@ model Fellow {
   repaymentRequests       RepaymentRequest[]
   overallFellowEvaluation OverallFellowEvaluation[]
   fellowComplaints        FellowComplaints[]
+  weeklyFellowRatings     WeeklyFellowRatings[]
 
   @@map("fellows")
 }
@@ -521,6 +522,7 @@ model Supervisor {
   repaymentRequests         RepaymentRequest[]
   overallFellowEvaluation   OverallFellowEvaluation[]
   fellowComplaints          FellowComplaints[]
+  weeklyFellowRatings       WeeklyFellowRatings[]
 
   @@map("supervisors")
 }
@@ -881,4 +883,20 @@ model FellowComplaints {
   fellow       Fellow     @relation(fields: [fellowId], references: [id])
 
   @@map("fellow_complaints")
+}
+
+model WeeklyFellowRatings {
+  id                       String     @id @default(cuid())
+  createdAt                DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                DateTime   @updatedAt @map("updated_at")
+  behaviourNotes           String     @map("behaviour_notes") @db.Text()
+  programDeliveryNotes     String     @map("program_delivery_notes") @db.Text()
+  dressingAndGroomingNotes String     @map("dressing_and_grooming_notes") @db.Text()
+  attendanceNotes          String     @map("attendance_notes") @db.Text()
+  fellowId                 String     @map("fellow_id") @db.VarChar(255)
+  fellow                   Fellow     @relation(fields: [fellowId], references: [id])
+  supervisorId             String     @map("supervisor_id") @db.Text()
+  supervisor               Supervisor @relation(fields: [supervisorId], references: [id])
+
+  @@map("weekly_fellow_ratings")
 }
