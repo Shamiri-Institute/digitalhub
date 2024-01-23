@@ -1083,7 +1083,7 @@ export async function AcceptRefferedClinicalCase(
   caseId: string,
 ) {
   try {
-    const caseHistory = await db.clinicalCaseTransferTrail.findMany({
+    const caseHistory = await db.clinicalCaseTransferTrail.findFirst({
       where: {
         caseId: caseId,
       },
@@ -1092,7 +1092,7 @@ export async function AcceptRefferedClinicalCase(
       },
     });
 
-    const caseHistoryId = caseHistory[0]?.id;
+    const caseHistoryId = caseHistory?.id;
 
     const currentcase = await db.clinicalScreeningInfo.update({
       where: {
@@ -1128,7 +1128,7 @@ export async function AcceptRefferedClinicalCase(
 
 export async function RejectRefferedClinicalCase(caseId: string) {
   try {
-    const caseHistory = await db.clinicalCaseTransferTrail.findMany({
+    const caseHistory = await db.clinicalCaseTransferTrail.findFirst({
       where: {
         caseId: caseId,
       },
@@ -1137,7 +1137,7 @@ export async function RejectRefferedClinicalCase(caseId: string) {
       },
     });
 
-    const caseHistoryId = caseHistory[0]?.id;
+    const caseHistoryId = caseHistory?.id;
 
     const currentcase = await db.clinicalScreeningInfo.update({
       where: {
