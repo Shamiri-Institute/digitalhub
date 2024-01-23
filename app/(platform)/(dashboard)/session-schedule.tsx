@@ -19,13 +19,10 @@ interface SessionEvent {
   duration: number;
 }
 
-export function SessionSchedule({
-  anchorDate,
-  sessions,
-}: {
-  anchorDate: Date;
-  sessions: SessionEvent[];
-}) {
+export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
+  const [anchorDate, setAnchorDate] = React.useState<Date>(
+    new Date("2023-05-17"),
+  );
   const anchorWeekStart = startOfWeek(anchorDate);
   const anchorWeekEnd = endOfWeek(anchorDate);
 
@@ -38,7 +35,7 @@ export function SessionSchedule({
   const threeHoursAfterEndHour = new Date(anchorDate);
   threeHoursAfterEndHour.setHours(lastSessionEndHour + 3);
 
-  const calendarBuffer = 2;
+  const calendarBuffer = 1;
   let scheduleHoursRange: number[] = [];
   for (
     let i = firstSessionStartHour - calendarBuffer;
@@ -87,6 +84,7 @@ export function SessionSchedule({
     start: anchorWeekStart,
     end: anchorWeekEnd,
   }).map((date) => ({
+    date,
     dayOfMonth: format(date, "d"),
     dayName: format(date, "EEEEE"),
     isAnchorDay: format(date, "d") === format(anchorDate, "d"),
@@ -114,15 +112,16 @@ export function SessionSchedule({
           <span>{format(anchorDate, "MMM yyyy")}</span>
         </div>
         <div className="mt-2 grid grid-cols-7 gap-1 px-1 text-center">
-          {daysOfWeek.map(({ dayOfMonth, dayName, isAnchorDay }) => (
+          {daysOfWeek.map(({ date, dayOfMonth, dayName, isAnchorDay }) => (
             <div
               key={dayOfMonth}
               className={cn(
-                "flex flex-col items-center gap-px rounded-t-md pb-2.5 pt-1 text-left",
+                "flex cursor-pointer flex-col items-center gap-px rounded-t-md pb-2.5 pt-1 text-left",
                 {
                   "bg-white text-active-card": isAnchorDay,
                 },
               )}
+              onClick={() => setAnchorDate(date)}
             >
               <span className="font-semibold">{dayOfMonth}</span>
               <span
