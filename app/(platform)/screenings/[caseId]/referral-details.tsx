@@ -17,6 +17,7 @@ import {
 } from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
 import { useToast } from "#/components/ui/use-toast";
+import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ClinicalCaseTransferTrail,
@@ -161,7 +162,10 @@ export function ReferralToDetails({
                           <Select
                             name="referredTo"
                             defaultValue={field.value}
-                            disabled={!canReferCase}
+                            disabled={
+                              !canReferCase ||
+                              currentcase.referralStatus == "Pending"
+                            }
                             onValueChange={(value) => {
                               field.onChange(value);
                               setSelectedOption(value);
@@ -288,7 +292,10 @@ export function ReferralToDetails({
                       <FormControl>
                         <div className="mt-3 grid w-full gap-1.5">
                           <Textarea
-                            disabled={!canReferCase}
+                            disabled={
+                              !canReferCase ||
+                              currentcase.referralStatus == "Pending"
+                            }
                             id="referralNotes"
                             className="mt-1.5 resize-none bg-card"
                             placeholder="Write referral notes here..."
@@ -307,7 +314,9 @@ export function ReferralToDetails({
               <Button
                 type="submit"
                 form="submitReferralForm"
-                disabled={!canReferCase}
+                disabled={
+                  !canReferCase || currentcase.referralStatus == "Pending"
+                }
                 className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
               >
                 {form.formState.isSubmitting && (
@@ -335,6 +344,7 @@ export function ReferralToDetails({
                   referredTo={
                     case_item.to == "" ? case_item.toRole : case_item.to
                   }
+                  referralStatus={case_item.referralStatus}
                 />
               );
             }
@@ -349,16 +359,27 @@ function SingleHistory({
   date = new Date(),
   referredFrom = "",
   referredTo = "",
+  referralStatus,
 }: {
   date: Date;
   referredFrom: string;
   referredTo: string;
+  referralStatus: string | null;
 }) {
   return (
     <li>
       <p className="mb-2 ml-2 text-xs text-brand">
         {new Date(date).toLocaleDateString()} - Referred from {referredFrom} to{" "}
         {referredTo}.
+        <span
+          className={cn(
+            "ml-2 inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800",
+            referralStatus == "Approved" && "bg-green-100 text-green-800",
+            referralStatus == "Declined" && "bg-red-100 text-red-800",
+          )}
+        >
+          {referralStatus}
+        </span>
       </p>
     </li>
   );

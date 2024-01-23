@@ -60,6 +60,19 @@ export default function CaseHeader({
         <Link href="/screenings">
           <Icons.chevronLeft className="h-6 w-6 text-brand" />
         </Link>
+        {currentcase.referralStatus && (
+          <span
+            className={cn(
+              "ml-2 inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800",
+              currentcase.referralStatus == "Approved" &&
+                "bg-green-100 text-green-800",
+              currentcase.referralStatus == "Declined" &&
+                "bg-red-100 text-red-800",
+            )}
+          >
+            {currentcase.referralStatus}
+          </span>
+        )}
         <FlagStudentDialog
           caseId={currentcase.id}
           reason={currentcase.caseReport}
