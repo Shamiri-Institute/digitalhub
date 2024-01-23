@@ -1,33 +1,7 @@
 import { chromium } from "@playwright/test";
-import { encode } from "next-auth/jwt";
 
-import { db } from "#/lib/db";
+import { generateSessionToken } from "#/scripts/auth/get-next-session";
 import { PersonnelFixtures } from "#/tests/helpers";
-
-async function generateSessionToken(email: string) {
-  const user = await db.user.findUniqueOrThrow({
-    where: { email },
-    include: { memberships: true },
-  });
-
-  const jwtPayload = {
-    name: user.name,
-    email: user.email,
-    picture: null,
-    sub: user.id,
-    memberships: user.memberships.map((m) => ({
-      id: m.id,
-      implementerId: m.implementerId,
-      role: m.role,
-      identifier: m.identifier,
-    })),
-  };
-
-  return await encode({
-    token: jwtPayload,
-    secret: process.env.NEXTAUTH_SECRET!,
-  });
-}
 
 const sessionFixtures = [
   {
@@ -48,6 +22,8 @@ async function globalSetup() {
   const browser = await chromium.launch();
 
   for (let { userEmail, stateFile } of sessionFixtures) {
+    console.log(`Adding session token for ${userEmail} to browser`);
+
     const sessionToken = await generateSessionToken(userEmail);
     const context = await browser.newContext({
       storageState: stateFile,
