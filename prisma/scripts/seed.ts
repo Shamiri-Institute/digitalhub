@@ -112,9 +112,8 @@ async function createHubs(db: Database) {
       },
     });
 
-    let hubCoordinatorId: string | null = null;
     if (hub["Hub_coordinator_ID"]) {
-      const hubCoordinator = await db.hubCoordinator.create({
+      await db.hubCoordinator.create({
         data: {
           id: objectId("coord"),
           visibleId: hub["Hub_coordinator_ID"],
@@ -123,7 +122,6 @@ async function createHubs(db: Database) {
           assignedHubId: createdHub.id,
         },
       });
-      hubCoordinatorId = hubCoordinator.id;
     }
   });
 }
@@ -496,14 +494,15 @@ async function createFixtures(db: Database) {
     },
   });
 
-  // Assign a school to each supervisor
-  for (let supervisor of supervisors) {
-    if (supervisor.hub) {
+  // Assign a school to each supervisor in a deterministic way
+  for (let i = 0; i < supervisors.length; i++) {
+    const supervisor = supervisors[i];
+    if (supervisor?.hub) {
       const { schools } = supervisor.hub;
-      const randomSchool = schools[Math.floor(Math.random() * schools.length)];
+      const assignedSchool = schools[i % schools.length];
       await db.supervisor.update({
         where: { id: supervisor.id },
-        data: { assignedSchoolId: randomSchool?.id },
+        data: { assignedSchoolId: assignedSchool?.id },
       });
     }
   }

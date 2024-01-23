@@ -17,19 +17,21 @@ test.describe("clinical screenings", () => {
     await clinicalScreeningPage.chooseSchoolInSelectDropdown("ANS23_School_25");
     await expect(page.getByText("Muthurwa Girls").nth(0)).toBeVisible();
 
-    await clinicalScreeningPage.chooseSupervisorInSelectDropdown("SPV23_S_35");
-    await expect(page.getByText("Marion Otieno").nth(0)).toBeVisible();
+    await clinicalScreeningPage.chooseSupervisorInSelectDropdown("SPV23_S_36");
+    await expect(page.getByText("Isabel Kinyua").nth(0)).toBeVisible();
 
-    await clinicalScreeningPage.chooseFellowInSelectDropdown("TFW23_S_221");
-    await expect(page.getByText("June Musimbi").nth(0)).toBeVisible();
+    await clinicalScreeningPage.chooseFellowInSelectDropdown("TFW23_S_266");
+    await expect(page.getByText("Samson Egwina").nth(0)).toBeVisible();
 
     await clinicalScreeningPage.chooseStudentInSelectDropdown(
-      "Stu_Adm_ANS23_School_28_9",
+      "Stu_Adm_ANS23_School_29_20",
     );
-    await expect(page.getByText("Celia Bogisich").nth(0)).toBeVisible();
+    await expect(page.getByText("Clifford Daugherty").nth(0)).toBeVisible();
 
     await clinicalScreeningPage.submitClinicalCaseDialogue();
 
-    await clinicalScreeningPage.assertClinicalCaseIsVisible("Celia Bogisich");
+    await clinicalScreeningPage.assertClinicalCaseIsVisible(
+      "Clifford Daugherty",
+    );
   });
 });
