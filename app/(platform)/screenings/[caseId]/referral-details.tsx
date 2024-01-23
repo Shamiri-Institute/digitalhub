@@ -373,9 +373,10 @@ function SingleHistory({
         {referredTo}.
         <span
           className={cn(
-            "ml-2 inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800",
+            "ml-2 inline-flex items-center rounded-full  px-2.5 py-0.5 text-xs font-medium",
             referralStatus == "Approved" && "bg-green-100 text-green-800",
             referralStatus == "Declined" && "bg-red-100 text-red-800",
+            referralStatus == "Pending" && "bg-indigo-100 text-indigo-800",
           )}
         >
           {referralStatus}
