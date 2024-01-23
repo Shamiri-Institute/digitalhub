@@ -53,6 +53,8 @@ export default function FellowDetailsForm(props: FellowDetails) {
       mpesaNumber: props.fellow.mpesaNumber ?? undefined,
       county: props.fellow.county ?? undefined,
       subCounty: props.fellow.subCounty ?? undefined,
+      idNumber: props.fellow.idNumber ?? "",
+      fellowEmail: props.fellow.fellowEmail ?? "",
     },
   });
 
@@ -176,6 +178,32 @@ export default function FellowDetailsForm(props: FellowDetails) {
                     {...field}
                     value={field.value || ""}
                   />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="idNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>ID NUMBER</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="fellowEmail"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
