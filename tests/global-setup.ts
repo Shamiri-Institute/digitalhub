@@ -1,7 +1,7 @@
 import { chromium } from "@playwright/test";
 
-import { generateSessionToken } from "#/scripts/auth/get-next-session";
 import { PersonnelFixtures } from "#/tests/helpers";
+import { generateSessionToken } from "./helpers";
 
 const sessionFixtures = [
   {

@@ -24,7 +24,7 @@ interface SessionEvent {
 }
 
 export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
-  const sortedSessions = sessions.toSorted(
+  const sortedSessions = (sessions || []).sort(
     (a, b) => a.date.getTime() - b.date.getTime(),
   );
   const [anchorDate, setAnchorDate] = React.useState<Date>(new Date());
