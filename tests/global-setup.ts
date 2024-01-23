@@ -16,6 +16,7 @@ async function generateSessionToken(email: string) {
     picture: null,
     sub: user.id,
     memberships: user.memberships.map((m) => ({
+      id: m.id,
       implementerId: m.implementerId,
       role: m.role,
       identifier: m.identifier,
