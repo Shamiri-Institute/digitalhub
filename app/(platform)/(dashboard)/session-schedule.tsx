@@ -2,8 +2,10 @@
 
 import * as React from "react";
 
+import { Icons } from "#/components/icons";
 import { cn } from "#/lib/utils";
 import {
+  addDays,
   addHours,
   eachDayOfInterval,
   endOfWeek,
@@ -108,8 +110,25 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
   return (
     <div className="max-w-4xl rounded-md bg-white shadow-md">
       <div className="rounded-t-md bg-active-card text-white">
-        <div className="p-4 pb-0 font-semibold">
-          <span>{format(anchorDate, "MMM yyyy")}</span>
+        <div className="flex items-center justify-between">
+          <div className="p-4 pb-0 font-semibold">
+            <span>{format(anchorDate, "MMM yyyy")}</span>
+          </div>
+          <div></div>
+          <div className="flex items-center gap-2 p-4 pb-0">
+            <button
+              className="rounded-full bg-active-card p-1.5 text-white transition-transform hover:bg-white/20 active:scale-95"
+              onClick={() => setAnchorDate(addDays(anchorDate, -7))}
+            >
+              <Icons.chevronLeft />
+            </button>
+            <button
+              className="rounded-full bg-active-card p-1.5 text-white transition-transform hover:bg-white/20 active:scale-95"
+              onClick={() => setAnchorDate(addDays(anchorDate, 7))}
+            >
+              <Icons.chevronRight />
+            </button>
+          </div>
         </div>
         <div className="mt-2 grid grid-cols-7 gap-1 px-1 text-center">
           {daysOfWeek.map(({ date, dayOfMonth, dayName, isAnchorDay }) => (
