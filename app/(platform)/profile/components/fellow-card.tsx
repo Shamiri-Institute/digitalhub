@@ -21,6 +21,7 @@ import FellowComplaintForm from "./fellow-complaint-form";
 import FellowDetailsForm from "./fellow-management-form";
 import FellowEvaluationForm from "./overall-evaluation-form";
 import ReportingNotesForm from "./reporting-notes-form";
+import WeeklyEvaluationForm from "./weekly-fellow-evaluation-form";
 
 export default function FellowCard({
   fellow,
@@ -156,7 +157,15 @@ function FellowCardMenu({
             </DialogContent>
           </Dialog>
         </MenuLineItem>
-        <MenuLineItem>Weekly Evaluation</MenuLineItem>
+        <MenuLineItem>
+          <WeeklyEvaluationForm
+            fellowId={fellow.id}
+            supervisorId={fellow.supervisorId ?? ""}
+            previousRatings={fellow.weeklyFellowRatings}
+          >
+            <div className="cursor-pointer">Weekly Evaluation</div>
+          </WeeklyEvaluationForm>
+        </MenuLineItem>
         <DropdownMenuSeparator className="my-2" />
         <MenuLineItem>
           <FellowEvaluationForm

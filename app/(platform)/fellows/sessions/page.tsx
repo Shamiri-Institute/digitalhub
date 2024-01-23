@@ -58,6 +58,7 @@ export default async function FellowSessionsPage({
       },
       fellowComplaints: true,
       overallFellowEvaluation: true,
+      weeklyFellowRatings: true,
       repaymentRequests: {
         include: {
           groupSession: {
