@@ -888,7 +888,8 @@ model FellowComplaints {
 model WeeklyFellowRatings {
   id                       String     @id @default(cuid())
   createdAt                DateTime   @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt                DateTime   @updatedAt @map("updated_at")
+  updatedAt                DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+  week                     DateTime   @db.Date // stores the week of the evaluation
   behaviourNotes           String     @map("behaviour_notes") @db.Text()
   programDeliveryNotes     String     @map("program_delivery_notes") @db.Text()
   dressingAndGroomingNotes String     @map("dressing_and_grooming_notes") @db.Text()
