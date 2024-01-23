@@ -24,16 +24,21 @@ interface SessionEvent {
 }
 
 export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
+  const sortedSessions = sessions.toSorted(
+    (a, b) => a.date.getTime() - b.date.getTime(),
+  );
   const [anchorDate, setAnchorDate] = React.useState<Date>(new Date());
   const anchorWeekStart = startOfWeek(anchorDate);
   const anchorWeekEnd = endOfWeek(anchorDate);
 
   const calendarBuffer = 1;
-  const firstSessionStartDate = sessions[0]?.date!;
+  const firstSessionStartDate = sortedSessions[0]?.date!;
   const firstSessionStartHour = getHours(firstSessionStartDate);
   const startHourMinusBuffer = new Date(anchorDate);
   startHourMinusBuffer.setHours(firstSessionStartHour - calendarBuffer);
-  const lastSessionEndDate = new Date(sessions[sessions.length - 1]?.date!);
+  const lastSessionEndDate = new Date(
+    sortedSessions[sortedSessions.length - 1]?.date!,
+  );
   const lastSessionEndHour = getHours(lastSessionEndDate);
   const endHourPlusBuffer = new Date(anchorDate);
   endHourPlusBuffer.setHours(lastSessionEndHour + calendarBuffer);
@@ -55,11 +60,12 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
     hourCount: number;
     schoolHref: string;
   };
+
   const todaySessions: {
     hour: number;
     sessions: CalendarSession[];
   }[] = scheduleHoursRange.map((hour) => {
-    const sessionsInHour = sessions
+    const sessionsInHour = sortedSessions
       .filter(
         (session) =>
           isSameDay(session.date, anchorDate) &&
@@ -134,7 +140,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
         </div>
         <div className="mt-2 grid grid-cols-7 gap-1 px-1 text-center">
           {daysOfWeek.map(({ date, dayOfMonth, dayName, isAnchorDay }) => {
-            const hasSessions = sessions.some((session) =>
+            const hasSessions = sortedSessions.some((session) =>
               isSameDay(session.date, date),
             );
             return (

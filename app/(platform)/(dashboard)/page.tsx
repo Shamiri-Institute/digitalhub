@@ -95,10 +95,7 @@ async function SupervisorView() {
           Sessions
         </h3>
         <div className="mt-4">
-          <SessionSchedule
-            anchorDate={new Date("2023-05-17")}
-            sessions={interventionSessions}
-          />
+          <SessionSchedule sessions={interventionSessions} />
         </div>
       </div>
 
