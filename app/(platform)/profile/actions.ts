@@ -7,6 +7,7 @@ import {
   FellowComplaintSchema,
   OverallFellowSchema,
   ReportingNotesSchema,
+  WeeklyFellowRatingSchema,
 } from "./schema";
 
 export async function submitReportingNotes(
@@ -55,6 +56,26 @@ export async function submitFellowComplaint(
 
     revalidatePath("/profile");
     return { success: true, message: "successfully added fellow complaint" };
+  } catch (e) {
+    console.error(e);
+    return { success: false, message: "something went wrong" };
+  }
+}
+
+export async function submitWeeklyFellowRating(
+  data: z.infer<typeof WeeklyFellowRatingSchema>,
+) {
+  try {
+    const parsedData = WeeklyFellowRatingSchema.parse(data);
+    await db.weeklyFellowRatings.create({
+      data: parsedData,
+    });
+
+    revalidatePath("/profile");
+    return {
+      success: true,
+      message: "successfully recorded fellow's weekly rating",
+    };
   } catch (e) {
     console.error(e);
     return { success: false, message: "something went wrong" };

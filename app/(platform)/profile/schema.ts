@@ -1,3 +1,4 @@
+import { stringValidation } from "#/lib/utils";
 import * as z from "zod";
 
 export const ReportingNotesSchema = z.object({
@@ -41,6 +42,18 @@ export const FellowComplaintSchema = z.object({
     .string({ required_error: "Please input a complaint" })
     .trim()
     .min(1, { message: "Please input a complaint " }),
+  fellowId: z.string(),
+  supervisorId: z.string(),
+});
+
+export const WeeklyFellowRatingSchema = z.object({
+  week: z.coerce.date({ required_error: "Please select a week" }),
+  behaviourNotes: stringValidation("Please input behaviour notes"),
+  programDeliveryNotes: stringValidation("Please input program delivery notes"),
+  dressingAndGroomingNotes: stringValidation(
+    "Please input dressing and grooming notes",
+  ),
+  attendanceNotes: stringValidation("Please input attendance notes"),
   fellowId: z.string(),
   supervisorId: z.string(),
 });
