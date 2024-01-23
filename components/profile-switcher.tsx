@@ -25,8 +25,6 @@ const fallbackProfile = {
 export function ProfileSwitcher() {
   const { data: session, status } = useSession();
 
-  console.log({ profileSwitcherSession: session });
-
   if (status !== "authenticated") {
     console.error("ProfileSwitcher: not authenticated");
   }

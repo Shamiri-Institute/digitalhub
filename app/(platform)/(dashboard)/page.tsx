@@ -23,6 +23,24 @@ export default async function HomePage() {
   return <div>Unknown role</div>;
 }
 
+function sessionDisplayName(sessionType: string) {
+  switch (sessionType) {
+    case "s0":
+      return "S00";
+      break;
+    case "s1":
+      return "S01";
+    case "s2":
+      return "S02";
+    case "s3":
+      return "S03";
+    case "s4":
+      return "S04";
+    default:
+      return sessionType;
+  }
+}
+
 async function SupervisorView() {
   const supervisor = await currentSupervisor();
   if (!supervisor) {
@@ -45,7 +63,9 @@ async function SupervisorView() {
         })),
       )
       .map((session) => ({
-        title: `${session.schoolName}, ${session.sessionType}`,
+        title: `${session.schoolName}, ${sessionDisplayName(
+          session.sessionType,
+        )}`,
         date: session.sessionDate,
         duration: 1,
       })) || [];
@@ -80,7 +100,7 @@ async function SupervisorView() {
         </div>
       </div>
 
-      <div className="mt-12">
+      {/* <div className="mt-12">
         <h3 className="mt-4 text-base font-semibold text-brand xl:text-2xl">
           Recently opened
         </h3>
@@ -89,7 +109,7 @@ async function SupervisorView() {
             Coming soon...
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
