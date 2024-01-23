@@ -1,9 +1,5 @@
 "use client";
 
-import * as React from "react";
-
-import { Icons } from "#/components/icons";
-import { cn } from "#/lib/utils";
 import {
   addDays,
   addHours,
@@ -14,11 +10,17 @@ import {
   isSameDay,
   startOfWeek,
 } from "date-fns";
+import Link from "next/link";
+import * as React from "react";
+
+import { Icons } from "#/components/icons";
+import { cn } from "#/lib/utils";
 
 interface SessionEvent {
   title: string;
   date: Date;
   duration: number;
+  schoolHref: string;
 }
 
 export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
@@ -28,16 +30,16 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
   const anchorWeekStart = startOfWeek(anchorDate);
   const anchorWeekEnd = endOfWeek(anchorDate);
 
+  const calendarBuffer = 1;
   const firstSessionStartDate = sessions[0]?.date!;
   const firstSessionStartHour = getHours(firstSessionStartDate);
-  const threeHoursBeforeStartHour = new Date(anchorDate);
-  threeHoursBeforeStartHour.setHours(firstSessionStartHour - 3);
+  const startHourMinusBuffer = new Date(anchorDate);
+  startHourMinusBuffer.setHours(firstSessionStartHour - calendarBuffer);
   const lastSessionEndDate = new Date(sessions[sessions.length - 1]?.date!);
   const lastSessionEndHour = getHours(lastSessionEndDate);
-  const threeHoursAfterEndHour = new Date(anchorDate);
-  threeHoursAfterEndHour.setHours(lastSessionEndHour + 3);
+  const endHourPlusBuffer = new Date(anchorDate);
+  endHourPlusBuffer.setHours(lastSessionEndHour + calendarBuffer);
 
-  const calendarBuffer = 1;
   let scheduleHoursRange: number[] = [];
   for (
     let i = firstSessionStartHour - calendarBuffer;
@@ -53,6 +55,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
     duration: number;
     offsetFromStartHour: number;
     hourCount: number;
+    schoolHref: string;
   };
   const todaySessions: {
     hour: number;
@@ -71,6 +74,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
           ...session,
           offsetFromStartHour,
           hourCount: 1,
+          schoolHref: session.schoolHref,
         };
       });
 
@@ -165,8 +169,9 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
         {todaySessions.map(({ sessions }) => {
           return sessions.map((session, idx) => {
             return (
-              <div
+              <Link
                 key={session.title}
+                href={session.schoolHref}
                 className="absolute z-20 ml-[12.5%]"
                 style={{
                   top: `${
@@ -176,14 +181,14 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
                   left: `${idx * calendarHourWidth}px`,
                 }}
               >
-                <button className="h-full w-fit cursor-pointer rounded-md bg-active-card px-4 py-2 text-white transition-all active:scale-90">
+                <div className="h-full w-fit cursor-pointer rounded-md bg-active-card px-4 py-2 text-white transition-all active:scale-90">
                   <h2 className="font-semibold">{session.title}</h2>
                   <span className="text-sm">
                     {format(session.date, "h:mm a")} -{" "}
                     {format(addHours(session.date, session.duration), "h:mm a")}
                   </span>
-                </button>
-              </div>
+                </div>
+              </Link>
             );
           });
         })}

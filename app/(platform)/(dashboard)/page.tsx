@@ -60,6 +60,7 @@ async function SupervisorView() {
         school.interventionSessions.map((is) => ({
           ...is,
           schoolName: school.schoolName,
+          schoolVisibleId: school.visibleId,
         })),
       )
       .map((session) => ({
@@ -68,6 +69,7 @@ async function SupervisorView() {
         )}`,
         date: session.sessionDate,
         duration: 1,
+        schoolHref: `/schools/${session.schoolVisibleId}`,
       })) || [];
 
   return (
