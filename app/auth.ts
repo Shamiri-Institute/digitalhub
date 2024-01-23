@@ -2,8 +2,30 @@ import { getServerSession } from "next-auth";
 
 import { db } from "#/lib/db";
 
-export async function currentHub() {
-  return await db.hub.findFirst();
+export type CurrentHubCoordinator = Awaited<
+  ReturnType<typeof currentHubCoordinator>
+>;
+
+export async function currentHubCoordinator() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { membership } = user;
+
+  const { identifier } = membership;
+  if (!identifier) {
+    return null;
+  }
+
+  const hubCoordinator = await db.hubCoordinator.findFirst({
+    where: { id: identifier },
+    include: {
+      assignedHub: true,
+    },
+  });
+
+  return hubCoordinator;
 }
 
 export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;

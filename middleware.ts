@@ -37,9 +37,15 @@ function hasAccessToRoute(role: ImplementerRole, routeGroup: string) {
   return roleRouteMap[role] === routeGroup;
 }
 
-function redirectTo(url: string, request: NextRequest, error: AuthErrors) {
+function redirectTo(url: string, request: NextRequest, error?: AuthErrors) {
   const redirectUrl = new URL(url, request.url);
-  redirectUrl.searchParams.append("error", error);
+  if (error) {
+    redirectUrl.searchParams.append("error", error);
+    console.error(
+      `Redirecting to ${redirectUrl.toString()} with error ${error}`,
+      request.nextUrl.pathname,
+    );
+  }
   return NextResponse.redirect(redirectUrl);
 }
 
@@ -59,21 +65,27 @@ export default async function middleware(request: NextRequest) {
     return redirectTo("/login", request, AuthErrors.NO_MEMBERSHIPS);
   }
 
-  const { role } = memberships[0];
+  const { role } = memberships[0] || {};
   if (!role) {
     return redirectTo("/login", request, AuthErrors.NO_ROLE);
   }
 
   const routeGroup = request.nextUrl.pathname.split("/")[1] || "";
   if (!hasAccessToRoute(role, routeGroup)) {
-    switch (role) {
-      case ImplementerRole.OPERATIONS:
-        return redirectTo("/ops", request, AuthErrors.NO_ACCESS);
-      case ImplementerRole.HUB_COORDINATOR:
-        return redirectTo("/hc", request, AuthErrors.NO_ACCESS);
-      case ImplementerRole.SUPERVISOR:
-        return redirectTo("/", request, AuthErrors.NO_ACCESS);
-    }
+    const redirectMap: Record<ImplementerRole, string> = {
+      [ImplementerRole.OPERATIONS]: "/ops",
+      [ImplementerRole.HUB_COORDINATOR]: "/hc",
+      [ImplementerRole.SUPERVISOR]: "/",
+      [ImplementerRole.ADMIN]: "/admin",
+    };
+
+    const redirectUrl = redirectMap[role];
+    const error =
+      request.nextUrl.searchParams.get("login") === "1"
+        ? undefined
+        : AuthErrors.NO_ACCESS;
+
+    return redirectTo(redirectUrl, request, error);
   }
 
   return AppMiddleware(request);
