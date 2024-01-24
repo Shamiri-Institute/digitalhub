@@ -102,6 +102,7 @@ async function FellowsList({
 }) {
   const fellows = await db.fellow.findMany({
     where: {
+      supervisorId: supervisor.id,
       fellowAttendances: { some: { schoolId: school.id } },
       students: { some: { schoolId: school.id } },
     },
