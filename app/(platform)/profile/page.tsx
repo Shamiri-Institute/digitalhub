@@ -16,18 +16,7 @@ export default async function SupervisorProfile() {
     return <InvalidPersonnelRole role="supervisor" />;
   }
 
-  const fellowsCount = (
-    await db.fellowAttendance.groupBy({
-      by: ["fellowId"],
-      where: {
-        supervisorId: supervisor.id,
-        schoolId: supervisor.assignedSchoolId ?? undefined,
-      },
-      _sum: {
-        id: true,
-      },
-    })
-  ).length;
+  const fellowsCount = supervisor.fellows.length;
 
   // SELECT COUNT(*) FROM schools WHERE hub_id = 'hub_01hetrj9mhf8kbq9tcm3eyg66v';
 
