@@ -156,7 +156,7 @@ export default function EditProfileBio({
           My Info
         </h3>
         <h3 className="text-base font-semibold text-shamiri-light-blue ">
-          Supervisor Name
+          {supervisor.supervisorName}
         </h3>
         <div className=" space-y-6">
           <div className="mt-6 space-y-6">
