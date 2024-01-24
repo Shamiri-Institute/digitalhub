@@ -71,6 +71,9 @@ export function Navigation({
       navigationDiv = <AdminNavigation />;
       break;
     default:
+      // default to this for now
+      console.error(`No active membership for user ${user.email}`);
+      navigationDiv = <SupervisorNavigation />;
       break;
   }
 
