@@ -11,6 +11,12 @@ import type {
   SchoolFindUniqueOutput,
 } from "#/types/prisma";
 
+const dotColor = (status: AttendanceStatus) => ({
+  "bg-[#85A070]": status === "present",
+  "bg-[#DE5E68]": status === "absent",
+  "bg-zinc-300": status === "not-marked",
+});
+
 export function FellowAttendanceDot({
   session,
   fellow,
@@ -23,15 +29,7 @@ export function FellowAttendanceDot({
   const { toast } = useToast();
   const [status, setStatus] = React.useState(session.status);
 
-  const dotColor = React.useCallback((status: AttendanceStatus) => {
-    return {
-      "bg-[#85A070]": status === "present",
-      "bg-[#DE5E68]": status === "absent",
-      "bg-zinc-300": status === "not-marked",
-    };
-  }, []);
-
-  const onDotClick = React.useCallback(async () => {
+  const onDotClick = async () => {
     const nextStatus = nextAttendanceStatus(status);
 
     const response = await markFellowAttendance(
@@ -83,15 +81,7 @@ export function FellowAttendanceDot({
         title: "Something went wrong",
       });
     }
-  }, [
-    dotColor,
-    fellow.fellowName,
-    fellow.visibleId,
-    school.visibleId,
-    session.label,
-    status,
-    toast,
-  ]);
+  };
 
   return (
     <div className="flex flex-col items-center gap-1.5">
