@@ -768,6 +768,7 @@ export async function dropoutSchoolWithReason(
       },
     });
 
+    revalidatePath("/profile");
     return { school };
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -776,6 +777,23 @@ export async function dropoutSchoolWithReason(
         error: error.message,
       };
     }
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function undoSchoolDropout(schoolVisibleId: string) {
+  try {
+    const school = await db.school.update({
+      where: { visibleId: schoolVisibleId },
+      data: {
+        droppedOut: false,
+      },
+    });
+
+    revalidatePath("/profile");
+    return { success: true, school };
+  } catch (error) {
     console.error(error);
     return { error: "Something went wrong" };
   }
