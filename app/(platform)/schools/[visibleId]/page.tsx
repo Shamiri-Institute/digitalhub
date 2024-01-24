@@ -121,7 +121,11 @@ async function FellowsList({
             fellow={fellow}
             school={school}
             supervisor={supervisor}
-            totalStudents={fellow.students.length}
+            totalStudents={
+              fellow.students.filter(
+                (student) => student.schoolId === school.id,
+              ).length
+            }
           />
         );
       })}
