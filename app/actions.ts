@@ -302,8 +302,8 @@ export async function markFellowAttendance(
 
 export async function dropoutFellowWithReason(
   fellowVisibleId: string,
-  schoolVisibleId: string,
   dropoutReason: string,
+  revalidationPath: string,
 ) {
   try {
     const fellow = await db.fellow.update({
@@ -315,8 +315,7 @@ export async function dropoutFellowWithReason(
       },
     });
 
-    revalidatePath(`/schools/${schoolVisibleId}`);
-
+    revalidatePath(revalidationPath);
     return { fellow };
   } catch (error: unknown) {
     if (error instanceof Error) {
