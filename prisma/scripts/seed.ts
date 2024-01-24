@@ -328,6 +328,7 @@ async function createInterventionGroupSessions(db: Database) {
             "yyyy-MM-dd",
           )}`,
           leaderId: fellow.id,
+          schoolId: interventionSession.schoolId,
         },
       });
     }
