@@ -1,75 +1,101 @@
 "use client";
 
-import * as React from "react";
-
-import { SchedulingDialog } from "#/app/(platform)/(dashboard)/scheduling-dialog";
-import { cn } from "#/lib/utils";
 import {
+  addDays,
   addHours,
   eachDayOfInterval,
   endOfWeek,
   format,
   getHours,
-  isToday,
-  isWithinInterval,
+  isSameDay,
   startOfWeek,
 } from "date-fns";
+import Link from "next/link";
+import * as React from "react";
+
+import { Icons } from "#/components/icons";
+import { cn } from "#/lib/utils";
 
 interface SessionEvent {
   title: string;
   date: Date;
   duration: number;
+  schoolHref: string;
 }
 
 export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
-  const currentDate = new Date();
+  const sortedSessions = (sessions || []).sort(
+    (a, b) => a.date.getTime() - b.date.getTime(),
+  );
+  const [anchorDate, setAnchorDate] = React.useState<Date>(new Date());
+  const anchorWeekStart = startOfWeek(anchorDate);
+  const anchorWeekEnd = endOfWeek(anchorDate);
 
-  const currentWeekStart = startOfWeek(currentDate);
-  const currentWeekEnd = endOfWeek(currentDate);
-
-  const firstSessionStartDate = sessions[0]?.date!;
+  const calendarBuffer = 1;
+  const firstSessionStartDate = sortedSessions[0]?.date!;
   const firstSessionStartHour = getHours(firstSessionStartDate);
-  const threeHoursBeforeStartHour = new Date(currentDate);
-  threeHoursBeforeStartHour.setHours(firstSessionStartHour - 3);
-  const lastSessionEndDate = new Date(sessions[sessions.length - 1]?.date!);
+  const startHourMinusBuffer = new Date(anchorDate);
+  startHourMinusBuffer.setHours(firstSessionStartHour - calendarBuffer);
+  const lastSessionEndDate = new Date(
+    sortedSessions[sortedSessions.length - 1]?.date!,
+  );
   const lastSessionEndHour = getHours(lastSessionEndDate);
-  const threeHoursAfterEndHour = new Date(currentDate);
-  threeHoursAfterEndHour.setHours(lastSessionEndHour + 3);
+  const endHourPlusBuffer = new Date(anchorDate);
+  endHourPlusBuffer.setHours(lastSessionEndHour + calendarBuffer);
 
   let scheduleHoursRange: number[] = [];
   for (
-    let i = firstSessionStartHour - 3;
-    i <= lastSessionEndHour + 3 + 1;
+    let i = firstSessionStartHour - calendarBuffer;
+    i <= lastSessionEndHour + calendarBuffer + 1;
     i++
   ) {
     scheduleHoursRange.push(i);
   }
-  console.debug({
-    firstSessionStartHour,
-    lastSessionEndHour,
-    scheduleHoursRange,
-  });
 
-  const thisWeekSessions = sessions.filter((session) =>
-    isWithinInterval(session.date, {
-      start: currentWeekStart,
-      end: currentWeekEnd,
-    }),
-  );
-  console.log({
-    date: sessions[0]!.date,
-    currentWeekStart,
-    currentWeekEnd,
-    thisWeekSessions,
+  type CalendarSession = {
+    title: string;
+    date: Date;
+    duration: number;
+    offsetFromStartHour: number;
+    hourCount: number;
+    schoolHref: string;
+  };
+
+  const todaySessions: {
+    hour: number;
+    sessions: CalendarSession[];
+  }[] = scheduleHoursRange.map((hour) => {
+    const sessionsInHour = sortedSessions
+      .filter(
+        (session) =>
+          isSameDay(session.date, anchorDate) &&
+          session.date.getHours() === hour,
+      )
+      .map((session) => {
+        const offsetFromStartHour =
+          hour - (firstSessionStartHour - calendarBuffer);
+        return {
+          ...session,
+          offsetFromStartHour,
+          hourCount: 1,
+          schoolHref: session.schoolHref,
+        };
+      });
+
+    return {
+      hour,
+      sessions: sessionsInHour,
+    };
   });
 
   const daysOfWeek = eachDayOfInterval({
-    start: currentWeekStart,
-    end: currentWeekEnd,
+    start: anchorWeekStart,
+    end: anchorWeekEnd,
   }).map((date) => ({
+    date,
     dayOfMonth: format(date, "d"),
     dayName: format(date, "EEEEE"),
-    isToday: isToday(date),
+    isAnchorDay: format(date, "d") === format(anchorDate, "d"),
   }));
 
   const firstSession = React.useRef<HTMLButtonElement>(null);
@@ -83,80 +109,122 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
     }
   }, []);
 
+  const calendarHourHeight = 80;
+  const calendarHourGap = 8;
+  const calendarHourWidth = 240;
+
   return (
     <div className="max-w-4xl rounded-md bg-white shadow-md">
       <div className="rounded-t-md bg-active-card text-white">
-        <div className="p-4 pb-0 font-semibold">
-          <span>{format(currentDate, "MMM yyyy")}</span>
+        <div className="flex items-center justify-between">
+          <div className="p-4 pb-0 font-semibold">
+            <span>{format(anchorDate, "MMM yyyy")}</span>
+          </div>
+          <div></div>
+          <div className="flex items-center gap-2 p-4 pb-0">
+            <button
+              className="rounded-full bg-active-card p-1.5 text-white transition-transform hover:bg-white/20 active:scale-95"
+              onClick={() => setAnchorDate(addDays(anchorDate, -7))}
+            >
+              <Icons.chevronLeft />
+            </button>
+            <button
+              className="rounded-full bg-active-card p-1.5 text-white transition-transform hover:bg-white/20 active:scale-95"
+              onClick={() => setAnchorDate(addDays(anchorDate, 7))}
+            >
+              <Icons.chevronRight />
+            </button>
+          </div>
         </div>
         <div className="mt-2 grid grid-cols-7 gap-1 px-1 text-center">
-          {daysOfWeek.map(({ dayOfMonth, dayName, isToday }) => (
-            <div
-              key={dayOfMonth}
-              className={cn(
-                "flex flex-col items-center gap-px rounded-t-md pb-2.5 pt-1 text-left",
-                {
-                  "bg-white text-active-card": isToday,
-                },
-              )}
-            >
-              <span className="font-semibold">{dayOfMonth}</span>
-              <span
-                className={cn("text-blue-300/80", {
-                  "text-gray-800": isToday,
-                })}
-              >
-                {dayName}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div
-        className={cn("mt-4 grid gap-2 overflow-scroll", {
-          "grid-rows-5": thisWeekSessions.length,
-        })}
-      >
-        {scheduleHoursRange.map((hour) =>
-          thisWeekSessions.map((session, index) => {
-            const isSessionThisHour = session.date.getHours() === hour;
-            console.debug({ isSessionThisHour, hour });
+          {daysOfWeek.map(({ date, dayOfMonth, dayName, isAnchorDay }) => {
+            const hasSessions = sortedSessions.some((session) =>
+              isSameDay(session.date, date),
+            );
             return (
-              <div key={index} className="flex h-20 justify-between gap-2">
-                <span className="w-20 px-4 text-right font-medium">
-                  {format(new Date().setHours(hour), "h a")}
+              <div
+                key={dayOfMonth}
+                className={cn(
+                  "relative flex cursor-pointer flex-col items-center gap-px rounded-t-md pb-2.5 pt-1 text-left",
+                  {
+                    "bg-white text-active-card": isAnchorDay,
+                  },
+                )}
+                onClick={() => setAnchorDate(date)}
+              >
+                <span className="font-semibold">{dayOfMonth}</span>
+                {hasSessions && (
+                  <span
+                    className={cn(
+                      "absolute bottom-2 inline-block h-1 w-1 rounded-full bg-white/50",
+                      {
+                        "bg-shamiri-dark-blue/90": isAnchorDay,
+                      },
+                    )}
+                  ></span>
+                )}
+                <span
+                  className={cn("text-blue-300/80", {
+                    "text-gray-800": isAnchorDay,
+                  })}
+                >
+                  {dayName}
                 </span>
-
-                <div className="relative flex-1 border-t border-gray-300/50">
-                  {isSessionThisHour && (
-                    <SchedulingDialog>
-                      <button
-                        ref={firstSession}
-                        className="absolute top-1/2 z-20 ml-[10%] h-full w-fit cursor-pointer rounded-md bg-active-card px-8 py-2 text-white transition-all active:scale-90"
-                      >
-                        <h2 className="font-semibold">{session.title}</h2>
-                        <span className="text-sm">
-                          {format(session.date, "h:mm a")} -{" "}
-                          {format(
-                            addHours(session.date, session.duration),
-                            "h:mm a",
-                          )}
-                        </span>
-                      </button>
-                    </SchedulingDialog>
-                  )}
-                </div>
               </div>
             );
-          }),
-        )}
-        {!thisWeekSessions.length && (
-          <div className="flex justify-center pb-5 pt-2">
-            <span className="text-center text-xl text-gray-500">
-              No sessions today
-            </span>
+          })}
+        </div>
+      </div>
+      <div className={cn("relative mt-4 overflow-scroll overflow-x-hidden")}>
+        {todaySessions.map(({ hour, sessions }) => {
+          const sessionOffsetFromHour = sessions[0]?.offsetFromStartHour ?? 0;
+          return (
+            <div
+              key={hour}
+              className="absolute z-20 ml-[20%] flex gap-2 lg:ml-[12.5%] lg:gap-6"
+              style={{
+                top: `${
+                  sessionOffsetFromHour * (calendarHourHeight + calendarHourGap)
+                }px`,
+              }}
+            >
+              {sessions.map((session, idx) => {
+                return (
+                  <Link
+                    key={session.title}
+                    href={session.schoolHref}
+                    style={{ height: calendarHourHeight * 0.9 }}
+                  >
+                    <div className="h-full w-fit cursor-pointer rounded-md bg-active-card px-2 py-1 pb-2 text-white transition-all active:scale-90 lg:px-4 lg:py-2">
+                      <h2 className="text-sm font-semibold md:text-base">
+                        {session.title}
+                      </h2>
+                      <span className="text-xs md:text-sm">
+                        {format(session.date, "h:mm a")} -{" "}
+                        {format(
+                          addHours(session.date, session.duration),
+                          "h:mm a",
+                        )}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          );
+        })}
+        {scheduleHoursRange.map((hour) => (
+          <div
+            key={hour}
+            className="flex justify-between"
+            style={{ height: calendarHourHeight, gap: calendarHourGap }}
+          >
+            <div className="w-20 px-4 pt-2 text-right font-medium">
+              {format(new Date().setHours(hour), "h a")}
+            </div>
+            <div className="relative flex-1 border-t border-gray-300/50"></div>
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
