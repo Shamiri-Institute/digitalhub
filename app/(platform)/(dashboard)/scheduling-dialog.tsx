@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import * as React from "react";
 
 import {
@@ -14,8 +13,6 @@ import {
 import { format } from "date-fns";
 
 export function SchedulingDialog({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-
   const sessions = [
     {
       title: "Pre session",
