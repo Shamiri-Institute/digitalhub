@@ -104,8 +104,6 @@ export function FellowAttendanceDot({
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
   const onDialogSubmit = async () => {
-    console.debug("onDialogSubmit");
-
     const nextStatus = nextAttendanceStatus(status);
 
     await markAttendance(
@@ -162,6 +160,7 @@ export function FellowAttendanceDot({
       );
     }
   }, [
+    attendanceDateBeyondCutoff,
     fellow.visibleId,
     markAttendance,
     school.visibleId,
@@ -190,7 +189,10 @@ export function FellowAttendanceDot({
             "mx-1 h-5 w-5 rounded-full transition-all active:scale-95",
             dotColor(status),
           )}
-        />
+          data-testid="attendance-dot"
+        >
+          <span className="hidden">{status}</span>
+        </button>
       </AttendanceConfirmationDialog>
     </div>
   );
