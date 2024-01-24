@@ -47,15 +47,29 @@ async function SchoolsList() {
     },
   });
 
+  const activeFellowsCount = (
+    await db.fellowAttendance.groupBy({
+      by: ["fellowId"],
+      where: {
+        supervisorId: supervisor.id,
+        schoolId: supervisor.assignedSchoolId ?? undefined,
+        attended: true,
+      },
+      _sum: {
+        id: true,
+      },
+    })
+  ).length;
+
   return (
     <div>
       <div>
         <h2 className="py-3 text-xl font-semibold">My School</h2>
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
           <SchoolCard
             key={assignedSchool.id}
             school={assignedSchool}
-            fellowsCount={supervisor.fellows.length}
+            fellowsCount={activeFellowsCount}
             sessionTypes={assignedSchool.interventionSessions}
             studentCount={supervisor.assignedSchool._count.students}
             assigned
@@ -67,14 +81,30 @@ async function SchoolsList() {
       <div>
         <h2 className="py-3 text-xl font-semibold">Others</h2>
         <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {otherSchools.map((school) => (
-            <SchoolCard
-              key={school.schoolName}
-              school={school}
-              studentCount={school._count?.students}
-              sessionTypes={school.interventionSessions}
-            />
-          ))}
+          {otherSchools.map(async (school) => {
+            const activeFellowsCount = (
+              await db.fellowAttendance.groupBy({
+                by: ["fellowId"],
+                where: {
+                  supervisorId: supervisor.id,
+                  schoolId: school.id,
+                  attended: true,
+                },
+                _sum: {
+                  id: true,
+                },
+              })
+            ).length;
+            return (
+              <SchoolCard
+                key={school.schoolName}
+                school={school}
+                studentCount={school._count?.students}
+                fellowsCount={activeFellowsCount}
+                sessionTypes={school.interventionSessions}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
