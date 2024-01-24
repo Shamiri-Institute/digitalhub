@@ -11,13 +11,11 @@ import type {
   SchoolFindUniqueOutput,
 } from "#/types/prisma";
 
-
 const dotColor = (status: AttendanceStatus) => ({
   "bg-[#85A070]": status === "present",
   "bg-[#DE5E68]": status === "absent",
   "bg-zinc-300": status === "not-marked",
 });
-
 
 export function FellowAttendanceDot({
   session,
@@ -83,7 +81,7 @@ export function FellowAttendanceDot({
         title: "Something went wrong",
       });
     }
-  }
+  };
 
   return (
     <div className="flex flex-col items-center gap-1.5">
