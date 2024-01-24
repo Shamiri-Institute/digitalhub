@@ -1083,22 +1083,35 @@ export async function AcceptRefferedClinicalCase(
   caseId: string,
 ) {
   try {
+    const caseHistory = await db.clinicalCaseTransferTrail.findFirst({
+      where: {
+        caseId: caseId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const caseHistoryId = caseHistory?.id;
+
     const currentcase = await db.clinicalScreeningInfo.update({
       where: {
         id: caseId,
       },
+
       data: {
         currentSupervisorId: currentSupervisorId,
         referredToSupervisorId: null,
         acceptCase: true,
+        referralStatus: null,
         caseTransferTrail: {
-          //TODO: ADJUST to correct data
-          create: {
-            from: currentSupervisorId,
-            fromRole: "Supervisor",
-            to: referredToSupervisorId ?? "",
-            toRole: "Supervisor",
-            date: new Date(),
+          update: {
+            where: {
+              id: caseHistoryId,
+            },
+            data: {
+              referralStatus: "Approved",
+            },
           },
         },
       },
@@ -1115,6 +1128,17 @@ export async function AcceptRefferedClinicalCase(
 
 export async function RejectRefferedClinicalCase(caseId: string) {
   try {
+    const caseHistory = await db.clinicalCaseTransferTrail.findFirst({
+      where: {
+        caseId: caseId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const caseHistoryId = caseHistory?.id;
+
     const currentcase = await db.clinicalScreeningInfo.update({
       where: {
         id: caseId,
@@ -1122,6 +1146,17 @@ export async function RejectRefferedClinicalCase(caseId: string) {
       data: {
         referredToSupervisorId: null,
         acceptCase: false,
+        referralStatus: "Declined",
+        caseTransferTrail: {
+          update: {
+            where: {
+              id: caseHistoryId,
+            },
+            data: {
+              referralStatus: "Declined",
+            },
+          },
+        },
       },
     });
 
@@ -1199,14 +1234,15 @@ export async function referClinicalCaseSupervisor(data: {
         referredToSpecified: data.referredToPerson ?? data.externalCare,
         referralNotes: data.referralNotes,
         referredToSupervisorId: data.referredToPerson ?? null,
+        referralStatus: "Pending",
         caseTransferTrail: {
           create: {
             from: data.referredFromSpecified ?? "",
             fromRole: data.referredFrom,
-            // to: data.referredToPerson,
             to: data.supervisorName,
             toRole: data.referredTo,
             date: new Date(),
+            referralStatus: "Pending",
           },
         },
         acceptCase: false,

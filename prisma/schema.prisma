@@ -793,6 +793,12 @@ enum riskStatusOptions {
   High
 }
 
+enum referralStatusOptions {
+  Approved
+  Declined
+  Pending
+}
+
 model ClinicalScreeningInfo {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
@@ -809,7 +815,9 @@ model ClinicalScreeningInfo {
   referredToSupervisorId String?     @map("referredTo_supervisor_id") @db.VarChar(255)
   referredToSupervisor   Supervisor? @relation("referredtocases", fields: [referredToSupervisorId], references: [id])
 
-  acceptCase                            Boolean                     @default(false) @map("accept_case")
+  acceptCase     Boolean                @default(false) @map("accept_case")
+  referralStatus referralStatusOptions? @map("referral_status")
+
   sessions                              ClinicalSessionAttendance[]
   generalPresentingIssues               String?                     @map("general_presenting_issues") @db.VarChar(255)
   generalPresentingIssuesOtherSpecified String?                     @map("general_presenting_issues_other_specified") @db.Text()
@@ -833,18 +841,19 @@ model ClinicalScreeningInfo {
 }
 
 model ClinicalCaseTransferTrail {
-  id        String                 @id @default(cuid())
-  createdAt DateTime               @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt DateTime               @updatedAt @map("updated_at")
-  date      DateTime               @default(now()) @map("date") @db.Timestamptz()
-  from      String                 @map("from") @db.VarChar(255)
-  fromRole  String                 @map("from_role") @db.VarChar(255)
-  to        String                 @map("to") @db.VarChar(255)
-  toRole    String                 @map("to_role") @db.VarChar(255)
-  caseId    String
-  case      ClinicalScreeningInfo? @relation(fields: [caseId], references: [id])
+  id             String                 @id @default(cuid())
+  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime               @updatedAt @map("updated_at")
+  date           DateTime               @default(now()) @map("date") @db.Timestamptz()
+  from           String                 @map("from") @db.VarChar(255)
+  fromRole       String                 @map("from_role") @db.VarChar(255)
+  to             String                 @map("to") @db.VarChar(255)
+  toRole         String                 @map("to_role") @db.VarChar(255)
+  caseId         String
+  case           ClinicalScreeningInfo? @relation(fields: [caseId], references: [id])
+  referralStatus referralStatusOptions? @map("referral_status")
 
-  @@map("clinical_case_transfer_history")
+  @@map("clinical_case_transfer_trail")
 }
 
 model ClinicalExpertCaseNotes {
