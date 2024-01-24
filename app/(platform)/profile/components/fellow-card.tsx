@@ -54,6 +54,13 @@ export default function FellowCard({
           <p className="text-xs font-medium text-muted-foreground lg:text-sm">
             Shamiri ID: {fellow.visibleId}
           </p>
+          {(fellow.droppedOutAt || fellow.droppedOut) && (
+            <div>
+              <span className="inline-flex items-center rounded-md bg-zinc-50 px-1.5 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-inset ring-zinc-500/10">
+                Dropped Out
+              </span>
+            </div>
+          )}
         </div>
         <div className={cn("flex items-start justify-end")}>
           <FellowCardMenu fellow={fellow}>
