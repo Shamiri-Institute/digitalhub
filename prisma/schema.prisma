@@ -528,48 +528,49 @@ model Supervisor {
 }
 
 model School {
-  id                          String                @id @db.VarChar(255)
-  createdAt                   DateTime              @default(now()) @map("created_at")
-  updatedAt                   DateTime              @updatedAt @map("updated_at")
-  archivedAt                  DateTime?             @map("archived_at")
-  schoolName                  String                @map("school_name") @db.VarChar(255) // e.g. Garden Estate
-  schoolType                  String?               @map("school_type") @db.VarChar(255)
-  schoolEmail                 String?               @map("school_email") @db.VarChar(255)
-  schoolCounty                String?               @map("school_county") @db.VarChar(255) // e.g. Makueni
-  schoolDemographics          String?               @map("school_demographics") @db.VarChar(255) // e.g. Mixed
-  visibleId                   String                @unique @map("visible_id") @db.VarChar(100) // e.g. T2PS_School_6
-  implementerId               String?               @map("implementer_id") @db.VarChar(255)
-  implementer                 Implementer?          @relation(fields: [implementerId], references: [id])
-  hubId                       String?               @map("hub_id") @db.VarChar(255)
-  hub                         Hub?                  @relation(fields: [hubId], references: [id])
-  pointPersonName             String?               @map("point_person_name") @db.VarChar(255)
-  pointPersonId               String?               @map("point_person_id") @db.VarChar(255)
-  pointPersonPhone            String?               @map("point_person_phone") @db.VarChar(255)
-  pointPersonEmail            String?               @map("point_person_email") @db.VarChar(255)
-  numbersExpected             Int?                  @map("numbers_expected") // e.g. 700
-  boardingDay                 String?               @map("boarding_day") @db.VarChar(255) // e.g. Day and boarding
-  longitude                   Float?                @map("longitude")
-  latitude                    Float?                @map("latitude")
-  droppedOut                  Boolean?              @map("dropped_out")
-  dropoutReason               String?               @map("dropout_reason")
-  preSessionDate              DateTime?             @map("pre_session_date")
-  session1Date                DateTime?             @map("session_1_date")
-  session2Date                DateTime?             @map("session_2_date")
-  session3Date                DateTime?             @map("session_3_date")
-  session4Date                DateTime?             @map("session_4_date")
-  clinicalFollowup1Date       DateTime?             @map("clinical_followup_1_date")
-  clinicalFollowup2Date       DateTime?             @map("clinical_followup_2_date")
-  clinicalFollowup3Date       DateTime?             @map("clinical_followup_3_date")
-  clinicalFollowup4Date       DateTime?             @map("clinical_followup_4_date")
-  clinicalFollowup5Date       DateTime?             @map("clinical_followup_5_date")
-  clinicalFollowup6Date       DateTime?             @map("clinical_followup_6_date")
-  clinicalFollowup7Date       DateTime?             @map("clinical_followup_7_date")
-  clinicalFollowup8Date       DateTime?             @map("clinical_followup_8_date")
-  dataCollectionFollowup1Date DateTime?             @map("data_collection_followup_1_date")
+  id                          String                     @id @db.VarChar(255)
+  createdAt                   DateTime                   @default(now()) @map("created_at")
+  updatedAt                   DateTime                   @updatedAt @map("updated_at")
+  archivedAt                  DateTime?                  @map("archived_at")
+  schoolName                  String                     @map("school_name") @db.VarChar(255) // e.g. Garden Estate
+  schoolType                  String?                    @map("school_type") @db.VarChar(255)
+  schoolEmail                 String?                    @map("school_email") @db.VarChar(255)
+  schoolCounty                String?                    @map("school_county") @db.VarChar(255) // e.g. Makueni
+  schoolDemographics          String?                    @map("school_demographics") @db.VarChar(255) // e.g. Mixed
+  visibleId                   String                     @unique @map("visible_id") @db.VarChar(100) // e.g. T2PS_School_6
+  implementerId               String?                    @map("implementer_id") @db.VarChar(255)
+  implementer                 Implementer?               @relation(fields: [implementerId], references: [id])
+  hubId                       String?                    @map("hub_id") @db.VarChar(255)
+  hub                         Hub?                       @relation(fields: [hubId], references: [id])
+  pointPersonName             String?                    @map("point_person_name") @db.VarChar(255)
+  pointPersonId               String?                    @map("point_person_id") @db.VarChar(255)
+  pointPersonPhone            String?                    @map("point_person_phone") @db.VarChar(255)
+  pointPersonEmail            String?                    @map("point_person_email") @db.VarChar(255)
+  numbersExpected             Int?                       @map("numbers_expected") // e.g. 700
+  boardingDay                 String?                    @map("boarding_day") @db.VarChar(255) // e.g. Day and boarding
+  longitude                   Float?                     @map("longitude")
+  latitude                    Float?                     @map("latitude")
+  droppedOut                  Boolean?                   @map("dropped_out")
+  dropoutReason               String?                    @map("dropout_reason")
+  preSessionDate              DateTime?                  @map("pre_session_date")
+  session1Date                DateTime?                  @map("session_1_date")
+  session2Date                DateTime?                  @map("session_2_date")
+  session3Date                DateTime?                  @map("session_3_date")
+  session4Date                DateTime?                  @map("session_4_date")
+  clinicalFollowup1Date       DateTime?                  @map("clinical_followup_1_date")
+  clinicalFollowup2Date       DateTime?                  @map("clinical_followup_2_date")
+  clinicalFollowup3Date       DateTime?                  @map("clinical_followup_3_date")
+  clinicalFollowup4Date       DateTime?                  @map("clinical_followup_4_date")
+  clinicalFollowup5Date       DateTime?                  @map("clinical_followup_5_date")
+  clinicalFollowup6Date       DateTime?                  @map("clinical_followup_6_date")
+  clinicalFollowup7Date       DateTime?                  @map("clinical_followup_7_date")
+  clinicalFollowup8Date       DateTime?                  @map("clinical_followup_8_date")
+  dataCollectionFollowup1Date DateTime?                  @map("data_collection_followup_1_date")
   students                    Student[]
   fellowAttendances           FellowAttendance[]
   interventionSessions        InterventionSession[]
   supervisors                 Supervisor[]
+  interventionGroupSession    InterventionGroupSession[]
 
   @@map("schools")
 }
@@ -691,6 +692,8 @@ model InterventionGroupSession {
   leader            Fellow?             @relation(fields: [leaderId], references: [id])
   sessionId         String              @map("session_id") @db.VarChar(255)
   session           InterventionSession @relation(fields: [sessionId], references: [id])
+  schoolId          String?             @map("school_id") // make this mandatory later on
+  school            School?             @relation(fields: [schoolId], references: [id])
   fellowAttendances FellowAttendance[]
   repaymentRequests RepaymentRequest[]
 
