@@ -88,8 +88,6 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
     };
   });
 
-  console.log({ todaySessions });
-
   const daysOfWeek = eachDayOfInterval({
     start: anchorWeekStart,
     end: anchorWeekEnd,
