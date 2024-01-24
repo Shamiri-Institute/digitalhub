@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -49,13 +50,14 @@ const FormSchema = z
 
 export function FellowDropoutDialog({
   fellow,
-  school,
+  revalidationPath,
   children,
 }: {
   fellow: Prisma.FellowGetPayload<{}>;
-  school: Prisma.SchoolGetPayload<{}>;
+  revalidationPath: string;
   children: React.ReactNode;
 }) {
+  const [open, setDialogOpen] = useState<boolean>(false);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
   });
@@ -77,8 +79,8 @@ export function FellowDropoutDialog({
 
     const response = await dropoutFellowWithReason(
       fellow.visibleId,
-      school.visibleId,
       reason,
+      revalidationPath,
     );
 
     if (response.error) {
@@ -93,12 +95,11 @@ export function FellowDropoutDialog({
     toast({
       title: `Dropped out ${fellow.fellowName}`,
     });
-
-    return;
+    setDialogOpen(false);
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="gap-0 p-0">
         <Form {...form}>
