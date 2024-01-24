@@ -1,8 +1,7 @@
-import Link from "next/link";
-
 import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
+import { LinkOrDiv } from "#/components/ui/common";
 import { db } from "#/lib/db";
 import { addWeeks } from "date-fns";
 import { SchoolReportCard } from "./school-report-card";
@@ -91,7 +90,15 @@ let referenceSessionItems: Omit<SessionItem, "id">[] = [
   },
 ];
 
-export default async function SchoolReport() {
+export default async function Page() {
+  return (
+    <SchoolReport>
+      <IntroHeader href="/profile" />
+    </SchoolReport>
+  );
+}
+
+export async function SchoolReport({ children }: React.PropsWithChildren<{}>) {
   const supervisor = await currentSupervisor();
   if (!supervisor) {
     return <InvalidPersonnelRole role="supervisor" />;
@@ -151,7 +158,7 @@ export default async function SchoolReport() {
 
   return (
     <div>
-      <IntroHeader />
+      {children}
       {interventionSessions.map(({ session, defaultSessionValues }) => (
         <SchoolReportCard
           key={session?.sessionName ?? defaultSessionValues.sessionName}
@@ -177,7 +184,7 @@ export default async function SchoolReport() {
   );
 }
 
-async function IntroHeader() {
+async function IntroHeader({ href }: { href: string }) {
   const supervisor = await currentSupervisor();
   if (!supervisor) {
     return <InvalidPersonnelRole role="supervisor" />;
@@ -187,15 +194,12 @@ async function IntroHeader() {
   return (
     <div>
       <div className="mt-2 flex items-center justify-between ">
-        <Link href="/profile">
+        <LinkOrDiv href={href}>
           <button>
             <Icons.chevronLeft className="h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
           </button>
-        </Link>
+        </LinkOrDiv>
         <h3 className="text-xl font-bold text-brand">Session Dates</h3>
-        {/* <button>
-                    <Icons.add className='h-6 w-6 align-baseline xl:h-7 xl:w-7 text-shamiri-blue' />
-                </button> */}
         <div></div>
       </div>
       <h4 className="text-brand-light-gray text-center text-xs">

@@ -55,6 +55,7 @@ export default async function ReportDetails({
         <SessionNavigationHeader
           schoolName={supervisor.assignedSchool.schoolName}
           sessionName={sessionName}
+          href="/profile"
         />
         <div className="py-6 text-center text-sm">
           {sessionName} has not yet been created.
@@ -98,6 +99,7 @@ export default async function ReportDetails({
       <SessionNavigationHeader
         schoolName={supervisor.assignedSchool.schoolName}
         sessionName={session.sessionName}
+        href="/profile"
       />
       <SessionRater
         revalidatePath={revalidatePath}
