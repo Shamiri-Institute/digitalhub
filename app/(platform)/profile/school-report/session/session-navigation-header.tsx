@@ -25,10 +25,12 @@ export function SessionNavigationHeader({
   sessionName,
   schoolName,
   href,
+  shooldId,
 }: {
   sessionName: string;
   schoolName: string;
   href: string;
+  shooldId?: string;
 }) {
   return (
     <div>
@@ -59,7 +61,11 @@ export function SessionNavigationHeader({
                       key={session.sessionType}
                       className="relative flex justify-between pr-10"
                       onSelect={() => {
-                        window.location.href = `/profile/school-report/session?type=${session.sessionType}`;
+                        if (href.includes("profile")) {
+                          window.location.href = `${href}/school-report/session?type=${session.sessionType}`;
+                        } else {
+                          window.location.href = `${href}/session-report/${shooldId}?type=${session.sessionType}`;
+                        }
                       }}
                     >
                       {session.sessionLabel}
