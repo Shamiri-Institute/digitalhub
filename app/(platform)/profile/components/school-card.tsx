@@ -11,6 +11,7 @@ import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { cn, doesSessionExist } from "#/lib/utils";
 
+import SchoolCardMenu from "#/app/(platform)/profile/components/assigned-school-card-menu";
 import { Icons } from "#/components/icons";
 import { Prisma, School } from "@prisma/client";
 
@@ -98,6 +99,13 @@ export function SchoolCardProfile({
             })}
           >
             {school.schoolName}
+            {school.droppedOut && (
+              <div>
+                <span className="inline-flex items-center rounded-md bg-zinc-50 px-1.5 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-inset ring-zinc-500/10">
+                  Dropped Out
+                </span>
+              </div>
+            )}
           </h3>
         </Link>
         <div
@@ -131,13 +139,15 @@ export function SchoolCardProfile({
               Students
             </p>
           </Link>
-          {assigned && (
-            <Link href={`/profile/myschool`}>
-              <button className="mt-1">
-                <Icons.edit className="text-shamiri-light-blue" />
+          <div className={cn("flex items-start justify-end")}>
+            <SchoolCardMenu school={school}>
+              <button className="flex flex-col gap-[1px]">
+                <div>
+                  <Icons.moreVertical className="h-5 w-5 text-white" />
+                </div>
               </button>
-            </Link>
-          )}
+            </SchoolCardMenu>
+          </div>
         </div>
       </div>
 
@@ -178,26 +188,6 @@ export function SchoolCardProfile({
         })}
       />
       <div className="relative items-center justify-between">
-        {assigned && (
-          <div className="absolute left-5 flex gap-5">
-            {/* <button>
-              <Icons.calendarDateAppointmentTime
-                className={cn("h-7 w-7", {
-                  "text-shamiri-light-blue": assigned,
-                })}
-              />
-            </button> */}
-            <Link href={`/profile/school-report`}>
-              <button>
-                <Icons.paperFileText
-                  className={cn("h-7 w-7", {
-                    "text-shamiri-light-blue": assigned,
-                  })}
-                />
-              </button>
-            </Link>
-          </div>
-        )}
         <Accordion type="single" collapsible>
           <AccordionItem value="item-1">
             <AccordionTrigger

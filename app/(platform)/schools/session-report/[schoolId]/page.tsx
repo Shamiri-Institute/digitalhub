@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 
+import { SessionNavigationHeader } from "#/app/(platform)/profile/school-report/session/session-navigation-header";
+import { SessionNotes } from "#/app/(platform)/profile/school-report/session/session-notes";
+import { SessionRater } from "#/app/(platform)/profile/school-report/session/session-rater";
+import { WeeklyReportForm } from "#/app/(platform)/profile/school-report/session/weekly-report-form";
 import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
-import { SessionNavigationHeader } from "./session-navigation-header";
-import { SessionNotes } from "./session-notes";
-import { SessionRater } from "./session-rater";
-import { WeeklyReportForm } from "./weekly-report-form";
 
 const sessionTypeToDisplayName: {
   [key: string]: string;
@@ -20,10 +20,13 @@ const sessionTypeToDisplayName: {
 
 export default async function ReportDetails({
   searchParams,
+  params,
 }: {
   searchParams: { type: string };
+  params: { schoolId: string };
 }) {
   const { type: sessionType } = searchParams;
+  const { schoolId } = params;
 
   if (!sessionType) {
     notFound();
@@ -37,15 +40,30 @@ export default async function ReportDetails({
   const session = await db.interventionSession.findUnique({
     where: {
       interventionBySchoolIdAndSessionType: {
-        schoolId: supervisor.assignedSchoolId,
+        schoolId,
         sessionType,
       },
     },
     include: {
       sessionRatings: true,
       sessionNotes: true,
+
+      school: {
+        select: {
+          schoolName: true,
+          supervisors: {
+            where: {
+              assignedSchoolId: schoolId,
+            },
+          },
+        },
+      },
     },
   });
+
+  const schoolNotAssigned = supervisor.assignedSchoolId !== schoolId;
+  const pointSupervisor = session?.school?.supervisors[0]!;
+  const schoolName = session?.school?.schoolName ?? "";
 
   if (!session) {
     const sessionName = sessionTypeToDisplayName[sessionType] ?? "Unknown";
@@ -53,9 +71,10 @@ export default async function ReportDetails({
     return (
       <div>
         <SessionNavigationHeader
-          schoolName={supervisor.assignedSchool.schoolName}
+          schoolName={schoolName}
           sessionName={sessionName}
-          href="/profile"
+          href="/schools"
+          schoolId={schoolId}
         />
         <div className="py-6 text-center text-sm">
           {sessionName} has not yet been created.
@@ -92,14 +111,15 @@ export default async function ReportDetails({
       include: { supervisor: true },
     });
 
-  const revalidatePath = `/profile/school-report/session?type=${sessionType}`;
+  const revalidatePath = `/schools/session-report/${schoolId}?type=${sessionType}`;
 
   return (
     <div>
       <SessionNavigationHeader
-        schoolName={supervisor.assignedSchool.schoolName}
+        schoolName={session?.school?.schoolName ?? ""}
         sessionName={session.sessionName}
-        href="/profile"
+        href="/schools"
+        schoolId={schoolId}
       />
       <SessionRater
         revalidatePath={revalidatePath}
@@ -110,13 +130,15 @@ export default async function ReportDetails({
           adminSupport: supervisorSessionRating?.adminSupportRating ?? 0,
           workload: supervisorSessionRating?.workloadRating ?? 0,
         }}
+        schoolNotAssigned={schoolNotAssigned}
       />
       <WeeklyReportForm
         revalidatePath={revalidatePath}
         sessionId={session.id}
         supervisorId={supervisor.id}
-        pointSupervisor={supervisor}
+        pointSupervisor={pointSupervisor}
         notes={pointSupervisorSessionNotes}
+        schoolNotAssigned={schoolNotAssigned}
       />
       <SessionNotes
         revalidatePath={revalidatePath}
