@@ -77,7 +77,7 @@ export default function SchoolCardMenu({
             </SchoolDropoutDialog>
           ) : (
             <button onClick={handleSchoolDropOut}>
-              <div className="cursor-pointer">
+              <div className="flex cursor-pointer">
                 {undoingSchoolDrop && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
