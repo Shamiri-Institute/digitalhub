@@ -264,6 +264,7 @@ function FellowCard({
             sessionItem={sessionItem}
             fellow={fellow}
             school={school}
+            supervisor={supervisor}
             recordTime={new Date()}
           />
         ))}

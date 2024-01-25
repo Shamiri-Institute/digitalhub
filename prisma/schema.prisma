@@ -632,20 +632,21 @@ model HubCoordinator {
 
 /// Intervention sessions represent the school-wide intervention event happening
 model InterventionSession {
-  id                   String                      @id @db.VarChar(255)
-  createdAt            DateTime                    @default(now()) @map("created_at")
-  updatedAt            DateTime                    @updatedAt @map("updated_at")
-  archivedAt           DateTime?                   @map("archived_at")
-  sessionDate          DateTime                    @map("session_date")
-  sessionName          String                      @map("session_name") @db.VarChar(255)
-  sessionType          String                      @map("session_type") @db.VarChar(255) // e.g. s0, s1, s2, s3, s4, fu1, fu2, ..., fu8
-  schoolId             String                      @map("school_id") @db.VarChar(255)
-  school               School                      @relation(fields: [schoolId], references: [id])
-  occurred             Boolean
-  yearOfImplementation Int                         @map("year_of_implementation")
-  groupSessions        InterventionGroupSession[]
-  sessionRatings       InterventionSessionRating[]
-  sessionNotes         InterventionSessionNote[]
+  id                     String                      @id @db.VarChar(255)
+  createdAt              DateTime                    @default(now()) @map("created_at")
+  updatedAt              DateTime                    @updatedAt @map("updated_at")
+  archivedAt             DateTime?                   @map("archived_at")
+  sessionDate            DateTime                    @map("session_date")
+  sessionName            String                      @map("session_name") @db.VarChar(255)
+  sessionType            String                      @map("session_type") @db.VarChar(255) // e.g. s0, s1, s2, s3, s4, fu1, fu2, ..., fu8
+  schoolId               String                      @map("school_id") @db.VarChar(255)
+  school                 School                      @relation(fields: [schoolId], references: [id])
+  occurred               Boolean
+  yearOfImplementation   Int                         @map("year_of_implementation")
+  groupSessions          InterventionGroupSession[]
+  sessionRatings         InterventionSessionRating[]
+  sessionNotes           InterventionSessionNote[]
+  delayedPaymentRequests DelayedPaymentRequest[]
 
   @@unique([schoolId, sessionType], name: "interventionBySchoolIdAndSessionType")
   @@map("intervention_sessions")
@@ -917,15 +918,17 @@ model WeeklyFellowRatings {
 }
 
 model DelayedPaymentRequest {
-  id                 String           @id @default(cuid())
-  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
-  fellowId           String           @map("fellow_id") @db.VarChar(255)
-  fellow             Fellow           @relation(fields: [fellowId], references: [id])
-  supervisorId       String           @map("supervisor_id") @db.VarChar(255)
-  supervisor         Supervisor       @relation(fields: [supervisorId], references: [id])
-  fellowAttendanceId Int              @map("fellow_attendance_id")
-  fellowAttendance   FellowAttendance @relation(fields: [fellowAttendanceId], references: [id])
+  id                    String              @id @default(cuid())
+  createdAt             DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt             DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
+  fellowId              String              @map("fellow_id") @db.VarChar(255)
+  fellow                Fellow              @relation(fields: [fellowId], references: [id])
+  supervisorId          String              @map("supervisor_id") @db.VarChar(255)
+  supervisor            Supervisor          @relation(fields: [supervisorId], references: [id])
+  interventionSessionId String              @map("intervention_session_id") @db.VarChar(255)
+  interventionSession   InterventionSession @relation(fields: [interventionSessionId], references: [id])
+  fellowAttendanceId    Int                 @map("fellow_attendance_id")
+  fellowAttendance      FellowAttendance    @relation(fields: [fellowAttendanceId], references: [id])
 
   @@map("delayed_payment_requests")
 }

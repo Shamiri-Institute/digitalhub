@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { addDays, isBefore, setHours, setMinutes, startOfWeek } from "date-fns";
 import * as React from "react";
 
+import { submitDelayedPaymentRequest } from "#/app/(platform)/schools/[visibleId]/actions";
 import { AttendanceConfirmationDialog } from "#/app/(platform)/schools/[visibleId]/attendance-confirmation-dialog";
 import { markFellowAttendance } from "#/app/actions";
 import { useToast } from "#/components/ui/use-toast";
@@ -15,6 +16,7 @@ export function FellowAttendanceDot({
   sessionItem,
   fellow,
   school,
+  supervisor,
   recordTime,
 }: {
   sessionItem: {
@@ -24,6 +26,7 @@ export function FellowAttendanceDot({
   };
   fellow: FellowWithAttendance;
   school: Prisma.SchoolGetPayload<{}>;
+  supervisor: Prisma.SupervisorGetPayload<{}>;
   recordTime: Date;
 }) {
   const { toast } = useToast();
@@ -43,7 +46,7 @@ export function FellowAttendanceDot({
       sessionLabel: SessionLabel,
       fellowVisibleId: string,
       schoolVisibleId: string,
-    ): Promise<void> => {
+    ): Promise<{ fellowAttendanceId: number } | undefined> => {
       const response = await markFellowAttendance(
         nextStatus,
         sessionLabel,
@@ -56,7 +59,7 @@ export function FellowAttendanceDot({
           title: response?.error,
         });
         return;
-      } else if (response) {
+      } else if (response.attendance) {
         toast({
           description: (
             <div className="flex gap-1">
@@ -85,6 +88,8 @@ export function FellowAttendanceDot({
         });
 
         setStatus(nextStatus);
+
+        return { fellowAttendanceId: response.attendance.id };
       } else {
         toast({
           variant: "destructive",
@@ -100,12 +105,27 @@ export function FellowAttendanceDot({
   const onDialogSubmit = async () => {
     const nextStatus = nextAttendanceStatus(status);
 
-    await markAttendance(
+    const response = await markAttendance(
       nextStatus,
       sessionItem.label,
       fellow.visibleId,
       school.visibleId,
     );
+
+    if (!response || !response?.fellowAttendanceId) {
+      throw Error(`No fellowAttendanceId returned from markAttendance`);
+    }
+
+    if (!sessionItem.session) {
+      throw Error(`No session found for sessionItem`);
+    }
+
+    await submitDelayedPaymentRequest({
+      fellowId: fellow.visibleId,
+      supervisorId: supervisor.id,
+      interventionSessionId: sessionItem.session?.id,
+      attendanceId: response.fellowAttendanceId,
+    });
 
     setDialogOpen(false);
   };

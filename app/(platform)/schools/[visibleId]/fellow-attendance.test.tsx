@@ -1,3 +1,4 @@
+import { Supervisor } from "@prisma/client";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { addDays, setHours, setMinutes } from "date-fns";
 import { expect, test, vi } from "vitest";
@@ -7,7 +8,13 @@ import { AttendanceStatus, SessionLabel } from "#/types/app";
 
 vi.mock("#/app/actions", () => ({
   markFellowAttendance: async () => {
-    return { success: true };
+    return { attendance: { id: 1 } };
+  },
+}));
+
+vi.mock("#/app/(platform)/schools/[visibleId]/actions", () => ({
+  submitDelayedPaymentRequest: async () => {
+    return { id: 1 };
   },
 }));
 
@@ -18,7 +25,7 @@ test("should correctly identify if a session date is within the allowed period f
   // For a session that occurred the previous day
   const sessionDate = addDays(recordTime, -1);
 
-  const props = generateProps({
+  const props = generateFellowAttendanceDotProps({
     status: "not-marked",
     label: "S3",
     sessionDate,
@@ -45,7 +52,7 @@ test("should not allow marking attendance after the cutoff date without delayed 
   // For a session that occurred the previous day
   const sessionDate = addDays(recordTime, -1);
 
-  const props = generateProps({
+  const props = generateFellowAttendanceDotProps({
     status: "not-marked",
     label: "S1",
     sessionDate,
@@ -72,7 +79,7 @@ test("should not allow marking attendance after the cutoff date without delayed 
   unmount();
 });
 
-function generateProps({
+function generateFellowAttendanceDotProps({
   status,
   label,
   sessionDate,
@@ -164,6 +171,9 @@ function generateProps({
       clinicalFollowup8Date: null,
       dataCollectionFollowup1Date: null,
     },
+    supervisor: {
+      id: "sup_01hmttr0h8ej6aq0hszvtwtz40",
+    } as Supervisor,
     recordTime,
   };
 }
