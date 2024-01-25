@@ -19,11 +19,11 @@ const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
 type SchoolCardType = {
   id: number;
   sessionName:
-  | "Presession"
-  | "Session 1"
-  | "Session 2"
-  | "Session 3"
-  | "Session 4";
+    | "Presession"
+    | "Session 1"
+    | "Session 2"
+    | "Session 3"
+    | "Session 4";
   uiValue: "Pre" | "S1" | "S2" | "S3" | "S4";
 };
 

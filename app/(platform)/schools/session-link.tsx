@@ -9,7 +9,6 @@ export default function SessionLink({
   assigned: boolean | undefined;
   schoolID: string;
 }) {
-
   return (
     <Link href={`/schools/session-report/${schoolID}?type=s0`}>
       <Icons.paperFileText
