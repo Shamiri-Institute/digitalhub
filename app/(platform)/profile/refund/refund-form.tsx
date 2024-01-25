@@ -1,5 +1,14 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { School } from "@prisma/client";
+import { PopoverTrigger } from "@radix-ui/react-popover";
+import { format } from "date-fns";
+import { isValidPhoneNumber } from "libphonenumber-js";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import {
   getSchoolsByHubId,
   submitTransportReimbursementRequest,
@@ -20,15 +29,15 @@ import {
 } from "#/components/ui/select";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { School } from "@prisma/client";
-import { PopoverTrigger } from "@radix-ui/react-popover";
-import { format } from "date-fns";
-import { isValidPhoneNumber } from "libphonenumber-js";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+
+const MAX_FILE_SIZE = 2000000;
+const ACCEPTED_FILE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "application/pdf",
+  "image/heic",
+];
 
 export const FormSchema = z.object({
   receiptDate: z
@@ -58,9 +67,28 @@ export const FormSchema = z.object({
   amount: z.string({
     required_error: "Please enter the total amount used.",
   }),
-  receiptUrl: z.string({
-    required_error: "Please enter the receipt url.",
-  }),
+  receiptFile: z
+    .any({
+      required_error: "Please upload a receipt file.",
+    })
+    .refine(
+      (file) =>
+        file.length == 1
+          ? ACCEPTED_FILE_TYPES.includes(file?.[0]?.type)
+            ? true
+            : false
+          : true,
+      "Invalid file. choose either JPEG or PNG image",
+    )
+    .refine(
+      (file) =>
+        file.length == 1
+          ? file[0]?.size <= MAX_FILE_SIZE
+            ? true
+            : false
+          : true,
+      "Max file size allowed is 2MB.",
+    ),
   school: z.string({
     required_error: "Please select a school.",
   }),
@@ -88,12 +116,10 @@ export function RefundForm({
       amount: "",
       mpesaName: "",
       mpesaNumber: "",
-      receiptUrl: "",
+      receiptFile: undefined,
       school: "",
     },
   });
-
-  const router = useRouter();
 
   useEffect(() => {
     const fetchHubSchools = async () => {
@@ -107,6 +133,7 @@ export function RefundForm({
   }, [hubId]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
+    console.log({ data });
     await submitTransportReimbursementRequest({
       supervisorId,
       hubId,
@@ -394,22 +421,17 @@ export function RefundForm({
               />
             </div>
 
-            <div>
-              <FormField
-                control={form.control}
-                name="receiptUrl"
-                render={({ field }) => (
-                  <div className="mt-3 grid w-full gap-1.5">
-                    <Label htmlFor="receiptUrl">Receipt Url</Label>
-                    <Input
-                      id="receiptUrl"
-                      className="mt-1.5 resize-none bg-card"
-                      placeholder="Paste G-Drive link here"
-                      data-1p-ignore="true"
-                      {...field}
-                    />
-                  </div>
-                )}
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="receiptFile" className="text-base font-medium">
+                Upload receipt
+              </Label>
+              <Input
+                id="receiptFile"
+                type="file"
+                {...form.register("receiptFile", {
+                  required: "Please upload the receipt",
+                })}
+                className="h-10 py-2"
               />
             </div>
 
