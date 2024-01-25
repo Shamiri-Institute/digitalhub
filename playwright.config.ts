@@ -8,7 +8,7 @@ const showServerLogs = process.env.LOG ? "pipe" : undefined;
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: "./tests",
+  testDir: "./tests/e2e",
   webServer: {
     command: "npm run dev",
     port: 3000,

@@ -2,9 +2,6 @@ name: Vitest unit tests
 
 on:
   push:
-    branches: ["*"]
-  pull_request:
-    branches: [main]
 
 jobs:
   unit-tests:
