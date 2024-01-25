@@ -1,7 +1,7 @@
 import { Supervisor } from "@prisma/client";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { addDays, setHours, setMinutes } from "date-fns";
-import { expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import { FellowAttendanceDot } from "#/app/(platform)/schools/[visibleId]/fellow-attendance-dot";
 import { AttendanceStatus, SessionLabel } from "#/types/app";
@@ -18,65 +18,67 @@ vi.mock("#/app/(platform)/schools/[visibleId]/actions", () => ({
   },
 }));
 
-test("should correctly identify if a session date is within the allowed period for marking attendance", async () => {
-  // Say a user is trying to record attendance on Wednesday, February 7, 2024, 8:59 AM
-  const recordTime = setMinutes(setHours(new Date(2024, 1, 7), 8), 59);
+describe("unmarked initial states", () => {
+  test("should correctly identify if a session date is within the allowed period for marking attendance", async () => {
+    // Say a user is trying to record attendance on Wednesday, February 7, 2024, 8:59 AM
+    const recordTime = setMinutes(setHours(new Date(2024, 1, 7), 8), 59);
 
-  // For a session that occurred the previous day
-  const sessionDate = addDays(recordTime, -1);
+    // For a session that occurred the previous day
+    const sessionDate = addDays(recordTime, -1);
 
-  const props = generateFellowAttendanceDotProps({
-    status: "not-marked",
-    label: "S3",
-    sessionDate,
-    recordTime,
+    const props = generateFellowAttendanceDotProps({
+      status: "not-marked",
+      label: "S3",
+      sessionDate,
+      recordTime,
+    });
+
+    const { unmount } = render(<FellowAttendanceDot {...props} />);
+
+    const attendanceDot = screen.getByTestId("attendance-dot");
+
+    await act(async () => {
+      fireEvent.click(attendanceDot);
+    });
+
+    expect(screen.getByText("present")).toBeDefined();
+
+    unmount();
   });
 
-  const { unmount } = render(<FellowAttendanceDot {...props} />);
+  test("should not allow marking attendance after the cutoff date without delayed payment request confirmation", async () => {
+    // Say a user is trying to record attendance on Thursday, February 8, 2024, 9:01 AM (just after the cutoff)
+    const recordTime = setMinutes(setHours(new Date(2024, 1, 8), 9), 1);
 
-  const attendanceDot = screen.getByTestId("attendance-dot");
+    // For a session that occurred the previous day
+    const sessionDate = addDays(recordTime, -1);
 
-  await act(async () => {
-    fireEvent.click(attendanceDot);
+    const props = generateFellowAttendanceDotProps({
+      status: "not-marked",
+      label: "S1",
+      sessionDate,
+      recordTime,
+    });
+
+    const { unmount } = render(<FellowAttendanceDot {...props} />);
+
+    const attendanceDot = screen.getByTestId("attendance-dot");
+
+    await act(async () => {
+      fireEvent.click(attendanceDot);
+    });
+
+    // They should be presented with delayed payment request dialog
+    expect(screen.queryByText("Submit delayed payment")).toBeDefined();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId("submit-delayed-payment-button"));
+    });
+
+    expect(screen.queryByText("present")).toBeDefined();
+
+    unmount();
   });
-
-  expect(screen.getByText("present")).toBeDefined();
-
-  unmount();
-});
-
-test("should not allow marking attendance after the cutoff date without delayed payment request confirmation", async () => {
-  // Say a user is trying to record attendance on Thursday, February 8, 2024, 9:01 AM (just after the cutoff)
-  const recordTime = setMinutes(setHours(new Date(2024, 1, 8), 9), 1);
-
-  // For a session that occurred the previous day
-  const sessionDate = addDays(recordTime, -1);
-
-  const props = generateFellowAttendanceDotProps({
-    status: "not-marked",
-    label: "S1",
-    sessionDate,
-    recordTime,
-  });
-
-  const { unmount } = render(<FellowAttendanceDot {...props} />);
-
-  const attendanceDot = screen.getByTestId("attendance-dot");
-
-  await act(async () => {
-    fireEvent.click(attendanceDot);
-  });
-
-  // They should be presented with delayed payment request dialog
-  expect(screen.queryByText("Submit delayed payment")).toBeDefined();
-
-  await act(async () => {
-    fireEvent.click(screen.getByTestId("submit-delayed-payment-button"));
-  });
-
-  expect(screen.queryByText("present")).toBeDefined();
-
-  unmount();
 });
 
 function generateFellowAttendanceDotProps({
