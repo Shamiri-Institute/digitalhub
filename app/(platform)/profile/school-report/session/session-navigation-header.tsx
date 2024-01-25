@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
+import { LinkOrDiv } from "#/components/ui/common";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,16 +24,20 @@ const sessionRatingOptions = [
 export function SessionNavigationHeader({
   sessionName,
   schoolName,
+  href,
+  schoolId,
 }: {
   sessionName: string;
   schoolName: string;
+  href: string;
+  schoolId?: string;
 }) {
   return (
     <div>
       <div className="mt-2 flex  justify-between ">
-        <Link href="/profile/school-report">
+        <LinkOrDiv href={href}>
           <Icons.chevronLeft className="h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
-        </Link>
+        </LinkOrDiv>
         <div>
           <h3 className="text-xl font-bold text-brand">My School Report</h3>
           <h4 className="text-brand-light-gray text-center text-sm">
@@ -56,7 +61,11 @@ export function SessionNavigationHeader({
                       key={session.sessionType}
                       className="relative flex justify-between pr-10"
                       onSelect={() => {
-                        window.location.href = `/profile/school-report/session?type=${session.sessionType}`;
+                        if (href.includes("profile")) {
+                          window.location.href = `${href}/school-report/session?type=${session.sessionType}`;
+                        } else {
+                          window.location.href = `${href}/session-report/${schoolId}?type=${session.sessionType}`;
+                        }
                       }}
                     >
                       {session.sessionLabel}

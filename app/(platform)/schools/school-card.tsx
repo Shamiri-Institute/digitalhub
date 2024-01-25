@@ -1,3 +1,4 @@
+import SessionLink from "#/app/(platform)/schools/session-link";
 import { Icons } from "#/components/icons";
 import {
   Accordion,
@@ -148,11 +149,6 @@ export function SchoolCard({
               Students
             </p>
           </Link>
-          {assigned && (
-            <button className="mt-1">
-              <Icons.edit className="text-shamiri-light-blue" />
-            </button>
-          )}
         </div>
       </div>
 
@@ -191,24 +187,9 @@ export function SchoolCard({
         })}
       />
       <div className="relative items-center justify-between">
-        {assigned && (
-          <div className="absolute left-5 flex gap-5">
-            <button>
-              <Icons.calendarDateAppointmentTime
-                className={cn("h-7 w-7", {
-                  "text-shamiri-light-blue": assigned,
-                })}
-              />
-            </button>
-            <button>
-              <Icons.paperFileText
-                className={cn("h-7 w-7", {
-                  "text-shamiri-light-blue": assigned,
-                })}
-              />
-            </button>
-          </div>
-        )}
+        <div className="absolute left-5 flex gap-5">
+          <SessionLink assigned={assigned} schoolID={school.id} />
+        </div>
         <Accordion type="single" collapsible>
           <AccordionItem value={`id-${school.visibleId}`}>
             <AccordionTrigger

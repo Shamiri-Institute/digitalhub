@@ -87,6 +87,7 @@ model Implementer {
   supervisors        Supervisor[]
   students           Student[]
   studentOutcomes    StudentOutcome[]
+  projects           Projects[]
 
   @@map("implementers")
 }
@@ -192,7 +193,7 @@ model Student {
   implementer          Implementer?            @relation(fields: [implementerId], references: [id])
   schoolId             String?                 @map("school_id") @db.VarChar(255)
   school               School?                 @relation(fields: [schoolId], references: [id])
-  yearOfImplementation Int?                    @map("year_of_implementation")
+  yearOfImplementation Int?                    @map("year_of_implementation") // might not be needed any more
   admissionNumber      String?                 @map("admission_number") @db.VarChar(255)
   age                  Int?
   gender               String?                 @db.VarChar(10)
@@ -238,7 +239,7 @@ model StudentOutcome {
   shamiriId            String?      @map("shamiri_id")
   student              Student?     @relation(fields: [shamiriId], references: [visibleId])
   timePoint            Int          @map("time_point")
-  yearOfImplementation Int          @map("year_of_implementation")
+  yearOfImplementation Int          @map("year_of_implementation") // might not be required anymore
   date                 DateTime?    @map("date") @db.Date
   condition            String       @map("condition")
   implementerId        String?      @map("implementer_id")
@@ -422,7 +423,7 @@ model Fellow {
   visibleId               String                     @unique @map("visible_id") @db.VarChar(100)
   fellowName              String?                    @map("fellow_name") @db.VarChar(255)
   fellowEmail             String?                    @map("fellow_email") @db.VarChar(255)
-  yearOfImplementation    Int?                       @map("year_of_implementation")
+  yearOfImplementation    Int?                       @map("year_of_implementation") // might not be required anymore
   mpesaName               String?                    @map("mpesa_name") @db.VarChar(255)
   mpesaNumber             String?                    @map("mpesa_number") @db.VarChar(255)
   idNumber                String?                    @map("id_number") @db.VarChar(255) // consider having this as required when we can establish 100% collection of this field, and probably encrypted at the db level
@@ -465,7 +466,7 @@ model FellowAttendance {
   fellow                 Fellow                    @relation(fields: [fellowId], references: [id])
   sessionNumber          Int                       @map("session_number")
   sessionDate            DateTime                  @map("session_date")
-  yearOfImplementation   Int                       @map("year_of_implementation")
+  yearOfImplementation   Int                       @map("year_of_implementation") // might not be needed
   schoolId               String                    @map("school_id") @db.VarChar(255)
   school                 School                    @relation(fields: [schoolId], references: [id])
   supervisorId           String                    @map("supervisor_id") @db.VarChar(255)
@@ -585,7 +586,7 @@ model Hub {
   archivedAt            DateTime?              @map("archived_at")
   visibleId             String                 @unique @map("visible_id") @db.VarChar(100)
   hubName               String                 @map("hub_name") @db.VarChar(255)
-  implementerId         String                 @map("implementer_id") @db.VarChar(255)
+  implementerId         String                 @map("implementer_id") @db.VarChar(255) // this might not be needed anymore now that we have project
   implementer           Implementer            @relation(fields: [implementerId], references: [id])
   // clinical_ops_supervisor_id // TODO: add after defining clinical workflows
   fellows               Fellow[]
@@ -594,6 +595,8 @@ model Hub {
   reimbursementRequests ReimbursementRequest[]
   repaymentRequests     RepaymentRequest[]
   coordinators          HubCoordinator[]
+  projectId             String?                @db.VarChar(100)
+  project               Projects?              @relation(fields: [projectId], references: [id])
 
   @@map("hubs")
 }
@@ -642,7 +645,7 @@ model InterventionSession {
   schoolId               String                      @map("school_id") @db.VarChar(255)
   school                 School                      @relation(fields: [schoolId], references: [id])
   occurred               Boolean
-  yearOfImplementation   Int                         @map("year_of_implementation")
+  yearOfImplementation   Int                         @map("year_of_implementation") // might not be needed anymore
   groupSessions          InterventionGroupSession[]
   sessionRatings         InterventionSessionRating[]
   sessionNotes           InterventionSessionNote[]
@@ -931,4 +934,25 @@ model DelayedPaymentRequest {
   fellowAttendance      FellowAttendance    @relation(fields: [fellowAttendanceId], references: [id])
 
   @@map("delayed_payment_requests")
+}
+
+// this model will force us to actually think about super users if we want to track who created a record
+model Projects {
+  id                 String        @id @default(cuid())
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+  visibleId          String        @unique @map("visible_id") @db.VarChar(255)
+  name               String        @db.VarChar(100)
+  projectLead        String?       @map("project_lead") @db.VarChar(255) // consider if this is necessary
+  implementers       Implementer[] //prisma implicit join to create an association table
+  funder             String?       @db.VarChar(255) // additional info required on what we need to do with this field
+  budget             Int?
+  phase              Int?
+  estimatedStartDate DateTime?     @map("estimated_start_date") @db.Date
+  estimatedEndDate   DateTime?     @map("estimated_end_date") @db.Date
+  actualStartDate    DateTime?     @map("actual_start_date") @db.Date
+  actualEndDate      DateTime?     @map("actual_end_date") @db.Date
+  hub                Hub[]
+
+  @@map("projects")
 }
