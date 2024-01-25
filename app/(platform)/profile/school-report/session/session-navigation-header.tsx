@@ -25,12 +25,12 @@ export function SessionNavigationHeader({
   sessionName,
   schoolName,
   href,
-  shooldId,
+  schoolId,
 }: {
   sessionName: string;
   schoolName: string;
   href: string;
-  shooldId?: string;
+  schoolId?: string;
 }) {
   return (
     <div>
@@ -64,7 +64,7 @@ export function SessionNavigationHeader({
                         if (href.includes("profile")) {
                           window.location.href = `${href}/school-report/session?type=${session.sessionType}`;
                         } else {
-                          window.location.href = `${href}/session-report/${shooldId}?type=${session.sessionType}`;
+                          window.location.href = `${href}/session-report/${schoolId}?type=${session.sessionType}`;
                         }
                       }}
                     >

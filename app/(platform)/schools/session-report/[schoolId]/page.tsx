@@ -74,7 +74,7 @@ export default async function ReportDetails({
           schoolName={schoolName}
           sessionName={sessionName}
           href="/schools"
-          shooldId={schoolId}
+          schoolId={schoolId}
         />
         <div className="py-6 text-center text-sm">
           {sessionName} has not yet been created.
@@ -119,7 +119,7 @@ export default async function ReportDetails({
         schoolName={session?.school?.schoolName ?? ""}
         sessionName={session.sessionName}
         href="/schools"
-        shooldId={schoolId}
+        schoolId={schoolId}
       />
       <SessionRater
         revalidatePath={revalidatePath}
