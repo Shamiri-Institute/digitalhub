@@ -925,8 +925,7 @@ model Projects {
   visibleId          String        @unique @map("visible_id") @db.VarChar(255)
   name               String        @db.VarChar(100)
   projectLead        String?       @map("project_lead") @db.VarChar(255) // consider if this is necessary
-  implementerId      String        @map("implementer_id") @db.VarChar(255)
-  implementer        Implementer[] //prisma implicit join to create an association table
+  implementers       Implementer[] //prisma implicit join to create an association table
   funder             String?       @db.VarChar(255) // additional info required on what we need to do with this field
   budget             Int?
   phase              Int?

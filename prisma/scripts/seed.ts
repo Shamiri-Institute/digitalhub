@@ -14,8 +14,8 @@ import { ImplementerRole } from "@prisma/client";
 
 async function seedDatabase() {
   await truncateTables();
-
   await createImplementers(db);
+  await createProjects(db);
   await createUsers(db);
   await createHubs(db);
   await createSchools(db);
@@ -45,7 +45,7 @@ seedDatabase()
 async function truncateTables() {
   console.log("Truncating tables");
   await db.$executeRaw`
-          TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, user_recent_opens, hubs, students, student_outcomes, fellows, intervention_sessions, intervention_group_sessions, intervention_session_ratings, intervention_session_notes, fellow_attendances, supervisors, schools, hub_coordinators, student_complaints, repayment_requests, reimbursement_requests, overall_fellow_evaluations, fellow_complaints CASCADE;
+          TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, user_recent_opens, hubs, projects, students, student_outcomes, fellows, intervention_sessions, intervention_group_sessions, intervention_session_ratings, intervention_session_notes, fellow_attendances, supervisors, schools, hub_coordinators, student_complaints, repayment_requests, reimbursement_requests, overall_fellow_evaluations, fellow_complaints CASCADE;
           `;
 }
 
@@ -56,7 +56,7 @@ async function createImplementers(db: Database) {
     await db.implementer.create({
       data: {
         id: objectId("impl"),
-        visibleId: implementer["Implementer_ID"],
+        visibleId: implementer["Implementer_ID"].trim(),
         implementerName: implementer["Implementer"],
         implementerType: implementer["Implementer_Type"],
         implementerAddress: implementer["address"],
@@ -95,6 +95,43 @@ async function createUsers(db: Database) {
   }
 }
 
+async function createProjects(db: Database) {
+  console.log("Creating projects");
+
+  const implementers = await db.implementer.findMany({
+    select: { id: true, visibleId: true },
+  });
+
+  await parseCsvFile("projects", async (project: any) => {
+    if (!project.project_id) {
+      console.log("Project found with missing project id. Skipping for now");
+      return;
+    }
+
+    const implementerIds = project["implementer_id"]?.split(",");
+
+    let implementersObject = undefined;
+    if (implementerIds.length) {
+      implementersObject = {
+        connect: implementers
+          .filter((imp) => implementerIds.includes(imp.visibleId))
+          .map(({ id }) => ({ id })),
+      };
+    }
+
+    await db.projects.create({
+      data: {
+        visibleId: project.project_id as string,
+        projectLead: project["project lead"] as string,
+        name: project.project as string,
+        funder: project.Funder as string | null,
+        budget: project.Budget as number | null,
+        implementers: implementersObject,
+      },
+    });
+  });
+}
+
 async function createHubs(db: Database) {
   console.log("Creating hubs");
 
@@ -103,12 +140,19 @@ async function createHubs(db: Database) {
       where: { visibleId: hub["implementer_id"] },
     });
 
+    const project = await db.projects.findFirstOrThrow({
+      where: {
+        visibleId: hub["project_id"],
+      },
+    });
+
     const createdHub = await db.hub.create({
       data: {
         id: objectId("hub"),
         visibleId: hub["Hub_ID"],
         hubName: hub["Hub_Name"],
         implementerId: implementer.id,
+        projectId: project.id,
       },
     });
 
