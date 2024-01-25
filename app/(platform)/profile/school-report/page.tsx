@@ -90,15 +90,7 @@ let referenceSessionItems: Omit<SessionItem, "id">[] = [
   },
 ];
 
-export default async function Page() {
-  return (
-    <SchoolReport>
-      <IntroHeader href="/profile" />
-    </SchoolReport>
-  );
-}
-
-export async function SchoolReport({ children }: React.PropsWithChildren<{}>) {
+export default async function SchoolReport() {
   const supervisor = await currentSupervisor();
   if (!supervisor) {
     return <InvalidPersonnelRole role="supervisor" />;
@@ -158,7 +150,7 @@ export async function SchoolReport({ children }: React.PropsWithChildren<{}>) {
 
   return (
     <div>
-      {children}
+      <IntroHeader href="/profile" />
       {interventionSessions.map(({ session, defaultSessionValues }) => (
         <SchoolReportCard
           key={session?.sessionName ?? defaultSessionValues.sessionName}
