@@ -97,7 +97,6 @@ function generateProps({
         sessionType: "s3",
         schoolId: "sch_01hmttqzhgerar24yk4gdj90mn",
         occurred: true,
-        occurringAt: null,
         yearOfImplementation: 2023,
       },
     },

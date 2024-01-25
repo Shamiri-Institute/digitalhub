@@ -639,7 +639,6 @@ model InterventionSession {
   schoolId             String                      @map("school_id") @db.VarChar(255)
   school               School                      @relation(fields: [schoolId], references: [id])
   occurred             Boolean
-  occurringAt          DateTime?                   @map("occurring_at") @db.Timestamptz()
   yearOfImplementation Int                         @map("year_of_implementation")
   groupSessions        InterventionGroupSession[]
   sessionRatings       InterventionSessionRating[]

@@ -182,7 +182,7 @@ export function FellowAttendanceDot({
         attendanceInfo={{
           sessionStatus: nextAttendanceStatus(status),
           sessionLabel: sessionItem.label,
-          sessionDate: sessionItem.session?.occurringAt ?? null,
+          sessionDate: sessionItem.session?.sessionDate ?? null,
           schoolName: school.schoolName,
         }}
         open={dialogOpen}

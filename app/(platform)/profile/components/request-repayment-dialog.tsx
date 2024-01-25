@@ -80,8 +80,8 @@ export function RequestRepaymentDialog({
       const sessionExists = unique.some(
         (session) => session.id === groupSession.session.id,
       );
-      const sessionDate = groupSession.session.occurringAt
-        ? format(new Date(groupSession.session.occurringAt), "dd/MM/yyyy")
+      const sessionDate = groupSession.session.sessionDate
+        ? format(new Date(groupSession.session.sessionDate), "dd/MM/yyyy")
         : "Unscheduled";
 
       if (!sessionExists) {
