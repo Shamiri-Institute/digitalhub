@@ -10,6 +10,7 @@
 supervisor-state.json
 hub-coordinator-state.json
 operations-state.json
+app/node_modules/.vitest/results.json
 
 # next.js
 /.next/
