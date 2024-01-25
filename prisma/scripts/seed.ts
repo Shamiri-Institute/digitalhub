@@ -121,11 +121,11 @@ async function createProjects(db: Database) {
 
     await db.projects.create({
       data: {
-        visibleId: project.project_id as string,
-        projectLead: project["project lead"] as string,
-        name: project.project as string,
-        funder: project.Funder as string | null,
-        budget: project.Budget as number | null,
+        visibleId: (project.project_id as string).trim(),
+        projectLead: project["project lead"],
+        name: (project.project as string).trim(),
+        funder: project.Funder,
+        budget: project.Budget,
         implementers: implementersObject,
       },
     });
