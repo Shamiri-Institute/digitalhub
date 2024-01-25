@@ -246,7 +246,10 @@ function FellowCard({
             <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
           </FellowModifyDialog>
           {(!fellow.droppedOutAt || !fellow.droppedOut) && (
-            <FellowDropoutDialog fellow={fellow} school={school}>
+            <FellowDropoutDialog
+              fellow={fellow}
+              revalidationPath={`/schools/${school.visibleId}`}
+            >
               <Icons.delete className="h-6 w-6 cursor-pointer text-brand" />
             </FellowDropoutDialog>
           )}

@@ -12,6 +12,12 @@ import { cn } from "#/lib/utils";
 import type { AttendanceStatus, SessionLabel } from "#/types/app";
 import type { FellowWithAttendance } from "#/types/prisma";
 
+const dotColor = (status: AttendanceStatus) => ({
+  "bg-[#85A070]": status === "present",
+  "bg-[#DE5E68]": status === "absent",
+  "bg-zinc-300": status === "not-marked",
+});
+
 export function FellowAttendanceDot({
   sessionItem,
   fellow,
@@ -31,14 +37,6 @@ export function FellowAttendanceDot({
 }) {
   const { toast } = useToast();
   const [status, setStatus] = React.useState(sessionItem.status);
-
-  const dotColor = React.useCallback((status: AttendanceStatus) => {
-    return {
-      "bg-[#85A070]": status === "present",
-      "bg-[#DE5E68]": status === "absent",
-      "bg-zinc-300": status === "not-marked",
-    };
-  }, []);
 
   const markAttendance = React.useCallback(
     async (
