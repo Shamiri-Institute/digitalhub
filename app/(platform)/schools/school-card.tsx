@@ -1,3 +1,4 @@
+import SessionLink from "#/app/(platform)/schools/session-link";
 import { Icons } from "#/components/icons";
 import {
   Accordion,
@@ -18,11 +19,11 @@ const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
 type SchoolCardType = {
   id: number;
   sessionName:
-    | "Presession"
-    | "Session 1"
-    | "Session 2"
-    | "Session 3"
-    | "Session 4";
+  | "Presession"
+  | "Session 1"
+  | "Session 2"
+  | "Session 3"
+  | "Session 4";
   uiValue: "Pre" | "S1" | "S2" | "S3" | "S4";
 };
 
@@ -187,14 +188,7 @@ export function SchoolCard({
       />
       <div className="relative items-center justify-between">
         <div className="absolute left-5 flex gap-5">
-          {/* todo: link to session notes page */}
-          <Link href={`/profile/school-report`}>
-            <Icons.paperFileText
-              className={cn("h-7 w-7", {
-                "text-shamiri-light-blue": assigned,
-              })}
-            />
-          </Link>
+          <SessionLink assigned={assigned} schoolID={school.id} />
         </div>
         <Accordion type="single" collapsible>
           <AccordionItem value={`id-${school.visibleId}`}>
