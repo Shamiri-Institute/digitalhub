@@ -62,6 +62,7 @@ export const AttendanceConfirmationDialog: React.FC<
             type="submit"
             size="lg"
             className="block w-full rounded bg-blue-500 text-lg font-bold text-white hover:bg-blue-700"
+            data-testid="submit-delayed-payment-button"
           >
             Submit Delayed Payment
           </Button>

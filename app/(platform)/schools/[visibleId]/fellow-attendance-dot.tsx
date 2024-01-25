@@ -1,15 +1,7 @@
 "use client";
 
 import { Prisma } from "@prisma/client";
-import {
-  endOfWeek,
-  isAfter,
-  isBefore,
-  setDay,
-  setHours,
-  setMinutes,
-  startOfWeek,
-} from "date-fns";
+import { addDays, isBefore, setHours, setMinutes, startOfWeek } from "date-fns";
 import * as React from "react";
 
 import { AttendanceConfirmationDialog } from "#/app/(platform)/schools/[visibleId]/attendance-confirmation-dialog";
@@ -23,6 +15,7 @@ export function FellowAttendanceDot({
   sessionItem,
   fellow,
   school,
+  recordTime,
 }: {
   sessionItem: {
     status: AttendanceStatus;
@@ -31,6 +24,7 @@ export function FellowAttendanceDot({
   };
   fellow: FellowWithAttendance;
   school: Prisma.SchoolGetPayload<{}>;
+  recordTime: Date;
 }) {
   const { toast } = useToast();
   const [status, setStatus] = React.useState(sessionItem.status);
@@ -116,40 +110,52 @@ export function FellowAttendanceDot({
     setDialogOpen(false);
   };
 
-  const attendanceDateBeyondCutoff = React.useCallback(() => {
-    if (!sessionItem.session?.occurringAt) {
+  function getNextCutoffDate(sessionDate: Date): Date {
+    const monday = 1;
+    const thursday = 4;
+    const cutoffHour = 9;
+
+    // Start of the current week (Monday)
+    let thisMonday = startOfWeek(sessionDate, { weekStartsOn: monday });
+    thisMonday = setHours(thisMonday, cutoffHour);
+    thisMonday = setMinutes(thisMonday, 0);
+
+    // Calculate this week's Thursday
+    let thisThursday = addDays(thisMonday, thursday - monday);
+    thisThursday = setHours(thisThursday, cutoffHour);
+    thisThursday = setMinutes(thisThursday, 0);
+
+    // If the session date is after this week's Thursday, calculate next week's Monday
+    if (sessionDate > thisThursday) {
+      let nextMonday = addDays(thisMonday, 7);
+      return nextMonday;
+    }
+
+    // If the session date is after this week's Monday but before or equal to this week's Thursday, return this week's Thursday
+    if (sessionDate > thisMonday && sessionDate <= thisThursday) {
+      return thisThursday;
+    }
+
+    // Otherwise, return this week's Monday
+    return thisMonday;
+  }
+
+  const isBeforePayoutCutoff = React.useCallback(() => {
+    if (!sessionItem.session?.sessionDate) {
       return false;
     }
 
-    const now = new Date();
-    const sessionDate = new Date(sessionItem.session.occurringAt);
+    const { sessionDate } = sessionItem.session;
 
-    // Define the start and end of the attendance marking periods
-    const startOfCurrentWeek = startOfWeek(now);
-    const endOfCurrentWeek = endOfWeek(now);
+    const cutoffDate = getNextCutoffDate(sessionDate);
 
-    const mondayCutoff = setDay(startOfCurrentWeek, 1, { weekStartsOn: 1 });
-    const thursdayCutoff = setDay(startOfCurrentWeek, 4, { weekStartsOn: 1 });
-
-    // Set the cutoff time to 9:00 am
-    setHours(mondayCutoff, 9);
-    setMinutes(mondayCutoff, 0);
-    setHours(thursdayCutoff, 9);
-    setMinutes(thursdayCutoff, 0);
-
-    // Check if the session date is within the allowed periods for marking attendance
-    const isWithinMondayPeriod =
-      isAfter(sessionDate, endOfCurrentWeek) && isBefore(now, mondayCutoff);
-    const isWithinThursdayPeriod =
-      isAfter(sessionDate, startOfCurrentWeek) && isBefore(now, thursdayCutoff);
-
-    return isWithinMondayPeriod || isWithinThursdayPeriod;
-  }, [sessionItem.session?.occurringAt]);
+    return isBefore(recordTime, cutoffDate);
+  }, [sessionItem.session, recordTime]);
 
   const onDotClick = React.useCallback(async () => {
     const nextStatus = nextAttendanceStatus(status);
 
-    if (nextStatus === "present" && attendanceDateBeyondCutoff()) {
+    if (nextStatus === "present" && !isBeforePayoutCutoff()) {
       setDialogOpen(true);
     } else {
       await markAttendance(
@@ -160,7 +166,7 @@ export function FellowAttendanceDot({
       );
     }
   }, [
-    attendanceDateBeyondCutoff,
+    isBeforePayoutCutoff,
     fellow.visibleId,
     markAttendance,
     school.visibleId,
@@ -180,7 +186,13 @@ export function FellowAttendanceDot({
           schoolName: school.schoolName,
         }}
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open: boolean) => {
+          if (open && !dialogOpen) {
+            return;
+          } else {
+            setDialogOpen(open);
+          }
+        }}
         onSubmit={onDialogSubmit}
       >
         <button

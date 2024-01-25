@@ -264,6 +264,7 @@ function FellowCard({
             sessionItem={sessionItem}
             fellow={fellow}
             school={school}
+            recordTime={new Date()}
           />
         ))}
       </div>
