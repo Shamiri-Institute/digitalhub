@@ -175,7 +175,12 @@ export function FellowAttendanceDot({
   const onDotClick = React.useCallback(async () => {
     const nextStatus = nextAttendanceStatus(status);
 
-    if (nextStatus === "present" && !isBeforePayoutCutoff()) {
+    if (status === "present") {
+      toast({
+        variant: "destructive",
+        title: "You cannot change attendance status after the cutoff",
+      });
+    } else if (nextStatus === "present" && !isBeforePayoutCutoff()) {
       setDialogOpen(true);
     } else {
       await markAttendance(
@@ -186,12 +191,13 @@ export function FellowAttendanceDot({
       );
     }
   }, [
-    isBeforePayoutCutoff,
-    fellow.visibleId,
-    markAttendance,
-    school.visibleId,
-    sessionItem.label,
     status,
+    isBeforePayoutCutoff,
+    toast,
+    markAttendance,
+    sessionItem.label,
+    fellow.visibleId,
+    school.visibleId,
   ]);
 
   return (

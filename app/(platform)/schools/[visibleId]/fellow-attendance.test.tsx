@@ -1,6 +1,6 @@
 import { Supervisor } from "@prisma/client";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { addDays, setHours, setMinutes } from "date-fns";
+import { addDays, addWeeks, setHours, setMinutes } from "date-fns";
 import { describe, expect, test, vi } from "vitest";
 
 import { FellowAttendanceDot } from "#/app/(platform)/schools/[visibleId]/fellow-attendance-dot";
@@ -18,8 +18,8 @@ vi.mock("#/app/(platform)/schools/[visibleId]/actions", () => ({
   },
 }));
 
-describe("unmarked initial states", () => {
-  test("should correctly identify if a session date is within the allowed period for marking attendance", async () => {
+describe("if attendance in unmarked initial state", () => {
+  test("should allow marking attendance before the cutoff", async () => {
     // Say a user is trying to record attendance on Wednesday, February 7, 2024, 8:59 AM
     const recordTime = setMinutes(setHours(new Date(2024, 1, 7), 8), 59);
 
@@ -76,6 +76,95 @@ describe("unmarked initial states", () => {
     });
 
     expect(screen.queryByText("present")).toBeDefined();
+
+    unmount();
+  });
+});
+
+describe("if attendance in absent initial state", () => {
+  test("should correctly identify if a session date is within the allowed period for marking attendance", async () => {
+    // Say a user is trying to record attendance on Wednesday, February 7, 2024, 8:59 AM
+    const recordTime = setMinutes(setHours(new Date(2024, 1, 7), 8), 59);
+
+    // For a session that occurred the previous day
+    const sessionDate = addDays(recordTime, -1);
+
+    const props = generateFellowAttendanceDotProps({
+      status: "absent",
+      label: "S2",
+      sessionDate,
+      recordTime,
+    });
+
+    const { unmount } = render(<FellowAttendanceDot {...props} />);
+
+    const attendanceDot = screen.getByTestId("attendance-dot");
+
+    await act(async () => {
+      fireEvent.click(attendanceDot); // Click to go from absent to not-marked
+    });
+
+    await act(async () => {
+      fireEvent.click(attendanceDot); // Click to go from not-marked to present
+    });
+
+    expect(screen.getByText("present")).toBeDefined();
+
+    unmount();
+  });
+});
+
+describe("if attendance in present initial state", () => {
+  test("should not be able to change attendance status if past cutoff date", async () => {
+    // Say a user is trying to record attendance on Wednesday, February 7, 2024, 11:00 AM
+    const recordTime = setMinutes(setHours(new Date(2024, 1, 7), 11), 0);
+
+    // For a session that occurred Wednesday the previous week
+    const sessionDate = addWeeks(recordTime, -1);
+
+    const props = generateFellowAttendanceDotProps({
+      status: "present",
+      label: "S3",
+      sessionDate,
+      recordTime,
+    });
+
+    const { unmount } = render(<FellowAttendanceDot {...props} />);
+
+    const attendanceDot = screen.getByTestId("attendance-dot");
+
+    await act(async () => {
+      fireEvent.click(attendanceDot);
+    });
+
+    expect(screen.getByText("present")).toBeDefined();
+
+    unmount();
+  });
+
+  test("should be able to change attendance status if before cutoff date", async () => {
+    // Say a user is trying to modify attendance on Thursday, February 8, 2024, 8:59 AM (just before the cutoff)
+    const recordTime = setMinutes(setHours(new Date(2024, 1, 8), 9), 1);
+
+    // For a session that occurred the previous day, Wednesday
+    const sessionDate = addDays(recordTime, -1);
+
+    const props = generateFellowAttendanceDotProps({
+      status: "present",
+      label: "S1",
+      sessionDate,
+      recordTime,
+    });
+
+    const { unmount } = render(<FellowAttendanceDot {...props} />);
+
+    const attendanceDot = screen.getByTestId("attendance-dot");
+
+    await act(async () => {
+      fireEvent.click(attendanceDot);
+    });
+
+    expect(screen.queryByText("not-marked")).toBeDefined();
 
     unmount();
   });
