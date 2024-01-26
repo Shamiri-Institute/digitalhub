@@ -41,16 +41,21 @@ export function SchoolDropoutDialog({
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log("onSubmit", reason);
-    const response = await dropoutSchoolWithReason(school.visibleId, reason);
-    if (response.school) {
-      toast({
-        variant: "destructive",
-        title: "School has been dropped out",
-      });
-
-      window.location.href = "/profile/myschool";
-    } else {
+    try {
+      const response = await dropoutSchoolWithReason(school.visibleId, reason);
+      if (response.school) {
+        toast({
+          variant: "destructive",
+          title: "School has been dropped out",
+        });
+        setDialogOpen(false);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Something went wrong",
+        });
+      }
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Something went wrong",
@@ -82,7 +87,6 @@ export function SchoolDropoutDialog({
 
             <div className="my-6 space-y-6">
               <div className="flex flex-col px-6">
-                {/* clickable options such as lack of 'timeline conflict', 'lack of commitment' with a grayish background */}
                 <h3 className="mb-2 text-lg font-bold text-brand">
                   Tell us why
                 </h3>
