@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { format } from "date-fns";
 
-import { mapSessionTypeToSessionNumber } from "#/prisma/scripts/utils";
+import { mapSessionTypeToSessionNumber } from "#/lib/utils";
 
 export function FellowAttendanceTable({
   attendance,
