@@ -1074,7 +1074,7 @@ export async function submitRepaymentRequest(data: {
   supervisorId: string;
   fellowId: string;
   hubId: string;
-  groupSessionId: string;
+  fellowAttendanceId: number;
 }) {
   try {
     console.log({ data });
@@ -1084,7 +1084,7 @@ export async function submitRepaymentRequest(data: {
         supervisorId: data.supervisorId,
         fellowId: data.fellowId,
         hubId: data.hubId,
-        groupSessionId: data.groupSessionId,
+        fellowAttendanceId: data.fellowAttendanceId,
       },
     });
     return { success: true };

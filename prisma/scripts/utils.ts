@@ -22,14 +22,14 @@ export async function parseCsvFile(
   for await (const row of parser) {
     const dataRow = replaceEmptyStringsWithNull(row);
 
-    if (fileName === "school_info") {
-      if (dataRow["Implementer_ID"].includes(",")) {
-        console.warn(
-          `Warning: Implementer_ID contains multiple values (${dataRow["Implementer_ID"]}). Check if this is correct. Truncating to one for now.`,
-        );
-        dataRow["Implementer_ID"] = dataRow["Implementer_ID"].split(",")[0];
-      }
-    }
+    // if (fileName === "school_info") {
+    //   if (dataRow["Implementer_ID"].includes(",")) {
+    //     console.warn(
+    //       `Warning: Implementer_ID contains multiple values (${dataRow["Implementer_ID"]}). Check if this is correct. Truncating to one for now.`,
+    //     );
+    //     dataRow["Implementer_ID"] = dataRow["Implementer_ID"].split(",")[0];
+    //   }
+    // }
 
     if (fileName === "implementer_info") {
       if (dataRow["Implementer"] === null) {
