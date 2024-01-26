@@ -46,10 +46,10 @@ ADD COLUMN     "fellow_attendance_id" INTEGER NOT NULL;
 ALTER TABLE "students" ADD COLUMN     "assigned_group_id" TEXT;
 
 -- DropTable
-DROP TABLE "_ImplementerToProjects";
+DROP TABLE "_ImplementerToProjects" CASCADE;
 
 -- DropTable
-DROP TABLE "intervention_group_sessions";
+DROP TABLE "intervention_group_sessions" CASCADE;
 
 -- CreateTable
 CREATE TABLE "student_attendances" (
