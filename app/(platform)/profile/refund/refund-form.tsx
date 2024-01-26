@@ -5,8 +5,9 @@ import { School } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
+import { useS3Upload } from "next-s3-upload";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { UseFormReturn, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import {
@@ -18,7 +19,6 @@ import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
 import { Form, FormField } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { Label } from "#/components/ui/label";
 import { Popover, PopoverContent } from "#/components/ui/popover";
 import {
   Select,
@@ -67,28 +67,9 @@ export const FormSchema = z.object({
   amount: z.string({
     required_error: "Please enter the total amount used.",
   }),
-  receiptFile: z
-    .any({
-      required_error: "Please upload a receipt file.",
-    })
-    .refine(
-      (file) =>
-        file.length == 1
-          ? ACCEPTED_FILE_TYPES.includes(file?.[0]?.type)
-            ? true
-            : false
-          : true,
-      "Invalid file. choose either JPEG or PNG image",
-    )
-    .refine(
-      (file) =>
-        file.length == 1
-          ? file[0]?.size <= MAX_FILE_SIZE
-            ? true
-            : false
-          : true,
-      "Max file size allowed is 2MB.",
-    ),
+  receiptFileKey: z.string({
+    required_error: "Please upload a receipt file.",
+  }),
   school: z.string({
     required_error: "Please select a school.",
   }),
@@ -116,7 +97,7 @@ export function RefundForm({
       amount: "",
       mpesaName: "",
       mpesaNumber: "",
-      receiptFile: undefined,
+      receiptFileKey: "",
       school: "",
     },
   });
@@ -421,25 +402,9 @@ export function RefundForm({
               />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="receiptFile" className="text-base font-medium">
-                Upload receipt
-              </Label>
-              <Input
-                id="receiptFile"
-                type="file"
-                {...form.register("receiptFile", {
-                  required: "Please upload the receipt",
-                })}
-                className="h-10 py-2"
-              />
-            </div>
+            <ReceiptFileUpload form={form} className="flex flex-col gap-2" />
 
-            <Button
-              type="submit"
-              form="modifyFellowForm"
-              className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
-            >
+            <Button className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95">
               Submit
             </Button>
           </div>
@@ -447,4 +412,70 @@ export function RefundForm({
       </Form>
     </div>
   );
+}
+
+export function ReceiptFileUpload({
+  form,
+  className,
+}: {
+  form: UseFormReturn<z.infer<typeof FormSchema>>;
+  className: string;
+}) {
+  const { FileInput, openFileDialog, uploadToS3 } = useS3Upload();
+  const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleFileChange = async (file: File) => {
+    setUploading(true);
+    const { key } = await uploadToS3(file, {
+      endpoint: {
+        request: {
+          url: "/api/files/upload",
+          body: {},
+          headers: {},
+        },
+      },
+    });
+    form.setValue("receiptFileKey", key);
+    if (key) {
+      setFile(file);
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className={className}>
+      <Button className="text-base font-medium" onClick={openFileDialog}>
+        {uploading ? "Uploading receipt..." : "Upload receipt"}
+      </Button>
+      <FileInput onChange={handleFileChange} />
+      {file && (
+        <div>
+          <span>
+            {file.name} ({formatBytes(file.size)})
+          </span>
+        </div>
+      )}
+      <Input
+        id="receiptFileKey"
+        type="text"
+        {...form.register("receiptFileKey", {
+          required: "Please upload the receipt",
+        })}
+        className="hidden h-10 py-2"
+      />
+    </div>
+  );
+}
+
+export function formatBytes(bytes: number, decimals = 2): string {
+  if (bytes === 0) return "0 Bytes";
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }
