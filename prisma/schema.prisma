@@ -229,6 +229,9 @@ model Student {
   studentComplaints    StudentComplaints[]
   clinicalCases        ClinicalScreeningInfo[]
 
+  groupSessionId String?                   @map("group_session_id") @db.VarChar(255) // should be required moving forward
+  groupSession   InterventionGroupSession? @relation(fields: [groupSessionId], references: [id])
+
   @@map("students")
 }
 
@@ -699,6 +702,7 @@ model InterventionGroupSession {
   school            School?             @relation(fields: [schoolId], references: [id])
   fellowAttendances FellowAttendance[]
   repaymentRequests RepaymentRequest[]
+  students          Student[]
 
   @@map("intervention_group_sessions")
 }
