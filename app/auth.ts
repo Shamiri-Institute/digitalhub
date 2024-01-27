@@ -67,7 +67,11 @@ export async function currentSupervisor() {
       fellows: {
         include: {
           hub: true,
-          fellowAttendances: true,
+          fellowAttendances: {
+            include: {
+              repaymentRequests: true,
+            },
+          },
           fellowComplaints: true,
           fellowReportingNotes: {
             include: {
@@ -76,21 +80,9 @@ export async function currentSupervisor() {
           },
           repaymentRequests: {
             include: {
-              groupSession: {
+              fellowAttendance: {
                 include: {
-                  session: {
-                    include: {
-                      school: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-          groupSessions: {
-            include: {
-              session: {
-                include: {
+                  group: true,
                   school: true,
                 },
               },

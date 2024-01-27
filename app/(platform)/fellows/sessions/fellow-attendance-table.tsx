@@ -1,11 +1,13 @@
 import { Prisma } from "@prisma/client";
 import { format } from "date-fns";
 
+import { mapSessionTypeToSessionNumber } from "#/lib/utils";
+
 export function FellowAttendanceTable({
   attendance,
 }: {
   attendance: Prisma.FellowAttendanceGetPayload<{
-    include: { school: true };
+    include: { school: true; session: true };
   }>[];
 }) {
   return (
@@ -56,13 +58,21 @@ export function FellowAttendanceTable({
                     .map((att) => (
                       <tr key={att.id}>
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                          S{att.sessionNumber.toString().padStart(2, "0")}
+                          {att.session
+                            ? mapSessionTypeToSessionNumber(
+                                att.session?.sessionType,
+                              )
+                                .toString()
+                                .padStart(2, "0")
+                            : "N/A"}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {att.school.schoolName}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {format(att.sessionDate, "dd MMM yyyy") ?? "N/A"}
+                          {att.session
+                            ? format(att.session.sessionDate, "dd MMM yyyy")
+                            : "N/A"}
                         </td>
                       </tr>
                     ))}

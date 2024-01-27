@@ -20,18 +20,16 @@ test.describe("clinical screenings", () => {
     await clinicalScreeningPage.chooseSupervisorInSelectDropdown("SPV23_S_36");
     await expect(page.getByText("Isabel Kinyua").nth(0)).toBeVisible();
 
-    await clinicalScreeningPage.chooseFellowInSelectDropdown("TFW23_S_266");
-    await expect(page.getByText("Samson Egwina").nth(0)).toBeVisible();
+    await clinicalScreeningPage.chooseFellowInSelectDropdown("TFW23_S_263");
+    await expect(page.getByText("Lindsey Asiome").nth(0)).toBeVisible();
 
     await clinicalScreeningPage.chooseStudentInSelectDropdown(
-      "Stu_Adm_ANS23_School_29_20",
+      "Stu_Adm_ANS23_School_43_20",
     );
-    await expect(page.getByText("Clifford Daugherty").nth(0)).toBeVisible();
+    await expect(page.getByText("Student 19").nth(0)).toBeVisible();
 
     await clinicalScreeningPage.submitClinicalCaseDialogue();
 
-    await clinicalScreeningPage.assertClinicalCaseIsVisible(
-      "Clifford Daugherty",
-    );
+    await clinicalScreeningPage.assertClinicalCaseIsVisible("Student 19");
   });
 });
