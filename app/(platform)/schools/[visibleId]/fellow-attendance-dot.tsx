@@ -95,7 +95,7 @@ export function FellowAttendanceDot({
         });
       }
     },
-    [toast, dotColor, sessionItem.label, fellow.fellowName],
+    [toast, sessionItem.label, fellow.fellowName],
   );
 
   const [dialogOpen, setDialogOpen] = React.useState(false);

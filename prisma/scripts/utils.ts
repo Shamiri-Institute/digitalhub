@@ -22,14 +22,14 @@ export async function parseCsvFile(
   for await (const row of parser) {
     const dataRow = replaceEmptyStringsWithNull(row);
 
-    if (fileName === "school_info") {
-      if (dataRow["Implementer_ID"].includes(",")) {
-        console.warn(
-          `Warning: Implementer_ID contains multiple values (${dataRow["Implementer_ID"]}). Check if this is correct. Truncating to one for now.`,
-        );
-        dataRow["Implementer_ID"] = dataRow["Implementer_ID"].split(",")[0];
-      }
-    }
+    // if (fileName === "school_info") {
+    //   if (dataRow["Implementer_ID"].includes(",")) {
+    //     console.warn(
+    //       `Warning: Implementer_ID contains multiple values (${dataRow["Implementer_ID"]}). Check if this is correct. Truncating to one for now.`,
+    //     );
+    //     dataRow["Implementer_ID"] = dataRow["Implementer_ID"].split(",")[0];
+    //   }
+    // }
 
     if (fileName === "implementer_info") {
       if (dataRow["Implementer"] === null) {
@@ -132,12 +132,4 @@ function replaceEmptyStringsWithNull(obj: GenericObject): GenericObject {
 
 export function parseCsvBoolean(value: string) {
   return value === "true";
-}
-
-export function mapSessionTypeToSessionNumber(sessionType: string): number {
-  if (sessionType[0] === "s" && sessionType.length === 2) {
-    return parseInt(sessionType[1]!);
-  }
-
-  throw new Error(`Invalid session type: ${sessionType}`);
 }
