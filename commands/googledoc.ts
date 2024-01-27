@@ -1,157 +1,47 @@
-import { authenticate } from "@google-cloud/local-auth"; // Make sure to have this library installed
-import fs from "fs";
-import { google } from "googleapis";
-import path from "path";
-const { GoogleAuth } = require("google-auth-library");
-const apikeys = require("../googleapikey.json");
-const apikeysUpdatd = require("./sdhgoogle.json");
-const mime = require("mime-types");
+const { google } = require("googleapis");
+const path = require("node:path");
+const fs = require("node:fs");
 
-const SCOPE = "https://www.googleapis.com/auth/drive";
+var mime = require("mime-types");
 
-const filePath = path.join(__dirname, "./sdhgoogle.json");
+const KEY_FILE_PATH = path.join(__dirname, "sdhgoogle.json");
 
-async function getAuthClient() {
-  console.log("inside getAuthClient");
-  const auth = await authenticate({
-    keyfilePath: "./sdhgoogle.json", // Replace with the path to your service account key file
-    scopes: ["https://www.googleapis.com/auth/drive"], // Specify the required scopes
-  });
-  console.log({ auth }, "9");
-  return auth;
-}
+const SCOPES = ["https://www.googleapis.com/auth/drive"];
 
-// async function getAuthClient() {
-//   const auth = await new GoogleAuth({
-//     keyfilePath: "../googleapikey.json", // Replace with your credentials file path
-//     scopes: ["https://www.googleapis.com/auth/drive"],
-//   });
-//   console.log({ auth });
-//   return auth;
-// }
+const auth = new google.auth.GoogleAuth({
+  keyFile: KEY_FILE_PATH,
+  scopes: SCOPES,
+});
 
-async function authorize() {
-  const jwtClient = new google.auth.JWT(
-    apikeysUpdatd.client_email,
-    undefined,
-    apikeysUpdatd.private_key,
-    [SCOPE],
-    undefined,
-  );
+const uploadFileToGoogleDrive = async () => {
+  console.log("inn");
+  try {
+    const filePath = path.join(__dirname, "doctesting.docx");
+    // get file name without extension
+    const fileName = path.basename(filePath).split(".")[0];
 
-  //   console.log(jwtClient);
-  console.log("authorize");
-  let arr = await jwtClient.authorize();
-  console.log(arr);
-  return arr;
-}
-
-// async function uploadFile(auth: any, file: any) {
-//   const drive = google.drive({ version: "v3", auth });
-
-//   const res = await drive.files.create({
-//     requestBody: {
-//       name: file.name,
-//       mimeType: file.mimeType,
-//     },
-//     media: {
-//       mimeType: file.mimeType,
-//       body: file.body,
-//     },
-//   });
-
-//   return res.data;
-// }
-
-async function uploadFile(authClient) {
-  console.log(__dirname);
-  console.log({ authClient });
-  return new Promise((resolve, rejected) => {
-    const drive = google.drive({
-      version: "v3",
-      auth: {
-        client_email: apikeysUpdatd.client_email,
-        private_key: apikeysUpdatd.private_key,
-      },
-    });
-    var fileMetaData = {
-      name: "mydrivetext.txt",
-      parents: ["1A6jUa08hZ95zU8N4VBV-kGMd96vX9Des"], // A folder ID to which file will get uploaded
-    };
-
-    const filePath = path.join(__dirname, "drive.txt"); // Constructing the file path relative to the script's directory
     const mimeType = mime.lookup(filePath);
-    drive.files.create(
-      {
-        resource: fileMetaData,
+    console.log({ mimeType });
+
+    const { data } = await google
+      .drive({ version: "v3", auth: auth })
+      .files.create({
         media: {
-          body: fs.createReadStream(filePath), // files that will get uploaded
           mimeType: mimeType || "application/octet-stream",
+          body: fs.createReadStream(filePath),
         },
-        fields: "id",
-      },
-      function (error, file) {
-        if (error) {
-          return rejected(error);
-        }
-        resolve(file);
-      },
-    );
-  });
-}
+        requestBody: {
+          name: fileName,
+          parents: ["1A6jUa08hZ95zU8N4VBV-kGMd96vX9Des"], //folder id in which file should be uploaded
+          // create sub folder inside folder
+        },
+        fields: "id,name",
+      });
 
-// async function uploadFile(authClient, filePath) {
-//   console.log("iiii");
-//   return new Promise((resolve, reject) => {
-//     const drive = google.drive({ version: "v3", auth: authClient });
+    console.log(`File uploaded successfully -> ${JSON.stringify(data)}`);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
-//     console.log("2222");
-
-//     const fileMetadata = {
-//       name: "clinicalnote.docx", // Set the desired file name here
-//       parents: ["1A6jUa08hZ95zU8N4VBV-kGMd96vX9Des"],
-//     };
-
-//     const mimeType = mime.lookup(filePath);
-//     console.log(mimeType, "999999");
-
-//     drive.files.create(
-//       {
-//         requestBody: fileMetadata,
-//         media: {
-//           body: fs.createReadStream(filePath),
-//           mimeType: mimeType || "application/octet-stream",
-//         },
-//         fields: "id",
-//       },
-//       function (err, file) {
-//         if (err) {
-//           console.log("kkk");
-//           console.error(err);
-//           reject(err);
-//         } else {
-//           console.log("File Id: ", file.id);
-//           resolve(file);
-//         }
-//       },
-//     );
-//   });
-// }
-getAuthClient();
-// authorize();
-
-// .then((authClient) => {
-//   console.log("authClient");
-//   return uploadFile(authClient);
-// })
-// .catch((err) => {
-//   console.log(err);
-// });
-// getAuthClient()
-//   .then((authClient) => {
-//     console.log("authClient");
-//     return uploadFile(authClient);
-//   })
-//   .catch((err) => {
-//     console.log(err);
-//   });
+uploadFileToGoogleDrive();
