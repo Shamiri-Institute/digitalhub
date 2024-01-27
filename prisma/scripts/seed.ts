@@ -1,16 +1,11 @@
 import { faker } from "@faker-js/faker";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { format } from "date-fns";
+import { ImplementerRole } from "@prisma/client";
 
 import { objectId } from "#/lib/crypto";
 import { Database, db } from "#/lib/db";
 import { userFixtures } from "#/prisma/scripts/fixtures";
-import {
-  mapSessionTypeToSessionNumber,
-  parseCsvBoolean,
-  parseCsvFile,
-} from "#/prisma/scripts/utils";
-import { ImplementerRole } from "@prisma/client";
+import { parseCsvBoolean, parseCsvFile } from "#/prisma/scripts/utils";
 
 async function seedDatabase() {
   await truncateTables();
@@ -22,7 +17,7 @@ async function seedDatabase() {
   await createInterventionSessions(db);
   await createSupervisors(db);
   await createFellows(db);
-  await createInterventionGroupSessions(db);
+  await createInterventionGroups(db);
   await createFellowAttendances(db);
   await createStudents(db);
   await createFixtures(db);
@@ -45,7 +40,7 @@ seedDatabase()
 async function truncateTables() {
   console.log("Truncating tables");
   await db.$executeRaw`
-          TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, user_recent_opens, hubs, projects, students, student_outcomes, fellows, intervention_sessions, intervention_group_sessions, intervention_session_ratings, intervention_session_notes, fellow_attendances, supervisors, schools, hub_coordinators, student_complaints, repayment_requests, reimbursement_requests, overall_fellow_evaluations, fellow_complaints CASCADE;
+          TRUNCATE TABLE implementers, implementer_avatars, implementer_invites, implementer_members, files, users, accounts, sessions, verification_tokens, user_avatars, user_recent_opens, hubs, projects, project_implementers, students, student_attendances, student_outcomes, fellows, intervention_sessions, intervention_groups, intervention_session_ratings, intervention_session_notes, fellow_attendances, supervisors, schools, school_implementers, hub_coordinators, student_complaints, repayment_requests, reimbursement_requests, overall_fellow_evaluations, fellow_complaints CASCADE;
           `;
 }
 
@@ -98,37 +93,37 @@ async function createUsers(db: Database) {
 async function createProjects(db: Database) {
   console.log("Creating projects");
 
-  const implementers = await db.implementer.findMany({
-    select: { id: true, visibleId: true },
-  });
-
-  await parseCsvFile("projects", async (project: any) => {
-    if (!project.project_id) {
+  await parseCsvFile("projects", async (projectInfo: any) => {
+    if (!projectInfo.project_id) {
       console.log("Project found with missing project id. Skipping for now");
       return;
     }
 
-    const implementerIds = project["implementer_id"]?.split(",");
-
-    let implementersObject = undefined;
-    if (implementerIds.length) {
-      implementersObject = {
-        connect: implementers
-          .filter((imp) => implementerIds.includes(imp.visibleId))
-          .map(({ id }) => ({ id })),
-      };
-    }
-
-    await db.projects.create({
+    const project = await db.project.create({
       data: {
-        visibleId: (project.project_id as string).trim(),
-        projectLead: project["project lead"],
-        name: (project.project as string).trim(),
-        funder: project.Funder,
-        budget: project.Budget,
-        implementers: implementersObject,
+        visibleId: (projectInfo.project_id as string).trim(),
+        projectLead: projectInfo["project lead"],
+        name: (projectInfo.project as string).trim(),
+        funder: projectInfo.Funder,
+        budget: projectInfo.Budget,
       },
     });
+
+    const implementerIds = (projectInfo["implementer_id"] as string)?.split(
+      ",",
+    );
+    for (let implementerId of implementerIds) {
+      const implementer = await db.implementer.findFirstOrThrow({
+        where: { visibleId: implementerId },
+      });
+
+      await db.projectImplementer.create({
+        data: {
+          projectId: project.id,
+          implementerId: implementer.id,
+        },
+      });
+    }
   });
 }
 
@@ -140,7 +135,7 @@ async function createHubs(db: Database) {
       where: { visibleId: hub["implementer_id"] },
     });
 
-    const project = await db.projects.findFirstOrThrow({
+    const project = await db.project.findFirstOrThrow({
       where: {
         visibleId: hub["project_id"],
       },
@@ -173,45 +168,68 @@ async function createHubs(db: Database) {
 async function createSchools(db: Database) {
   console.log("Creating schools");
 
-  await parseCsvFile("school_info", async (school: any) => {
+  // TODO: Remove TBC ("To Be Confirmed") schools from database
+
+  await parseCsvFile("school_info", async (schoolInfo: any) => {
     let implementerId: string | undefined;
-    if (school["Implementer_ID"]) {
+    if (
+      schoolInfo["Implementer_ID"] &&
+      !schoolInfo["Implementer_ID"].includes(",")
+    ) {
       const implementer = await db.implementer.findFirstOrThrow({
-        where: { visibleId: school["Implementer_ID"] },
+        where: { visibleId: schoolInfo["Implementer_ID"] },
       });
       implementerId = implementer.id;
     }
 
     let hubId: string | undefined;
-    if (school["Hub_ID"]) {
+    if (schoolInfo["Hub_ID"]) {
       const hub = await db.hub.findUnique({
-        where: { visibleId: school["Hub_ID"] },
+        where: { visibleId: schoolInfo["Hub_ID"] },
       });
       hubId = hub?.id;
     }
 
-    await db.school.create({
+    const school = await db.school.create({
       data: {
         id: objectId("sch"),
-        schoolName: school["School_Name"],
-        schoolType: school["School_Type"],
-        schoolEmail: school["School_email"],
-        schoolCounty: school["School_County"],
-        schoolDemographics: school["School_Demographics"],
-        visibleId: school["School_ID"],
-        implementerId: implementerId,
+        schoolName: schoolInfo["School_Name"],
+        schoolType: schoolInfo["School_Type"],
+        schoolEmail: schoolInfo["School_email"],
+        schoolCounty: schoolInfo["School_County"],
+        schoolDemographics: schoolInfo["School_Demographics"],
+        visibleId: schoolInfo["School_ID"],
+        implementerId: implementerId, // TODO: legacy remove
         hubId: hubId,
-        pointPersonName: school["Point_Person_Name"],
-        pointPersonId: school["Point_Person_ID"],
-        pointPersonPhone: school["Point_Person_Phone"],
-        pointPersonEmail: school["Point_Person_Email"],
-        numbersExpected: parseInt(school["Numbers_Expected"]),
-        boardingDay: school["Boarding_day"],
-        longitude: school["Longitude"] ? parseFloat(school["Longitude"]) : null,
-        latitude: school["Latitude"] ? parseFloat(school["Latitude"]) : null,
-        droppedOut: Boolean(school["Dropped_Out"]),
+        pointPersonName: schoolInfo["Point_Person_Name"],
+        pointPersonId: schoolInfo["Point_Person_ID"],
+        pointPersonPhone: schoolInfo["Point_Person_Phone"],
+        pointPersonEmail: schoolInfo["Point_Person_Email"],
+        numbersExpected: parseInt(schoolInfo["Numbers_Expected"]),
+        boardingDay: schoolInfo["Boarding_day"],
+        longitude: schoolInfo["Longitude"]
+          ? parseFloat(schoolInfo["Longitude"])
+          : null,
+        latitude: schoolInfo["Latitude"]
+          ? parseFloat(schoolInfo["Latitude"])
+          : null,
+        droppedOut: Boolean(schoolInfo["Dropped_Out"]),
       },
     });
+
+    const implementerIds = (schoolInfo["Implementer_ID"] as string)?.split(",");
+    for (let implementerId of implementerIds) {
+      const implementer = await db.implementer.findFirstOrThrow({
+        where: { visibleId: implementerId },
+      });
+
+      await db.schoolImplementer.create({
+        data: {
+          implementerId: implementer.id,
+          schoolId: school.id,
+        },
+      });
+    }
   });
 }
 
@@ -348,33 +366,48 @@ async function createFellows(db: Database) {
   });
 }
 
-async function createInterventionGroupSessions(db: Database) {
+async function createInterventionGroups(db: Database) {
   console.log("Creating intervention group sessions");
 
   const interventionSessions = await db.interventionSession.findMany({
-    include: { school: true },
+    include: {
+      school: {
+        include: {
+          hub: true,
+        },
+      },
+    },
   });
 
+  let fellowIdx = 0;
   for (let interventionSession of interventionSessions) {
-    const { sessionDate, school } = interventionSession;
+    const { school } = interventionSession;
 
-    const fellows = await db.fellow.findMany({
+    const fellowsCount = await db.fellow.count({
       where: { hubId: school.hubId },
     });
+    for (const idx of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+      const groupName = `group-${school.visibleId}-X${(idx + 1)
+        .toString()
+        .padStart(2, "0")}`;
 
-    for (let fellow of fellows) {
-      await db.interventionGroupSession.create({
+      const fellow = await db.fellow.findFirstOrThrow({
+        where: { hubId: school.hubId },
+        skip: (fellowIdx + 1) % fellowsCount,
+        take: 1,
+      });
+
+      await db.interventionGroup.create({
         data: {
-          id: objectId("igsess"),
-          sessionId: interventionSession.id,
-          groupName: `${school.schoolName} Group ${fellow.visibleId} ${format(
-            sessionDate,
-            "yyyy-MM-dd",
-          )}`,
+          id: objectId("ig"),
+          groupName,
           leaderId: fellow.id,
           schoolId: interventionSession.schoolId,
+          projectId: interventionSession.school.hub?.projectId || "N/A",
         },
       });
+
+      fellowIdx += 1;
     }
   }
 }
@@ -382,47 +415,48 @@ async function createInterventionGroupSessions(db: Database) {
 async function createFellowAttendances(db: Database) {
   console.log("Creating fellow attendances");
 
-  const groupSessions = await db.interventionGroupSession.findMany({
+  const schools = await db.school.findMany({
     include: {
-      leader: true,
-      session: {
-        include: {
-          school: true,
-        },
-      },
+      interventionSessions: true,
+      interventionGroups: true,
+      hub: true,
     },
   });
 
-  for (let groupSession of groupSessions) {
-    if (!groupSession.leader) {
-      continue;
+  for (let school of schools) {
+    const { interventionSessions, interventionGroups } = school;
+
+    let fellowIdx = 0;
+    for (const session of interventionSessions) {
+      for (const group of interventionGroups) {
+        const fellowsCount = await db.fellow.count();
+        const fellow = await db.fellow.findFirstOrThrow({
+          skip: fellowIdx % fellowsCount,
+          take: 1,
+        });
+
+        if (!fellow.supervisorId) {
+          console.log(`Fellow ${fellow.visibleId} has no supervisor`);
+          continue;
+        }
+
+        await db.fellowAttendance.create({
+          data: {
+            visibleId: `FA_${fellow.visibleId}_${session.id}`,
+            projectId: school.hub?.projectId ?? null,
+            fellowId: fellow.id,
+            schoolId: school.id,
+            supervisorId: fellow.supervisorId,
+            attended: fellowIdx % 0 == 1 ? true : false,
+            absenceReason: fellowIdx % 0 == 1 ? null : "Random reason",
+            sessionId: session.id,
+            groupId: group.id,
+          },
+        });
+
+        fellowIdx += 1;
+      }
     }
-
-    const { hubId } = groupSession.session.school;
-    const supervisors = await db.supervisor.findMany({
-      where: { hubId },
-    });
-    const randomSupervisor =
-      supervisors[Math.floor(Math.random() * supervisors.length)]!;
-
-    const attended = Math.random() > 0.8;
-
-    await db.fellowAttendance.create({
-      data: {
-        visibleId: `FA_${groupSession.leader.visibleId}_${groupSession.id}`,
-        yearOfImplementation: groupSession.session.yearOfImplementation,
-        fellowId: groupSession.leader.id,
-        sessionNumber: mapSessionTypeToSessionNumber(
-          groupSession.session.sessionType,
-        ),
-        sessionDate: groupSession.session.sessionDate,
-        schoolId: groupSession.session.schoolId,
-        supervisorId: randomSupervisor?.id,
-        attended,
-        absenceReason: attended ? null : "Random reason",
-        groupSessionId: groupSession.id,
-      },
-    });
   }
 }
 
@@ -431,30 +465,41 @@ async function createStudents(db: Database) {
 
   const schools = await db.school.findMany();
 
+  let supervisorIdx = 0;
+  let fellowIdx = 0;
   for (const school of schools) {
     const { hubId } = school;
-    const supervisors = await db.supervisor.findMany({
-      where: { hubId },
-    });
-    const randomSupervisor =
-      supervisors[Math.floor(Math.random() * supervisors.length)]!;
+    if (!hubId) {
+      continue;
+    }
 
-    const fellows = await db.fellow.findMany({ where: { hubId } });
-    const randomFellow = fellows[Math.floor(Math.random() * fellows.length)]!;
+    const supervisorCount = await db.supervisor.count({ where: { hubId } });
+    const supervisor = await db.supervisor.findFirstOrThrow({
+      where: { hubId },
+      skip: (supervisorIdx + 1) % supervisorCount,
+      take: 1,
+    });
+
+    const fellowCount = await db.fellow.count({ where: { hubId } });
+    const fellow = await db.fellow.findFirstOrThrow({
+      where: { hubId },
+      skip: (fellowIdx + 1) % fellowCount,
+      take: 1,
+    });
 
     try {
       for (let i = 0; i < 20; i++) {
-        const studentName = faker.person.fullName();
         const admissionNumber = `Adm_${school.visibleId}_${i + 1}`;
+        const studentName = `Student ${i}`;
         await db.student.create({
           data: {
             id: objectId("stu"),
             studentName,
             visibleId: `Stu_${admissionNumber}`,
-            fellowId: randomFellow?.id,
-            supervisorId: randomSupervisor?.id,
+            fellowId: fellow.id,
+            supervisorId: supervisor.id,
             schoolId: school.id,
-            yearOfImplementation: randomFellow?.yearOfImplementation,
+            yearOfImplementation: fellow.yearOfImplementation,
             admissionNumber,
             age: Math.floor(Math.random() * 10) + 13,
             gender: Math.random() > 0.5 ? "M" : "F",
@@ -477,9 +522,11 @@ async function createStudents(db: Database) {
             isClinicalCase: Math.random() > 0.5,
           },
         });
+
+        fellowIdx += 1;
+        supervisorIdx += 1;
       }
     } catch (error) {
-      console.error({ randomSupervisor, randomFellow, school });
       throw error;
     }
   }

@@ -17,7 +17,7 @@ export function SessionHistory({
   fellow: Prisma.FellowGetPayload<{ include: { fellowAttendances: true } }>;
   fellows: NonNullable<CurrentSupervisor>["fellows"];
   sessionsAttended: Prisma.FellowAttendanceGetPayload<{
-    include: { school: true };
+    include: { school: true; session: true };
   }>[];
 }) {
   const presentCount =

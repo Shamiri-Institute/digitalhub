@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { currentSupervisor } from "#/app/auth";
+import { CurrentSupervisor, currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
@@ -33,6 +33,7 @@ export default async function FellowSessionsPage({
       fellowAttendances: {
         include: {
           school: true,
+          session: true,
         },
         orderBy: {
           sessionNumber: "asc",
@@ -44,45 +45,38 @@ export default async function FellowSessionsPage({
     return <p>Fellow not found with id: {fid}</p>;
   }
 
-  const allFellowsInHub = await db.fellow.findMany({
-    where: {
-      hubId: supervisor.hubId,
-    },
-    include: {
-      hub: true,
-      fellowAttendances: true,
-      fellowReportingNotes: {
-        include: {
-          supervisor: true,
-        },
+  const allFellowsInHub: NonNullable<CurrentSupervisor>["fellows"] =
+    await db.fellow.findMany({
+      where: {
+        hubId: supervisor.hubId,
       },
-      fellowComplaints: true,
-      overallFellowEvaluation: true,
-      weeklyFellowRatings: true,
-      repaymentRequests: {
-        include: {
-          groupSession: {
-            include: {
-              session: {
-                include: {
-                  school: true,
-                },
+      include: {
+        hub: true,
+        fellowAttendances: {
+          include: {
+            repaymentRequests: true,
+          },
+        },
+        fellowReportingNotes: {
+          include: {
+            supervisor: true,
+          },
+        },
+        fellowComplaints: true,
+        overallFellowEvaluation: true,
+        weeklyFellowRatings: true,
+        repaymentRequests: {
+          include: {
+            fellowAttendance: {
+              include: {
+                group: true,
+                school: true,
               },
             },
           },
         },
       },
-      groupSessions: {
-        include: {
-          session: {
-            include: {
-              school: true,
-            },
-          },
-        },
-      },
-    },
-  });
+    });
 
   return (
     <main className="max-w-3xl">

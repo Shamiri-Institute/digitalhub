@@ -65,29 +65,31 @@ model VerificationToken {
 }
 
 model Implementer {
-  id                 String              @id @db.VarChar(255)
-  createdAt          DateTime            @default(now()) @map("created_at")
-  updatedAt          DateTime            @updatedAt @map("updated_at")
-  archivedAt         DateTime?           @map("archived_at")
-  visibleId          String              @unique @map("visible_id") @db.VarChar(100) // e.g. Imp_1
-  implementerName    String              @map("implementer_name")
-  implementerType    String              @map("implementer_type") // e.g. NGO
-  implementerAddress String?             @map("implementer_address") // e.g. MAWEHSI GARDENS, OFF Matumbato Rd, Nairobi
-  countyOfOperation  String?             @map("county_of_operation") // e.g. Makueni
-  pointPersonName    String?             @map("point_person_name") // e.g. Beverly
-  pointPersonPhone   String?             @map("point_person_phone") // e.g. 0712345678
-  pointPersonEmail   String?             @map("point_person_email") // e.g. timothy@amhrtf.org
-  avatar             ImplementerAvatar?
-  memberships        ImplementerMember[]
-  invites            ImplementerInvite[]
-  fellows            Fellow[]
-  hubs               Hub[]
-  hubCoordinators    HubCoordinator[]
-  schools            School[]
-  supervisors        Supervisor[]
-  students           Student[]
-  studentOutcomes    StudentOutcome[]
-  projects           Projects[]
+  id                  String               @id @db.VarChar(255)
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  archivedAt          DateTime?            @map("archived_at")
+  visibleId           String               @unique @map("visible_id") @db.VarChar(100) // e.g. Imp_1
+  implementerName     String               @map("implementer_name")
+  implementerType     String               @map("implementer_type") // e.g. NGO
+  implementerAddress  String?              @map("implementer_address") // e.g. MAWEHSI GARDENS, OFF Matumbato Rd, Nairobi
+  countyOfOperation   String?              @map("county_of_operation") // e.g. Makueni
+  pointPersonName     String?              @map("point_person_name") // e.g. Beverly
+  pointPersonPhone    String?              @map("point_person_phone") // e.g. 0712345678
+  pointPersonEmail    String?              @map("point_person_email") // e.g. timothy@amhrtf.org
+  avatar              ImplementerAvatar?
+  memberships         ImplementerMember[]
+  invites             ImplementerInvite[]
+  fellows             Fellow[]
+  hubs                Hub[]
+  hubCoordinators     HubCoordinator[]
+  schools             School[]
+  supervisors         Supervisor[]
+  students            Student[]
+  studentOutcomes     StudentOutcome[]
+  projects            Project[]
+  projectImplementers ProjectImplementer[]
+  schoolImplementers  SchoolImplementer[]
 
   @@map("implementers")
 }
@@ -207,7 +209,9 @@ model Student {
   home                 String?                 @db.VarChar(255)
   siblings             String?                 @db.VarChar(255)
   religion             String?                 @db.VarChar(255)
-  groupName            String?                 @map("group_name") @db.VarChar(255) // TODO: move to intervention_groups & intervention_group_students table
+  groupName            String?                 @map("group_name") @db.VarChar(255) // TODO: can be removed after data migration
+  assignedGroupId      String?                 @map("assigned_group_id")
+  assignedGroup        InterventionGroup?      @relation(fields: [assignedGroupId], references: [id])
   survivingParents     String?                 @map("surviving_parents") @db.VarChar(255)
   parentsDead          String?                 @map("parents_dead") @db.VarChar(255)
   fathersEducation     String?                 @map("fathers_education") @db.VarChar(255)
@@ -217,19 +221,42 @@ model Student {
   isClinicalCase       Boolean?                @map("is_clinical_case")
   phoneNumber          String?                 @map("phone_number") @db.VarChar(255)
   mpesaNumber          String?                 @map("mpesa_number") @db.VarChar(255)
-  attendanceSession0   Boolean?                @map("attendance_session_0")
-  attendanceSession1   Boolean?                @map("attendance_session_1")
-  attendanceSession2   Boolean?                @map("attendance_session_2")
-  attendanceSession3   Boolean?                @map("attendance_session_3")
-  attendanceSession4   Boolean?                @map("attendance_session_4")
+  attendanceSession0   Boolean?                @map("attendance_session_0") // TODO: can be removed after data migration
+  attendanceSession1   Boolean?                @map("attendance_session_1") // TODO: can be removed after data migration
+  attendanceSession2   Boolean?                @map("attendance_session_2") // TODO: can be removed after data migration
+  attendanceSession3   Boolean?                @map("attendance_session_3") // TODO: can be removed after data migration
+  attendanceSession4   Boolean?                @map("attendance_session_4") // TODO: can be removed after data migration
   droppedOut           Boolean?                @map("dropped_out")
   droppedOutAt         DateTime?               @map("dropped_out_at") @db.Timestamptz()
   dropOutReason        String?                 @map("drop_out_reason")
   studentOutcome       StudentOutcome[]
   studentComplaints    StudentComplaints[]
   clinicalCases        ClinicalScreeningInfo[]
+  studentAttendances   StudentAttendance[]
 
   @@map("students")
+}
+
+model StudentAttendance {
+  id            Int                 @id @default(autoincrement())
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  projectId     String              @map("project_id")
+  project       Project             @relation(fields: [projectId], references: [id])
+  studentId     String              @map("student_id") @db.VarChar(255)
+  student       Student             @relation(fields: [studentId], references: [id])
+  schoolId      String              @map("school_id") @db.VarChar(255)
+  school        School              @relation(fields: [schoolId], references: [id])
+  fellowId      String              @map("fellow_id") @db.VarChar(255)
+  fellow        Fellow              @relation(fields: [fellowId], references: [id])
+  attended      Boolean?            @map("attended")
+  absenceReason String?             @map("absence_reason")
+  sessionId     String              @map("session_id")
+  session       InterventionSession @relation(fields: [sessionId], references: [id])
+  groupId       String              @map("group_id") @db.VarChar(255)
+  group         InterventionGroup   @relation(fields: [groupId], references: [id])
+
+  @@map("student_attendances")
 }
 
 model StudentOutcome {
@@ -416,40 +443,41 @@ model StudentOutcome {
 
 /// Fellows are the lay-providers, group leaders of the Shamiri Intervention.
 model Fellow {
-  id                      String                     @id @db.VarChar(255)
-  createdAt               DateTime                   @default(now()) @map("created_at")
-  updatedAt               DateTime                   @updatedAt @map("updated_at")
-  archivedAt              DateTime?                  @map("archived_at")
-  visibleId               String                     @unique @map("visible_id") @db.VarChar(100)
-  fellowName              String?                    @map("fellow_name") @db.VarChar(255)
-  fellowEmail             String?                    @map("fellow_email") @db.VarChar(255)
-  yearOfImplementation    Int?                       @map("year_of_implementation") // might not be required anymore
-  mpesaName               String?                    @map("mpesa_name") @db.VarChar(255)
-  mpesaNumber             String?                    @map("mpesa_number") @db.VarChar(255)
-  idNumber                String?                    @map("id_number") @db.VarChar(255) // consider having this as required when we can establish 100% collection of this field, and probably encrypted at the db level
-  cellNumber              String?                    @map("cell_number") @db.VarChar(255)
-  county                  String?                    @map("county") @db.VarChar(255)
-  subCounty               String?                    @map("sub_county") @db.VarChar(255)
-  dateOfBirth             DateTime?                  @map("date_of_birth") @db.Date
-  gender                  String?                    @map("gender")
-  transferred             Boolean?                   @map("transferred")
-  hubId                   String?                    @map("hub_id") @db.VarChar(255)
-  hub                     Hub?                       @relation(fields: [hubId], references: [id])
-  implementerId           String?                    @map("implementer_id") @db.VarChar(255)
-  implementer             Implementer?               @relation(fields: [implementerId], references: [id])
-  supervisorId            String?                    @map("supervisor_id") @db.VarChar(255)
-  supervisor              Supervisor?                @relation(fields: [supervisorId], references: [id])
-  droppedOut              Boolean?                   @map("dropped_out") // keeping this here for historical data that didn't track droppedOutDates
-  droppedOutAt            DateTime?                  @map("dropped_out_at") @db.Timestamptz()
-  dropOutReason           String?                    @map("drop_out_reason")
+  id                      String                    @id @db.VarChar(255)
+  createdAt               DateTime                  @default(now()) @map("created_at")
+  updatedAt               DateTime                  @updatedAt @map("updated_at")
+  archivedAt              DateTime?                 @map("archived_at")
+  visibleId               String                    @unique @map("visible_id") @db.VarChar(100)
+  fellowName              String?                   @map("fellow_name") @db.VarChar(255)
+  fellowEmail             String?                   @map("fellow_email") @db.VarChar(255)
+  yearOfImplementation    Int?                      @map("year_of_implementation") // might not be required anymore
+  mpesaName               String?                   @map("mpesa_name") @db.VarChar(255)
+  mpesaNumber             String?                   @map("mpesa_number") @db.VarChar(255)
+  idNumber                String?                   @map("id_number") @db.VarChar(255) // consider having this as required when we can establish 100% collection of this field, and probably encrypted at the db level
+  cellNumber              String?                   @map("cell_number") @db.VarChar(255)
+  county                  String?                   @map("county") @db.VarChar(255)
+  subCounty               String?                   @map("sub_county") @db.VarChar(255)
+  dateOfBirth             DateTime?                 @map("date_of_birth") @db.Date
+  gender                  String?                   @map("gender")
+  transferred             Boolean?                  @map("transferred")
+  hubId                   String?                   @map("hub_id") @db.VarChar(255) // TODO: make non-null
+  hub                     Hub?                      @relation(fields: [hubId], references: [id])
+  implementerId           String?                   @map("implementer_id") @db.VarChar(255)
+  implementer             Implementer?              @relation(fields: [implementerId], references: [id])
+  supervisorId            String?                   @map("supervisor_id") @db.VarChar(255)
+  supervisor              Supervisor?               @relation(fields: [supervisorId], references: [id])
+  droppedOut              Boolean?                  @map("dropped_out") // keeping this here for historical data that didn't track droppedOutDates
+  droppedOutAt            DateTime?                 @map("dropped_out_at") @db.Timestamptz()
+  dropOutReason           String?                   @map("drop_out_reason")
   students                Student[]
+  studentAttendances      StudentAttendance[]
   fellowAttendances       FellowAttendance[]
-  groupSessions           InterventionGroupSession[]
   fellowReportingNotes    FellowReportingNotes[]
   repaymentRequests       RepaymentRequest[]
   overallFellowEvaluation OverallFellowEvaluation[]
   fellowComplaints        FellowComplaints[]
   weeklyFellowRatings     WeeklyFellowRatings[]
+  groups                  InterventionGroup[]
   delayedPaymentRequests  DelayedPaymentRequest[]
 
   @@map("fellows")
@@ -458,24 +486,29 @@ model Fellow {
 /// FellowAttendance is a representation of the attendance of a fellow in a session. It is used to track the attendance of fellows in sessions but also track the session in the future.
 
 model FellowAttendance {
-  id                     Int                       @id @default(autoincrement())
-  visibleId              String                    @unique @map("visible_id") @db.VarChar(100)
-  createdAt              DateTime                  @default(now()) @map("created_at")
-  updatedAt              DateTime                  @updatedAt @map("updated_at")
-  fellowId               String                    @map("fellow_id") @db.VarChar(255)
-  fellow                 Fellow                    @relation(fields: [fellowId], references: [id])
-  sessionNumber          Int                       @map("session_number")
-  sessionDate            DateTime                  @map("session_date")
-  yearOfImplementation   Int                       @map("year_of_implementation") // might not be needed
-  schoolId               String                    @map("school_id") @db.VarChar(255)
-  school                 School                    @relation(fields: [schoolId], references: [id])
-  supervisorId           String                    @map("supervisor_id") @db.VarChar(255)
-  supervisor             Supervisor                @relation(fields: [supervisorId], references: [id])
-  attended               Boolean?                  @map("attended")
-  absenceReason          String?                   @map("absence_reason")
-  paymentInitiated       Boolean?                  @map("payment_initiated")
-  groupSessionId         String?                   @map("group_session_id") @db.VarChar(255)
-  groupSession           InterventionGroupSession? @relation(fields: [groupSessionId], references: [id])
+  id                     Int                     @id @default(autoincrement())
+  visibleId              String                  @unique @map("visible_id") @db.VarChar(100)
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  projectId              String?                 @map("project_id")
+  project                Project?                @relation(fields: [projectId], references: [id])
+  fellowId               String                  @map("fellow_id") @db.VarChar(255)
+  fellow                 Fellow                  @relation(fields: [fellowId], references: [id])
+  sessionNumber          Int?                    @map("session_number") // TODO: deprecate after data migration
+  sessionDate            DateTime?               @map("session_date") // TODO: deprecate after data migration
+  yearOfImplementation   Int?                    @map("year_of_implementation") // TODO: might not be needed , use projectId
+  schoolId               String                  @map("school_id") @db.VarChar(255)
+  school                 School                  @relation(fields: [schoolId], references: [id])
+  supervisorId           String                  @map("supervisor_id") @db.VarChar(255)
+  supervisor             Supervisor              @relation(fields: [supervisorId], references: [id])
+  attended               Boolean?                @map("attended")
+  absenceReason          String?                 @map("absence_reason")
+  paymentInitiated       Boolean?                @map("payment_initiated") // TODO: figure how this will impact flows, may not be needed
+  sessionId              String?                 @map("session_id") // TODO: make required after schema migration and historial data migration
+  session                InterventionSession?    @relation(fields: [sessionId], references: [id])
+  groupId                String?                 @map("group_id") @db.VarChar(255) // TODO: make required after schema migration and historial data migration
+  group                  InterventionGroup?      @relation(fields: [groupId], references: [id])
+  repaymentRequests      RepaymentRequest[]
   delayedPaymentRequests DelayedPaymentRequest[]
 
   @@map("fellow_attendances")
@@ -518,7 +551,7 @@ model Supervisor {
   sessionRatings            InterventionSessionRating[]
   sessionNotes              InterventionSessionNote[]
   reimbursementRequests     ReimbursementRequest[]
-  StudentComplaints         StudentComplaints[]
+  studentComplaints         StudentComplaints[]
   fellowReportingNotes      FellowReportingNotes[]
   clinicalScreeningCases    ClinicalScreeningInfo[]
   referredToMeClinicalCases ClinicalScreeningInfo[]     @relation("referredtocases")
@@ -532,51 +565,64 @@ model Supervisor {
 }
 
 model School {
-  id                          String                     @id @db.VarChar(255)
-  createdAt                   DateTime                   @default(now()) @map("created_at")
-  updatedAt                   DateTime                   @updatedAt @map("updated_at")
-  archivedAt                  DateTime?                  @map("archived_at")
-  schoolName                  String                     @map("school_name") @db.VarChar(255) // e.g. Garden Estate
-  schoolType                  String?                    @map("school_type") @db.VarChar(255)
-  schoolEmail                 String?                    @map("school_email") @db.VarChar(255)
-  schoolCounty                String?                    @map("school_county") @db.VarChar(255) // e.g. Makueni
-  schoolDemographics          String?                    @map("school_demographics") @db.VarChar(255) // e.g. Mixed
-  visibleId                   String                     @unique @map("visible_id") @db.VarChar(100) // e.g. T2PS_School_6
-  implementerId               String?                    @map("implementer_id") @db.VarChar(255)
-  implementer                 Implementer?               @relation(fields: [implementerId], references: [id])
-  hubId                       String?                    @map("hub_id") @db.VarChar(255)
-  hub                         Hub?                       @relation(fields: [hubId], references: [id])
-  pointPersonName             String?                    @map("point_person_name") @db.VarChar(255)
-  pointPersonId               String?                    @map("point_person_id") @db.VarChar(255)
-  pointPersonPhone            String?                    @map("point_person_phone") @db.VarChar(255)
-  pointPersonEmail            String?                    @map("point_person_email") @db.VarChar(255)
-  numbersExpected             Int?                       @map("numbers_expected") // e.g. 700
-  boardingDay                 String?                    @map("boarding_day") @db.VarChar(255) // e.g. Day and boarding
-  longitude                   Float?                     @map("longitude")
-  latitude                    Float?                     @map("latitude")
-  droppedOut                  Boolean?                   @map("dropped_out")
-  dropoutReason               String?                    @map("dropout_reason")
-  preSessionDate              DateTime?                  @map("pre_session_date")
-  session1Date                DateTime?                  @map("session_1_date")
-  session2Date                DateTime?                  @map("session_2_date")
-  session3Date                DateTime?                  @map("session_3_date")
-  session4Date                DateTime?                  @map("session_4_date")
-  clinicalFollowup1Date       DateTime?                  @map("clinical_followup_1_date")
-  clinicalFollowup2Date       DateTime?                  @map("clinical_followup_2_date")
-  clinicalFollowup3Date       DateTime?                  @map("clinical_followup_3_date")
-  clinicalFollowup4Date       DateTime?                  @map("clinical_followup_4_date")
-  clinicalFollowup5Date       DateTime?                  @map("clinical_followup_5_date")
-  clinicalFollowup6Date       DateTime?                  @map("clinical_followup_6_date")
-  clinicalFollowup7Date       DateTime?                  @map("clinical_followup_7_date")
-  clinicalFollowup8Date       DateTime?                  @map("clinical_followup_8_date")
-  dataCollectionFollowup1Date DateTime?                  @map("data_collection_followup_1_date")
+  id                          String                @id @db.VarChar(255)
+  createdAt                   DateTime              @default(now()) @map("created_at")
+  updatedAt                   DateTime              @updatedAt @map("updated_at")
+  archivedAt                  DateTime?             @map("archived_at")
+  schoolName                  String                @map("school_name") @db.VarChar(255) // e.g. Garden Estate
+  schoolType                  String?               @map("school_type") @db.VarChar(255)
+  schoolEmail                 String?               @map("school_email") @db.VarChar(255)
+  schoolCounty                String?               @map("school_county") @db.VarChar(255) // e.g. Makueni
+  schoolDemographics          String?               @map("school_demographics") @db.VarChar(255) // e.g. Mixed
+  visibleId                   String                @unique @map("visible_id") @db.VarChar(100) // e.g. T2PS_School_6
+  implementerId               String?               @map("implementer_id") @db.VarChar(255) // TODO: to be replaced by join table
+  implementer                 Implementer?          @relation(fields: [implementerId], references: [id])
+  hubId                       String?               @map("hub_id") @db.VarChar(255)
+  hub                         Hub?                  @relation(fields: [hubId], references: [id])
+  pointPersonName             String?               @map("point_person_name") @db.VarChar(255)
+  pointPersonId               String?               @map("point_person_id") @db.VarChar(255)
+  pointPersonPhone            String?               @map("point_person_phone") @db.VarChar(255)
+  pointPersonEmail            String?               @map("point_person_email") @db.VarChar(255)
+  numbersExpected             Int?                  @map("numbers_expected") // e.g. 700
+  boardingDay                 String?               @map("boarding_day") @db.VarChar(255) // e.g. Day and boarding
+  longitude                   Float?                @map("longitude")
+  latitude                    Float?                @map("latitude")
+  droppedOut                  Boolean?              @map("dropped_out")
+  dropoutReason               String?               @map("dropout_reason")
+  preSessionDate              DateTime?             @map("pre_session_date") // TODO: remove after data migration
+  session1Date                DateTime?             @map("session_1_date") // TODO: remove after data migration
+  session2Date                DateTime?             @map("session_2_date") // TODO: remove after data migration
+  session3Date                DateTime?             @map("session_3_date") // TODO: remove after data migration
+  session4Date                DateTime?             @map("session_4_date") // TODO: remove after data migration
+  clinicalFollowup1Date       DateTime?             @map("clinical_followup_1_date") // TODO: remove after data migration
+  clinicalFollowup2Date       DateTime?             @map("clinical_followup_2_date") // TODO: remove after data migration
+  clinicalFollowup3Date       DateTime?             @map("clinical_followup_3_date") // TODO: remove after data migration
+  clinicalFollowup4Date       DateTime?             @map("clinical_followup_4_date") // TODO: remove after data migration
+  clinicalFollowup5Date       DateTime?             @map("clinical_followup_5_date") // TODO: remove after data migration
+  clinicalFollowup6Date       DateTime?             @map("clinical_followup_6_date") // TODO: remove after data migration
+  clinicalFollowup7Date       DateTime?             @map("clinical_followup_7_date") // TODO: remove after data migration
+  clinicalFollowup8Date       DateTime?             @map("clinical_followup_8_date") // TODO: remove after data migration
+  dataCollectionFollowup1Date DateTime?             @map("data_collection_followup_1_date") // TODO: remove after data migration
   students                    Student[]
+  studentAttendances          StudentAttendance[]
   fellowAttendances           FellowAttendance[]
-  interventionSessions        InterventionSession[]
   supervisors                 Supervisor[]
-  interventionGroupSession    InterventionGroupSession[]
+  interventionSessions        InterventionSession[]
+  interventionGroups          InterventionGroup[]
+  schoolImplementers          SchoolImplementer[]
 
   @@map("schools")
+}
+
+/// Join table for schools and implementers
+model SchoolImplementer {
+  schoolId      String
+  school        School      @relation(fields: [schoolId], references: [id])
+  implementerId String
+  implementer   Implementer @relation(fields: [implementerId], references: [id])
+
+  @@id([schoolId, implementerId])
+  @@map("school_implementers")
 }
 
 model Hub {
@@ -596,7 +642,7 @@ model Hub {
   repaymentRequests     RepaymentRequest[]
   coordinators          HubCoordinator[]
   projectId             String?                @db.VarChar(100)
-  project               Projects?              @relation(fields: [projectId], references: [id])
+  project               Project?               @relation(fields: [projectId], references: [id])
 
   @@map("hubs")
 }
@@ -641,14 +687,18 @@ model InterventionSession {
   archivedAt             DateTime?                   @map("archived_at")
   sessionDate            DateTime                    @map("session_date")
   sessionName            String                      @map("session_name") @db.VarChar(255)
-  sessionType            String                      @map("session_type") @db.VarChar(255) // e.g. s0, s1, s2, s3, s4, fu1, fu2, ..., fu8
+  sessionType            String                      @map("session_type") @db.VarChar(255) // e.g. s0, s1, s2, s3, s4, fu1, fu2, ..., fu8, 
+  // TODO: consider adding column for sessionIndex Int, while sessionType tracks, intervention, dataCollation, followUp
   schoolId               String                      @map("school_id") @db.VarChar(255)
   school                 School                      @relation(fields: [schoolId], references: [id])
   occurred               Boolean
-  yearOfImplementation   Int                         @map("year_of_implementation") // might not be needed anymore
-  groupSessions          InterventionGroupSession[]
+  yearOfImplementation   Int                         @map("year_of_implementation") // TODO: might not be needed anymore
+  projectId              String?                     @map("project_id") @db.VarChar(100)
+  project                Project?                    @relation(fields: [projectId], references: [id])
   sessionRatings         InterventionSessionRating[]
   sessionNotes           InterventionSessionNote[]
+  fellowAttendances      FellowAttendance[]
+  studentAttendances     StudentAttendance[]
   delayedPaymentRequests DelayedPaymentRequest[]
 
   @@unique([schoolId, sessionType], name: "interventionBySchoolIdAndSessionType")
@@ -687,23 +737,24 @@ model InterventionSessionNote {
   @@map("intervention_session_notes")
 }
 
-/// Intervention group sessions are group sessions where the Shamiri Intervention is delivered to high school students by run by fellows (a group leader)
-model InterventionGroupSession {
-  id                String              @id @db.VarChar(255)
-  createdAt         DateTime            @default(now()) @map("created_at")
-  updatedAt         DateTime            @updatedAt @map("updated_at")
-  archivedAt        DateTime?           @map("archived_at")
-  groupName         String              @map("group_name") @db.VarChar(100)
-  leaderId          String?             @map("leader_id") @db.VarChar(255)
-  leader            Fellow?             @relation(fields: [leaderId], references: [id])
-  sessionId         String              @map("session_id") @db.VarChar(255)
-  session           InterventionSession @relation(fields: [sessionId], references: [id])
-  schoolId          String?             @map("school_id") // make this mandatory later on
-  school            School?             @relation(fields: [schoolId], references: [id])
-  fellowAttendances FellowAttendance[]
-  repaymentRequests RepaymentRequest[]
+/// Intervention groups are the all the groups alloted for a school across multiple intervention sessions
+model InterventionGroup {
+  id                 String              @id @db.VarChar(255)
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  archivedAt         DateTime?           @map("archived_at")
+  groupName          String              @map("group_name") @db.VarChar(100)
+  leaderId           String?             @map("leader_id") @db.VarChar(255)
+  leader             Fellow?             @relation(fields: [leaderId], references: [id])
+  schoolId           String?             @map("school_id") // make this mandatory later on
+  school             School?             @relation(fields: [schoolId], references: [id])
+  projectId          String              @map("project_id") @db.VarChar(100)
+  project            Project             @relation(fields: [projectId], references: [id])
+  students           Student[]
+  fellowAttendances  FellowAttendance[]
+  studentAttendances StudentAttendance[]
 
-  @@map("intervention_group_sessions")
+  @@map("intervention_groups")
 }
 
 model ReimbursementRequest {
@@ -730,17 +781,17 @@ model ReimbursementRequest {
 }
 
 model RepaymentRequest {
-  id             String                   @id @default(cuid())
-  createdAt      DateTime                 @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt      DateTime                 @updatedAt @map("updated_at") @db.Timestamptz()
-  supervisorId   String                   @map("supervisor_id") @db.VarChar(255)
-  supervisor     Supervisor               @relation(fields: [supervisorId], references: [id])
-  fellowId       String                   @map("fellow_id") @db.VarChar(255)
-  fellow         Fellow                   @relation(fields: [fellowId], references: [id])
-  hubId          String                   @map("hub_id") @db.VarChar(255)
-  hub            Hub                      @relation(fields: [hubId], references: [id])
-  groupSessionId String                   @map("group_session_id") @db.VarChar(255)
-  groupSession   InterventionGroupSession @relation(fields: [groupSessionId], references: [id])
+  id                 String           @id @default(cuid())
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
+  supervisorId       String           @map("supervisor_id") @db.VarChar(255)
+  supervisor         Supervisor       @relation(fields: [supervisorId], references: [id])
+  fellowId           String           @map("fellow_id") @db.VarChar(255)
+  fellow             Fellow           @relation(fields: [fellowId], references: [id])
+  hubId              String           @map("hub_id") @db.VarChar(255)
+  hub                Hub              @relation(fields: [hubId], references: [id])
+  fellowAttendanceId Int              @map("fellow_attendance_id")
+  fellowAttendance   FellowAttendance @relation(fields: [fellowAttendanceId], references: [id]) // TODO: request repayment UI, we need to show an error toast if fellow didn't attendance session in second dropdown
 
   @@map("repayment_requests")
 }
@@ -937,22 +988,38 @@ model DelayedPaymentRequest {
 }
 
 // this model will force us to actually think about super users if we want to track who created a record
-model Projects {
-  id                 String        @id @default(cuid())
-  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt          DateTime      @updatedAt @map("updated_at")
-  visibleId          String        @unique @map("visible_id") @db.VarChar(255)
-  name               String        @db.VarChar(100)
-  projectLead        String?       @map("project_lead") @db.VarChar(255) // consider if this is necessary
-  implementers       Implementer[] //prisma implicit join to create an association table
-  funder             String?       @db.VarChar(255) // additional info required on what we need to do with this field
-  budget             Int?
-  phase              Int?
-  estimatedStartDate DateTime?     @map("estimated_start_date") @db.Date
-  estimatedEndDate   DateTime?     @map("estimated_end_date") @db.Date
-  actualStartDate    DateTime?     @map("actual_start_date") @db.Date
-  actualEndDate      DateTime?     @map("actual_end_date") @db.Date
-  hub                Hub[]
+model Project {
+  id                   String                @id @default(cuid())
+  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+  visibleId            String                @unique @map("visible_id") @db.VarChar(255)
+  name                 String                @db.VarChar(100)
+  projectLead          String?               @map("project_lead") @db.VarChar(255) // consider if this is necessary
+  implementers         Implementer[] //prisma implicit join to create an association table
+  funder               String?               @db.VarChar(255) // additional info required on what we need to do with this field
+  budget               Int?
+  phase                Int?
+  estimatedStartDate   DateTime?             @map("estimated_start_date") @db.Date
+  estimatedEndDate     DateTime?             @map("estimated_end_date") @db.Date
+  actualStartDate      DateTime?             @map("actual_start_date") @db.Date
+  actualEndDate        DateTime?             @map("actual_end_date") @db.Date
+  hub                  Hub[]
+  studentAttendances   StudentAttendance[]
+  fellowAttendances    FellowAttendance[]
+  interventionSessions InterventionSession[]
+  interventionGroups   InterventionGroup[]
+  projectImplementers  ProjectImplementer[]
 
   @@map("projects")
+}
+
+// Join table between projects and implementers
+model ProjectImplementer {
+  projectId     String
+  project       Project     @relation(fields: [projectId], references: [id])
+  implementerId String
+  implementer   Implementer @relation(fields: [implementerId], references: [id])
+
+  @@id([projectId, implementerId])
+  @@map("project_implementers")
 }
