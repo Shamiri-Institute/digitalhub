@@ -25,14 +25,7 @@ const fallbackProfile = {
 export function ProfileSwitcher() {
   const { data: session, status } = useSession();
 
-  if (status !== "authenticated") {
-    console.error("ProfileSwitcher: not authenticated");
-  }
-
   const implementerId = session?.user?.activeMembership?.implementerId;
-  if (!implementerId) {
-    console.error("ProfileSwitcher: no active membership");
-  }
 
   const [implementerInfo, setImplementerInfo] = React.useState<
     Prisma.ImplementerGetPayload<{
@@ -47,12 +40,14 @@ export function ProfileSwitcher() {
   >();
 
   React.useEffect(() => {
-    fetch(`/api/implementers/${implementerId}`)
-      .then((response) => response.json())
-      .then((data) => setImplementerInfo(data));
-  }, [implementerId]);
-
-  console.log({ implementerInfo });
+    if (implementerId) {
+      fetch(`/api/implementers/${implementerId}`)
+        .then((response) => response.json())
+        .then((data) => setImplementerInfo(data));
+    } else {
+      console.error("ProfileSwitcher: no implementerId", { status, session });
+    }
+  }, [implementerId, session, status]);
 
   return (
     <div className="-ml-1.5 flex justify-between">

@@ -19,19 +19,20 @@ export default async function RefundPage() {
   }
 
   return (
-    <>
+    <main className="mx-auto max-w-3xl">
       <PageHeader />
       <RefundForm
         supervisorId={supervisor.id}
         hubId={supervisor.assignedSchool.hubId}
       />
-    </>
+    </main>
   );
 }
 
 function PageHeader() {
   return (
-    <div className="mt-2 flex justify-end">
+    <div className="mt-8 flex justify-between lg:mt-2">
+      <h1 className="text-xl font-semibold">Request Refund</h1>
       <Link href={"/profile"}>
         <Icons.xIcon className="h-6 w-6" />
       </Link>

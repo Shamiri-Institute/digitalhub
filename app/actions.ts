@@ -676,7 +676,7 @@ export async function submitTransportReimbursementRequest(data: {
   amount: string;
   mpesaName: string;
   mpesaNumber: string;
-  receiptUrl: string;
+  receiptFileKey?: string;
   session: string;
   destination: string;
   reason: string;
@@ -702,7 +702,7 @@ export async function submitTransportReimbursementRequest(data: {
         mpesaNumber: data.mpesaNumber,
         details: {
           subtype: data.reason,
-          receiptUrl: data.receiptUrl,
+          receiptFileKey: data.receiptFileKey,
           session: data.session,
           destination: data.destination,
           school: data.school,
