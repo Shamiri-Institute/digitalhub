@@ -86,26 +86,8 @@ export async function currentSupervisor() {
                   school: true,
                 },
               },
-              // groupSession: {
-              //   include: {
-              //     session: {
-              //       include: {
-              //         school: true,
-              //       },
-              //     },
-              //   },
-              // },
             },
           },
-          // groupSessions: {
-          //   include: {
-          //     session: {
-          //       include: {
-          //         school: true,
-          //       },
-          //     },
-          //   },
-          // },
           overallFellowEvaluation: true,
           weeklyFellowRatings: true,
         },

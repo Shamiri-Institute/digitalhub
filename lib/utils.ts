@@ -92,6 +92,7 @@ export function doesSessionExist(
 export function stringValidation(message: string) {
   return z.string({ required_error: message }).trim().min(1, { message });
 }
+
 export function mapSessionTypeToSessionNumber(sessionType: string): number {
   if (sessionType[0] === "s" && sessionType.length === 2) {
     return parseInt(sessionType[1]!);

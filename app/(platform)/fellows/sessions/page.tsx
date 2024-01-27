@@ -65,19 +65,6 @@ export default async function FellowSessionsPage({
         fellowComplaints: true,
         overallFellowEvaluation: true,
         weeklyFellowRatings: true,
-        // repaymentRequests: {
-        //   include: {
-        //     groupSession: {
-        //       include: {
-        //         session: {
-        //           include: {
-        //             school: true,
-        //           },
-        //         },
-        //       },
-        //     },
-        //   },
-        // },
         repaymentRequests: {
           include: {
             fellowAttendance: {
@@ -88,15 +75,6 @@ export default async function FellowSessionsPage({
             },
           },
         },
-        // groupSessions: {
-        //   include: {
-        //     session: {
-        //       include: {
-        //         school: true,
-        //       },
-        //     },
-        //   },
-        // },
       },
     });
 
