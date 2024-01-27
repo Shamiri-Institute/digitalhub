@@ -1,5 +1,15 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { School } from "@prisma/client";
+import { PopoverTrigger } from "@radix-ui/react-popover";
+import { format } from "date-fns";
+import { isValidPhoneNumber } from "libphonenumber-js";
+import { useS3Upload } from "next-s3-upload";
+import { useCallback, useEffect, useState } from "react";
+import { UseFormReturn, useForm } from "react-hook-form";
+import { z } from "zod";
+
 import {
   getSchoolsByHubId,
   submitTransportReimbursementRequest,
@@ -9,7 +19,6 @@ import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
 import { Form, FormField } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { Label } from "#/components/ui/label";
 import { Popover, PopoverContent } from "#/components/ui/popover";
 import {
   Select,
@@ -20,15 +29,15 @@ import {
 } from "#/components/ui/select";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { School } from "@prisma/client";
-import { PopoverTrigger } from "@radix-ui/react-popover";
-import { format } from "date-fns";
-import { isValidPhoneNumber } from "libphonenumber-js";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+
+const MAX_FILE_SIZE = 2000000;
+const ACCEPTED_FILE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "application/pdf",
+  "image/heic",
+];
 
 export const FormSchema = z.object({
   receiptDate: z
@@ -58,9 +67,11 @@ export const FormSchema = z.object({
   amount: z.string({
     required_error: "Please enter the total amount used.",
   }),
-  receiptUrl: z.string({
-    required_error: "Please enter the receipt url.",
-  }),
+  receiptFileKey: z
+    .string({
+      required_error: "Please upload a receipt file.",
+    })
+    .min(3, "Please upload a receipt file"),
   school: z.string({
     required_error: "Please select a school.",
   }),
@@ -88,12 +99,10 @@ export function RefundForm({
       amount: "",
       mpesaName: "",
       mpesaNumber: "",
-      receiptUrl: "",
+      receiptFileKey: "",
       school: "",
     },
   });
-
-  const router = useRouter();
 
   useEffect(() => {
     const fetchHubSchools = async () => {
@@ -394,28 +403,26 @@ export function RefundForm({
               />
             </div>
 
-            <div>
-              <FormField
-                control={form.control}
-                name="receiptUrl"
-                render={({ field }) => (
-                  <div className="mt-3 grid w-full gap-1.5">
-                    <Label htmlFor="receiptUrl">Receipt Url</Label>
-                    <Input
-                      id="receiptUrl"
-                      className="mt-1.5 resize-none bg-card"
-                      placeholder="Paste G-Drive link here"
-                      data-1p-ignore="true"
-                      {...field}
-                    />
-                  </div>
-                )}
-              />
-            </div>
+            <ReceiptFileUpload form={form} className="flex flex-col gap-2" />
+
+            {Object.keys(form.formState.errors).length > 0 && (
+              <div
+                className="relative rounded border border-red-300 bg-red-50 px-4 py-3 text-red-500"
+                role="alert"
+              >
+                <strong className="font-bold">
+                  Please correct the following errors:
+                </strong>
+                <ul className="list-inside list-disc">
+                  {Object.entries(form.formState.errors).map(([key, value]) => (
+                    <li key={key}>{value.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <Button
               type="submit"
-              form="modifyFellowForm"
               className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
             >
               Submit
@@ -425,4 +432,82 @@ export function RefundForm({
       </Form>
     </div>
   );
+}
+
+export function ReceiptFileUpload({
+  form,
+  className,
+}: {
+  form: UseFormReturn<z.infer<typeof FormSchema>>;
+  className: string;
+}) {
+  const { FileInput, openFileDialog, uploadToS3 } = useS3Upload();
+  const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleFileChange = useCallback(
+    async (file: File) => {
+      try {
+        setUploading(true);
+        const { key } = await uploadToS3(file, {
+          endpoint: {
+            request: {
+              url: "/api/files/upload",
+              body: {},
+              headers: {},
+            },
+          },
+        });
+        if (key) {
+          form.setValue("receiptFileKey", key);
+          setFile(file);
+        }
+      } catch (error) {
+        console.error("File upload error:", error);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [form, uploadToS3],
+  );
+
+  return (
+    <div className={className}>
+      <Button
+        type="button"
+        className="text-base font-medium"
+        onClick={openFileDialog}
+      >
+        {uploading ? "Uploading receipt..." : "Upload receipt"}
+      </Button>
+      <FileInput onChange={handleFileChange} />
+      {file && (
+        <div>
+          <span>
+            {file.name} ({formatBytes(file.size)})
+          </span>
+        </div>
+      )}
+      <Input
+        id="receiptFileKey"
+        type="text"
+        {...form.register("receiptFileKey", {
+          required: "Please upload the receipt",
+        })}
+        className="hidden h-10 py-2"
+      />
+    </div>
+  );
+}
+
+export function formatBytes(bytes: number, decimals = 2): string {
+  if (bytes === 0) return "0 Bytes";
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
 }

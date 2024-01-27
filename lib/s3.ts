@@ -13,7 +13,7 @@ const client = new S3Client({ region: env.AWS_REGION });
 export async function getObject(input: Pick<GetObjectCommandInput, "Key">) {
   const command = new GetObjectCommand({
     ...input,
-    Bucket: env.AWS_BUCKET_NAME,
+    Bucket: env.S3_UPLOAD_BUCKET,
   });
   const response = await client.send(command);
   return response;
@@ -24,7 +24,7 @@ export async function putObject(
 ) {
   const command = new PutObjectCommand({
     ...input,
-    Bucket: env.AWS_BUCKET_NAME,
+    Bucket: env.S3_UPLOAD_BUCKET,
   });
   return await client.send(command);
 }
