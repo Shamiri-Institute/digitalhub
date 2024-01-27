@@ -1,8 +1,0 @@
-﻿project_id,project,project lead,implementer_id,Implementer_ID  (from imp_id),Funder,Budget,hub_info
-2018_Project_1,Pilot Study,,Imp_1,Imp_1,,,HQ_2018
-2019_Project_1,Templeton 1,,Imp_1,Imp_1,,,HQ_2019
-2021_Project_1,Templeton 2 Phase 1,,Imp_1,Imp_1,,,HQ_2021
-2022_Project_1,Templeton 2 Phase 2,,"Imp_1,Imp_2","Imp_1, Imp_2",,,"HQ_2022,Partner"
-2023_Project_1,Wellspring,,"Imp_1,Imp_3","Imp_1, Imp_3",,,23_Hub_06
-2023_Project_2,Anansi_25k,,"Imp_1,Imp_2","Imp_1, Imp_2",,,"23_Hub_01,23_Hub_02,23_Hub_03,23_Hub_04,23_Hub_05"
-,,,,,,,
