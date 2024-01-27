@@ -659,7 +659,7 @@ async function createFixtures(db: Database) {
     details: {
       subtype: reimbursement.subtype,
       session: reimbursement.session,
-      receiptUrl: "https://example.com/uber.pdf",
+      receiptFileKey: "https://s3.example.com/uber.pdf",
     },
   }));
 
