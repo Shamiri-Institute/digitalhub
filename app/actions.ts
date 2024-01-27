@@ -676,17 +676,12 @@ export async function submitTransportReimbursementRequest(data: {
   amount: string;
   mpesaName: string;
   mpesaNumber: string;
-  receiptFile?: any;
+  receiptFileKey?: string;
   session: string;
   destination: string;
   reason: string;
   school: string;
 }) {
-  console.log({
-    receiptFile: data.receiptFile,
-    receiptFileType: typeof data.receiptFile,
-  });
-
   try {
     if (!data.receiptDate) {
       return {
@@ -707,7 +702,7 @@ export async function submitTransportReimbursementRequest(data: {
         mpesaNumber: data.mpesaNumber,
         details: {
           subtype: data.reason,
-          receiptUrl: "", // TODO: replace
+          receiptFileKey: data.receiptFileKey,
           session: data.session,
           destination: data.destination,
           school: data.school,

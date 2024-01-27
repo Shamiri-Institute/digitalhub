@@ -6,7 +6,7 @@ import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { useS3Upload } from "next-s3-upload";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { UseFormReturn, useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -67,9 +67,11 @@ export const FormSchema = z.object({
   amount: z.string({
     required_error: "Please enter the total amount used.",
   }),
-  receiptFileKey: z.string({
-    required_error: "Please upload a receipt file.",
-  }),
+  receiptFileKey: z
+    .string({
+      required_error: "Please upload a receipt file.",
+    })
+    .min(3, "Please upload a receipt file"),
   school: z.string({
     required_error: "Please select a school.",
   }),
@@ -114,7 +116,6 @@ export function RefundForm({
   }, [hubId]);
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log({ data });
     await submitTransportReimbursementRequest({
       supervisorId,
       hubId,
@@ -404,7 +405,26 @@ export function RefundForm({
 
             <ReceiptFileUpload form={form} className="flex flex-col gap-2" />
 
-            <Button className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95">
+            {Object.keys(form.formState.errors).length > 0 && (
+              <div
+                className="relative rounded border border-red-300 bg-red-50 px-4 py-3 text-red-500"
+                role="alert"
+              >
+                <strong className="font-bold">
+                  Please correct the following errors:
+                </strong>
+                <ul className="list-inside list-disc">
+                  {Object.entries(form.formState.errors).map(([key, value]) => (
+                    <li key={key}>{value.message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              className="mt-4 w-full bg-shamiri-blue py-5 text-white transition-transform hover:bg-shamiri-blue-darker active:scale-95"
+            >
               Submit
             </Button>
           </div>
@@ -425,27 +445,39 @@ export function ReceiptFileUpload({
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
 
-  const handleFileChange = async (file: File) => {
-    setUploading(true);
-    const { key } = await uploadToS3(file, {
-      endpoint: {
-        request: {
-          url: "/api/files/upload",
-          body: {},
-          headers: {},
-        },
-      },
-    });
-    form.setValue("receiptFileKey", key);
-    if (key) {
-      setFile(file);
-      setUploading(false);
-    }
-  };
+  const handleFileChange = useCallback(
+    async (file: File) => {
+      try {
+        setUploading(true);
+        const { key } = await uploadToS3(file, {
+          endpoint: {
+            request: {
+              url: "/api/files/upload",
+              body: {},
+              headers: {},
+            },
+          },
+        });
+        if (key) {
+          form.setValue("receiptFileKey", key);
+          setFile(file);
+        }
+      } catch (error) {
+        console.error("File upload error:", error);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [form, uploadToS3],
+  );
 
   return (
     <div className={className}>
-      <Button className="text-base font-medium" onClick={openFileDialog}>
+      <Button
+        type="button"
+        className="text-base font-medium"
+        onClick={openFileDialog}
+      >
         {uploading ? "Uploading receipt..." : "Upload receipt"}
       </Button>
       <FileInput onChange={handleFileChange} />
