@@ -33,6 +33,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import { fetchSupervisors } from "#/lib/actions/fetch-supervisors";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { constants } from "#/tests/constants";
 
 const FormSchema = z.object({
@@ -175,10 +176,9 @@ export default function CreateClinicalCaseDialogue({
     async function fetchData() {
       const supervisors = await fetchSupervisors({
         where: {
+          hub: { project: { visibleId: CURRENT_PROJECT_ID } },
           assignedSchools: {
-            some: {
-              id: selectedSchoolId,
-            },
+            some: { id: selectedSchoolId },
           },
         },
       });

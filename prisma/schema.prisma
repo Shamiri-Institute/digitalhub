@@ -644,7 +644,7 @@ model Hub {
   reimbursementRequests ReimbursementRequest[]
   repaymentRequests     RepaymentRequest[]
   coordinators          HubCoordinator[]
-  projectId             String?                @db.VarChar(100)
+  projectId             String?                @map("project_id") @db.VarChar(100)
   project               Project?               @relation(fields: [projectId], references: [id])
 
   @@map("hubs")

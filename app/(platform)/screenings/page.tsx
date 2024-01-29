@@ -3,6 +3,7 @@ import { CasesReferredToMe } from "#/app/(platform)/screenings/components/cases-
 import { CreateClinicalCases } from "#/app/(platform)/screenings/components/create-clinical-cases";
 import { ListViewOfClinicalCases } from "#/app/(platform)/screenings/components/view-clinical-cases";
 import { currentSupervisor } from "#/app/auth";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export default async function Page() {
@@ -42,6 +43,7 @@ export default async function Page() {
   const schools = await db.school.findMany({
     where: {
       hubId: supervisor?.hubId,
+      hub: { project: { visibleId: CURRENT_PROJECT_ID } },
     },
     include: {
       students: true,
