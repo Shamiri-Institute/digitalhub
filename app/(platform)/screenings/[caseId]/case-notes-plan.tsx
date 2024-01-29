@@ -15,7 +15,9 @@ export function CaseNotePlan({
   currentSupId: string;
   currentcase: CurrentCase;
 }) {
-  const [selected, setSelected] = useState<string>("");
+  const [selected, setSelected] = useState<string>(
+    currentcase.progressNotes ? "Progress Notes" : "",
+  );
   return (
     <>
       <Card className="my-1 flex rounded-sm">
