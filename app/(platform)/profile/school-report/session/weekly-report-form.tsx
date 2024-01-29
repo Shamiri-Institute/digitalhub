@@ -30,12 +30,14 @@ export function WeeklyReportForm({
   supervisorId,
   pointSupervisor,
   notes,
+  schoolNotAssigned = false,
 }: {
   revalidatePath: string;
   sessionId: string;
   supervisorId: string;
-  pointSupervisor: Prisma.SupervisorGetPayload<{}>;
+  pointSupervisor?: Prisma.SupervisorGetPayload<{}>;
   notes: Prisma.InterventionSessionNoteGetPayload<{}>[];
+  schoolNotAssigned?: boolean;
 }) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -73,6 +75,10 @@ export function WeeklyReportForm({
     }
   }
 
+  if (!pointSupervisor) {
+    return <div>No point supervisor assigned</div>;
+  }
+
   return (
     <div className="px-6">
       <div className="my-3 text-center text-sm font-medium text-muted-foreground">
@@ -98,6 +104,7 @@ export function WeeklyReportForm({
                   placeholder="Write here..."
                   className="mt-1.5 resize-none bg-card"
                   rows={10}
+                  disabled={schoolNotAssigned}
                 />
               </div>
             )}
@@ -116,6 +123,7 @@ export function WeeklyReportForm({
                   placeholder="Write here..."
                   className="mt-1.5 resize-none bg-card"
                   rows={10}
+                  disabled={schoolNotAssigned}
                 />
               </div>
             )}
@@ -134,12 +142,14 @@ export function WeeklyReportForm({
                   placeholder="Write here..."
                   className="mt-1.5 resize-none bg-card"
                   rows={10}
+                  disabled={schoolNotAssigned}
                 />
               </div>
             )}
           />
           <Button
             type="submit"
+            disabled={schoolNotAssigned}
             className="mt-6 w-full bg-shamiri-blue hover:bg-brand"
           >
             Save Report

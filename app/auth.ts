@@ -2,8 +2,30 @@ import { getServerSession } from "next-auth";
 
 import { db } from "#/lib/db";
 
-export async function currentHub() {
-  return await db.hub.findFirst();
+export type CurrentHubCoordinator = Awaited<
+  ReturnType<typeof currentHubCoordinator>
+>;
+
+export async function currentHubCoordinator() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { membership } = user;
+
+  const { identifier } = membership;
+  if (!identifier) {
+    return null;
+  }
+
+  const hubCoordinator = await db.hubCoordinator.findFirst({
+    where: { id: identifier },
+    include: {
+      assignedHub: true,
+    },
+  });
+
+  return hubCoordinator;
 }
 
 export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
@@ -23,12 +45,33 @@ export async function currentSupervisor() {
   const supervisor = await db.supervisor.findFirst({
     where: { id: identifier },
     include: {
-      hub: true,
-      assignedSchool: true,
+      hub: {
+        include: {
+          schools: {
+            include: {
+              interventionSessions: true,
+            },
+          },
+        },
+      },
+      assignedSchools: {
+        include: {
+          interventionSessions: true,
+          _count: {
+            select: {
+              students: true,
+            },
+          },
+        },
+      },
       fellows: {
         include: {
           hub: true,
-          fellowAttendances: true,
+          fellowAttendances: {
+            include: {
+              repaymentRequests: true,
+            },
+          },
           fellowComplaints: true,
           fellowReportingNotes: {
             include: {
@@ -37,27 +80,16 @@ export async function currentSupervisor() {
           },
           repaymentRequests: {
             include: {
-              groupSession: {
+              fellowAttendance: {
                 include: {
-                  session: {
-                    include: {
-                      school: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-          groupSessions: {
-            include: {
-              session: {
-                include: {
+                  group: true,
                   school: true,
                 },
               },
             },
           },
           overallFellowEvaluation: true,
+          weeklyFellowRatings: true,
         },
       },
     },
@@ -67,12 +99,7 @@ export async function currentSupervisor() {
     return null;
   }
 
-  const { assignedSchoolId, assignedSchool } = supervisor;
-  if (!assignedSchoolId || !assignedSchool) {
-    throw new Error("Supervisor has no assigned school");
-  }
-
-  return { ...supervisor, assignedSchoolId, assignedSchool };
+  return supervisor;
 }
 
 export type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>;

@@ -1,4 +1,7 @@
+import { Prisma } from "@prisma/client";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import React from "react";
 
 import { Icons } from "#/components/icons";
 import { OrganizationAvatar, UserAvatar } from "#/components/ui/avatar";
@@ -10,9 +13,8 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 import { constants } from "#/tests/constants";
-import { signOut, useSession } from "next-auth/react";
 
-const demoProfile = {
+const fallbackProfile = {
   organization: {
     avatarUrl: "https://i.imgur.com/1s8jfQi.png",
     name: "Shamiri Institute",
@@ -21,9 +23,31 @@ const demoProfile = {
 };
 
 export function ProfileSwitcher() {
-  const session = useSession();
+  const { data: session, status } = useSession();
 
-  console.log({ session });
+  const implementerId = session?.user?.activeMembership?.implementerId;
+
+  const [implementerInfo, setImplementerInfo] = React.useState<
+    Prisma.ImplementerGetPayload<{
+      include: {
+        avatar: {
+          include: {
+            file: true;
+          };
+        };
+      };
+    }>
+  >();
+
+  React.useEffect(() => {
+    if (implementerId) {
+      fetch(`/api/implementers/${implementerId}`)
+        .then((response) => response.json())
+        .then((data) => setImplementerInfo(data));
+    } else {
+      console.error("ProfileSwitcher: no implementerId", { status, session });
+    }
+  }, [implementerId, session, status]);
 
   return (
     <div className="-ml-1.5 flex justify-between">
@@ -33,12 +57,12 @@ export function ProfileSwitcher() {
           data-testid={constants.ORGANIZATION_SWITCHER}
         >
           <OrganizationAvatar
-            src={demoProfile.organization.avatarUrl}
-            fallback={demoProfile.organization.name}
+            src={fallbackProfile.organization.avatarUrl}
+            fallback={fallbackProfile.organization.name}
           />
           <div className="text-sm font-medium">
-            {session?.data?.user?.implementer?.name ||
-              demoProfile.organization.name}
+            {implementerInfo?.implementerName ??
+              fallbackProfile.organization.name}
           </div>
           <Icons.chevronsUpDown
             className={cn("h-5 text-foreground/50", "animate-in hover:fade-in")}
@@ -48,8 +72,8 @@ export function ProfileSwitcher() {
       </OrganizationDialog>
       <button className="rounded p-1 transition hover:bg-card active:scale-95">
         <UserAvatar
-          src={session?.data?.user?.image || ""}
-          fallback={session?.data?.user?.name || "??"}
+          src={session?.user?.image || ""}
+          fallback={session?.user?.name || "??"}
         />
       </button>
     </div>
@@ -77,11 +101,11 @@ function OrganizationDialog({ children }: { children: React.ReactNode }) {
             <button className="my-2 flex w-full items-center justify-between rounded-md px-1.5 py-1 hover:bg-foreground/[0.025]">
               <div className="flex items-center gap-2">
                 <OrganizationAvatar
-                  src={demoProfile.organization.avatarUrl}
-                  fallback={demoProfile.organization.name}
+                  src={fallbackProfile.organization.avatarUrl}
+                  fallback={fallbackProfile.organization.name}
                 />
                 <div className="text-sm font-medium">
-                  {demoProfile.organization.name}
+                  {fallbackProfile.organization.name}
                 </div>
               </div>
               <Icons.check className="h-5 text-brand" strokeWidth={1} />

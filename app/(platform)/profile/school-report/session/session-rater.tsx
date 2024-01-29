@@ -12,6 +12,7 @@ import {
 } from "#/components/ui/accordion";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
+import { cn } from "#/lib/utils";
 
 type SessionRatings = {
   studentBehavior: number;
@@ -24,11 +25,13 @@ export function SessionRater({
   sessionId,
   supervisorId,
   ratings,
+  schoolNotAssigned = false,
 }: {
   revalidatePath: string;
   sessionId: string;
   supervisorId: string;
   ratings: SessionRatings;
+  schoolNotAssigned?: boolean;
 }) {
   const { toast } = useToast();
 
@@ -74,7 +77,9 @@ export function SessionRater({
           </AccordionTrigger>
 
           <AccordionContent>
-            <div className="pt-4">
+            <div
+              className={cn("pt-4", schoolNotAssigned && "pointer-events-none")}
+            >
               <div className="flex items-center justify-between">
                 <p className="text-sm font-normal text-brand">
                   Student behavior

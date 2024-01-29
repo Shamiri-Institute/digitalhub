@@ -1,27 +1,30 @@
 "use client";
+
+import { Prisma } from "@prisma/client";
+
 import CreateClinicalCaseDialogue from "#/app/(platform)/screenings/[caseId]/components/create-clinical-case";
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
-import { Fellow, School, Student, Supervisor } from "@prisma/client";
-
-type FellowWithStudents = Fellow & {
-  students: Student[];
-};
-
-type SupervisorWithFellows = Supervisor & {
-  fellows: FellowWithStudents[];
-};
-
-type SchoolsWithSupervisors = School & {
-  supervisors: SupervisorWithFellows[];
-};
 
 export function CreateClinicalCases({
   currentSupervisorId,
   schools,
 }: {
   currentSupervisorId: string | undefined;
-  schools: SchoolsWithSupervisors[];
+  schools: Prisma.SchoolGetPayload<{
+    include: {
+      students: true;
+      assignedSupervisor: {
+        include: {
+          fellows: {
+            include: {
+              students: true;
+            };
+          };
+        };
+      };
+    };
+  }>[];
 }) {
   return (
     <div className="my-3">
@@ -36,7 +39,7 @@ export function CreateClinicalCases({
             currentSupervisorId={currentSupervisorId}
             schools={schools}
           >
-            <Icons.add className="h-6 w-6 text-brand" />
+            <Icons.add className="h-6 w-6 cursor-pointer text-brand" />
           </CreateClinicalCaseDialogue>
         </div>
       </div>

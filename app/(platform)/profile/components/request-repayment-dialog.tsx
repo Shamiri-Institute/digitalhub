@@ -14,91 +14,88 @@ import {
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
-
-type RequestRepaymentFellow = Prisma.FellowGetPayload<{
-  include: {
-    repaymentRequests: {
-      include: {
-        groupSession: {
-          include: {
-            session: {
-              include: {
-                school: true;
-              };
-            };
-          };
-        };
-      };
-    };
-    groupSessions: {
-      include: {
-        session: {
-          include: {
-            school: true;
-          };
-        };
-      };
-    };
-  };
-}>;
+import { fetchFellowAttendances } from "#/lib/actions/fetch-fellow-attendances";
+import { fetchRepaymentRequest } from "#/lib/actions/fetch-repayment-requests";
+import { fetchSchools } from "#/lib/actions/fetch-schools";
 
 export function RequestRepaymentDialog({
   fellow,
   children,
 }: {
-  fellow: RequestRepaymentFellow;
+  fellow: Prisma.FellowGetPayload<{}>;
   children: React.ReactNode;
 }) {
+  const [fellowSchools, setFellowSchools] =
+    React.useState<Prisma.SchoolGetPayload<{}>[]>();
+
+  React.useEffect(() => {
+    async function initState() {
+      if (!fellow.hubId) {
+        throw new Error("Fellow does not have a hub");
+      }
+
+      const schools = await fetchSchools({ hubId: fellow.hubId });
+      setFellowSchools(schools);
+    }
+
+    initState();
+  }, [fellow.hubId]);
+
   const [activeSchoolId, setActiveSchoolId] = React.useState<string | null>(
     null,
   );
 
-  // This dedupes the schools in the group sessions
-  const schools = fellow.groupSessions.reduce<{ id: string; name: string }[]>(
-    (unique, groupSession) => {
-      if (
-        !unique.find((school) => school.id === groupSession.session.school.id)
-      ) {
-        unique.push({
-          id: groupSession.session.school.id,
-          name: groupSession.session.school.schoolName,
-        });
+  const comboboxSchoolResults =
+    fellowSchools?.map((school) => ({
+      id: school.id,
+      name: school.schoolName,
+    })) || [];
+
+  const [activeAttendanceId, setActiveAttendanceId] = React.useState<
+    number | null
+  >(null);
+
+  type FellowAttendanceResults = Awaited<
+    ReturnType<typeof fetchFellowAttendances>
+  >;
+  const [fellowAttendances, setFellowAttendances] =
+    React.useState<FellowAttendanceResults>();
+
+  React.useEffect(() => {
+    async function fetchAttendances() {
+      if (!activeSchoolId) {
+        return;
       }
-      return unique;
-    },
-    [],
-  );
 
-  const [activeSessionId, setActiveSessionId] = React.useState<string | null>(
-    null,
-  );
+      const attendances = await fetchFellowAttendances({
+        where: {
+          schoolId: activeSchoolId,
+          fellowId: fellow.id,
+        },
+      });
+      setFellowAttendances(attendances);
+    }
 
-  // Sessions based on school selected
-  const sessions = fellow.groupSessions
-    .filter((groupSession) => groupSession.session.school.id === activeSchoolId)
-    .reduce<{ id: string; name: string }[]>((unique, groupSession) => {
-      const sessionExists = unique.some(
-        (session) => session.id === groupSession.session.id,
-      );
-      const sessionDate = groupSession.session.occurringAt
-        ? format(new Date(groupSession.session.occurringAt), "dd/MM/yyyy")
-        : "Unscheduled";
+    fetchAttendances();
+  }, [activeSchoolId, fellow.id]);
 
-      if (!sessionExists) {
-        unique.push({
-          id: groupSession.id,
-          name: `${groupSession.session.sessionName} - ${sessionDate}`,
-        });
-      }
-      return unique;
-    }, []);
+  const comboxSessionResults =
+    fellowAttendances
+      ?.filter((attendance) => attendance.attended)
+      .map((attendance) => ({
+        id: attendance.id,
+        name: formatSessionLabel({
+          sessionName: attendance.session?.sessionName,
+          sessionDate: attendance.session?.sessionDate,
+        }),
+      })) || [];
 
   const { toast } = useToast();
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    if (!activeSessionId) {
+    if (!activeAttendanceId) {
       toast({ title: "Please select a session" });
       return;
     }
@@ -117,12 +114,12 @@ export function RequestRepaymentDialog({
       supervisorId: fellow.supervisorId,
       fellowId: fellow.id,
       hubId: fellow.hubId,
-      groupSessionId: activeSessionId,
+      fellowAttendanceId: activeAttendanceId,
     });
 
     if (response.success) {
       setActiveSchoolId(null);
-      setActiveSessionId(null);
+      setActiveAttendanceId(null);
       window.location.reload();
     } else {
       toast({
@@ -151,14 +148,11 @@ export function RequestRepaymentDialog({
         <div className="flex justify-center text-4xl font-bold">
           {fellow.mpesaNumber}
         </div>
-        <RepaymentRequestHistory
-          fellow={fellow}
-          repaymentRequests={fellow.repaymentRequests}
-        />
+        <RepaymentRequestHistory fellow={fellow} />
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <SchoolSelector
-              schools={schools}
+              schools={comboboxSchoolResults}
               activeSchoolId={activeSchoolId || ""}
               onSelectSchool={(schoolId) => {
                 setActiveSchoolId(schoolId);
@@ -166,18 +160,16 @@ export function RequestRepaymentDialog({
             />
           </div>
           <div>
-            <SessionSelector
-              sessions={sessions}
-              activeSessionId={activeSessionId || ""}
-              onSelectSession={(sessionId) => {
-                setActiveSessionId(sessionId);
-              }}
+            <AttendanceSelector
+              attendances={comboxSessionResults}
+              activeAttendanceId={activeAttendanceId || -1}
+              onSelectAttendance={setActiveAttendanceId}
             />
           </div>
           <div>
             <Button
               type="submit"
-              disabled={!activeSchoolId || !activeSessionId}
+              disabled={!activeSchoolId || !activeAttendanceId}
               className="mt-4 w-full bg-shamiri-blue py-6 text-lg hover:bg-brand"
             >
               Request Repayment
@@ -187,6 +179,19 @@ export function RequestRepaymentDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function formatSessionLabel({
+  sessionName,
+  sessionDate,
+}: {
+  sessionName?: string;
+  sessionDate?: Date;
+}) {
+  const formattedDate = sessionDate
+    ? format(sessionDate, "dd/MM/yyyy")
+    : "Unscheduled";
+  return `${sessionName || "N/A"} - ${formattedDate}`;
 }
 
 type SchoolSelectorProps = {
@@ -213,25 +218,23 @@ export function SchoolSelector({
   );
 }
 
-type SessionSelectorProps = {
-  sessions: { id: string; name: string }[];
-  activeSessionId: string;
-  onSelectSession: (sessionId: string) => void;
-};
-
-export function SessionSelector({
-  sessions,
-  activeSessionId,
-  onSelectSession,
-}: SessionSelectorProps) {
+export function AttendanceSelector({
+  attendances,
+  activeAttendanceId,
+  onSelectAttendance,
+}: {
+  attendances: { id: number; name: string }[];
+  activeAttendanceId: number;
+  onSelectAttendance: (attendanceId: number) => void;
+}) {
   return (
     <Combobox
-      items={sessions.map((session) => ({
-        id: session.id,
-        label: session.name,
+      items={attendances.map((attendance) => ({
+        id: attendance.id.toString(),
+        label: attendance.name,
       }))}
-      activeItemId={activeSessionId}
-      onSelectItem={onSelectSession}
+      activeItemId={activeAttendanceId.toString()}
+      onSelectItem={(id: string) => onSelectAttendance(parseInt(id))}
       placeholder="Select session..."
     />
   );
@@ -261,23 +264,15 @@ function MPESADisclaimer() {
 
 function RepaymentRequestHistory({
   fellow,
-  repaymentRequests,
 }: {
   fellow: Prisma.FellowGetPayload<{}>;
-  repaymentRequests: Prisma.RepaymentRequestGetPayload<{
-    include: {
-      groupSession: {
-        include: {
-          session: {
-            include: {
-              school: true;
-            };
-          };
-        };
-      };
-    };
-  }>[];
 }) {
+  type RepaymentRequestResults = Awaited<
+    ReturnType<typeof fetchRepaymentRequest>
+  >;
+  const [repaymentRequests, setRepaymentRequests] =
+    React.useState<RepaymentRequestResults>([]);
+
   if (repaymentRequests.length === 0) {
     return null;
   }
@@ -302,8 +297,8 @@ function RepaymentRequestHistory({
                 {format(new Date(request.createdAt), "dd/MM/yyyy")}
               </td>
               <td className="px-2 py-1">
-                {request.groupSession.session.school.schoolName} — Session{" "}
-                {request.groupSession.session.sessionType}
+                {request.fellowAttendance.school.schoolName} — Session{" "}
+                {request.fellowAttendance.session?.sessionType || "N/A"}
               </td>
               <td className="px-2 py-1">{fellow.mpesaNumber}</td>
             </tr>

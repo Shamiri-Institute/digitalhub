@@ -4,7 +4,7 @@ import { SessionSchedule } from "#/app/(platform)/(dashboard)/session-schedule";
 import { ClinicalFeatureCard } from "#/app/(platform)/clinical-feature-card";
 import { Header } from "#/app/(platform)/common";
 import { HubCoordinatorView } from "#/app/(platform)/hub-coordinator-view";
-import { getCurrentPersonnel } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { Icon, Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
 import { db } from "#/lib/db";
@@ -23,8 +23,26 @@ export default async function HomePage() {
   return <div>Unknown role</div>;
 }
 
+function sessionDisplayName(sessionType: string) {
+  switch (sessionType) {
+    case "s0":
+      return "S00";
+      break;
+    case "s1":
+      return "S01";
+    case "s2":
+      return "S02";
+    case "s3":
+      return "S03";
+    case "s4":
+      return "S04";
+    default:
+      return sessionType;
+  }
+}
+
 async function SupervisorView() {
-  const supervisor = await getCurrentPersonnel();
+  const supervisor = await currentSupervisor();
   if (!supervisor) {
     return <div>Not a supervisor</div>;
   }
@@ -35,6 +53,24 @@ async function SupervisorView() {
   const schoolCount = await db.school.count({
     where: { hubId: supervisor.hubId },
   });
+
+  const interventionSessions =
+    supervisor.hub?.schools
+      .flatMap((school) =>
+        school.interventionSessions.map((is) => ({
+          ...is,
+          schoolName: school.schoolName,
+          schoolVisibleId: school.visibleId,
+        })),
+      )
+      .map((session) => ({
+        title: `${session.schoolName}, ${sessionDisplayName(
+          session.sessionType,
+        )}`,
+        date: session.sessionDate,
+        duration: 1,
+        schoolHref: `/schools/${session.schoolVisibleId}`,
+      })) || [];
 
   return (
     <div>
@@ -59,19 +95,11 @@ async function SupervisorView() {
           Sessions
         </h3>
         <div className="mt-4">
-          <SessionSchedule
-            sessions={[
-              {
-                title: "Kamkunji, S01",
-                date: new Date("2023-11-05T19:30:00Z"),
-                duration: 1,
-              },
-            ]}
-          />
+          <SessionSchedule sessions={interventionSessions} />
         </div>
       </div>
 
-      <div className="mt-12">
+      {/* <div className="mt-12">
         <h3 className="mt-4 text-base font-semibold text-brand xl:text-2xl">
           Recently opened
         </h3>
@@ -80,7 +108,7 @@ async function SupervisorView() {
             Coming soon...
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
@@ -103,7 +131,7 @@ async function SupervisorOverviewCards({
   return (
     <div className="mb-4 grid grid-cols-1 gap-4 xs:grid-cols-2 sm:grid-cols-3 sm:gap-6">
       <FeatureCard
-        href="/fellows" // TODO: see if these are supposed to be clickable
+        href="/profile" // TODO: see if these are supposed to be clickable
         title="Fellows"
         stat={fellowCount}
         Icon={Icons.users}
@@ -150,45 +178,6 @@ function FeatureCard({
     </Link>
   );
 }
-
-const schools = [
-  {
-    name: "Maranda Sec School",
-    population: 1400,
-    sessions: ["Pre", "S1"],
-    fellowsCount: 15,
-  },
-  {
-    name: "Kanjeru Sec School",
-    population: 23,
-    sessions: ["Pre", "S1", "S2"],
-    fellowsCount: 0,
-  },
-  {
-    name: "Allaince Sec School",
-    population: 100,
-    sessions: ["Pre", "S1", "S3", "S4"],
-    fellowsCount: 9,
-  },
-  {
-    name: "Maseno Sec School",
-    population: 400,
-    sessions: ["Pre"],
-    fellowsCount: 4,
-  },
-  {
-    name: "Kamukunji Sec School",
-    population: 900,
-    sessions: ["Pre", "S1", "S2"],
-    fellowsCount: 11,
-  },
-  {
-    name: "Starehe Sec School",
-    population: 1400,
-    sessions: ["Pre"],
-    fellowsCount: 7,
-  },
-];
 
 function SchoolsList() {
   const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];

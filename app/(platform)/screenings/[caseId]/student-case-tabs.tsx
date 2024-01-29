@@ -29,6 +29,11 @@ export function StudentCaseTabs({
   supervisors: SupervisorWithFellows[];
   currentSupId: string | undefined;
 }) {
+  const canReferCase = !!(
+    currentcase.initialCaseHistoryId &&
+    currentcase.emergencyPresentingIssues !== null
+  );
+
   return (
     <div className="mt-4">
       <Accordion type="single" collapsible>
@@ -82,7 +87,7 @@ export function StudentCaseTabs({
           >
             <div className="flex items-center">
               <Icons.network className="mr-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
-              <span className="items-center align-middle">Referral From</span>
+              <span className="items-center align-middle">Initial contact</span>
             </div>
           </AccordionTrigger>
           <AccordionContent>
@@ -103,11 +108,12 @@ export function StudentCaseTabs({
           >
             <div className="flex items-center">
               <Icons.referral className="mr-2 h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
-              <span className="items-center align-middle">Refer To </span>
+              <span className="items-center align-middle">Refer To</span>
             </div>
           </AccordionTrigger>
           <AccordionContent>
             <ReferralToDetails
+              canReferCase={canReferCase}
               currentcase={currentcase}
               supervisors={supervisors}
               currentSupId={currentSupId}

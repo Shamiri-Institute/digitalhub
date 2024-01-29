@@ -26,67 +26,100 @@ function Header() {
 }
 
 async function SchoolsList() {
-  const sessionTypes = ["Pre", "S1", "S2", "S3", "S4"];
-  // const assignedSchool = {
-  //   name: "Maranda Sec School",
-  //   population: 1400,
-  //   sessions: ["Pre", "S1"],
-  //   fellowsCount: 15,
-  //   type: "Public",
-  //   county: "Nairobi",
-  //   pointPerson: "Benny Otieno",
-  //   contactNo: "+254712342314780",
-  //   demographics: "Mixed",
-  // };
-  const assignedSchoolId = "ANS23_School_17";
   const supervisor = await currentSupervisor();
   if (!supervisor) {
     return <InvalidPersonnelRole role="supervisor" />;
   }
-  const { assignedSchool } = supervisor;
-
-  const interventionSessions = await db.interventionSession.findMany({
-    where: {
-      schoolId: supervisor.assignedSchoolId,
-    },
-  });
-
+  const { assignedSchools } = supervisor;
 
   const otherSchools = await db.school.findMany({
     where: {
-      visibleId: { not: assignedSchoolId },
-      hubId: assignedSchool.hubId,
+      visibleId: { notIn: assignedSchools.map((school) => school.visibleId) },
+      hubId: {
+        in: assignedSchools
+          .filter((school) => school.hubId !== null)
+          .map((school) => school.hubId as string),
+      },
+    },
+    include: {
+      interventionSessions: true,
+      _count: {
+        select: {
+          students: true,
+        },
+      },
     },
   });
+
+  const activeFellowsCount = (
+    await db.fellowAttendance.groupBy({
+      by: ["fellowId"],
+      where: {
+        supervisorId: supervisor.id,
+        schoolId: {
+          in: assignedSchools.map((school) => school.id),
+        },
+        attended: true,
+      },
+      _sum: {
+        id: true,
+      },
+    })
+  ).length;
 
   return (
     <div>
       <div>
         <h2 className="py-3 text-xl font-semibold">My School</h2>
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
-          <SchoolCard
-            key={assignedSchool.schoolName}
-            school={assignedSchool}
-            sessionTypes={interventionSessions}
-            fellowsCount={supervisor.fellows.length}
-            assigned
-          />
-          <div />
-          <div />
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+          {assignedSchools.map((school) => (
+            <SchoolCard
+              key={school.id}
+              school={school}
+              fellowsCount={activeFellowsCount}
+              sessionTypes={school.interventionSessions}
+              studentCount={school._count.students}
+            />
+          ))}
+          {assignedSchools.length > 1 ? (
+            <>
+              <div />
+            </>
+          ) : (
+            <>
+              <div />
+              <div />
+            </>
+          )}
         </div>
       </div>
       <div>
         <h2 className="py-3 text-xl font-semibold">Others</h2>
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {otherSchools.map((school) => (
-            <SchoolCard
-              key={school.schoolName}
-              school={school}
-              sessionTypes={interventionSessions}
-              fellowsCount={supervisor.fellows.length}
-
-            />
-          ))}
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+          {otherSchools.map(async (school) => {
+            const activeFellowsCount = (
+              await db.fellowAttendance.groupBy({
+                by: ["fellowId"],
+                where: {
+                  supervisorId: supervisor.id,
+                  schoolId: school.id,
+                  attended: true,
+                },
+                _sum: {
+                  id: true,
+                },
+              })
+            ).length;
+            return (
+              <SchoolCard
+                key={school.schoolName}
+                school={school}
+                studentCount={school._count?.students}
+                fellowsCount={activeFellowsCount}
+                sessionTypes={school.interventionSessions}
+              />
+            );
+          })}
         </div>
       </div>
     </div>

@@ -43,7 +43,7 @@ export function SchoolReportCard({
           ? "Marked as occurring"
           : "Marked as not occurring",
       });
-      window.location.href = "/profile/school-report";
+      window.location.href = `/profile/school-report?sid=${data.schoolVisibleId}`;
     } else {
       toast({
         variant: "destructive",
@@ -62,7 +62,7 @@ export function SchoolReportCard({
     if (response) {
       console.log({ response });
       toast({ title: "Date updated" });
-      window.location.href = "/profile/school-report";
+      window.location.href = `/profile/school-report?sid=${data.schoolVisibleId}`;
     } else {
       toast({
         variant: "destructive",
@@ -92,13 +92,7 @@ export function SchoolReportCard({
             "pointer-events-none": !saved,
           })}
         >
-          <LinkOrDiv
-            href={
-              savedSession
-                ? `/profile/school-report/session?type=${savedSession.sessionType}`
-                : undefined
-            }
-          >
+          <LinkOrDiv>
             <p
               className={cn("pl-3 text-base font-medium leading-5 text-brand", {
                 "text-light-grey": !saved,

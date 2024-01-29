@@ -24,9 +24,8 @@ const casesColorOptions: {
   status: caseStatusOptions;
 }[] = [
   { id: 1, status: "Active" },
-  { id: 2, status: "Referred" },
-  { id: 3, status: "FollowUp" },
-  { id: 4, status: "Terminated" },
+  { id: 2, status: "FollowUp" },
+  { id: 3, status: "Terminated" },
 ];
 
 export default function CaseHeader({
@@ -61,6 +60,19 @@ export default function CaseHeader({
         <Link href="/screenings">
           <Icons.chevronLeft className="h-6 w-6 text-brand" />
         </Link>
+        {currentcase.referralStatus ? (
+          <span
+            className={cn(
+              "ml-2 inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800",
+              currentcase.referralStatus == "Approved" &&
+                "bg-green-100 text-green-800",
+              currentcase.referralStatus == "Declined" &&
+                "bg-red-100 text-red-800",
+            )}
+          >
+            {currentcase.referralStatus}
+          </span>
+        ) : null}
         <FlagStudentDialog
           caseId={currentcase.id}
           reason={currentcase.caseReport}

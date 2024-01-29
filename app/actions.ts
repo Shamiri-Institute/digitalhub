@@ -302,8 +302,8 @@ export async function markFellowAttendance(
 
 export async function dropoutFellowWithReason(
   fellowVisibleId: string,
-  schoolVisibleId: string,
   dropoutReason: string,
+  revalidationPath: string,
 ) {
   try {
     const fellow = await db.fellow.update({
@@ -315,8 +315,7 @@ export async function dropoutFellowWithReason(
       },
     });
 
-    revalidatePath(`/schools/${schoolVisibleId}`);
-
+    revalidatePath(revalidationPath);
     return { fellow };
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -600,6 +599,7 @@ export interface OccurrenceData {
   yearOfImplementation: number;
   sessionType: string;
   schoolId: string;
+  schoolVisibleId: string;
 }
 
 /**
@@ -677,7 +677,7 @@ export async function submitTransportReimbursementRequest(data: {
   amount: string;
   mpesaName: string;
   mpesaNumber: string;
-  receiptUrl: string;
+  receiptFileKey?: string;
   session: string;
   destination: string;
   reason: string;
@@ -703,7 +703,7 @@ export async function submitTransportReimbursementRequest(data: {
         mpesaNumber: data.mpesaNumber,
         details: {
           subtype: data.reason,
-          receiptUrl: data.receiptUrl,
+          receiptFileKey: data.receiptFileKey,
           session: data.session,
           destination: data.destination,
           school: data.school,
@@ -769,6 +769,7 @@ export async function dropoutSchoolWithReason(
       },
     });
 
+    revalidatePath("/profile");
     return { school };
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -777,6 +778,23 @@ export async function dropoutSchoolWithReason(
         error: error.message,
       };
     }
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function undoSchoolDropout(schoolVisibleId: string) {
+  try {
+    const school = await db.school.update({
+      where: { visibleId: schoolVisibleId },
+      data: {
+        droppedOut: false,
+      },
+    });
+
+    revalidatePath("/profile");
+    return { success: true, school };
+  } catch (error) {
     console.error(error);
     return { error: "Something went wrong" };
   }
@@ -1011,6 +1029,8 @@ export async function editFellowDetails(
     | "subCounty"
     | "mpesaName"
     | "cellNumber"
+    | "idNumber"
+    | "fellowEmail"
   >,
 ) {
   const result = EditFellowSchema.safeParse(fellowDetails);
@@ -1055,7 +1075,7 @@ export async function submitRepaymentRequest(data: {
   supervisorId: string;
   fellowId: string;
   hubId: string;
-  groupSessionId: string;
+  fellowAttendanceId: number;
 }) {
   try {
     console.log({ data });
@@ -1065,7 +1085,7 @@ export async function submitRepaymentRequest(data: {
         supervisorId: data.supervisorId,
         fellowId: data.fellowId,
         hubId: data.hubId,
-        groupSessionId: data.groupSessionId,
+        fellowAttendanceId: data.fellowAttendanceId,
       },
     });
     return { success: true };
@@ -1081,22 +1101,35 @@ export async function AcceptRefferedClinicalCase(
   caseId: string,
 ) {
   try {
+    const caseHistory = await db.clinicalCaseTransferTrail.findFirst({
+      where: {
+        caseId: caseId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const caseHistoryId = caseHistory?.id;
+
     const currentcase = await db.clinicalScreeningInfo.update({
       where: {
         id: caseId,
       },
+
       data: {
         currentSupervisorId: currentSupervisorId,
         referredToSupervisorId: null,
         acceptCase: true,
+        referralStatus: null,
         caseTransferTrail: {
-          //TODO: ADJUST to correct data
-          create: {
-            from: currentSupervisorId,
-            fromRole: "Supervisor",
-            to: referredToSupervisorId ?? "",
-            toRole: "Supervisor",
-            date: new Date(),
+          update: {
+            where: {
+              id: caseHistoryId,
+            },
+            data: {
+              referralStatus: "Approved",
+            },
           },
         },
       },
@@ -1113,6 +1146,17 @@ export async function AcceptRefferedClinicalCase(
 
 export async function RejectRefferedClinicalCase(caseId: string) {
   try {
+    const caseHistory = await db.clinicalCaseTransferTrail.findFirst({
+      where: {
+        caseId: caseId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    const caseHistoryId = caseHistory?.id;
+
     const currentcase = await db.clinicalScreeningInfo.update({
       where: {
         id: caseId,
@@ -1120,6 +1164,17 @@ export async function RejectRefferedClinicalCase(caseId: string) {
       data: {
         referredToSupervisorId: null,
         acceptCase: false,
+        referralStatus: "Declined",
+        caseTransferTrail: {
+          update: {
+            where: {
+              id: caseHistoryId,
+            },
+            data: {
+              referralStatus: "Declined",
+            },
+          },
+        },
       },
     });
 
@@ -1197,14 +1252,15 @@ export async function referClinicalCaseSupervisor(data: {
         referredToSpecified: data.referredToPerson ?? data.externalCare,
         referralNotes: data.referralNotes,
         referredToSupervisorId: data.referredToPerson ?? null,
+        referralStatus: "Pending",
         caseTransferTrail: {
           create: {
             from: data.referredFromSpecified ?? "",
             fromRole: data.referredFrom,
-            // to: data.referredToPerson,
             to: data.supervisorName,
             toRole: data.referredTo,
             date: new Date(),
+            referralStatus: "Pending",
           },
         },
         acceptCase: false,
@@ -1431,7 +1487,7 @@ export async function createClinicalCase(data: {
     return { success: true, data: result };
   } catch (error) {
     console.error(error);
-    return { error: "Something went wrong" };
+    return { success: false, error: "Something went wrong" };
   }
 }
 

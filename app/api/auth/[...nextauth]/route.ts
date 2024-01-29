@@ -1,4 +1,5 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import NextAuth, { type AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
@@ -74,8 +75,10 @@ const authOptions: AuthOptions = {
           },
           memberships: {
             select: {
+              id: true,
               implementer: true,
               role: true,
+              identifier: true,
             },
           },
         },
@@ -89,16 +92,16 @@ const authOptions: AuthOptions = {
         console.warn(`User ${user.email} has no memberships`);
       }
 
+      const memberships = parseMembershipsForJWT(user);
+      const activeMembership = memberships[0];
+
       const sessionUser: SessionUser = {
         id: token.sub || null,
         email: user.email,
         name: user.name,
-        roles: user.memberships.map((m) => m.role),
         image: user.image,
-        implementer: {
-          id: user.memberships[0]?.implementer.id || "",
-          name: user.memberships[0]?.implementer.implementerName || "",
-        },
+        activeMembership,
+        memberships,
         // @ts-ignore
         ...(token || session).user,
       };
@@ -106,8 +109,59 @@ const authOptions: AuthOptions = {
       session.user = sessionUser;
       return session;
     },
+    jwt: async ({ token, user, account, trigger }) => {
+      if (trigger === "signIn") {
+        if (user.email) {
+          const currentUser = await db.user.findUnique({
+            where: { email: user.email },
+            select: {
+              memberships: {
+                select: {
+                  id: true,
+                  implementer: true,
+                  role: true,
+                  identifier: true,
+                },
+              },
+            },
+          });
+          if (!currentUser) {
+            console.error("User not found in database");
+            return token;
+          }
+
+          if (currentUser) {
+            token.memberships = parseMembershipsForJWT(currentUser) || [];
+            token.activeMembership = token.memberships[0];
+          }
+        }
+      }
+      return token;
+    },
   },
 };
+
+function parseMembershipsForJWT(
+  userWithMemberships: Prisma.UserGetPayload<{
+    select: {
+      memberships: {
+        select: {
+          id: true;
+          implementer: true;
+          role: true;
+          identifier: true;
+        };
+      };
+    };
+  }>,
+): JWTMembership[] {
+  return userWithMemberships.memberships.map((m) => ({
+    id: m.id,
+    implementerId: m.implementer.id,
+    role: m.role,
+    identifier: m.identifier,
+  }));
+}
 
 const handler = NextAuth(authOptions);
 
@@ -117,10 +171,14 @@ export type SessionUser = {
   id: string | null;
   email: string | null;
   name: string | null;
-  roles: string[];
   image: string | null;
-  implementer: {
-    id: string;
-    name: string;
-  };
+  activeMembership?: JWTMembership;
+  memberships?: JWTMembership[];
 };
+
+export interface JWTMembership {
+  id: number;
+  implementerId: string;
+  role: ImplementerRole;
+  identifier: string | null;
+}

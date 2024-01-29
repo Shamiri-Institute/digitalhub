@@ -23,7 +23,7 @@ export default async function SchoolDetailPage({
 }) {
   const school = await db.school.findUnique({
     where: { visibleId },
-    include: { hub: true, implementer: true },
+    include: { hub: true, implementer: true, interventionSessions: true },
   });
   if (!school) {
     notFound();
@@ -96,14 +96,13 @@ async function FellowsList({
   supervisor,
 }: {
   school: Prisma.SchoolGetPayload<{
-    include: { hub: true; implementer: true };
+    include: { hub: true; implementer: true; interventionSessions: true };
   }>;
   supervisor: Prisma.SupervisorGetPayload<{}>;
 }) {
   const fellows = await db.fellow.findMany({
     where: {
-      fellowAttendances: { some: { schoolId: school.id } },
-      students: { some: { schoolId: school.id } },
+      supervisorId: supervisor.id,
     },
     include: { fellowAttendances: true, students: true },
     orderBy: {
@@ -120,7 +119,11 @@ async function FellowsList({
             fellow={fellow}
             school={school}
             supervisor={supervisor}
-            totalStudents={fellow.students.length}
+            totalStudents={
+              fellow.students.filter(
+                (student) => student.schoolId === school.id,
+              ).length
+            }
           />
         );
       })}
@@ -136,7 +139,7 @@ function FellowCard({
 }: {
   fellow: FellowWithAttendance;
   school: Prisma.SchoolGetPayload<{
-    include: { hub: true; implementer: true };
+    include: { hub: true; implementer: true; interventionSessions: true };
   }>;
   supervisor: Prisma.SupervisorGetPayload<{}>;
   totalStudents: number;
@@ -171,12 +174,46 @@ function FellowCard({
     return "not-marked";
   }
 
-  const sessionItems: { status: AttendanceStatus; label: SessionLabel }[] = [
-    { status: getAttendanceStatus(0), label: "Pre" },
-    { status: getAttendanceStatus(1), label: "S1" },
-    { status: getAttendanceStatus(2), label: "S2" },
-    { status: getAttendanceStatus(3), label: "S3" },
-    { status: getAttendanceStatus(4), label: "S4" },
+  const sessionItems: {
+    status: AttendanceStatus;
+    label: SessionLabel;
+    session: Prisma.InterventionSessionGetPayload<{}> | null;
+  }[] = [
+    {
+      status: getAttendanceStatus(0),
+      label: "Pre",
+      session:
+        school.interventionSessions.find((ins) => ins.sessionType === "s0") ||
+        null,
+    },
+    {
+      status: getAttendanceStatus(1),
+      label: "S1",
+      session:
+        school.interventionSessions.find((ins) => ins.sessionType === "s1") ||
+        null,
+    },
+    {
+      status: getAttendanceStatus(2),
+      label: "S2",
+      session:
+        school.interventionSessions.find((ins) => ins.sessionType === "s2") ||
+        null,
+    },
+    {
+      status: getAttendanceStatus(3),
+      label: "S3",
+      session:
+        school.interventionSessions.find((ins) => ins.sessionType === "s3") ||
+        null,
+    },
+    {
+      status: getAttendanceStatus(4),
+      label: "S4",
+      session:
+        school.interventionSessions.find((ins) => ins.sessionType === "s4") ||
+        null,
+    },
   ];
 
   return (
@@ -203,13 +240,16 @@ function FellowCard({
               hubVisibleId: school?.hub?.visibleId!,
               supervisorVisibleId: supervisor.visibleId,
               implementerVisibleId: school?.implementer?.visibleId!,
-              schoolVisibleId: school.visibleId,
+              schoolVisibleIds: [school.visibleId],
             }}
           >
             <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
           </FellowModifyDialog>
           {(!fellow.droppedOutAt || !fellow.droppedOut) && (
-            <FellowDropoutDialog fellow={fellow} school={school}>
+            <FellowDropoutDialog
+              fellow={fellow}
+              revalidationPath={`/schools/${school.visibleId}`}
+            >
               <Icons.delete className="h-6 w-6 cursor-pointer text-brand" />
             </FellowDropoutDialog>
           )}
@@ -221,12 +261,14 @@ function FellowCard({
       <Separator className="my-2" />
 
       <div className="mt-4 flex justify-between pb-2">
-        {sessionItems.map((session, index) => (
+        {sessionItems.map((sessionItem, index) => (
           <FellowAttendanceDot
             key={index}
-            session={session}
+            sessionItem={sessionItem}
             fellow={fellow}
             school={school}
+            supervisor={supervisor}
+            recordTime={new Date()}
           />
         ))}
       </div>

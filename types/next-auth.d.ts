@@ -1,5 +1,6 @@
-import { SessionUser } from "#/app/api/auth/[...nextauth]/route";
 import "next-auth";
+
+import { JWTMembership, SessionUser } from "#/app/api/auth/[...nextauth]/route";
 
 declare module "next-auth" {
   /**
@@ -7,5 +8,12 @@ declare module "next-auth" {
    */
   interface Session {
     user: SessionUser;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT extends DefaultJWT {
+    activeMembership?: JWTMembership;
+    memberships?: JWTMembership[];
   }
 }

@@ -2,6 +2,7 @@ import { Prisma, riskStatusOptions } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx";
 import { Metadata } from "next";
 import { twMerge } from "tailwind-merge";
+import { z } from "zod";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -77,9 +78,25 @@ export function getHighestValue(data: {
   }
 }
 
+type sessionTypes = Prisma.InterventionSessionGetPayload<{}>[];
+
 export function doesSessionExist(
-  sessionTypes: Prisma.InterventionSessionGetPayload<{}>[],
+  sessionTypes: sessionTypes,
   sessionName: string,
 ) {
-  return sessionTypes.some((session) => session.sessionName === sessionName);
+  return sessionTypes.some(
+    (session) => session.sessionName === sessionName && session.occurred,
+  );
+}
+
+export function stringValidation(message: string) {
+  return z.string({ required_error: message }).trim().min(1, { message });
+}
+
+export function mapSessionTypeToSessionNumber(sessionType: string): number {
+  if (sessionType[0] === "s" && sessionType.length === 2) {
+    return parseInt(sessionType[1]!);
+  }
+
+  throw new Error(`Invalid session type: ${sessionType}`);
 }

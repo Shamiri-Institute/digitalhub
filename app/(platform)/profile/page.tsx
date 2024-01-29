@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
 import { CurrentSupervisor, currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
@@ -8,6 +7,7 @@ import { db } from "#/lib/db";
 import { getInitials } from "#/lib/utils";
 import { FellowModifyDialog } from "../schools/[visibleId]/fellow-modify-dialog";
 import FellowCard from "./components/fellow-card";
+import { MySchools } from "./my-schools";
 import { ReimbursementRequests } from "./reimbursement-requests";
 
 export default async function SupervisorProfile() {
@@ -16,18 +16,7 @@ export default async function SupervisorProfile() {
     return <InvalidPersonnelRole role="supervisor" />;
   }
 
-  const fellowsCount = (
-    await db.fellowAttendance.groupBy({
-      by: ["fellowId"],
-      where: {
-        supervisorId: supervisor.id,
-        schoolId: supervisor.assignedSchoolId ?? undefined,
-      },
-      _sum: {
-        id: true,
-      },
-    })
-  ).length;
+  const fellowsCount = supervisor.fellows.length;
 
   // SELECT COUNT(*) FROM schools WHERE hub_id = 'hub_01hetrj9mhf8kbq9tcm3eyg66v';
 
@@ -95,7 +84,9 @@ export default async function SupervisorProfile() {
             hubVisibleId: supervisor.hub?.visibleId!,
             supervisorVisibleId: supervisor.visibleId,
             implementerVisibleId: implementer?.visibleId!,
-            schoolVisibleId: supervisor.assignedSchool.visibleId,
+            schoolVisibleIds: supervisor.assignedSchools.map(
+              (school) => school.visibleId,
+            ),
           }}
         >
           <button className="transition-transform active:scale-95">
@@ -177,35 +168,6 @@ function ProfileHeader({
         </div>
       </div>
     </div>
-  );
-}
-
-async function MySchools({
-  supervisor,
-}: {
-  supervisor: NonNullable<CurrentSupervisor>;
-}) {
-  const interventionSessions = await db.interventionSession.findMany({
-    where: {
-      schoolId: supervisor.assignedSchoolId,
-    },
-  });
-
-  return (
-    <>
-      <div className="grid grid-cols-1 gap-4 sm:items-center  sm:gap-6">
-        <h3 className="mt-4 text-base font-semibold text-brand xl:text-2xl">
-          My School
-        </h3>
-        <SchoolCardProfile
-          key={supervisor.assignedSchool.schoolName}
-          school={supervisor.assignedSchool}
-          sessionTypes={interventionSessions}
-          fellowsCount={supervisor.fellows.length}
-          assigned
-        />
-      </div>
-    </>
   );
 }
 
