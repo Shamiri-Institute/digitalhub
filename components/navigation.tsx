@@ -108,9 +108,6 @@ function AdminNavigation() {
         <NavItem href="/schools" Icon={Icons.schoolMinusOutline}>
           Schools
         </NavItem>
-        <NavItem href="/students" Icon={Icons.backpack}>
-          Students
-        </NavItem>
         <NavItem href="/fellows" Icon={Icons.users2}>
           Fellows
         </NavItem>
