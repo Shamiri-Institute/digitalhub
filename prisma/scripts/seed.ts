@@ -591,16 +591,20 @@ async function createFixtures(db: Database) {
     const supervisor = supervisors[i];
     if (supervisor?.hub) {
       const { schools } = supervisor.hub;
-      const assignedSchool = schools[i % schools.length];
-      await db.supervisor.update({
-        where: { id: supervisor.id },
-        data: { assignedSchoolId: assignedSchool?.id },
+      const assignedSchool = schools[i % schools.length]!;
+      await db.school.update({
+        where: { id: assignedSchool.id },
+        data: { assignedSupervisorId: supervisor.id },
       });
     }
   }
 
-  let stDominic = await db.school.findUnique({
+  let supervisorMichelle = await db.supervisor.findUniqueOrThrow({
+    where: { visibleId: "SPV23_S_25" },
+  });
+  const stDominic = await db.school.update({
     where: { visibleId: "ANS23_School_3" },
+    data: { assignedSupervisorId: supervisorMichelle?.id },
     include: {
       hub: {
         include: {
@@ -608,10 +612,6 @@ async function createFixtures(db: Database) {
         },
       },
     },
-  });
-  const supervisorMichelle = await db.supervisor.update({
-    where: { visibleId: "SPV23_S_25" },
-    data: { assignedSchoolId: stDominic?.id },
   });
 
   const data = [
@@ -646,7 +646,7 @@ async function createFixtures(db: Database) {
   ].map((reimbursement) => ({
     id: objectId("reim"),
     supervisorId: supervisorMichelle.id,
-    hubId: stDominic!.hubId!,
+    hubId: stDominic.hubId!,
     hubCoordinatorId: stDominic!.hub!.coordinators[0]!.id,
     incurredAt: reimbursement.date,
     amount: reimbursement.amount,

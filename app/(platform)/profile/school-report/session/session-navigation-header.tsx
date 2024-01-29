@@ -25,12 +25,12 @@ export function SessionNavigationHeader({
   sessionName,
   schoolName,
   href,
-  schoolId,
+  schoolVisibleId,
 }: {
   sessionName: string;
   schoolName: string;
   href: string;
-  schoolId?: string;
+  schoolVisibleId: string;
 }) {
   return (
     <div>
@@ -62,9 +62,9 @@ export function SessionNavigationHeader({
                       className="relative flex justify-between pr-10"
                       onSelect={() => {
                         if (href.includes("profile")) {
-                          window.location.href = `${href}/school-report/session?type=${session.sessionType}`;
+                          window.location.href = `${href}/school-report/session?type=${session.sessionType}&sid=${schoolVisibleId}`;
                         } else {
-                          window.location.href = `${href}/session-report/${schoolId}?type=${session.sessionType}`;
+                          window.location.href = `${href}/session-report/${schoolVisibleId}?type=${session.sessionType}&sid=${schoolVisibleId}`;
                         }
                       }}
                     >
@@ -76,7 +76,10 @@ export function SessionNavigationHeader({
             </DropdownMenu>
           </div>
         </div>
-        <Link href="/profile/school-report" className="invisible">
+        <Link
+          href={`/profile/school-report?sid=${schoolVisibleId}`}
+          className="invisible"
+        >
           <Icons.xIcon className="h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
         </Link>
       </div>

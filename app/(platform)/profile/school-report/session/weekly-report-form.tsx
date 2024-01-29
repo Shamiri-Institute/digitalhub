@@ -35,7 +35,7 @@ export function WeeklyReportForm({
   revalidatePath: string;
   sessionId: string;
   supervisorId: string;
-  pointSupervisor: Prisma.SupervisorGetPayload<{}>;
+  pointSupervisor?: Prisma.SupervisorGetPayload<{}>;
   notes: Prisma.InterventionSessionNoteGetPayload<{}>[];
   schoolNotAssigned?: boolean;
 }) {
@@ -73,6 +73,10 @@ export function WeeklyReportForm({
         title: `Point supervisor report failed to save`,
       });
     }
+  }
+
+  if (!pointSupervisor) {
+    return <div>No point supervisor assigned</div>;
   }
 
   return (
