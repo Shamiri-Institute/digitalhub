@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const CURRENT_PROJECT_ID = "2023_Project_2";
+
 export const SDH_LOGO_BANNER =
   "https://shamiri-assets.s3.af-south-1.amazonaws.com/shamiri-logo-blue.png";
 

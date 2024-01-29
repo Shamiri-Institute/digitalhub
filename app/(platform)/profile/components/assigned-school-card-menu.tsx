@@ -57,16 +57,22 @@ export default function SchoolCardMenu({
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent className="p-1 text-sm">
         <MenuLineItem>
-          <Link href={`/profile/school-report`}>Session Dates</Link>
+          <Link href={`/profile/school-report?sid=${school.visibleId}`}>
+            Session Dates
+          </Link>
         </MenuLineItem>
 
         <MenuLineItem>
-          <Link href={`/profile/school-report/session?type=s0`}>
+          <Link
+            href={`/profile/school-report/session?type=s0&sid=${school.visibleId}`}
+          >
             School Report
           </Link>
         </MenuLineItem>
         <MenuLineItem>
-          <Link href={`/profile/myschool`}>Edit School</Link>
+          <Link href={`/profile/myschool?sid=${school.visibleId}`}>
+            Edit School
+          </Link>
         </MenuLineItem>
         <DropdownMenuSeparator className="my-2" />
 

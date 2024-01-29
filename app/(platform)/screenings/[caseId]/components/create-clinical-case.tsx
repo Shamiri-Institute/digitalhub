@@ -1,5 +1,13 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Prisma, Student } from "@prisma/client";
+import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { createClinicalCase } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
@@ -24,14 +32,9 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
+import { fetchSupervisors } from "#/lib/actions/fetch-supervisors";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { constants } from "#/tests/constants";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Fellow, School, Student, Supervisor } from "@prisma/client";
-import { Loader2 } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 const FormSchema = z.object({
   school: z
@@ -60,18 +63,6 @@ const FormSchema = z.object({
     .min(1, { message: "Required. Please select the student." }),
 });
 
-type FellowWithStudents = Fellow & {
-  students: Student[];
-};
-
-type SupervisorWithFellows = Supervisor & {
-  fellows: FellowWithStudents[];
-};
-
-type SchoolsWithSupervisors = School & {
-  supervisors: SupervisorWithFellows[];
-};
-
 export default function CreateClinicalCaseDialogue({
   children,
   currentSupervisorId,
@@ -79,7 +70,20 @@ export default function CreateClinicalCaseDialogue({
 }: {
   children: React.ReactNode;
   currentSupervisorId: string | undefined;
-  schools: SchoolsWithSupervisors[];
+  schools: Prisma.SchoolGetPayload<{
+    include: {
+      students: true;
+      assignedSupervisor: {
+        include: {
+          fellows: {
+            include: {
+              students: true;
+            };
+          };
+        };
+      };
+    };
+  }>[];
 }) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -94,8 +98,24 @@ export default function CreateClinicalCaseDialogue({
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
   const [selectedSupId, setSelectedSupId] = useState<string>("");
   const [selectedFellowId, setSelectedFellowId] = useState<string>("");
-  const [supervisors, setSupervisors] = useState<SupervisorWithFellows[]>();
-  const [fellows, setFellows] = useState<FellowWithStudents[]>();
+  const [supervisors, setSupervisors] = useState<
+    Prisma.SupervisorGetPayload<{
+      include: {
+        fellows: {
+          include: {
+            students: true;
+          };
+        };
+      };
+    }>[]
+  >();
+  const [fellows, setFellows] = useState<
+    Prisma.FellowGetPayload<{
+      include: {
+        students: true;
+      };
+    }>[]
+  >();
   const [students, setStudents] = useState<Student[]>();
   const { toast } = useToast();
 
@@ -146,16 +166,26 @@ export default function CreateClinicalCaseDialogue({
 
   useEffect(() => {
     // from the selected supervisor id, get the fellow
-    const fellow = supervisors?.find((sup) => sup.id === selectedSupId)
-      ?.fellows;
-    setFellows(fellow);
+    const fellows =
+      supervisors?.find((sup) => sup.id === selectedSupId)?.fellows ?? [];
+    setFellows(fellows);
   }, [selectedSupId, supervisors]);
 
   useEffect(() => {
     // from the selected school id, get the supervisors
-    const supervisors = schools.find((school) => school.id === selectedSchoolId)
-      ?.supervisors;
-    setSupervisors(supervisors);
+    async function fetchData() {
+      const supervisors = await fetchSupervisors({
+        where: {
+          hub: { project: { visibleId: CURRENT_PROJECT_ID } },
+          assignedSchools: {
+            some: { id: selectedSchoolId },
+          },
+        },
+      });
+      setSupervisors(supervisors);
+    }
+
+    fetchData();
   }, [selectedSchoolId, schools]);
 
   return (

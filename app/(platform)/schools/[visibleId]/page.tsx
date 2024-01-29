@@ -240,7 +240,7 @@ function FellowCard({
               hubVisibleId: school?.hub?.visibleId!,
               supervisorVisibleId: supervisor.visibleId,
               implementerVisibleId: school?.implementer?.visibleId!,
-              schoolVisibleId: school.visibleId,
+              schoolVisibleIds: [school.visibleId],
             }}
           >
             <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />

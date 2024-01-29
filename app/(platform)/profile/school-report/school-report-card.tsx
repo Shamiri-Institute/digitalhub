@@ -43,7 +43,7 @@ export function SchoolReportCard({
           ? "Marked as occurring"
           : "Marked as not occurring",
       });
-      window.location.href = "/profile/school-report";
+      window.location.href = `/profile/school-report?sid=${data.schoolVisibleId}`;
     } else {
       toast({
         variant: "destructive",
@@ -62,7 +62,7 @@ export function SchoolReportCard({
     if (response) {
       console.log({ response });
       toast({ title: "Date updated" });
-      window.location.href = "/profile/school-report";
+      window.location.href = `/profile/school-report?sid=${data.schoolVisibleId}`;
     } else {
       toast({
         variant: "destructive",
