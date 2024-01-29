@@ -11,20 +11,21 @@ export default async function RefundPage() {
     return <InvalidPersonnelRole role="supervisor" />;
   }
 
-  if (!supervisor.assignedSchool) {
+  if (!supervisor.assignedSchools) {
+    throw new Error("Supervisor has no assigned schools");
+  }
+  const assignedSchool = supervisor.assignedSchools[0];
+  if (!assignedSchool) {
     throw new Error("Supervisor has no assigned school");
   }
-  if (!supervisor.assignedSchool.hubId) {
+  if (!assignedSchool.hubId) {
     throw new Error("Assigned school has no hub");
   }
 
   return (
     <main className="mx-auto max-w-3xl">
       <PageHeader />
-      <RefundForm
-        supervisorId={supervisor.id}
-        hubId={supervisor.assignedSchool.hubId}
-      />
+      <RefundForm supervisorId={supervisor.id} hubId={assignedSchool.hubId} />
     </main>
   );
 }

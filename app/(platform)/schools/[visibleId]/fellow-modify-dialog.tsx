@@ -95,7 +95,7 @@ export function FellowModifyDialog({
     hubVisibleId: string;
     supervisorVisibleId: string;
     implementerVisibleId: string;
-    schoolVisibleId: string;
+    schoolVisibleIds: string[];
   };
   children: React.ReactNode;
 }) {
@@ -107,7 +107,7 @@ export function FellowModifyDialog({
       hubVisibleId: info.hubVisibleId,
       supervisorVisibleId: info.supervisorVisibleId,
       implementerVisibleId: info.implementerVisibleId,
-      schoolVisibleId: info.schoolVisibleId,
+      schoolVisibleId: info.schoolVisibleIds[0],
       fellowName: fellow?.fellowName ?? undefined,
       yearOfImplementation:
         fellow?.yearOfImplementation ?? new Date().getFullYear(),
@@ -140,8 +140,6 @@ export function FellowModifyDialog({
     }
 
     if (response) {
-      console.log({ response });
-
       if (mode === "create") {
         toast({
           description: `Added ${response.fellow?.fellowName}`,
@@ -208,6 +206,44 @@ export function FellowModifyDialog({
                   {...form.register("implementerVisibleId")}
                 />
                 <input type="hidden" {...form.register("schoolVisibleId")} />
+              </div>
+              <div>
+                <FormField
+                  control={form.control}
+                  name="schoolVisibleId"
+                  render={({ field }) => (
+                    <div className="mt-3 grid w-full gap-1.5">
+                      <Label htmlFor="schoolVisibleId">School</Label>
+                      <Select
+                        name="schoolVisibleId"
+                        defaultValue={info.schoolVisibleIds[0] || field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            className="text-muted-foreground"
+                            defaultValue={
+                              info.schoolVisibleIds[0] || field.value
+                            }
+                            onChange={field.onChange}
+                            placeholder={
+                              <span className="text-muted-foreground">
+                                Select school
+                              </span>
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {info.schoolVisibleIds.map((schoolId, index) => (
+                            <SelectItem key={index} value={schoolId}>
+                              {schoolId}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                />
               </div>
               <div>
                 <FormField

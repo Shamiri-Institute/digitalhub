@@ -45,7 +45,7 @@ export default async function Page() {
     },
     include: {
       students: true,
-      supervisors: {
+      assignedSupervisor: {
         include: {
           fellows: {
             include: {

@@ -599,6 +599,7 @@ export interface OccurrenceData {
   yearOfImplementation: number;
   sessionType: string;
   schoolId: string;
+  schoolVisibleId: string;
 }
 
 /**

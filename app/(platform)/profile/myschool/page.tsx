@@ -8,7 +8,11 @@ export default async function MySchoolPage() {
     return <InvalidPersonnelRole role="supervisor" />;
   }
 
-  const assignedSchool = supervisor.assignedSchool;
+  const assignedSchool = supervisor.assignedSchools[0];
+
+  if (!assignedSchool) {
+    return <div>No assigned school</div>;
+  }
 
   if (assignedSchool?.droppedOut) {
     return (

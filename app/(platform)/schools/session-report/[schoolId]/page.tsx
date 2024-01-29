@@ -51,18 +51,16 @@ export default async function ReportDetails({
       school: {
         select: {
           schoolName: true,
-          supervisors: {
-            where: {
-              assignedSchoolId: schoolId,
-            },
-          },
+          assignedSupervisor: true,
         },
       },
     },
   });
 
-  const schoolNotAssigned = supervisor.assignedSchoolId !== schoolId;
-  const pointSupervisor = session?.school?.supervisors[0]!;
+  const schoolNotAssigned = supervisor.assignedSchools?.every(
+    (school) => school.id !== schoolId,
+  );
+  const pointSupervisor = session?.school?.assignedSupervisor ?? undefined;
   const schoolName = session?.school?.schoolName ?? "";
 
   if (!session) {
@@ -74,7 +72,7 @@ export default async function ReportDetails({
           schoolName={schoolName}
           sessionName={sessionName}
           href="/schools"
-          schoolId={schoolId}
+          schoolVisibleId={schoolId}
         />
         <div className="py-6 text-center text-sm">
           {sessionName} has not yet been created.
@@ -119,7 +117,7 @@ export default async function ReportDetails({
         schoolName={session?.school?.schoolName ?? ""}
         sessionName={session.sessionName}
         href="/schools"
-        schoolId={schoolId}
+        schoolVisibleId={schoolId}
       />
       <SessionRater
         revalidatePath={revalidatePath}
