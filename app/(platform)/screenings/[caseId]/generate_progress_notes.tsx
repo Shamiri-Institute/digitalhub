@@ -1,5 +1,5 @@
 import { CurrentCase } from "#/app/(platform)/screenings/screen";
-import { createSupProgressNoteToGDriveAndSaveOnDb } from "#/commands/googledoc";
+import { createSupProgressNoteToGDriveAndSaveOnDb } from "#/commands/google-drive-actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { useToast } from "#/components/ui/use-toast";
@@ -29,7 +29,7 @@ export function GenerateProgressNotes({
       await createSupProgressNoteToGDriveAndSaveOnDb({
         caseId: currentcase.id,
         studentId: currentcase.student.id,
-        supervisorEmail: currentcase?.currentSupervisor?.supervisorEmail, //todo: uncomment
+        supervisorEmail: currentcase?.currentSupervisor?.supervisorEmail,
         supervisorName: currentcase?.currentSupervisor?.supervisorName,
       });
 
