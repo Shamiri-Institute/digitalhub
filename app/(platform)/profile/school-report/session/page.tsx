@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
+import { addBreadcrumb } from "@sentry/nextjs";
 import { SessionNavigationHeader } from "./session-navigation-header";
 import { SessionNotes } from "./session-notes";
 import { SessionRater } from "./session-rater";
@@ -21,9 +22,9 @@ const sessionTypeToDisplayName: {
 export default async function ReportDetails({
   searchParams,
 }: {
-  searchParams: { type: string };
+  searchParams: { type?: string; sid?: string };
 }) {
-  const { type: sessionType } = searchParams;
+  const { type: sessionType, sid: assignedSchoolVisibleId } = searchParams;
 
   if (!sessionType) {
     notFound();
@@ -34,10 +35,23 @@ export default async function ReportDetails({
     return <InvalidPersonnelRole role="supervisor" />;
   }
 
+  const assignedSchool = await db.school.findUnique({
+    where: { visibleId: assignedSchoolVisibleId },
+  });
+  if (!assignedSchool) {
+    addBreadcrumb({
+      message: "School not found",
+      data: { assignedSchoolVisibleId },
+    });
+    notFound();
+  }
+
+  const schoolName = assignedSchool.schoolName;
+
   const session = await db.interventionSession.findUnique({
     where: {
       interventionBySchoolIdAndSessionType: {
-        schoolId: supervisor.assignedSchoolId,
+        schoolId: assignedSchool.id,
         sessionType,
       },
     },
@@ -53,9 +67,10 @@ export default async function ReportDetails({
     return (
       <div>
         <SessionNavigationHeader
-          schoolName={supervisor.assignedSchool.schoolName}
+          schoolName={assignedSchool.schoolName}
           sessionName={sessionName}
           href="/profile"
+          schoolVisibleId={assignedSchool.visibleId}
         />
         <div className="py-6 text-center text-sm">
           {sessionName} has not yet been created.
@@ -92,14 +107,15 @@ export default async function ReportDetails({
       include: { supervisor: true },
     });
 
-  const revalidatePath = `/profile/school-report/session?type=${sessionType}`;
+  const revalidatePath = `/profile/school-report/session?type=${sessionType}&sid=${assignedSchool.visibleId}`;
 
   return (
     <div>
       <SessionNavigationHeader
-        schoolName={supervisor.assignedSchool.schoolName}
+        schoolName={schoolName}
         sessionName={session.sessionName}
         href="/profile"
+        schoolVisibleId={assignedSchool.visibleId}
       />
       <SessionRater
         revalidatePath={revalidatePath}

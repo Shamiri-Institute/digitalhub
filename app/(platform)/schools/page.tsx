@@ -30,12 +30,16 @@ async function SchoolsList() {
   if (!supervisor) {
     return <InvalidPersonnelRole role="supervisor" />;
   }
-  const { assignedSchool } = supervisor;
+  const { assignedSchools } = supervisor;
 
   const otherSchools = await db.school.findMany({
     where: {
-      visibleId: { not: assignedSchool.visibleId },
-      hubId: assignedSchool.hubId,
+      visibleId: { notIn: assignedSchools.map((school) => school.visibleId) },
+      hubId: {
+        in: assignedSchools
+          .filter((school) => school.hubId !== null)
+          .map((school) => school.hubId as string),
+      },
     },
     include: {
       interventionSessions: true,
@@ -52,7 +56,9 @@ async function SchoolsList() {
       by: ["fellowId"],
       where: {
         supervisorId: supervisor.id,
-        schoolId: supervisor.assignedSchoolId ?? undefined,
+        schoolId: {
+          in: assignedSchools.map((school) => school.id),
+        },
         attended: true,
       },
       _sum: {
@@ -66,16 +72,25 @@ async function SchoolsList() {
       <div>
         <h2 className="py-3 text-xl font-semibold">My School</h2>
         <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
-          <SchoolCard
-            key={assignedSchool.id}
-            school={assignedSchool}
-            fellowsCount={activeFellowsCount}
-            sessionTypes={assignedSchool.interventionSessions}
-            studentCount={supervisor.assignedSchool._count.students}
-            assigned
-          />
-          <div />
-          <div />
+          {assignedSchools.map((school) => (
+            <SchoolCard
+              key={school.id}
+              school={school}
+              fellowsCount={activeFellowsCount}
+              sessionTypes={school.interventionSessions}
+              studentCount={school._count.students}
+            />
+          ))}
+          {assignedSchools.length > 1 ? (
+            <>
+              <div />
+            </>
+          ) : (
+            <>
+              <div />
+              <div />
+            </>
+          )}
         </div>
       </div>
       <div>

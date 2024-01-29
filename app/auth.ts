@@ -54,7 +54,7 @@ export async function currentSupervisor() {
           },
         },
       },
-      assignedSchool: {
+      assignedSchools: {
         include: {
           interventionSessions: true,
           _count: {
@@ -99,12 +99,7 @@ export async function currentSupervisor() {
     return null;
   }
 
-  const { assignedSchoolId, assignedSchool } = supervisor;
-  if (!assignedSchoolId || !assignedSchool) {
-    throw new Error("Supervisor has no assigned school");
-  }
-
-  return { ...supervisor, assignedSchoolId, assignedSchool };
+  return supervisor;
 }
 
 export type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>;

@@ -11,7 +11,9 @@ export async function fetchPersonnel() {
   }[] = (
     await db.supervisor.findMany({
       orderBy: { supervisorName: "desc" },
-      where: { NOT: { assignedSchoolId: null } },
+      where: {
+        assignedSchools: { some: { NOT: { assignedSupervisorId: null } } },
+      },
     })
   ).map((sup) => ({
     id: sup.id,
