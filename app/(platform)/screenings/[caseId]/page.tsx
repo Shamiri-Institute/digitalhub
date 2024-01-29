@@ -47,7 +47,6 @@ export default async function Page({ params }: { params: { caseId: string } }) {
     },
   });
 
-
   return (
     <div>
       {currentcase && <CaseHeader currentcase={currentcase} />}
@@ -58,9 +57,7 @@ export default async function Page({ params }: { params: { caseId: string } }) {
           currentSupId={supervisor?.id}
         />
       )}
-      <CaseNotePlan
-        currentSupId={supervisor?.id}
-      />
+      <CaseNotePlan currentSupId={supervisor?.id} currentcase={currentcase} />
     </div>
   );
 }
