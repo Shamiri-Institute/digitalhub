@@ -129,6 +129,9 @@ function StudentsList({
           />
         );
       })}
+      {!students.length && (
+        <div className="text-gray-500">No students found</div>
+      )}
     </div>
   );
 }

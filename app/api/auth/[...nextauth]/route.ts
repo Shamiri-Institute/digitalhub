@@ -1,5 +1,6 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { ImplementerRole, Prisma } from "@prisma/client";
+import { addBreadcrumb } from "@sentry/nextjs";
 import NextAuth, { type AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
@@ -14,6 +15,7 @@ const config = z
   .parse(process.env);
 
 const authOptions: AuthOptions = {
+  debug: true,
   session: {
     strategy: "jwt",
     maxAge: 7 * 24 * 60 * 60, // 7 days
@@ -85,6 +87,10 @@ const authOptions: AuthOptions = {
       });
 
       if (!user) {
+        addBreadcrumb({
+          message: "User not found",
+          data: { token },
+        });
         return session;
       }
 
