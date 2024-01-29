@@ -79,6 +79,7 @@ async function SchoolsList() {
               fellowsCount={activeFellowsCount}
               sessionTypes={school.interventionSessions}
               studentCount={school._count.students}
+              assigned
             />
           ))}
           {assignedSchools.length > 1 ? (
