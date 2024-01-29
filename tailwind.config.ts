@@ -103,11 +103,6 @@ const config: Config = {
       },
     },
   },
-  data: {
-    // data-carousel-item
-    "carousel-item-transition-duration": "150ms",
-    active: "data-carousel-item",
-  },
   plugins: [require("tailwindcss-animate")],
 };
 
