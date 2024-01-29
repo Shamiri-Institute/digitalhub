@@ -3,7 +3,10 @@ import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role
 import { Icons } from "#/components/icons";
 import { LinkOrDiv } from "#/components/ui/common";
 import { db } from "#/lib/db";
+import { School } from "@prisma/client";
+import { addBreadcrumb } from "@sentry/nextjs";
 import { addWeeks } from "date-fns";
+import { notFound } from "next/navigation";
 import { SchoolReportCard } from "./school-report-card";
 
 export interface SessionItem {
@@ -90,15 +93,30 @@ let referenceSessionItems: Omit<SessionItem, "id">[] = [
   },
 ];
 
-export default async function SchoolReport() {
+export default async function SchoolReport({
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
+}) {
+  const assignedSchoolVisibleId = searchParams?.sid;
+  if (!assignedSchoolVisibleId) {
+    addBreadcrumb({
+      message: "No assigned school id in url",
+      level: "error",
+    });
+    return notFound();
+  }
+
   const supervisor = await currentSupervisor();
   if (!supervisor) {
     return <InvalidPersonnelRole role="supervisor" />;
   }
-  const { assignedSchoolId } = supervisor;
+  const assignedSchool = await db.school.findUnique({
+    where: { visibleId: assignedSchoolVisibleId as string },
+  });
 
-  if (assignedSchoolId === null) {
-    throw Error("Supervisor has no assigned school");
+  if (!assignedSchool) {
+    return notFound();
   }
 
   const interventionSessions: {
@@ -115,7 +133,7 @@ export default async function SchoolReport() {
         where: {
           interventionBySchoolIdAndSessionType: {
             sessionType: sessionItem.sessionType,
-            schoolId: assignedSchoolId,
+            schoolId: assignedSchool.id,
           },
         },
       });
@@ -150,7 +168,7 @@ export default async function SchoolReport() {
 
   return (
     <div>
-      <IntroHeader href="/profile" />
+      <IntroHeader href="/profile" assignedSchool={assignedSchool} />
       {interventionSessions.map(({ session, defaultSessionValues }) => (
         <SchoolReportCard
           key={session?.sessionName ?? defaultSessionValues.sessionName}
@@ -168,7 +186,8 @@ export default async function SchoolReport() {
               session?.sessionType ?? defaultSessionValues.sessionType,
             yearOfImplementation:
               session?.sessionDate.getFullYear() || new Date().getFullYear(),
-            schoolId: assignedSchoolId,
+            schoolId: assignedSchool.id,
+            schoolVisibleId: assignedSchool.visibleId,
           }}
         />
       ))}
@@ -176,13 +195,13 @@ export default async function SchoolReport() {
   );
 }
 
-async function IntroHeader({ href }: { href: string }) {
-  const supervisor = await currentSupervisor();
-  if (!supervisor) {
-    return <InvalidPersonnelRole role="supervisor" />;
-  }
-  const { assignedSchool } = supervisor;
-
+async function IntroHeader({
+  href,
+  assignedSchool,
+}: {
+  href: string;
+  assignedSchool: School;
+}) {
   return (
     <div>
       <div className="mt-2 flex items-center justify-between ">
@@ -195,7 +214,7 @@ async function IntroHeader({ href }: { href: string }) {
         <div></div>
       </div>
       <h4 className="text-brand-light-gray text-center text-xs">
-        {assignedSchool?.schoolName}
+        {assignedSchool.schoolName}
       </h4>
     </div>
   );

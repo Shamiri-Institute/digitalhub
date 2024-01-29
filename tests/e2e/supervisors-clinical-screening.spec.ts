@@ -16,12 +16,15 @@ test.describe("clinical screenings", () => {
 
     await clinicalScreeningPage.chooseSchoolInSelectDropdown("ANS23_School_25");
     await expect(page.getByText("Muthurwa Girls").nth(0)).toBeVisible();
+    await page.waitForLoadState("networkidle");
 
     await clinicalScreeningPage.chooseSupervisorInSelectDropdown("SPV23_S_36");
     await expect(page.getByText("Isabel Kinyua").nth(0)).toBeVisible();
+    await page.waitForLoadState("networkidle");
 
     await clinicalScreeningPage.chooseFellowInSelectDropdown("TFW23_S_263");
     await expect(page.getByText("Lindsey Asiome").nth(0)).toBeVisible();
+    await page.waitForLoadState("networkidle");
 
     await clinicalScreeningPage.chooseStudentInSelectDropdown(
       "Stu_Adm_ANS23_School_43_20",
