@@ -119,11 +119,7 @@ async function FellowsList({
             fellow={fellow}
             school={school}
             supervisor={supervisor}
-            totalStudents={
-              fellow.students.filter(
-                (student) => student.schoolId === school.id,
-              ).length
-            }
+            totalStudents={school.numbersExpected ?? 0}
           />
         );
       })}
