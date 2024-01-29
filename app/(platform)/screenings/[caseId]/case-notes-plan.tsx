@@ -1,4 +1,6 @@
 "use client";
+import { GenerateProgressNotes } from "#/app/(platform)/screenings/[caseId]/generate_progress_notes";
+import { CurrentCase } from "#/app/(platform)/screenings/screen";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
@@ -7,9 +9,11 @@ import { cn } from "#/lib/utils";
 import { useState } from "react";
 
 export function CaseNotePlan({
-  currentSupId
+  currentSupId,
+  currentcase,
 }: {
-  currentSupId: string
+  currentSupId: string;
+  currentcase: CurrentCase;
 }) {
   const [selected, setSelected] = useState<string>("");
   return (
@@ -19,7 +23,6 @@ export function CaseNotePlan({
           option="Progress Notes"
           selected={selected}
           setSelected={setSelected}
-
         />
         <CaseNotePlanOption
           option="Treatment Plan"
@@ -34,7 +37,7 @@ export function CaseNotePlan({
       </Card>
       {selected === "Progress Notes" && (
         <div className="mt-4">
-          <ProgressNotes />
+          <GenerateProgressNotes currentcase={currentcase} />
         </div>
       )}
       {selected === "Treatment Plan" && (
@@ -71,20 +74,6 @@ function CaseNotePlanOption({
     >
       <p className="text-xs font-medium text-brand">{option}</p>
     </button>
-  );
-}
-
-function ProgressNotes() {
-
-  const handleFileGeneration = () => {
-    console.log("File generated");
-  }
-
-  return (
-    <Button className="hover:bg-shamiri-brand w-full rounded-sm bg-shamiri-blue px-3 py-2 text-white" onClick={handleFileGeneration}>
-      <Icons.upload className="mr-2 h-4 w-4" />
-      Generate File
-    </Button>
   );
 }
 

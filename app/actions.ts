@@ -1456,3 +1456,23 @@ export async function flagClinicalCaseForFollowUp(data: {
     return { error: "Something went wrong" };
   }
 }
+
+export async function storeSupervisorProgressNotes(
+  caseId: string,
+  documentURL: string,
+) {
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: caseId,
+      },
+      data: {
+        progressNotes: documentURL,
+      },
+    });
+    return { success: true, data: documentURL };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Something went wrong" };
+  }
+}
