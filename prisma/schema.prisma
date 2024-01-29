@@ -583,6 +583,8 @@ model School {
   pointPersonId               String?               @map("point_person_id") @db.VarChar(255)
   pointPersonPhone            String?               @map("point_person_phone") @db.VarChar(255)
   pointPersonEmail            String?               @map("point_person_email") @db.VarChar(255)
+  principalName               String?               @map("principal_name")
+  principalPhone              String?               @map("principal_phone")
   numbersExpected             Int?                  @map("numbers_expected") // e.g. 700
   boardingDay                 String?               @map("boarding_day") @db.VarChar(255) // e.g. Day and boarding
   longitude                   Float?                @map("longitude")
