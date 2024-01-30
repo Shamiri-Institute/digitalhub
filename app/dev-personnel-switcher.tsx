@@ -68,8 +68,8 @@ export function PersonnelSwitcher({
                       (personnel) => personnel.id === activePersonnelId,
                     )?.label
                   : loading
-                    ? "Loading..."
-                    : "Select personnel..."}
+                  ? "Loading..."
+                  : "Select personnel..."}
               </span>
               <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
