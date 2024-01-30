@@ -34,11 +34,17 @@ async function SchoolsList() {
 
   const otherSchools = await db.school.findMany({
     where: {
-      visibleId: { notIn: assignedSchools.map((school) => school.visibleId) },
+      visibleId: {
+        notIn: assignedSchools.map((school) => school.visibleId),
+      },
       hubId: {
-        in: assignedSchools
-          .filter((school) => school.hubId !== null)
-          .map((school) => school.hubId as string),
+        in: assignedSchools.length
+          ? assignedSchools
+              .filter((school) => school.hubId !== null)
+              .map((school) => school.hubId as string)
+          : supervisor.hubId
+          ? [supervisor.hubId]
+          : [],
       },
     },
     include: {
@@ -86,6 +92,10 @@ async function SchoolsList() {
             <>
               <div />
             </>
+          ) : assignedSchools.length === 0 ? (
+            <div className="text-left font-medium text-gray-500">
+              No assigned schools
+            </div>
           ) : (
             <>
               <div />
