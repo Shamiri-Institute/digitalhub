@@ -144,7 +144,6 @@ async function updateFellow(data: ModifyFellowData) {
         visibleId: data.visibleId,
       },
       data: {
-        id: objectId("fellow"),
         fellowName: data.fellowName,
         fellowEmail: data.fellowEmail,
         cellNumber: data.cellNumber,
