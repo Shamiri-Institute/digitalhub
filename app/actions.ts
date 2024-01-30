@@ -176,10 +176,19 @@ async function createFellow(data: ModifyFellowData) {
       where: { visibleId: data.implementerVisibleId },
     });
 
+    // TODO: Let's track this as a serial number on implementer
+    const fellowsCreatedThisYearCount = await db.fellow.count({
+      where: {
+        createdAt: {
+          gte: new Date(new Date().getFullYear(), 0, 1),
+        },
+      },
+    });
+
     const fellow = await db.fellow.create({
       data: {
         id: objectId("fellow"),
-        visibleId: generateFellowVisibleID(),
+        visibleId: generateFellowVisibleID(fellowsCreatedThisYearCount),
         hubId: hub.id,
         supervisorId: supervisor.id,
         implementerId: implementer.id,
@@ -202,7 +211,7 @@ async function createFellow(data: ModifyFellowData) {
   }
 }
 
-function generateFellowVisibleID(): string {
+function generateFellowVisibleID(lastNumber: number): string {
   // Get current year
   const currentYear: number = new Date().getFullYear();
 
@@ -213,13 +222,14 @@ function generateFellowVisibleID(): string {
   let part1: string = `TFW${yearDigits}`;
 
   // Second part
-  let part2: string =
-    Math.random() < 0.5
-      ? String.fromCharCode(65 + Math.floor(Math.random() * 26)) // Generate random letter from A-Z
-      : String(`00${Math.floor(Math.random() * 999)}`).slice(-3); // Zero-padding if number is less than 100
+  let part2: string = "S";
 
   // Third part
-  let part3: string = String(`00${Math.floor(Math.random() * 999)}`).slice(-3);
+  const newNumber = lastNumber + 1;
+  let part3: string = newNumber.toString().padStart(3, "0");
+  if (newNumber >= 1000) {
+    part3 = newNumber.toString().padStart(4, "0");
+  }
 
   return `${part1}_${part2}_${part3}`;
 }
