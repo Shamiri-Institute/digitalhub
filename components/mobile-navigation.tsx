@@ -6,7 +6,7 @@ import { create } from "zustand";
 
 import { Header } from "#/components/header";
 import { Navigation } from "#/components/navigation";
-import { Dialog, DialogBaseContent } from "#/components/ui/dialog";
+import { Dialog, DialogContent } from "#/components/ui/dialog";
 import { Sheet, SheetContent } from "#/components/ui/sheet";
 import { cn } from "#/lib/utils";
 
@@ -76,14 +76,14 @@ function MobileNavigationDialog({
   return (
     <>
       <Dialog open={isOpen}>
-        <DialogBaseContent
+        <DialogContent
           className={cn(
             "fixed inset-0 z-100",
             "duration-200 data-[state=closed]:delay-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           )}
         >
           <Header className="pointer-events-auto z-100" />
-        </DialogBaseContent>
+        </DialogContent>
       </Dialog>
       <Sheet open={isOpen}>
         <SheetContent side="left" className="left-0 w-full">
