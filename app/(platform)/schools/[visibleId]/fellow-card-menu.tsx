@@ -31,9 +31,7 @@ export default function FellowCardMenu({
       <DropdownMenuContent className="p-1 text-sm">
         <MenuLineItem>
           <RescheduleDialog fellow={fellow}>
-            <p className="flex items-center text-base font-medium text-brand">
-              Substitute Sessions
-            </p>
+            <div className="cursor-pointer">Substitute Fellow</div>
           </RescheduleDialog>
         </MenuLineItem>
         <DropdownMenuSeparator className="my-2" />
@@ -49,9 +47,7 @@ export default function FellowCardMenu({
               schoolVisibleIds: [school.visibleId],
             }}
           >
-            <p className="flex items-center text-base font-medium text-brand">
-              Edit Information
-            </p>
+            <div className="cursor-pointer">Edit Information</div>
           </FellowModifyDialog>
         </MenuLineItem>
         <DropdownMenuSeparator className="my-2" />
@@ -61,9 +57,7 @@ export default function FellowCardMenu({
               fellow={fellow}
               revalidationPath={`/schools/${school.visibleId}`}
             >
-              <p className="flex items-center text-base font-medium text-brand">
-                Drop Out Fellow
-              </p>
+              <div className="cursor-pointer">Drop Out Fellow</div>
             </FellowDropoutDialog>
           )}
         </MenuLineItem>
