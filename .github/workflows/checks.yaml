@@ -2,6 +2,8 @@ name: Formatting and lint checks
 
 on:
   push:
+    branches-ignore:
+      - main
 
 jobs:
   formatting_and_lint_checks:
