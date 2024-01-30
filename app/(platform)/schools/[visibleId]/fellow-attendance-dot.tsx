@@ -172,13 +172,15 @@ export function FellowAttendanceDot({
 
   const onDotClick = React.useCallback(async () => {
     const nextStatus = nextAttendanceStatus(status);
+    const isAfterPayoutCutoff = !isBeforePayoutCutoff();
 
-    if (status === "present") {
+    if (status === "present" && isAfterPayoutCutoff) {
       toast({
         variant: "destructive",
-        title: "You cannot change attendance status after the cutoff",
+        title:
+          "You cannot mark an existing present attendance status after the cutoff",
       });
-    } else if (nextStatus === "present" && !isBeforePayoutCutoff()) {
+    } else if (nextStatus === "present" && isAfterPayoutCutoff) {
       setDialogOpen(true);
     } else {
       await markAttendance(
