@@ -16,6 +16,7 @@ import { ModifyFellowData } from "#/app/(platform)/schools/[visibleId]/fellow-mo
 import type { ModifyStudentData } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
 import { getCurrentUser } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getHighestValue } from "#/lib/utils";
@@ -641,6 +642,7 @@ export async function toggleInterventionOccurrence(data: OccurrenceData) {
           yearOfImplementation: data.yearOfImplementation,
           schoolId: data.schoolId,
           occurred,
+          projectId: CURRENT_PROJECT_ID,
         },
       });
       success = true;
