@@ -58,21 +58,9 @@ const FormSchema = z.object({
   mpesaNumber: z.string({
     required_error: "Please enter the fellow's MPESA number.",
   }),
-  county: z
-    .string({
-      required_error: "Please enter the fellow's county.",
-    })
-    .optional(),
-  subCounty: z
-    .string({
-      required_error: "Please enter the fellow's sub-county.",
-    })
-    .optional(),
-  dateOfBirth: z
-    .date({
-      required_error: "Please enter the fellow's date of birth.",
-    })
-    .optional(),
+  county: z.string().optional(), // TODO: make required in term 2
+  subCounty: z.string().optional(), // TODO: make required in term 2
+  dateOfBirth: z.date().optional(),
   gender: z.string({
     required_error: "Please enter the fellow's gender.",
   }),
