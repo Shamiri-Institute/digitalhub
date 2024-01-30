@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-export const CURRENT_PROJECT_ID = "2024_Project_1";
-
 export const SDH_LOGO_BANNER =
   "https://shamiri-assets.s3.af-south-1.amazonaws.com/shamiri-logo-blue.png";
 
@@ -16,6 +14,9 @@ export const APP_HOSTNAMES = new Set([
 ]);
 
 export const NEXT_PUBLIC_ENV = validate(process.env.NEXT_PUBLIC_ENV);
+
+export const CURRENT_PROJECT_ID =
+  NEXT_PUBLIC_ENV === "development" ? "2023_Project_2" : "2024_Project_1";
 
 export const constants = z
   .object({
