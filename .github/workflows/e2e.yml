@@ -15,6 +15,7 @@ env:
   NEXTAUTH_SECRET: test-auth-secret
   PLAYWRIGHT_VERSION: ""
   DATABASE_URL: postgres://youth:thriving@localhost:5432/shamiri_db?pool_timeout=30
+  NEXT_PUBLIC_ENV: development
 
 jobs:
   e2e-tests:
