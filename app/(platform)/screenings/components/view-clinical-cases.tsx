@@ -152,8 +152,8 @@ function ClinicalCassesCard({
             risk === "High"
               ? "text-shamiri-red"
               : risk === "Mid"
-              ? "text-muted-yellow"
-              : "text-muted-green",
+                ? "text-muted-yellow"
+                : "text-muted-green",
           )}
         >
           {risk}
