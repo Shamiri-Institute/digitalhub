@@ -26,7 +26,6 @@ export async function SchoolCardProfile({
   assigned?: boolean;
   fellowsCount?: number;
 }) {
-  console.log({ sessionTypes });
   const expectedSessionTypesOnCard = [
     {
       sessionNumber: 0,

@@ -96,3 +96,7 @@ export function mapSessionTypeToSessionNumber(sessionType: string): number {
 
   throw new Error(`Invalid session type: ${sessionType}`);
 }
+
+export function notEmpty<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined;
+}
