@@ -3,10 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SchoolDemographics } from "#/app/(platform)/schools/[visibleId]/demographics";
-import { FellowDropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
 import { FellowAttendanceDot } from "#/app/(platform)/schools/[visibleId]/fellow-attendance-dot";
-import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
-import { RescheduleDialog } from "#/app/(platform)/schools/[visibleId]/reschedule-dialog";
+import FellowCardMenu from "#/app/(platform)/schools/[visibleId]/fellow-card-menu";
 import { currentSupervisor } from "#/app/auth";
 import { Back } from "#/components/common/back";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
@@ -227,30 +225,18 @@ function FellowCard({
             </div>
           )}
         </div>
-        <div className="flex gap-0.5">
-          <RescheduleDialog fellow={fellow}>
-            <Icons.calendar className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
-          </RescheduleDialog>
-          <FellowModifyDialog
-            mode="edit"
+        <div className="flex items-start justify-end">
+          <FellowCardMenu
             fellow={fellow}
-            info={{
-              hubVisibleId: school?.hub?.visibleId!,
-              supervisorVisibleId: supervisor.visibleId,
-              implementerVisibleId: school?.implementer?.visibleId!,
-              schoolVisibleIds: [school.visibleId],
-            }}
+            school={school}
+            supervisor={supervisor}
           >
-            <Icons.edit className="mr-4 h-6 w-6 cursor-pointer align-baseline text-brand" />
-          </FellowModifyDialog>
-          {(!fellow.droppedOutAt || !fellow.droppedOut) && (
-            <FellowDropoutDialog
-              fellow={fellow}
-              revalidationPath={`/schools/${school.visibleId}`}
-            >
-              <Icons.delete className="h-6 w-6 cursor-pointer text-brand" />
-            </FellowDropoutDialog>
-          )}
+            <button className="flex flex-col gap-[1px]">
+              <div>
+                <Icons.moreVertical className="h-5 w-5 text-brand" />
+              </div>
+            </button>
+          </FellowCardMenu>
         </div>
       </div>
       <p className="mt-1 text-sm text-gray-600">
