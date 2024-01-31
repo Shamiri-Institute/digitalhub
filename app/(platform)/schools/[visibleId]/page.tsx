@@ -149,10 +149,12 @@ function FellowCard({
   if (filteredAttendances.length !== 5) {
     console.warn(
       `Fellow ${fellow.fellowName} has ${filteredAttendances.length} attendances`,
+      { attendances: fellow.fellowAttendances },
     );
   }
 
   function getAttendanceStatus(sessionNumber: SessionNumber): AttendanceStatus {
+    console.log({ filteredAttendances });
     const attendance: FellowWithAttendance["attendances"][number] =
       filteredAttendances.find(
         (attendance: FellowWithAttendance["attendances"][number]) =>

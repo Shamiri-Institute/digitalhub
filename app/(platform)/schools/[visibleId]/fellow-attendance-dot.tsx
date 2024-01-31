@@ -183,12 +183,13 @@ export function FellowAttendanceDot({
     } else if (nextStatus === "present" && isAfterPayoutCutoff) {
       setDialogOpen(true);
     } else {
-      await markAttendance(
+      const response = await markAttendance(
         nextStatus,
         sessionItem.label,
         fellow.visibleId,
         school.visibleId,
       );
+      console.log({ response });
     }
   }, [
     status,
