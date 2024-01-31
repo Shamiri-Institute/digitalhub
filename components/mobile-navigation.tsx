@@ -6,7 +6,6 @@ import { create } from "zustand";
 
 import { Header } from "#/components/header";
 import { Navigation } from "#/components/navigation";
-import { Dialog, DialogContent } from "#/components/ui/dialog";
 import { Sheet, SheetContent } from "#/components/ui/sheet";
 import { cn } from "#/lib/utils";
 
@@ -42,9 +41,11 @@ const IsInsideMobileNavigationContext = createContext(false);
 
 function MobileNavigationDialog({
   isOpen,
+  open,
   close,
 }: {
   isOpen: boolean;
+  open: () => void;
   close: () => void;
 }) {
   let pathname = usePathname();
@@ -75,23 +76,17 @@ function MobileNavigationDialog({
 
   return (
     <>
-      <Dialog open={isOpen}>
-        <DialogContent
-          className={cn(
-            "fixed inset-0 z-100",
-            "duration-200 data-[state=closed]:delay-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-          )}
-        >
-          <Header className="pointer-events-auto z-100" />
-        </DialogContent>
-      </Dialog>
-      <Sheet open={isOpen}>
+      <Sheet
+        open={isOpen}
+        onOpenChange={(openBool) => (openBool ? open() : close())}
+      >
         <SheetContent side="left" className="left-0 w-full">
           <div
             className={cn(
               "fixed bottom-0 left-0 top-14 w-full overflow-y-auto px-4 pb-4 pt-6 min-[416px]:max-w-sm sm:px-6 sm:pb-10",
             )}
           >
+            <Header className="pointer-events-auto z-100" />
             <Navigation />
           </div>
         </SheetContent>
@@ -119,7 +114,6 @@ export const useMobileNavigationStore = create<{
 export function MobileNavigation() {
   let isInsideMobileNavigation = useIsInsideMobileNavigation();
   let { isOpen, toggle, close } = useMobileNavigationStore();
-  let ToggleIcon = isOpen ? XIcon : MenuIcon;
 
   return (
     <IsInsideMobileNavigationContext.Provider value={true}>
@@ -129,11 +123,11 @@ export function MobileNavigation() {
         aria-label="Toggle navigation"
         onClick={toggle}
       >
-        <ToggleIcon className="w-2.5 stroke-zinc-900" />
+        <MenuIcon className="w-2.5 stroke-zinc-900" />
       </button>
       {!isInsideMobileNavigation && (
         <Suspense fallback={null}>
-          <MobileNavigationDialog isOpen={isOpen} close={close} />
+          <MobileNavigationDialog isOpen={isOpen} open={open} close={close} />
         </Suspense>
       )}
     </IsInsideMobileNavigationContext.Provider>
