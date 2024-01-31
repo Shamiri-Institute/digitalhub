@@ -34,6 +34,14 @@ export async function MySchools({
             assigned
           />
         ))}
+
+        {!schools.length && (
+          <div className="flex w-full items-center justify-center py-1">
+            <p className="text-lg font-medium text-gray-500">
+              You have not been assigned to any schools yet.
+            </p>
+          </div>
+        )}
       </div>
     </>
   );
