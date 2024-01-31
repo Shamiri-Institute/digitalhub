@@ -202,7 +202,7 @@ export function RescheduleDialog({
                 data-testid={constants.ADD_MEMBERS_SUBMIT}
                 className="w-full bg-[#AC2925]"
               >
-                Reschedule {fellow.fellowName?.trim()}&apos;s Sessions
+                Submit
               </Button>
             </div>
             <p aria-live="polite" className="sr-only" role="status">
