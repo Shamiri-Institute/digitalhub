@@ -17,7 +17,10 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
-import { FellowDropoutDialog } from "../../schools/[visibleId]/dropout-dialog";
+import {
+  FellowDropoutDialog,
+  FellowUndropoutDialog,
+} from "../../schools/[visibleId]/dropout-dialog";
 import FellowComplaintForm from "./fellow-complaint-form";
 import FellowDetailsForm from "./fellow-management-form";
 import FellowEvaluationForm from "./overall-evaluation-form";
@@ -200,9 +203,19 @@ function FellowCardMenu({
           </RequestRepaymentDialog>
         </MenuLineItem>
         <MenuLineItem>
-          <FellowDropoutDialog fellow={fellow} revalidationPath="/profile">
-            <div className="cursor-pointer">Dropout Fellow</div>
-          </FellowDropoutDialog>
+          {(!fellow.droppedOutAt || !fellow.droppedOut) && (
+            <FellowDropoutDialog fellow={fellow} revalidationPath="/profile">
+              <div className="cursor-pointer">Dropout Fellow</div>
+            </FellowDropoutDialog>
+          )}
+          {(fellow.droppedOutAt || fellow.droppedOut) && (
+            <FellowUndropoutDialog
+              fellow={fellow}
+              revalidationPath={`/profile`}
+            >
+              <div className="cursor-pointer">Un-dropout Fellow</div>
+            </FellowUndropoutDialog>
+          )}
         </MenuLineItem>
         <MenuLineItem>
           <ReportingNotesForm
