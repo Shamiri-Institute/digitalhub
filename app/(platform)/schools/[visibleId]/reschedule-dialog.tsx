@@ -79,7 +79,8 @@ export function RescheduleDialog({
             <DialogHeader className="space-y-0 px-6 py-4">
               <div className="flex items-center gap-2">
                 <span className="text-base font-medium">
-                  Reschedule {fellow.fellowName?.trim()}&apos; Sessions
+                  Submit substitute for {fellow.fellowName?.trim()}&apos;
+                  Sessions
                 </span>
               </div>
             </DialogHeader>
