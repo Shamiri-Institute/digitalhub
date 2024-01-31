@@ -3,20 +3,13 @@ import Link from "next/link";
 import { forwardRef } from "react";
 
 import { Icons } from "#/components/icons";
-import {
-  MobileNavigation,
-  useIsInsideMobileNavigation,
-  useMobileNavigationStore,
-} from "#/components/mobile-navigation";
+import { MobileNavigation } from "#/components/mobile-navigation";
 import { cn } from "#/lib/utils";
 
 export const Header = forwardRef<
   React.ElementRef<"div">,
   { className?: string }
 >(function Header({ className }, ref) {
-  let { isOpen: mobileNavIsOpen } = useMobileNavigationStore();
-  let isInsideMobileNavigation = useIsInsideMobileNavigation();
-
   return (
     <motion.div
       ref={ref}
