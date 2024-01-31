@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import AppMiddleware from "#/lib/middleware/app";
 
@@ -16,5 +16,9 @@ export const config = {
 };
 
 export default async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname.includes("monitoring")) {
+    return NextResponse.next();
+  }
+
   return AppMiddleware(request);
 }

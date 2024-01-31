@@ -11,6 +11,7 @@ import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role
 import { Icons } from "#/components/icons";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import { cn } from "#/lib/utils";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 import type { FellowWithAttendance } from "#/types/prisma";
 
@@ -39,12 +40,22 @@ export default async function SchoolDetailPage({
     where: { schoolId: school.id, gender: undefined },
   });
 
-  const total = await db.student.count({ where: { schoolId: school.id } });
+  const total = school.numbersExpected;
 
   const supervisor = await currentSupervisor();
   if (!supervisor) {
     return <InvalidPersonnelRole role="supervisor" />;
   }
+
+  const schoolSessions = school.interventionSessions
+    .map((ins) => {
+      return {
+        occurred: ins.occurred,
+        sessionType: ins.sessionType,
+      };
+    })
+    .filter((ins) => ["s0", "s1", "s2", "s3", "s4"].includes(ins.sessionType))
+    .sort((a, b) => a.sessionType.localeCompare(b.sessionType));
 
   return (
     <main className="pt-2">
@@ -76,9 +87,17 @@ export default async function SchoolDetailPage({
       <div className="mx-auto my-4 max-w-[200px]">
         <div className="text-muted-foreground">Sessions</div>
         <div className="mt-1 flex gap-4">
-          <div className="h-4 w-4 rounded-full bg-muted-green" />
-          <div className="h-4 w-4 rounded-full bg-muted-green" />
-          <div className="h-4 w-4 rounded-full bg-shamiri-red" />
+          {[0, 1, 2, 3, 4].map((idx) => {
+            return (
+              <div
+                key={idx}
+                className={cn("h-4 w-4 rounded-full", {
+                  "bg-muted-green": schoolSessions[idx]?.occurred,
+                  "bg-zinc-300": !schoolSessions[idx]?.occurred,
+                })}
+              />
+            );
+          })}
         </div>
       </div>
       <div className="mt-8 text-2xl font-semibold">Fellows</div>
@@ -103,9 +122,11 @@ async function FellowsList({
       supervisorId: supervisor.id,
     },
     include: { fellowAttendances: true, students: true },
-    orderBy: {
-      createdAt: "asc",
-    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const schoolStudentCount = await db.student.count({
+    where: { schoolId: school.id },
   });
 
   return (
@@ -117,12 +138,31 @@ async function FellowsList({
             fellow={fellow}
             school={school}
             supervisor={supervisor}
-            totalStudents={school.numbersExpected ?? 0}
+            totalStudents={schoolStudentCount}
           />
         );
       })}
     </div>
   );
+}
+
+function getAttendanceStatus(
+  attendances: FellowWithAttendance["attendances"][number][],
+  sessionNumber: SessionNumber,
+): AttendanceStatus {
+  const attendance = attendances.find(
+    (attendance) => attendance.sessionNumber === sessionNumber,
+  );
+  if (attendance?.attended === true) {
+    return "present";
+  }
+  if (attendance?.attended === false) {
+    return "absent";
+  }
+  if (attendance?.attended === null) {
+    return "not-marked";
+  }
+  return "not-marked";
 }
 
 function FellowCard({
@@ -144,67 +184,41 @@ function FellowCard({
         attendance.schoolId === school.id,
     );
 
-  if (filteredAttendances.length !== 5) {
-    console.warn(
-      `Fellow ${fellow.fellowName} has ${filteredAttendances.length} attendances`,
-      { attendances: fellow.fellowAttendances },
-    );
-  }
-
-  function getAttendanceStatus(sessionNumber: SessionNumber): AttendanceStatus {
-    console.log({ filteredAttendances });
-    const attendance: FellowWithAttendance["attendances"][number] =
-      filteredAttendances.find(
-        (attendance: FellowWithAttendance["attendances"][number]) =>
-          attendance.sessionNumber === sessionNumber,
-      );
-    if (attendance?.attended === true) {
-      return "present";
-    }
-    if (attendance?.attended === false) {
-      return "absent";
-    }
-    if (attendance?.attended === null) {
-      return "not-marked";
-    }
-    return "not-marked";
-  }
-
   const sessionItems: {
     status: AttendanceStatus;
     label: SessionLabel;
     session: Prisma.InterventionSessionGetPayload<{}> | null;
   }[] = [
     {
-      status: getAttendanceStatus(0),
+      status: getAttendanceStatus(filteredAttendances, 0),
       label: "Pre",
       session:
         school.interventionSessions.find((ins) => ins.sessionType === "s0") ||
         null,
     },
     {
-      status: getAttendanceStatus(1),
+      status: getAttendanceStatus(filteredAttendances, 1),
       label: "S1",
       session:
         school.interventionSessions.find((ins) => ins.sessionType === "s1") ||
         null,
     },
     {
-      status: getAttendanceStatus(2),
+      status: getAttendanceStatus(filteredAttendances, 2),
       label: "S2",
       session:
         school.interventionSessions.find((ins) => ins.sessionType === "s2") ||
         null,
     },
     {
-      status: getAttendanceStatus(3),
+      status: getAttendanceStatus(filteredAttendances, 3),
       label: "S3",
       session:
         school.interventionSessions.find((ins) => ins.sessionType === "s3") ||
         null,
     },
     {
-      status: getAttendanceStatus(4),
+      status: getAttendanceStatus(filteredAttendances, 4),
       label: "S4",
       session:
         school.interventionSessions.find((ins) => ins.sessionType === "s4") ||
