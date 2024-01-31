@@ -113,7 +113,7 @@ export const useMobileNavigationStore = create<{
 
 export function MobileNavigation() {
   let isInsideMobileNavigation = useIsInsideMobileNavigation();
-  let { isOpen, toggle, close } = useMobileNavigationStore();
+  let { isOpen, toggle, open, close } = useMobileNavigationStore();
 
   return (
     <IsInsideMobileNavigationContext.Provider value={true}>
