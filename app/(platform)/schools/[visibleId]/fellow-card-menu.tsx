@@ -1,6 +1,9 @@
 "use client";
 
-import { FellowDropoutDialog } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
+import {
+  FellowDropoutDialog,
+  FellowUndropoutDialog,
+} from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
 import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
 import { RescheduleDialog } from "#/app/(platform)/schools/[visibleId]/reschedule-dialog";
 import {
@@ -59,6 +62,14 @@ export default function FellowCardMenu({
             >
               <div className="cursor-pointer">Drop Out Fellow</div>
             </FellowDropoutDialog>
+          )}
+          {(fellow.droppedOutAt || fellow.droppedOut) && (
+            <FellowUndropoutDialog
+              fellow={fellow}
+              revalidationPath={`/schools/${school.visibleId}`}
+            >
+              <div className="cursor-pointer">Undropout Fellow</div>
+            </FellowUndropoutDialog>
           )}
         </MenuLineItem>
       </DropdownMenuContent>
