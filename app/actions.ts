@@ -302,6 +302,34 @@ export async function dropoutFellowWithReason(
   }
 }
 
+export async function undropoutFellow(
+  fellowVisibleId: string,
+  revalidationPath: string,
+) {
+  try {
+    const fellow = await db.fellow.update({
+      where: { visibleId: fellowVisibleId },
+      data: {
+        droppedOut: false,
+        droppedOutAt: null,
+        dropOutReason: null,
+      },
+    });
+
+    revalidatePath(revalidationPath);
+    return { fellow };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
 function generateFellowAttendanceVisibleId(
   fellowId: string,
   schoolId: string,

@@ -6,11 +6,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { dropoutFellowWithReason } from "#/app/actions";
+import { dropoutFellowWithReason, undropoutFellow } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
@@ -203,6 +204,69 @@ export function FellowDropoutDialog({
             </div>
           </form>
         </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function FellowUndropoutDialog({
+  fellow,
+  revalidationPath,
+  children,
+}: {
+  fellow: Prisma.FellowGetPayload<{}>;
+  revalidationPath: string;
+  children: React.ReactNode;
+}) {
+  const handleUndropout = async () => {
+    console.log("undropout", fellow, revalidationPath);
+    const response = await undropoutFellow(fellow.visibleId, revalidationPath);
+    if (response.error) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description: response.error,
+      });
+      return;
+    } else if (response.fellow) {
+      toast({
+        title: `Undropped out ${fellow.fellowName}`,
+      });
+      setDialogOpen(false);
+    }
+  };
+
+  const [open, setDialogOpen] = useState<boolean>(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="gap-0 p-0">
+        <DialogHeader className="space-y-0 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <span className="text-base font-medium">
+              Un-dropout {fellow.fellowName}
+            </span>
+          </div>
+        </DialogHeader>
+        <Separator />
+        <div className="my-6 space-y-6">
+          <div className="px-6">
+            <p className="mb-5">
+              Are you sure you want to{" "}
+              <span className="underline">un-dropout</span>{" "}
+              <span className="font-semibold">{fellow.fellowName}</span>?
+            </p>
+            <DialogFooter>
+              <Button variant="base" onClick={close}>
+                Cancel
+              </Button>
+              <Button variant="default" onClick={handleUndropout}>
+                Confirm
+              </Button>
+            </DialogFooter>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
