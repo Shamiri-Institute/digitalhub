@@ -7,6 +7,10 @@ export default async function AppMiddleware(req: NextRequest) {
   const { path } = parse(req);
   const session = await getToken({ req });
   if (!session?.email && path !== "/login" && path !== "/register") {
+    console.warn(`No email in session`, {
+      session,
+      pathname: req.nextUrl.pathname,
+    });
     return NextResponse.redirect(
       new URL(
         `/login${path !== "/" ? `?next=${encodeURIComponent(path)}` : ""}`,
