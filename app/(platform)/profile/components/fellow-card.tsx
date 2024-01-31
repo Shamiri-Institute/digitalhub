@@ -92,12 +92,10 @@ export default function FellowCard({
               label="Contact"
               value={fellow.cellNumber || null}
             />
-            {fellow.cellNumber !== fellow.mpesaNumber && (
-              <CardDetailLineItem
-                label="MPESA"
-                value={fellow.mpesaNumber || null}
-              />
-            )}
+            <CardDetailLineItem
+              label="MPESA"
+              value={fellow.mpesaNumber || null}
+            />
             <CardDetailLineItem
               label="Hub"
               value={fellow.hub?.hubName || null}
