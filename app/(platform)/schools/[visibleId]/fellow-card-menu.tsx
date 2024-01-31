@@ -1,11 +1,14 @@
 "use client";
 
+import { Fellow, Prisma } from "@prisma/client";
+import React from "react";
+
 import {
   FellowDropoutDialog,
   FellowUndropoutDialog,
 } from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
 import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
-import { RescheduleDialog } from "#/app/(platform)/schools/[visibleId]/reschedule-dialog";
+import { FellowSubstitutionDialog } from "#/app/(platform)/schools/[visibleId]/fellow-substitution-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
-import { Fellow, Prisma } from "@prisma/client";
 
 export default function FellowCardMenu({
   fellow,
@@ -28,14 +30,18 @@ export default function FellowCardMenu({
   }>;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = React.useState(false);
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent className="p-1 text-sm">
         <MenuLineItem>
-          <RescheduleDialog fellow={fellow}>
+          <FellowSubstitutionDialog
+            fellow={fellow}
+            close={() => setOpen(false)}
+          >
             <div className="cursor-pointer">Substitute Fellow</div>
-          </RescheduleDialog>
+          </FellowSubstitutionDialog>
         </MenuLineItem>
         <DropdownMenuSeparator className="my-2" />
 
