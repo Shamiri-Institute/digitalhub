@@ -7,9 +7,7 @@ import {
   caseStatusOptions,
   riskStatusOptions,
 } from "@prisma/client";
-import * as csv from "csv-parse";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { ModifyFellowData } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
@@ -57,66 +55,6 @@ export async function inviteUserToImplementer(prevState: any, formData: any) {
   } catch (e) {
     return { message: "failed" };
   }
-}
-
-export async function batchUploadFellows(formData: FormData) {
-  const { file }: { file?: File } = z
-    .object({
-      file: z.any(),
-    })
-    .parse({
-      file: formData.get("csv-file"),
-    });
-
-  if (!file) {
-    throw new Error("No file provided");
-  }
-
-  const records = await parseCsvFile(file);
-
-  // TODO: fin
-  redirect("/supervisors/assignments/fellows");
-}
-
-const BATCH_FELLOW_CSV_HEADERS = [
-  "Name",
-  "Phone",
-  "Email",
-  "National ID",
-  "MPESA Name",
-  "MPESA Number",
-  "County",
-  "Sub-county",
-  "Date of birth",
-  "Gender",
-];
-
-async function parseCsvFile(file: File) {
-  return new Promise(async (resolve, reject) => {
-    const parser = csv.parse({
-      delimiter: ",",
-      columns: BATCH_FELLOW_CSV_HEADERS,
-    });
-
-    const records: any[] = [];
-    parser.on("readable", function () {
-      let record;
-      while ((record = parser.read())) {
-        records.push(record);
-      }
-    });
-
-    parser.on("error", function (err) {
-      reject(err.message);
-    });
-
-    parser.on("end", function () {
-      resolve(records);
-    });
-
-    parser.write(Buffer.from(await file.arrayBuffer()));
-    parser.end();
-  });
 }
 
 export async function modifyFellow(
@@ -241,6 +179,12 @@ export async function markFellowAttendance(
   schoolVisibleId: string,
 ) {
   try {
+    console.debug("Marking fellow attendance action", {
+      status,
+      label,
+      fellowVisibleId,
+      schoolVisibleId,
+    });
     const fellow = await db.fellow.findUniqueOrThrow({
       where: { visibleId: fellowVisibleId },
     });
@@ -251,14 +195,31 @@ export async function markFellowAttendance(
 
     const school = await db.school.findUniqueOrThrow({
       where: { visibleId: schoolVisibleId },
+      include: {
+        interventionSessions: true,
+        interventionGroups: true,
+      },
     });
 
     const sessionNumber = sessionLabelToNumber(label);
+    const interventionSession = school.interventionSessions.find(
+      (session) => session.sessionType === `s${sessionNumber}`,
+    );
+    if (!interventionSession) {
+      throw new Error("Intervention session not found");
+    }
+
+    const interventionGroup =
+      school.interventionGroups.find((group) => group.leaderId === fellow.id) ??
+      null;
 
     const fellowAttendance = await db.fellowAttendance.findFirst({
       where: {
         fellowId: fellow.id,
         sessionNumber,
+        schoolId: school.id,
+        sessionId: interventionSession.id,
+        groupId: interventionGroup?.id ?? null,
       },
     });
 
@@ -284,11 +245,13 @@ export async function markFellowAttendance(
           ),
           yearOfImplementation: new Date().getFullYear(),
           sessionNumber: sessionNumber as number,
-          // TODO: remove this as we need a way to know the date of the session (see introduced intervention_sessions)
-          sessionDate: new Date(),
+          sessionDate: interventionSession.sessionDate,
           attended: attendanceStatusToBoolean(status),
           schoolId: school.id,
           supervisorId: fellow.supervisorId,
+          sessionId: interventionSession.id,
+          groupId: interventionGroup?.id ?? null,
+          projectId: CURRENT_PROJECT_ID,
         },
       });
     }
