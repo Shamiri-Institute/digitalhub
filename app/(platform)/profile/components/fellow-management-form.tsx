@@ -28,7 +28,7 @@ import { cn } from "#/lib/utils";
 import { EditFellowSchema } from "#/lib/validators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Fellow } from "@prisma/client";
-import format from "date-fns/format";
+import { format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -44,9 +44,7 @@ export default function FellowDetailsForm(props: FellowDetails) {
     defaultValues: {
       id: props.fellow.id,
       fellowName: props.fellow.fellowName ?? undefined,
-      dateOfBirth: props.fellow.dateOfBirth
-        ? new Date(props.fellow.dateOfBirth)
-        : undefined,
+      dateOfBirth: props.fellow.dateOfBirth ?? undefined,
       gender: props.fellow.gender ?? undefined,
       cellNumber: props.fellow.cellNumber ?? undefined,
       mpesaName: props.fellow.mpesaName ?? undefined, // TODO: mpesa name not recorded in some of the initial values
@@ -133,7 +131,20 @@ export default function FellowDetailsForm(props: FellowDetails) {
                     <Calendar
                       mode="single"
                       selected={field.value ?? undefined}
-                      onSelect={field.onChange}
+                      onSelect={(val) => {
+                        if (val) {
+                          const utcDate = new Date(
+                            Date.UTC(
+                              val.getFullYear(),
+                              val.getMonth(),
+                              val.getDate(),
+                            ),
+                          );
+                          field.onChange(utcDate);
+                        } else {
+                          field.onChange(val);
+                        }
+                      }}
                     />
                   </PopoverContent>
                 </Popover>
