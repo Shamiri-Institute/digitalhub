@@ -9,48 +9,52 @@ import {
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
-import { cn, doesSessionExist } from "#/lib/utils";
+import { cn, isSessionScheduled } from "#/lib/utils";
 
 import SchoolCardMenu from "#/app/(platform)/profile/components/assigned-school-card-menu";
 import { Icons } from "#/components/icons";
 import { Prisma, School } from "@prisma/client";
 
-type sessionTypes = Prisma.InterventionSessionGetPayload<{}>[];
-
-const expectedSessionTypesOnCard = [
-  {
-    id: 1,
-    sessionName: "Presession",
-  },
-  {
-    id: 2,
-    sessionName: "Session 1",
-  },
-  {
-    id: 3,
-    sessionName: "Session 2",
-  },
-  {
-    id: 4,
-    sessionName: "Session 3",
-  },
-  {
-    id: 5,
-    sessionName: "Session 4",
-  },
-];
-
-export function SchoolCardProfile({
+export async function SchoolCardProfile({
   school,
   sessionTypes,
   assigned,
   fellowsCount,
 }: {
   school: School;
-  sessionTypes: sessionTypes;
+  sessionTypes: Prisma.InterventionSessionGetPayload<{}>[];
   assigned?: boolean;
   fellowsCount?: number;
 }) {
+  console.log({ sessionTypes });
+  const expectedSessionTypesOnCard = [
+    {
+      sessionNumber: 0,
+      sessionName: "Presession",
+      scheduled: isSessionScheduled(sessionTypes, "s0"),
+    },
+    {
+      sessionNumber: 1,
+      sessionName: "Session 1",
+      scheduled: isSessionScheduled(sessionTypes, "s1"),
+    },
+    {
+      sessionNumber: 2,
+      sessionName: "Session 2",
+      scheduled: isSessionScheduled(sessionTypes, "s2"),
+    },
+    {
+      sessionNumber: 3,
+      sessionName: "Session 3",
+      scheduled: isSessionScheduled(sessionTypes, "s3"),
+    },
+    {
+      sessionNumber: 4,
+      sessionName: "Session 4",
+      scheduled: isSessionScheduled(sessionTypes, "s4"),
+    },
+  ];
+
   const SchoolDetail = ({
     label,
     value,
@@ -153,23 +157,20 @@ export function SchoolCardProfile({
 
       <div className="flex justify-between gap-2">
         <div className="flex gap-3">
-          {expectedSessionTypesOnCard.map((sessiontype) => (
-            <div key={sessiontype.id} className="flex flex-col items-center">
+          {expectedSessionTypesOnCard.map((session) => (
+            <div
+              key={session.sessionNumber}
+              className="flex flex-col items-center"
+            >
               <p className="text-xs font-medium text-muted-foreground">
-                {sessiontype.sessionName}
+                {session.sessionName}
               </p>
               <div
                 className={cn("mt-2 h-4 w-4 rounded-full", {
-                  "bg-gray-300": !doesSessionExist(
-                    sessionTypes,
-                    sessiontype.sessionName,
-                  ),
-                  "bg-green-600": doesSessionExist(
-                    sessionTypes,
-                    sessiontype.sessionName,
-                  ),
+                  "bg-gray-300": !session.scheduled,
+                  "bg-green-400": session.scheduled,
                 })}
-              ></div>
+              />
             </div>
           ))}
         </div>

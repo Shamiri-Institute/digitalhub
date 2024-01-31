@@ -9,7 +9,7 @@ import {
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
-import { cn, doesSessionExist } from "#/lib/utils";
+import { cn, isSessionScheduled } from "#/lib/utils";
 import { Prisma, School } from "@prisma/client";
 import Link from "next/link";
 
@@ -25,6 +25,7 @@ type SchoolCardType = {
     | "Session 3"
     | "Session 4";
   uiValue: "Pre" | "S1" | "S2" | "S3" | "S4";
+  dbValue: "s0" | "s1" | "s2" | "s3" | "s4";
 };
 
 const expectedSessionTypesOnCard: SchoolCardType[] = [
@@ -32,26 +33,31 @@ const expectedSessionTypesOnCard: SchoolCardType[] = [
     id: 1,
     sessionName: "Presession",
     uiValue: "Pre",
+    dbValue: "s0",
   },
   {
     id: 2,
     sessionName: "Session 1",
     uiValue: "S1",
+    dbValue: "s1",
   },
   {
     id: 3,
     sessionName: "Session 2",
     uiValue: "S2",
+    dbValue: "s2",
   },
   {
     id: 4,
     sessionName: "Session 3",
     uiValue: "S3",
+    dbValue: "s3",
   },
   {
     id: 5,
     sessionName: "Session 4",
     uiValue: "S4",
+    dbValue: "s4",
   },
 ];
 
@@ -161,14 +167,16 @@ export function SchoolCard({
               </p>
               <div
                 className={cn("mt-2 h-4 w-4 rounded-full", {
-                  "bg-gray-300": !doesSessionExist(
+                  "bg-gray-300": !isSessionScheduled(
                     sessionTypes,
-                    session.sessionName,
+                    session.dbValue,
                   ),
-                  "bg-green-600": doesSessionExist(
-                    sessionTypes,
-                    session.sessionName,
-                  ),
+                  "bg-green-400":
+                    isSessionScheduled(sessionTypes, session.dbValue) &&
+                    assigned,
+                  "bg-green-600":
+                    isSessionScheduled(sessionTypes, session.dbValue) &&
+                    !assigned,
                 })}
               ></div>
             </div>
