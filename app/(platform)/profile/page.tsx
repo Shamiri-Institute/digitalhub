@@ -62,6 +62,15 @@ export default async function SupervisorProfile() {
     },
   });
 
+  const modifyDialogInfo = {
+    hubVisibleId: supervisor.hub?.visibleId!,
+    supervisorVisibleId: supervisor.visibleId,
+    implementerVisibleId: implementer?.visibleId!,
+    schoolVisibleIds: supervisor.assignedSchools.map(
+      (school) => school.visibleId,
+    ),
+  };
+
   return (
     <main className="max-w-3xl">
       <IntroHeader />
@@ -78,24 +87,16 @@ export default async function SupervisorProfile() {
         <h3 className="text-base font-semibold text-brand xl:text-2xl">
           My Fellows
         </h3>
-        <FellowModifyDialog
-          mode="create"
-          info={{
-            hubVisibleId: supervisor.hub?.visibleId!,
-            supervisorVisibleId: supervisor.visibleId,
-            implementerVisibleId: implementer?.visibleId!,
-            schoolVisibleIds: supervisor.assignedSchools.map(
-              (school) => school.visibleId,
-            ),
-          }}
-        >
-          <button className="transition-transform active:scale-95">
-            <Icons.plusCircle
-              className="h-6 w-6 text-shamiri-blue"
-              strokeWidth={1.5}
-            />
-          </button>
-        </FellowModifyDialog>
+        {false && (
+          <FellowModifyDialog mode="create" info={modifyDialogInfo}>
+            <button className="transition-transform active:scale-95">
+              <Icons.plusCircle
+                className="h-6 w-6 text-shamiri-blue"
+                strokeWidth={1.5}
+              />
+            </button>
+          </FellowModifyDialog>
+        )}
       </div>
 
       <MyFellows fellows={supervisor.fellows} />
