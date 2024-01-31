@@ -1,8 +1,8 @@
 name: Playwright end-to-end tests
 
 on:
-  push:
-    branches: [main]
+  # push:
+  # branches: [main]
   pull_request:
     branches: [main]
 
