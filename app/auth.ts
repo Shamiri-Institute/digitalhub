@@ -1,5 +1,6 @@
 import { getServerSession } from "next-auth";
 
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export type CurrentHubCoordinator = Awaited<
@@ -55,6 +56,9 @@ export async function currentSupervisor() {
         },
       },
       assignedSchools: {
+        where: {
+          hub: { projectId: CURRENT_PROJECT_ID },
+        },
         include: {
           interventionSessions: true,
           _count: {
