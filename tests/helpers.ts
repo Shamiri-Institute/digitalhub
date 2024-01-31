@@ -5,12 +5,15 @@ import { db } from "#/lib/db";
 
 export const PersonnelFixtures = {
   supervisor: {
+    email: "shadrack.lilan@shamiri.institute",
     stateFile: path.join(__dirname, `./fixtures/supervisor-state.json`),
   },
   hubCoordinator: {
+    email: "edmund@shamiri.institute",
     stateFile: path.join(__dirname, `./fixtures/hub-coordinator-state.json`),
   },
   operations: {
+    email: "benny@shamiri.institute",
     stateFile: path.join(__dirname, `./fixtures/operations-state.json`),
   },
 };

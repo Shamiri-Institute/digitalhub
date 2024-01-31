@@ -5,15 +5,15 @@ import { generateSessionToken } from "./helpers";
 
 const sessionFixtures = [
   {
-    userEmail: "shadrack.lilan@shamiri.institute",
+    userEmail: PersonnelFixtures.supervisor.email,
     stateFile: PersonnelFixtures.supervisor.stateFile,
   },
   {
-    userEmail: "edmund@shamiri.institute",
+    userEmail: PersonnelFixtures.hubCoordinator.email,
     stateFile: PersonnelFixtures.hubCoordinator.stateFile,
   },
   {
-    userEmail: "benny@shamiri.institute",
+    userEmail: PersonnelFixtures.operations.email,
     stateFile: PersonnelFixtures.operations.stateFile,
   },
 ];
