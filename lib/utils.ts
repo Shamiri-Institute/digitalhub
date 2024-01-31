@@ -78,15 +78,11 @@ export function getHighestValue(data: {
   }
 }
 
-type sessionTypes = Prisma.InterventionSessionGetPayload<{}>[];
-
-export function doesSessionExist(
-  sessionTypes: sessionTypes,
-  sessionName: string,
+export function isSessionScheduled(
+  sessions: Prisma.InterventionSessionGetPayload<{}>[],
+  sessionType: string, // s0, s1, s2, ...
 ) {
-  return sessionTypes.some(
-    (session) => session.sessionName === sessionName && session.occurred,
-  );
+  return sessions.some((session) => session.sessionType === sessionType);
 }
 
 export function stringValidation(message: string) {
