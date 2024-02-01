@@ -48,7 +48,7 @@ describe("if attendance in unmarked initial state", () => {
 
   test("should not allow marking attendance after the cutoff date without delayed payment request confirmation", async () => {
     // Say a user is trying to record attendance on Thursday, February 8, 2024, 9:01 AM (just after the cutoff)
-    const recordTime = setMinutes(setHours(new Date(2024, 1, 8), 9), 1);
+    const recordTime = setMinutes(setHours(new Date(2024, 1, 8), 11), 1);
 
     // For a session that occurred the previous day
     const sessionDate = addDays(recordTime, -1);

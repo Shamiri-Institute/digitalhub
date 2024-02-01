@@ -131,7 +131,7 @@ export function FellowAttendanceDot({
   function getNextCutoffDate(sessionDate: Date): Date {
     const monday = 1;
     const thursday = 4;
-    const cutoffHour = 9;
+    const cutoffHour = 11;
 
     // Start of the current week (Monday)
     let thisMonday = startOfWeek(sessionDate, { weekStartsOn: monday });
