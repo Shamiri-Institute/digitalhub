@@ -31,26 +31,31 @@ export async function SchoolCardProfile({
       sessionNumber: 0,
       sessionName: "Presession",
       scheduled: isSessionScheduled(sessionTypes, "s0"),
+      uiValue: "Pre",
     },
     {
       sessionNumber: 1,
       sessionName: "Session 1",
       scheduled: isSessionScheduled(sessionTypes, "s1"),
+      uiValue: "S1",
     },
     {
       sessionNumber: 2,
       sessionName: "Session 2",
       scheduled: isSessionScheduled(sessionTypes, "s2"),
+      uiValue: "S2",
     },
     {
       sessionNumber: 3,
       sessionName: "Session 3",
       scheduled: isSessionScheduled(sessionTypes, "s3"),
+      uiValue: "S3",
     },
     {
       sessionNumber: 4,
       sessionName: "Session 4",
       scheduled: isSessionScheduled(sessionTypes, "s4"),
+      uiValue: "S4",
     },
   ];
 
@@ -154,15 +159,15 @@ export async function SchoolCardProfile({
         </div>
       </div>
 
-      <div className="flex justify-between gap-2">
-        <div className="flex gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div className="mr-4 flex flex-1 justify-between">
           {expectedSessionTypesOnCard.map((session) => (
             <div
               key={session.sessionNumber}
               className="flex flex-col items-center"
             >
               <p className="text-xs font-medium text-muted-foreground">
-                {session.sessionName}
+                {session.uiValue}
               </p>
               <div
                 className={cn("mt-2 h-4 w-4 rounded-full", {
