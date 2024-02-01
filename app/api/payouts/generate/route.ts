@@ -1,3 +1,4 @@
+import { SendRawEmailCommandInput } from "@aws-sdk/client-ses";
 import {
   addDays,
   format,
@@ -12,7 +13,6 @@ import { z } from "zod";
 
 import { db } from "#/lib/db";
 import { sendEmailWithAttachment } from "#/lib/ses";
-import { SendRawEmailCommandInput } from "@aws-sdk/client-ses";
 
 export const revalidate = 0;
 
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const { day } = dayParam.data;
     const isFebruary1st =
       new Date().getMonth() === 1 && new Date().getDate() === 1;
-    const specialStartTimeForFeb1st = new Date(Date.UTC(2024, 0, 23));
+    const specialStartTimeForFeb1st = new Date(2024, 0, 23);
     const cuttoffStartTime = isFebruary1st
       ? specialStartTimeForFeb1st
       : getStartCuttoffRange(day);
@@ -78,13 +78,6 @@ export async function GET(request: NextRequest) {
       const sessionType = attendance.session?.sessionType;
       const payout = payouts[attendance.fellow.visibleId];
       const filterKey = `${attendance.fellow.visibleId}-${attendance.schoolId}-${attendance.session?.sessionType}`;
-      console.log('Filterkeys')
-      console.log(filterKey)
-      if (attendance.fellow.visibleId === "TFW24_S_056") {
-        console.log("here is the filter key");
-        console.log(filterKey);
-        console.log(filterSet.has(filterKey));
-      }
 
       if (sessionType && payout) {
         if (sessionType === "s0") {
@@ -138,23 +131,23 @@ export async function GET(request: NextRequest) {
       RawMessage: {
         Data: Buffer.from(
           `From: "Shamiri Institute" <tech@shamiri.institute>\n` +
-            `To: tech@shamiri.institute\n` +
-            `Subject: Payouts for sessions ${format(
-              cuttoffStartTime,
-              "yyyy-MM-dd",
-            )} to ${format(cuttoffEndTime, "yyyy-MM-dd")}\n` +
-            `MIME-Version: 1.0\n` +
-            `Content-Type: multipart/mixed; boundary="NextPart"\n\n` +
-            `--NextPart\n` +
-            `Content-Type: text/plain\n\n` +
-            `Please find the attached payouts CSV.\n\n` +
-            `There were ${payoutsWithoutMpesaName} payouts without Mpesa names and ${payoutsWithoutMpesaNumber} payouts without Mpesa numbers.\n\n` +
-            `The total payout amount is KES ${totalPayoutAmount} and the total payout amount with Mpesa info present is KES ${totalPayoutAmountWithMpesaInfoPresent}.\n\n` +
-            `--NextPart\n` +
-            `Content-Type: text/csv; name="payouts.csv"\n` +
-            `Content-Disposition: attachment; filename="payouts.csv"\n\n` +
-            csvBuffer.toString() +
-            `\n--NextPart--`,
+          `To: tech@shamiri.institute\n` +
+          `Subject: Payouts for sessions ${format(
+            cuttoffStartTime,
+            "yyyy-MM-dd",
+          )} to ${format(cuttoffEndTime, "yyyy-MM-dd")}\n` +
+          `MIME-Version: 1.0\n` +
+          `Content-Type: multipart/mixed; boundary="NextPart"\n\n` +
+          `--NextPart\n` +
+          `Content-Type: text/plain\n\n` +
+          `Please find the attached payouts CSV.\n\n` +
+          `There were ${payoutsWithoutMpesaName} payouts without Mpesa names and ${payoutsWithoutMpesaNumber} payouts without Mpesa numbers.\n\n` +
+          `The total payout amount is KES ${totalPayoutAmount} and the total payout amount with Mpesa info present is KES ${totalPayoutAmountWithMpesaInfoPresent}.\n\n` +
+          `--NextPart\n` +
+          `Content-Type: text/csv; name="payouts.csv"\n` +
+          `Content-Disposition: attachment; filename="payouts.csv"\n\n` +
+          csvBuffer.toString() +
+          `\n--NextPart--`,
         ),
       },
     };
@@ -182,23 +175,24 @@ export async function GET(request: NextRequest) {
   }
 }
 
+const cutoffHour = 6; // 6am UTC / 9am EAT
+const cutoffMinute = 0;
+
 function getStartCuttoffRange(day: "R" | "M"): Date {
   switch (day) {
     case "R":
-      // Get the start of the current week (Monday 00:00)
       let thisMonday = startOfWeek(new Date(), { weekStartsOn: 1 });
 
-      // Set the time to 9am EAT (UTC+3)
-      thisMonday = setHours(thisMonday, 9);
-      thisMonday = setMinutes(thisMonday, 0);
+      thisMonday = setHours(thisMonday, cutoffHour);
+      thisMonday = setMinutes(thisMonday, cutoffMinute);
       return thisMonday;
     case "M":
-      // Get the start of the previous week (Monday 00:00)
-      let lastMonday = startOfWeek(subDays(new Date(), 7), { weekStartsOn: 1 });
+      let lastMonday = startOfWeek(subDays(new Date(), 7), {
+        weekStartsOn: 1,
+      });
 
-      // Set the time to 9am EAT (UTC+3) on Thursday
-      let lastThursday = setHours(lastMonday, 9);
-      lastThursday = setMinutes(lastThursday, 0);
+      let lastThursday = setHours(lastMonday, cutoffHour);
+      lastThursday = setMinutes(lastThursday, cutoffMinute);
       lastThursday = addDays(lastThursday, 3); // Move to Thursday
       return lastThursday;
     default:
@@ -211,15 +205,16 @@ function getEndCuttoffRange(day: "R" | "M"): Date {
     case "R":
       // Thursday 9am EAT
       let thisThursday = startOfWeek(new Date(), { weekStartsOn: 1 });
-      thisThursday = setHours(thisThursday, 9);
-      thisThursday = setMinutes(thisThursday, 0);
+      thisThursday = setHours(thisThursday, cutoffHour);
+      thisThursday = setMinutes(thisThursday, cutoffMinute);
       thisThursday = addDays(thisThursday, 3); // Move to Thursday
+
       return thisThursday;
     case "M":
-      // Monday 9am EAT
+      // Monday 9am UTC
       let thisMonday = startOfWeek(new Date(), { weekStartsOn: 1 });
-      thisMonday = setHours(thisMonday, 9);
-      thisMonday = setMinutes(thisMonday, 0);
+      thisMonday = setHours(thisMonday, cutoffHour);
+      thisMonday = setMinutes(thisMonday, cutoffMinute);
       return thisMonday;
     default:
       throw new Error("Invalid day");
