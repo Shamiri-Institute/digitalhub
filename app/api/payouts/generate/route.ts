@@ -1,4 +1,11 @@
-import { addDays, setHours, setMinutes, startOfWeek, subDays } from "date-fns";
+import {
+  addDays,
+  format,
+  setHours,
+  setMinutes,
+  startOfWeek,
+  subDays,
+} from "date-fns";
 import * as fastcsv from "fast-csv";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -115,7 +122,7 @@ export async function GET(request: NextRequest) {
         Data: Buffer.from(
           `From: "Shamiri Institute" <tech@shamiri.institute>\n` +
             `To: tech@shamiri.institute\n` +
-            `Subject: Payouts CSV Attachment\n` +
+            `Subject: Payouts for sessions ${format(cuttoffStartTime, "yyyy-MM-dd")} to ${format(cuttoffEndTime, "yyyy-MM-dd")}\n` +
             `MIME-Version: 1.0\n` +
             `Content-Type: multipart/mixed; boundary="NextPart"\n\n` +
             `--NextPart\n` +
