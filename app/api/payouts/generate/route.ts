@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
             gte: cuttoffStartTime,
             lt: cuttoffEndTime,
           },
+          occurred: true,
         },
         attended: true,
       },
@@ -109,11 +110,11 @@ export async function GET(request: NextRequest) {
 
     const emailInput: SendRawEmailCommandInput = {
       Source: '"Shamiri Institute" <tech@shamiri.institute>',
-      Destinations: ["mmbone@shamiri.institute"],
+      Destinations: ["tech@shamiri.institute"],
       RawMessage: {
         Data: Buffer.from(
           `From: "Shamiri Institute" <tech@shamiri.institute>\n` +
-            `To: mmbone@shamiri.institute\n` +
+            `To: tech@shamiri.institute\n` +
             `Subject: Payouts CSV Attachment\n` +
             `MIME-Version: 1.0\n` +
             `Content-Type: multipart/mixed; boundary="NextPart"\n\n` +
