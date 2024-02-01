@@ -21,11 +21,14 @@ export async function GET(request: NextRequest) {
     const cuttoffStartTime = getStartCuttoffRange(day);
     const cuttoffEndTime = getEndCuttoffRange(day);
 
+    const isFebruary1st =
+      new Date().getMonth() === 1 && new Date().getDate() === 1;
+    const specialStartTimeForFeb1st = new Date(Date.UTC(2024, 0, 23));
     const attendances = await db.fellowAttendance.findMany({
       where: {
         session: {
           sessionDate: {
-            gte: cuttoffStartTime,
+            gte: isFebruary1st ? specialStartTimeForFeb1st : cuttoffStartTime,
             lt: cuttoffEndTime,
           },
         },
