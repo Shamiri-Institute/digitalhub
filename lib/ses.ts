@@ -1,4 +1,8 @@
-import { SES, SendEmailCommandInput, SendRawEmailCommandInput } from "@aws-sdk/client-ses";
+import {
+  SES,
+  SendEmailCommandInput,
+  SendRawEmailCommandInput,
+} from "@aws-sdk/client-ses";
 
 import { env } from "#/env";
 
