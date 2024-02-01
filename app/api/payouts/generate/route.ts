@@ -78,14 +78,16 @@ export async function GET(request: NextRequest) {
       const sessionType = attendance.session?.sessionType;
       const payout = payouts[attendance.fellow.visibleId];
       const filterKey = `${attendance.fellow.visibleId}-${attendance.schoolId}-${attendance.session?.sessionType}`;
+      console.log('Filterkeys')
+      console.log(filterKey)
+      if (attendance.fellow.visibleId === "TFW24_S_056") {
+        console.log("here is the filter key");
+        console.log(filterKey);
+        console.log(filterSet.has(filterKey));
+      }
 
       if (sessionType && payout) {
         if (sessionType === "s0") {
-          if (attendance.fellow.visibleId === "TFW24_S_056") {
-            console.log("here is the filter key");
-            console.log(filterKey);
-            console.log(filterSet.has(filterKey));
-          }
           if (!filterSet.has(filterKey)) {
             payout.kesPayoutAmount += 500;
             payout.presessionCount += 1;
