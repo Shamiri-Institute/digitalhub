@@ -82,7 +82,10 @@ export function isSessionScheduled(
   sessions: Prisma.InterventionSessionGetPayload<{}>[],
   sessionType: string, // s0, s1, s2, ...
 ) {
-  return sessions.some((session) => session.sessionType === sessionType);
+  return sessions.some(
+    (session) =>
+      session.sessionType === sessionType && session.occurred === true,
+  );
 }
 
 export function stringValidation(message: string) {
