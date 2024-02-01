@@ -131,23 +131,23 @@ export async function GET(request: NextRequest) {
       RawMessage: {
         Data: Buffer.from(
           `From: "Shamiri Institute" <tech@shamiri.institute>\n` +
-          `To: tech@shamiri.institute\n` +
-          `Subject: Payouts for sessions ${format(
-            cuttoffStartTime,
-            "yyyy-MM-dd",
-          )} to ${format(cuttoffEndTime, "yyyy-MM-dd")}\n` +
-          `MIME-Version: 1.0\n` +
-          `Content-Type: multipart/mixed; boundary="NextPart"\n\n` +
-          `--NextPart\n` +
-          `Content-Type: text/plain\n\n` +
-          `Please find the attached payouts CSV.\n\n` +
-          `There were ${payoutsWithoutMpesaName} payouts without Mpesa names and ${payoutsWithoutMpesaNumber} payouts without Mpesa numbers.\n\n` +
-          `The total payout amount is KES ${totalPayoutAmount} and the total payout amount with Mpesa info present is KES ${totalPayoutAmountWithMpesaInfoPresent}.\n\n` +
-          `--NextPart\n` +
-          `Content-Type: text/csv; name="payouts.csv"\n` +
-          `Content-Disposition: attachment; filename="payouts.csv"\n\n` +
-          csvBuffer.toString() +
-          `\n--NextPart--`,
+            `To: tech@shamiri.institute\n` +
+            `Subject: Payouts for sessions ${format(
+              cuttoffStartTime,
+              "yyyy-MM-dd",
+            )} to ${format(cuttoffEndTime, "yyyy-MM-dd")}\n` +
+            `MIME-Version: 1.0\n` +
+            `Content-Type: multipart/mixed; boundary="NextPart"\n\n` +
+            `--NextPart\n` +
+            `Content-Type: text/plain\n\n` +
+            `Please find the attached payouts CSV.\n\n` +
+            `There were ${payoutsWithoutMpesaName} payouts without Mpesa names and ${payoutsWithoutMpesaNumber} payouts without Mpesa numbers.\n\n` +
+            `The total payout amount is KES ${totalPayoutAmount} and the total payout amount with Mpesa info present is KES ${totalPayoutAmountWithMpesaInfoPresent}.\n\n` +
+            `--NextPart\n` +
+            `Content-Type: text/csv; name="payouts.csv"\n` +
+            `Content-Disposition: attachment; filename="payouts.csv"\n\n` +
+            csvBuffer.toString() +
+            `\n--NextPart--`,
         ),
       },
     };
