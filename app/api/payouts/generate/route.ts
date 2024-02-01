@@ -6,7 +6,7 @@ import { z } from "zod";
 
 import { db } from "#/lib/db";
 
-export const revalidate = 60 * 60 * 24; // 24 hours
+export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   const dayParam = z
@@ -18,17 +18,19 @@ export async function GET(request: NextRequest) {
 
   try {
     const { day } = dayParam.data;
-    const cuttoffStartTime = getStartCuttoffRange(day);
-    const cuttoffEndTime = getEndCuttoffRange(day);
-
     const isFebruary1st =
       new Date().getMonth() === 1 && new Date().getDate() === 1;
     const specialStartTimeForFeb1st = new Date(Date.UTC(2024, 0, 23));
+    const cuttoffStartTime = isFebruary1st
+      ? specialStartTimeForFeb1st
+      : getStartCuttoffRange(day);
+    const cuttoffEndTime = getEndCuttoffRange(day);
+
     const attendances = await db.fellowAttendance.findMany({
       where: {
         session: {
           sessionDate: {
-            gte: isFebruary1st ? specialStartTimeForFeb1st : cuttoffStartTime,
+            gte: cuttoffStartTime,
             lt: cuttoffEndTime,
           },
         },
@@ -78,6 +80,20 @@ export async function GET(request: NextRequest) {
     }
     const payoutRows = Object.values(payouts);
 
+    const payoutsWithoutMpesaNumber = payoutRows.filter(
+      (payout) => !payout.mpesaNumber,
+    ).length;
+    const payoutsWithoutMpesaName = payoutRows.filter(
+      (payout) => !payout.mpesaName,
+    ).length;
+    const totalPayoutAmount = payoutRows.reduce(
+      (acc, payout) => acc + payout.kesPayoutAmount,
+      0,
+    );
+    const totalPayoutAmountWithMpesa = payoutRows
+      .filter((payout) => payout.mpesaNumber && payout.mpesaName)
+      .reduce((acc, payout) => acc + payout.kesPayoutAmount, 0);
+
     const ws = fs.createWriteStream("payouts.csv");
     fastcsv.write(payoutRows, { headers: true }).pipe(ws);
 
@@ -86,6 +102,10 @@ export async function GET(request: NextRequest) {
       currentTime: new Date(),
       cuttoffStartTime,
       cuttoffEndTime,
+      payoutsWithoutMpesaName,
+      payoutsWithoutMpesaNumber,
+      totalPayoutAmount,
+      totalPayoutAmountWithMpesa,
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
