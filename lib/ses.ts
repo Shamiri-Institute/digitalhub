@@ -1,4 +1,4 @@
-import { SES, SendEmailCommandInput } from "@aws-sdk/client-ses";
+import { SES, SendEmailCommandInput, SendRawEmailCommandInput } from "@aws-sdk/client-ses";
 
 import { env } from "#/env";
 
@@ -12,5 +12,10 @@ const ses = new SES({
 
 export async function sendEmail(input: SendEmailCommandInput) {
   const response = await ses.sendEmail(input);
+  return response;
+}
+
+export async function sendEmailWithAttachment(input: SendRawEmailCommandInput) {
+  const response = await ses.sendRawEmail(input);
   return response;
 }
