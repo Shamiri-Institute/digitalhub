@@ -159,8 +159,9 @@ export default function CreateClinicalCaseDialogue({
 
   useEffect(() => {
     // from the selected fellow id, get the fellow
-    const students = fellows?.find((fellow) => fellow.id === selectedFellowId)
-      ?.students;
+    const students = fellows?.find(
+      (fellow) => fellow.id === selectedFellowId,
+    )?.students;
     setStudents(students);
   }, [selectedFellowId, fellows]);
 
