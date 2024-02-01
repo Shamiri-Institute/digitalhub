@@ -43,8 +43,8 @@ async function SchoolsList() {
               .filter((school) => school.hubId !== null)
               .map((school) => school.hubId as string)
           : supervisor.hubId
-            ? [supervisor.hubId]
-            : [],
+          ? [supervisor.hubId]
+          : [],
       },
     },
     include: {
