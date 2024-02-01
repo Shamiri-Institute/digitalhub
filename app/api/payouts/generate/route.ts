@@ -1,10 +1,11 @@
 import { addDays, setHours, setMinutes, startOfWeek, subDays } from "date-fns";
 import * as fastcsv from "fast-csv";
-import * as fs from "fs";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { db } from "#/lib/db";
+import { sendEmailWithAttachment } from "#/lib/ses";
+import { SendRawEmailCommandInput } from "@aws-sdk/client-ses";
 
 export const revalidate = 0;
 
@@ -90,12 +91,46 @@ export async function GET(request: NextRequest) {
       (acc, payout) => acc + payout.kesPayoutAmount,
       0,
     );
-    const totalPayoutAmountWithMpesa = payoutRows
+    const totalPayoutAmountWithMpesaInfoPresent = payoutRows
       .filter((payout) => payout.mpesaNumber && payout.mpesaName)
       .reduce((acc, payout) => acc + payout.kesPayoutAmount, 0);
 
-    const ws = fs.createWriteStream("payouts.csv");
-    fastcsv.write(payoutRows, { headers: true }).pipe(ws);
+    const csvStream = fastcsv.format({ headers: true });
+    payoutRows.forEach((row) => csvStream.write(row));
+    csvStream.end();
+
+    const chunks: Buffer[] = [];
+    csvStream.on("data", (chunk: Buffer) => chunks.push(chunk));
+    await new Promise((resolve, reject) => {
+      csvStream.on("end", resolve);
+      csvStream.on("error", reject);
+    });
+    const csvBuffer = Buffer.concat(chunks);
+
+    const emailInput: SendRawEmailCommandInput = {
+      Source: '"Shamiri Institute" <tech@shamiri.institute>',
+      Destinations: ["mmbone@shamiri.institute"],
+      RawMessage: {
+        Data: Buffer.from(
+          `From: "Shamiri Institute" <tech@shamiri.institute>\n` +
+            `To: mmbone@shamiri.institute\n` +
+            `Subject: Payouts CSV Attachment\n` +
+            `MIME-Version: 1.0\n` +
+            `Content-Type: multipart/mixed; boundary="NextPart"\n\n` +
+            `--NextPart\n` +
+            `Content-Type: text/plain\n\n` +
+            `Please find the attached payouts CSV.\n\n` +
+            `There were ${payoutsWithoutMpesaName} payouts without Mpesa names and ${payoutsWithoutMpesaNumber} payouts without Mpesa numbers.\n\n` +
+            `The total payout amount is KES ${totalPayoutAmount} and the total payout amount with Mpesa info present is KES ${totalPayoutAmountWithMpesaInfoPresent}.\n\n` +
+            `--NextPart\n` +
+            `Content-Type: text/csv; name="payouts.csv"\n` +
+            `Content-Disposition: attachment; filename="payouts.csv"\n\n` +
+            csvBuffer.toString() +
+            `\n--NextPart--`,
+        ),
+      },
+    };
+    await sendEmailWithAttachment(emailInput);
 
     return NextResponse.json({
       message: `Tabulated ${payoutRows.length} payouts`,
@@ -105,7 +140,7 @@ export async function GET(request: NextRequest) {
       payoutsWithoutMpesaName,
       payoutsWithoutMpesaNumber,
       totalPayoutAmount,
-      totalPayoutAmountWithMpesa,
+      totalPayoutAmountWithMpesaInfoPresent,
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
