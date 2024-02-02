@@ -31,13 +31,13 @@ type PayoutReport = {
 
 export async function calculatePayouts({
   day,
-  currentDate,
+  effectiveDate,
 }: {
   day: PayoutDay;
-  currentDate: Date;
+  effectiveDate: Date;
 }): Promise<PayoutReport> {
-  const payoutPeriodStart = getStartCuttoffRange(day);
-  const payoutPeriodEnd = getEndCuttoffRange(day);
+  const payoutPeriodStart = getPayoutPeriodStartDate(day, effectiveDate);
+  const payoutPeriodEnd = getPayoutPeriodEndDate(day, effectiveDate);
 
   const attendances = await db.fellowAttendance.findMany({
     where: {
@@ -67,23 +67,24 @@ export async function calculatePayouts({
   const payoutCache = new Set<string>();
 
   for (const attendance of attendances) {
-    if (!payouts[attendance.fellow.visibleId]) {
-      payouts[attendance.fellow.visibleId] = {
-        supervisorVisibleId: attendance.fellow.supervisor?.visibleId ?? "N/A",
-        supervisorName: attendance.fellow.supervisor?.supervisorName ?? "N/A",
-        fellowVisibleId: attendance.fellow.visibleId,
-        fellowName: attendance.fellow.fellowName ?? "N/A",
-        mpesaName: attendance.fellow.mpesaName ?? "N/A",
-        mpesaNumber: attendance.fellow.mpesaNumber ?? "N/A",
+    const { fellow, session } = attendance;
+    if (!payouts[fellow.visibleId]) {
+      payouts[fellow.visibleId] = {
+        supervisorVisibleId: fellow.supervisor?.visibleId ?? "N/A",
+        supervisorName: fellow.supervisor?.supervisorName ?? "N/A",
+        fellowVisibleId: fellow.visibleId,
+        fellowName: fellow.fellowName ?? "N/A",
+        mpesaName: fellow.mpesaName ?? "N/A",
+        mpesaNumber: fellow.mpesaNumber ?? "N/A",
         kesPayoutAmount: 0,
         presessionCount: 0,
         sessionCount: 0,
       };
     }
-    const sessionType = attendance.session?.sessionType;
-    const payout = payouts[attendance.fellow.visibleId];
+    const sessionType = session?.sessionType;
+    const payout = payouts[fellow.visibleId];
 
-    const cacheKey = `${attendance.fellow.visibleId}-${attendance.schoolId}-${attendance.session?.sessionType}`;
+    const cacheKey = `${fellow.visibleId}-${attendance.schoolId}-${session?.sessionType}`;
 
     if (sessionType && payout) {
       if (sessionType === "s0") {
@@ -134,46 +135,56 @@ export async function calculatePayouts({
   };
 }
 
-const cutoffHour = 6; // 6am UTC / 9am EAT
+const cutoffHour = 0; // 6am UTC / 9am EAT
 const cutoffMinute = 0;
 
-export function getStartCuttoffRange(day: PayoutDay): Date {
-  switch (day) {
-    case "R":
-      let thisMonday = startOfWeek(new Date(), { weekStartsOn: 1 });
-
-      thisMonday = setHours(thisMonday, cutoffHour);
-      thisMonday = setMinutes(thisMonday, cutoffMinute);
-      return thisMonday;
-    case "M":
-      let lastMonday = startOfWeek(subDays(new Date(), 7), {
-        weekStartsOn: 1,
-      });
-
-      let lastThursday = setHours(lastMonday, cutoffHour);
-      lastThursday = setMinutes(lastThursday, cutoffMinute);
-      lastThursday = addDays(lastThursday, 3); // Move to Thursday
-      return lastThursday;
-    default:
-      throw new Error("Invalid day");
-  }
+function setCutoffTime(date: Date): Date {
+  return setMinutes(setHours(date, cutoffHour), cutoffMinute);
 }
 
-export function getEndCuttoffRange(day: PayoutDay): Date {
+export function getPayoutPeriodStartDate(
+  day: PayoutDay,
+  effectiveDate: Date,
+): Date {
+  let startDay: Date;
+
   switch (day) {
     case "R":
-      let thisThursday = startOfWeek(new Date(), { weekStartsOn: 1 });
-      thisThursday = setHours(thisThursday, cutoffHour);
-      thisThursday = setMinutes(thisThursday, cutoffMinute);
-      thisThursday = addDays(thisThursday, 3); // Move to Thursday
-
-      return thisThursday;
+      // For "R", start from this Monday
+      startDay = startOfWeek(effectiveDate, { weekStartsOn: 1 });
+      break;
     case "M":
-      let thisMonday = startOfWeek(new Date(), { weekStartsOn: 1 });
-      thisMonday = setHours(thisMonday, cutoffHour);
-      thisMonday = setMinutes(thisMonday, cutoffMinute);
-      return thisMonday;
+      // For "M", start from last Monday then move to Thursday
+      startDay = addDays(
+        startOfWeek(subDays(effectiveDate, 7), { weekStartsOn: 1 }),
+        3,
+      );
+      break;
     default:
       throw new Error("Invalid day");
   }
+
+  return setCutoffTime(startDay);
+}
+
+export function getPayoutPeriodEndDate(
+  day: PayoutDay,
+  effectiveDate: Date,
+): Date {
+  let endDay: Date;
+
+  switch (day) {
+    case "R":
+      // For "R", end on this Thursday
+      endDay = addDays(startOfWeek(effectiveDate, { weekStartsOn: 1 }), 3);
+      break;
+    case "M":
+      // For "M", end on this Monday
+      endDay = startOfWeek(effectiveDate, { weekStartsOn: 1 });
+      break;
+    default:
+      throw new Error("Invalid day");
+  }
+
+  return setCutoffTime(endDay);
 }
