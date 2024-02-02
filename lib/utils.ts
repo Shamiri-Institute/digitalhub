@@ -103,3 +103,20 @@ export function mapSessionTypeToSessionNumber(sessionType: string): number {
 export function notEmpty<T>(value: T | null | undefined): value is T {
   return value !== null && value !== undefined;
 }
+
+export function sessionDisplayName(sessionType: string) {
+  switch (sessionType) {
+    case "s0":
+      return "Pre";
+    case "s1":
+      return "S1";
+    case "s2":
+      return "S2";
+    case "s3":
+      return "S3";
+    case "s4":
+      return "S4";
+    default:
+      return sessionType;
+  }
+}
