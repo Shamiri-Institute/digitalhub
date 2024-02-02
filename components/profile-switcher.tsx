@@ -44,8 +44,6 @@ export function ProfileSwitcher() {
       fetch(`/api/implementers/${implementerId}`)
         .then((response) => response.json())
         .then((data) => setImplementerInfo(data));
-    } else {
-      console.error("ProfileSwitcher: no implementerId", { status, session });
     }
   }, [implementerId, session, status]);
 
