@@ -46,11 +46,13 @@ async function SupervisorView() {
   const interventionSessions =
     supervisor.hub?.schools
       .flatMap((school) =>
-        school.interventionSessions.map((is) => ({
-          ...is,
-          schoolName: school.schoolName,
-          schoolVisibleId: school.visibleId,
-        })),
+        school.interventionSessions
+          .filter((ins) => ins.occurred)
+          .map((is) => ({
+            ...is,
+            schoolName: school.schoolName,
+            schoolVisibleId: school.visibleId,
+          })),
       )
       .map((session) => ({
         title: `${session.schoolName}, ${sessionDisplayName(
