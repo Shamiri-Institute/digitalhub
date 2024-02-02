@@ -8,8 +8,8 @@ export type PayoutDetail = {
   mpesaName: string;
   mpesaNumber: string;
   kesPayoutAmount: number;
-  presessionCount: number;
-  sessionCount: number;
+  preSessionCount: number;
+  mainSessionCount: number;
 };
 
 export type PayoutReport = {

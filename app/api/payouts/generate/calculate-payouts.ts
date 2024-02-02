@@ -56,15 +56,15 @@ export async function calculatePayouts({
     const { fellow, session } = attendance;
     if (!payouts[fellow.visibleId]) {
       payouts[fellow.visibleId] = {
-        supervisorVisibleId: fellow.supervisor?.visibleId ?? "N/A",
-        supervisorName: fellow.supervisor?.supervisorName ?? "N/A",
         fellowVisibleId: fellow.visibleId,
         fellowName: fellow.fellowName ?? "N/A",
         mpesaName: fellow.mpesaName ?? "N/A",
         mpesaNumber: fellow.mpesaNumber ?? "N/A",
         kesPayoutAmount: 0,
-        presessionCount: 0,
-        sessionCount: 0,
+        supervisorVisibleId: fellow.supervisor?.visibleId ?? "N/A",
+        supervisorName: fellow.supervisor?.supervisorName ?? "N/A",
+        preSessionCount: 0,
+        mainSessionCount: 0,
       };
     }
     const sessionType = session?.sessionType;
@@ -76,13 +76,13 @@ export async function calculatePayouts({
       if (sessionType === "s0") {
         if (!payoutCache.has(cacheKey)) {
           payout.kesPayoutAmount += PRE_SESSION_COMPENSATION;
-          payout.presessionCount += 1;
+          payout.preSessionCount += 1;
           payoutCache.add(cacheKey);
         }
       } else if (["s1", "s2", "s3", "s4"].includes(sessionType)) {
         if (!payoutCache.has(cacheKey)) {
           payout.kesPayoutAmount += MAIN_SESSION_COMPENSATION;
-          payout.sessionCount += 1;
+          payout.mainSessionCount += 1;
           payoutCache.add(cacheKey);
         }
       } else {
