@@ -7,27 +7,10 @@ import { currentSupervisor } from "#/app/auth";
 import { Icon, Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
 import { db } from "#/lib/db";
+import { sessionDisplayName } from "#/lib/utils";
 
 export default async function HomePage() {
   return <SupervisorView />;
-}
-
-function sessionDisplayName(sessionType: string) {
-  switch (sessionType) {
-    case "s0":
-      return "S00";
-      break;
-    case "s1":
-      return "S01";
-    case "s2":
-      return "S02";
-    case "s3":
-      return "S03";
-    case "s4":
-      return "S04";
-    default:
-      return sessionType;
-  }
 }
 
 async function SupervisorView() {
