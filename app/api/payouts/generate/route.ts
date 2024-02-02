@@ -11,6 +11,7 @@ import * as fastcsv from "fast-csv";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+import { constants } from "#/lib/constants";
 import { db } from "#/lib/db";
 import { sendEmailWithAttachment } from "#/lib/ses";
 
@@ -54,8 +55,9 @@ export async function GET(request: NextRequest) {
     const payouts: {
       [fellowVisibleId: string]: {
         fellowVisibleId: string;
-        mpesaName: string | null;
-        mpesaNumber: string | null;
+        fellowName: string;
+        mpesaName: string;
+        mpesaNumber: string;
         kesPayoutAmount: number;
         presessionCount: number;
         sessionCount: number;
@@ -68,8 +70,9 @@ export async function GET(request: NextRequest) {
       if (!payouts[attendance.fellow.visibleId]) {
         payouts[attendance.fellow.visibleId] = {
           fellowVisibleId: attendance.fellow.visibleId,
-          mpesaName: attendance.fellow.mpesaName,
-          mpesaNumber: attendance.fellow.mpesaNumber,
+          fellowName: attendance.fellow.fellowName ?? "N/A",
+          mpesaName: attendance.fellow.mpesaName ?? "N/A",
+          mpesaNumber: attendance.fellow.mpesaNumber ?? "N/A",
           kesPayoutAmount: 0,
           presessionCount: 0,
           sessionCount: 0,
@@ -131,27 +134,28 @@ export async function GET(request: NextRequest) {
       RawMessage: {
         Data: Buffer.from(
           `From: "Shamiri Institute" <tech@shamiri.institute>\n` +
-          `To: tech@shamiri.institute\n` +
-          `Subject: Payouts for sessions ${format(
-            cuttoffStartTime,
-            "yyyy-MM-dd",
-          )} to ${format(cuttoffEndTime, "yyyy-MM-dd")}\n` +
-          `MIME-Version: 1.0\n` +
-          `Content-Type: multipart/mixed; boundary="NextPart"\n\n` +
-          `--NextPart\n` +
-          `Content-Type: text/plain\n\n` +
-          `Please find the attached payouts CSV.\n\n` +
-          `There were ${payoutsWithoutMpesaName} payouts without Mpesa names and ${payoutsWithoutMpesaNumber} payouts without Mpesa numbers.\n\n` +
-          `The total payout amount is KES ${totalPayoutAmount} and the total payout amount with Mpesa info present is KES ${totalPayoutAmountWithMpesaInfoPresent}.\n\n` +
-          `--NextPart\n` +
-          `Content-Type: text/csv; name="payouts.csv"\n` +
-          `Content-Disposition: attachment; filename="payouts.csv"\n\n` +
-          csvBuffer.toString() +
-          `\n--NextPart--`,
+            `To: tech@shamiri.institute\n` +
+            `Subject: Payouts for sessions ${format(
+              cuttoffStartTime,
+              "yyyy-MM-dd",
+            )} to ${format(cuttoffEndTime, "yyyy-MM-dd")}\n` +
+            `MIME-Version: 1.0\n` +
+            `Content-Type: multipart/mixed; boundary="NextPart"\n\n` +
+            `--NextPart\n` +
+            `Content-Type: text/plain\n\n` +
+            `Please find the attached payouts CSV.\n\n` +
+            `There were ${payoutsWithoutMpesaName} payouts without Mpesa names and ${payoutsWithoutMpesaNumber} payouts without Mpesa numbers.\n\n` +
+            `The total payout amount is KES ${totalPayoutAmount} and the total payout amount with Mpesa info present is KES ${totalPayoutAmountWithMpesaInfoPresent}.\n\n` +
+            `--NextPart\n` +
+            `Content-Type: text/csv; name="payouts.csv"\n` +
+            `Content-Disposition: attachment; filename="payouts.csv"\n\n` +
+            csvBuffer.toString() +
+            `\n--NextPart--`,
         ),
       },
     };
-    await sendEmailWithAttachment(emailInput);
+
+    await sendEmail(request, emailInput);
 
     return NextResponse.json({
       message: `Tabulated ${payoutRows.length} payouts`,
@@ -178,6 +182,20 @@ export async function GET(request: NextRequest) {
 const cutoffHour = 6; // 6am UTC / 9am EAT
 const cutoffMinute = 0;
 
+async function sendEmail(
+  request: NextRequest,
+  emailInput: SendRawEmailCommandInput,
+) {
+  if (
+    constants.NEXT_PUBLIC_ENV === "production" ||
+    request.nextUrl.searchParams.get("sendEmail") === "true"
+  ) {
+    await sendEmailWithAttachment(emailInput);
+  } else {
+    console.warn("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
+  }
+}
+
 function getStartCuttoffRange(day: "R" | "M"): Date {
   switch (day) {
     case "R":
@@ -203,7 +221,6 @@ function getStartCuttoffRange(day: "R" | "M"): Date {
 function getEndCuttoffRange(day: "R" | "M"): Date {
   switch (day) {
     case "R":
-      // Thursday 9am EAT
       let thisThursday = startOfWeek(new Date(), { weekStartsOn: 1 });
       thisThursday = setHours(thisThursday, cutoffHour);
       thisThursday = setMinutes(thisThursday, cutoffMinute);
@@ -211,7 +228,6 @@ function getEndCuttoffRange(day: "R" | "M"): Date {
 
       return thisThursday;
     case "M":
-      // Monday 9am UTC
       let thisMonday = startOfWeek(new Date(), { weekStartsOn: 1 });
       thisMonday = setHours(thisMonday, cutoffHour);
       thisMonday = setMinutes(thisMonday, cutoffMinute);
