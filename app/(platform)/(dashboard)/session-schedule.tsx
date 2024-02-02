@@ -233,6 +233,14 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
             <div className="relative flex-1 border-t border-gray-300/50"></div>
           </div>
         ))}
+        {!scheduleHoursRange.length && (
+          <div
+            className="flex justify-center"
+            style={{ height: 40, gap: calendarHourGap }}
+          >
+            <span className="text-center text-gray-400">No sessions found</span>
+          </div>
+        )}
       </div>
     </div>
   );
