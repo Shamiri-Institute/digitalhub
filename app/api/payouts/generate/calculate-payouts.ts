@@ -1,33 +1,14 @@
 import { addDays, setHours, setMinutes, startOfWeek, subDays } from "date-fns";
 
-import type { PayoutDay } from "#/app/api/payouts/generate/types";
+import type {
+  PayoutDay,
+  PayoutDetail,
+  PayoutReport,
+} from "#/app/api/payouts/generate/types";
 import { db } from "#/lib/db";
 
-type PayoutDetail = {
-  supervisorVisibleId: string;
-  supervisorName: string;
-  fellowVisibleId: string;
-  fellowName: string;
-  mpesaName: string;
-  mpesaNumber: string;
-  kesPayoutAmount: number;
-  presessionCount: number;
-  sessionCount: number;
-};
-
-type PayoutReport = {
-  payoutDetails: PayoutDetail[];
-  payoutPeriod: {
-    startDate: Date;
-    endDate: Date;
-  };
-  incompleteRecords: {
-    countMissingMpesaName: number;
-    countMissingMpesaNumber: number;
-  };
-  totalPayoutAmount: number;
-  totalPayoutAmountWithMpesaInfo: number;
-};
+const PRE_SESSION_COMPENSATION = 500;
+const MAIN_SESSION_COMPENSATION = 1500;
 
 export async function calculatePayouts({
   day,
@@ -89,13 +70,13 @@ export async function calculatePayouts({
     if (sessionType && payout) {
       if (sessionType === "s0") {
         if (!payoutCache.has(cacheKey)) {
-          payout.kesPayoutAmount += 500;
+          payout.kesPayoutAmount += PRE_SESSION_COMPENSATION;
           payout.presessionCount += 1;
           payoutCache.add(cacheKey);
         }
       } else if (["s1", "s2", "s3", "s4"].includes(sessionType)) {
         if (!payoutCache.has(cacheKey)) {
-          payout.kesPayoutAmount += 1500;
+          payout.kesPayoutAmount += MAIN_SESSION_COMPENSATION;
           payout.sessionCount += 1;
           payoutCache.add(cacheKey);
         }
@@ -154,7 +135,7 @@ export function getPayoutPeriodStartDate(
       startDay = startOfWeek(effectiveDate, { weekStartsOn: 1 });
       break;
     case "M":
-      // For "M", start from last Monday then move to Thursday
+      // For "M", start from last Thursday
       startDay = addDays(
         startOfWeek(subDays(effectiveDate, 7), { weekStartsOn: 1 }),
         3,
