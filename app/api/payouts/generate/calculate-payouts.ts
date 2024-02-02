@@ -13,9 +13,11 @@ const MAIN_SESSION_COMPENSATION = 1500;
 export async function calculatePayouts({
   day,
   effectiveDate,
+  supervisorId,
 }: {
   day: PayoutDay;
   effectiveDate: Date;
+  supervisorId?: string;
 }): Promise<PayoutReport> {
   const payoutPeriodStart = getPayoutPeriodStartDate(day, effectiveDate);
   const payoutPeriodEnd = getPayoutPeriodEndDate(day, effectiveDate);
@@ -30,6 +32,9 @@ export async function calculatePayouts({
         occurred: true,
       },
       attended: true,
+      ...(supervisorId && {
+        supervisorId,
+      }),
     },
     include: {
       fellow: {
