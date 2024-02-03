@@ -14,6 +14,7 @@ import type {
   PayoutReport,
 } from "#/app/api/payouts/generate/types";
 import { db } from "#/lib/db";
+import { sessionDisplayName } from "#/lib/utils";
 
 const PRE_SESSION_COMPENSATION = 500;
 const MAIN_SESSION_COMPENSATION = 1500;
@@ -57,7 +58,11 @@ export async function calculatePayouts({
           supervisor: true,
         },
       },
-      session: true,
+      session: {
+        include: {
+          school: true,
+        },
+      },
     },
   });
 
@@ -115,6 +120,7 @@ export async function calculatePayouts({
         supervisorName: fellow.supervisor?.supervisorName ?? "N/A",
         preSessionCount: 0,
         mainSessionCount: 0,
+        sessionDetails: "",
       };
     }
     const sessionType = session?.sessionType;
@@ -127,12 +133,22 @@ export async function calculatePayouts({
         if (!payoutCache.has(cacheKey)) {
           payout.kesPayoutAmount += PRE_SESSION_COMPENSATION;
           payout.preSessionCount += 1;
+          let sessionDetail = `${session.school.schoolName}-${sessionDisplayName(session.sessionType)}`;
+          if (attendance.delayedPaymentRequests.length > 0) {
+            sessionDetail += "(Delayed)";
+          }
+          payout.sessionDetails += sessionDetail + "/";
           payoutCache.add(cacheKey);
         }
       } else if (["s1", "s2", "s3", "s4"].includes(sessionType)) {
         if (!payoutCache.has(cacheKey)) {
           payout.kesPayoutAmount += MAIN_SESSION_COMPENSATION;
           payout.mainSessionCount += 1;
+          let sessionDetail = `${session.school.schoolName}-${sessionDisplayName(session.sessionType)}`;
+          if (attendance.delayedPaymentRequests.length > 0) {
+            sessionDetail += "(Delayed)";
+          }
+          payout.sessionDetails += sessionDetail + "/";
           payoutCache.add(cacheKey);
         }
       } else {
