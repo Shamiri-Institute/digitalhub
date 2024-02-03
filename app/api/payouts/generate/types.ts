@@ -22,6 +22,7 @@ export type PayoutReport = {
     countMissingMpesaName: number;
     countMissingMpesaNumber: number;
   };
+  attendancesWithDelayedPaymentRequests: number;
   totalPayoutAmount: number;
   totalPayoutAmountWithMpesaInfo: number;
 };
