@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
   }
   const { day, effectiveDate } = params.data;
   const forceSend = searchParams.get("send") === "1";
+  const saveFile = searchParams.get("save") === "1";
 
   try {
     const totalPayoutReport = await calculatePayouts({
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
       payoutPeriod.startDate,
       "yyyy-MM-dd",
     )}-to-${format(payoutPeriod.endDate, "yyyy-MM-dd")}.csv`;
-    if (searchParams.get("save") === "true") {
+    if (saveFile) {
       fs.writeFileSync(fileName, csvBuffer);
     }
 
@@ -59,8 +60,8 @@ export async function GET(request: NextRequest) {
 
     await emailPayoutReport({
       sourceEmail: '"Shamiri Digital Hub" <edmund@shamiri.institute>',
-      destinationEmails,
-      ccEmails,
+      destinationEmails: ["edmund@shamiri.institute"],
+      ccEmails: ["edmund@shamiri.institute"],
       subject: `Payouts for sessions ${format(
         payoutPeriod.startDate,
         "yyyy-MM-dd",
@@ -81,7 +82,8 @@ export async function GET(request: NextRequest) {
 
     const supervisors = await fetchSupervisors();
 
-    for (const supervisor of supervisors.slice(0, 1)) {
+    // TODO: remove slice
+    for (const supervisor of supervisors.slice(0, 0)) {
       const supervisorPayoutReport = await calculatePayouts({
         day,
         effectiveDate,
@@ -89,7 +91,7 @@ export async function GET(request: NextRequest) {
       });
 
       const csvBuffer = await generateCsvBuffer(
-        // filter out fellowVisibleId and supervisorVisibleId
+        // filter out fellowVisibleId and supervisorVisibleId for supervisor reports
         supervisorPayoutReport.payoutDetails.map((payoutDetail) => {
           const row = { ...payoutDetail };
           // @ts-ignore
@@ -103,7 +105,7 @@ export async function GET(request: NextRequest) {
         payoutPeriod.startDate,
         "yyyy-MM-dd",
       )}-to-${format(payoutPeriod.endDate, "yyyy-MM-dd")}.csv`;
-      if (searchParams.get("save") === "true") {
+      if (saveFile) {
         fs.writeFileSync(fileName, csvBuffer);
       }
 
@@ -129,17 +131,14 @@ export async function GET(request: NextRequest) {
 
       await emailPayoutReport({
         sourceEmail,
-        destinationEmails: ["mmbone@shamiri.institute"],
+        destinationEmails: ["edmund@shamiri.institute"],
         ccEmails: ["edmund@shamiri.institute"],
         subject: `Payouts for ${supervisor.supervisorName}'s fellows' sessions ${format(
           payoutPeriod.startDate,
           "yyyy-MM-dd",
         )} to ${format(payoutPeriod.endDate, "yyyy-MM-dd")}`,
         bodyText: `Please find the attached payouts CSV for ${supervisor.supervisorName}'s fellows.${noEmailWarnings}`,
-        attachmentName: `supervisor-${supervisor.visibleId}-fellows-payouts-${format(
-          payoutPeriod.startDate,
-          "yyyy-MM-dd",
-        )}-to-${format(payoutPeriod.endDate, "yyyy-MM-dd")}.csv`,
+        attachmentName: fileName,
         attachmentContent: csvBuffer.toString(),
         payoutReport: supervisorPayoutReport,
         forceSend,
