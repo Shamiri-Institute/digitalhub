@@ -10,6 +10,7 @@ export type PayoutDetail = {
   kesPayoutAmount: number;
   preSessionCount: number;
   mainSessionCount: number;
+  sessionDetails: string;
 };
 
 export type PayoutReport = {
