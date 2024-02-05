@@ -29,3 +29,10 @@ export type PayoutReport = {
   totalPayoutAmount: number;
   totalPayoutAmountWithMpesaInfo: number;
 };
+
+export type RepaymentReport = {
+  totalRepaymentAmount: number;
+  repaymentRequestsFulfilled: {
+    id: string;
+  }[];
+};
