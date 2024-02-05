@@ -211,7 +211,7 @@ async function fetchSupervisors() {
   return supervisors;
 }
 
-export async function generateCsv(options: {
+async function generateCsv(options: {
   payoutDetails: PayoutDetail[];
   fileName: string;
   saveFile: boolean;
