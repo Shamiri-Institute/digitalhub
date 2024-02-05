@@ -3,11 +3,11 @@
   "crons": [
     {
       "path": "/api/payouts/generate?day=R",
-      "schedule": "0 10 * * 4"
+      "schedule": "0 11 * * 4"
     },
     {
       "path": "/api/payouts/generate?day=M",
-      "schedule": "0 10 * * 1"
+      "schedule": "0 11 * * 1"
     }
   ]
 }
