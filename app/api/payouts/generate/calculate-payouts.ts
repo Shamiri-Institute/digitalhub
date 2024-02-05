@@ -139,6 +139,7 @@ export async function calculatePayouts({
       countMissingMpesaName: payoutsWithoutMpesaName,
       countMissingMpesaNumber: payoutsWithoutMpesaNumber,
     },
+    attendancesFulfilled,
     delayedPaymentsFulfilled,
     totalPayoutAmount,
     totalPayoutAmountWithMpesaInfo,
