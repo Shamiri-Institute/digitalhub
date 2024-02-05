@@ -39,10 +39,6 @@ export async function calculateRepayments(): Promise<RepaymentReport> {
 
   return {
     payoutDetails: payoutRows,
-    incompleteRecords: {
-      countMissingMpesaName: payoutsWithoutMpesaName,
-      countMissingMpesaNumber: payoutsWithoutMpesaNumber,
-    },
     totalRepaymentAmount: totalPayoutAmount,
     repaymentRequestsFulfilled: repaymentRequests.map((rr) => ({ id: rr.id })),
   };
