@@ -12,6 +12,7 @@ import { notEmpty } from "#/lib/utils";
 import { calculatePayouts } from "./calculate-payouts";
 
 export const revalidate = 0;
+export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -75,6 +76,7 @@ export async function GET(request: NextRequest) {
       forceSend,
     });
 
+    const { delayedPaymentsFulfilled } = totalPayoutReport;
     console.log(
       `Emailed total payout report to ${destinationEmails.join(", ")} and cc'ed ${ccEmails.join(", ")}`,
     );
@@ -121,7 +123,7 @@ export async function GET(request: NextRequest) {
           supervisor.hub?.coordinators
             ?.map((coordinator) => coordinator.visibleId)
             .filter(notEmpty) || [];
-        noEmailWarnings += ` No hub coordinator emailss for ${supervisor.visibleId}. ${hubCoordinatorVisibleIds.join(", ")}.`;
+        noEmailWarnings += ` No hub coordinator emails for ${supervisor.visibleId}. ${hubCoordinatorVisibleIds.join(", ")}.`;
       }
 
       const destinationEmails = [supervisor.supervisorEmail].filter(notEmpty);
