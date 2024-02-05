@@ -31,6 +31,7 @@ export type PayoutReport = {
 };
 
 export type RepaymentReport = {
+  payoutDetails: PayoutDetail[];
   totalRepaymentAmount: number;
   repaymentRequestsFulfilled: {
     id: string;

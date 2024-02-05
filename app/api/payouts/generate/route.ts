@@ -5,7 +5,10 @@ import fs from "node:fs";
 import { z } from "zod";
 
 import { calculateRepayments } from "#/app/api/payouts/generate/calculate-repayments";
-import { emailPayoutReport } from "#/app/api/payouts/generate/email-payout-report";
+import {
+  emailPayoutReport,
+  emailRepaymentReport,
+} from "#/app/api/payouts/generate/email-report";
 import type { PayoutDetail } from "#/app/api/payouts/generate/types";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
@@ -58,14 +61,16 @@ export async function GET(request: NextRequest) {
     });
 
     const sourceEmail = '"Shamiri Digital Hub" <tech@shamiri.institute>';
-    const destinationEmails = ["ngatti@shamiri.institute"];
-    const ccEmails = [
-      "waweru@shamiri.institute",
-      "ngatia@shamiri.institute",
-      "nyareso@shamiri.institute",
-      "daya@shamiri.institute",
-      "tech@shamiri.institute",
-    ];
+    // const destinationEmails = ["ngatti@shamiri.institute"];
+    // const ccEmails = [
+    //   "waweru@shamiri.institute",
+    //   "ngatia@shamiri.institute",
+    //   "nyareso@shamiri.institute",
+    //   "daya@shamiri.institute",
+    //   "tech@shamiri.institute",
+    // ];
+    const destinationEmails = ["edmund@agency.fund"];
+    const ccEmails = ["edmund@korley.net"];
 
     await emailPayoutReport({
       sourceEmail,
@@ -86,20 +91,19 @@ export async function GET(request: NextRequest) {
       `Emailed total payout report to ${destinationEmails.join(", ")} and cc'ed ${ccEmails.join(", ")}`,
     );
 
-    await emailPayoutReport({
+    await emailRepaymentReport({
       sourceEmail,
       destinationEmails,
       ccEmails,
-      subject: `Repayments as of ${format(effectiveDate, "yyyy-MM-dd")}`,
-      bodyText: `Please find the attached repayments CSV.`,
+      subject: `Repayment requested as of ${format(effectiveDate, "yyyy-MM-dd")}`,
+      bodyText: `Please find the attached repayments CSV. These should be deducated from the supervisor's compensation.`,
       attachmentName: repaymentsCsvFileName,
       attachmentContent: repaymentsCsvBuffer.toString(),
-      payoutReport: repaymentsPayoutReport,
+      repaymentReport: repaymentsPayoutReport,
       forceSend,
     });
 
     const supervisors = await fetchSupervisors();
-
     for (const supervisor of supervisors) {
       const supervisorPayoutReport = await calculatePayouts({
         day,

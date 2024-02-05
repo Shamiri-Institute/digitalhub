@@ -59,11 +59,15 @@ export const processAttendances = (
           : MAIN_SESSION_COMPENSATION;
         isPreSession ? payout.preSessionCount++ : payout.mainSessionCount++;
 
-        let sessionDetail = `${session.school.schoolName}-${sessionDisplayName(session.sessionType)}`;
+        let sessionDetail = `${session.school.schoolName.trim()}-${sessionDisplayName(
+          session.sessionType,
+        )}`;
         if (attendance.delayedPaymentRequests?.length > 0) {
           sessionDetail += "(Delayed)";
         }
-        payout.sessionDetails += sessionDetail + "/";
+
+        let separator = payout.sessionDetails === "" ? "" : "/";
+        payout.sessionDetails += separator + sessionDetail;
         payoutCache.add(cacheKey);
       } else {
         throw new Error(`Invalid session type: ${sessionType}`);
