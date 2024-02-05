@@ -7,22 +7,12 @@ import {
   subDays,
 } from "date-fns";
 
-import type {
-  PayoutDay,
-  PayoutDetail,
-  PayoutReport,
-} from "#/app/api/payouts/generate/types";
+import { processAttendances } from "#/app/api/payouts/generate/payout-utils";
+import type { PayoutDay, PayoutReport } from "#/app/api/payouts/generate/types";
 import { db } from "#/lib/db";
-import { sessionDisplayName } from "#/lib/utils";
-
-const PRE_SESSION_COMPENSATION = 500;
-const MAIN_SESSION_COMPENSATION = 1500;
 
 const PAY_PERIOD_CUTOFF_HOUR = 6; // 6am UTC / 9am EAT
 const PAY_PERIOD_CUTOFF_MINUTE = 0;
-
-const ATTENDANCE_MARKING_CUTOFF_HOUR = 11; // 8am UTC / 11am EAT
-const ATTENDANCE_MARKING_CUTOFF_MINUTE = 0;
 
 export async function calculatePayouts({
   day,
@@ -36,7 +26,7 @@ export async function calculatePayouts({
   const payoutPeriodStart = getPayoutPeriodStartDate(day, effectiveDate);
   const payoutPeriodEnd = getPayoutPeriodEndDate(day, effectiveDate);
 
-  const fulfilledDelayedPaymentRequests = [];
+  const fulfilledDelayedPaymentRequests: { id: string }[] = [];
 
   const mainAttendances = await db.fellowAttendance.findMany({
     where: {
@@ -119,63 +109,10 @@ export async function calculatePayouts({
     fulfilledDelayedPaymentRequests.push(...delayedPaymentRequests);
   }
 
-  const payouts: {
-    [fellowVisibleId: string]: PayoutDetail;
-  } = {};
-
-  const payoutCache = new Set<string>();
-
   const eligibleAttendances = [...mainAttendances, ...delayedAttendances];
 
-  for (const attendance of eligibleAttendances) {
-    const { fellow, session } = attendance;
-    if (!payouts[fellow.visibleId]) {
-      payouts[fellow.visibleId] = {
-        fellowVisibleId: fellow.visibleId,
-        fellowName: fellow.fellowName ?? "N/A",
-        mpesaName: fellow.mpesaName ?? "N/A",
-        mpesaNumber: fellow.mpesaNumber ?? "N/A",
-        kesPayoutAmount: 0,
-        supervisorVisibleId: fellow.supervisor?.visibleId ?? "N/A",
-        supervisorName: fellow.supervisor?.supervisorName ?? "N/A",
-        preSessionCount: 0,
-        mainSessionCount: 0,
-        sessionDetails: "",
-      };
-    }
-    const sessionType = session?.sessionType;
-    const payout = payouts[fellow.visibleId];
+  const { payouts } = processAttendances(eligibleAttendances);
 
-    const cacheKey = `${fellow.visibleId}-${attendance.schoolId}-${session?.sessionType}`;
-
-    if (sessionType && payout) {
-      if (sessionType === "s0") {
-        if (!payoutCache.has(cacheKey)) {
-          payout.kesPayoutAmount += PRE_SESSION_COMPENSATION;
-          payout.preSessionCount += 1;
-          let sessionDetail = `${session.school.schoolName}-${sessionDisplayName(session.sessionType)}`;
-          if (attendance.delayedPaymentRequests.length > 0) {
-            sessionDetail += "(Delayed)";
-          }
-          payout.sessionDetails += sessionDetail + "/";
-          payoutCache.add(cacheKey);
-        }
-      } else if (["s1", "s2", "s3", "s4"].includes(sessionType)) {
-        if (!payoutCache.has(cacheKey)) {
-          payout.kesPayoutAmount += MAIN_SESSION_COMPENSATION;
-          payout.mainSessionCount += 1;
-          let sessionDetail = `${session.school.schoolName}-${sessionDisplayName(session.sessionType)}`;
-          if (attendance.delayedPaymentRequests.length > 0) {
-            sessionDetail += "(Delayed)";
-          }
-          payout.sessionDetails += sessionDetail + "/";
-          payoutCache.add(cacheKey);
-        }
-      } else {
-        throw new Error("Invalid session type");
-      }
-    }
-  }
   const payoutRows = Object.values(payouts);
 
   const payoutsWithoutMpesaNumber = payoutRows.filter(
