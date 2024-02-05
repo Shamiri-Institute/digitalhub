@@ -978,6 +978,8 @@ model DelayedPaymentRequest {
   id                    String              @id @default(cuid())
   createdAt             DateTime            @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt             DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
+  fulfilledAt           DateTime?           @map("fulfilled_at") @db.Timestamptz()
+  rejectedAt            DateTime?           @map("rejected_at") @db.Timestamptz()
   fellowId              String              @map("fellow_id") @db.VarChar(255)
   fellow                Fellow              @relation(fields: [fellowId], references: [id])
   supervisorId          String              @map("supervisor_id") @db.VarChar(255)
