@@ -23,7 +23,9 @@ export type PayoutReport = {
     countMissingMpesaName: number;
     countMissingMpesaNumber: number;
   };
-  attendancesWithDelayedPaymentRequests: number;
+  delayedPaymentsFulfilled: {
+    id: string;
+  }[];
   totalPayoutAmount: number;
   totalPayoutAmountWithMpesaInfo: number;
 };
