@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import { z } from "zod";
 
+import { calculateRepayments } from "#/app/api/payouts/generate/calculate-repayments";
 import { emailPayoutReport } from "#/app/api/payouts/generate/email-payout-report";
 import type { PayoutDetail } from "#/app/api/payouts/generate/types";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
@@ -37,16 +38,24 @@ export async function GET(request: NextRequest) {
       day,
       effectiveDate,
     });
-
-    const csvBuffer = await generateCsvBuffer(totalPayoutReport.payoutDetails);
     const { payoutPeriod } = totalPayoutReport;
-    const fileName = `total-payouts-${format(
+    const totalCsvFileName = `total-payouts-${format(
       payoutPeriod.startDate,
       "yyyy-MM-dd",
     )}-to-${format(payoutPeriod.endDate, "yyyy-MM-dd")}.csv`;
-    if (saveFile) {
-      fs.writeFileSync(fileName, csvBuffer);
-    }
+    const totalCsvBuffer = await generateCsv({
+      payoutDetails: totalPayoutReport.payoutDetails,
+      fileName: totalCsvFileName,
+      saveFile,
+    });
+
+    const repaymentsPayoutReport = await calculateRepayments();
+    const repaymentsCsvFileName = `repayments-${format(effectiveDate, "yyyy-MM-dd")}.csv`;
+    const repaymentsCsvBuffer = await generateCsv({
+      payoutDetails: repaymentsPayoutReport.payoutDetails,
+      fileName: repaymentsCsvFileName,
+      saveFile,
+    });
 
     const sourceEmail = '"Shamiri Digital Hub" <tech@shamiri.institute>';
     const destinationEmails = ["ngatti@shamiri.institute"];
@@ -67,19 +76,27 @@ export async function GET(request: NextRequest) {
         "yyyy-MM-dd",
       )} to ${format(payoutPeriod.endDate, "yyyy-MM-dd")}`,
       bodyText: `Please find the attached payouts CSV.`,
-      attachmentName: `total-payouts-${format(
-        payoutPeriod.startDate,
-        "yyyy-MM-dd",
-      )}-to-${format(payoutPeriod.endDate, "yyyy-MM-dd")}.csv`,
-      attachmentContent: csvBuffer.toString(),
+      attachmentName: totalCsvFileName,
+      attachmentContent: totalCsvBuffer.toString(),
       payoutReport: totalPayoutReport,
       forceSend,
     });
 
-    const { delayedPaymentsFulfilled } = totalPayoutReport;
     console.log(
       `Emailed total payout report to ${destinationEmails.join(", ")} and cc'ed ${ccEmails.join(", ")}`,
     );
+
+    await emailPayoutReport({
+      sourceEmail,
+      destinationEmails,
+      ccEmails,
+      subject: `Repayments as of ${format(effectiveDate, "yyyy-MM-dd")}`,
+      bodyText: `Please find the attached repayments CSV.`,
+      attachmentName: repaymentsCsvFileName,
+      attachmentContent: repaymentsCsvBuffer.toString(),
+      payoutReport: repaymentsPayoutReport,
+      forceSend,
+    });
 
     const supervisors = await fetchSupervisors();
 
@@ -167,6 +184,7 @@ export async function GET(request: NextRequest) {
 }
 
 async function fetchSupervisors() {
+  return [];
   const supervisors = await db.supervisor.findMany({
     where: {
       hub: {
@@ -182,6 +200,21 @@ async function fetchSupervisors() {
     },
   });
   return supervisors;
+}
+
+export async function generateCsv(options: {
+  payoutDetails: PayoutDetail[];
+  fileName: string;
+  saveFile: boolean;
+}): Promise<Buffer> {
+  const { payoutDetails, fileName, saveFile } = options;
+
+  const csvBuffer = await generateCsvBuffer(payoutDetails);
+  if (saveFile) {
+    fs.writeFileSync(fileName, csvBuffer);
+  }
+
+  return csvBuffer;
 }
 
 async function generateCsvBuffer(
