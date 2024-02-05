@@ -33,8 +33,8 @@ export async function emailPayoutReport(props: EmailProperties) {
   if (constants.NEXT_PUBLIC_ENV === "production" || props.forceSend) {
     await sendEmailWithAttachment(emailInput);
   } else {
-    // console.warn("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
-    // console.info("To force send email, set send=1 query param.");
+    console.debug("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
+    console.debug("To force send email, set send=1 query param.");
   }
 }
 
@@ -43,10 +43,22 @@ export async function emailRepaymentReport(
     repaymentReport: RepaymentReport;
   },
 ) {
-  const emailBody = constructPayoutEmailBody(props);
+  const emailBody = constructRepaymentEmailBody(props);
 
-    countMissingMpesaNumber: payoutsWithoutMpesaNumber,
-  },
+  const emailInput: SendRawEmailCommandInput = {
+    Source: props.sourceEmail,
+    Destinations: [...props.destinationEmails, ...props.ccEmails],
+    RawMessage: {
+      Data: Buffer.from(emailBody),
+    },
+  };
+
+  if (constants.NEXT_PUBLIC_ENV === "production" || props.forceSend) {
+    await sendEmailWithAttachment(emailInput);
+  } else {
+    console.debug("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
+    console.debug("To force send email, set send=1 query param.");
+  }
 }
 
 export function constructPayoutEmailBody(props: EmailProperties): string {
@@ -97,7 +109,11 @@ ${attachmentContent}
 --NextPart--`;
 }
 
-export function constructRepaymentEmailBody(props: EmailProperties): string {
+export function constructRepaymentEmailBody(
+  props: Omit<EmailProperties, "payoutReport"> & {
+    repaymentReport: RepaymentReport;
+  },
+): string {
   const {
     sourceEmail,
     destinationEmails,
@@ -106,19 +122,9 @@ export function constructRepaymentEmailBody(props: EmailProperties): string {
     bodyText,
     attachmentName,
     attachmentContent,
-    payoutReport,
+    repaymentReport,
   } = props;
-  const incompleteRecordsMessage =
-    payoutReport.incompleteRecords.countMissingMpesaName === 0 &&
-    payoutReport.incompleteRecords.countMissingMpesaNumber === 0
-      ? "All records have MPESA name and number."
-      : `There were ${payoutReport.incompleteRecords.countMissingMpesaName} payouts without Mpesa names and ${payoutReport.incompleteRecords.countMissingMpesaNumber} payouts without Mpesa numbers.`;
-
-  const totalPayoutMessage =
-    payoutReport.totalPayoutAmount ===
-    payoutReport.totalPayoutAmountWithMpesaInfo
-      ? `The total payout amount is KES ${payoutReport.totalPayoutAmount}.`
-      : `The total payout amount is KES ${payoutReport.totalPayoutAmount} and the total payout amount with Mpesa info present is KES ${payoutReport.totalPayoutAmountWithMpesaInfo}.`;
+  const totalRepaymentMessage = `The total repayment amount is KES ${repaymentReport.totalRepaymentAmount}.`;
 
   return `From: ${sourceEmail}
 To: ${destinationEmails.join(", ")}
@@ -132,9 +138,7 @@ Content-Type: text/plain
 
 ${bodyText}
 
-${incompleteRecordsMessage}
-
-${totalPayoutMessage}
+${totalRepaymentMessage}
 
 --NextPart
 Content-Type: text/csv; name="${attachmentName}"
