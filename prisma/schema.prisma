@@ -787,6 +787,8 @@ model RepaymentRequest {
   id                 String           @id @default(cuid())
   createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
+  fulfilledAt        DateTime?        @map("fulfilled_at") @db.Timestamptz()
+  rejectedAt         DateTime?        @map("rejected_at") @db.Timestamptz()
   supervisorId       String           @map("supervisor_id") @db.VarChar(255)
   supervisor         Supervisor       @relation(fields: [supervisorId], references: [id])
   fellowId           String           @map("fellow_id") @db.VarChar(255)
@@ -794,7 +796,7 @@ model RepaymentRequest {
   hubId              String           @map("hub_id") @db.VarChar(255)
   hub                Hub              @relation(fields: [hubId], references: [id])
   fellowAttendanceId Int              @map("fellow_attendance_id")
-  fellowAttendance   FellowAttendance @relation(fields: [fellowAttendanceId], references: [id]) // TODO: request repayment UI, we need to show an error toast if fellow didn't attendance session in second dropdown
+  fellowAttendance   FellowAttendance @relation(fields: [fellowAttendanceId], references: [id])
 
   @@map("repayment_requests")
 }
