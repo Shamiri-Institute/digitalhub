@@ -50,7 +50,6 @@ export async function GET(request: NextRequest) {
     const sourceEmail = '"Shamiri Digital Hub" <tech@shamiri.institute>';
     const destinationEmails = ["ngatti@shamiri.institute"];
     const ccEmails = [
-      "tech@shamiri.institute",
       "waweru@shamiri.institute",
       "ngatia@shamiri.institute",
       "nyareso@shamiri.institute",
@@ -59,9 +58,9 @@ export async function GET(request: NextRequest) {
     ];
 
     await emailPayoutReport({
-      sourceEmail: '"Shamiri Digital Hub" <edmund@shamiri.institute>',
-      destinationEmails: ["edmund@shamiri.institute"],
-      ccEmails: ["edmund@shamiri.institute"],
+      sourceEmail,
+      destinationEmails,
+      ccEmails,
       subject: `Payouts for sessions ${format(
         payoutPeriod.startDate,
         "yyyy-MM-dd",
@@ -82,8 +81,7 @@ export async function GET(request: NextRequest) {
 
     const supervisors = await fetchSupervisors();
 
-    // TODO: remove slice
-    for (const supervisor of supervisors.slice(0, 0)) {
+    for (const supervisor of supervisors) {
       const supervisorPayoutReport = await calculatePayouts({
         day,
         effectiveDate,
@@ -131,8 +129,8 @@ export async function GET(request: NextRequest) {
 
       await emailPayoutReport({
         sourceEmail,
-        destinationEmails: ["edmund@shamiri.institute"],
-        ccEmails: ["edmund@shamiri.institute"],
+        destinationEmails,
+        ccEmails,
         subject: `Payouts for ${supervisor.supervisorName}'s fellows' sessions ${format(
           payoutPeriod.startDate,
           "yyyy-MM-dd",
