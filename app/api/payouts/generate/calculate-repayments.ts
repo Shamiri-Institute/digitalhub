@@ -5,8 +5,10 @@ import { db } from "#/lib/db";
 export async function calculateRepayments(): Promise<RepaymentReport> {
   const repaymentRequests = await db.repaymentRequest.findMany({
     where: {
-      fulfilledAt: null,
-      rejectedAt: null,
+      AND: {
+        fulfilledAt: null,
+        rejectedAt: null,
+      },
     },
     include: {
       fellowAttendance: {
