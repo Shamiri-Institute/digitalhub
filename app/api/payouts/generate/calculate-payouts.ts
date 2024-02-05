@@ -59,6 +59,15 @@ export async function calculatePayouts({
   });
 
   const delayedPaymentRequests = await db.delayedPaymentRequest.findMany({
+    where: {
+      AND: {
+        fulfilledAt: null,
+        rejectedAt: null,
+      },
+      ...(supervisorId && {
+        supervisorId,
+      }),
+    },
     include: {
       fellowAttendance: {
         include: {
