@@ -26,8 +26,6 @@ export async function calculatePayouts({
   const payoutPeriodStart = getPayoutPeriodStartDate(day, effectiveDate);
   const payoutPeriodEnd = getPayoutPeriodEndDate(day, effectiveDate);
 
-  const fulfilledDelayedPaymentRequests: { id: string }[] = [];
-
   const mainAttendances = await db.fellowAttendance.findMany({
     where: {
       session: {
@@ -97,18 +95,6 @@ export async function calculatePayouts({
     id: dpr.id,
   }));
 
-  for (let delayedAttendance of delayedAttendances) {
-    if (
-      delayedPaymentRequests.some((dpr) => dpr.fulfilledAt) &&
-      delayedPaymentRequests.some((dpr) => !dpr.fulfilledAt)
-    ) {
-      console.warn(
-        `Attendance ${delayedAttendance.id} has both fulfilled and unfulfilled delayed payment requests`,
-      );
-    }
-    fulfilledDelayedPaymentRequests.push(...delayedPaymentRequests);
-  }
-
   const eligibleAttendances = [...mainAttendances, ...delayedAttendances];
 
   const { payouts } = processAttendances(eligibleAttendances);
@@ -139,7 +125,9 @@ export async function calculatePayouts({
       countMissingMpesaName: payoutsWithoutMpesaName,
       countMissingMpesaNumber: payoutsWithoutMpesaNumber,
     },
-    attendancesFulfilled,
+    attendancesProcessed: eligibleAttendances.map((attendance) => ({
+      id: attendance.id.toString(),
+    })),
     delayedPaymentsFulfilled,
     totalPayoutAmount,
     totalPayoutAmountWithMpesaInfo,

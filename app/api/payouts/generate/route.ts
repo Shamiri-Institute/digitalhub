@@ -61,16 +61,14 @@ export async function GET(request: NextRequest) {
     });
 
     const sourceEmail = '"Shamiri Digital Hub" <tech@shamiri.institute>';
-    // const destinationEmails = ["ngatti@shamiri.institute"];
-    // const ccEmails = [
-    //   "waweru@shamiri.institute",
-    //   "ngatia@shamiri.institute",
-    //   "nyareso@shamiri.institute",
-    //   "daya@shamiri.institute",
-    //   "tech@shamiri.institute",
-    // ];
-    const destinationEmails = ["edmund@agency.fund"];
-    const ccEmails = ["edmund@korley.net"];
+    const destinationEmails = ["ngatti@shamiri.institute"];
+    const ccEmails = [
+      "waweru@shamiri.institute",
+      "ngatia@shamiri.institute",
+      "nyareso@shamiri.institute",
+      "daya@shamiri.institute",
+      "tech@shamiri.institute",
+    ];
 
     await emailPayoutReport({
       sourceEmail,
@@ -96,7 +94,7 @@ export async function GET(request: NextRequest) {
       destinationEmails,
       ccEmails,
       subject: `Repayment requested as of ${format(effectiveDate, "yyyy-MM-dd")}`,
-      bodyText: `Please find the attached repayments CSV. These should be deducated from the supervisor's compensation.`,
+      bodyText: `Please find the attached repayments CSV.`,
       attachmentName: repaymentsCsvFileName,
       attachmentContent: repaymentsCsvBuffer.toString(),
       repaymentReport: repaymentsPayoutReport,
@@ -170,6 +168,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    await markAttendancesProcessed(totalPayoutReport.attendancesProcessed);
+    await markDelayedPaymentsFulfilled(
+      totalPayoutReport.delayedPaymentsFulfilled,
+    );
+    await markRepaymentRequestFulfilled(
+      repaymentsPayoutReport.repaymentRequestsFulfilled,
+    );
+
     return NextResponse.json({
       message: `Tabulated ${totalPayoutReport.payoutDetails.length} payouts`,
       effectiveDate,
@@ -188,7 +194,6 @@ export async function GET(request: NextRequest) {
 }
 
 async function fetchSupervisors() {
-  return [];
   const supervisors = await db.supervisor.findMany({
     where: {
       hub: {
@@ -236,4 +241,40 @@ async function generateCsvBuffer(
   });
 
   return await csvPromise;
+}
+
+type Processed = {
+  id: string;
+};
+
+async function markAttendancesProcessed(
+  attendancesProcessed: Processed[],
+): Promise<void> {
+  const ids = attendancesProcessed
+    .map((a) => parseInt(a.id))
+    .filter((n) => !isNaN(n));
+  await db.fellowAttendance.updateMany({
+    where: { id: { in: ids } },
+    data: { processedAt: new Date() },
+  });
+}
+
+async function markDelayedPaymentsFulfilled(
+  delayedPaymentsFulfilled: Processed[],
+): Promise<void> {
+  const ids = delayedPaymentsFulfilled.map((dpr) => dpr.id);
+  await db.delayedPaymentRequest.updateMany({
+    where: { id: { in: ids } },
+    data: { fulfilledAt: new Date() },
+  });
+}
+
+async function markRepaymentRequestFulfilled(
+  repaymentRequestsFulfilled: Processed[],
+): Promise<void> {
+  const ids = repaymentRequestsFulfilled.map((r) => r.id);
+  await db.repaymentRequest.updateMany({
+    where: { id: { in: ids } },
+    data: { fulfilledAt: new Date() },
+  });
 }
