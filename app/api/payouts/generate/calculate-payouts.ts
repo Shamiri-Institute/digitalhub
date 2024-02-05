@@ -1,6 +1,5 @@
 import {
   addDays,
-  isBefore,
   isSameDay,
   setHours,
   setMinutes,
@@ -37,7 +36,9 @@ export async function calculatePayouts({
   const payoutPeriodStart = getPayoutPeriodStartDate(day, effectiveDate);
   const payoutPeriodEnd = getPayoutPeriodEndDate(day, effectiveDate);
 
-  const attendances = await db.fellowAttendance.findMany({
+  const fulfilledDelayedPaymentRequests = [];
+
+  const mainAttendances = await db.fellowAttendance.findMany({
     where: {
       session: {
         sessionDate: {
@@ -50,6 +51,9 @@ export async function calculatePayouts({
       ...(supervisorId && {
         supervisorId,
       }),
+      delayedPaymentRequests: {
+        none: {},
+      },
     },
     include: {
       delayedPaymentRequests: true,
@@ -66,9 +70,54 @@ export async function calculatePayouts({
     },
   });
 
-  const attendancesWithDelayedPaymentRequests = attendances.filter(
-    (attendance) => attendance.delayedPaymentRequests.length > 0,
-  ).length;
+  const delayedPaymentRequests = await db.delayedPaymentRequest.findMany({
+    include: {
+      fellowAttendance: {
+        include: {
+          delayedPaymentRequests: true,
+          fellow: {
+            include: {
+              supervisor: true,
+            },
+          },
+          session: {
+            include: {
+              school: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const delayedAttendances: (typeof delayedPaymentRequests)[number]["fellowAttendance"][] =
+    Object.values(
+      delayedPaymentRequests
+        .map((dpr) => dpr.fellowAttendance)
+        .reduce(
+          (acc, attendance) => {
+            acc[attendance.id] = attendance;
+            return acc;
+          },
+          {} as { [key: number]: (typeof delayedAttendances)[number] },
+        ),
+    );
+
+  const delayedPaymentsFulfilled = delayedPaymentRequests.map((dpr) => ({
+    id: dpr.id,
+  }));
+
+  for (let delayedAttendance of delayedAttendances) {
+    if (
+      delayedPaymentRequests.some((dpr) => dpr.fulfilledAt) &&
+      delayedPaymentRequests.some((dpr) => !dpr.fulfilledAt)
+    ) {
+      console.warn(
+        `Attendance ${delayedAttendance.id} has both fulfilled and unfulfilled delayed payment requests`,
+      );
+    }
+    fulfilledDelayedPaymentRequests.push(...delayedPaymentRequests);
+  }
 
   const payouts: {
     [fellowVisibleId: string]: PayoutDetail;
@@ -76,37 +125,8 @@ export async function calculatePayouts({
 
   const payoutCache = new Set<string>();
 
-  let eligibleAttendances = attendances.filter(
-    (attendance) => attendance.delayedPaymentRequests.length === 0,
-  );
-  if (isSameDay(payoutPeriodStart, new Date(2024, 0, 23))) {
-    console.warn(
-      "Accounting for delayed payment repayment requests that we fufilled early",
-    );
-    const attendanceMarkingCutoff = new Date(
-      2024,
-      1,
-      1,
-      ATTENDANCE_MARKING_CUTOFF_HOUR,
-      ATTENDANCE_MARKING_CUTOFF_MINUTE,
-    );
-    eligibleAttendances = attendances.filter((attendance) => {
-      const markedBeforeFeb2MarkingCutoff =
-        attendance.delayedPaymentRequests.some((dpr) => {
-          return isBefore(dpr.createdAt, attendanceMarkingCutoff);
-        });
-      if (
-        !isBefore(attendance.createdAt, attendanceMarkingCutoff) &&
-        attendance.delayedPaymentRequests.length === 0
-      ) {
-        return false;
-      }
-      return (
-        attendance.delayedPaymentRequests.length === 0 ||
-        markedBeforeFeb2MarkingCutoff
-      );
-    });
-  }
+  const eligibleAttendances = [...mainAttendances, ...delayedAttendances];
+
   for (const attendance of eligibleAttendances) {
     const { fellow, session } = attendance;
     if (!payouts[fellow.visibleId]) {
@@ -182,7 +202,7 @@ export async function calculatePayouts({
       countMissingMpesaName: payoutsWithoutMpesaName,
       countMissingMpesaNumber: payoutsWithoutMpesaNumber,
     },
-    attendancesWithDelayedPaymentRequests,
+    delayedPaymentsFulfilled,
     totalPayoutAmount,
     totalPayoutAmountWithMpesaInfo,
   };
