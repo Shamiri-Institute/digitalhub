@@ -107,7 +107,7 @@ const ids = {
                   pointPersonPhone: "+254 722 229 367",
                   numbersExpected: 2200,
                   principalName: "L. O. Nyachwera",
-                  assignedSupervisorId: "SPV24_S_01",
+                  assignedSupervisorVisibleId: "SPV24_S_01",
 
                   students: {
                     ANS24_Stu_01: {
@@ -279,8 +279,6 @@ async function seedDatabase() {
           const createdSchool = await db.school.create({
             data: {
               id: school.id,
-              hubId: createdHub.id,
-              implementerId: implementer.id,
               visibleId: school.visibleId,
               schoolName: school.schoolName,
               schoolType: school.schoolType,
@@ -292,6 +290,15 @@ async function seedDatabase() {
               pointPersonPhone: school.pointPersonPhone,
               numbersExpected: school.numbersExpected,
               principalName: school.principalName,
+              hub: {
+                connect: { id: createdHub.id },
+              },
+              implementer: {
+                connect: { id: implementer.id },
+              },
+              assignedSupervisor: {
+                connect: { visibleId: school.assignedSupervisorVisibleId },
+              },
             },
           });
 
