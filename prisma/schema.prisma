@@ -1002,7 +1002,7 @@ model Project {
   createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt            DateTime              @updatedAt @map("updated_at")
   visibleId            String                @unique @map("visible_id") @db.VarChar(255)
-  projectName          String                @map("project_name") @db.VarChar(100)
+  name                 String                @db.VarChar(100)
   projectLead          String?               @map("project_lead") @db.VarChar(255) // consider if this is necessary
   funder               String?               @db.VarChar(255) // additional info required on what we need to do with this field
   budget               Int?
