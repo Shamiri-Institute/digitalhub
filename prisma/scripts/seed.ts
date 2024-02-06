@@ -205,7 +205,7 @@ async function seedDatabase() {
         data: {
           id: project.id,
           visibleId: project.visibleId,
-          projectName: project.projectName,
+          name: project.projectName,
         },
       });
 
