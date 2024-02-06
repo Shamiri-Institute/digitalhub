@@ -1,3 +1,5 @@
+import { ImplementerRole } from "@prisma/client";
+
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
@@ -27,8 +29,39 @@ const ids = {
               visibleId: "24_Hub_01",
               hubName: "Dagoretti/Westlands",
 
+              supervisors: {
+                SPV24_S_01: {
+                  id: objectId("sup"),
+                  visibleId: "SPV24_S_01",
+                  supervisorName: "James Kariuki",
+                  supervisorEmail: "james.kariuki@example.com",
+                  idNumber: "200100200",
+                  cellNumber: "+254700000003",
+                  mpesaName: "James Kariuki",
+                  mpesaNumber: "+254700000003",
+                  county: "Nairobi",
+                  subCounty: "Westlands",
+                  dateOfBirth: new Date("1975-04-20"),
+                  gender: "Male",
+                },
+                SPV24_S_02: {
+                  id: objectId("sup"),
+                  visibleId: "SPV24_S_02",
+                  supervisorName: "Mary Wanjiku",
+                  supervisorEmail: "mary.wanjiku@example.com",
+                  idNumber: "200200300",
+                  cellNumber: "+254700000004",
+                  mpesaName: "Mary Wanjiku",
+                  mpesaNumber: "+254700000004",
+                  county: "Kiambu",
+                  subCounty: "Thika",
+                  dateOfBirth: new Date("1980-08-15"),
+                  gender: "Female",
+                },
+              },
+
               fellows: {
-                Fellow_01: {
+                TFW24_S_01: {
                   id: objectId("fel"),
                   visibleId: "TFW24_S_01",
                   fellowName: "John Doe",
@@ -41,9 +74,9 @@ const ids = {
                   subCounty: "Westlands",
                   dateOfBirth: new Date("1999-01-01"),
                   gender: "Male",
-                  hubId: objectId("hub"),
+                  supervisorVisibleId: "SPV24_S_01",
                 },
-                Fellow_02: {
+                TFW24_S_02: {
                   id: objectId("fel"),
                   visibleId: "TFW24_S_02",
                   fellowName: "Jane Doe",
@@ -56,7 +89,7 @@ const ids = {
                   subCounty: "Dagoretti",
                   dateOfBirth: new Date("2000-02-02"),
                   gender: "Female",
-                  hubId: objectId("hub"),
+                  supervisorVisibleId: "SPV24_S_02",
                 },
               },
 
@@ -74,9 +107,10 @@ const ids = {
                   pointPersonPhone: "+254 722 229 367",
                   numbersExpected: 2200,
                   principalName: "L. O. Nyachwera",
+                  assignedSupervisorId: "SPV24_S_01",
 
                   students: {
-                    Student_01: {
+                    ANS24_Stu_01: {
                       id: objectId("stu"),
                       visibleId: "ANS24_Stu_01",
                       studentName: "Alice Mwangi",
@@ -86,7 +120,7 @@ const ids = {
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_01",
                     },
-                    Student_02: {
+                    ANS24_Stu_02: {
                       id: objectId("stu"),
                       visibleId: "ANS24_Stu_02",
                       studentName: "Bob Otieno",
@@ -96,7 +130,7 @@ const ids = {
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_01",
                     },
-                    Student_03: {
+                    ANS24_Stu_03: {
                       id: objectId("stu"),
                       visibleId: "ANS24_Stu_03",
                       studentName: "Caroline Njeri",
@@ -106,7 +140,7 @@ const ids = {
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
                     },
-                    Student_04: {
+                    ANS24_Stu_04: {
                       id: objectId("stu"),
                       visibleId: "ANS24_Stu_04",
                       studentName: "David Kimani",
@@ -121,6 +155,27 @@ const ids = {
               },
             },
           },
+        },
+      },
+
+      users: {
+        edmund: {
+          id: objectId("user"),
+          email: "edmund@shamiri.institute",
+          role: ImplementerRole.SUPERVISOR,
+          roleByVisibleId: "SPV24_S_01",
+        },
+        benny: {
+          id: objectId("user"),
+          email: "benny@shamiri.institute",
+          role: ImplementerRole.SUPERVISOR,
+          roleByVisibleId: "SPV24_S_01",
+        },
+        shadrack: {
+          id: objectId("user"),
+          email: "shadrack.lilan@shamiri.institute",
+          role: ImplementerRole.SUPERVISOR,
+          roleByVisibleId: "SPV24_S_01",
         },
       },
     },
@@ -172,7 +227,34 @@ async function seedDatabase() {
           },
         });
 
+        for (const supervisor of Object.values(hub.supervisors)) {
+          await db.supervisor.create({
+            data: {
+              id: supervisor.id,
+              visibleId: supervisor.visibleId,
+              supervisorName: supervisor.supervisorName,
+              supervisorEmail: supervisor.supervisorEmail,
+              idNumber: supervisor.idNumber,
+              cellNumber: supervisor.cellNumber,
+              mpesaName: supervisor.mpesaName,
+              mpesaNumber: supervisor.mpesaNumber,
+              county: supervisor.county,
+              subCounty: supervisor.subCounty,
+              dateOfBirth: supervisor.dateOfBirth,
+              gender: supervisor.gender,
+              implementerId: implementer.id,
+              hubId: createdHub.id,
+            },
+          });
+        }
+
         for (const fellow of Object.values(hub.fellows)) {
+          const supervisor = await db.supervisor.findUnique({
+            where: {
+              visibleId: fellow.supervisorVisibleId,
+            },
+          });
+
           await db.fellow.create({
             data: {
               id: fellow.id,
@@ -188,6 +270,7 @@ async function seedDatabase() {
               dateOfBirth: fellow.dateOfBirth,
               gender: fellow.gender,
               hubId: createdHub.id,
+              supervisorId: supervisor.id,
             },
           });
         }
@@ -235,6 +318,27 @@ async function seedDatabase() {
           }
         }
       }
+    }
+
+    for (const user of Object.values(implementer.users)) {
+      const supervisor = await db.supervisor.findUniqueOrThrow({
+        where: {
+          visibleId: user.roleByVisibleId,
+        },
+      });
+      await db.user.create({
+        data: {
+          id: user.id,
+          email: user.email,
+          memberships: {
+            create: {
+              implementerId: implementer.id,
+              role: user.role,
+              identifier: supervisor.id,
+            },
+          },
+        },
+      });
     }
   }
 
