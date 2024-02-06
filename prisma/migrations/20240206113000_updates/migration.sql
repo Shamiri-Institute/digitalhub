@@ -4,11 +4,9 @@
   - The primary key for the `project_implementers` table will be changed. If it partially fails, the table could be left without primary key constraint.
   - You are about to drop the column `implementerId` on the `project_implementers` table. All the data in the column will be lost.
   - You are about to drop the column `projectId` on the `project_implementers` table. All the data in the column will be lost.
-  - You are about to drop the column `name` on the `projects` table. All the data in the column will be lost.
   - You are about to drop the `_ImplementerToProject` table. If the table is not empty, all the data it contains will be lost.
   - Added the required column `implementer_id` to the `project_implementers` table without a default value. This is not possible if the table is not empty.
   - Added the required column `project_id` to the `project_implementers` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `project_name` to the `projects` table without a default value. This is not possible if the table is not empty.
 
 */
 -- DropForeignKey
@@ -30,10 +28,6 @@ DROP COLUMN "projectId",
 ADD COLUMN     "implementer_id" VARCHAR(255) NOT NULL,
 ADD COLUMN     "project_id" VARCHAR(255) NOT NULL,
 ADD CONSTRAINT "project_implementers_pkey" PRIMARY KEY ("project_id", "implementer_id");
-
--- AlterTable
-ALTER TABLE "projects" DROP COLUMN "name",
-ADD COLUMN     "project_name" VARCHAR(100) NOT NULL;
 
 -- AlterTable
 ALTER TABLE "students" ADD COLUMN     "date_of_birth" TIMESTAMPTZ;
