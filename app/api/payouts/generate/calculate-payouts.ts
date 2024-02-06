@@ -111,10 +111,10 @@ export async function calculatePayouts({
   const payoutRows = Object.values(payouts);
 
   const payoutsWithoutMpesaNumber = payoutRows.filter(
-    (payout) => !payout.mpesaNumber,
+    (payout) => payout.mpesaNumber?.length === 0,
   ).length;
   const payoutsWithoutMpesaName = payoutRows.filter(
-    (payout) => !payout.mpesaName,
+    (payout) => payout.mpesaName?.length === 0,
   ).length;
   const totalPayoutAmount = payoutRows.reduce(
     (acc, payout) => acc + payout.kesPayoutAmount,
