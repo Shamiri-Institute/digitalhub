@@ -46,6 +46,7 @@ export default async function SchoolStudentsPage({
     orderBy: { visibleId: "asc" },
   });
 
+  const showStudentCreationButton = true;
   return (
     <main>
       <Header
@@ -55,24 +56,26 @@ export default async function SchoolStudentsPage({
       <div className="mt-8">
         <div className="mx-4 flex justify-between border-b border-border/50 pb-3">
           <div className="text-2xl font-semibold">Students</div>
-          <StudentModifyDialog
-            mode="create"
-            fellowName={fellow.fellowName ?? "N/A"}
-            schoolName={school.schoolName}
-            info={{
-              schoolVisibleId: school.visibleId,
-              fellowVisibleId: fellow.visibleId,
-              supervisorVisibleId: fellow.supervisor?.visibleId!,
-              implementerVisibleId: fellow.implementer?.visibleId!,
-            }}
-          >
-            <button className="transition-transform active:scale-95">
-              <Icons.plusCircle
-                className="h-6 w-6 text-shamiri-blue"
-                strokeWidth={1.5}
-              />
-            </button>
-          </StudentModifyDialog>
+          {showStudentCreationButton && (
+            <StudentModifyDialog
+              mode="create"
+              fellowName={fellow.fellowName ?? "N/A"}
+              schoolName={school.schoolName}
+              info={{
+                schoolVisibleId: school.visibleId,
+                fellowVisibleId: fellow.visibleId,
+                supervisorVisibleId: fellow.supervisor?.visibleId!,
+                implementerVisibleId: fellow.implementer?.visibleId!,
+              }}
+            >
+              <button className="transition-transform active:scale-95">
+                <Icons.plusCircle
+                  className="h-6 w-6 text-shamiri-blue"
+                  strokeWidth={1.5}
+                />
+              </button>
+            </StudentModifyDialog>
+          )}
         </div>
       </div>
       <div className="mx-4 mt-8">
