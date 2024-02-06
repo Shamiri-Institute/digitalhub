@@ -249,7 +249,7 @@ async function seedDatabase() {
         }
 
         for (const fellow of Object.values(hub.fellows)) {
-          const supervisor = await db.supervisor.findUnique({
+          const createdSupervisor = await db.supervisor.findUniqueOrThrow({
             where: {
               visibleId: fellow.supervisorVisibleId,
             },
@@ -270,7 +270,7 @@ async function seedDatabase() {
               dateOfBirth: fellow.dateOfBirth,
               gender: fellow.gender,
               hubId: createdHub.id,
-              supervisorId: supervisor.id,
+              supervisorId: createdSupervisor.id,
             },
           });
         }
