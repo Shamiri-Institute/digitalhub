@@ -19,6 +19,10 @@ export const revalidate = 0;
 export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
+  const pause = true;
+  if (pause) {
+    return NextResponse.json({ message: "Pausing for now" }, { status: 200 });
+  }
   const { searchParams } = request.nextUrl;
   const params = z
     .object({
