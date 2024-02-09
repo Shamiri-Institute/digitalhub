@@ -29,9 +29,6 @@ ADD COLUMN     "implementer_id" VARCHAR(255) NOT NULL,
 ADD COLUMN     "project_id" VARCHAR(255) NOT NULL,
 ADD CONSTRAINT "project_implementers_pkey" PRIMARY KEY ("project_id", "implementer_id");
 
--- AlterTable
-ALTER TABLE "students" ADD COLUMN     "date_of_birth" TIMESTAMPTZ;
-
 -- DropTable
 DROP TABLE "_ImplementerToProject";
 

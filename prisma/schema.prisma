@@ -196,8 +196,8 @@ model Student {
   school               School?                 @relation(fields: [schoolId], references: [id])
   yearOfImplementation Int?                    @map("year_of_implementation") // might not be needed any more
   admissionNumber      String?                 @map("admission_number") @db.VarChar(255)
-  dateOfBirth          DateTime?               @map("date_of_birth") @db.Date
-  age                  Int? // TODO: remove as represents point in time
+  // We should move away from this. SI is collecting age at year of implementation
+  age                  Int?
   gender               String?                 @db.VarChar(10)
   form                 Int?
   stream               String?                 @db.VarChar(255)
