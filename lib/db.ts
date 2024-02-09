@@ -12,7 +12,10 @@ if (process.env.NODE_ENV === "production") {
 } else {
   if (!global.cachedPrisma) {
     global.cachedPrisma = new PrismaClient({
-      log: ["query", "info", "warn", "error"],
+      log:
+        process.env.DEBUG === "1"
+          ? ["query", "info", "warn", "error"]
+          : ["info", "warn", "error"],
     });
   }
   prisma = global.cachedPrisma;
