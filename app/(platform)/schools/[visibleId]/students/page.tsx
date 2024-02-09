@@ -13,8 +13,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { AttendanceStatus, SessionLabel } from "#/types/app";
-import { StudentWithSchoolAndFellow } from "#/types/prisma";
+import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 import ComplaintDialog from "./record-complaint-dialog";
 
 export default async function SchoolStudentsPage({
@@ -40,9 +39,21 @@ export default async function SchoolStudentsPage({
     notFound();
   }
 
-  const students: StudentWithSchoolAndFellow[] = await db.student.findMany({
+  const students = await db.student.findMany({
     where: { schoolId: school.id, fellowId: fellow.id },
-    include: { fellow: true, school: true, studentComplaints: true },
+    include: {
+      school: true,
+      fellow: {
+        include: {
+          supervisor: true,
+          implementer: true,
+        },
+      },
+      supervisor: true,
+      implementer: true,
+      studentComplaints: true,
+      studentAttendances: { include: { session: true } },
+    },
     orderBy: { visibleId: "asc" },
   });
 
@@ -118,7 +129,20 @@ function StudentsList({
       implementer: true;
     };
   }>;
-  students: StudentWithSchoolAndFellow[];
+  students: Prisma.StudentGetPayload<{
+    include: {
+      school: true;
+      fellow: true;
+      supervisor: true;
+      implementer: true;
+      studentComplaints: true;
+      studentAttendances: {
+        include: {
+          session: true;
+        };
+      };
+    };
+  }>[];
 }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -139,12 +163,46 @@ function StudentsList({
   );
 }
 
+function getAttendanceStatus(
+  attendances: Prisma.StudentAttendanceGetPayload<{
+    include: { session: true };
+  }>[],
+  sessionNumber: SessionNumber,
+): AttendanceStatus {
+  const attendance = attendances.find(
+    (attendance) => attendance.session.sessionType === `s${sessionNumber}`,
+  );
+  if (attendance?.attended === true) {
+    return "present";
+  }
+  if (attendance?.attended === false) {
+    return "absent";
+  }
+  if (attendance?.attended === null) {
+    return "not-marked";
+  }
+  return "not-marked";
+}
+
 function StudentCard({
   student,
   school,
   fellow,
 }: {
-  student: StudentWithSchoolAndFellow;
+  student: Prisma.StudentGetPayload<{
+    include: {
+      school: true;
+      fellow: true;
+      supervisor: true;
+      implementer: true;
+      studentComplaints: true;
+      studentAttendances: {
+        include: {
+          session: true;
+        };
+      };
+    };
+  }>;
   school: Prisma.SchoolGetPayload<{}>;
   fellow: Prisma.FellowGetPayload<{
     include: {
@@ -153,25 +211,15 @@ function StudentCard({
     };
   }>;
 }) {
-  function getAttendanceStatus(attendance: boolean | null) {
-    if (attendance === true) {
-      return "present";
-    }
-    if (attendance === false) {
-      return "absent";
-    }
-    if (attendance === null) {
-      return "not-marked";
-    }
-    return "not-marked";
-  }
-
   const sessionItems: { status: AttendanceStatus; label: SessionLabel }[] = [
-    { status: getAttendanceStatus(student.attendanceSession0), label: "Pre" },
-    { status: getAttendanceStatus(student.attendanceSession1), label: "S1" },
-    { status: getAttendanceStatus(student.attendanceSession2), label: "S2" },
-    { status: getAttendanceStatus(student.attendanceSession3), label: "S3" },
-    { status: getAttendanceStatus(student.attendanceSession4), label: "S4" },
+    {
+      status: getAttendanceStatus(student.studentAttendances, 0),
+      label: "Pre",
+    },
+    { status: getAttendanceStatus(student.studentAttendances, 1), label: "S1" },
+    { status: getAttendanceStatus(student.studentAttendances, 2), label: "S2" },
+    { status: getAttendanceStatus(student.studentAttendances, 3), label: "S3" },
+    { status: getAttendanceStatus(student.studentAttendances, 4), label: "S4" },
   ];
 
   return (
@@ -216,7 +264,7 @@ function StudentCard({
                   fellowId={fellow.visibleId}
                   schoolId={school.visibleId}
                   studentId={student.id}
-                  complaints={student.StudentComplaints}
+                  complaints={student.studentComplaints}
                 >
                   <div className="cursor-pointer">Record complaint</div>
                 </ComplaintDialog>

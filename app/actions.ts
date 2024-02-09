@@ -373,58 +373,84 @@ export async function markStudentAttendance(
   status: AttendanceStatus,
   label: SessionLabel,
   studentVisibleId: string,
+  schoolVisibleId: string,
 ) {
   try {
-    const sessionNumber = sessionLabelToNumber(label);
-
     const attendanceBoolean = attendanceStatusToBoolean(status);
-
-    switch (sessionNumber) {
-      case 0:
-        await db.student.update({
-          where: { visibleId: studentVisibleId },
-          data: {
-            attendanceSession0: attendanceBoolean,
-          },
-        });
-        break;
-      case 1:
-        await db.student.update({
-          where: { visibleId: studentVisibleId },
-          data: {
-            attendanceSession1: attendanceBoolean,
-          },
-        });
-        break;
-      case 2:
-        await db.student.update({
-          where: { visibleId: studentVisibleId },
-          data: {
-            attendanceSession2: attendanceBoolean,
-          },
-        });
-        break;
-      case 3:
-        await db.student.update({
-          where: { visibleId: studentVisibleId },
-          data: {
-            attendanceSession3: attendanceBoolean,
-          },
-        });
-        break;
-      case 4:
-        await db.student.update({
-          where: { visibleId: studentVisibleId },
-          data: {
-            attendanceSession3: attendanceBoolean,
-          },
-        });
-        break;
-    }
 
     const student = await db.student.findUniqueOrThrow({
       where: { visibleId: studentVisibleId },
+      include: {
+        assignedGroup: true,
+      },
     });
+    if (!student.assignedGroup) {
+      throw new Error(`Student (${student.visibleId}) has no assigned group`);
+    }
+
+    const school = await db.school.findUniqueOrThrow({
+      where: { visibleId: schoolVisibleId },
+      include: {
+        interventionSessions: true,
+        interventionGroups: true,
+        assignedSupervisor: true,
+      },
+    });
+
+    const sessionNumber = sessionLabelToNumber(label);
+    const interventionSession = school.interventionSessions.find(
+      (session) => session.sessionType === `s${sessionNumber}`,
+    );
+    if (!interventionSession) {
+      throw new Error("Intervention session not found");
+    }
+    if (interventionSession.occurred !== true) {
+      return {
+        error: `Session ${label} is marked as not occurred. Please contact the assigned supervisor for ${school.schoolName} (${school.assignedSupervisor?.supervisorName}) to mark the session as occurred before marking attendance.`,
+      };
+    }
+
+    if (student.assignedGroup.leaderId === null) {
+      return {
+        error: `Group ${student.assignedGroup.groupName} has no leader. Please contact hub coordinator to assign a group leader so we can track this.`,
+      };
+    }
+
+    let attendance = await db.studentAttendance.findFirst({
+      where: {
+        studentId: student.id,
+        schoolId: school.id,
+        fellowId: student.assignedGroup.leaderId,
+      },
+    });
+    if (attendance) {
+      attendance = await db.studentAttendance.update({
+        where: {
+          id: attendance.id,
+        },
+        data: {
+          attended: attendanceBoolean,
+        },
+      });
+    } else {
+      attendance = await db.studentAttendance.create({
+        data: {
+          projectId: CURRENT_PROJECT_ID,
+          studentId: student.id,
+          schoolId: school.id,
+          fellowId: student.assignedGroup.leaderId,
+          sessionId: interventionSession.id,
+          groupId: student.assignedGroup.id,
+          attended: attendanceBoolean,
+        },
+      });
+    }
+
+    await legacyUpdateStudentAttendance(
+      sessionNumber,
+      studentVisibleId,
+      attendanceBoolean,
+    );
 
     return { student };
   } catch (error: unknown) {
@@ -438,6 +464,56 @@ export async function markStudentAttendance(
     return {
       error: "Something went wrong",
     };
+  }
+}
+
+// This is the legacy way of updating student attendance and will be deprecated
+async function legacyUpdateStudentAttendance(
+  sessionNumber: number,
+  studentVisibleId: string,
+  attendanceBoolean: boolean | null,
+) {
+  switch (sessionNumber) {
+    case 0:
+      await db.student.update({
+        where: { visibleId: studentVisibleId },
+        data: {
+          attendanceSession0: attendanceBoolean,
+        },
+      });
+      break;
+    case 1:
+      await db.student.update({
+        where: { visibleId: studentVisibleId },
+        data: {
+          attendanceSession1: attendanceBoolean,
+        },
+      });
+      break;
+    case 2:
+      await db.student.update({
+        where: { visibleId: studentVisibleId },
+        data: {
+          attendanceSession2: attendanceBoolean,
+        },
+      });
+      break;
+    case 3:
+      await db.student.update({
+        where: { visibleId: studentVisibleId },
+        data: {
+          attendanceSession3: attendanceBoolean,
+        },
+      });
+      break;
+    case 4:
+      await db.student.update({
+        where: { visibleId: studentVisibleId },
+        data: {
+          attendanceSession3: attendanceBoolean,
+        },
+      });
+      break;
   }
 }
 

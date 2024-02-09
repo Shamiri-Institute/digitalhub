@@ -17,13 +17,14 @@ export function register() {
       color = "\x1b[31m"; // Red
     }
 
-    console.info(`\x1b[34mConnecting to database\x1b[0m`);
+    const leftPad = " ".repeat(3);
+    console.info(`${leftPad}\x1b[34mConnecting to database\x1b[0m`);
     if (databaseHost !== "localhost") {
       console.warn(
-        `${color}WARNING: You are connected to the production database!\x1b[0m`,
+        `${leftPad}${color}WARNING: You are connected to the production database!\x1b[0m`,
       );
     }
-    console.log(`${color}Database host: ${databaseHost}\x1b[0m`);
-    console.log(`${color}Database name: ${databaseName}\x1b[0m`);
+    console.log(`${leftPad}${color}Database host: ${databaseHost}\x1b[0m`);
+    console.log(`${leftPad}${color}Database name: ${databaseName}\x1b[0m`);
   }
 }
