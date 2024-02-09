@@ -695,6 +695,7 @@ model InterventionSession {
   // TODO: consider adding column for sessionIndex Int, while sessionType tracks, intervention, dataCollation, followUp
   schoolId               String                      @map("school_id") @db.VarChar(255)
   school                 School                      @relation(fields: [schoolId], references: [id])
+  // If session has occurred. Should be set by assigned supervisor of the school before attendance can be marked
   occurred               Boolean
   yearOfImplementation   Int                         @map("year_of_implementation") // TODO: might not be needed anymore
   projectId              String?                     @map("project_id") @db.VarChar(100)
