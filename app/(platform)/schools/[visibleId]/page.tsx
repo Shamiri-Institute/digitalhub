@@ -22,7 +22,12 @@ export default async function SchoolDetailPage({
 }) {
   const school = await db.school.findUnique({
     where: { visibleId },
-    include: { hub: true, implementer: true, interventionSessions: true },
+    include: {
+      hub: true,
+      implementer: true,
+      interventionSessions: true,
+      interventionGroups: true,
+    },
   });
   if (!school) {
     notFound();
@@ -113,7 +118,12 @@ async function FellowsList({
   supervisor,
 }: {
   school: Prisma.SchoolGetPayload<{
-    include: { hub: true; implementer: true; interventionSessions: true };
+    include: {
+      hub: true;
+      implementer: true;
+      interventionSessions: true;
+      interventionGroups: true;
+    };
   }>;
   supervisor: Prisma.SupervisorGetPayload<{}>;
 }) {
@@ -173,7 +183,12 @@ function FellowCard({
 }: {
   fellow: FellowWithAttendance;
   school: Prisma.SchoolGetPayload<{
-    include: { hub: true; implementer: true; interventionSessions: true };
+    include: {
+      hub: true;
+      implementer: true;
+      interventionSessions: true;
+      interventionGroups: true;
+    };
   }>;
   supervisor: Prisma.SupervisorGetPayload<{}>;
   totalStudents: number;
@@ -226,6 +241,10 @@ function FellowCard({
     },
   ];
 
+  const fellowGroup = school.interventionGroups.find(
+    (group) => group.leaderId === fellow.id,
+  );
+
   return (
     <div className="rounded border p-8 shadow-md">
       <div className="flex justify-between">
@@ -255,6 +274,9 @@ function FellowCard({
       </div>
       <p className="mt-1 text-sm text-gray-600">
         Shamiri ID: {fellow.visibleId}
+      </p>
+      <p className="mt-1 text-sm text-gray-600">
+        Group: {fellowGroup?.groupName ?? "N/A"}
       </p>
       <Separator className="my-2" />
 
