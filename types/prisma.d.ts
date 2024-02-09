@@ -4,6 +4,12 @@ export type FellowWithAttendance = Prisma.FellowGetPayload<{
   };
 }>;
 
+export type StudentWithAttendance = Prisma.StudentGetPayload<{
+  include: {
+    studentAttendances: true;
+  };
+}>;
+
 export type StudentWithFellow = Prisma.StudentGetPayload<{
   include: {
     fellow: true;
