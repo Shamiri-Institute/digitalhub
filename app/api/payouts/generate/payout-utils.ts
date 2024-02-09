@@ -34,8 +34,8 @@ export const processAttendances = (
       payouts[fellow.visibleId] = {
         fellowVisibleId: fellow.visibleId,
         fellowName: fellow.fellowName ?? "N/A",
-        mpesaName: fellow.mpesaName ?? "N/A",
-        mpesaNumber: fellow.mpesaNumber ?? "N/A",
+        mpesaName: fellow.mpesaName ?? "",
+        mpesaNumber: fellow.mpesaNumber ?? "",
         kesPayoutAmount: 0,
         supervisorVisibleId: fellow.supervisor?.visibleId ?? "N/A",
         supervisorName: fellow.supervisor?.supervisorName ?? "N/A",
