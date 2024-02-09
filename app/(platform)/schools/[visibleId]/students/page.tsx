@@ -25,6 +25,9 @@ export default async function SchoolStudentsPage({
 }) {
   const school = await db.school.findUnique({
     where: { visibleId },
+    include: {
+      interventionGroups: true,
+    },
   });
   if (!school) {
     notFound();
@@ -38,6 +41,10 @@ export default async function SchoolStudentsPage({
   if (!fellow) {
     notFound();
   }
+
+  const fellowGroup = school.interventionGroups.find(
+    (group) => group.leaderId === fellow.id,
+  );
 
   const students = await db.student.findMany({
     where: { schoolId: school.id, fellowId: fellow.id },
@@ -63,6 +70,7 @@ export default async function SchoolStudentsPage({
       <Header
         schoolName={school.schoolName}
         fellowName={fellow.fellowName ?? "N/A"}
+        groupName={fellowGroup?.groupName ?? "N/A"}
       />
       <div className="mt-8">
         <div className="mx-4 flex justify-between border-b border-border/50 pb-3">
@@ -99,9 +107,11 @@ export default async function SchoolStudentsPage({
 function Header({
   schoolName,
   fellowName,
+  groupName,
 }: {
   schoolName: string;
   fellowName: string;
+  groupName: string;
 }) {
   return (
     <header className="flex items-center justify-between">
@@ -109,6 +119,7 @@ function Header({
       <div className="flex flex-col items-center">
         <div className="text-2xl font-semibold">{schoolName}</div>
         <div className="text-lg">{fellowName}</div>
+        <div className="text-sm text-muted-foreground">Group: {groupName}</div>
       </div>
       <div className="flex gap-2">
         <Icons.search className="h-6 w-6 text-brand" strokeWidth={1.75} />
