@@ -179,12 +179,6 @@ export async function markFellowAttendance(
   schoolVisibleId: string,
 ) {
   try {
-    console.debug("Marking fellow attendance action", {
-      status,
-      label,
-      fellowVisibleId,
-      schoolVisibleId,
-    });
     const fellow = await db.fellow.findUniqueOrThrow({
       where: { visibleId: fellowVisibleId },
     });
@@ -198,6 +192,7 @@ export async function markFellowAttendance(
       include: {
         interventionSessions: true,
         interventionGroups: true,
+        assignedSupervisor: true,
       },
     });
 
@@ -207,6 +202,11 @@ export async function markFellowAttendance(
     );
     if (!interventionSession) {
       throw new Error("Intervention session not found");
+    }
+    if (interventionSession.occurred !== true) {
+      return {
+        error: `Session ${label} is marked as not occurred. Please contact the assigned supervisor for ${school.schoolName} (${school.assignedSupervisor?.supervisorName}) to mark the session as occurred before marking attendance.`,
+      };
     }
 
     const interventionGroup =
