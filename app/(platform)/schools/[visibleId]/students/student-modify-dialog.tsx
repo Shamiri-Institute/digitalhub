@@ -30,6 +30,7 @@ import {
 import { toast } from "#/components/ui/use-toast";
 
 const FormSchema = z.object({
+  isTransfer: z.boolean().optional(),
   fellowVisibleId: z.string({
     required_error: "Please enter the fellow's visible ID.",
   }),
@@ -112,6 +113,7 @@ export function StudentModifyDialog({
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
+      isTransfer: false,
       fellowVisibleId: info.fellowVisibleId,
       supervisorVisibleId: info.supervisorVisibleId,
       implementerVisibleId: info.implementerVisibleId,
@@ -211,6 +213,27 @@ export function StudentModifyDialog({
             className="overflow-hidden text-ellipsis px-1"
           >
             <div className="mt-6 space-y-6">
+              {mode === "create" && (
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="isTransfer"
+                    render={({ field }) => (
+                      <div className="mt-3 flex items-center gap-2">
+                        <Input
+                          type="checkbox"
+                          id="isTransfer"
+                          checked={field.value}
+                          onChange={field.onChange}
+                        />
+                        <Label htmlFor="isTransfer">
+                          Is this student a transfer?
+                        </Label>
+                      </div>
+                    )}
+                  />
+                </div>
+              )}
               <div>
                 <FormField
                   control={form.control}
