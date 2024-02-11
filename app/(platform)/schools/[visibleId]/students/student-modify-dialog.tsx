@@ -196,7 +196,7 @@ export function StudentModifyDialog({
           {mode === "create" && (
             <SheetDescription>
               This student will be assigned to {fellowName}&apos;s group at{" "}
-              {schoolName}.
+              {schoolName}: {group?.groupName || "N/A"}
             </SheetDescription>
           )}
           {mode === "edit" && (
@@ -220,14 +220,14 @@ export function StudentModifyDialog({
                     name="isTransfer"
                     render={({ field }) => (
                       <div className="mt-3 flex items-center gap-2">
-                        <Input
+                        <input
                           type="checkbox"
                           id="isTransfer"
                           checked={field.value}
                           onChange={field.onChange}
                         />
                         <Label htmlFor="isTransfer">
-                          Is this student a transfer?
+                          Check if this is a student transfer
                         </Label>
                       </div>
                     )}

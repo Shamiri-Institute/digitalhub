@@ -575,7 +575,7 @@ export async function modifyStudent(
 
 async function updateStudent(
   data: ModifyStudentData,
-): Promise<{ error?: string; student?: Prisma.StudentGetPayload<{}> }> {
+): Promise<{ error: string } | { student: Prisma.StudentGetPayload<{}> }> {
   try {
     const student = await db.student.update({
       where: { visibleId: data.visibleId },
@@ -614,7 +614,7 @@ async function createStudent(data: ModifyStudentData) {
     });
 
     const group = await db.interventionGroup.findUnique({
-      where: { id: data.groupId },
+      where: { id: data.groupId ?? "" },
     });
 
     const duplicateStudent = await db.student.findFirst({
@@ -636,16 +636,37 @@ async function createStudent(data: ModifyStudentData) {
         };
       }
 
+      const newGroup = await db.interventionGroup.findUnique({
+        where: { id: data.groupId },
+      });
+      if (!newGroup) {
+        return {
+          error: "Group not found",
+        };
+      }
+
+      if (!newGroup.leaderId) {
+        return {
+          error: `New group (${newGroup.groupName}) does not have a leader`,
+        };
+      }
+
       const student = await db.student.update({
         where: {
           id: duplicateStudent.id,
         },
         data: {
-          assignedGroupId: data.groupId,
+          fellowId: newGroup.leaderId,
+          assignedGroupId: newGroup.id,
         },
       });
 
       return { student };
+    } else if (data.isTransfer) {
+      return {
+        error:
+          "Could not find student with the same admission number to transfer",
+      };
     }
 
     const studentCount = await db.student.count();
