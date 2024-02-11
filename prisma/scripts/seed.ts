@@ -19,7 +19,7 @@ const ids = {
 
       projects: {
         "2024_Project_1": {
-          id: objectId("proj"),
+          id: "2024_Project_1",
           visibleId: "2024_Project_1",
           projectName: "Anansi 100K Phase 1",
 
@@ -109,6 +109,33 @@ const ids = {
                   principalName: "L. O. Nyachwera",
                   assignedSupervisorVisibleId: "SPV24_S_01",
 
+                  groups: {
+                    ANS24_Group_01: {
+                      id: "G1",
+                      groupName: "G1",
+                      groupFellowVisibleId: "TFW24_S_01",
+                    },
+                  },
+
+                  sessions: {
+                    Session_01: {
+                      id: objectId("sess"),
+                      sessionType: "s0",
+                      sessionName: "Presession",
+                      sessionDate: new Date("2024-01-15"),
+                      sessionRating: 4,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_02: {
+                      id: objectId("sess"),
+                      sessionType: "s1",
+                      sessionName: "Session 01",
+                      sessionDate: new Date("2024-02-15"),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                  },
+
                   students: {
                     ANS24_Stu_01: {
                       id: objectId("stu"),
@@ -116,9 +143,10 @@ const ids = {
                       studentName: "Alice Mwangi",
                       admissionNumber: "ADM123",
                       age: 17,
-                      gender: "Female",
+                      gender: "F",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_01",
+                      assignedGroupId: "G1",
                     },
                     ANS24_Stu_02: {
                       id: objectId("stu"),
@@ -126,9 +154,10 @@ const ids = {
                       studentName: "Bob Otieno",
                       admissionNumber: "ADM124",
                       age: 16,
-                      gender: "Male",
+                      gender: "M",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_01",
+                      assignedGroupId: "G1",
                     },
                     ANS24_Stu_03: {
                       id: objectId("stu"),
@@ -136,9 +165,10 @@ const ids = {
                       studentName: "Caroline Njeri",
                       admissionNumber: "ADM125",
                       age: 15,
-                      gender: "Female",
+                      gender: "F",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
+                      assignedGroupId: "G1",
                     },
                     ANS24_Stu_04: {
                       id: objectId("stu"),
@@ -146,9 +176,10 @@ const ids = {
                       studentName: "David Kimani",
                       admissionNumber: "ADM126",
                       age: 14,
-                      gender: "Male",
+                      gender: "M",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
+                      assignedGroupId: "G1",
                     },
                   },
                 },
@@ -259,6 +290,7 @@ async function seedDatabase() {
             data: {
               id: fellow.id,
               visibleId: fellow.visibleId,
+              implementerId: implementer.id,
               fellowName: fellow.fellowName,
               fellowEmail: fellow.fellowEmail,
               mpesaName: fellow.mpesaName,
@@ -302,6 +334,43 @@ async function seedDatabase() {
             },
           });
 
+          for (const session of Object.values(school.sessions)) {
+            await db.interventionSession.create({
+              data: {
+                id: session.id,
+                sessionType: session.sessionType,
+                sessionName: session.sessionName,
+                sessionDate: session.sessionDate,
+                occurred: true,
+                yearOfImplementation: session.sessionDate.getFullYear(),
+                school: {
+                  connect: { id: createdSchool.id },
+                },
+                project: {
+                  connect: { id: createdProject.id },
+                },
+              },
+            });
+          }
+
+          for (const group of Object.values(school.groups)) {
+            await db.interventionGroup.create({
+              data: {
+                id: group.id,
+                groupName: group.groupName,
+                leader: {
+                  connect: { visibleId: group.groupFellowVisibleId },
+                },
+                project: {
+                  connect: { id: createdProject.id },
+                },
+                school: {
+                  connect: { id: createdSchool.id },
+                },
+              },
+            });
+          }
+
           for (const student of Object.values(school.students)) {
             await db.student.create({
               data: {
@@ -319,6 +388,9 @@ async function seedDatabase() {
                 },
                 school: {
                   connect: { id: createdSchool.id },
+                },
+                assignedGroup: {
+                  connect: { id: student.assignedGroupId },
                 },
               },
             });
