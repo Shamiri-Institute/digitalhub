@@ -64,6 +64,10 @@ export default async function SchoolStudentsPage({
     orderBy: { visibleId: "asc" },
   });
 
+  const fellowGroupInfo = fellowGroup
+    ? { groupId: fellowGroup.id, groupName: fellowGroup.groupName }
+    : undefined;
+
   const showStudentCreationButton = true;
   return (
     <main>
@@ -86,6 +90,7 @@ export default async function SchoolStudentsPage({
                 supervisorVisibleId: fellow.supervisor?.visibleId!,
                 implementerVisibleId: fellow.implementer?.visibleId!,
               }}
+              group={fellowGroupInfo}
             >
               <button className="transition-transform active:scale-95">
                 <Icons.plusCircle
@@ -98,7 +103,12 @@ export default async function SchoolStudentsPage({
         </div>
       </div>
       <div className="mx-4 mt-8">
-        <StudentsList school={school} fellow={fellow} students={students} />
+        <StudentsList
+          school={school}
+          fellow={fellow}
+          students={students}
+          group={fellowGroupInfo}
+        />
       </div>
     </main>
   );
@@ -132,6 +142,7 @@ function StudentsList({
   school,
   fellow,
   students,
+  group,
 }: {
   school: Prisma.SchoolGetPayload<{}>;
   fellow: Prisma.FellowGetPayload<{
@@ -154,6 +165,7 @@ function StudentsList({
       };
     };
   }>[];
+  group?: { groupId: string; groupName: string };
 }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -164,6 +176,7 @@ function StudentsList({
             student={student}
             school={school}
             fellow={fellow}
+            group={group}
           />
         );
       })}
@@ -199,6 +212,7 @@ function StudentCard({
   student,
   school,
   fellow,
+  group,
 }: {
   student: Prisma.StudentGetPayload<{
     include: {
@@ -221,6 +235,7 @@ function StudentCard({
       implementer: true;
     };
   }>;
+  group?: { groupId: string; groupName: string };
 }) {
   const sessionItems: { status: AttendanceStatus; label: SessionLabel }[] = [
     {
@@ -265,6 +280,7 @@ function StudentCard({
                       supervisorVisibleId: fellow.supervisor?.visibleId!,
                       implementerVisibleId: fellow.implementer?.visibleId!,
                     }}
+                    group={group}
                   >
                     <div className="cursor-pointer">Edit Student</div>
                   </StudentModifyDialog>

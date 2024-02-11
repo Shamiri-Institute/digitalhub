@@ -592,7 +592,6 @@ async function updateStudent(data: ModifyStudentData) {
       home: data.home,
       siblings: data.siblings,
       religion: data.religion,
-      groupName: data.groupName,
       survivingParents: data.survivingParents,
       parentsDead: data.parentsDead,
       fathersEducation: data.fathersEducation,
@@ -622,11 +621,20 @@ async function createStudent(data: ModifyStudentData) {
       where: { visibleId: data.schoolVisibleId },
     });
 
+    const group = await db.interventionGroup.findUnique({
+      where: { id: data.groupId },
+    });
+    const studentCount = await db.student.count();
+    const studentVisibleId = generateStudentVisibleID(
+      group?.groupName ?? "NA",
+      studentCount,
+    );
+
     const student = await db.student.create({
       data: {
         id: objectId("stu"),
         studentName: data.studentName,
-        visibleId: generateStudentVisibleID(data.groupName),
+        visibleId: studentVisibleId,
         fellowId: fellow.id,
         supervisorId: supervisor.id,
         implementerId: implementer.id,
@@ -645,7 +653,6 @@ async function createStudent(data: ModifyStudentData) {
         home: data.home,
         siblings: data.siblings,
         religion: data.religion,
-        groupName: data.groupName,
         survivingParents: data.survivingParents,
         parentsDead: data.parentsDead,
         fathersEducation: data.fathersEducation,
@@ -654,6 +661,7 @@ async function createStudent(data: ModifyStudentData) {
         sports: data.sports,
         phoneNumber: data.phoneNumber,
         mpesaNumber: data.mpesaNumber,
+        assignedGroupId: data.groupId,
       },
     });
 
@@ -664,9 +672,8 @@ async function createStudent(data: ModifyStudentData) {
   }
 }
 
-function generateStudentVisibleID(groupName: string) {
-  const suffix = Math.floor(Math.random() * 90000) + 10000;
-  return `${groupName}_${suffix}`;
+function generateStudentVisibleID(groupName: string, lastNumber: number) {
+  return `${groupName}_${lastNumber}`;
 }
 
 export interface OccurrenceData {

@@ -69,7 +69,6 @@ const FormSchema = z.object({
   home: z.string().optional(),
   siblings: z.string().optional(),
   religion: z.string().optional(),
-  groupName: z.string(),
   survivingParents: z.string().optional(),
   parentsDead: z.string().optional(),
   fathersEducation: z.string().optional(),
@@ -91,6 +90,7 @@ const FormSchema = z.object({
 
 export type ModifyStudentData = z.infer<typeof FormSchema> & {
   visibleId?: string;
+  groupId?: string;
 };
 
 export function StudentModifyDialog({
@@ -100,6 +100,7 @@ export function StudentModifyDialog({
   schoolName,
   fellowName,
   children,
+  group,
 }: {
   mode: "create" | "edit";
   student?: Prisma.StudentGetPayload<{
@@ -119,6 +120,10 @@ export function StudentModifyDialog({
   schoolName: string;
   fellowName: string;
   children: React.ReactNode;
+  group?: {
+    groupId: string;
+    groupName: string;
+  };
 }) {
   const router = useRouter();
 
@@ -145,7 +150,6 @@ export function StudentModifyDialog({
       home: student?.home ?? undefined,
       siblings: student?.siblings ?? undefined,
       religion: student?.religion ?? undefined,
-      groupName: student?.groupName ?? undefined,
       survivingParents: student?.survivingParents ?? undefined,
       parentsDead: student?.parentsDead ?? undefined,
       fathersEducation: student?.fathersEducation ?? undefined,
@@ -165,6 +169,7 @@ export function StudentModifyDialog({
       ...data,
       mode,
       visibleId: student?.visibleId,
+      groupId: group?.groupId,
     });
     if (response && (response as any).error) {
       console.error((response as any).error);
@@ -545,24 +550,6 @@ export function StudentModifyDialog({
                         id="religion"
                         className="mt-1.5 resize-none bg-card"
                         placeholder="N/A"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="groupName"
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="groupName">Group name</Label>
-                      <Input
-                        id="groupName"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="55_E45"
                         {...field}
                       />
                     </div>
