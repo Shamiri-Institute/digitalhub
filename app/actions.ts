@@ -616,6 +616,38 @@ async function createStudent(data: ModifyStudentData) {
     const group = await db.interventionGroup.findUnique({
       where: { id: data.groupId },
     });
+
+    const duplicateStudent = await db.student.findFirst({
+      where: {
+        schoolId: school.id,
+        admissionNumber: data.admissionNumber,
+      },
+    });
+    if (duplicateStudent) {
+      if (!data.isTransfer) {
+        return {
+          error: "Duplicate admission number. Mark as transfer if applicable.",
+        };
+      }
+
+      if (!data.groupId) {
+        return {
+          error: "Fellow is not leader of a group to transfer student to.",
+        };
+      }
+
+      const student = await db.student.update({
+        where: {
+          id: duplicateStudent.id,
+        },
+        data: {
+          assignedGroupId: data.groupId,
+        },
+      });
+
+      return { student };
+    }
+
     const studentCount = await db.student.count();
     const studentVisibleId = generateStudentVisibleID(
       group?.groupName ?? "NA",
