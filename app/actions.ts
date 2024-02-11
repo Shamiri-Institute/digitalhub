@@ -573,39 +573,31 @@ export async function modifyStudent(
   }
 }
 
-async function updateStudent(data: ModifyStudentData) {
-  const student = await db.student.update({
-    where: { visibleId: data.visibleId },
-    data: {
-      studentName: data.studentName,
-      yearOfImplementation: data.yearOfImplementation,
-      admissionNumber: data.admissionNumber,
-      age: data.age ? parseInt(data.age) : null,
-      gender: data.gender,
-      form: parseInt(data.form),
-      stream: data.stream,
-      condition: data.condition,
-      intervention: data.intervention,
-      tribe: data.tribe,
-      county: data.county,
-      financialStatus: data.financialStatus,
-      home: data.home,
-      siblings: data.siblings,
-      religion: data.religion,
-      survivingParents: data.survivingParents,
-      parentsDead: data.parentsDead,
-      fathersEducation: data.fathersEducation,
-      mothersEducation: data.mothersEducation,
-      coCurricular: data.coCurricular,
-      sports: data.sports,
-      phoneNumber: data.phoneNumber,
-      mpesaNumber: data.mpesaNumber,
-    },
-  });
+async function updateStudent(
+  data: ModifyStudentData,
+): Promise<{ error?: string; student?: Prisma.StudentGetPayload<{}> }> {
+  try {
+    const student = await db.student.update({
+      where: { visibleId: data.visibleId },
+      data: {
+        studentName: data.studentName,
+        yearOfImplementation: data.yearOfImplementation,
+        admissionNumber: data.admissionNumber,
+        age: data.age ? parseInt(data.age) : null,
+        gender: data.gender,
+        form: parseInt(data.form),
+        stream: data.stream,
+        county: data.county,
+        phoneNumber: data.phoneNumber,
+      },
+    });
 
-  return { student };
+    return { student };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong during student update" };
+  }
 }
-
 async function createStudent(data: ModifyStudentData) {
   try {
     const fellow = await db.fellow.findUniqueOrThrow({
@@ -645,22 +637,8 @@ async function createStudent(data: ModifyStudentData) {
         gender: data.gender,
         form: parseInt(data.form),
         stream: data.stream,
-        condition: data.condition,
-        intervention: data.intervention,
-        tribe: data.tribe,
         county: data.county,
-        financialStatus: data.financialStatus,
-        home: data.home,
-        siblings: data.siblings,
-        religion: data.religion,
-        survivingParents: data.survivingParents,
-        parentsDead: data.parentsDead,
-        fathersEducation: data.fathersEducation,
-        mothersEducation: data.mothersEducation,
-        coCurricular: data.coCurricular,
-        sports: data.sports,
         phoneNumber: data.phoneNumber,
-        mpesaNumber: data.mpesaNumber,
         assignedGroupId: data.groupId,
       },
     });
@@ -668,7 +646,7 @@ async function createStudent(data: ModifyStudentData) {
     return { student };
   } catch (error: unknown) {
     console.error(error);
-    return { error: "Something went wrong" };
+    return { error: "Something went wrong during student creation" };
   }
 }
 
