@@ -95,6 +95,7 @@ export function StudentAttendanceDot({
     dotColor,
     session.label,
     status,
+    student.school?.visibleId,
     student.studentName,
     student.visibleId,
     toast,
