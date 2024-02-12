@@ -108,6 +108,41 @@ export async function calculatePayouts({
 
   const { payouts } = processAttendances(eligibleAttendances);
 
+  const reconciliations = await db.payoutReconciliation.findMany({
+    where: {
+      fellowId: {
+        in: eligibleAttendances.map((attendance) => attendance.fellowId),
+      },
+      executedAt: null,
+    },
+    orderBy: {
+      fellowId: "asc",
+    },
+    include: {
+      fellow: true,
+    },
+  });
+
+  const reconciliationsFulfilled: { id: string }[] = [];
+  for (const reconciliation of reconciliations) {
+    const payout = payouts[reconciliation.fellow.visibleId];
+    if (payout) {
+      payout.kesPayoutAmount += reconciliation.amount;
+      if (payout.notes.length !== 0) {
+        payout.notes += "/";
+      }
+      payout.notes +=
+        reconciliation.description ??
+        `Adjustment of ${reconciliation.amount} ${reconciliation.currency} made.`;
+
+      reconciliationsFulfilled.push({ id: reconciliation.id.toString() });
+    } else {
+      console.warn(
+        `Reconciliation for fellow ${reconciliation.fellow.visibleId} not found in payouts`,
+      );
+    }
+  }
+
   const payoutRows = Object.values(payouts);
 
   const payoutsWithoutMpesaNumber = payoutRows.filter(
@@ -116,6 +151,7 @@ export async function calculatePayouts({
   const payoutsWithoutMpesaName = payoutRows.filter(
     (payout) => payout.mpesaName?.length === 0,
   ).length;
+
   const totalPayoutAmount = payoutRows.reduce(
     (acc, payout) => acc + payout.kesPayoutAmount,
     0,
@@ -138,6 +174,7 @@ export async function calculatePayouts({
       id: attendance.id.toString(),
     })),
     delayedPaymentsFulfilled,
+    reconciliationsFulfilled,
     totalPayoutAmount,
     totalPayoutAmountWithMpesaInfo,
   };
