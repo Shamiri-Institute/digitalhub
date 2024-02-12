@@ -42,6 +42,7 @@ export const processAttendances = (
         preSessionCount: 0,
         mainSessionCount: 0,
         sessionDetails: "",
+        notes: "",
       };
     }
 

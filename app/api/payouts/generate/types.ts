@@ -11,6 +11,7 @@ export type PayoutDetail = {
   preSessionCount: number;
   mainSessionCount: number;
   sessionDetails: string;
+  notes: string;
 };
 
 export type PayoutReport = {
@@ -27,6 +28,9 @@ export type PayoutReport = {
     id: string;
   }[];
   delayedPaymentsFulfilled: {
+    id: string;
+  }[];
+  reconciliationsFulfilled: {
     id: string;
   }[];
   totalPayoutAmount: number;
