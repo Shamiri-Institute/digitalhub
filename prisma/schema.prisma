@@ -479,6 +479,7 @@ model Fellow {
   weeklyFellowRatings     WeeklyFellowRatings[]
   groups                  InterventionGroup[]
   delayedPaymentRequests  DelayedPaymentRequest[]
+  payoutReconciliations   PayoutReconciliation[]
 
   @@map("fellows")
 }
@@ -995,6 +996,22 @@ model DelayedPaymentRequest {
   fellowAttendance      FellowAttendance    @relation(fields: [fellowAttendanceId], references: [id])
 
   @@map("delayed_payment_requests")
+}
+
+/// This model is track per-fellow adjustments to payouts e.g. due to an overpayment in a previous payout period
+model PayoutReconciliation {
+  id             Int       @id @default(autoincrement())
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  executedAt     DateTime? @map("executed_at") @db.Timestamptz()
+  amount         Int
+  currency       String    @default("KES") @db.VarChar(3) // ISO 4217 code
+  description    String?
+  fellowId       String
+  fellow         Fellow    @relation(fields: [fellowId], references: [id])
+  relatedDetails Json? // JSONB column for storing various optional associations
+
+  @@map("payout_reconciliations")
 }
 
 // this model will force us to actually think about super users if we want to track who created a record
