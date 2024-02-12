@@ -1007,9 +1007,9 @@ model PayoutReconciliation {
   amount         Int
   currency       String    @default("KES") @db.VarChar(3) // ISO 4217 code
   description    String?
-  fellowId       String
+  fellowId       String    @map("fellow_id")
   fellow         Fellow    @relation(fields: [fellowId], references: [id])
-  relatedDetails Json? // JSONB column for storing various optional associations
+  relatedDetails Json?     @map("related_details") // JSONB column for storing various optional associations
 
   @@map("payout_reconciliations")
 }
