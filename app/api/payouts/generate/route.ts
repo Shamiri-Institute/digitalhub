@@ -175,6 +175,9 @@ export async function GET(request: NextRequest) {
     await markRepaymentRequestFulfilled(
       repaymentsPayoutReport.repaymentRequestsFulfilled,
     );
+    await markPayoutReconciliationsExecuted(
+      totalPayoutReport.reconciliationsFulfilled,
+    );
 
     return NextResponse.json({
       message: `Tabulated ${totalPayoutReport.payoutDetails.length} payouts`,
@@ -276,5 +279,17 @@ async function markRepaymentRequestFulfilled(
   await db.repaymentRequest.updateMany({
     where: { id: { in: ids } },
     data: { fulfilledAt: new Date() },
+  });
+}
+
+async function markPayoutReconciliationsExecuted(
+  reconciliationsExecuted: Processed[],
+): Promise<void> {
+  const ids = reconciliationsExecuted
+    .map((r) => parseInt(r.id))
+    .filter((n) => !isNaN(n));
+  await db.payoutReconciliation.updateMany({
+    where: { id: { in: ids } },
+    data: { executedAt: new Date() },
   });
 }
