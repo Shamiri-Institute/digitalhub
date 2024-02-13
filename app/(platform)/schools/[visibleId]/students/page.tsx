@@ -286,7 +286,8 @@ function StudentCard({
                   </StudentModifyDialog>
                 </div>
 
-                <div>Sessions attended</div>
+                {/* <div>Sessions attended</div> */}
+
                 <ComplaintDialog
                   fellowId={fellow.visibleId}
                   schoolId={school.visibleId}
