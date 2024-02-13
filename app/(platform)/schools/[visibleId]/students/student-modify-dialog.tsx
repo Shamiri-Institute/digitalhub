@@ -227,7 +227,7 @@ export function StudentModifyDialog({
                           onChange={field.onChange}
                         />
                         <Label htmlFor="isTransfer">
-                          Check if this is a student transfer
+                          Mark if this is a student transfer
                         </Label>
                       </div>
                     )}
