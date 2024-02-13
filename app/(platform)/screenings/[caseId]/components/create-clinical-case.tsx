@@ -127,10 +127,8 @@ export default function CreateClinicalCaseDialogue({
     );
 
     if (selectedSchool?.students) {
-      console.log(selectedSchool?.students);
-      console.log("selected");
+    
       setStudents(() => selectedSchool?.students);
-      console.log({ students }, "adfd");
     }
     setSelectedInterventionGroup(selectedSchool?.interventionGroups);
 
