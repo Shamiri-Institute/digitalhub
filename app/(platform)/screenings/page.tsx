@@ -47,6 +47,11 @@ export default async function Page() {
     },
     include: {
       students: true,
+      interventionGroups: {
+        include: {
+          students: true,
+        },
+      },
       assignedSupervisor: {
         include: {
           fellows: {

@@ -14,6 +14,11 @@ export function CreateClinicalCases({
   schools: Prisma.SchoolGetPayload<{
     include: {
       students: true;
+      interventionGroups: {
+        include: {
+          students: true;
+        };
+      };
       assignedSupervisor: {
         include: {
           fellows: {
