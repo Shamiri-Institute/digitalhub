@@ -127,7 +127,6 @@ export default function CreateClinicalCaseDialogue({
     );
 
     if (selectedSchool?.students) {
-    
       setStudents(() => selectedSchool?.students);
     }
     setSelectedInterventionGroup(selectedSchool?.interventionGroups);
