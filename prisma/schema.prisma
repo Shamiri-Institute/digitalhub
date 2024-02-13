@@ -87,7 +87,6 @@ model Implementer {
   supervisors         Supervisor[]
   students            Student[]
   studentOutcomes     StudentOutcome[]
-  projects            Project[]
   projectImplementers ProjectImplementer[]
   schoolImplementers  SchoolImplementer[]
 
@@ -197,6 +196,7 @@ model Student {
   school               School?                 @relation(fields: [schoolId], references: [id])
   yearOfImplementation Int?                    @map("year_of_implementation") // might not be needed any more
   admissionNumber      String?                 @map("admission_number") @db.VarChar(255)
+  // We should move away from this. SI is collecting age at year of implementation
   age                  Int?
   gender               String?                 @db.VarChar(10)
   form                 Int?
@@ -479,6 +479,7 @@ model Fellow {
   weeklyFellowRatings     WeeklyFellowRatings[]
   groups                  InterventionGroup[]
   delayedPaymentRequests  DelayedPaymentRequest[]
+  payoutReconciliations   PayoutReconciliation[]
 
   @@map("fellows")
 }
@@ -490,6 +491,7 @@ model FellowAttendance {
   visibleId              String                  @unique @map("visible_id") @db.VarChar(100)
   createdAt              DateTime                @default(now()) @map("created_at")
   updatedAt              DateTime                @updatedAt @map("updated_at")
+  processedAt            DateTime?               @map("processed_at")
   projectId              String?                 @map("project_id")
   project                Project?                @relation(fields: [projectId], references: [id])
   fellowId               String                  @map("fellow_id") @db.VarChar(255)
@@ -563,6 +565,7 @@ model Supervisor {
   @@map("supervisors")
 }
 
+/// Schools should not be duped across projects to ensure accurate reach tabulation
 model School {
   id                   String                @id @db.VarChar(255)
   createdAt            DateTime              @default(now()) @map("created_at")
@@ -694,6 +697,7 @@ model InterventionSession {
   // TODO: consider adding column for sessionIndex Int, while sessionType tracks, intervention, dataCollation, followUp
   schoolId               String                      @map("school_id") @db.VarChar(255)
   school                 School                      @relation(fields: [schoolId], references: [id])
+  // If session has occurred. Should be set by assigned supervisor of the school before attendance can be marked
   occurred               Boolean
   yearOfImplementation   Int                         @map("year_of_implementation") // TODO: might not be needed anymore
   projectId              String?                     @map("project_id") @db.VarChar(100)
@@ -787,6 +791,8 @@ model RepaymentRequest {
   id                 String           @id @default(cuid())
   createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
+  fulfilledAt        DateTime?        @map("fulfilled_at") @db.Timestamptz()
+  rejectedAt         DateTime?        @map("rejected_at") @db.Timestamptz()
   supervisorId       String           @map("supervisor_id") @db.VarChar(255)
   supervisor         Supervisor       @relation(fields: [supervisorId], references: [id])
   fellowId           String           @map("fellow_id") @db.VarChar(255)
@@ -794,7 +800,7 @@ model RepaymentRequest {
   hubId              String           @map("hub_id") @db.VarChar(255)
   hub                Hub              @relation(fields: [hubId], references: [id])
   fellowAttendanceId Int              @map("fellow_attendance_id")
-  fellowAttendance   FellowAttendance @relation(fields: [fellowAttendanceId], references: [id]) // TODO: request repayment UI, we need to show an error toast if fellow didn't attendance session in second dropdown
+  fellowAttendance   FellowAttendance @relation(fields: [fellowAttendanceId], references: [id])
 
   @@map("repayment_requests")
 }
@@ -978,6 +984,8 @@ model DelayedPaymentRequest {
   id                    String              @id @default(cuid())
   createdAt             DateTime            @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt             DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
+  fulfilledAt           DateTime?           @map("fulfilled_at") @db.Timestamptz()
+  rejectedAt            DateTime?           @map("rejected_at") @db.Timestamptz()
   fellowId              String              @map("fellow_id") @db.VarChar(255)
   fellow                Fellow              @relation(fields: [fellowId], references: [id])
   supervisorId          String              @map("supervisor_id") @db.VarChar(255)
@@ -990,6 +998,22 @@ model DelayedPaymentRequest {
   @@map("delayed_payment_requests")
 }
 
+/// This model is track per-fellow adjustments to payouts e.g. due to an overpayment in a previous payout period
+model PayoutReconciliation {
+  id             Int       @id @default(autoincrement())
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  executedAt     DateTime? @map("executed_at") @db.Timestamptz()
+  amount         Int
+  currency       String    @default("KES") @db.VarChar(3) // ISO 4217 code
+  description    String?
+  fellowId       String    @map("fellow_id")
+  fellow         Fellow    @relation(fields: [fellowId], references: [id])
+  relatedDetails Json?     @map("related_details") // JSONB column for storing various optional associations
+
+  @@map("payout_reconciliations")
+}
+
 // this model will force us to actually think about super users if we want to track who created a record
 model Project {
   id                   String                @id @default(cuid())
@@ -998,7 +1022,6 @@ model Project {
   visibleId            String                @unique @map("visible_id") @db.VarChar(255)
   name                 String                @db.VarChar(100)
   projectLead          String?               @map("project_lead") @db.VarChar(255) // consider if this is necessary
-  implementers         Implementer[] //prisma implicit join to create an association table
   funder               String?               @db.VarChar(255) // additional info required on what we need to do with this field
   budget               Int?
   phase                Int?
@@ -1006,7 +1029,7 @@ model Project {
   estimatedEndDate     DateTime?             @map("estimated_end_date") @db.Date
   actualStartDate      DateTime?             @map("actual_start_date") @db.Date
   actualEndDate        DateTime?             @map("actual_end_date") @db.Date
-  hub                  Hub[]
+  hubs                 Hub[]
   studentAttendances   StudentAttendance[]
   fellowAttendances    FellowAttendance[]
   interventionSessions InterventionSession[]
@@ -1018,9 +1041,9 @@ model Project {
 
 // Join table between projects and implementers
 model ProjectImplementer {
-  projectId     String
+  projectId     String      @map("project_id") @db.VarChar(255)
   project       Project     @relation(fields: [projectId], references: [id])
-  implementerId String
+  implementerId String      @map("implementer_id") @db.VarChar(255)
   implementer   Implementer @relation(fields: [implementerId], references: [id])
 
   @@id([projectId, implementerId])

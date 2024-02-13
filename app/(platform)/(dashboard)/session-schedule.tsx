@@ -31,13 +31,16 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
   const anchorWeekStart = startOfWeek(anchorDate);
   const anchorWeekEnd = endOfWeek(anchorDate);
 
+  const sessionsOnAnchorDate = sortedSessions.filter((session) =>
+    isSameDay(session.date, anchorDate),
+  );
   const calendarBuffer = 1;
-  const firstSessionStartDate = sortedSessions[0]?.date!;
+  const firstSessionStartDate = sessionsOnAnchorDate[0]?.date!;
   const firstSessionStartHour = getHours(firstSessionStartDate);
   const startHourMinusBuffer = new Date(anchorDate);
   startHourMinusBuffer.setHours(firstSessionStartHour - calendarBuffer);
   const lastSessionEndDate = new Date(
-    sortedSessions[sortedSessions.length - 1]?.date!,
+    sessionsOnAnchorDate[sessionsOnAnchorDate.length - 1]?.date!,
   );
   const lastSessionEndHour = getHours(lastSessionEndDate);
   const endHourPlusBuffer = new Date(anchorDate);
@@ -111,7 +114,6 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
 
   const calendarHourHeight = 80;
   const calendarHourGap = 8;
-  const calendarHourWidth = 240;
 
   return (
     <div className="max-w-4xl rounded-md bg-white shadow-md">
@@ -194,7 +196,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
                 }px`,
               }}
             >
-              {sessions.map((session, idx) => {
+              {sessions.map((session) => {
                 return (
                   <Link
                     key={session.title}
@@ -231,6 +233,14 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
             <div className="relative flex-1 border-t border-gray-300/50"></div>
           </div>
         ))}
+        {!scheduleHoursRange.length && (
+          <div
+            className="flex justify-center"
+            style={{ height: 40, gap: calendarHourGap }}
+          >
+            <span className="text-center text-gray-400">No sessions found</span>
+          </div>
+        )}
       </div>
     </div>
   );

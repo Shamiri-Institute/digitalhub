@@ -179,12 +179,6 @@ export async function markFellowAttendance(
   schoolVisibleId: string,
 ) {
   try {
-    console.debug("Marking fellow attendance action", {
-      status,
-      label,
-      fellowVisibleId,
-      schoolVisibleId,
-    });
     const fellow = await db.fellow.findUniqueOrThrow({
       where: { visibleId: fellowVisibleId },
     });
@@ -198,6 +192,7 @@ export async function markFellowAttendance(
       include: {
         interventionSessions: true,
         interventionGroups: true,
+        assignedSupervisor: true,
       },
     });
 
@@ -207,6 +202,11 @@ export async function markFellowAttendance(
     );
     if (!interventionSession) {
       throw new Error("Intervention session not found");
+    }
+    if (interventionSession.occurred !== true) {
+      return {
+        error: `Session ${label} is marked as not occurred. Please contact the assigned supervisor for ${school.schoolName} (${school.assignedSupervisor?.supervisorName}) to mark the session as occurred before marking attendance.`,
+      };
     }
 
     const interventionGroup =
@@ -373,58 +373,84 @@ export async function markStudentAttendance(
   status: AttendanceStatus,
   label: SessionLabel,
   studentVisibleId: string,
+  schoolVisibleId: string,
 ) {
   try {
-    const sessionNumber = sessionLabelToNumber(label);
-
     const attendanceBoolean = attendanceStatusToBoolean(status);
-
-    switch (sessionNumber) {
-      case 0:
-        await db.student.update({
-          where: { visibleId: studentVisibleId },
-          data: {
-            attendanceSession0: attendanceBoolean,
-          },
-        });
-        break;
-      case 1:
-        await db.student.update({
-          where: { visibleId: studentVisibleId },
-          data: {
-            attendanceSession1: attendanceBoolean,
-          },
-        });
-        break;
-      case 2:
-        await db.student.update({
-          where: { visibleId: studentVisibleId },
-          data: {
-            attendanceSession2: attendanceBoolean,
-          },
-        });
-        break;
-      case 3:
-        await db.student.update({
-          where: { visibleId: studentVisibleId },
-          data: {
-            attendanceSession3: attendanceBoolean,
-          },
-        });
-        break;
-      case 4:
-        await db.student.update({
-          where: { visibleId: studentVisibleId },
-          data: {
-            attendanceSession3: attendanceBoolean,
-          },
-        });
-        break;
-    }
 
     const student = await db.student.findUniqueOrThrow({
       where: { visibleId: studentVisibleId },
+      include: {
+        assignedGroup: true,
+      },
     });
+    if (!student.assignedGroup) {
+      throw new Error(`Student (${student.visibleId}) has no assigned group`);
+    }
+
+    const school = await db.school.findUniqueOrThrow({
+      where: { visibleId: schoolVisibleId },
+      include: {
+        interventionSessions: true,
+        interventionGroups: true,
+        assignedSupervisor: true,
+      },
+    });
+
+    const sessionNumber = sessionLabelToNumber(label);
+    const interventionSession = school.interventionSessions.find(
+      (session) => session.sessionType === `s${sessionNumber}`,
+    );
+    if (!interventionSession) {
+      throw new Error("Intervention session not found");
+    }
+    if (interventionSession.occurred !== true) {
+      return {
+        error: `Session ${label} is marked as not occurred. Please contact the assigned supervisor for ${school.schoolName} (${school.assignedSupervisor?.supervisorName}) to mark the session as occurred before marking attendance.`,
+      };
+    }
+
+    if (student.assignedGroup.leaderId === null) {
+      return {
+        error: `Group ${student.assignedGroup.groupName} has no leader. Please contact hub coordinator to assign a group leader so we can track this.`,
+      };
+    }
+
+    let attendance = await db.studentAttendance.findFirst({
+      where: {
+        studentId: student.id,
+        schoolId: school.id,
+        fellowId: student.assignedGroup.leaderId,
+      },
+    });
+    if (attendance) {
+      attendance = await db.studentAttendance.update({
+        where: {
+          id: attendance.id,
+        },
+        data: {
+          attended: attendanceBoolean,
+        },
+      });
+    } else {
+      attendance = await db.studentAttendance.create({
+        data: {
+          projectId: CURRENT_PROJECT_ID,
+          studentId: student.id,
+          schoolId: school.id,
+          fellowId: student.assignedGroup.leaderId,
+          sessionId: interventionSession.id,
+          groupId: student.assignedGroup.id,
+          attended: attendanceBoolean,
+        },
+      });
+    }
+
+    await legacyUpdateStudentAttendance(
+      sessionNumber,
+      studentVisibleId,
+      attendanceBoolean,
+    );
 
     return { student };
   } catch (error: unknown) {
@@ -438,6 +464,56 @@ export async function markStudentAttendance(
     return {
       error: "Something went wrong",
     };
+  }
+}
+
+// This is the legacy way of updating student attendance and will be deprecated
+async function legacyUpdateStudentAttendance(
+  sessionNumber: number,
+  studentVisibleId: string,
+  attendanceBoolean: boolean | null,
+) {
+  switch (sessionNumber) {
+    case 0:
+      await db.student.update({
+        where: { visibleId: studentVisibleId },
+        data: {
+          attendanceSession0: attendanceBoolean,
+        },
+      });
+      break;
+    case 1:
+      await db.student.update({
+        where: { visibleId: studentVisibleId },
+        data: {
+          attendanceSession1: attendanceBoolean,
+        },
+      });
+      break;
+    case 2:
+      await db.student.update({
+        where: { visibleId: studentVisibleId },
+        data: {
+          attendanceSession2: attendanceBoolean,
+        },
+      });
+      break;
+    case 3:
+      await db.student.update({
+        where: { visibleId: studentVisibleId },
+        data: {
+          attendanceSession3: attendanceBoolean,
+        },
+      });
+      break;
+    case 4:
+      await db.student.update({
+        where: { visibleId: studentVisibleId },
+        data: {
+          attendanceSession3: attendanceBoolean,
+        },
+      });
+      break;
   }
 }
 
@@ -497,40 +573,31 @@ export async function modifyStudent(
   }
 }
 
-async function updateStudent(data: ModifyStudentData) {
-  const student = await db.student.update({
-    where: { visibleId: data.visibleId },
-    data: {
-      studentName: data.studentName,
-      yearOfImplementation: data.yearOfImplementation,
-      admissionNumber: data.admissionNumber,
-      age: data.age ? parseInt(data.age) : null,
-      gender: data.gender,
-      form: parseInt(data.form),
-      stream: data.stream,
-      condition: data.condition,
-      intervention: data.intervention,
-      tribe: data.tribe,
-      county: data.county,
-      financialStatus: data.financialStatus,
-      home: data.home,
-      siblings: data.siblings,
-      religion: data.religion,
-      groupName: data.groupName,
-      survivingParents: data.survivingParents,
-      parentsDead: data.parentsDead,
-      fathersEducation: data.fathersEducation,
-      mothersEducation: data.mothersEducation,
-      coCurricular: data.coCurricular,
-      sports: data.sports,
-      phoneNumber: data.phoneNumber,
-      mpesaNumber: data.mpesaNumber,
-    },
-  });
+async function updateStudent(
+  data: ModifyStudentData,
+): Promise<{ error: string } | { student: Prisma.StudentGetPayload<{}> }> {
+  try {
+    const student = await db.student.update({
+      where: { visibleId: data.visibleId },
+      data: {
+        studentName: data.studentName,
+        yearOfImplementation: data.yearOfImplementation,
+        admissionNumber: data.admissionNumber,
+        age: data.age ? parseInt(data.age) : null,
+        gender: data.gender,
+        form: parseInt(data.form),
+        stream: data.stream,
+        county: data.county,
+        phoneNumber: data.phoneNumber,
+      },
+    });
 
-  return { student };
+    return { student };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong during student update" };
+  }
 }
-
 async function createStudent(data: ModifyStudentData) {
   try {
     const fellow = await db.fellow.findUniqueOrThrow({
@@ -546,11 +613,73 @@ async function createStudent(data: ModifyStudentData) {
       where: { visibleId: data.schoolVisibleId },
     });
 
+    const group = await db.interventionGroup.findUnique({
+      where: { id: data.groupId ?? "" },
+    });
+
+    const duplicateStudent = await db.student.findFirst({
+      where: {
+        schoolId: school.id,
+        admissionNumber: data.admissionNumber,
+      },
+    });
+    if (duplicateStudent) {
+      if (!data.isTransfer) {
+        return {
+          error: "Duplicate admission number. Mark as transfer if applicable.",
+        };
+      }
+
+      if (!data.groupId) {
+        return {
+          error: "Fellow is not leader of a group to transfer student to.",
+        };
+      }
+
+      const newGroup = await db.interventionGroup.findUnique({
+        where: { id: data.groupId },
+      });
+      if (!newGroup) {
+        return {
+          error: "Group not found",
+        };
+      }
+
+      if (!newGroup.leaderId) {
+        return {
+          error: `New group (${newGroup.groupName}) does not have a leader`,
+        };
+      }
+
+      const student = await db.student.update({
+        where: {
+          id: duplicateStudent.id,
+        },
+        data: {
+          fellowId: newGroup.leaderId,
+          assignedGroupId: newGroup.id,
+        },
+      });
+
+      return { student };
+    } else if (data.isTransfer) {
+      return {
+        error:
+          "Could not find student with the same admission number to transfer",
+      };
+    }
+
+    const studentCount = await db.student.count();
+    const studentVisibleId = generateStudentVisibleID(
+      group?.groupName ?? "NA",
+      studentCount,
+    );
+
     const student = await db.student.create({
       data: {
         id: objectId("stu"),
         studentName: data.studentName,
-        visibleId: generateStudentVisibleID(data.groupName),
+        visibleId: studentVisibleId,
         fellowId: fellow.id,
         supervisorId: supervisor.id,
         implementerId: implementer.id,
@@ -561,36 +690,21 @@ async function createStudent(data: ModifyStudentData) {
         gender: data.gender,
         form: parseInt(data.form),
         stream: data.stream,
-        condition: data.condition,
-        intervention: data.intervention,
-        tribe: data.tribe,
         county: data.county,
-        financialStatus: data.financialStatus,
-        home: data.home,
-        siblings: data.siblings,
-        religion: data.religion,
-        groupName: data.groupName,
-        survivingParents: data.survivingParents,
-        parentsDead: data.parentsDead,
-        fathersEducation: data.fathersEducation,
-        mothersEducation: data.mothersEducation,
-        coCurricular: data.coCurricular,
-        sports: data.sports,
         phoneNumber: data.phoneNumber,
-        mpesaNumber: data.mpesaNumber,
+        assignedGroupId: data.groupId,
       },
     });
 
     return { student };
   } catch (error: unknown) {
     console.error(error);
-    return { error: "Something went wrong" };
+    return { error: "Something went wrong during student creation" };
   }
 }
 
-function generateStudentVisibleID(groupName: string) {
-  const suffix = Math.floor(Math.random() * 90000) + 10000;
-  return `${groupName}_${suffix}`;
+function generateStudentVisibleID(groupName: string, lastNumber: number) {
+  return `${groupName}_${lastNumber}`;
 }
 
 export interface OccurrenceData {

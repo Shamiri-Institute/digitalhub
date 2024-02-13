@@ -25,7 +25,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <Navigation className="hidden lg:flex" />
         </div>
       </motion.header>
-      <div className="relative mx-auto flex h-full flex-col px-4 pt-14 sm:px-6 lg:px-8">
+      <div className="relative mx-auto flex h-full flex-col px-4 pt-20 sm:px-6 lg:px-8">
         <main className="flex-auto">{children}</main>
         <Footer />
       </div>
