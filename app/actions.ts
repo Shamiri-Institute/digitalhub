@@ -369,12 +369,19 @@ function sessionLabelToNumber(label: SessionLabel): SessionNumber {
   }
 }
 
-export async function markStudentAttendance(
-  status: AttendanceStatus,
-  label: SessionLabel,
-  studentVisibleId: string,
-  schoolVisibleId: string,
-) {
+export async function markStudentAttendance({
+  status,
+  label,
+  studentVisibleId,
+  schoolVisibleId,
+  groupId,
+}: {
+  status: AttendanceStatus;
+  label: SessionLabel;
+  studentVisibleId: string;
+  schoolVisibleId: string;
+  groupId?: string;
+}) {
   try {
     const attendanceBoolean = attendanceStatusToBoolean(status);
 
@@ -421,6 +428,8 @@ export async function markStudentAttendance(
         studentId: student.id,
         schoolId: school.id,
         fellowId: student.assignedGroup.leaderId,
+        sessionId: interventionSession.id,
+        groupId: groupId,
       },
     });
     if (attendance) {

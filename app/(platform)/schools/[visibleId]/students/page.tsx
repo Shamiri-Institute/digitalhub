@@ -316,6 +316,7 @@ function StudentCard({
             key={index}
             session={session}
             student={student}
+            group={group}
           />
         ))}
       </div>

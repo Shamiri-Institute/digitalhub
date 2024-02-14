@@ -11,6 +11,7 @@ import { Prisma } from "@prisma/client";
 export function StudentAttendanceDot({
   session,
   student,
+  group,
 }: {
   session: { status: AttendanceStatus; label: SessionLabel };
   student: Prisma.StudentGetPayload<{
@@ -19,6 +20,7 @@ export function StudentAttendanceDot({
       school: true;
     };
   }>;
+  group?: { groupId: string; groupName: string };
 }) {
   const { toast } = useToast();
   const [status, setStatus] = React.useState(session.status);
@@ -41,13 +43,13 @@ export function StudentAttendanceDot({
       });
       return;
     }
-
-    const response = await markStudentAttendance(
-      nextStatus,
-      session.label,
-      student.visibleId,
-      student.school.visibleId,
-    );
+    const response = await markStudentAttendance({
+      status: nextStatus,
+      label: session.label,
+      studentVisibleId: student.visibleId,
+      schoolVisibleId: student.school.visibleId,
+      groupId: group?.groupId,
+    });
     if (response?.error) {
       toast({
         variant: "destructive",
