@@ -1,4 +1,5 @@
 "use client";
+import { TreatmentPlan } from "#/app/(platform)/screenings/[caseId]/components/treatment-plan";
 import { GenerateProgressNotes } from "#/app/(platform)/screenings/[caseId]/generate_progress_notes";
 import { CurrentCase } from "#/app/(platform)/screenings/screen";
 import { Icons } from "#/components/icons";
@@ -44,13 +45,13 @@ export function CaseNotePlan({
       )}
       {selected === "Treatment Plan" && (
         <div className="mt-4">
-          <TreatmentPlan />
+          <TreatmentPlan currentcase={currentcase} />
         </div>
       )}
 
       {selected === "Case Reports" && (
         <div className="mt-4">
-          <CaseReports />
+          <CaseReports currentcase={currentcase} />
         </div>
       )}
     </>
@@ -79,19 +80,7 @@ function CaseNotePlanOption({
   );
 }
 
-function TreatmentPlan() {
-  return (
-    <>
-      <Input id="csv-file" name="csv-file" type="file" accept="text/csv" />
-      <Button className="hover:bg-shamiri-brand mt-2 w-full rounded-sm bg-shamiri-blue px-3 py-2 text-white">
-        <Icons.upload className="mr-2 h-4 w-4" />
-        Upload File
-      </Button>
-    </>
-  );
-}
-
-function CaseReports() {
+function CaseReports({ currentcase }: { currentcase: CurrentCase }) {
   return (
     <>
       <Input id="csv-file" name="csv-file" type="file" accept="text/csv" />
