@@ -42,6 +42,11 @@ export async function calculatePayouts({
       delayedPaymentRequests: {
         none: {},
       },
+      fellow: {
+        NOT: {
+          droppedOut: true,
+        },
+      },
     },
     include: {
       delayedPaymentRequests: true,
@@ -63,6 +68,11 @@ export async function calculatePayouts({
       AND: {
         fulfilledAt: null,
         rejectedAt: null,
+      },
+      fellow: {
+        NOT: {
+          droppedOut: true,
+        },
       },
       ...(supervisorId && {
         supervisorId,
@@ -112,6 +122,11 @@ export async function calculatePayouts({
     where: {
       fellowId: {
         in: eligibleAttendances.map((attendance) => attendance.fellowId),
+      },
+      fellow: {
+        NOT: {
+          droppedOut: true,
+        },
       },
       executedAt: null,
     },
