@@ -218,6 +218,7 @@ export function FellowAttendanceDot({
       <DisableFutureAttendanceMarkingTooltip
         show={shouldBeDisabled}
         unscheduled={sessionItem.session === null}
+        className="flex flex-col items-center gap-1.5"
       >
         <div className="text-sm text-muted-foreground">{sessionItem.label}</div>
         <AttendanceConfirmationDialog
@@ -242,7 +243,10 @@ export function FellowAttendanceDot({
             onClick={onDotClick}
             disabled={shouldBeDisabled}
             className={cn(
-              "mx-1 h-5 w-5 rounded-full transition-all active:scale-95",
+              "mx-1 h-5 w-5 rounded-full transition-all",
+              {
+                "active:scale-95": !shouldBeDisabled,
+              },
               dotColor(status),
             )}
             data-testid="attendance-dot"
@@ -258,10 +262,12 @@ export function FellowAttendanceDot({
 function DisableFutureAttendanceMarkingTooltip({
   show,
   unscheduled,
+  className,
   children,
 }: {
   show: boolean;
   unscheduled: boolean;
+  className: string;
   children: React.ReactNode;
 }) {
   if (!show) {
@@ -269,7 +275,7 @@ function DisableFutureAttendanceMarkingTooltip({
   }
   return (
     <Tooltip>
-      <TooltipTrigger>{children}</TooltipTrigger>
+      <TooltipTrigger className={className}>{children}</TooltipTrigger>
       <TooltipContent>
         You cannot mark attendance for{" "}
         {unscheduled ? "an unscheduled" : "a future"} session
