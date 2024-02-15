@@ -30,6 +30,7 @@ import {
 import { toast } from "#/components/ui/use-toast";
 
 const FormSchema = z.object({
+  isTransfer: z.boolean().optional(),
   fellowVisibleId: z.string({
     required_error: "Please enter the fellow's visible ID.",
   }),
@@ -61,29 +62,10 @@ const FormSchema = z.object({
   }),
   form: z.string(),
   stream: z.string().optional(),
-  condition: z.string().optional(),
-  intervention: z.string().optional(),
-  tribe: z.string().optional(),
   county: z.string().optional(),
-  financialStatus: z.string().optional(),
-  home: z.string().optional(),
-  siblings: z.string().optional(),
-  religion: z.string().optional(),
-  groupName: z.string(),
-  survivingParents: z.string().optional(),
-  parentsDead: z.string().optional(),
-  fathersEducation: z.string().optional(),
-  mothersEducation: z.string().optional(),
-  coCurricular: z.string().optional(),
-  sports: z.string().optional(),
   phoneNumber: z
     .string({
       required_error: "Please enter the student's phone number.",
-    })
-    .optional(),
-  mpesaNumber: z
-    .string({
-      required_error: "Please enter the student's MPESA number.",
     })
     .optional(),
   dropOutReason: z.string().optional(),
@@ -91,6 +73,7 @@ const FormSchema = z.object({
 
 export type ModifyStudentData = z.infer<typeof FormSchema> & {
   visibleId?: string;
+  groupId?: string;
 };
 
 export function StudentModifyDialog({
@@ -100,6 +83,7 @@ export function StudentModifyDialog({
   schoolName,
   fellowName,
   children,
+  group,
 }: {
   mode: "create" | "edit";
   student?: Prisma.StudentGetPayload<{
@@ -119,12 +103,17 @@ export function StudentModifyDialog({
   schoolName: string;
   fellowName: string;
   children: React.ReactNode;
+  group?: {
+    groupId: string;
+    groupName: string;
+  };
 }) {
   const router = useRouter();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
+      isTransfer: false,
       fellowVisibleId: info.fellowVisibleId,
       supervisorVisibleId: info.supervisorVisibleId,
       implementerVisibleId: info.implementerVisibleId,
@@ -137,23 +126,8 @@ export function StudentModifyDialog({
       gender: student?.gender ?? undefined,
       form: student?.form?.toString() ?? undefined,
       stream: student?.stream ?? undefined,
-      condition: student?.condition ?? undefined,
-      intervention: student?.intervention ?? undefined,
-      tribe: student?.tribe ?? undefined,
       county: student?.county ?? undefined,
-      financialStatus: student?.financialStatus ?? undefined,
-      home: student?.home ?? undefined,
-      siblings: student?.siblings ?? undefined,
-      religion: student?.religion ?? undefined,
-      groupName: student?.groupName ?? undefined,
-      survivingParents: student?.survivingParents ?? undefined,
-      parentsDead: student?.parentsDead ?? undefined,
-      fathersEducation: student?.fathersEducation ?? undefined,
-      mothersEducation: student?.mothersEducation ?? undefined,
-      coCurricular: student?.coCurricular ?? undefined,
-      sports: student?.sports ?? undefined,
       phoneNumber: student?.phoneNumber ?? undefined,
-      mpesaNumber: student?.mpesaNumber ?? undefined,
       dropOutReason: student?.dropOutReason ?? undefined,
     },
   });
@@ -165,6 +139,7 @@ export function StudentModifyDialog({
       ...data,
       mode,
       visibleId: student?.visibleId,
+      groupId: group?.groupId,
     });
     if (response && (response as any).error) {
       console.error((response as any).error);
@@ -221,7 +196,7 @@ export function StudentModifyDialog({
           {mode === "create" && (
             <SheetDescription>
               This student will be assigned to {fellowName}&apos;s group at{" "}
-              {schoolName}.
+              {schoolName}: {group?.groupName || "N/A"}
             </SheetDescription>
           )}
           {mode === "edit" && (
@@ -238,6 +213,27 @@ export function StudentModifyDialog({
             className="overflow-hidden text-ellipsis px-1"
           >
             <div className="mt-6 space-y-6">
+              {mode === "create" && (
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="isTransfer"
+                    render={({ field }) => (
+                      <div className="mt-3 flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="isTransfer"
+                          checked={field.value}
+                          onChange={field.onChange}
+                        />
+                        <Label htmlFor="isTransfer">
+                          Mark if this is a student transfer
+                        </Label>
+                      </div>
+                    )}
+                  />
+                </div>
+              )}
               <div>
                 <FormField
                   control={form.control}
@@ -404,62 +400,6 @@ export function StudentModifyDialog({
               <div>
                 <FormField
                   control={form.control}
-                  name="condition"
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="condition">Condition</Label>
-                      <Input
-                        id="condition"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="TAU"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="intervention"
-                  rules={{ required: false }}
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="intervention">Intervention</Label>
-                      <Input
-                        id="intervention"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="N/A"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="tribe"
-                  rules={{ required: false }}
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="tribe">Tribe</Label>
-                      <Input
-                        id="tribe"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="Kikuyu"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
                   name="county"
                   rules={{ required: false }}
                   render={({ field }) => (
@@ -479,244 +419,12 @@ export function StudentModifyDialog({
               <div>
                 <FormField
                   control={form.control}
-                  name="financialStatus"
-                  rules={{ required: false }}
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="financialStatus">Financial Status</Label>
-                      <Input
-                        id="financialStatus"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="N/A"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="home"
-                  rules={{ required: false }}
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="home">Home</Label>
-                      <Input
-                        id="home"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="N/A"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="siblings"
-                  rules={{ required: false }}
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="siblings">Siblings</Label>
-                      <Input
-                        id="siblings"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="N/A"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="religion"
-                  rules={{ required: false }}
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="religion">Religion</Label>
-                      <Input
-                        id="religion"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="N/A"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="groupName"
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="groupName">Group name</Label>
-                      <Input
-                        id="groupName"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="55_E45"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="survivingParents"
-                  rules={{ required: false }}
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="survivingParents">
-                        Surviving Parents
-                      </Label>
-                      <Input
-                        id="survivingParents"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="N/A"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="parentsDead"
-                  rules={{ required: false }}
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="parentsDead">Parents Dead</Label>
-                      <Input
-                        id="parentsDead"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="N/A"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="fathersEducation"
-                  rules={{ required: false }}
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="fathersEducation">
-                        Fathers Education
-                      </Label>
-                      <Input
-                        id="fathersEducation"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="N/A"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="mothersEducation"
-                  rules={{ required: false }}
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="mothersEducation">
-                        Mothers Education
-                      </Label>
-                      <Input
-                        id="mothersEducation"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="N/A"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="coCurricular"
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="coCurricular">
-                        Co-Curricular Activities
-                      </Label>
-                      <Input
-                        id="coCurricular"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="N/A"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="sports"
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="sports">Sports</Label>
-                      <Input
-                        id="sports"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="N/A"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
                   name="phoneNumber"
                   render={({ field }) => (
                     <div className="mt-3 grid w-full gap-1.5">
                       <Label htmlFor="phoneNumber">Phone Number</Label>
                       <Input
                         id="phoneNumber"
-                        className="mt-1.5 resize-none bg-card"
-                        placeholder="+254-700-000-0000"
-                        {...field}
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="mpesaNumber"
-                  render={({ field }) => (
-                    <div className="mt-3 grid w-full gap-1.5">
-                      <Label htmlFor="mpesaNumber">MPESA Number</Label>
-                      <Input
-                        id="mpesaNumber"
                         className="mt-1.5 resize-none bg-card"
                         placeholder="+254-700-000-0000"
                         {...field}

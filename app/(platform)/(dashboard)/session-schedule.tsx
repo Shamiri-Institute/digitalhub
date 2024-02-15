@@ -196,7 +196,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
                 }px`,
               }}
             >
-              {sessions.map((session, idx) => {
+              {sessions.map((session) => {
                 return (
                   <Link
                     key={session.title}

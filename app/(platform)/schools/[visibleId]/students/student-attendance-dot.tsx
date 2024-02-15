@@ -6,14 +6,21 @@ import { markStudentAttendance } from "#/app/actions";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import type { AttendanceStatus, SessionLabel } from "#/types/app";
-import type { StudentWithFellow } from "#/types/prisma";
+import { Prisma } from "@prisma/client";
 
 export function StudentAttendanceDot({
   session,
   student,
+  group,
 }: {
   session: { status: AttendanceStatus; label: SessionLabel };
-  student: StudentWithFellow;
+  student: Prisma.StudentGetPayload<{
+    include: {
+      fellow: true;
+      school: true;
+    };
+  }>;
+  group?: { groupId: string; groupName: string };
 }) {
   const { toast } = useToast();
   const [status, setStatus] = React.useState(session.status);
@@ -29,11 +36,20 @@ export function StudentAttendanceDot({
   const onDotClick = React.useCallback(async () => {
     const nextStatus = nextAttendanceStatus(status);
 
-    const response = await markStudentAttendance(
-      nextStatus,
-      session.label,
-      student.visibleId,
-    );
+    if (!student.school?.visibleId) {
+      toast({
+        variant: "destructive",
+        title: "Student is not assigned to a school",
+      });
+      return;
+    }
+    const response = await markStudentAttendance({
+      status: nextStatus,
+      label: session.label,
+      studentVisibleId: student.visibleId,
+      schoolVisibleId: student.school.visibleId,
+      groupId: group?.groupId,
+    });
     if (response?.error) {
       toast({
         variant: "destructive",
@@ -43,7 +59,6 @@ export function StudentAttendanceDot({
     }
 
     if (response) {
-      console.log({ response });
       toast({
         description: (
           <div className="flex gap-1">
@@ -82,6 +97,7 @@ export function StudentAttendanceDot({
     dotColor,
     session.label,
     status,
+    student.school?.visibleId,
     student.studentName,
     student.visibleId,
     toast,
