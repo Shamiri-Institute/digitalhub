@@ -9,8 +9,14 @@ export async function calculateRepayments(): Promise<RepaymentReport> {
         fulfilledAt: null,
         rejectedAt: null,
       },
+      fellow: {
+        NOT: {
+          droppedOut: true,
+        },
+      },
     },
     include: {
+      fellow: true,
       fellowAttendance: {
         include: {
           delayedPaymentRequests: true,
