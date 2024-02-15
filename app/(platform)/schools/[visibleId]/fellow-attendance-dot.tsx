@@ -7,6 +7,11 @@ import * as React from "react";
 import { submitDelayedPaymentRequest } from "#/app/(platform)/schools/[visibleId]/actions";
 import { AttendanceConfirmationDialog } from "#/app/(platform)/schools/[visibleId]/attendance-confirmation-dialog";
 import { markFellowAttendance } from "#/app/actions";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import type { AttendanceStatus, SessionLabel } from "#/types/app";
@@ -35,6 +40,10 @@ export function FellowAttendanceDot({
   supervisor: Prisma.SupervisorGetPayload<{}>;
   recordTime: Date;
 }) {
+  const now = new Date();
+  const sessionDate = sessionItem.session?.sessionDate;
+  const shouldBeDisabled = sessionDate ? isBefore(now, sessionDate) : true;
+
   const { toast } = useToast();
   const [status, setStatus] = React.useState(sessionItem.status);
 
@@ -203,37 +212,60 @@ export function FellowAttendanceDot({
 
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <div className="text-sm text-muted-foreground">{sessionItem.label}</div>
-      <AttendanceConfirmationDialog
-        fellow={fellow}
-        attendanceInfo={{
-          sessionStatus: nextAttendanceStatus(status),
-          sessionLabel: sessionItem.label,
-          sessionDate: sessionItem.session?.sessionDate ?? null,
-          schoolName: school.schoolName,
-        }}
-        open={dialogOpen}
-        onOpenChange={(open: boolean) => {
-          if (open && !dialogOpen) {
-            return;
-          } else {
-            setDialogOpen(open);
-          }
-        }}
-        onSubmit={onDialogSubmit}
-      >
-        <button
-          onClick={onDotClick}
-          className={cn(
-            "mx-1 h-5 w-5 rounded-full transition-all active:scale-95",
-            dotColor(status),
-          )}
-          data-testid="attendance-dot"
+      <DisableFutureAttendanceMarkingTooltip show={shouldBeDisabled}>
+        <div className="text-sm text-muted-foreground">{sessionItem.label}</div>
+        <AttendanceConfirmationDialog
+          fellow={fellow}
+          attendanceInfo={{
+            sessionStatus: nextAttendanceStatus(status),
+            sessionLabel: sessionItem.label,
+            sessionDate: sessionItem.session?.sessionDate ?? null,
+            schoolName: school.schoolName,
+          }}
+          open={dialogOpen && !shouldBeDisabled}
+          onOpenChange={(open: boolean) => {
+            if (open && !dialogOpen) {
+              return;
+            } else {
+              setDialogOpen(open);
+            }
+          }}
+          onSubmit={onDialogSubmit}
         >
-          <span className="hidden">{status}</span>
-        </button>
-      </AttendanceConfirmationDialog>
+          <button
+            onClick={onDotClick}
+            disabled={shouldBeDisabled}
+            className={cn(
+              "mx-1 h-5 w-5 rounded-full transition-all active:scale-95",
+              dotColor(status),
+            )}
+            data-testid="attendance-dot"
+          >
+            <span className="hidden">{status}</span>
+          </button>
+        </AttendanceConfirmationDialog>
+      </DisableFutureAttendanceMarkingTooltip>
     </div>
+  );
+}
+
+function DisableFutureAttendanceMarkingTooltip({
+  show,
+  children,
+}: {
+  show: boolean;
+  children: React.ReactNode;
+}) {
+  if (!show) {
+    return <>{children}</>;
+  }
+  return (
+    <Tooltip>
+      <TooltipTrigger>{children}</TooltipTrigger>
+      <TooltipContent>
+        You cannot mark attendance for a future session
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
