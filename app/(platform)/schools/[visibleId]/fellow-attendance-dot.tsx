@@ -72,7 +72,10 @@ export function FellowAttendanceDot({
             <div className="flex gap-1">
               <span
                 className={cn(
-                  "mx-1 h-5 w-5 rounded-full transition-all active:scale-90",
+                  "mx-1 h-5 w-5 rounded-full transition-all",
+                  {
+                    "active:scale-90": !shouldBeDisabled,
+                  },
                   dotColor(nextStatus),
                 )}
               ></span>
@@ -212,7 +215,10 @@ export function FellowAttendanceDot({
 
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <DisableFutureAttendanceMarkingTooltip show={shouldBeDisabled}>
+      <DisableFutureAttendanceMarkingTooltip
+        show={shouldBeDisabled}
+        unscheduled={sessionItem.session === null}
+      >
         <div className="text-sm text-muted-foreground">{sessionItem.label}</div>
         <AttendanceConfirmationDialog
           fellow={fellow}
@@ -251,9 +257,11 @@ export function FellowAttendanceDot({
 
 function DisableFutureAttendanceMarkingTooltip({
   show,
+  unscheduled,
   children,
 }: {
   show: boolean;
+  unscheduled: boolean;
   children: React.ReactNode;
 }) {
   if (!show) {
@@ -263,7 +271,8 @@ function DisableFutureAttendanceMarkingTooltip({
     <Tooltip>
       <TooltipTrigger>{children}</TooltipTrigger>
       <TooltipContent>
-        You cannot mark attendance for a future session
+        You cannot mark attendance for{" "}
+        {unscheduled ? "an unscheduled" : "a future"} session
       </TooltipContent>
     </Tooltip>
   );
