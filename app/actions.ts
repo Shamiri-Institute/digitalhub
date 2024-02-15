@@ -745,7 +745,6 @@ export async function toggleInterventionOccurrence(data: OccurrenceData) {
   let success = false;
   if (occurred) {
     if (interventionSession === null) {
-      // TODO: if they tap a downstream session (e.g. s4) and all sessions in between is unoccurrred, mark all the in between sesssion occurred
       await db.interventionSession.create({
         data: {
           id: objectId("isess"),
