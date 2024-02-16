@@ -1,7 +1,14 @@
 "use client";
 
 import { Prisma } from "@prisma/client";
-import { addDays, isBefore, setHours, setMinutes, startOfWeek } from "date-fns";
+import {
+  addDays,
+  isBefore,
+  isSameDay,
+  setHours,
+  setMinutes,
+  startOfWeek,
+} from "date-fns";
 import * as React from "react";
 
 import { submitDelayedPaymentRequest } from "#/app/(platform)/schools/[visibleId]/actions";
@@ -42,7 +49,14 @@ export function FellowAttendanceDot({
 }) {
   const now = new Date();
   const sessionDate = sessionItem.session?.sessionDate;
-  const shouldBeDisabled = sessionDate ? isBefore(now, sessionDate) : true;
+  let shouldBeDisabled = true;
+  if (sessionDate) {
+    if (isBefore(now, sessionDate) && !isSameDay(now, sessionDate)) {
+      shouldBeDisabled = true;
+    } else {
+      shouldBeDisabled = false;
+    }
+  }
 
   const { toast } = useToast();
   const [status, setStatus] = React.useState(sessionItem.status);
