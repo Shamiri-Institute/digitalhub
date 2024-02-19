@@ -43,9 +43,7 @@ export async function calculatePayouts({
         none: {},
       },
       fellow: {
-        NOT: {
-          droppedOut: true,
-        },
+        OR: [{ droppedOut: false }, { droppedOut: null }],
       },
     },
     include: {
@@ -70,9 +68,7 @@ export async function calculatePayouts({
         rejectedAt: null,
       },
       fellow: {
-        NOT: {
-          droppedOut: true,
-        },
+        OR: [{ droppedOut: false }, { droppedOut: null }],
       },
       ...(supervisorId && {
         supervisorId,
@@ -124,9 +120,7 @@ export async function calculatePayouts({
         in: eligibleAttendances.map((attendance) => attendance.fellowId),
       },
       fellow: {
-        NOT: {
-          droppedOut: true,
-        },
+        OR: [{ droppedOut: false }, { droppedOut: null }],
       },
       executedAt: null,
     },
