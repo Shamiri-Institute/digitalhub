@@ -131,7 +131,14 @@ async function FellowsList({
     where: {
       supervisorId: supervisor.id,
     },
-    include: { fellowAttendances: true, students: true },
+    include: {
+      fellowAttendances: {
+        orderBy: {
+          updatedAt: "desc",
+        },
+      },
+      students: true,
+    },
     orderBy: { createdAt: "asc" },
   });
 

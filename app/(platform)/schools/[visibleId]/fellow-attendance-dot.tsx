@@ -121,7 +121,7 @@ export function FellowAttendanceDot({
         });
       }
     },
-    [toast, sessionItem.label, fellow.fellowName],
+    [toast, sessionItem.label, fellow.fellowName, shouldBeDisabled],
   );
 
   const [dialogOpen, setDialogOpen] = React.useState(false);

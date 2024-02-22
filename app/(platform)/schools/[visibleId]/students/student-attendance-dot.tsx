@@ -101,6 +101,7 @@ export function StudentAttendanceDot({
     student.studentName,
     student.visibleId,
     toast,
+    group?.groupId,
   ]);
 
   return (
