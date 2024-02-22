@@ -34,6 +34,7 @@ export function CasesReferredToMe({
           caseId={stud.id}
           currentSupervisorId={currentSupervisorId || ""}
           referredToSupervisorId={stud.referredToSupervisorId}
+          referralNotes={stud.referralNotes}
         />
       ))}
       {cases.length === 0 && (
@@ -52,11 +53,13 @@ export function RefferedCasesTab({
   caseId = "",
   currentSupervisorId = "",
   referredToSupervisorId = "",
+  referralNotes = "",
 }: {
   name: string | null;
   caseId: string;
   currentSupervisorId: string;
   referredToSupervisorId: string | null;
+  referralNotes: string | null;
 }) {
   const { toast } = useToast();
 
@@ -96,9 +99,20 @@ export function RefferedCasesTab({
     }
   };
 
+  function handleWordLimit(text: string | null, limit: number) {
+    if (!text) return "";
+    if (text.length > limit) {
+      return text.slice(0, limit) + "...";
+    }
+    return text;
+  }
+
   return (
     <Card className="pr-3.5bg-white my-2 flex  items-center justify-between gap-5 p-4">
       <p className="text-base font-medium text-brand">{name}</p>
+      <span className="text-sm font-normal text-muted-foreground">
+        {handleWordLimit(referralNotes, 50)}
+      </span>
       <div className="flex items-center justify-between">
         <button onClick={handleAcceptReferredCase}>
           <Icons.check className="mx-2 h-6 w-6 align-baseline text-muted-green xl:h-7 xl:w-7" />

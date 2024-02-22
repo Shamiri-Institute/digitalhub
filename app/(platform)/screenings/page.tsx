@@ -37,6 +37,11 @@ export default async function Page() {
           date: "desc",
         },
       },
+      currentSupervisor: {
+        include: {
+          hub: true,
+        },
+      },
     },
   });
 
@@ -70,6 +75,74 @@ export default async function Page() {
     },
   });
 
+  const fetchCasesForCurrentClinician = async () => {
+    if (supervisor?.id === "Shamiri_CO") {
+      return await db.clinicalScreeningInfo.findMany({
+        include: {
+          student: true,
+          sessions: {
+            orderBy: {
+              date: "desc",
+            },
+          },
+          currentSupervisor: {
+            include: {
+              hub: true,
+            },
+          },
+        },
+        where: {
+          createdAt: {
+            gte: new Date(2024, 0, 29), //date when sessions started
+          },
+        },
+      });
+    } else {
+      return await db.clinicalScreeningInfo.findMany({
+        include: {
+          student: true,
+          sessions: {
+            orderBy: {
+              date: "desc",
+            },
+          },
+          currentSupervisor: {
+            include: {
+              hub: true,
+            },
+          },
+        },
+        where: {
+          currentSupervisor: {
+            hubId: supervisor?.hubId,
+            createdAt: {
+              gte: new Date(2024, 0, 29), //date when sessions started
+            },
+          },
+        },
+      });
+    }
+  };
+
+  const allClinicalCases = await fetchCasesForCurrentClinician();
+
+  function showAllCases() {
+    // todo: to be dynamic once they have their own platforms
+    if (supervisor?.id === "Shamiri_CO") {
+      return true;
+    }
+    if (supervisor?.id === "COS24_001") {
+      return true;
+    }
+    if (supervisor?.id === "COS24_002") {
+      return true;
+    }
+    if (supervisor?.id === "COS24_003") {
+      return true;
+    }
+    return false;
+  }
+
   return (
     <div>
       <ClinicalFeatureCard clinicalCases={clinicalCases} />
@@ -82,6 +155,15 @@ export default async function Page() {
         schools={schools}
       />
       <ListViewOfClinicalCases cases={myCases} />
+
+      {showAllCases() ? (
+        <section>
+          <h3 className="mt-8 text-base font-semibold text-brand xl:text-2xl">
+            All Clinical Cases: {allClinicalCases.length}
+          </h3>
+          <ListViewOfClinicalCases cases={allClinicalCases} />
+        </section>
+      ) : null}
     </div>
   );
 }

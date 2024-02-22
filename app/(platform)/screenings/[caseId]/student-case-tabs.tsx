@@ -24,10 +24,12 @@ export function StudentCaseTabs({
   currentcase,
   supervisors = [],
   currentSupId,
+  hubId,
 }: {
   currentcase: CurrentCase;
   supervisors: SupervisorWithFellows[];
   currentSupId: string | undefined;
+  hubId: string | null;
 }) {
   const canReferCase = !!(
     currentcase.initialCaseHistoryId &&
@@ -117,6 +119,7 @@ export function StudentCaseTabs({
               currentcase={currentcase}
               supervisors={supervisors}
               currentSupId={currentSupId}
+              hubId={hubId}
             />
           </AccordionContent>
         </AccordionItem>
