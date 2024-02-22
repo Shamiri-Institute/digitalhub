@@ -66,11 +66,13 @@ export function ReferralToDetails({
   supervisors,
   currentSupId,
   canReferCase,
+  hubId,
 }: {
   currentcase: CurrentCase;
   supervisors: Supervisor[];
   currentSupId: string | undefined;
   canReferCase: boolean;
+  hubId: string | null;
 }) {
   const { toast } = useToast();
   const [selectedSupervisorId, setSelectedSupervisorId] = useState<string>("");
@@ -85,6 +87,30 @@ export function ReferralToDetails({
       referredToPerson: "",
     },
   });
+
+  function getReferralToPerson(data: z.infer<typeof FormSchema>) {
+    if (selectedOption == "Supervisor") {
+      return data.referredToPerson;
+    }
+    if (selectedOption == "Shamiri Clinical Team") {
+      return "Shamiri_CO"; // todo: @hinn254 update to  make dynamic for shamiri clinical team id them as not supervisors
+    }
+    if (selectedOption == "External Care") {
+      return "External Care";
+    }
+    if (selectedOption == "Clinical Leads") {
+      if (hubId == "24_Hub_01") {
+        return "COS24_001";
+      }
+      if (hubId == "24_Hub_02") {
+        return "COS24_002";
+      }
+      if (hubId == "24_Hub_04") {
+        return "COS24_003";
+      }
+    }
+    return null;
+  }
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     // edge case: if supervisor is selected but no supervisor is selected
@@ -105,8 +131,7 @@ export function ReferralToDetails({
         referredFromSpecified:
           currentcase.currentSupervisor.supervisorName ?? "",
         referredFrom: currentSupId ?? "",
-        referredToPerson:
-          selectedOption !== "Supervisor" ? null : data.referredToPerson, //todo: @hinn254 update to clinical leads/external care id's once we have them
+        referredToPerson: getReferralToPerson(data),
         externalCare:
           selectedOption !== "External Care" ? null : data.externalCare,
       });

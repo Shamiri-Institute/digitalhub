@@ -55,6 +55,7 @@ export default async function Page({ params }: { params: { caseId: string } }) {
           currentcase={currentcase}
           supervisors={all_supervisors}
           currentSupId={supervisor?.id}
+          hubId={supervisor?.hubId}
         />
       )}
       <CaseNotePlan currentSupId={supervisor?.id} currentcase={currentcase} />

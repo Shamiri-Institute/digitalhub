@@ -5,21 +5,28 @@ import { Separator } from "#/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "#/components/ui/tabs";
 import { cn } from "#/lib/utils";
 import { constants } from "#/tests/constants";
-import {
-  ClinicalScreeningInfo,
-  ClinicalSessionAttendance,
-  Student,
-} from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import Link from "next/link";
 
 type Colors = {
   [key: string]: string;
 };
 
-type CasesType = ClinicalScreeningInfo & {
-  student: Student;
-  sessions: ClinicalSessionAttendance[];
-};
+type CasesType = Prisma.ClinicalScreeningInfoGetPayload<{
+  include: {
+    student: true;
+    sessions: {
+      orderBy: {
+        date: "desc";
+      };
+    };
+    currentSupervisor: {
+      include: {
+        hub: true;
+      };
+    };
+  };
+}>;
 
 const colors: Colors = {
   Active: "bg-muted-green",
