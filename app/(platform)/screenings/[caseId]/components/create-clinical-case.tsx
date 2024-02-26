@@ -279,7 +279,7 @@ export function StudentSelector({
       items={students.map((student) => ({
         id: student.id,
         label:
-          `${student?.studentName?.toLocaleLowerCase()} - ${student?.admissionNumber} - ${student?.form}${student?.stream}` ??
+          `${student?.studentName ?? "N/A"} - ${student?.admissionNumber ?? "N/A"} - ${student?.form ?? ""}${student?.stream ?? "N/A"}` ??
           "",
       }))}
       activeItemId={activeStudentId}
