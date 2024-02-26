@@ -115,6 +115,31 @@ const ids = {
                       groupName: "G1",
                       groupFellowVisibleId: "TFW24_S_01",
                     },
+                    ANS24_Group_02: {
+                      id: "G2",
+                      groupName: "G2",
+                      groupFellowVisibleId: "TFW24_S_01",
+                    },
+                    ANS24_Group_03: {
+                      id: "G3",
+                      groupName: "G3",
+                      groupFellowVisibleId: "TFW24_S_01",
+                    },
+                    ANS24_Group_04: {
+                      id: "G4",
+                      groupName: "G4",
+                      groupFellowVisibleId: "TFW24_S_01",
+                    },
+                    ANS24_Group_05: {
+                      id: "G5",
+                      groupName: "G5",
+                      groupFellowVisibleId: "TFW24_S_01",
+                    },
+                    ANS24_Group_06: {
+                      id: "G6",
+                      groupName: "G6",
+                      groupFellowVisibleId: "TFW24_S_01",
+                    },
                   },
 
                   sessions: {

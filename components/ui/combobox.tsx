@@ -20,6 +20,7 @@ type ComboboxProps = {
   activeItemId: string;
   onSelectItem: (itemId: string) => void;
   placeholder?: string;
+  inputPlaceholder?: string;
 };
 
 export function Combobox({
@@ -27,6 +28,7 @@ export function Combobox({
   activeItemId,
   onSelectItem,
   placeholder,
+  inputPlaceholder,
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -51,7 +53,9 @@ export function Combobox({
         <PopoverContent className="w-[360px] p-0 md:w-64">
           <Command
             filter={(value: string, search: string) => {
-              const item = items.find((item) => item.id === value);
+              const item = items.find(
+                (item) => item.id.toLowerCase() === value.toLowerCase(),
+              );
               if (!item) return 0;
 
               if (item.label.toLowerCase().includes(search.toLowerCase())) {
@@ -61,11 +65,11 @@ export function Combobox({
             }}
           >
             <CommandInput
-              placeholder={placeholder || "Search items..."}
+              placeholder={inputPlaceholder || "Type to filter results"}
               className="h-9"
             />
             <CommandEmpty>No item found.</CommandEmpty>
-            <CommandGroup>
+            <CommandGroup className="max-h-[12rem] overflow-y-scroll">
               {items.map((item) => (
                 <CommandItem
                   key={item.id}
