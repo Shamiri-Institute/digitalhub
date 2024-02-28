@@ -7,8 +7,73 @@ import { Footer } from "#/components/footer";
 import { Header } from "#/components/header";
 import { Icons } from "#/components/icons";
 import { Navigation } from "#/components/navigation";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
+import FeedbackIcon from "../public/icons/feedback-icon.svg";
+import HelpIcon from "../public/icons/help-icon.svg";
+import NotificationIcon from "../public/icons/notification-icon.svg";
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/hc")) {
+    return (
+      <>
+        <header className="flex justify-between px-4">
+          <a>Shamiri Hub</a>
+          <div className="flex">
+            <div className="mr-8 flex items-center gap-2">
+              <Image
+                unoptimized
+                priority
+                src={FeedbackIcon}
+                alt="Feedback Icon"
+                width={24}
+                heigh={24}
+              />
+              <a>Feedback</a>
+            </div>
+            <div className="mr-8 flex items-center gap-2">
+              <Image
+                unoptimized
+                priority
+                src={HelpIcon}
+                alt="Help Icon"
+                width={24}
+                height={24}
+              />
+              <a>Help</a>
+            </div>
+            <div className="flex items-center gap-6">
+              <Image
+                unoptimized
+                priority
+                src={NotificationIcon}
+                alt="Notification Icon"
+                width={24}
+                height={24}
+              />
+              {/*TODO: notification counter */}
+              <div className="flex space-x-2">
+                {/* TODO: figure out which parts of the component should be clickable */}
+                <div>{/* TODO: avatar icon */}A</div>
+                <p>Leroy Jenkins</p>
+                <Image
+                  unoptimized
+                  priority
+                  src={ArrowDropdown}
+                  alt="Profile/Setting arrow drop down icon"
+                />
+              </div>
+            </div>
+          </div>
+        </header>
+        {children}
+      </>
+    );
+  }
+
   return (
     <div className="h-full max-w-7xl lg:ml-72 xl:ml-80">
       <motion.header
