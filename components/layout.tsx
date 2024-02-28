@@ -20,7 +20,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   if (pathname.startsWith("/hc")) {
     return (
       <>
-        <header className="flex justify-between px-4 py-4 items-center">
+        <header className="flex items-center justify-between px-4 py-4">
           <a className="text-xl text-shamiri-new-blue">Shamiri Hub</a>
           <div className="flex py-8">
             <div className="mr-8 flex items-center gap-2">
@@ -69,7 +69,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
-        <div className="px-6 flex gap-8">
+        <div className="flex gap-8 px-6">
           {/*TODO: the items in this list should depend on the user's role */}
           <a href="/hc/schedule">Schedule</a>
           <a href="/hc/schools">Schools</a>
