@@ -20,9 +20,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   if (pathname.startsWith("/hc")) {
     return (
       <>
-        <header className="flex justify-between px-4">
-          <a>Shamiri Hub</a>
-          <div className="flex">
+        <header className="flex justify-between px-4 py-4 items-center">
+          <a className="text-xl text-shamiri-new-blue">Shamiri Hub</a>
+          <div className="flex py-8">
             <div className="mr-8 flex items-center gap-2">
               <Image
                 unoptimized
@@ -30,7 +30,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 src={FeedbackIcon}
                 alt="Feedback Icon"
                 width={24}
-                heigh={24}
+                height={24}
               />
               <a>Feedback</a>
             </div>
@@ -69,6 +69,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
+        <div className="px-6 flex gap-8">
+          {/*TODO: the items in this list should depend on the user's role */}
+          <a href="/hc/schedule">Schedule</a>
+          <a href="/hc/schools">Schools</a>
+          <a href="/hc/supervisors">Supervisors</a>
+          <a href="/hc/fellows">Fellows</a>
+          <a href="/hc/students">Students</a>
+          <a href="/hc/reporting">Reporting</a>
+        </div>
         {children}
       </>
     );
