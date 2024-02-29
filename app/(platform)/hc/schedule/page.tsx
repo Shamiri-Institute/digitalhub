@@ -1,11 +1,19 @@
 "use client";
 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "#/components/ui/popover";
 import { format } from "date-fns";
 import {
   Button,
   Calendar,
   CalendarCell,
   CalendarGrid,
+  CalendarGridBody,
+  CalendarGridHeader,
+  CalendarHeaderCell,
   Heading,
 } from "react-aria-components";
 
@@ -35,26 +43,54 @@ const sessions: ISession[] = [
 
 export default function HCSchedulePage() {
   return (
-    <div className="App">
+    <div className="px-[24px] pb-[24px] pt-[20px]">
       <h1>SDH Schedule</h1>
       <section>
-        <Calendar aria-label="Appointment date">
-          <header>
+        <Calendar aria-label="Session schedule">
+          <header className="mb-2">
             <Button slot="previous">◀</Button>
             <Heading />
             <Button slot="next">▶</Button>
           </header>
-          <CalendarGrid>
-            {(date) => (
-              <CalendarCell date={date} className="m-0 p-0">
-                <div className="flex h-[144px] w-[198px] flex-col gap-[8px] border-t border-[#E8E8E8] px-[16px] py-[8px]">
-                  {format(date.toDate("GMT"), "d")}
-                </div>
-              </CalendarCell>
-            )}
+          <CalendarGrid
+            className="border-separate border-spacing-0"
+            weekdayStyle="long"
+          >
+            <CalendarGridHeader>
+              {(day) => (
+                <CalendarHeaderCell className="border-l border-t border-[#E8E8E8] bg-[#F7F7F7] px-[16px] py-[12px] text-left first:rounded-tl-[7px] last:rounded-tr-[7px] last:border-r">
+                  {day}
+                </CalendarHeaderCell>
+              )}
+            </CalendarGridHeader>
+
+            <CalendarGridBody>
+              {(date) => (
+                <CalendarCell date={date} className="m-0 p-0">
+                  <div className="flex h-[144px] w-[198px] flex-col gap-[8px] overflow-y-scroll border-l border-t border-[#E8E8E8] px-[16px] py-[8px]">
+                    <div>{format(date.toDate("GMT"), "dd")}</div>
+                    {format(date.toDate("GMT"), "d") === "1" && (
+                      <ExampleSession />
+                    )}
+                  </div>
+                </CalendarCell>
+              )}
+            </CalendarGridBody>
           </CalendarGrid>
         </Calendar>
       </section>
     </div>
+  );
+}
+
+function ExampleSession() {
+  return (
+    <Popover>
+      <PopoverTrigger>session 1</PopoverTrigger>
+      <PopoverContent className="w-[360px]">
+        <input />
+        <button onClick={() => console.log("button clicked")}>Click me</button>
+      </PopoverContent>
+    </Popover>
   );
 }
