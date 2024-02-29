@@ -1,13 +1,10 @@
 "use client";
 
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
-import { Separator } from "#/components/ui/separator";
+import { DateValue, createCalendar } from "@internationalized/date";
 import { format } from "date-fns";
 import React from "react";
+import { useCalendar, useLocale } from "react-aria";
+import type { CalendarProps } from "react-aria-components";
 import {
   Button,
   Calendar,
@@ -19,6 +16,16 @@ import {
   CalendarStateContext,
   Heading,
 } from "react-aria-components";
+import { useCalendarState } from "react-stately";
+
+import { Icons } from "#/components/icons";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "#/components/ui/popover";
+import { Separator } from "#/components/ui/separator";
+import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 
 type ISession = {
   kind: "Pre" | "S1" | "S2" | "S3" | "S4";
@@ -49,6 +56,7 @@ export default function HubCoordinatorSchedulePage() {
     <main className="px-[24px] pb-[24px] pt-[20px]">
       <ScheduleHeader sessions={20} fellows={14} cases={23} />
       <Separator className="my-5 bg-[#E8E8E8]" />
+      <ScheduleCalendar />
     </main>
   );
 }
@@ -65,25 +73,124 @@ function ScheduleHeader({
   return (
     <div className="flex items-center justify-between">
       <div className="text-[2.25rem] font-semibold text-black">Schedule</div>
-      <div className="relative flex items-center justify-between divide-x divide-[#E8E8E8] self-stretch rounded-lg border border-[#E8E8E8] bg-[#F7F7F7]">
+      <div className="relative flex items-center justify-between divide-x divide-[#E8E8E8] self-stretch rounded-lg border border-[#E8E8E8] bg-[#F7F7F7] font-normal">
         <div className="flex w-28 flex-col items-center justify-center py-2">
           <div className="text-sm text-gray-500">Sessions</div>
-          <div className="text-lg text-black">{sessions}</div>
+          <div className="text-xl text-black">{sessions}</div>
         </div>
         <div className="flex w-28 flex-col items-center justify-center py-2">
           <div className="text-sm text-gray-500">Fellows</div>
-          <div className="text-lg text-black">{fellows}</div>
+          <div className="text-xl text-black">{fellows}</div>
         </div>
         <div className="flex w-28 flex-col items-center justify-center py-2">
           <div className="text-sm text-gray-500">Cases</div>
-          <div className="text-lg text-black">{cases}</div>
+          <div className="text-xl text-black">{cases}</div>
         </div>
       </div>
     </div>
   );
 }
 
-export function HCSchedulePage() {
+function ScheduleCalendar(props: CalendarProps<DateValue>) {
+  let { locale } = useLocale();
+  let state = useCalendarState({
+    ...props,
+    locale,
+    createCalendar,
+  });
+
+  let { calendarProps, prevButtonProps, nextButtonProps, title } = useCalendar(
+    props,
+    state,
+  );
+
+  return (
+    <>
+      <div className="flex gap-2">
+        <div className="flex gap-6">
+          <div className="text-2xl font-semibold leading-8">{title}</div>
+          <NavigationButtons
+            onNext={() => console.log("next")}
+            onPrevious={() => console.log("previous")}
+          />
+        </div>
+        <div className="mx-2">
+          <ScheduleMode />
+        </div>
+      </div>
+    </>
+  );
+}
+
+function ScheduleMode() {
+  return (
+    <ToggleGroup
+      type="single"
+      className="gap-0 divide-x divide-gray-300 overflow-hidden rounded-xl border border-gray-300 py-0 shadow"
+    >
+      <ToggleGroupItem
+        value="day"
+        aria-label="Toggle day"
+        className="rounded-none border-0 text-base"
+      >
+        Day
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="week"
+        aria-label="Toggle week"
+        className="rounded-none border-0 text-base"
+      >
+        Week
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="month"
+        aria-label="Toggle month"
+        className="rounded-none border-0 text-base"
+      >
+        Month
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="list-view"
+        aria-label="Toggle list view"
+        className="rounded-none border-0 text-base"
+      >
+        List view
+      </ToggleGroupItem>
+    </ToggleGroup>
+  );
+}
+
+function NavigationButtons({
+  onPrevious,
+  onNext,
+}: {
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <div
+      className="inline-flex divide-x divide-gray-300 overflow-auto rounded-xl border border-gray-300 shadow"
+      role="group"
+    >
+      <button
+        className="inline-flex items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50"
+        onClick={onPrevious}
+        aria-label="Previous Month"
+      >
+        <Icons.chevronLeft className="h-5 w-5" />
+      </button>
+      <button
+        className="inline-flex items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50"
+        onClick={onNext}
+        aria-label="Next Month"
+      >
+        <Icons.chevronRight className="h-5 w-5" />
+      </button>
+    </div>
+  );
+}
+
+function HCSchedulePage() {
   let state = React.useContext(CalendarStateContext)!;
   return (
     <div className="px-[24px] pb-[24px] pt-[20px]">
