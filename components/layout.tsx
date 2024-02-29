@@ -25,7 +25,8 @@ import { Avatar } from "./ui/avatar";
 export function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  if (!pathname.startsWith("/sc")) {
+  // TODO: need to ensure that this screens for other prefix routes e.g. /op /sc etc
+  if (pathname.startsWith("/hc")) {
     return (
       <>
         <header className="bg-background-secondary">
