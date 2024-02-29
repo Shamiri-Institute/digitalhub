@@ -5,7 +5,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "#/components/ui/popover";
+import { Separator } from "#/components/ui/separator";
 import { format } from "date-fns";
+import React from "react";
 import {
   Button,
   Calendar,
@@ -14,6 +16,7 @@ import {
   CalendarGridBody,
   CalendarGridHeader,
   CalendarHeaderCell,
+  CalendarStateContext,
   Heading,
 } from "react-aria-components";
 
@@ -41,7 +44,47 @@ const sessions: ISession[] = [
   },
 ];
 
-export default function HCSchedulePage() {
+export default function HubCoordinatorSchedulePage() {
+  return (
+    <main className="px-[24px] pb-[24px] pt-[20px]">
+      <ScheduleHeader sessions={20} fellows={14} cases={23} />
+      <Separator className="my-5 bg-[#E8E8E8]" />
+    </main>
+  );
+}
+
+function ScheduleHeader({
+  sessions,
+  fellows,
+  cases,
+}: {
+  sessions: number;
+  fellows: number;
+  cases: number;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="text-[2.25rem] font-semibold text-black">Schedule</div>
+      <div className="relative flex items-center justify-between divide-x divide-[#E8E8E8] self-stretch rounded-lg border border-[#E8E8E8] bg-[#F7F7F7]">
+        <div className="flex w-28 flex-col items-center justify-center py-2">
+          <div className="text-sm text-gray-500">Sessions</div>
+          <div className="text-lg text-black">{sessions}</div>
+        </div>
+        <div className="flex w-28 flex-col items-center justify-center py-2">
+          <div className="text-sm text-gray-500">Fellows</div>
+          <div className="text-lg text-black">{fellows}</div>
+        </div>
+        <div className="flex w-28 flex-col items-center justify-center py-2">
+          <div className="text-sm text-gray-500">Cases</div>
+          <div className="text-lg text-black">{cases}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function HCSchedulePage() {
+  let state = React.useContext(CalendarStateContext)!;
   return (
     <div className="px-[24px] pb-[24px] pt-[20px]">
       <h1>SDH Schedule</h1>
