@@ -124,7 +124,7 @@ export default function WeeklyEvaluationForm({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="gap-0 p-0">
+      <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -245,8 +245,8 @@ export default function WeeklyEvaluationForm({
           </h2>
           {previousRatings?.length ? (
             <Accordion type="single" collapsible className="mt-2 w-full">
-              {previousRatings.map((pr, idx) => (
-                <AccordionItem value={`item-${idx}`}>
+              {previousRatings.map((pr) => (
+                <AccordionItem value={`item-${pr.id}`} key={pr.id}>
                   <AccordionTrigger>
                     Week of {pr.week.toLocaleDateString()}
                   </AccordionTrigger>
@@ -254,19 +254,27 @@ export default function WeeklyEvaluationForm({
                     <Table>
                       <TableBody>
                         <TableRow>
-                          <TableCell>Behaviour Notes</TableCell>
+                          <TableCell className="font-bold">
+                            Behaviour Notes
+                          </TableCell>
                           <TableCell>{pr.behaviourNotes}</TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell>Program Delivery Notes</TableCell>
+                          <TableCell className="font-bold">
+                            Program Delivery Notes
+                          </TableCell>
                           <TableCell>{pr.programDeliveryNotes}</TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell>Dressing and Grooming Notes</TableCell>
+                          <TableCell className="font-bold">
+                            Dressing and Grooming Notes
+                          </TableCell>
                           <TableCell>{pr.dressingAndGroomingNotes}</TableCell>
                         </TableRow>
                         <TableRow>
-                          <TableCell>Attendance Notes</TableCell>
+                          <TableCell className="font-bold">
+                            Attendance Notes
+                          </TableCell>
                           <TableCell>{pr.attendanceNotes}</TableCell>
                         </TableRow>
                       </TableBody>
