@@ -1,22 +1,29 @@
 "use client";
 
-import { DateValue, createCalendar } from "@internationalized/date";
+import {
+  DateValue,
+  createCalendar,
+  getWeeksInMonth,
+} from "@internationalized/date";
 import { format } from "date-fns";
 import React from "react";
-import { useCalendar, useLocale } from "react-aria";
+import {
+  useCalendar,
+  useCalendarCell,
+  useCalendarGrid,
+  useLocale,
+} from "react-aria";
 import type { CalendarProps } from "react-aria-components";
 import {
   Button,
   Calendar,
-  CalendarCell,
-  CalendarGrid,
   CalendarGridBody,
   CalendarGridHeader,
   CalendarHeaderCell,
   CalendarStateContext,
   Heading,
 } from "react-aria-components";
-import { useCalendarState } from "react-stately";
+import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 import {
@@ -56,7 +63,7 @@ export default function HubCoordinatorSchedulePage() {
     <main className="px-[24px] pb-[24px] pt-[20px]">
       <ScheduleHeader sessions={20} fellows={14} cases={23} />
       <Separator className="my-5 bg-[#E8E8E8]" />
-      <ScheduleCalendar />
+      <ScheduleCalendar aria-label="Session schedule" />
     </main>
   );
 }
@@ -110,15 +117,93 @@ function ScheduleCalendar(props: CalendarProps<DateValue>) {
         <div className="flex gap-6">
           <div className="text-2xl font-semibold leading-8">{title}</div>
           <NavigationButtons
-            onNext={() => console.log("next")}
-            onPrevious={() => console.log("previous")}
+            prevProps={prevButtonProps}
+            nextProps={nextButtonProps}
           />
         </div>
         <div className="mx-2">
           <ScheduleMode />
         </div>
       </div>
+      <div className="mt-4">
+        <CalendarGrid state={state} weekdayStyle="long" />
+      </div>
     </>
+  );
+}
+
+function CalendarGrid({ state, ...props }: { state: CalendarState } & any) {
+  let { locale } = useLocale();
+  let { gridProps, headerProps, weekDays } = useCalendarGrid(props, state);
+
+  // Get the number of weeks in the month so we can render the proper number of rows.
+  let weeksInMonth = getWeeksInMonth(state.visibleRange.start, locale);
+
+  return (
+    <table {...gridProps}>
+      <thead {...headerProps}>
+        <tr className="px-2">
+          {weekDays.map((day, index) => (
+            <th key={index} className="px-1 text-left">
+              {day}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
+          <tr key={weekIndex}>
+            {state
+              .getDatesInWeek(weekIndex)
+              .map((date, i) =>
+                date ? (
+                  <CalendarCell key={i} state={state} date={date} />
+                ) : (
+                  <td key={i} />
+                ),
+              )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function CalendarCell({
+  state,
+  date,
+}: {
+  state: CalendarState;
+  date: DateValue;
+}) {
+  let ref = React.useRef(null);
+  let {
+    cellProps,
+    buttonProps,
+    isSelected,
+    isOutsideVisibleRange,
+    isDisabled,
+    isUnavailable,
+    formattedDate,
+  } = useCalendarCell({ date }, state, ref);
+
+  return (
+    <td {...cellProps}>
+      <div
+        {...buttonProps}
+        ref={ref}
+        hidden={isOutsideVisibleRange}
+        className={`cell ${isSelected ? "selected" : ""} ${
+          isDisabled ? "disabled" : ""
+        } ${isUnavailable ? "unavailable" : ""}`}
+      >
+        <div className="flex h-[144px] w-[198px] flex-col gap-[8px] overflow-y-scroll border-l border-t border-[#E8E8E8] px-[16px] py-[8px]">
+          {/* <div>{format(date.toDate("GMT"), "dd")}</div> */}
+          <div>{formattedDate}</div>
+          {format(date.toDate("GMT"), "d") === "1" && <ExampleSession />}
+        </div>
+      </div>
+    </td>
   );
 }
 
@@ -161,11 +246,11 @@ function ScheduleMode() {
 }
 
 function NavigationButtons({
-  onPrevious,
-  onNext,
+  prevProps,
+  nextProps,
 }: {
-  onPrevious: () => void;
-  onNext: () => void;
+  prevProps: React.ButtonHTMLAttributes<HTMLButtonElement>;
+  nextProps: React.ButtonHTMLAttributes<HTMLButtonElement>;
 }) {
   return (
     <div
@@ -174,15 +259,15 @@ function NavigationButtons({
     >
       <button
         className="inline-flex items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50"
-        onClick={onPrevious}
         aria-label="Previous Month"
+        {...prevProps}
       >
         <Icons.chevronLeft className="h-5 w-5" />
       </button>
       <button
         className="inline-flex items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50"
-        onClick={onNext}
         aria-label="Next Month"
+        {...nextProps}
       >
         <Icons.chevronRight className="h-5 w-5" />
       </button>
