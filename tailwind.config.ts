@@ -31,6 +31,7 @@ const config: Config = {
           DEFAULT: "hsl(var(--brand))",
           foreground: "hsl(var(--brand-foreground))",
         },
+        "background-secondary": "#F7F7F7",
         "shamiri-blue": "#0474bc", // DEPRECATED: switch shamiri-blue to shamiri-new-blue
         "shamiri-new-blue": "#0085FF",
         "shamiri-blue-darker": "#045e96",
