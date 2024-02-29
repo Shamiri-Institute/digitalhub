@@ -72,3 +72,17 @@
     scrollbar-width: none; /* Firefox */
   }
 }
+
+/* adjustments for react-aria */
+@layer base {
+  td[role="gridcell"] {
+    padding: 0;
+  }
+
+  /* TODO: make more specific to avoid collisions with non react-aria tables */
+  tbody > tr:last-child {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-color: #e8e8e8;
+  }
+}
