@@ -1,4 +1,10 @@
 "use client";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "#/components/ui/accordion";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -22,6 +28,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
+import { Table, TableBody, TableCell, TableRow } from "#/components/ui/table";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -117,19 +124,14 @@ export default function WeeklyEvaluationForm({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="gap-0 p-0">
+      <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
             className="overflow-hidden text-ellipsis"
           >
             <DialogHeader className="space-y-0 px-6 py-4">
-              <div className="flex items-center gap-2 text-base font-medium">
-                {previousRatings.length} Previous Rating
-                {previousRatings.length > 1 || !previousRatings.length
-                  ? "s"
-                  : ""}
-              </div>
+              <h2>Submit Weekly fellow evaluation</h2>
             </DialogHeader>
             <Separator />
             <div className="my-6 space-y-6">
@@ -237,6 +239,54 @@ export default function WeeklyEvaluationForm({
             </div>
           </form>
         </Form>
+        <div className="p-6">
+          <h2 className="font-medium text-shamiri-dark-blue">
+            Past Weekly Evaluations
+          </h2>
+          {previousRatings?.length ? (
+            <Accordion type="single" collapsible className="mt-2 w-full">
+              {previousRatings.map((pr) => (
+                <AccordionItem value={`item-${pr.id}`} key={pr.id}>
+                  <AccordionTrigger>
+                    Week of {pr.week.toLocaleDateString()}
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <Table>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="font-bold">
+                            Behaviour Notes
+                          </TableCell>
+                          <TableCell>{pr.behaviourNotes}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-bold">
+                            Program Delivery Notes
+                          </TableCell>
+                          <TableCell>{pr.programDeliveryNotes}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-bold">
+                            Dressing and Grooming Notes
+                          </TableCell>
+                          <TableCell>{pr.dressingAndGroomingNotes}</TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell className="font-bold">
+                            Attendance Notes
+                          </TableCell>
+                          <TableCell>{pr.attendanceNotes}</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          ) : (
+            <div>No Weekly Evaluations Done</div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
