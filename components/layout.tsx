@@ -190,10 +190,8 @@ function PersonnelToolPopover({ children }: { children: React.ReactNode }) {
   return (
     <Popover>
       <PopoverTrigger>{children}</PopoverTrigger>
-      <PopoverContent>
-        <div className="bg-white">
-          <PersonnelTool />
-        </div>
+      <PopoverContent className="-m-px p-0 shadow-none">
+        <PersonnelTool />
       </PopoverContent>
     </Popover>
   );
