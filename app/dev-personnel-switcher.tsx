@@ -21,6 +21,7 @@ import {
 import { fetchPersonnel } from "#/lib/actions/fetch-personnel";
 import { constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
+import { signOut } from "next-auth/react";
 
 export type Personnel = {
   id: string;
@@ -44,7 +45,7 @@ export function PersonnelSwitcher({
   ) => {
     await selectPersonnel({ identifier: personnelId, role });
     setLoading(true);
-    window.location.reload();
+    signOut({ callbackUrl: "/login" });
   };
 
   return (

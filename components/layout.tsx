@@ -70,7 +70,7 @@ function LayoutV2({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex items-center">
             <PersonnelToolPopover>
-              <div className="mr-8">Switch Roles</div>
+              <div className="mr-8 text-shamiri-new-blue">Switch Role</div>
             </PersonnelToolPopover>
             <div className="mr-8 flex items-center gap-2 py-2">
               <Image
@@ -191,7 +191,9 @@ function PersonnelToolPopover({ children }: { children: React.ReactNode }) {
     <Popover>
       <PopoverTrigger>{children}</PopoverTrigger>
       <PopoverContent>
-        <PersonnelTool />
+        <div className="bg-white">
+          <PersonnelTool />
+        </div>
       </PopoverContent>
     </Popover>
   );
