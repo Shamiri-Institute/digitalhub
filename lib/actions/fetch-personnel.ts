@@ -21,21 +21,20 @@ export async function fetchPersonnel() {
     label: `${sup.supervisorName} - ${sup.visibleId}`,
   }));
 
-  // TODO: add back when implementing hub coordinator flow
-  // const hubCoordinators: {
-  //   id: string;
-  //   type: "supervisor" | "hc";
-  //   label: string;
-  // }[] = (
-  //   await db.hubCoordinator.findMany({
-  //     orderBy: { coordinatorName: "desc" },
-  //   })
-  // ).map((hc) => ({
-  //   id: hc.id,
-  //   type: "hc" as const,
-  //   label: `${hc.coordinatorName} - ${hc.visibleId}`,
-  // }));
-  const personnel = [...supervisors];
+  const hubCoordinators: {
+    id: string;
+    type: "supervisor" | "hc";
+    label: string;
+  }[] = (
+    await db.hubCoordinator.findMany({
+      orderBy: { coordinatorName: "desc" },
+    })
+  ).map((hc) => ({
+    id: hc.id,
+    type: "hc" as const,
+    label: `${hc.coordinatorName} - ${hc.visibleId}`,
+  }));
+  const personnel = [...supervisors, ...hubCoordinators];
 
   const user = await getCurrentUser();
   if (!user) {
