@@ -1,14 +1,12 @@
 "use server";
 
 import { getCurrentUser } from "#/app/auth";
+import { Personnel } from "#/app/dev-personnel-switcher";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 
 export async function fetchPersonnel() {
-  const supervisors: {
-    id: string;
-    type: "supervisor" | "hc";
-    label: string;
-  }[] = (
+  const supervisors: Personnel[] = (
     await db.supervisor.findMany({
       orderBy: { supervisorName: "desc" },
       where: {
@@ -17,21 +15,17 @@ export async function fetchPersonnel() {
     })
   ).map((sup) => ({
     id: sup.id,
-    type: "supervisor",
+    role: ImplementerRole.SUPERVISOR,
     label: `${sup.supervisorName} - ${sup.visibleId}`,
   }));
 
-  const hubCoordinators: {
-    id: string;
-    type: "supervisor" | "hc";
-    label: string;
-  }[] = (
+  const hubCoordinators: Personnel[] = (
     await db.hubCoordinator.findMany({
       orderBy: { coordinatorName: "desc" },
     })
   ).map((hc) => ({
     id: hc.id,
-    type: "hc" as const,
+    role: ImplementerRole.HUB_COORDINATOR,
     label: `${hc.coordinatorName} - ${hc.visibleId}`,
   }));
   const personnel = [...supervisors, ...hubCoordinators];
