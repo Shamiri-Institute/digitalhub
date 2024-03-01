@@ -2,6 +2,7 @@
 
 import { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
+import { signOut } from "next-auth/react";
 import * as React from "react";
 
 import { selectPersonnel } from "#/app/actions";
@@ -21,7 +22,6 @@ import {
 import { fetchPersonnel } from "#/lib/actions/fetch-personnel";
 import { constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
-import { signOut } from "next-auth/react";
 
 export type Personnel = {
   id: string;
