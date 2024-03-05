@@ -1,6 +1,8 @@
 "use client";
 
+import { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
+import { signOut } from "next-auth/react";
 import * as React from "react";
 
 import { selectPersonnel } from "#/app/actions";
@@ -21,9 +23,9 @@ import { fetchPersonnel } from "#/lib/actions/fetch-personnel";
 import { constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 
-type Personnel = {
+export type Personnel = {
   id: string;
-  type: "supervisor" | "hc";
+  role: ImplementerRole;
   label: string;
 };
 
@@ -37,10 +39,13 @@ export function PersonnelSwitcher({
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
 
-  const onSelectPersonnel = async (personnelId: string) => {
-    await selectPersonnel({ identifier: personnelId });
+  const onSelectPersonnel = async (
+    personnelId: string,
+    role: ImplementerRole,
+  ) => {
+    await selectPersonnel({ identifier: personnelId, role });
     setLoading(true);
-    window.location.reload();
+    signOut({ callbackUrl: "/login" });
   };
 
   return (
@@ -94,13 +99,13 @@ export function PersonnelSwitcher({
                     key={person.id}
                     value={person.id}
                     onSelect={async (_currentValue) => {
-                      onSelectPersonnel(person.id);
+                      onSelectPersonnel(person.id, person.role);
                       setOpen(false);
                     }}
                   >
                     <div className="flex flex-col gap-0.5">
                       <div className="text-[8px] font-medium uppercase tracking-widest">
-                        {person.type === "supervisor"
+                        {person.role === ImplementerRole.SUPERVISOR
                           ? "Supervisor"
                           : "Hub Coordinator"}
                       </div>
@@ -153,13 +158,7 @@ function Spinner({ className }: { className: string }) {
 }
 
 export function PersonnelTool() {
-  const [personnel, setPersonnel] = React.useState<
-    {
-      id: string;
-      type: "supervisor" | "hc";
-      label: string;
-    }[]
-  >([]);
+  const [personnel, setPersonnel] = React.useState<Personnel[]>([]);
   const [activePersonnelId, setActivePersonnelId] = React.useState("");
 
   React.useEffect(() => {

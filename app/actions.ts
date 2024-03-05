@@ -3,6 +3,7 @@
 import {
   Fellow,
   FellowAttendance,
+  ImplementerRole,
   Prisma,
   caseStatusOptions,
   riskStatusOptions,
@@ -1062,8 +1063,14 @@ export async function addNote({
   }
 }
 
-export async function selectPersonnel({ identifier }: { identifier: string }) {
-  console.log("selectPersonnel", { identifier });
+export async function selectPersonnel({
+  identifier,
+  role,
+}: {
+  identifier: string;
+  role: ImplementerRole;
+}) {
+  console.log("updating personnel role", { identifier, role });
   const user = await getCurrentUser();
   if (!user) {
     return null;
@@ -1071,7 +1078,7 @@ export async function selectPersonnel({ identifier }: { identifier: string }) {
   const { membership } = user;
   await db.implementerMember.update({
     where: { id: membership.id },
-    data: { identifier },
+    data: { identifier, role },
   });
 }
 
