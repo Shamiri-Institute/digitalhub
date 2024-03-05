@@ -177,7 +177,9 @@ function LayoutV2({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
-      {children}
+      <main className="px-6 pt-5">
+        {children}
+      </main>
     </>
   );
 }
