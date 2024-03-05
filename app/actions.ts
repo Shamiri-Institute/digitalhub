@@ -1656,3 +1656,50 @@ export async function storeSupervisorProgressNotes(
     return { success: false, error: "Something went wrong" };
   }
 }
+
+export async function rateGroup(payload: {
+  key:
+    | "e1"
+    | "e2"
+    | "e3"
+    | "eComment"
+    | "c1"
+    | "c2"
+    | "c3"
+    | "cComment"
+    | "content"
+    | "contentComment";
+  rating: number | string;
+  groupId: string;
+  sessionId: string | undefined;
+  id: string | undefined;
+  path: string;
+}) {
+  try {
+    // todo: to be updated once the all session eveluation is done
+    if (!payload.id) {
+      await db.interventionGroupReport.create({
+        data: {
+          id: objectId("ige"),
+          groupId: payload.groupId,
+          sessionId: payload.sessionId ?? undefined,
+          [payload.key]: payload.rating,
+        },
+      });
+    } else {
+      await db.interventionGroupReport.update({
+        where: {
+          id: payload.id,
+        },
+        data: {
+          [payload.key]: payload.rating,
+        },
+      });
+    }
+    revalidatePath(payload.path);
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Something went wrong" };
+  }
+}
