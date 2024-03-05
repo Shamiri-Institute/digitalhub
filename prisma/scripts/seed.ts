@@ -29,6 +29,13 @@ const ids = {
               visibleId: "24_Hub_01",
               hubName: "Dagoretti/Westlands",
 
+              hubCoordinator: {
+                id: objectId("hc"),
+                visibleId: "24_HC_01",
+                coordinatorName: "Perez Ambala",
+                coordinatorEmail: "perez.ambala@shamiri.institute",
+              },
+
               supervisors: {
                 SPV24_S_01: {
                   id: objectId("sup"),
@@ -280,6 +287,17 @@ async function seedDatabase() {
             hubName: hub.hubName,
             implementerId: implementer.id, // TODO: remove; projectImplementer replaces this
             projectId: createdProject.id,
+          },
+        });
+
+        const { hubCoordinator } = hub;
+        await db.hubCoordinator.create({
+          data: {
+            id: hubCoordinator.id,
+            visibleId: hubCoordinator.visibleId,
+            coordinatorName: hubCoordinator.coordinatorName,
+            coordinatorEmail: hubCoordinator.coordinatorEmail,
+            implementerId: implementer.id,
           },
         });
 
