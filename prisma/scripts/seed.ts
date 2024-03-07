@@ -298,6 +298,7 @@ async function seedDatabase() {
             coordinatorName: hubCoordinator.coordinatorName,
             coordinatorEmail: hubCoordinator.coordinatorEmail,
             implementerId: implementer.id,
+            assignedHubId: createdHub.id,
           },
         });
 

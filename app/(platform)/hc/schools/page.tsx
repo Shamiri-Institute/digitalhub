@@ -1,27 +1,40 @@
 import { Button } from "#/components/ui/button";
-import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "#/components/ui/command";
+import ChartCard from "#/components/ui/chart-card";
+import { Command, CommandInput } from "#/components/ui/command";
 import PageHeading from "#/components/ui/page-heading";
-import { Select, SelectGroup, SelectContent, SelectTrigger, SelectValue, SelectItem } from "#/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import Image from "next/image";
-import AddCircleOutlined from '../../../../public/icons/add-circle-outline.svg';
-import SettingsIcon from '../../../../public/icons/settings-icon.svg';
-import ChartCard from "#/components/ui/chart-card";
+import AddCircleOutlined from "../../../../public/icons/add-circle-outline.svg";
+import SettingsIcon from "../../../../public/icons/settings-icon.svg";
+import { fetchSchoolData } from "./actions";
+import { columns } from "./components/columns";
+import SchoolsDataTable from "./components/data-table";
 
 const dummySchools = [
-  'Komothai High School',
-  'Alliance High School',
-  'Pangani Girls High School'
-]
+  "Komothai High School",
+  "Alliance High School",
+  "Pangani Girls High School",
+];
 
-export default function SchoolsPage() {
+export default async function SchoolsPage() {
+  const data = await fetchSchoolData();
+  console.log({ data });
+
   return (
     <>
       <PageHeading title="Schools" />
       <Separator className="my-5" />
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div className="flex gap-3">
-          <Command className="rounded border max-w-64">
+          <Command className="max-w-64 rounded border">
             <CommandInput placeholder="Search Schools" />
             {/*
             <CommandList>
@@ -47,7 +60,7 @@ export default function SchoolsPage() {
           </Select>
         </div>
         <div className="flex items-center gap-3">
-          <Button className="flex items-center gap-2 text-base bg-shamiri-new-blue font-semibold text-white leading-6">
+          <Button className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
             <Image
               unoptimized
               priority
@@ -58,7 +71,7 @@ export default function SchoolsPage() {
             />
             Weekly Hub Report
           </Button>
-          <Button className="flex items-center gap-2 text-sm bg-white font-semibold text-shamiri-black leading-5">
+          <Button className="flex items-center gap-2 bg-white text-sm font-semibold leading-5 text-shamiri-black">
             Edit Columns
             <Image
               unoptimized
@@ -81,7 +94,8 @@ export default function SchoolsPage() {
       </div>
       <Separator />
       <div className="pt-5">
+        <SchoolsDataTable data={data} columns={columns} />
       </div>
     </>
-  )
+  );
 }
