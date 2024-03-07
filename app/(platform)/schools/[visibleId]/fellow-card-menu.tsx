@@ -16,11 +16,13 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
+import Link from "next/link";
 
 export default function FellowCardMenu({
   fellow,
   school,
   supervisor,
+  fellowGroup,
   children,
 }: {
   fellow: Fellow;
@@ -28,6 +30,7 @@ export default function FellowCardMenu({
   school: Prisma.SchoolGetPayload<{
     include: { hub: true; implementer: true };
   }>;
+  fellowGroup?: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = React.useState(false);
@@ -42,6 +45,17 @@ export default function FellowCardMenu({
           >
             <div className="cursor-pointer">Substitute Fellow</div>
           </FellowSubstitutionDialog>
+        </MenuLineItem>
+        <DropdownMenuSeparator className="my-2" />
+        <MenuLineItem>
+          {/* // todo: make ?type=s0 (after this implementation) */}
+          {fellowGroup ? (
+            <Link href={`/schools/${school.visibleId}/${fellowGroup}?type=all`}>
+              <div className="cursor-pointer">Group Evaluation</div>
+            </Link>
+          ) : (
+            <p className="cursor-default">No Group Assigned</p>
+          )}
         </MenuLineItem>
         <DropdownMenuSeparator className="my-2" />
 
