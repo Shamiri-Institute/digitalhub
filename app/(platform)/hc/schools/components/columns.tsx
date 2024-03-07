@@ -1,7 +1,18 @@
 "use client";
 
+import { Button } from "#/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
+import format from "date-fns/format";
+import { MoreHorizontal } from "lucide-react";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {
@@ -68,10 +79,32 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
   {
     header: "Date added",
     // TODO: need to date fns to format this
-    accessorKey: "createdAt",
+    accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
   },
   {
     header: "Type",
     accessorKey: "schoolType",
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost">
+            <MoreHorizontal />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>View school</DropdownMenuItem>
+          <DropdownMenuItem>Edit school information</DropdownMenuItem>
+          <DropdownMenuItem>Assign point supervisor</DropdownMenuItem>
+          <DropdownMenuItem className="text-shamiri-red">
+            Dropout school
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
   },
 ];
