@@ -767,24 +767,24 @@ model InterventionGroup {
 }
 
 model InterventionGroupReport {
-  id             String               @id @db.VarChar(255)
-  createdAt      DateTime             @default(now()) @map("created_at")
-  updatedAt      DateTime             @updatedAt @map("updated_at")
-  groupId        String               @map("group_id") @db.VarChar(255)
-  group          InterventionGroup    @relation(fields: [groupId], references: [id])
-  e1             Int?                 @map("e1")
-  e2             Int?                 @map("e2")
-  e3             Int?                 @map("e3")
-  eComment       String?              @map("e_comment") @db.Text()
-  c1             Int?                 @map("c1")
-  c2             Int?                 @map("c2")
-  c3             Int?                 @map("c3")
-  cComment       String?              @map("c_comment") @db.Text()
-  content        Int?
-  contentComment String?              @map("content_comment") @db.Text()
-  sessionId      String?              @unique @map("intervention_session_id")
-  session        InterventionSession? @relation(fields: [sessionId], references: [id])
-  isAllReport    Boolean?             @map("is_all_report")
+  id                 String               @id @db.VarChar(255)
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  groupId            String               @map("group_id") @db.VarChar(255)
+  group              InterventionGroup    @relation(fields: [groupId], references: [id])
+  engagement1        Int?                 @map("engagement_1")
+  engagement2        Int?                 @map("engagement_2")
+  engagement3        Int?                 @map("engagement_3")
+  engagementComment  String?              @map("engagement_comment") @db.Text()
+  cooperation1       Int?                 @map("cooperation_1")
+  cooperation2       Int?                 @map("cooperation_2")
+  cooperation3       Int?                 @map("cooperation_3")
+  cooperationComment String?              @map("cooperation_comment") @db.Text()
+  content            Int?
+  contentComment     String?              @map("content_comment") @db.Text()
+  sessionId          String?              @unique @map("intervention_session_id")
+  session            InterventionSession? @relation(fields: [sessionId], references: [id])
+  isAllReport        Boolean?             @map("is_all_report")
 
   @@map("intervention_group_reports")
 }
