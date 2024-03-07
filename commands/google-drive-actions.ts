@@ -65,7 +65,7 @@ export const createSupProgressNoteToGDriveAndSaveOnDb = async (inputData: {
   }
 };
 
-const createDocumentPermission = async (
+export const createDocumentPermission = async (
   fileId: string,
   targetUserEmail: string,
 ) => {
