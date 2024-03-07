@@ -45,7 +45,9 @@ export default async function SchoolDetailPage({
     where: { schoolId: school.id, gender: undefined },
   });
 
-  const total = school.numbersExpected;
+  const total = await db.student.count({
+    where: { schoolId: school.id },
+  });
 
   const supervisor = await currentSupervisor();
   if (!supervisor) {
@@ -142,10 +144,6 @@ async function FellowsList({
     orderBy: { createdAt: "asc" },
   });
 
-  const schoolStudentCount = await db.student.count({
-    where: { schoolId: school.id },
-  });
-
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {fellows.map((fellow) => {
@@ -155,7 +153,6 @@ async function FellowsList({
             fellow={fellow}
             school={school}
             supervisor={supervisor}
-            totalStudents={schoolStudentCount}
           />
         );
       })}
@@ -182,11 +179,10 @@ function getAttendanceStatus(
   return "not-marked";
 }
 
-function FellowCard({
+async function FellowCard({
   fellow,
   school,
   supervisor,
-  totalStudents,
 }: {
   fellow: FellowWithAttendance;
   school: Prisma.SchoolGetPayload<{
@@ -198,14 +194,12 @@ function FellowCard({
     };
   }>;
   supervisor: Prisma.SupervisorGetPayload<{}>;
-  totalStudents: number;
 }) {
   const filteredAttendances: FellowWithAttendance["attendances"][number][] =
     fellow.fellowAttendances.filter(
       (attendance: FellowWithAttendance["attendances"][number]) =>
         attendance.schoolId === school.id,
     );
-
   const sessionItems: {
     status: AttendanceStatus;
     label: SessionLabel;
@@ -251,6 +245,13 @@ function FellowCard({
   const fellowGroup = school.interventionGroups.find(
     (group) => group.leaderId === fellow.id,
   );
+
+  const groupStudentCount = await db.student.count({
+    where: {
+      schoolId: school.id,
+      assignedGroupId: fellowGroup?.id,
+    },
+  });
 
   return (
     <div className="rounded border p-8 shadow-md">
@@ -320,7 +321,7 @@ function FellowCard({
           href={`/schools/${school.visibleId}/students?fellowId=${fellow.visibleId}`}
           className="block w-full"
         >
-          {totalStudents} Students
+          {groupStudentCount} Students
         </Link>
       </div>
     </div>
