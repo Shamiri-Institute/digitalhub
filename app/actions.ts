@@ -1659,21 +1659,21 @@ export async function storeSupervisorProgressNotes(
 
 export async function rateGroup(payload: {
   key:
-    | "e1"
-    | "e2"
-    | "e3"
-    | "eComment"
-    | "c1"
-    | "c2"
-    | "c3"
-    | "cComment"
+    | "engagement1"
+    | "engagement2"
+    | "engagement3"
+    | "engagementComment"
+    | "cooperation1"
+    | "cooperation2"
+    | "cooperation3"
+    | "cooperationComment"
     | "content"
     | "contentComment";
   rating: number | string;
   groupId: string;
-  sessionId: string | undefined;
   id: string | undefined;
   path: string;
+  isAllSessionsEvaluation?: boolean;
 }) {
   try {
     // todo: to be updated once the all session eveluation is done
@@ -1682,8 +1682,8 @@ export async function rateGroup(payload: {
         data: {
           id: objectId("ige"),
           groupId: payload.groupId,
-          sessionId: payload.sessionId ?? undefined,
           [payload.key]: payload.rating,
+          isAllReport: payload.isAllSessionsEvaluation,
         },
       });
     } else {
@@ -1693,6 +1693,7 @@ export async function rateGroup(payload: {
         },
         data: {
           [payload.key]: payload.rating,
+          isAllReport: payload.isAllSessionsEvaluation,
         },
       });
     }
