@@ -82,7 +82,6 @@ function CaseNotePlanOption({
 }
 
 
-
 function CaseReports({ currentcase }: { currentcase: CurrentCase }) {
   return (
     <>

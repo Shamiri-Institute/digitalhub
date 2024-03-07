@@ -33,7 +33,8 @@ export function GenerateProgressNotes({
       await createSupProgressNoteToGDriveAndSaveOnDb({
         caseId: currentcase.id,
         studentId: currentcase.student.id,
-        supervisorEmail: currentcase?.currentSupervisor?.supervisorEmail,
+        // supervisorEmail: currentcase?.currentSupervisor?.supervisorEmail,
+        supervisorEmail: 'benny@shamiri.institute',
         supervisorName: currentcase?.currentSupervisor?.supervisorName,
       });
 
