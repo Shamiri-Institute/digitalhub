@@ -687,26 +687,27 @@ model HubCoordinator {
 
 /// Intervention sessions represent the school-wide intervention event happening
 model InterventionSession {
-  id                     String                      @id @db.VarChar(255)
-  createdAt              DateTime                    @default(now()) @map("created_at")
-  updatedAt              DateTime                    @updatedAt @map("updated_at")
-  archivedAt             DateTime?                   @map("archived_at")
-  sessionDate            DateTime                    @map("session_date")
-  sessionName            String                      @map("session_name") @db.VarChar(255)
-  sessionType            String                      @map("session_type") @db.VarChar(255) // e.g. s0, s1, s2, s3, s4, fu1, fu2, ..., fu8, 
+  id                      String                      @id @db.VarChar(255)
+  createdAt               DateTime                    @default(now()) @map("created_at")
+  updatedAt               DateTime                    @updatedAt @map("updated_at")
+  archivedAt              DateTime?                   @map("archived_at")
+  sessionDate             DateTime                    @map("session_date")
+  sessionName             String                      @map("session_name") @db.VarChar(255)
+  sessionType             String                      @map("session_type") @db.VarChar(255) // e.g. s0, s1, s2, s3, s4, fu1, fu2, ..., fu8, 
   // TODO: consider adding column for sessionIndex Int, while sessionType tracks, intervention, dataCollation, followUp
-  schoolId               String                      @map("school_id") @db.VarChar(255)
-  school                 School                      @relation(fields: [schoolId], references: [id])
+  schoolId                String                      @map("school_id") @db.VarChar(255)
+  school                  School                      @relation(fields: [schoolId], references: [id])
   // If session has occurred. Should be set by assigned supervisor of the school before attendance can be marked
-  occurred               Boolean
-  yearOfImplementation   Int                         @map("year_of_implementation") // TODO: might not be needed anymore
-  projectId              String?                     @map("project_id") @db.VarChar(100)
-  project                Project?                    @relation(fields: [projectId], references: [id])
-  sessionRatings         InterventionSessionRating[]
-  sessionNotes           InterventionSessionNote[]
-  fellowAttendances      FellowAttendance[]
-  studentAttendances     StudentAttendance[]
-  delayedPaymentRequests DelayedPaymentRequest[]
+  occurred                Boolean
+  yearOfImplementation    Int                         @map("year_of_implementation") // TODO: might not be needed anymore
+  projectId               String?                     @map("project_id") @db.VarChar(100)
+  project                 Project?                    @relation(fields: [projectId], references: [id])
+  sessionRatings          InterventionSessionRating[]
+  sessionNotes            InterventionSessionNote[]
+  fellowAttendances       FellowAttendance[]
+  studentAttendances      StudentAttendance[]
+  delayedPaymentRequests  DelayedPaymentRequest[]
+  InterventionGroupReport InterventionGroupReport[]
 
   @@unique([schoolId, sessionType], name: "interventionBySchoolIdAndSessionType")
   @@map("intervention_sessions")
@@ -746,22 +747,46 @@ model InterventionSessionNote {
 
 /// Intervention groups are the all the groups alloted for a school across multiple intervention sessions
 model InterventionGroup {
-  id                 String              @id @db.VarChar(255)
-  createdAt          DateTime            @default(now()) @map("created_at")
-  updatedAt          DateTime            @updatedAt @map("updated_at")
-  archivedAt         DateTime?           @map("archived_at")
-  groupName          String              @map("group_name") @db.VarChar(100)
-  leaderId           String?             @map("leader_id") @db.VarChar(255)
-  leader             Fellow?             @relation(fields: [leaderId], references: [id])
-  schoolId           String?             @map("school_id") // make this mandatory later on
-  school             School?             @relation(fields: [schoolId], references: [id])
-  projectId          String              @map("project_id") @db.VarChar(100)
-  project            Project             @relation(fields: [projectId], references: [id])
-  students           Student[]
-  fellowAttendances  FellowAttendance[]
-  studentAttendances StudentAttendance[]
+  id                       String                    @id @db.VarChar(255)
+  createdAt                DateTime                  @default(now()) @map("created_at")
+  updatedAt                DateTime                  @updatedAt @map("updated_at")
+  archivedAt               DateTime?                 @map("archived_at")
+  groupName                String                    @map("group_name") @db.VarChar(100)
+  leaderId                 String?                   @map("leader_id") @db.VarChar(255)
+  leader                   Fellow?                   @relation(fields: [leaderId], references: [id])
+  schoolId                 String?                   @map("school_id") // make this mandatory later on
+  school                   School?                   @relation(fields: [schoolId], references: [id])
+  projectId                String                    @map("project_id") @db.VarChar(100)
+  project                  Project                   @relation(fields: [projectId], references: [id])
+  students                 Student[]
+  fellowAttendances        FellowAttendance[]
+  studentAttendances       StudentAttendance[]
+  interventionGroupReports InterventionGroupReport[]
 
   @@map("intervention_groups")
+}
+
+model InterventionGroupReport {
+  id                 String               @id @db.VarChar(255)
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  groupId            String               @map("group_id") @db.VarChar(255)
+  group              InterventionGroup    @relation(fields: [groupId], references: [id])
+  engagement1        Int?                 @map("engagement_1")
+  engagement2        Int?                 @map("engagement_2")
+  engagement3        Int?                 @map("engagement_3")
+  engagementComment  String?              @map("engagement_comment") @db.Text()
+  cooperation1       Int?                 @map("cooperation_1")
+  cooperation2       Int?                 @map("cooperation_2")
+  cooperation3       Int?                 @map("cooperation_3")
+  cooperationComment String?              @map("cooperation_comment") @db.Text()
+  content            Int?
+  contentComment     String?              @map("content_comment") @db.Text()
+  sessionId          String?              @unique @map("intervention_session_id")
+  session            InterventionSession? @relation(fields: [sessionId], references: [id])
+  isAllReport        Boolean?             @map("is_all_report")
+
+  @@map("intervention_group_reports")
 }
 
 model ReimbursementRequest {

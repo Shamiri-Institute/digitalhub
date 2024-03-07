@@ -271,6 +271,7 @@ async function FellowCard({
             fellow={fellow}
             school={school}
             supervisor={supervisor}
+            fellowGroup={fellowGroup?.groupName}
           >
             <button className="flex flex-col gap-[1px]">
               <div>
