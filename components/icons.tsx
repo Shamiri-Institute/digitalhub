@@ -63,7 +63,7 @@ export const Icons = {
   moreHorizontal: MoreHorizontal,
   moreVertical: MoreVertical,
   xIcon: XIcon,
-  startOutline: Star,
+  starOutline: Star,
   heartPulse: HeartPulse,
 
   // star: StarIcon,
