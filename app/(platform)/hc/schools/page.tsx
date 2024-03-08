@@ -13,8 +13,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import Image from "next/image";
 import AddCircleOutlined from "../../../../public/icons/add-circle-outline.svg";
-import SettingsIcon from "../../../../public/icons/settings-icon.svg";
-import { fetchSchoolData } from "./actions";
+import { fetchChartItems, fetchSchoolData } from "./actions";
 import { columns } from "./components/columns";
 import SchoolsDataTable from "./components/data-table";
 
