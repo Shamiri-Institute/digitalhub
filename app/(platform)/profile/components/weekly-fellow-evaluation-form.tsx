@@ -1,4 +1,5 @@
 "use client";
+import { Icons } from "#/components/icons";
 import {
   Accordion,
   AccordionContent,
@@ -68,6 +69,24 @@ const InputSchema = WeeklyFellowRatingSchema.pick({
   week: true,
 });
 
+export interface RatingState {
+  ratings: {
+    behaviourRating: number;
+    programDeliveryRating: number;
+    dressingAndGroomingRating: number;
+    punctualityRating: number;
+  };
+}
+
+const initialState: RatingState = {
+  ratings: {
+    behaviourRating: 0,
+    programDeliveryRating: 0,
+    dressingAndGroomingRating: 0,
+    punctualityRating: 0,
+  },
+};
+
 export default function WeeklyEvaluationForm({
   children,
   previousRatings = [],
@@ -98,7 +117,24 @@ export default function WeeklyEvaluationForm({
       supervisorId,
     };
 
-    const response = await submitWeeklyFellowRating(weeklyRatingBody);
+    if (
+      ratingState.ratings.behaviourRating === 0 ||
+      ratingState.ratings.programDeliveryRating === 0 ||
+      ratingState.ratings.dressingAndGroomingRating === 0 ||
+      ratingState.ratings.punctualityRating === 0
+    ) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description: "Please rate all the fields before submitting",
+      });
+      return;
+    }
+
+    const response = await submitWeeklyFellowRating(
+      weeklyRatingBody,
+      ratingState,
+    );
 
     if (!response.success) {
       toast({
@@ -118,8 +154,24 @@ export default function WeeklyEvaluationForm({
     });
 
     form.reset();
+    setRatingState(initialState);
     setDialogOpen(false);
   }
+
+  const onRatingSelect = (
+    kind:
+      | "behaviourRating"
+      | "programDeliveryRating"
+      | "dressingAndGroomingRating"
+      | "punctualityRating",
+    rating: number,
+  ) =>
+    setRatingState((prev) => ({
+      ratings: { ...prev.ratings, [kind]: rating },
+    }));
+
+  const [ratingState, setRatingState] =
+    React.useState<RatingState>(initialState);
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -169,7 +221,17 @@ export default function WeeklyEvaluationForm({
                   name="behaviourNotes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Fellow Behaviour</FormLabel>
+                      <div className="flex items-center">
+                        <FormLabel>Fellow Behaviour</FormLabel>
+                        <FormControl>
+                          <RatingStars
+                            onSelect={(rating) => {
+                              onRatingSelect("behaviourRating", rating);
+                            }}
+                            rating={ratingState.ratings.behaviourRating}
+                          />
+                        </FormControl>
+                      </div>
                       <FormControl>
                         <Textarea className="resize-none" {...field} />
                       </FormControl>
@@ -184,7 +246,15 @@ export default function WeeklyEvaluationForm({
                   name="programDeliveryNotes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Program Delivery</FormLabel>
+                      <div className="flex items-center">
+                        <FormLabel>Program Delivery</FormLabel>
+                        <RatingStars
+                          onSelect={(rating) => {
+                            onRatingSelect("programDeliveryRating", rating);
+                          }}
+                          rating={ratingState.ratings.programDeliveryRating}
+                        />
+                      </div>
                       <FormControl>
                         <Textarea className="resize-none" {...field} />
                       </FormControl>
@@ -199,7 +269,15 @@ export default function WeeklyEvaluationForm({
                   name="dressingAndGroomingNotes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Dressing and Grooming</FormLabel>
+                      <div className="flex items-center">
+                        <FormLabel>Dressing and Grooming</FormLabel>
+                        <RatingStars
+                          onSelect={(rating) => {
+                            onRatingSelect("dressingAndGroomingRating", rating);
+                          }}
+                          rating={ratingState.ratings.dressingAndGroomingRating}
+                        />
+                      </div>
                       <FormControl>
                         <Textarea className="resize-none" {...field} />
                       </FormControl>
@@ -214,7 +292,15 @@ export default function WeeklyEvaluationForm({
                   name="attendanceNotes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Attendance</FormLabel>
+                      <div className="flex items-center">
+                        <FormLabel>Punctuality</FormLabel>
+                        <RatingStars
+                          onSelect={(rating) => {
+                            onRatingSelect("punctualityRating", rating);
+                          }}
+                          rating={ratingState.ratings.punctualityRating}
+                        />
+                      </div>
                       <FormControl>
                         <Textarea className="resize-none" {...field} />
                       </FormControl>
@@ -255,25 +341,27 @@ export default function WeeklyEvaluationForm({
                       <TableBody>
                         <TableRow>
                           <TableCell className="font-bold">
-                            Behaviour Notes
+                            Behaviour Notes - ({pr.behaviourRating})
                           </TableCell>
                           <TableCell>{pr.behaviourNotes}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-bold">
-                            Program Delivery Notes
+                            Program Delivery Notes - ({pr.programDeliveryRating}
+                            )
                           </TableCell>
                           <TableCell>{pr.programDeliveryNotes}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-bold">
-                            Dressing and Grooming Notes
+                            Dressing and Grooming Notes - (
+                            {pr.dressingAndGroomingRating})
                           </TableCell>
                           <TableCell>{pr.dressingAndGroomingNotes}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-bold">
-                            Attendance Notes
+                            Attendance Notes - ({pr.punctualityRating})
                           </TableCell>
                           <TableCell>{pr.attendanceNotes}</TableCell>
                         </TableRow>
@@ -289,5 +377,39 @@ export default function WeeklyEvaluationForm({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function RatingStars({
+  rating,
+  onSelect,
+}: {
+  rating: number;
+  onSelect: (rating: number) => void;
+}) {
+  return (
+    <div className="flex flex-1 justify-end">
+      {[1, 2, 3, 4, 5].map((i) => {
+        if (i <= rating) {
+          return (
+            <button type="button" key={i} onClick={() => onSelect(i)}>
+              <Icons.star
+                key={i}
+                className="ml-4 h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7"
+              />
+            </button>
+          );
+        }
+
+        return (
+          <button type="button" key={i} onClick={() => onSelect(i)}>
+            <Icons.startOutline
+              key={i}
+              className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7"
+            />
+          </button>
+        );
+      })}
+    </div>
   );
 }
