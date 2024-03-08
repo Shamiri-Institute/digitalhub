@@ -151,15 +151,15 @@ export default function EditProfileBio({
         </button>
       </div>
 
-      <Card className="mb-4 flex flex-col gap-5 bg-brand p-5 py-8 pr-3.5">
+      <Card className="mb-4 flex flex-col gap-3 bg-brand p-5 py-8 pr-3.5">
         <h3 className="text-base font-semibold text-muted-foreground">
           My Info
         </h3>
-        <h3 className="text-base font-semibold text-shamiri-light-blue ">
+        <h3 className="text-lg font-semibold text-shamiri-light-blue ">
           {supervisor.supervisorName}
         </h3>
-        <div className=" space-y-6">
-          <div className="mt-6 space-y-6">
+        <div>
+          <div className="space-y-6">
             <Form {...form}>
               <form
                 id="modifyFellowForm"
@@ -169,25 +169,27 @@ export default function EditProfileBio({
                 className="overflow-hidden text-ellipsis px-1"
               >
                 <div>
-                  <FormField
-                    control={form.control}
-                    name="supervisorEmail"
-                    render={({ field }) => (
-                      <div className="mt-2 grid w-full gap-1.5">
-                        <Input
-                          id="supervisorEmail"
-                          name="supervisorEmail"
-                          onChange={field.onChange}
-                          type="email"
-                          defaultValue={
-                            supervisor?.supervisorEmail || field.value
-                          }
-                          placeholder="Personal email address"
-                          className="resize-none bg-card"
-                        />
-                      </div>
-                    )}
-                  />
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="supervisorEmail"
+                      render={({ field }) => (
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="supervisorEmail"
+                            name="supervisorEmail"
+                            onChange={field.onChange}
+                            type="email"
+                            defaultValue={
+                              supervisor?.supervisorEmail || field.value
+                            }
+                            placeholder="Personal email address"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
+                    />
+                  </div>
                   <div>
                     <FormField
                       control={form.control}
@@ -227,6 +229,7 @@ export default function EditProfileBio({
                     />
                   </div>
                   <div>
+                    <h3 className="my-2 text-gray-400">Date of birth</h3>
                     <FormField
                       control={form.control}
                       name="dateOfBirth"
@@ -254,7 +257,7 @@ export default function EditProfileBio({
                 </div>
 
                 <div>
-                  <h3 className="mb-4 text-gray-400">Gender</h3>
+                  <h3 className="my-2 text-gray-400">Gender</h3>
                   <div className="grid grid-cols-3 gap-x-2 gap-y-2">
                     <Button
                       className={cn(
@@ -299,7 +302,7 @@ export default function EditProfileBio({
                   </div>
                 </div>
                 <div>
-                  <h3 className="mb-4  text-gray-400">Mpesa</h3>
+                  <h3 className="my-2  text-gray-400">MPESA</h3>
                   <FormField
                     control={form.control}
                     name="mpesaName"
@@ -340,7 +343,7 @@ export default function EditProfileBio({
                   </div>
                 </div>
                 <div>
-                  <h3 className="mb-4 text-gray-400">Bank</h3>
+                  <h3 className="my-2 text-gray-400">Bank</h3>
                   <FormField
                     control={form.control}
                     name="bankName"
