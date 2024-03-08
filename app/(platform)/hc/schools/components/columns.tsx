@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "#/components/ui/button";
+import { Checkbox } from "#/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,28 @@ export type SchoolsTableData = Prisma.SchoolGetPayload<{
 }>;
 
 export const columns: ColumnDef<SchoolsTableData>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(val) => row.toggleSelected(!!val)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: "schoolName",
     header: "School Name",
