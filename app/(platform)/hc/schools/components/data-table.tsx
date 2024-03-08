@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "#/components/ui/table";
+import { cn } from "#/lib/utils";
 import {
   ColumnDef,
   SortingState,
@@ -92,7 +93,17 @@ export default function DataTable<TData, TValue>({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
+                <TableHead
+                  key={header.id}
+                  className={cn(
+                    "px-4 text-sm font-semibold leading-5 text-shamiri-text-grey",
+                    ["actions", "select"].includes(
+                      header.column.columnDef.header,
+                    )
+                      ? "py-3"
+                      : "py-2",
+                  )}
+                >
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -109,10 +120,11 @@ export default function DataTable<TData, TValue>({
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
+                className="text-sm font-medium leading-5 text-shamiri-text-dark-grey"
                 data-state={row.getIsSelected() && "Selected"}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell key={cell.id} className="px-4 py-2">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
