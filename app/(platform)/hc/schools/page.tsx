@@ -71,17 +71,6 @@ export default async function SchoolsPage() {
             />
             Weekly Hub Report
           </Button>
-          <Button className="flex items-center gap-2 bg-white text-sm font-semibold leading-5 text-shamiri-black">
-            Edit Columns
-            <Image
-              unoptimized
-              priority
-              src={SettingsIcon}
-              alt="Setting Icon"
-              width={24}
-              height={24}
-            />
-          </Button>
           {/* TODO: dispaly options button */}
         </div>
       </div>
