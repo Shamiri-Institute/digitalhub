@@ -191,7 +191,7 @@ export function FellowSubstitutionDialog({
                             }
                           />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-64 overflow-y-auto">
                           {fellowInterventionSessions.map((session) => (
                             <SelectItem
                               key={session.fellowAttendanceId}
@@ -239,7 +239,7 @@ export function FellowSubstitutionDialog({
                             }
                           />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-64 overflow-y-auto">
                           {supervisors?.map((supervisor) => (
                             <SelectItem
                               key={supervisor.id}
@@ -279,7 +279,7 @@ export function FellowSubstitutionDialog({
                             }
                           />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-64 overflow-y-auto">
                           {fellows?.map((fellow) => (
                             <SelectItem key={fellow.id} value={fellow.id}>
                               {fellow.fellowName} - {fellow.visibleId}
