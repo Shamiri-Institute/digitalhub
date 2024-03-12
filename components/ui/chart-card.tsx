@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./card";
 

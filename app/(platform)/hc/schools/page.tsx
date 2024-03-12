@@ -1,3 +1,4 @@
+import { getCurrentPersonnel } from "#/app/auth";
 import { Button } from "#/components/ui/button";
 import ChartCard from "#/components/ui/chart-card";
 import { Command, CommandInput } from "#/components/ui/command";
@@ -13,24 +14,23 @@ import {
 import { Separator } from "#/components/ui/separator";
 import Image from "next/image";
 import AddCircleOutlined from "../../../../public/icons/add-circle-outline.svg";
-import { fetchChartItems, fetchSchoolData } from "./actions";
+import {
+  fetchDropoutReasons,
+  fetchSchoolData,
+  fetchSessionAttendanceData,
+} from "./actions";
+import ChartArea from "./components/chart-area";
 import { columns } from "./components/columns";
 import SchoolsDataTable from "./components/data-table";
-import { getCurrentPersonnel } from "#/app/auth";
-import { Pie, PieChart } from "recharts";
-import ChartArea from "./components/chart-area";
-
-const dummySchools = [
-  "Komothai High School",
-  "Alliance High School",
-  "Pangani Girls High School",
-];
 
 export default async function SchoolsPage() {
-  const hubCoordinator = await getCurrentPersonnel()
+  const hubCoordinator = await getCurrentPersonnel();
+  // TODO: convert this to Promise.all for concurrent fetch
   const data = await fetchSchoolData(hubCoordinator.assignedHubId);
-  const { dropoutData } = await fetchChartItems(hubCoordinator.assignedHubId);
-  console.log(dropoutData)
+  const dropoutData = await fetchDropoutReasons(hubCoordinator.assignedHubId);
+  const sessionAttendanceData = await fetchSessionAttendanceData(
+    hubCoordinator.assignedHubId,
+  );
 
   return (
     <>
@@ -79,9 +79,12 @@ export default async function SchoolsPage() {
         </div>
       </div>
       {/* TODO: better to use grid here for responsive views */}
-      <div className="grid grid-cols-2 md:grid-cols-4 py-5 gap-5">
+      <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
         <ChartCard title="Attendance" />
-        <ChartArea dropoutData={dropoutData} />
+        <ChartArea
+          dropoutData={dropoutData}
+          sessionAttendanceData={sessionAttendanceData}
+        />
         <ChartCard title="School information completion" />
         <ChartCard title="Ratings" />
       </div>
