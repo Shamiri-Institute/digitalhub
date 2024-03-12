@@ -1,6 +1,6 @@
 import { currentSupervisor } from "#/app/auth";
 import { createDocumentPermission } from "#/commands/google-drive-actions";
-import { File } from "@web-std/file";
+import { db } from "#/lib/db";
 import { google } from "googleapis";
 import mime from "mime-types";
 import { NextRequest, NextResponse } from "next/server";
@@ -19,37 +19,28 @@ const auth = new google.auth.GoogleAuth({
   scopes: SCOPES,
 });
 
-// POST for uploading file to Google Drive: of type File
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
-  console.log("dsfdfdfdd");
-  console.log("hhhee");
-  console.log({ formData });
 
   const supervisor = await currentSupervisor();
 
-  console.log(supervisor?.supervisorEmail);
-
   try {
     const file = formData.get("file") as File;
-    console.log("about to get array buffer from file");
+
     const buffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(buffer);
 
     const studentId = formData.get("studentId") as string;
-    const schoolId = formData.get("schoolId") as string;
+    const caseId = formData.get("caseId") as string;
 
-    console.log({ studentId, schoolId });
-    console.log(file, "fillllle");
-
-    const resp = await uploadTreatmentPlan(fileBuffer, {
+    await uploadTreatmentPlan(fileBuffer, {
       studentId: studentId ?? "",
       supervisorName: supervisor?.supervisorName ?? "",
-      // supervisorEmail: supervisor?.supervisorEmail,
-      supervisorEmail: "benny@shamiri.institute",
+      supervisorEmail: supervisor?.supervisorEmail ?? "",
       filename: file.name,
+      caseId,
     });
-    console.log("dadada", resp);
+
     return NextResponse.json({
       status: 200,
       message: "File uploaded successfully.",
@@ -70,17 +61,18 @@ async function uploadTreatmentPlan(
     supervisorName,
     supervisorEmail,
     filename,
+    caseId,
   }: {
     studentId: string;
     supervisorName: string;
     supervisorEmail: string;
     filename: string;
+    caseId: string;
   },
 ) {
   const mimeType = mime.lookup(filename);
-  console.log({ mimeType });
+
   try {
-    console.log("inside upload treatment plan", fileBuffer, filename);
     const { data } = await google.drive({ version: "v3", auth }).files.create({
       media: {
         mimeType: mimeType || "application/octet-stream",
@@ -97,8 +89,7 @@ async function uploadTreatmentPlan(
       throw new Error("File not uploaded. No data.id");
     }
 
-    await createDocumentPermission(data.id, "benny@shamiri.institute");
-    // await createDocumentPermission(data.id, supervisorEmail);
+    await createDocumentPermission(data.id, supervisorEmail);
 
     const fileId = data.id;
 
@@ -109,13 +100,19 @@ async function uploadTreatmentPlan(
         fields: "webViewLink",
       });
 
-    console.log(shareResponse, "shareResponse");
     const shareableLink = shareResponse.data.webViewLink;
 
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: caseId,
+      },
+      data: {
+        treatmentPlan: shareableLink,
+      },
+    });
+
     return shareableLink;
-    // todo: store the shareable link in the database
-    return "https://www.google.com";
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 }
