@@ -3,10 +3,16 @@
 import ChartCard from "#/components/ui/chart-card";
 import { Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
-export default function ChartArea({ dropoutData }: { dropoutData: any }) {
-  console.log(dropoutData);
+export default function ChartArea({
+  dropoutData,
+  sessionAttendanceData,
+}: {
+  dropoutData: any;
+  sessionAttendanceData: any;
+}) {
   return (
-    <>
+    <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
+      <ChartCard title="Attendance" />
       <ChartCard title="Drop out reasons">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart width={307} height={307}>
@@ -22,6 +28,8 @@ export default function ChartArea({ dropoutData }: { dropoutData: any }) {
           </PieChart>
         </ResponsiveContainer>
       </ChartCard>
-    </>
+      <ChartCard title="School information completion" />
+      <ChartCard title="Ratings" />
+    </div>
   );
 }

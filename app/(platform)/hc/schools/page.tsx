@@ -1,6 +1,5 @@
 import { getCurrentPersonnel } from "#/app/auth";
 import { Button } from "#/components/ui/button";
-import ChartCard from "#/components/ui/chart-card";
 import { Command, CommandInput } from "#/components/ui/command";
 import PageHeading from "#/components/ui/page-heading";
 import {
@@ -79,15 +78,10 @@ export default async function SchoolsPage() {
         </div>
       </div>
       {/* TODO: better to use grid here for responsive views */}
-      <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
-        <ChartCard title="Attendance" />
-        <ChartArea
-          dropoutData={dropoutData}
-          sessionAttendanceData={sessionAttendanceData}
-        />
-        <ChartCard title="School information completion" />
-        <ChartCard title="Ratings" />
-      </div>
+      <ChartArea
+        dropoutData={dropoutData}
+        sessionAttendanceData={sessionAttendanceData}
+      />
       <Separator />
       <div className="pt-5">
         <SchoolsDataTable data={data} columns={columns} />
