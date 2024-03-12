@@ -1,98 +1,120 @@
-import { Input } from "#/components/ui/input";
-import { ChangeEvent, useState } from "react";
+import { CurrentCase } from "#/app/(platform)/screenings/screen";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
+import { Input } from "#/components/ui/input";
 import { useToast } from "#/components/ui/use-toast";
-import { CurrentCase } from "#/app/(platform)/screenings/screen";
+import { Loader2 } from "lucide-react";
+import Link from "next/link";
+import { ChangeEvent, useState } from "react";
 
-export function TreatmentPlan({ currentcase }: {
-  currentcase: CurrentCase;
-}) {
+export function TreatmentPlan({ currentcase }: { currentcase: CurrentCase }) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
 
   function handleFileUpload(event: ChangeEvent<HTMLInputElement>) {
-
     if (!event?.target?.files) return;
 
-    const file = event.target.files[0]; // Get the first selected file
-    if (file) {
-      // Perform operations with the selected file
-      console.log("Selected file:", file);
-      setSelectedFile(file);
+    const file = event.target.files[0];
 
+    if (file) {
+      setSelectedFile(file);
     }
   }
 
   const handleUpload = async () => {
-
     if (!selectedFile) {
+      toast({ title: "No file selected", variant: "destructive" });
       console.error("No file selected");
       return;
     }
 
-    // Perform file upload
-    console.log("Uploading file:", selectedFile);
     const formData = new FormData();
-    // formData.append("file", selectedFile);
+
     formData.append("studentId", currentcase.student.id);
-    formData.append("schoolId", currentcase.student.schoolId!);
+    formData.append("caseId", currentcase.id);
 
-    // Read the file content
     const fileContent = await readFileContent(selectedFile);
-
-    // Append the file content to the FormData object
     formData.append("file", fileContent, selectedFile.name);
-    console.log(formData);
+
     try {
-      // const resp = await uploadTreatmentPlan(formData);
-      console.log("oaddu");
+      setUploading(true);
 
       const resp = await fetch("/api/files/gdrive", {
         method: "POST",
         body: formData,
-      })
+      });
 
-
-      // if (resp.ok) {
-      //   toast({ title: "File uploaded successfully", variant: "default" });
-      // } else {
-      //   toast({ title: "Failed to upload file", variant: "destructive" });
-      // }
-
-      // console.log({ resp });
-
+      if (resp.ok) {
+        toast({ title: "File uploaded successfully", variant: "default" });
+      }
+      window.location.href = `/screenings/${currentcase.id}`;
     } catch (error) {
       console.error("Failed to upload file:", error);
+      toast({
+        title: "Failed to upload file. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
     }
-
-  }
+  };
 
   return (
     <>
-      <Input className="cursor-pointer" id="docx-file" name="docx-file" type="file" accept=".doc, .docx, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        onChange={handleFileUpload}
-      />
-      {/* <p className="text-sm text-gray-500 mt-2">Select a .doc or .docx file to upload</p> */}
-      {
-        selectedFile &&
-        <>
-          <p className="text-sm text-gray-500 mt-2">Selected file: {selectedFile.name}</p>
-          <p className="text-sm text-gray-500 mt-2">File size: {selectedFile.size} bytes</p>
-        </>
-      }
-      <Button
-        disabled={!selectedFile}
-        onClick={handleUpload}
-        type="submit"
-        className="hover:bg-shamiri-brand mt-2 w-full rounded-sm bg-shamiri-blue px-3 py-2 text-white">
-        <Icons.upload className="mr-2 h-4 w-4" />
-        Upload File
-      </Button>
+      {currentcase.treatmentPlan ? (
+        <div>
+          <p className="text-sm text-gray-500">Treatment Plan Link</p>
+          <Link
+            href={currentcase.treatmentPlan ?? "#"}
+            target="_blank"
+            className="hover:bg-shamiri-brand w-full rounded-sm  py-2 text-brand underline"
+          >
+            {currentcase.treatmentPlan}
+          </Link>
+        </div>
+      ) : (
+        <div>
+          <Input
+            className="cursor-pointer"
+            id="docx-file"
+            name="docx-file"
+            type="file"
+            accept=".doc, .docx, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            onChange={handleFileUpload}
+          />
+
+          {selectedFile && (
+            <>
+              <p className="mt-2 text-sm text-gray-500">
+                Selected file: {selectedFile.name}
+              </p>
+              <p className="mt-2 text-sm text-gray-500">
+                File size: {selectedFile.size} bytes
+              </p>
+            </>
+          )}
+          <Button
+            disabled={!selectedFile}
+            onClick={handleUpload}
+            type="submit"
+            className="hover:bg-shamiri-brand mt-2 w-full rounded-sm bg-shamiri-blue px-3 py-2 text-white"
+          >
+            {uploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {uploading ? (
+              "Uploading file..."
+            ) : (
+              <>
+                <Icons.upload className="mr-2 h-4 w-4" />
+                Upload File
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </>
   );
 }
-
 
 export function readFileContent(file: File): Promise<Blob> {
   return new Promise((resolve, reject) => {
