@@ -4,18 +4,12 @@ import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 import {
-  ClinicalScreeningInfo,
-  ClinicalSessionAttendance,
-  Prisma,
-  Student,
+  Prisma
 } from "@prisma/client";
 import { useState } from "react";
 import GeneralIssues from "./general-issues";
+import { CurrentCase } from "#/app/(platform)/screenings/screen";
 
-type CurrentCase = ClinicalScreeningInfo & {
-  student: Student;
-  sessions: ClinicalSessionAttendance[];
-};
 export function PresentingIssues({
   currentcase,
 }: {
@@ -24,7 +18,7 @@ export function PresentingIssues({
   return (
     <div className="mt-4">
       <h3 className="mb-2 text-sm font-medium text-muted-foreground">
-        Emergency
+        Emergency Presenting Issues
       </h3>
       <Separator />
       <DiagnosingBoard currentcase={currentcase} />
@@ -34,11 +28,11 @@ export function PresentingIssues({
 }
 
 const emergency_options = [
-  { id: 1, name: "Child Abuse" },
-  { id: 2, name: "Self-harm/Suicidality" },
+  { id: 1, name: "Child Maltreatment" },
+  { id: 2, name: "Suicidality" },
   { id: 3, name: "Sexual Abuse" },
   { id: 4, name: "Bullying" },
-  { id: 5, name: "Substance Abuse" },
+  { id: 5, name: "Substance Use" },
 ];
 
 function DiagnosingBoard({ currentcase }: { currentcase: CurrentCase }) {

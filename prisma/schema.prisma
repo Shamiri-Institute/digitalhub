@@ -912,21 +912,35 @@ model ClinicalScreeningInfo {
   acceptCase     Boolean                @default(false) @map("accept_case")
   referralStatus referralStatusOptions? @map("referral_status")
 
-  sessions                              ClinicalSessionAttendance[]
-  generalPresentingIssues               String?                     @map("general_presenting_issues") @db.VarChar(255)
-  generalPresentingIssuesOtherSpecified String?                     @map("general_presenting_issues_other_specified") @db.Text()
-  emergencyPresentingIssues             Json?                       @map("emergency_presenting_issues") @db.Json()
-  referredFrom                          String?                     @map("referred_from") @db.VarChar(255)
-  referredFromSpecified                 String?                     @map("referred_from_specified") @db.VarChar(255)
-  referredTo                            String?                     @map("referred_to") @db.VarChar(255)
-  referredToSpecified                   String?                     @map("referred_to_specified") @db.VarChar(255)
-  referralNotes                         String?                     @map("referral_notes") @db.Text()
-  caseTransferTrail                     ClinicalCaseTransferTrail[]
-  consultingClinicalExpert              ClinicalExpertCaseNotes[]
-  progressNotes                         String?                     @map("progress_notes") @db.VarChar(255) // link to a google doc hub/school/supervisor/cases/progress_notes
-  treatmentPlan                         String?                     @map("treatment_plan") @db.VarChar(255) // upload a link to a google doc hub/school/supervisor/cases/treatment_plan
-  caseReport                            String?                     @map("case_report") @db.VarChar(255) // upload a link to a google doc hub/school/supervisor/cases/case_report
-  flagged                               Boolean                     @default(false)
+  sessions ClinicalSessionAttendance[]
+
+  generalPresentingIssues               String?  @map("general_presenting_issues") @db.VarChar(255) //todo: legacy field
+  academicStruggles                     Boolean? @map("academic_struggles")
+  homeEnvironment                       Boolean? @map("home_environment")
+  anxiety                               Boolean? @map("anxiety")
+  blendedFamilyDynamics                 Boolean? @map("blended_family_dynamics")
+  parentChildRelationships              Boolean? @map("parent_child_relationships")
+  studentTeacherRelationships           Boolean? @map("student_teacher_relationships")
+  unresolvedGriefLoss                   Boolean? @map("unresolved_grief_loss")
+  medicalCondition                      Boolean? @map("medical_condition")
+  selfPerception                        Boolean? @map("self_perception")
+  selfRegulation                        Boolean? @map("self_regulation")
+  peerRelationships                     Boolean? @map("peer_relationships")
+  sexuality                             Boolean? @map("sexuality")
+  generalPresentingIssuesOtherSpecified String?  @map("general_presenting_issues_other_specified") @db.Text()
+
+  emergencyPresentingIssues Json?                       @map("emergency_presenting_issues") @db.Json()
+  referredFrom              String?                     @map("referred_from") @db.VarChar(255)
+  referredFromSpecified     String?                     @map("referred_from_specified") @db.VarChar(255)
+  referredTo                String?                     @map("referred_to") @db.VarChar(255)
+  referredToSpecified       String?                     @map("referred_to_specified") @db.VarChar(255)
+  referralNotes             String?                     @map("referral_notes") @db.Text()
+  caseTransferTrail         ClinicalCaseTransferTrail[]
+  consultingClinicalExpert  ClinicalExpertCaseNotes[]
+  progressNotes             String?                     @map("progress_notes") @db.VarChar(255) // link to a google doc hub/school/supervisor/cases/progress_notes
+  treatmentPlan             String?                     @map("treatment_plan") @db.VarChar(255) // upload a link to a google doc hub/school/supervisor/cases/treatment_plan
+  caseReport                String?                     @map("case_report") @db.VarChar(255) // upload a link to a google doc hub/school/supervisor/cases/case_report
+  flagged                   Boolean                     @default(false)
 
   initialCaseHistoryId      String? @map("initial_case_history_id") @db.VarChar(255)
   initialCaseHistoryOwnerId String? @map("initial_case_history_owner_id") @db.VarChar(255)
