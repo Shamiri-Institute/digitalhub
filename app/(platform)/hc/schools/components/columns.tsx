@@ -71,10 +71,12 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
     accessorKey: 
   },
   */
+  /*
   {
     header: "Report submission FIXME",
     accessorKey: "schoolName",
   },
+  */
   {
     header: "School ID",
     accessorKey: "id",

@@ -16,6 +16,9 @@ import AddCircleOutlined from "../../../../public/icons/add-circle-outline.svg";
 import { fetchChartItems, fetchSchoolData } from "./actions";
 import { columns } from "./components/columns";
 import SchoolsDataTable from "./components/data-table";
+import { getCurrentPersonnel } from "#/app/auth";
+import { Pie, PieChart } from "recharts";
+import ChartArea from "./components/chart-area";
 
 const dummySchools = [
   "Komothai High School",
@@ -24,8 +27,10 @@ const dummySchools = [
 ];
 
 export default async function SchoolsPage() {
-  const data = await fetchSchoolData();
-  console.log({ data });
+  const hubCoordinator = await getCurrentPersonnel()
+  const data = await fetchSchoolData(hubCoordinator.assignedHubId);
+  const { dropoutData } = await fetchChartItems(hubCoordinator.assignedHubId);
+  console.log(dropoutData)
 
   return (
     <>
@@ -74,9 +79,9 @@ export default async function SchoolsPage() {
         </div>
       </div>
       {/* TODO: better to use grid here for responsive views */}
-      <div className="flex justify-between py-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 py-5 gap-5">
         <ChartCard title="Attendance" />
-        <ChartCard title="Drop-out reasons" />
+        <ChartArea dropoutData={dropoutData} />
         <ChartCard title="School information completion" />
         <ChartCard title="Ratings" />
       </div>
