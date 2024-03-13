@@ -37,8 +37,10 @@ const colors: Colors = {
 
 export function ListViewOfClinicalCases({
   cases = [],
+  currentSupervisorId,
 }: {
   cases: CasesType[];
+  currentSupervisorId?: string;
 }) {
   return (
     <div>
@@ -54,19 +56,39 @@ export function ListViewOfClinicalCases({
             <TabsTrigger value="Referred">Referred</TabsTrigger>
           </TabsList>
           <TabsContent value="all">
-            <ClinicalCasses cases={cases} option={"all"} />
+            <ClinicalCasses
+              cases={cases}
+              option={"all"}
+              currentSupervisorId={currentSupervisorId}
+            />
           </TabsContent>
           <TabsContent value="Active">
-            <ClinicalCasses cases={cases} option={"Active"} />
+            <ClinicalCasses
+              cases={cases}
+              option={"Active"}
+              currentSupervisorId={currentSupervisorId}
+            />
           </TabsContent>
           <TabsContent value="FollowUp">
-            <ClinicalCasses cases={cases} option={"FollowUp"} />
+            <ClinicalCasses
+              cases={cases}
+              option={"FollowUp"}
+              currentSupervisorId={currentSupervisorId}
+            />
           </TabsContent>
           <TabsContent value="Terminated">
-            <ClinicalCasses cases={cases} option={"Terminated"} />
+            <ClinicalCasses
+              cases={cases}
+              option={"Terminated"}
+              currentSupervisorId={currentSupervisorId}
+            />
           </TabsContent>
           <TabsContent value="Referred">
-            <ClinicalCasses cases={cases} option={"Referred"} />
+            <ClinicalCasses
+              cases={cases}
+              option={"Referred"}
+              currentSupervisorId={currentSupervisorId}
+            />
           </TabsContent>
         </Tabs>
       </div>
@@ -77,9 +99,11 @@ export function ListViewOfClinicalCases({
 function ClinicalCasses({
   option,
   cases = [],
+  currentSupervisorId,
 }: {
   option: "all" | "Active" | "FollowUp" | "Terminated" | "Referred";
   cases?: CasesType[];
+  currentSupervisorId?: string;
 }) {
   const newList = cases.filter((item) => {
     if (option === "all") return true;
@@ -92,6 +116,11 @@ function ClinicalCasses({
       data-testid={constants.CLINICAL_CASES_LIST}
     >
       <div className="mb-2 flex flex-1 justify-between">
+        {currentSupervisorId && (
+          <p className="flex-1 text-base font-medium text-muted-foreground">
+            Supervisor
+          </p>
+        )}
         <p className="flex-1 text-base font-medium text-muted-foreground">
           Name
         </p>
@@ -109,6 +138,8 @@ function ClinicalCasses({
           key={stud.id}
           caseId={stud.id}
           name={stud.student.studentName}
+          currentSupervisorId={currentSupervisorId}
+          supervisor={stud.currentSupervisor.supervisorName}
           session={
             stud.sessions
               .findLast((session) => session.session)
@@ -136,16 +167,23 @@ function ClinicalCassesCard({
   risk,
   status,
   caseId,
+  supervisor,
+  currentSupervisorId,
 }: {
   name: string | null;
   session: string;
   risk: string;
   status: string;
   caseId: string;
+  supervisor: string | null;
+  currentSupervisorId?: string;
 }) {
   return (
     <Link href={`/screenings/${caseId}`}>
       <div className="mt-2 flex flex-1 items-center justify-between border-b last:border-none">
+        {currentSupervisorId && (
+          <p className="flex-1 text-left text-sm text-brand">{supervisor}</p>
+        )}
         <p
           className="flex-1 text-left text-sm text-brand"
           data-testid={constants.CLINICAL_CASES_LIST_NAME}
