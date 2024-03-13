@@ -1626,7 +1626,7 @@ export async function flagClinicalCaseForFollowUp(data: {
       },
       data: {
         flagged: true,
-        caseReport: data.reason,
+        flaggedReason: data.reason,
       },
     });
 
