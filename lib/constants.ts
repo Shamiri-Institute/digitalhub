@@ -36,3 +36,4 @@ function validate(value: string | undefined): string {
   }
   return value;
 }
+export const SHOW_DUPLICATE_ID_CHECKBOX = "show-duplicate-id-checkbox";
