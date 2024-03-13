@@ -14,7 +14,10 @@ import { ModifyFellowData } from "#/app/(platform)/schools/[visibleId]/fellow-mo
 import type { ModifyStudentData } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
 import { getCurrentUser } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
+import {
+  CURRENT_PROJECT_ID,
+  SHOW_DUPLICATE_ID_CHECKBOX,
+} from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getHighestValue } from "#/lib/utils";
@@ -561,7 +564,11 @@ export async function dropoutStudentWithReason(
 
 export async function modifyStudent(
   data: ModifyStudentData & { mode: "create" | "edit" },
-): Promise<{ error: string } | { student: Prisma.StudentGetPayload<{}> }> {
+): Promise<
+  | { error: string }
+  | { error: string; action: typeof SHOW_DUPLICATE_ID_CHECKBOX }
+  | { student: Prisma.StudentGetPayload<{}> }
+> {
   try {
     if (data.mode === "create") {
       revalidatePath(
@@ -607,6 +614,7 @@ async function updateStudent(
     return { error: "Something went wrong during student update" };
   }
 }
+
 async function createStudent(data: ModifyStudentData) {
   try {
     const fellow = await db.fellow.findUniqueOrThrow({
@@ -631,11 +639,15 @@ async function createStudent(data: ModifyStudentData) {
         schoolId: school.id,
         admissionNumber: data.admissionNumber,
       },
+      include: {
+        assignedGroup: true,
+      },
     });
-    if (duplicateStudent) {
+    if (duplicateStudent && !data.isDuplicateAdmissionNumber) {
       if (!data.isTransfer) {
         return {
-          error: "Duplicate admission number. Mark as transfer if applicable.",
+          error: `Duplicate admission number (Name: ${duplicateStudent.studentName}, Admission number: ${duplicateStudent.admissionNumber}, Form: ${duplicateStudent.form}, Stream: ${duplicateStudent.stream}, Group: ${duplicateStudent.assignedGroup?.groupName ?? "N/A"}) Mark as a student transfer from a different group if applicable. Or mark if the student shares an admission number with another student in the school.`,
+          action: SHOW_DUPLICATE_ID_CHECKBOX,
         };
       }
 
