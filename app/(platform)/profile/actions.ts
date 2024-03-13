@@ -72,6 +72,15 @@ export async function submitWeeklyFellowRating(
 
     const parsedData = WeeklyFellowRatingSchema.parse(data);
 
+    console.log({ ratings })
+    console.log({ parsedData })
+    console.log({
+      finalData: {
+        ...parsedData,
+        ...ratings
+      }
+    })
+
     await db.weeklyFellowRatings.create({
       data: {
         ...parsedData,

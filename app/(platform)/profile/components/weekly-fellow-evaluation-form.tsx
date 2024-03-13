@@ -67,11 +67,11 @@ const InputSchema = WeeklyFellowRatingSchema.pick({
   attendanceNotes: true,
   behaviourNotes: true,
   week: true,
+  behaviourRating: true,
 });
 
 export interface RatingState {
   ratings: {
-    behaviourRating: number;
     programDeliveryRating: number;
     dressingAndGroomingRating: number;
     punctualityRating: number;
@@ -80,7 +80,6 @@ export interface RatingState {
 
 const initialState: RatingState = {
   ratings: {
-    behaviourRating: 0,
     programDeliveryRating: 0,
     dressingAndGroomingRating: 0,
     punctualityRating: 0,
@@ -107,6 +106,7 @@ export default function WeeklyEvaluationForm({
       dressingAndGroomingNotes: "",
       attendanceNotes: "",
       behaviourNotes: "",
+      behaviourRating: 0,
     },
   });
 
@@ -118,7 +118,6 @@ export default function WeeklyEvaluationForm({
     };
 
     if (
-      ratingState.ratings.behaviourRating === 0 ||
       ratingState.ratings.programDeliveryRating === 0 ||
       ratingState.ratings.dressingAndGroomingRating === 0 ||
       ratingState.ratings.punctualityRating === 0
@@ -216,29 +215,36 @@ export default function WeeklyEvaluationForm({
               </div>
 
               <div className="px-6">
-                <FormField
-                  control={form.control}
-                  name="behaviourNotes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center">
-                        <FormLabel>Fellow Behaviour</FormLabel>
+                <div className="flex items-center justify-between">
+                  <p>Fellow Behavour</p>
+                  <FormField
+                    control={form.control}
+                    name="behaviourRating"
+                    render={({ field: { value, onChange } }) => (
+                      <FormItem>
+                        <RatingStars
+                          onSelect={(rating) => onChange(rating)}
+                          rating={value}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="behaviourNotes"
+                    render={({ field }) => (
+                      <FormItem>
                         <FormControl>
-                          <RatingStars
-                            onSelect={(rating) => {
-                              onRatingSelect("behaviourRating", rating);
-                            }}
-                            rating={ratingState.ratings.behaviourRating}
-                          />
+                          <Textarea className="resize-none" {...field} />
                         </FormControl>
-                      </div>
-                      <FormControl>
-                        <Textarea className="resize-none" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
               <div className="px-6">
                 <FormField
