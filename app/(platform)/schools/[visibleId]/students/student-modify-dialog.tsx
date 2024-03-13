@@ -28,9 +28,11 @@ import {
   SheetTrigger,
 } from "#/components/ui/sheet";
 import { toast } from "#/components/ui/use-toast";
+import { SHOW_DUPLICATE_ID_CHECKBOX } from "#/lib/constants";
 
 const FormSchema = z.object({
   isTransfer: z.boolean().optional(),
+  isDuplicateAdmissionNumber: z.boolean().optional(),
   fellowVisibleId: z.string({
     required_error: "Please enter the fellow's visible ID.",
   }),
@@ -114,6 +116,7 @@ export function StudentModifyDialog({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       isTransfer: false,
+      isDuplicateAdmissionNumber: false,
       fellowVisibleId: info.fellowVisibleId,
       supervisorVisibleId: info.supervisorVisibleId,
       implementerVisibleId: info.implementerVisibleId,
@@ -141,12 +144,17 @@ export function StudentModifyDialog({
       visibleId: student?.visibleId,
       groupId: group?.groupId,
     });
+
     if (response && (response as any).error) {
       console.error((response as any).error);
       toast({
         variant: "destructive",
         title: (response as any).error,
       });
+      if ((response as any).action === SHOW_DUPLICATE_ID_CHECKBOX) {
+        setShowDuplicateOverride(true);
+        return;
+      }
       return;
     }
 
@@ -165,6 +173,8 @@ export function StudentModifyDialog({
 
       setIsSheetOpen(false);
 
+      setShowDuplicateOverride(false);
+
       router.refresh();
 
       form.reset();
@@ -179,6 +189,9 @@ export function StudentModifyDialog({
   function onError(errors: any) {
     console.log({ errors });
   }
+
+  const [showDuplicateOverride, setShowDuplicateOverride] =
+    React.useState(false);
 
   return (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -196,7 +209,7 @@ export function StudentModifyDialog({
           {mode === "create" && (
             <SheetDescription>
               This student will be assigned to {fellowName}&apos;s group at{" "}
-              {schoolName}: {group?.groupName || "N/A"}
+              {schoolName.trim()}: {group?.groupName || "N/A"}
             </SheetDescription>
           )}
           {mode === "edit" && (
@@ -219,15 +232,39 @@ export function StudentModifyDialog({
                     control={form.control}
                     name="isTransfer"
                     render={({ field }) => (
-                      <div className="mt-3 flex items-center gap-2">
+                      <div className="mt-3 flex items-start gap-2">
                         <input
                           type="checkbox"
+                          className="mt-[2px]"
                           id="isTransfer"
                           checked={field.value}
                           onChange={field.onChange}
                         />
                         <Label htmlFor="isTransfer">
-                          Mark if this is a student transfer
+                          Mark as a student transfer from a different group
+                        </Label>
+                      </div>
+                    )}
+                  />
+                </div>
+              )}
+              {mode === "create" && showDuplicateOverride && (
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="isDuplicateAdmissionNumber"
+                    render={({ field }) => (
+                      <div className="mt-3 flex items-start gap-2">
+                        <input
+                          type="checkbox"
+                          className="mt-[2px]"
+                          id="isDuplicateAdmissionNumber"
+                          checked={field.value}
+                          onChange={field.onChange}
+                        />
+                        <Label htmlFor="isDuplicateAdmissionNumber">
+                          Mark if the student shares an admission number with
+                          another student in the same school
                         </Label>
                       </div>
                     )}
@@ -451,6 +488,26 @@ export function StudentModifyDialog({
                       </div>
                     )}
                   />
+                </div>
+              )}
+
+              {Object.keys(form.formState.errors).length > 0 && (
+                <div
+                  className="relative rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-500"
+                  role="alert"
+                >
+                  <strong className="font-bold">
+                    Please correct the following errors:
+                  </strong>
+                  <ul className="list-inside list-disc">
+                    {Object.entries(form.formState.errors).map(
+                      ([key, value]) => (
+                        <li key={key}>
+                          {key}: {value.message}
+                        </li>
+                      ),
+                    )}
+                  </ul>
                 </div>
               )}
 
