@@ -1,14 +1,12 @@
 "use client";
+import { CurrentCase } from "#/app/(platform)/screenings/screen";
 import { updateClinicalCaseEmergencyPresentingIssue } from "#/app/actions";
 import { Card } from "#/components/ui/card";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
-import {
-  Prisma
-} from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { useState } from "react";
 import GeneralIssues from "./general-issues";
-import { CurrentCase } from "#/app/(platform)/screenings/screen";
 
 export function PresentingIssues({
   currentcase,

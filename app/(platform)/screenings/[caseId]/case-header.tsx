@@ -23,10 +23,10 @@ const casesColorOptions: {
   id: number;
   status: caseStatusOptions;
 }[] = [
-    { id: 1, status: "Active" },
-    { id: 2, status: "FollowUp" },
-    { id: 3, status: "Terminated" },
-  ];
+  { id: 1, status: "Active" },
+  { id: 2, status: "FollowUp" },
+  { id: 3, status: "Terminated" },
+];
 
 export default function CaseHeader({
   currentcase,
@@ -65,9 +65,9 @@ export default function CaseHeader({
             className={cn(
               "ml-2 inline-flex items-center rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-medium text-indigo-800",
               currentcase.referralStatus == "Approved" &&
-              "bg-green-100 text-green-800",
+                "bg-green-100 text-green-800",
               currentcase.referralStatus == "Declined" &&
-              "bg-red-100 text-red-800",
+                "bg-red-100 text-red-800",
             )}
           >
             {currentcase.referralStatus}
