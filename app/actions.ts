@@ -1336,8 +1336,6 @@ export async function updateClinicalCaseGeneralPresentingIssue(
   presentingIssue: { [k: string]: boolean },
   presentingIssueOtherSpecified: string,
 ) {
-  console.log(presentingIssue);
-
   try {
     await db.clinicalScreeningInfo.update({
       where: {
@@ -1349,6 +1347,27 @@ export async function updateClinicalCaseGeneralPresentingIssue(
       },
     });
     revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function updateClinicalCaseGeneralPresentingIssueOtherField(
+  caseId: string,
+  presentingIssueOtherSpecified: string,
+) {
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: caseId,
+      },
+      data: {
+        generalPresentingIssuesOtherSpecified: presentingIssueOtherSpecified,
+      },
+    });
+    revalidatePath(`/screenings/${caseId}`);
     return { success: true };
   } catch (error) {
     console.error(error);
