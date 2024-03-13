@@ -2,6 +2,7 @@
 ALTER TABLE "clinical_screening_info" ADD COLUMN     "academic_struggles" BOOLEAN,
 ADD COLUMN     "anxiety" BOOLEAN,
 ADD COLUMN     "blended_family_dynamics" BOOLEAN,
+ADD COLUMN     "flagged_reason" TEXT,
 ADD COLUMN     "home_environment" BOOLEAN,
 ADD COLUMN     "medical_condition" BOOLEAN,
 ADD COLUMN     "parent_child_relationships" BOOLEAN,

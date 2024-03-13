@@ -941,6 +941,7 @@ model ClinicalScreeningInfo {
   treatmentPlan             String?                     @map("treatment_plan") @db.VarChar(255) // upload a link to a google doc hub/school/supervisor/cases/treatment_plan
   caseReport                String?                     @map("case_report") @db.VarChar(255) // upload a link to a google doc hub/school/supervisor/cases/case_report
   flagged                   Boolean                     @default(false)
+  flaggedReason             String?                     @map("flagged_reason") @db.Text()
 
   initialCaseHistoryId      String? @map("initial_case_history_id") @db.VarChar(255)
   initialCaseHistoryOwnerId String? @map("initial_case_history_owner_id") @db.VarChar(255)
