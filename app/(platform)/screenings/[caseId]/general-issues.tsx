@@ -37,18 +37,14 @@ export default function GeneralIssues({
       ...option,
     })
 
-
-    // setSelected(
-
-    // );
     try {
-      // if (option !== "Other") {
-      // await updateClinicalCaseGeneralPresentingIssue(
-      //   currentcase.id,
-      //   option,
-      //   other,
-      // );
-      // }
+      if (!option.others) {
+        await updateClinicalCaseGeneralPresentingIssue(
+          currentcase.id,
+          option,
+          other,
+        );
+      }
     } catch (error) {
       console.log(error);
     }
@@ -160,7 +156,7 @@ export default function GeneralIssues({
             option="Sexuality/ Sexual Identity"
             selected={selected.sexuality ?? false}
             setSelected={handleOption}
-            valKey="sexualitySexualIdentity"
+            valKey="sexuality"
           />
         </div>
         <div className="my-1 flex gap-2">

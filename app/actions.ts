@@ -1333,16 +1333,18 @@ export async function updateClinicalCaseStatus(
 
 export async function updateClinicalCaseGeneralPresentingIssue(
   caseId: string,
-  presentingIssue: string,
+  presentingIssue: { [k: string]: boolean },
   presentingIssueOtherSpecified: string,
 ) {
+  console.log(presentingIssue);
+
   try {
     await db.clinicalScreeningInfo.update({
       where: {
         id: caseId,
       },
       data: {
-        generalPresentingIssues: presentingIssue,
+        ...presentingIssue,
         generalPresentingIssuesOtherSpecified: presentingIssueOtherSpecified,
       },
     });
