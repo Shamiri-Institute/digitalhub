@@ -163,7 +163,7 @@ export default function GeneralIssues({
           <GeneralOption
             option="Others"
             valKey="others"
-            selected={selected.others ?? false}
+            selected={other ? true : false}
             setSelected={handleOption}
           />
 
