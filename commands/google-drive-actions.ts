@@ -27,10 +27,14 @@ export const createSupProgressNoteToGDriveAndSaveOnDb = async (inputData: {
   supervisorEmail: string;
   caseId: string;
 }) => {
+  console.log("inside create sup progress notes");
   try {
     const filePath = path.join("./commands", "progress_notes_doc.docx");
+    console.log(filePath, "file path");
 
     const mimeType = mime.lookup(filePath);
+
+    console.log(process.env.PROGRESSNOTE_FILEID, "PROGRESSNOTE_FILEID");
 
     const { data } = await google
       .drive({ version: "v3", auth: auth })
@@ -46,6 +50,8 @@ export const createSupProgressNoteToGDriveAndSaveOnDb = async (inputData: {
         fields: "id,name",
       });
 
+    console.log(data.id);
+
     await createDocumentPermission(data.id, inputData.supervisorEmail);
 
     const fileId = data.id;
@@ -58,8 +64,10 @@ export const createSupProgressNoteToGDriveAndSaveOnDb = async (inputData: {
       });
 
     const shareableLink = shareResponse.data.webViewLink;
+    console.log(shareableLink, "shareable link");
 
     await storeSupervisorProgressNotes(inputData.caseId, shareableLink);
+    console.log("progress notes stored in db");
   } catch (error) {
     console.log(error);
   }
