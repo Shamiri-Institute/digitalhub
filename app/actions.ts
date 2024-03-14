@@ -1345,7 +1345,7 @@ export async function updateClinicalCaseStatus(
 
 export async function updateClinicalCaseGeneralPresentingIssue(
   caseId: string,
-  presentingIssue: string,
+  presentingIssue: { [k: string]: boolean },
   presentingIssueOtherSpecified: string,
 ) {
   try {
@@ -1354,11 +1354,32 @@ export async function updateClinicalCaseGeneralPresentingIssue(
         id: caseId,
       },
       data: {
-        generalPresentingIssues: presentingIssue,
+        ...presentingIssue,
         generalPresentingIssuesOtherSpecified: presentingIssueOtherSpecified,
       },
     });
     revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function updateClinicalCaseGeneralPresentingIssueOtherField(
+  caseId: string,
+  presentingIssueOtherSpecified: string,
+) {
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: caseId,
+      },
+      data: {
+        generalPresentingIssuesOtherSpecified: presentingIssueOtherSpecified,
+      },
+    });
+    revalidatePath(`/screenings/${caseId}`);
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -1638,7 +1659,7 @@ export async function flagClinicalCaseForFollowUp(data: {
       },
       data: {
         flagged: true,
-        caseReport: data.reason,
+        flaggedReason: data.reason,
       },
     });
 
