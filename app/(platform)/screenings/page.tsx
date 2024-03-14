@@ -161,7 +161,10 @@ export default async function Page() {
           <h3 className="mt-8 text-base font-semibold text-brand xl:text-2xl">
             All Clinical Cases: {allClinicalCases.length}
           </h3>
-          <ListViewOfClinicalCases cases={allClinicalCases} />
+          <ListViewOfClinicalCases
+            cases={allClinicalCases}
+            currentSupervisorId={supervisor?.id}
+          />
         </section>
       ) : null}
     </div>
