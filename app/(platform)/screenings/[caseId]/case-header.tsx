@@ -75,7 +75,7 @@ export default function CaseHeader({
         ) : null}
         <FlagStudentDialog
           caseId={currentcase.id}
-          reason={currentcase.caseReport}
+          reason={currentcase.flaggedReason}
         >
           <button onClick={handleFlagged}>
             <Icons.flagcase
