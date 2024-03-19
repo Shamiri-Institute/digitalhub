@@ -14,15 +14,6 @@ import {
   useLocale,
 } from "react-aria";
 import type { CalendarProps } from "react-aria-components";
-import {
-  Button,
-  Calendar,
-  CalendarGridBody,
-  CalendarGridHeader,
-  CalendarHeaderCell,
-  CalendarStateContext,
-  Heading,
-} from "react-aria-components";
 import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
@@ -61,7 +52,7 @@ const sessions: ISession[] = [
 
 export default function HubCoordinatorSchedulePage() {
   return (
-    <main className="px-[24px] pb-[24px] pt-[20px]">
+    <main className="max-w-[90rem] px-[24px] pb-[24px] pt-[20px]">
       <ScheduleHeader sessions={20} fellows={14} cases={23} />
       <Separator className="my-5 bg-[#E8E8E8]" />
       <ScheduleCalendar aria-label="Session schedule" />
@@ -134,11 +125,10 @@ function ScheduleCalendar(props: CalendarProps<DateValue>) {
 }
 
 function CalendarGrid({ state, ...props }: { state: CalendarState } & any) {
-  let { locale } = useLocale();
-  let { gridProps, headerProps, weekDays } = useCalendarGrid(props, state);
+  const { locale } = useLocale();
+  const { gridProps, headerProps, weekDays } = useCalendarGrid(props, state);
 
-  // Get the number of weeks in the month so we can render the proper number of rows.
-  let weeksInMonth = getWeeksInMonth(state.visibleRange.start, locale);
+  const weeksInMonth = getWeeksInMonth(state.visibleRange.start, locale);
 
   return (
     <table
@@ -202,7 +192,10 @@ function CalendarCell({
       >
         <div
           className={cn(
-            "flex h-[144px] w-[198px] flex-col gap-[8px] overflow-y-scroll px-[16px] py-[8px]",
+            "flex flex-col gap-[8px] overflow-y-scroll",
+            "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
+            "h-[120px] xl:h-[144px]",
+            "w-[165px] xl:w-[198px]",
             "border-grey-border border-t",
           )}
         >
@@ -288,54 +281,11 @@ function NavigationButtons({
   );
 }
 
-function HCSchedulePage() {
-  let state = React.useContext(CalendarStateContext)!;
-  return (
-    <div className="px-[24px] pb-[24px] pt-[20px]">
-      <h1>SDH Schedule</h1>
-      <section>
-        <Calendar aria-label="Session schedule">
-          <header className="mb-2">
-            <Button slot="previous">◀</Button>
-            <Heading />
-            <Button slot="next">▶</Button>
-          </header>
-          <CalendarGrid
-            className="border-separate border-spacing-0"
-            weekdayStyle="long"
-          >
-            <CalendarGridHeader>
-              {(day) => (
-                <CalendarHeaderCell className="border-l border-t border-[#E8E8E8] bg-[#F7F7F7] px-[16px] py-[12px] text-left first:rounded-tl-[7px] last:rounded-tr-[7px] last:border-r">
-                  {day}
-                </CalendarHeaderCell>
-              )}
-            </CalendarGridHeader>
-
-            <CalendarGridBody>
-              {(date) => (
-                <CalendarCell date={date} className="m-0 p-0">
-                  <div className="flex h-[144px] w-[198px] flex-col gap-[8px] overflow-y-scroll border-l border-t border-[#E8E8E8] px-[16px] py-[8px]">
-                    <div>{format(date.toDate("GMT"), "dd")}</div>
-                    {format(date.toDate("GMT"), "d") === "1" && (
-                      <ExampleSession />
-                    )}
-                  </div>
-                </CalendarCell>
-              )}
-            </CalendarGridBody>
-          </CalendarGrid>
-        </Calendar>
-      </section>
-    </div>
-  );
-}
-
 function ExampleSession() {
   return (
     <Popover>
       <PopoverTrigger>session 1</PopoverTrigger>
-      <PopoverContent className="w-[360px]">
+      <PopoverContent className="w-full max-w-xs">
         <input />
         <button onClick={() => console.log("button clicked")}>Click me</button>
       </PopoverContent>
