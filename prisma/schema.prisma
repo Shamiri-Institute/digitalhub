@@ -927,6 +927,7 @@ model ClinicalScreeningInfo {
   selfRegulation                        Boolean? @map("self_regulation")
   peerRelationships                     Boolean? @map("peer_relationships")
   sexuality                             Boolean? @map("sexuality")
+  nonSuicidalSelfInjury                 Boolean? @map("non_suicidal_self_injury")
   generalPresentingIssuesOtherSpecified String?  @map("general_presenting_issues_other_specified") @db.Text()
 
   emergencyPresentingIssues Json?                       @map("emergency_presenting_issues") @db.Json()
@@ -945,6 +946,9 @@ model ClinicalScreeningInfo {
 
   initialCaseHistoryId      String? @map("initial_case_history_id") @db.VarChar(255)
   initialCaseHistoryOwnerId String? @map("initial_case_history_owner_id") @db.VarChar(255)
+
+  initialReferredFrom          String? @map("initial_referred_from") @db.VarChar(255)
+  initialReferredFromSpecified String? @map("initial_referred_from_specified") @db.VarChar(255)
 
   @@map("clinical_screening_info")
 }
