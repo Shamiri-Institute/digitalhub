@@ -170,7 +170,7 @@ const ids = {
                   },
 
                   students: {
-                    ANS24_Stu_01: {
+                    ANS24_07_Stu_01: {
                       id: objectId("stu"),
                       visibleId: "ANS24_07_Stu_01",
                       studentName: "Alice Mwangi",
@@ -181,7 +181,7 @@ const ids = {
                       fellowVisibleId: "TFW24_S_01",
                       assignedGroupId: "07G1",
                     },
-                    ANS24_Stu_02: {
+                    ANS24_07_Stu_02: {
                       id: objectId("stu"),
                       visibleId: "ANS24_07_Stu_02",
                       studentName: "Bob Otieno",
@@ -192,7 +192,7 @@ const ids = {
                       fellowVisibleId: "TFW24_S_01",
                       assignedGroupId: "07G1",
                     },
-                    ANS24_Stu_03: {
+                    ANS24_07_Stu_03: {
                       id: objectId("stu"),
                       visibleId: "ANS24_07_Stu_03",
                       studentName: "Caroline Njeri",
@@ -203,7 +203,7 @@ const ids = {
                       fellowVisibleId: "TFW24_S_02",
                       assignedGroupId: "07G1",
                     },
-                    ANS24_Stu_04: {
+                    ANS24_07_Stu_04: {
                       id: objectId("stu"),
                       visibleId: "ANS24_07_Stu_04",
                       studentName: "David Kimani",
@@ -245,7 +245,7 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: addDays(new Date(), -14),
+                      sessionDate: addDays(new Date(), -11),
                       sessionRating: 4,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -253,7 +253,7 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s1",
                       sessionName: "Session 01",
-                      sessionDate: addDays(new Date(), -7),
+                      sessionDate: addDays(new Date(), -3),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -273,12 +273,101 @@ const ids = {
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },
+                    Session_05: {
+                      id: objectId("sess"),
+                      sessionType: "s4",
+                      sessionName: "Session 04",
+                      sessionDate: addDays(new Date(), 10),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
                   },
 
                   students: {
-                    ANS24_Stu_01: {
+                    ANS24_08_Stu_01: {
                       id: objectId("stu"),
                       visibleId: "ANS24_08_Stu_01",
+                      studentName: "Alice Mwangi",
+                      admissionNumber: "ADM123",
+                      age: 17,
+                      gender: "F",
+                      condition: "Shamiri",
+                      fellowVisibleId: "TFW24_S_02",
+                      assignedGroupId: "08G1",
+                    },
+                  },
+                },
+
+                ANS24_School_09: {
+                  id: objectId("sch"),
+                  visibleId: "ANS24_School_09",
+                  schoolName: "Beth Mugo High School",
+                  schoolType: "Sub county",
+                  schoolEmail: "bethmugo@example.com",
+                  schoolCounty: "Nairobi",
+                  schoolDemographics: "Mixed",
+                  pointPersonId: "721296099",
+                  pointPersonName: "Tabitha Matara",
+                  pointPersonPhone: "N/A",
+                  numbersExpected: 1000,
+                  principalName: "Emily W. Masele",
+                  assignedSupervisorVisibleId: "SPV24_S_01",
+
+                  groups: {
+                    ANS24_Group_01: {
+                      id: "09G1",
+                      groupName: "G1",
+                      groupFellowVisibleId: "TFW24_S_01",
+                    },
+                  },
+
+                  sessions: {
+                    Session_01: {
+                      id: objectId("sess"),
+                      sessionType: "s0",
+                      sessionName: "Presession",
+                      sessionDate: addDays(new Date(), -1),
+                      sessionRating: 4,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_02: {
+                      id: objectId("sess"),
+                      sessionType: "s1",
+                      sessionName: "Session 01",
+                      sessionDate: addDays(new Date(), 3),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_03: {
+                      id: objectId("sess"),
+                      sessionType: "s2",
+                      sessionName: "Session 02",
+                      sessionDate: addDays(new Date(), 7),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_04: {
+                      id: objectId("sess"),
+                      sessionType: "s3",
+                      sessionName: "Session 03",
+                      sessionDate: addDays(new Date(), 11),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_05: {
+                      id: objectId("sess"),
+                      sessionType: "s4",
+                      sessionName: "Session 04",
+                      sessionDate: addDays(new Date(), 12),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                  },
+
+                  students: {
+                    ANS24_09_Stu_01: {
+                      id: objectId("stu"),
+                      visibleId: "ANS24_09_Stu_01",
                       studentName: "Alice Mwangi",
                       admissionNumber: "ADM123",
                       age: 17,

@@ -9,16 +9,38 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
   }
   if (sessions.length === 1) {
     const [session] = sessions;
-    return session && <SessionDetail session={session} />;
+    return session && <SessionDetail session={session} layout="expanded" />;
   }
-  // TODO: Show 2 smaller details and + N more for third spot. Max 3 spots.
-  return <div></div>;
+
+  const restCount = sessions.length - 2;
+  return (
+    <div className="flex flex-col gap-2">
+      <SessionDetail session={sessions[0]!} layout="compact" />
+      <SessionDetail session={sessions[1]!} layout="compact" />
+      {restCount > 0 && (
+        <div className="text-sm font-semibold text-grey-c3">
+          + {restCount} more
+        </div>
+      )}
+    </div>
+  );
 }
 
-function SessionDetail({ session }: { session: Session }) {
-  const schoolName = session.school.schoolName;
+function SessionDetail({
+  session,
+  layout,
+}: {
+  session: Session;
+  layout: "compact" | "expanded";
+}) {
+  const startTimeLabel = "2:30PM";
   const durationLabel = "2:30 - 3:00PM";
+
+  const schoolName = session.school.schoolName;
   const completed = session.sessionDate < new Date();
+
+  const isCompact = layout === "compact";
+  const isExpanded = layout === "expanded";
 
   return (
     <div
@@ -42,11 +64,25 @@ function SessionDetail({ session }: { session: Session }) {
         })}
       >
         <div className="flex items-center gap-1">
-          <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
-          <div>{sessionDisplayName(session.sessionType)}</div>
+          {completed && (
+            <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
+          )}
+          {!completed && (
+            <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
+          )}
+          {isExpanded && <div>{sessionDisplayName(session.sessionType)}</div>}
+          {isCompact && (
+            <div>
+              {session.sessionName} - {startTimeLabel}
+            </div>
+          )}
         </div>
-        <div>{schoolName}</div>
-        <div>{durationLabel}</div>
+        {isExpanded && (
+          <>
+            <div>{schoolName}</div>
+            <div>{durationLabel}</div>
+          </>
+        )}
       </div>
     </div>
   );
