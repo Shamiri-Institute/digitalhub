@@ -35,6 +35,8 @@ const config: Config = {
         "shamiri-light-red": "#E92C2C",
         "shamiri-blue": "#0474bc", // DEPRECATED: switch shamiri-blue to shamiri-new-blue
         "shamiri-new-blue": "#0085FF",
+        "shamiri-new-light-blue": "#E5F3FF",
+        "shamiri-new-lighter-blue": "#CCE7FF",
         "shamiri-blue-darker": "#045e96",
         "shamiri-light-blue": "#b0d5ea",
         "shamiri-dark-blue": "#002244",

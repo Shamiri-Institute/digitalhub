@@ -126,14 +126,14 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
           <DropdownMenuItem>View school</DropdownMenuItem>
           <DropdownMenuItem>Edit school information</DropdownMenuItem>
           <DropdownMenuItem>Assign point supervisor</DropdownMenuItem>
-          <DropdownMenuItem className="text-shamiri-red">
+          <div className="text-shamiri-red">
             <DropoutSchool
               schoolId={row.original.id}
               schoolName={row.original.schoolName}
             >
               <div>Dropout school</div>
             </DropoutSchool>
-          </DropdownMenuItem>
+          </div>
         </DropdownMenuContent>
       </DropdownMenu>
     ),
