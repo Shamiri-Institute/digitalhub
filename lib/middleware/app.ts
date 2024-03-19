@@ -1,4 +1,3 @@
-import { ImplementerRole } from "@prisma/client";
 import { JWT, getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -38,14 +37,13 @@ export default async function AppMiddleware(req: NextRequest) {
 
 function ifHcUserAndUnprefixedPath(session: JWT | null, path: string) {
   return (
-    session?.activeMembership?.role === 'HUB_COORDINATOR' &&
+    session?.activeMembership?.role === "HUB_COORDINATOR" &&
     !path.startsWith("/hc")
   );
 }
 
 function ifSupervisorAndHcRoute(session: JWT | null, path: string) {
   return (
-    session?.activeMembership?.role === 'SUPERVISOR' &&
-    path.startsWith("/hc")
+    session?.activeMembership?.role === "SUPERVISOR" && path.startsWith("/hc")
   );
 }
