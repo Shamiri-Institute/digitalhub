@@ -1466,6 +1466,8 @@ export async function initialReferralFromClinicalCaseSupervisor(data: {
               },
             },
           },
+          initialReferredFrom: data.referredFrom,
+          initialReferredFromSpecified: data.referredFromSpecified ?? "",
         },
       });
     } else {
