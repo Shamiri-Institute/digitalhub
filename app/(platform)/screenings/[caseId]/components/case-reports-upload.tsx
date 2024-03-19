@@ -95,7 +95,7 @@ export function CaseReports({ currentcase }: { currentcase: CurrentCase }) {
             </>
           )}
           <Button
-            disabled={!selectedFile}
+            disabled={!selectedFile || uploading}
             onClick={handleUpload}
             type="submit"
             className="hover:bg-shamiri-brand mt-2 w-full rounded-sm bg-shamiri-blue px-3 py-2 text-white"
