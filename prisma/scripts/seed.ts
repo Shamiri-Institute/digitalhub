@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -28,6 +28,13 @@ const ids = {
               id: objectId("hub"),
               visibleId: "24_Hub_01",
               hubName: "Dagoretti/Westlands",
+
+              coordinator: {
+                id: objectId("hc"),
+                visibleId: "24_HC_01",
+                coordinatorName: "Perez Ambala",
+                coordinatorEmail: "perez.ambala@shamiri.institute",
+              },
 
               supervisors: {
                 SPV24_S_01: {
@@ -218,8 +225,8 @@ const ids = {
         edmund: {
           id: objectId("user"),
           email: "edmund@shamiri.institute",
-          role: ImplementerRole.SUPERVISOR,
-          roleByVisibleId: "SPV24_S_01",
+          role: ImplementerRole.HUB_COORDINATOR,
+          roleByVisibleId: "24_HC_01",
         },
         benny: {
           id: objectId("user"),
@@ -280,6 +287,18 @@ async function seedDatabase() {
             hubName: hub.hubName,
             implementerId: implementer.id, // TODO: remove; projectImplementer replaces this
             projectId: createdProject.id,
+          },
+        });
+
+        const { coordinator } = hub;
+        await db.hubCoordinator.create({
+          data: {
+            id: coordinator.id,
+            implementerId: implementer.id,
+            assignedHubId: createdHub.id,
+            visibleId: coordinator.visibleId,
+            coordinatorName: coordinator.coordinatorName,
+            coordinatorEmail: coordinator.coordinatorEmail,
           },
         });
 
@@ -425,11 +444,27 @@ async function seedDatabase() {
     }
 
     for (const user of Object.values(implementer.users)) {
-      const supervisor = await db.supervisor.findUniqueOrThrow({
-        where: {
-          visibleId: user.roleByVisibleId,
-        },
-      });
+      let personnel:
+        | Prisma.SupervisorGetPayload<{}>
+        | Prisma.HubCoordinatorGetPayload<{}>
+        | null = null;
+
+      if (user.role === ImplementerRole.SUPERVISOR) {
+        personnel = await db.supervisor.findUniqueOrThrow({
+          where: {
+            visibleId: user.roleByVisibleId,
+          },
+        });
+      } else if (user.role === ImplementerRole.HUB_COORDINATOR) {
+        personnel = await db.hubCoordinator.findUniqueOrThrow({
+          where: {
+            visibleId: user.roleByVisibleId,
+          },
+        });
+      } else {
+        throw new Error(`Unhandled role: ${(user as any).role}`);
+      }
+
       await db.user.create({
         data: {
           id: user.id,
@@ -438,7 +473,7 @@ async function seedDatabase() {
             create: {
               implementerId: implementer.id,
               role: user.role,
-              identifier: supervisor.id,
+              identifier: personnel.id,
             },
           },
         },
