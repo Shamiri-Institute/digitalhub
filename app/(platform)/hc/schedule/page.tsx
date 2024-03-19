@@ -141,11 +141,14 @@ function CalendarGrid({ state, ...props }: { state: CalendarState } & any) {
   let weeksInMonth = getWeeksInMonth(state.visibleRange.start, locale);
 
   return (
-    <table {...gridProps}>
+    <table
+      {...gridProps}
+      className="border-grey-border border-separate overflow-hidden rounded-[0.4375rem] border [border-spacing:0]"
+    >
       <thead {...headerProps}>
-        <tr className="px-2">
+        <tr className="divide-grey-border bg-grey-bg divide-x">
           {weekDays.map((day, index) => (
-            <th key={index} className="px-1 text-left">
+            <th key={index} className="px-4 py-3 text-left">
               {day}
             </th>
           ))}
@@ -153,7 +156,7 @@ function CalendarGrid({ state, ...props }: { state: CalendarState } & any) {
       </thead>
       <tbody>
         {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
-          <tr key={weekIndex}>
+          <tr key={weekIndex} className="divide-grey-border divide-x">
             {state
               .getDatesInWeek(weekIndex)
               .map((date, i) =>
@@ -197,10 +200,15 @@ function CalendarCell({
           isDisabled ? "disabled" : ""
         } ${isUnavailable ? "unavailable" : ""}`}
       >
-        <div className="flex h-[144px] w-[198px] flex-col gap-[8px] overflow-y-scroll border-l border-t border-[#E8E8E8] px-[16px] py-[8px]">
+        <div
+          className={cn(
+            "flex h-[144px] w-[198px] flex-col gap-[8px] overflow-y-scroll px-[16px] py-[8px]",
+            "border-grey-border border-t",
+          )}
+        >
           <div
             className={cn({
-              "text-light-grey-c3": isOutsideVisibleRange,
+              "text-grey-c3": isOutsideVisibleRange,
             })}
           >
             {formattedDate}
