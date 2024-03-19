@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useToast } from "#/components/ui/use-toast";
 
 const FormSchema = z.object({
   name: z.string({
@@ -35,11 +36,38 @@ const FormSchema = z.object({
 });
 
 export default function CreateStudentPage() {
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-  });
+
   const [gender, setGender] = useState("");
   const [studentClass, setStudentClass] = useState("");
+
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      name: "",
+      shamiriID: "",
+      age: 0,
+      admission: 0,
+
+    },
+  });
+
+
+
+  const { toast } = useToast();
+
+
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    toast({
+      title: "You submitted the following values:",
+      description: (
+        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
+    });
+  }
+
+
 
   const formAction = () => {
     // todo: make api call
@@ -62,7 +90,7 @@ export default function CreateStudentPage() {
       <div className=" space-y-6 ">
         <Form {...form}>
           <form
-            // onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(onSubmit)}
             action={formAction}
             className="overflow-hidden text-ellipsis"
           >
@@ -78,7 +106,7 @@ export default function CreateStudentPage() {
                         name="name"
                         onChange={field.onChange}
                         type="text"
-                        // defaultValue={fellow?.mpesaName || field.value}
+                        defaultValue={field.value}
                         placeholder="Student name"
                         className="resize-none bg-card"
                       />
@@ -96,7 +124,7 @@ export default function CreateStudentPage() {
                           name="shamiriID"
                           type="text"
                           onChange={field.onChange}
-                          // defaultValue={fellow?.mpesaName || field.value}
+                          defaultValue={field.value}
                           placeholder="Shamiri ID"
                           className="resize-none bg-card"
                         />
@@ -104,6 +132,11 @@ export default function CreateStudentPage() {
                     )}
                   />
                 </div>
+
+                {/* //todo: add school here */}
+                {/* //admission */}
+                {/* //stream */}
+                {/* // coutny */}
 
                 <div className="mt-8">
                   <FormField
@@ -116,7 +149,7 @@ export default function CreateStudentPage() {
                           name="age"
                           type="number"
                           onChange={field.onChange}
-                          // defaultValue={fellow?.mpesaName || field.value}
+                          defaultValue={field.value}
                           placeholder="Age: eg 12"
                           className="resize-none bg-card"
                         />
@@ -136,7 +169,7 @@ export default function CreateStudentPage() {
                           name="admission"
                           type="number"
                           onChange={field.onChange}
-                          // defaultValue={fellow?.mpesaName || field.value}
+                          defaultValue={field.value}
                           placeholder="Admission number"
                           className="resize-none bg-card"
                         />
@@ -155,7 +188,7 @@ export default function CreateStudentPage() {
                           name="contactNumber"
                           type="text"
                           onChange={field.onChange}
-                          // defaultValue={fellow?.mpesaName || field.value}
+                          defaultValue={field.value}
                           placeholder="Contact number"
                           className="resize-none bg-card"
                         />
@@ -172,7 +205,7 @@ export default function CreateStudentPage() {
                     className={cn(
                       "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
                       studentClass === "1" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                     )}
                     onClick={(e) => {
                       e.preventDefault();
@@ -185,7 +218,7 @@ export default function CreateStudentPage() {
                     className={cn(
                       "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
                       studentClass === "2" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                     )}
                     onClick={(e) => {
                       e.preventDefault();
@@ -198,7 +231,7 @@ export default function CreateStudentPage() {
                     className={cn(
                       "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
                       studentClass === "3" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                     )}
                     onClick={(e) => {
                       e.preventDefault();
@@ -211,7 +244,7 @@ export default function CreateStudentPage() {
                     className={cn(
                       "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
                       studentClass === "4" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                     )}
                     onClick={(e) => {
                       e.preventDefault();
@@ -249,7 +282,7 @@ export default function CreateStudentPage() {
                     className={cn(
                       "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
                       gender === "Male" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                     )}
                     onClick={(e) => {
                       e.preventDefault();
@@ -262,7 +295,7 @@ export default function CreateStudentPage() {
                     className={cn(
                       "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
                       gender === "Female" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                     )}
                     onClick={(e) => {
                       e.preventDefault();
@@ -275,7 +308,7 @@ export default function CreateStudentPage() {
                     className={cn(
                       "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
                       gender === "Other" &&
-                        "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
+                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
                     )}
                     onClick={(e) => {
                       e.preventDefault();
