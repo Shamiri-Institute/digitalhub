@@ -16,7 +16,9 @@ export default function ChartCard({
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent className="h-[307px]">{children}</CardContent>
+      <CardContent className="h-[307px]">
+        {!!children ? children : "No data available"}
+      </CardContent>
       <CardFooter className="px-4 py-[14px]">
         {/* TODO: the change the font type to user Inter in this section */}
         {/* TODO: also change to a link */}

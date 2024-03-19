@@ -1,4 +1,4 @@
-import { getCurrentPersonnel } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import { Button } from "#/components/ui/button";
 import { Command, CommandInput } from "#/components/ui/command";
 import PageHeading from "#/components/ui/page-heading";
@@ -23,12 +23,14 @@ import { columns } from "./components/columns";
 import SchoolsDataTable from "./components/data-table";
 
 export default async function SchoolsPage() {
-  const hubCoordinator = await getCurrentPersonnel();
+  const hubCoordinator = await currentHubCoordinator();
   // TODO: convert this to Promise.all for concurrent fetch
-  const data = await fetchSchoolData(hubCoordinator.assignedHubId);
-  const dropoutData = await fetchDropoutReasons(hubCoordinator.assignedHubId);
+  const data = await fetchSchoolData(hubCoordinator?.assignedHubId as string);
+  const dropoutData = await fetchDropoutReasons(
+    hubCoordinator?.assignedHubId as string,
+  );
   const sessionAttendanceData = await fetchSessionAttendanceData(
-    hubCoordinator.assignedHubId,
+    hubCoordinator?.assignedHubId as string,
   );
 
   return (

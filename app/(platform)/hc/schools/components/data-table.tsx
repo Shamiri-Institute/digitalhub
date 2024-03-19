@@ -98,6 +98,7 @@ export default function DataTable<TData, TValue>({
                   className={cn(
                     "!px-4 text-sm font-semibold leading-5 text-shamiri-text-grey",
                     ["actions", "select"].includes(
+                      //@ts-ignore
                       header.column.columnDef.header,
                     )
                       ? "py-3"
