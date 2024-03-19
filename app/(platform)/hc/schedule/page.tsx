@@ -33,6 +33,7 @@ import {
 } from "#/components/ui/popover";
 import { Separator } from "#/components/ui/separator";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
+import { cn } from "#/lib/utils";
 
 type ISession = {
   kind: "Pre" | "S1" | "S2" | "S3" | "S4";
@@ -188,18 +189,22 @@ function CalendarCell({
   } = useCalendarCell({ date }, state, ref);
 
   return (
-    <td {...cellProps}>
+    <td {...cellProps} className="p-0">
       <div
         {...buttonProps}
         ref={ref}
-        hidden={isOutsideVisibleRange}
         className={`cell ${isSelected ? "selected" : ""} ${
           isDisabled ? "disabled" : ""
         } ${isUnavailable ? "unavailable" : ""}`}
       >
         <div className="flex h-[144px] w-[198px] flex-col gap-[8px] overflow-y-scroll border-l border-t border-[#E8E8E8] px-[16px] py-[8px]">
-          {/* <div>{format(date.toDate("GMT"), "dd")}</div> */}
-          <div>{formattedDate}</div>
+          <div
+            className={cn({
+              "text-light-grey-c3": isOutsideVisibleRange,
+            })}
+          >
+            {formattedDate}
+          </div>
           {format(date.toDate("GMT"), "d") === "1" && <ExampleSession />}
         </div>
       </div>

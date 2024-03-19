@@ -74,6 +74,7 @@ const config: Config = {
         },
         // From Figma
         "light-grey": "rgba(173, 173, 173, 1)",
+        "light-grey-c3": "rgba(150, 150, 150, 1)", // Light/Grayscale/Content 3
       },
       borderRadius: {
         lg: "var(--radius)",
