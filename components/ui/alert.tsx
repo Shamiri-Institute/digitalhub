@@ -2,21 +2,21 @@ import { cn } from "#/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 
-const alertVariants = cva(
-  "relative w-full rounded-lg border px-4 py-3 text-sm [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground [&>svg~*]:pl-7",
-  {
-    variants: {
-      variant: {
-        default: "bg-background text-foreground",
-        destructive:
-          "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
+// FIXME: ensure that we use Inter font here
+const alertVariants = cva("w-full text-sm font-medium", {
+  variants: {
+    variant: {
+      primary:
+        "bg-shamiri-new-light-blue border-bg-shamiri-new-lighter-blue text-shamiri-new-blue rounded-xl p-3",
+      default: "bg-background text-foreground rounded-lg border",
+      destructive:
+        "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive rounded-lg border",
     },
   },
-);
+  defaultVariants: {
+    variant: "default",
+  },
+});
 
 const Alert = React.forwardRef<
   HTMLDivElement,
@@ -35,11 +35,7 @@ const AlertTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
-  <h5
-    ref={ref}
-    className={cn("mb-1 font-medium leading-none tracking-tight", className)}
-    {...props}
-  />
+  <h5 ref={ref} className={cn("font-medium leading-5", className)} {...props} />
 ));
 AlertTitle.displayName = "AlertTitle";
 
