@@ -1,5 +1,5 @@
 "use client";
-import { Alert, AlertDescription } from "#/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "#/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -49,10 +49,21 @@ export async function dropoutSchool({
               </Alert>
             </DialogHeader>
             <Separator />
-            <div></div>
+            <div className="space-y-2">
+              <h3>
+                Select reason <span>*</span>
+              </h3>
+              <div>Select options go here with the form field</div>
+            </div>
             <Separator />
             <DialogFooter className="flex justify-end">
-              <Button>Cancel</Button>
+              <Button
+                onClick={() => {
+                  setFormDialogOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
               <Button
                 onClick={() => {
                   setFormDialogOpen(false);
@@ -68,8 +79,31 @@ export async function dropoutSchool({
           <DialogContent className="p-5">
             <DialogHeader>
               <h2>Confirm drop out</h2>
+              <Alert>
+                <AlertDescription>{schoolId}</AlertDescription>
+              </Alert>
             </DialogHeader>
+            <div className="space-y-4">
+              <h3>Are you sure?</h3>
+              <Alert variant="destructive">
+                <AlertTitle>
+                  Once this change has been made it is irreversible and will
+                  need you to contact support in order to modify. Please be sure
+                  of your action before you confirm.
+                </AlertTitle>
+              </Alert>
+            </div>
             <Separator />
+            <DialogFooter className="flex justify-end">
+              <Button
+                onClick={() => {
+                  setConfirmDialogOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Confirm</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </form>
