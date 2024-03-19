@@ -2,6 +2,7 @@ import { ImplementerRole, Prisma } from "@prisma/client";
 
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { addDays, subDays } from "date-fns";
 
 const ids = {
   implementers: {
@@ -154,7 +155,7 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: new Date("2024-01-15"),
+                      sessionDate: subDays(new Date(), 2),
                       sessionRating: 4,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -162,7 +163,7 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s1",
                       sessionName: "Session 01",
-                      sessionDate: new Date("2024-02-15"),
+                      sessionDate: addDays(new Date(), 7),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },
