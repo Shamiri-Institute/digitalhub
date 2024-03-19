@@ -177,6 +177,12 @@ export default function GeneralIssues({
 
         <div className="my-1 flex gap-2">
           <GeneralOption
+            option="Non-Suicidal Self Injury"
+            selected={selected.nonSuicidalSelfInjury ?? false}
+            setSelected={handleOption}
+            valKey="nonSuicidalSelfInjury"
+          />
+          <GeneralOption
             option="Others"
             valKey="others"
             selected={otherOption}
