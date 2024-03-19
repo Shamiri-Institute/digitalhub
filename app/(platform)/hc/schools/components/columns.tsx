@@ -14,6 +14,7 @@ import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import format from "date-fns/format";
 import { MoreHorizontal } from "lucide-react";
+import { DropoutSchool } from "../../components/dropout-school-form";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {
@@ -126,7 +127,12 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
           <DropdownMenuItem>Edit school information</DropdownMenuItem>
           <DropdownMenuItem>Assign point supervisor</DropdownMenuItem>
           <DropdownMenuItem className="text-shamiri-red">
-            Dropout school
+            <DropoutSchool
+              schoolId={row.original.id}
+              schoolName={row.original.schoolName}
+            >
+              <div>Dropout school</div>
+            </DropoutSchool>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

@@ -16,7 +16,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { DropoutSchoolSchema } from "../schemas";
 
-export async function dropoutSchool({
+export function DropoutSchool({
   children,
   schoolId,
   schoolName,
