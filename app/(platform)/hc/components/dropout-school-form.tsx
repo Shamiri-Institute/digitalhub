@@ -65,6 +65,7 @@ export async function dropoutSchool({
                 Cancel
               </Button>
               <Button
+                variant="ghost"
                 onClick={() => {
                   setFormDialogOpen(false);
                   setConfirmDialogOpen(true);
@@ -96,6 +97,7 @@ export async function dropoutSchool({
             <Separator />
             <DialogFooter className="flex justify-end">
               <Button
+                variant="ghost"
                 onClick={() => {
                   setConfirmDialogOpen(false);
                 }}
