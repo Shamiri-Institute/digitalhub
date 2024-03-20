@@ -1,5 +1,6 @@
 "use client";
 
+import React from 'react'
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
@@ -15,12 +16,21 @@ import { ColumnDef } from "@tanstack/react-table";
 import format from "date-fns/format";
 import { MoreHorizontal } from "lucide-react";
 import { DropoutSchool } from "../../components/dropout-school-form";
+import { cn } from "#/lib/utils";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {
     assignedSupervisor: true;
   };
 }>;
+
+function MenuItem({ children, className }: { children: React.ReactNode, className: string }) {
+  return (
+    <div className={cn('px-3 py-2 cursor-pointer', className)}>
+      {children}
+    </div>
+  )
+}
 
 export const columns: ColumnDef<SchoolsTableData>[] = [
   {
@@ -127,14 +137,14 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
           <DropdownMenuItem>Edit school information</DropdownMenuItem>
           <DropdownMenuItem>Assign point supervisor</DropdownMenuItem>
           {row.original.droppedOutAt ? (
-            <div className="text-shamiri-red">
+            <MenuItem className="text-shamiri-red">
               <DropoutSchool
                 schoolId={row.original.id}
                 schoolName={row.original.schoolName}
               >
                 <div>Dropout school</div>
               </DropoutSchool>
-            </div>
+            </MenuItem>
           ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
