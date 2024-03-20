@@ -1,6 +1,9 @@
 "use server";
 
+import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
+import { revalidatePath } from "next/cache";
+import { DropoutSchoolSchema } from "../schemas";
 
 export async function fetchSchoolData(hubId: string) {
   return await db.school.findMany({
@@ -38,8 +41,13 @@ export async function fetchSessionAttendanceData(hubId: string) {
   return sessionAttendanceData;
 }
 
+export type DropoutReasonsGraphData = {
+  name: string;
+  value: number;
+};
+
 export async function fetchDropoutReasons(hubId: string) {
-  const dropoutData = await db.$queryRaw<{ name: string; value: number }[]>`
+  const dropoutData = await db.$queryRaw<DropoutReasonsGraphData[]>`
     SELECT
       COUNT(*) AS value,
       dropout_reason AS name
@@ -57,4 +65,40 @@ export async function fetchDropoutReasons(hubId: string) {
   });
 
   return dropoutData;
+}
+
+export async function dropoutSchool(schoolId: string, dropoutReason: string) {
+  try {
+    const hubCoordinator = await currentHubCoordinator();
+
+    if (!hubCoordinator) {
+      throw new Error("The session has not been authenticated");
+    }
+
+    const data = DropoutSchoolSchema.parse({ schoolId, dropoutReason });
+    await db.school.update({
+      data: {
+        dropoutReason: data.dropoutReason,
+        droppedOut: true,
+        droppedOutAt: new Date(),
+        droppedOutBy: hubCoordinator.id,
+      },
+      where: {
+        id: data.schoolId,
+      },
+    });
+
+    revalidatePath("/hc/schools");
+
+    return {
+      success: true,
+      message: "Successfully dropped out school",
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      success: false,
+      message: "Something went wrong while trying to drop out the school",
+    };
+  }
 }
