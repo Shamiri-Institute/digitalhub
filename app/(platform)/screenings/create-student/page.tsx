@@ -1,332 +1,35 @@
-"use client";
-import { Icons } from "#/components/icons";
-import { Button } from "#/components/ui/button";
-import { Form, FormField } from "#/components/ui/form";
-import { Input } from "#/components/ui/input";
-import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { useToast } from "#/components/ui/use-toast";
+import CreateNonShamiriStudentPage from "#/app/(platform)/screenings/create-student/create-nonshamirian";
+import { getCurrentUser } from "#/app/auth";
+import { db } from "#/lib/db";
+import { notFound } from "next/navigation";
 
-const FormSchema = z.object({
-  name: z.string({
-    required_error: "Please enter the student name.",
-  }),
-  shamiriID: z.string({
-    required_error: "Please shamiri ID.",
-  }),
-  age: z.number({
-    required_error: "Please enter the student's age.",
-  }),
-  admission: z.number({
-    required_error: "Please enter the student's admission number.",
-  }),
-  gender: z.string({
-    required_error: "Please enter the student's gender.",
-  }),
-  stream: z.string({
-    required_error: "Please enter the student's stream.",
-  }),
-  contactNumber: z.string({
-    required_error: "Please enter the student's contact number.",
-  }),
-});
+export default async function Page() {
+  const supervisor = await getCurrentUser();
 
-export default function CreateStudentPage() {
+  console.log({ supervisor });
 
-  const [gender, setGender] = useState("");
-  const [studentClass, setStudentClass] = useState("");
+  if (!supervisor) {
+    return notFound();
+  }
 
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
-      name: "",
-      shamiriID: "",
-      age: 0,
-      admission: 0,
-
+  const schools = await db.school.findMany({
+    where: {
+      hub: {
+        implementerId: supervisor.membership.implementerId,
+      },
     },
   });
 
+  const { membership } = supervisor;
 
-
-  const { toast } = useToast();
-
-
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    });
-  }
-
-
-
-  const formAction = () => {
-    // todo: make api call
-    alert("kk");
-  };
-
-  const router = useRouter();
-
+  console.log({ schools });
   return (
-    <div className="flex flex-col ">
-      <div className="mb-5  mt-2 flex items-center justify-end">
-        <button onClick={() => router.back()}>
-          <Icons.xIcon className="h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
-        </button>
-      </div>
-
-      <h3 className="text-base font-semibold text-brand">
-        Student Information
-      </h3>
-      <div className=" space-y-6 ">
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            action={formAction}
-            className="overflow-hidden text-ellipsis"
-          >
-            <div className="mt-6 space-y-6 px-[0.9px]">
-              <div>
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <div className="mt-2 grid w-full gap-1.5">
-                      <Input
-                        id="name"
-                        name="name"
-                        onChange={field.onChange}
-                        type="text"
-                        defaultValue={field.value}
-                        placeholder="Student name"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="shamiriID"
-                    render={({ field }) => (
-                      <div className="mt-2 grid w-full gap-1.5">
-                        <Input
-                          id="shamiriID"
-                          name="shamiriID"
-                          type="text"
-                          onChange={field.onChange}
-                          defaultValue={field.value}
-                          placeholder="Shamiri ID"
-                          className="resize-none bg-card"
-                        />
-                      </div>
-                    )}
-                  />
-                </div>
-
-                {/* //todo: add school here */}
-                {/* //admission */}
-                {/* //stream */}
-                {/* // coutny */}
-
-                <div className="mt-8">
-                  <FormField
-                    control={form.control}
-                    name="age"
-                    render={({ field }) => (
-                      <div className="mt-2 grid w-full gap-1.5">
-                        <Input
-                          id="age"
-                          name="age"
-                          type="number"
-                          onChange={field.onChange}
-                          defaultValue={field.value}
-                          placeholder="Age: eg 12"
-                          className="resize-none bg-card"
-                        />
-                      </div>
-                    )}
-                  />
-                </div>
-
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="admission"
-                    render={({ field }) => (
-                      <div className="mt-2 grid w-full gap-1.5">
-                        <Input
-                          id="admission"
-                          name="admission"
-                          type="number"
-                          onChange={field.onChange}
-                          defaultValue={field.value}
-                          placeholder="Admission number"
-                          className="resize-none bg-card"
-                        />
-                      </div>
-                    )}
-                  />
-                </div>
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="contactNumber"
-                    render={({ field }) => (
-                      <div className="mt-2 grid w-full gap-1.5">
-                        <Input
-                          id="contactNumber"
-                          name="contactNumber"
-                          type="text"
-                          onChange={field.onChange}
-                          defaultValue={field.value}
-                          placeholder="Contact number"
-                          className="resize-none bg-card"
-                        />
-                      </div>
-                    )}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <h3 className="mb-4 text-gray-400">Class/Form</h3>
-                <div className="grid grid-cols-4 gap-x-2 gap-y-2">
-                  <Button
-                    className={cn(
-                      "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
-                      studentClass === "1" &&
-                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
-                    )}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setStudentClass("1");
-                    }}
-                  >
-                    1
-                  </Button>
-                  <Button
-                    className={cn(
-                      "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
-                      studentClass === "2" &&
-                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
-                    )}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setStudentClass("2");
-                    }}
-                  >
-                    2
-                  </Button>
-                  <Button
-                    className={cn(
-                      "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
-                      studentClass === "3" &&
-                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
-                    )}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setStudentClass("3");
-                    }}
-                  >
-                    3
-                  </Button>
-                  <Button
-                    className={cn(
-                      "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
-                      studentClass === "4" &&
-                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
-                    )}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setStudentClass("4");
-                    }}
-                  >
-                    4
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
-                  name="stream"
-                  render={({ field }) => (
-                    <div className="mt-2 grid w-full gap-1.5">
-                      <Input
-                        id="stream"
-                        name="stream"
-                        type="text"
-                        onChange={field.onChange}
-                        // defaultValue={fellow?.mpesaName || field.value}
-                        placeholder="Add stream here"
-                        className="resize-none bg-card"
-                      />
-                    </div>
-                  )}
-                />
-              </div>
-              <div>
-                <h3 className="mb-4  text-gray-400">Gender</h3>
-                <div className="grid grid-cols-3 gap-x-2 gap-y-2">
-                  <Button
-                    className={cn(
-                      "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
-                      gender === "Male" &&
-                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
-                    )}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setGender("Male");
-                    }}
-                  >
-                    Male
-                  </Button>
-                  <Button
-                    className={cn(
-                      "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
-                      gender === "Female" &&
-                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
-                    )}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setGender("Female");
-                    }}
-                  >
-                    Female
-                  </Button>
-                  <Button
-                    className={cn(
-                      "mb-2 w-full bg-white py-5 text-gray-600 transition-transform hover:bg-transparent active:scale-95",
-                      gender === "Other" &&
-                      "bg-shamiri-light-blue hover:bg-shamiri-light-blue",
-                    )}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setGender("Other");
-                    }}
-                  >
-                    Other
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <Button className="mt-4 w-full bg-shamiri-blue hover:bg-shamiri-blue">
-              Save
-            </Button>
-          </form>
-        </Form>
-      </div>
-    </div>
+    <>
+      <CreateNonShamiriStudentPage
+        schools={schools}
+        implementerId={membership.implementerId}
+        supervisorId={supervisor.membership.identifier!}
+      />
+    </>
   );
 }
