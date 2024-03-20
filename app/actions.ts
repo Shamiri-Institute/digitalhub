@@ -1739,3 +1739,74 @@ export async function rateGroup(payload: {
     return { success: false, error: "Something went wrong" };
   }
 }
+
+export async function addNonShamiriStudentViaClinicalScreening(
+  data: {
+    studentName: string;
+    admissionNumber: string;
+    age: string;
+    county: string;
+    form: string;
+    contactNumber?: string;
+    stream: string;
+    gender: string;
+    schoolId: string;
+  },
+  {
+    implementerId,
+    supervisorId,
+  }: {
+    implementerId: string;
+    supervisorId: string;
+  },
+) {
+  try {
+    const duplicateStudent = await db.student.findFirst({
+      where: {
+        schoolId: data.schoolId,
+        admissionNumber: data.admissionNumber,
+      },
+    });
+
+    if (duplicateStudent) {
+      return {
+        success: false,
+        error: `Duplicate student record (Name: ${duplicateStudent.studentName}, Admission number: ${duplicateStudent.admissionNumber}, Form: ${duplicateStudent.form}, Stream: ${duplicateStudent.stream}. This student already exists.`,
+      };
+    }
+
+    const studentCount = await db.student.count();
+    const studentVisibleId = generateStudentVisibleID("CLN", studentCount);
+
+    const student = await db.student.create({
+      data: {
+        id: objectId("stu"),
+        studentName: data.studentName,
+        visibleId: studentVisibleId,
+        supervisorId: supervisorId,
+        implementerId: implementerId,
+        schoolId: data.schoolId,
+        yearOfImplementation: new Date().getFullYear(),
+        admissionNumber: data.admissionNumber,
+        age: parseInt(data.age),
+        gender: data.gender,
+        form: parseInt(data.form),
+        stream: data.stream,
+        county: data.county,
+        phoneNumber: data.contactNumber,
+        isClinicalCase: true,
+      },
+    });
+
+    await createClinicalCase({
+      schoolId: data.schoolId,
+      currentSupervisorId: supervisorId,
+      studentId: student.id,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Something went wrong" };
+  }
+}
