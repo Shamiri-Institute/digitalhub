@@ -140,12 +140,11 @@ export function DropoutSchool({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
-                if (form.formState.isValid) {
+              onClick={async () => {
+                const validForm = await form.trigger();
+                if (validForm) {
                   setFormDialogOpen(false);
                   setConfirmDialogOpen(true);
-                } else {
-                  form.trigger();
                 }
               }}
             >

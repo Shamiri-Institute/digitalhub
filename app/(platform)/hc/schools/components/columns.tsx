@@ -1,6 +1,5 @@
 "use client";
 
-import React from 'react'
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
@@ -11,12 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import format from "date-fns/format";
 import { MoreHorizontal } from "lucide-react";
+import React from "react";
 import { DropoutSchool } from "../../components/dropout-school-form";
-import { cn } from "#/lib/utils";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {
@@ -24,12 +24,16 @@ export type SchoolsTableData = Prisma.SchoolGetPayload<{
   };
 }>;
 
-function MenuItem({ children, className }: { children: React.ReactNode, className: string }) {
+function MenuItem({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className: string;
+}) {
   return (
-    <div className={cn('px-3 py-2 cursor-pointer', className)}>
-      {children}
-    </div>
-  )
+    <div className={cn("cursor-pointer px-3 py-2", className)}>{children}</div>
+  );
 }
 
 export const columns: ColumnDef<SchoolsTableData>[] = [
