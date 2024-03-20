@@ -1792,6 +1792,7 @@ export async function addNonShamiriStudentViaClinicalScreening(
         stream: data.stream,
         county: data.county,
         phoneNumber: data.contactNumber,
+        isClinicalCase: true,
       },
     });
 
