@@ -102,6 +102,7 @@ export function DropoutSchool({
           <Separator />
           <DialogFooter className="flex justify-end">
             <Button
+              className="text-shamiri-light-red"
               variant="ghost"
               onClick={() => {
                 setFormDialogOpen(false);
@@ -110,6 +111,7 @@ export function DropoutSchool({
               Cancel
             </Button>
             <Button
+              variant="destructive"
               onClick={() => {
                 if (form.formState.isValid) {
                   setFormDialogOpen(false);
@@ -149,6 +151,7 @@ export function DropoutSchool({
           <Separator />
           <DialogFooter className="flex justify-end">
             <Button
+              className="text-shamiri-light-red"
               variant="ghost"
               onClick={() => {
                 setConfirmDialogOpen(false);
@@ -156,7 +159,13 @@ export function DropoutSchool({
             >
               Cancel
             </Button>
-            <Button type="submit">Confirm</Button>
+            <Button
+              type="submit"
+              variant="destructive"
+              onClick={form.handleSubmit(onSubmit)}
+            >
+              Confirm
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
