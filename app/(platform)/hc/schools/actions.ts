@@ -1,6 +1,8 @@
 "use server";
 
 import { db } from "#/lib/db";
+import { revalidatePath } from "next/cache";
+import { DropoutSchoolSchema } from "../schemas";
 
 export async function fetchSchoolData(hubId: string) {
   return await db.school.findMany({
@@ -57,4 +59,35 @@ export async function fetchDropoutReasons(hubId: string) {
   });
 
   return dropoutData;
+}
+
+export async function dropoutSchool(schoolId: string, dropoutReason: string) {
+  const currentHubCoordinator = await currentHubCoordinator();
+
+  try {
+    const data = DropoutSchoolSchema.parse({ schoolId, dropoutReason });
+    await db.school.update({
+      data: {
+        dropoutReason: data.dropoutReason,
+        droppedOut: true,
+        droppedOutAt: new Date(),
+      },
+      where: {
+        id: data.schoolId,
+      },
+    });
+
+    revalidatePath("/hc/schools");
+
+    return {
+      success: true,
+      message: "Successfully dropped out school",
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      success: false,
+      message: "Something went wrong while trying to drop out the school",
+    };
+  }
 }
