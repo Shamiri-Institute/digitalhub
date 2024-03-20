@@ -84,7 +84,7 @@ export function DropoutSchool({
     <Form {...form}>
       <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
         <DialogTrigger asChild>{children}</DialogTrigger>
-        <DialogContent className="p-5">
+        <DialogContent className="p-5 text-base font-medium leading-6">
           <DialogHeader>
             <h2>Drop out school</h2>
             <Alert variant="primary">
@@ -95,38 +95,34 @@ export function DropoutSchool({
             </Alert>
           </DialogHeader>
           <Separator />
-          <div className="space-y-2">
-            <h3></h3>
-            <FormField
-              control={form.control}
-              name="dropoutReason"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Select reason{" "}
-                    <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a dropout reason" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Lack of understanding of program and timelines">
-                        Lack of understanding of program and timelines
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div>Select options go here with the form field</div>
-          </div>
+          <FormField
+            control={form.control}
+            name="dropoutReason"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel>
+                  Select reason{" "}
+                  <span className="text-shamiri-light-red">*</span>
+                </FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a dropout reason" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Lack of understanding of program and timelines">
+                      Lack of understanding of program and timelines
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <Separator />
           <DialogFooter className="flex justify-end">
             <Button
