@@ -3,6 +3,7 @@
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
 import { DropoutSchoolSchema } from "../schemas";
+import { currentHubCoordinator } from "#/app/auth";
 
 export async function fetchSchoolData(hubId: string) {
   return await db.school.findMany({
@@ -62,7 +63,7 @@ export async function fetchDropoutReasons(hubId: string) {
 }
 
 export async function dropoutSchool(schoolId: string, dropoutReason: string) {
-  const currentHubCoordinator = await currentHubCoordinator();
+  const hubCoordinator = await currentHubCoordinator();
 
   try {
     const data = DropoutSchoolSchema.parse({ schoolId, dropoutReason });
