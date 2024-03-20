@@ -26,7 +26,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, Loader2 } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -189,8 +189,12 @@ export function DropoutSchool({
             <Button
               type="submit"
               variant="destructive"
+              disabled={form.formState.isSubmitting}
               onClick={form.handleSubmit(onSubmit)}
             >
+              {form.formState.isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Confirm
             </Button>
           </DialogFooter>
