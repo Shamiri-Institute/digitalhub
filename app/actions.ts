@@ -1750,7 +1750,6 @@ export async function addNonShamiriStudentViaClinicalScreening(
     gender: string;
     schoolVisibleId: string;
   },
-
   {
     implementerId,
     supervisorId,
@@ -1759,31 +1758,8 @@ export async function addNonShamiriStudentViaClinicalScreening(
     supervisorId: string;
   },
 ) {
-  // const supervisor = await db.supervisor.findUnique({
-  //   where: { id: supervisorId },
-  // });
-
   const studentCount = await db.student.count();
-  const studentVisibleId = generateStudentVisibleID("CLN_", studentCount);
-
-  console.log({ studentCount, studentVisibleId });
-
-  console.log({
-    id: objectId("stu"),
-    studentName: data.studentName,
-    visibleId: studentVisibleId,
-    supervisorId: supervisorId,
-    implementerId: implementerId,
-    schoolId: data.schoolVisibleId,
-    yearOfImplementation: new Date().getFullYear(),
-    admissionNumber: data.admissionNumber,
-    age: parseInt(data.age),
-    gender: data.gender,
-    form: parseInt(data.form),
-    stream: data.stream,
-    county: data.county,
-    phoneNumber: data.contactNumber,
-  });
+  const studentVisibleId = generateStudentVisibleID("CLN", studentCount);
 
   await db.student.create({
     data: {

@@ -38,27 +38,26 @@ export const NonShamirianStudentSchema = z.object({
       required_error: "Please enter the student's admission number.",
     })
     .trim()
-    .min(1, "Admission number is too short."),
+    .min(1, "Admission number is not valid."),
   age: z
     .string({
       required_error: "Please enter the student's age.",
     })
     .trim()
-    .min(1, "Age is too short."),
+    .min(1, "Age is not valid."),
 
   county: z
     .string({
       required_error: "Please enter the student's county.",
     })
     .trim()
-    .min(1, "County is too short."),
+    .min(1, "County name is too short."),
 
   form: z
     .string({
       required_error: "Please enter the student's form.",
     })
-    .trim()
-    .min(1, "Form is too short."),
+    .trim(),
   contactNumber: z
     .string({
       required_error: "Please enter the student's contact number.",
@@ -69,21 +68,20 @@ export const NonShamirianStudentSchema = z.object({
     .string({
       required_error: "Please enter the student's stream.",
     })
-    .trim()
-    .min(1, "Stream is too short."),
+    .trim(),
 
   gender: z
     .string({
-      required_error: "Please enter the student's gender.",
+      required_error: "Please select the student's gender.",
     })
     .trim()
-    .min(1, "Please enter the student's gender"),
+    .min(1, "Please select the student's gender"),
   schoolVisibleId: z
     .string({
-      required_error: "Please select a school",
+      required_error: "Please select the student's school",
     })
     .trim()
-    .min(1, "Please select a school"),
+    .min(1, "Please select the student's school"),
 });
 
 export default function CreateNonShamiriStudentPage({
@@ -102,8 +100,6 @@ export default function CreateNonShamiriStudentPage({
   const { toast } = useToast();
 
   async function onSubmit(data: z.infer<typeof NonShamirianStudentSchema>) {
-    console.log("submitting");
-
     const result = await addNonShamiriStudentViaClinicalScreening(data, {
       implementerId,
       supervisorId,
@@ -384,7 +380,7 @@ export default function CreateNonShamiriStudentPage({
                             type="text"
                             onChange={field.onChange}
                             defaultValue={field.value}
-                            placeholder="Add stream here eg. West, East, North, South"
+                            placeholder="Add stream eg. West, East, North, South"
                             className="resize-none bg-card"
                           />
                         </div>

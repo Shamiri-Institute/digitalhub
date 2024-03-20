@@ -6,8 +6,6 @@ import { notFound } from "next/navigation";
 export default async function Page() {
   const supervisor = await getCurrentUser();
 
-  console.log({ supervisor });
-
   if (!supervisor) {
     return notFound();
   }
@@ -22,7 +20,6 @@ export default async function Page() {
 
   const { membership } = supervisor;
 
-  console.log({ schools });
   return (
     <>
       <CreateNonShamiriStudentPage
