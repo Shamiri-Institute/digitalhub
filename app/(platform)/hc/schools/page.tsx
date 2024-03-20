@@ -13,11 +13,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import Image from "next/image";
 import AddCircleOutlined from "../../../../public/icons/add-circle-outline.svg";
-import {
-  fetchDropoutReasons,
-  fetchSchoolData,
-  fetchSessionAttendanceData,
-} from "./actions";
+import { fetchDropoutReasons, fetchSchoolData } from "./actions";
 import ChartArea from "./components/chart-area";
 import { columns } from "./components/columns";
 import SchoolsDataTable from "./components/data-table";
@@ -27,9 +23,6 @@ export default async function SchoolsPage() {
   // TODO: convert this to Promise.all for concurrent fetch
   const data = await fetchSchoolData(hubCoordinator?.assignedHubId as string);
   const dropoutData = await fetchDropoutReasons(
-    hubCoordinator?.assignedHubId as string,
-  );
-  const sessionAttendanceData = await fetchSessionAttendanceData(
     hubCoordinator?.assignedHubId as string,
   );
 
@@ -80,10 +73,7 @@ export default async function SchoolsPage() {
         </div>
       </div>
       {/* TODO: better to use grid here for responsive views */}
-      <ChartArea
-        dropoutData={dropoutData}
-        sessionAttendanceData={sessionAttendanceData}
-      />
+      <ChartArea dropoutData={dropoutData} />
       <Separator />
       <div className="pt-5">
         <SchoolsDataTable data={data} columns={columns} />

@@ -1,14 +1,21 @@
 "use client";
 
 import ChartCard from "#/components/ui/chart-card";
-import { Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { SCHOOL_DROPOUT_REASONS_MAPPING } from "#/lib/app-constants/constants";
+import {
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
+import { DropoutReasonsGraphData } from "../actions";
 
 export default function ChartArea({
   dropoutData,
-  sessionAttendanceData,
 }: {
-  dropoutData: any;
-  sessionAttendanceData: any;
+  dropoutData: DropoutReasonsGraphData[];
 }) {
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
@@ -22,7 +29,16 @@ export default function ChartArea({
               nameKey="name"
               outerRadius={80}
               fill="#8884d8"
-            />
+            >
+              {dropoutData.map((reason) => (
+                <Cell
+                  key={reason.name}
+                  // FIXME: remove this ts-ignore to be consistent across the app
+                  // @ts-ignore
+                  fill={SCHOOL_DROPOUT_REASONS_MAPPING[reason.name]}
+                />
+              ))}
+            </Pie>
             <Legend />
             <Tooltip />
           </PieChart>
