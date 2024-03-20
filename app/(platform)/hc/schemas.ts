@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export const DropoutSchoolSchema = z.object({
   schoolId: stringValidation("Missing school ID"),
+  // @ts-ignore
   dropoutReason: z.enum(SCHOOL_DROPOUT_REASONS, {
     errorMap: (_issue, _ctx) => ({
       message:

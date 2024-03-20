@@ -41,8 +41,13 @@ export async function fetchSessionAttendanceData(hubId: string) {
   return sessionAttendanceData;
 }
 
+export type DropoutReasonsGraphData = {
+  name: string;
+  value: number;
+};
+
 export async function fetchDropoutReasons(hubId: string) {
-  const dropoutData = await db.$queryRaw<{ name: string; value: number }[]>`
+  const dropoutData = await db.$queryRaw<DropoutReasonsGraphData[]>`
     SELECT
       COUNT(*) AS value,
       dropout_reason AS name
