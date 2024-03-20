@@ -593,6 +593,7 @@ model School {
   latitude             Float?                @map("latitude")
   droppedOut           Boolean?              @map("dropped_out")
   dropoutReason        String?               @map("dropout_reason")
+  droppedOutAt         DateTime              @map("dropped_out_at") @db.Timestamptz()
   assignedSupervisorId String?               @map("assigned_supervisor_id") @db.VarChar(255)
   assignedSupervisor   Supervisor?           @relation(fields: [assignedSupervisorId], references: [id])
   students             Student[]
