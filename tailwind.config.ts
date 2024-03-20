@@ -33,6 +33,7 @@ const config: Config = {
         },
         "background-secondary": "#F7F7F7",
         "shamiri-light-red": "#E92C2C",
+        "shamiri-light-red-background-base": "#FF3B3B",
         "shamiri-blue": "#0474bc", // DEPRECATED: switch shamiri-blue to shamiri-new-blue
         "shamiri-new-blue": "#0085FF",
         "shamiri-new-light-blue": "#E5F3FF",

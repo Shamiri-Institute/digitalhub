@@ -138,7 +138,8 @@ export function DropoutSchool({
           <div className="space-y-4">
             <h3>Are you sure?</h3>
             <Alert variant="destructive">
-              <AlertTitle>
+              <AlertTitle className="flex gap-2">
+                <InfoIcon />
                 Once this change has been made it is irreversible and will need
                 you to contact support in order to modify. Please be sure of
                 your action before you confirm.
