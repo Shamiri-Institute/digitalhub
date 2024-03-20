@@ -1758,28 +1758,49 @@ export async function addNonShamiriStudentViaClinicalScreening(
     supervisorId: string;
   },
 ) {
-  const studentCount = await db.student.count();
-  const studentVisibleId = generateStudentVisibleID("CLN", studentCount);
-
-  await db.student.create({
-    data: {
-      id: objectId("stu"),
-      studentName: data.studentName,
-      visibleId: studentVisibleId,
-      supervisorId: supervisorId,
-      implementerId: implementerId,
-      schoolId: data.schoolVisibleId,
-      yearOfImplementation: new Date().getFullYear(),
-      admissionNumber: data.admissionNumber,
-      age: parseInt(data.age),
-      gender: data.gender,
-      form: parseInt(data.form),
-      stream: data.stream,
-      county: data.county,
-      phoneNumber: data.contactNumber,
-    },
-  });
   try {
+    const duplicateStudent = await db.student.findFirst({
+      where: {
+        schoolId: data.schoolVisibleId,
+        admissionNumber: data.admissionNumber,
+      },
+    });
+
+    if (duplicateStudent) {
+      return {
+        success: false,
+        error: `Duplicate student record (Name: ${duplicateStudent.studentName}, Admission number: ${duplicateStudent.admissionNumber}, Form: ${duplicateStudent.form}, Stream: ${duplicateStudent.stream}. This student already exists.`,
+      };
+    }
+
+    const studentCount = await db.student.count();
+    const studentVisibleId = generateStudentVisibleID("CLN", studentCount);
+
+    const student = await db.student.create({
+      data: {
+        id: objectId("stu"),
+        studentName: data.studentName,
+        visibleId: studentVisibleId,
+        supervisorId: supervisorId,
+        implementerId: implementerId,
+        schoolId: data.schoolVisibleId,
+        yearOfImplementation: new Date().getFullYear(),
+        admissionNumber: data.admissionNumber,
+        age: parseInt(data.age),
+        gender: data.gender,
+        form: parseInt(data.form),
+        stream: data.stream,
+        county: data.county,
+        phoneNumber: data.contactNumber,
+      },
+    });
+
+    await createClinicalCase({
+      schoolId: data.schoolVisibleId,
+      currentSupervisorId: supervisorId,
+      studentId: student.id,
+    });
+
     return { success: true };
   } catch (error) {
     console.error(error);
