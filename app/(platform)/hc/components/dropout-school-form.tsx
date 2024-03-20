@@ -1,5 +1,5 @@
 "use client";
-import { Alert, AlertDescription, AlertTitle } from "#/components/ui/alert";
+import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -52,7 +52,6 @@ export function DropoutSchool({
   const [confirmDialogOpen, setConfirmDialogOpen] =
     React.useState<boolean>(false);
 
-  console.log({ formDialogOpen });
   return (
     <Form {...form}>
       <Dialog open={formDialogOpen} onOpenChange={setFormDialogOpen}>
@@ -112,8 +111,12 @@ export function DropoutSchool({
             </Button>
             <Button
               onClick={() => {
-                setFormDialogOpen(false);
-                setConfirmDialogOpen(true);
+                if (form.formState.isValid) {
+                  setFormDialogOpen(false);
+                  setConfirmDialogOpen(true);
+                } else {
+                  form.trigger();
+                }
               }}
             >
               Submit
@@ -125,8 +128,11 @@ export function DropoutSchool({
         <DialogContent className="p-5">
           <DialogHeader>
             <h2>Confirm drop out</h2>
-            <Alert>
-              <AlertDescription>{schoolId}</AlertDescription>
+            <Alert variant="primary">
+              <AlertTitle className="flex items-center gap-2">
+                <InfoIcon />
+                {schoolName}
+              </AlertTitle>
             </Alert>
           </DialogHeader>
           <div className="space-y-4">
