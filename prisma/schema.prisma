@@ -652,6 +652,7 @@ model Hub {
   coordinators          HubCoordinator[]
   projectId             String?                @map("project_id") @db.VarChar(100)
   project               Project?               @relation(fields: [projectId], references: [id])
+  weeklyHubReports      WeeklyHubReport[]
 
   @@map("hubs")
 }
@@ -685,6 +686,7 @@ model HubCoordinator {
   assignedHub           Hub?                   @relation(fields: [assignedHubId], references: [id])
   reimbursementRequests ReimbursementRequest[]
   droppedOutSchools     School[]
+  weeklyHubReports      WeeklyHubReport[]
 
   @@map("hub_coordinators")
 }
@@ -1092,4 +1094,20 @@ model ProjectImplementer {
 
   @@id([projectId, implementerId])
   @@map("project_implementers")
+}
+
+model WeeklyHubReport {
+  id                 String         @id @default(cuid())
+  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
+  positiveHighlights String         @map("positive_highlights") @db.Text
+  reportedChallenges String         @map("reported_challenges") @db.Text
+  recommendations    String         @map("recommendations") @db.Text
+  week               DateTime       @db.Date // stores the week of the report
+  submittedBy        String         @map("submitted_by") @db.VarChar(255)
+  hubCoordinator     HubCoordinator @relation(fields: [submittedBy], references: [id])
+  hubId              String         @map("hub_id") @db.VarChar(255)
+  hub                Hub            @relation(fields: [hubId], references: [id])
+
+  @@map("weekly_hub_reports")
 }
