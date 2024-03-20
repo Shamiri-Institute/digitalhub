@@ -1748,7 +1748,7 @@ export async function addNonShamiriStudentViaClinicalScreening(
     contactNumber?: string;
     stream: string;
     gender: string;
-    schoolVisibleId: string;
+    schoolId: string;
   },
   {
     implementerId,
@@ -1761,7 +1761,7 @@ export async function addNonShamiriStudentViaClinicalScreening(
   try {
     const duplicateStudent = await db.student.findFirst({
       where: {
-        schoolId: data.schoolVisibleId,
+        schoolId: data.schoolId,
         admissionNumber: data.admissionNumber,
       },
     });
@@ -1783,7 +1783,7 @@ export async function addNonShamiriStudentViaClinicalScreening(
         visibleId: studentVisibleId,
         supervisorId: supervisorId,
         implementerId: implementerId,
-        schoolId: data.schoolVisibleId,
+        schoolId: data.schoolId,
         yearOfImplementation: new Date().getFullYear(),
         admissionNumber: data.admissionNumber,
         age: parseInt(data.age),
@@ -1797,7 +1797,7 @@ export async function addNonShamiriStudentViaClinicalScreening(
     });
 
     await createClinicalCase({
-      schoolId: data.schoolVisibleId,
+      schoolId: data.schoolId,
       currentSupervisorId: supervisorId,
       studentId: student.id,
     });
