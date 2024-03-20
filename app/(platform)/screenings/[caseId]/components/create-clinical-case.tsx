@@ -205,7 +205,7 @@ export default function CreateClinicalCaseDialogue({
 
         <div className="flex justify-end px-6 pb-6">
           <Link href={"/screenings/create-student"} className="flex flex-1">
-            <Button variant="brand" onClick={() => {}} className="w-full">
+            <Button variant="brand" className="w-full">
               Non-Shamiri Student
             </Button>
           </Link>
