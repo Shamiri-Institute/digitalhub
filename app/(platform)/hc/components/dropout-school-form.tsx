@@ -48,6 +48,10 @@ export function DropoutSchool({
     },
   });
 
+  const onSubmit = async (data) => {
+    console.log(data);
+  };
+
   const [formDialogOpen, setFormDialogOpen] = React.useState<boolean>(false);
   const [confirmDialogOpen, setConfirmDialogOpen] =
     React.useState<boolean>(false);
