@@ -116,7 +116,7 @@ export function DropoutSchool({
                   </FormControl>
                   <SelectContent>
                     {SCHOOL_DROPOUT_REASONS.map((reason) => (
-                      <SelectItem value={reason}>{reason}</SelectItem>
+                      <SelectItem key={reason} value={reason}>{reason}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
