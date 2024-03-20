@@ -22,6 +22,7 @@ import {
 import { useToast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -95,6 +96,17 @@ export default function CreateNonShamiriStudentPage({
 }) {
   const form = useForm<z.infer<typeof NonShamirianStudentSchema>>({
     resolver: zodResolver(NonShamirianStudentSchema),
+    defaultValues: {
+      admissionNumber: "",
+      age: "",
+      contactNumber: "",
+      county: "",
+      form: "",
+      gender: "",
+      schoolVisibleId: "",
+      stream: "",
+      studentName: "",
+    },
   });
 
   const { toast } = useToast();
@@ -108,12 +120,12 @@ export default function CreateNonShamiriStudentPage({
     if (result.success) {
       toast({
         variant: "default",
-        description: "successfully edited fellow details",
+        description: "Successfully added student and created clinical case.",
       });
     } else {
       toast({
         variant: "destructive",
-        description: "Failed to submit edits",
+        description: `${result.error ? result.error : "Something went wrong."}`,
       });
     }
   }
@@ -436,6 +448,9 @@ export default function CreateNonShamiriStudentPage({
             </div>
 
             <Button className="mt-4 w-full bg-shamiri-blue hover:bg-shamiri-blue">
+              {form.formState.isSubmitting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Save
             </Button>
           </form>
