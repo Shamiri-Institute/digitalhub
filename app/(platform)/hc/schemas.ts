@@ -1,6 +1,7 @@
+import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
 
 export const DropoutSchoolSchema = z.object({
-  schoolId: z.string(),
-  dropoutReason: z.string(),
+  schoolId: stringValidation("Missing school ID"),
+  dropoutReason: stringValidation("Please select a dropoout reason"),
 });

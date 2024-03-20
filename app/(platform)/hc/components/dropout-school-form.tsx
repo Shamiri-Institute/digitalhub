@@ -8,7 +8,21 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { Form } from "#/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "#/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "lucide-react";
@@ -55,9 +69,35 @@ export function DropoutSchool({
           </DialogHeader>
           <Separator />
           <div className="space-y-2">
-            <h3>
-              Select reason <span className="text-shamiri-light-red">*</span>
-            </h3>
+            <h3></h3>
+            <FormField
+              control={form.control}
+              name="dropoutReason"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Select reason{" "}
+                    <span className="text-shamiri-light-red">*</span>
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a dropout reason" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Lack of understanding of program and timelines">
+                        Lack of understanding of program and timelines
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div>Select options go here with the form field</div>
           </div>
           <Separator />
