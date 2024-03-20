@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { useToast } from "#/components/ui/use-toast";
+import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
 import { Loader2 } from "lucide-react";
@@ -28,61 +29,26 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 export const NonShamirianStudentSchema = z.object({
-  studentName: z
-    .string({
-      required_error: "Please enter the student name.",
-    })
-    .trim()
-    .min(1, "Student name is too short."),
-  admissionNumber: z
-    .string({
-      required_error: "Please enter the student's admission number.",
-    })
-    .trim()
-    .min(1, "Admission number is not valid."),
-  age: z
-    .string({
-      required_error: "Please enter the student's age.",
-    })
-    .trim()
-    .min(1, "Age is not valid."),
+  studentName: stringValidation("Please enter the student name."),
+  admissionNumber: stringValidation(
+    "Please enter the student's admission number.",
+  ),
+  age: stringValidation("Please enter the student's age."),
 
-  county: z
-    .string({
-      required_error: "Please enter the student's county.",
-    })
-    .trim()
-    .min(1, "County name is too short."),
+  county: stringValidation("Please enter the student's county."),
 
-  form: z
-    .string({
-      required_error: "Please enter the student's form.",
-    })
-    .trim(),
-  contactNumber: z
-    .string({
-      required_error: "Please enter the student's contact number.",
-    })
-    .min(9, "Please enter a valid contact number")
-    .optional(),
+  form: stringValidation("Please enter the student's form."),
+  contactNumber: stringValidation(
+    "Please enter the student's contact number.",
+  ).optional(),
   stream: z
     .string({
       required_error: "Please enter the student's stream.",
     })
     .trim(),
 
-  gender: z
-    .string({
-      required_error: "Please select the student's gender.",
-    })
-    .trim()
-    .min(1, "Please select the student's gender"),
-  schoolVisibleId: z
-    .string({
-      required_error: "Please select the student's school",
-    })
-    .trim()
-    .min(1, "Please select the student's school"),
+  gender: stringValidation("Please select the student's gender."),
+  schoolId: stringValidation("Please select the student's school."),
 });
 
 export default function CreateNonShamiriStudentPage({
@@ -103,7 +69,7 @@ export default function CreateNonShamiriStudentPage({
       county: "",
       form: "",
       gender: "",
-      schoolVisibleId: "",
+      schoolId: "",
       stream: "",
       studentName: "",
     },
@@ -122,6 +88,8 @@ export default function CreateNonShamiriStudentPage({
         variant: "default",
         description: "Successfully added student and created clinical case.",
       });
+      form.reset();
+      window.location.href = "/screenings";
     } else {
       toast({
         variant: "destructive",
@@ -178,14 +146,14 @@ export default function CreateNonShamiriStudentPage({
               <div>
                 <FormField
                   control={form.control}
-                  name="schoolVisibleId"
+                  name="schoolId"
                   render={({ field }) => (
                     <div className="mt-3 grid w-full gap-1.5">
-                      <FormLabel htmlFor="schoolVisibleId">School</FormLabel>
+                      <FormLabel htmlFor="schoolId">School</FormLabel>
                       <FormItem>
                         <FormControl>
                           <Select
-                            name="schoolVisibleId"
+                            name="schoolId"
                             defaultValue={field.value}
                             onValueChange={field.onChange}
                           >
