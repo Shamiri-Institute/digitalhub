@@ -1,9 +1,9 @@
 "use server";
 
+import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
 import { DropoutSchoolSchema } from "../schemas";
-import { currentHubCoordinator } from "#/app/auth";
 
 export async function fetchSchoolData(hubId: string) {
   return await db.school.findMany({
@@ -63,15 +63,20 @@ export async function fetchDropoutReasons(hubId: string) {
 }
 
 export async function dropoutSchool(schoolId: string, dropoutReason: string) {
-  const hubCoordinator = await currentHubCoordinator();
-
   try {
+    const hubCoordinator = await currentHubCoordinator();
+
+    if (!hubCoordinator) {
+      throw new Error("The session has not been authenticated");
+    }
+
     const data = DropoutSchoolSchema.parse({ schoolId, dropoutReason });
     await db.school.update({
       data: {
         dropoutReason: data.dropoutReason,
         droppedOut: true,
         droppedOutAt: new Date(),
+        droppedOutBy: hubCoordinator.id,
       },
       where: {
         id: data.schoolId,

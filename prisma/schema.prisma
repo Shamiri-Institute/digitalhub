@@ -594,7 +594,7 @@ model School {
   droppedOut                 Boolean?              @map("dropped_out")
   dropoutReason              String?               @map("dropout_reason")
   droppedOutAt               DateTime?             @map("dropped_out_at") @db.Timestamptz()
-  droppedOutBy               String?               @map("dropped_out_by") @db.VarChar(255)
+  droppedOutBy               String?               @map("dropped_out_by") @db.VarChar(255) // we would have to add additional columns for each role since supervisors can also drop schools
   droppedOutByHubCoordinator HubCoordinator?       @relation(fields: [droppedOutBy], references: [id])
   assignedSupervisorId       String?               @map("assigned_supervisor_id") @db.VarChar(255)
   assignedSupervisor         Supervisor?           @relation(fields: [assignedSupervisorId], references: [id])

@@ -24,12 +24,14 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
+import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { DropoutSchoolSchema } from "../schemas";
+import { dropoutSchool } from "../schools/actions";
 
 export function DropoutSchool({
   children,
@@ -48,8 +50,30 @@ export function DropoutSchool({
     },
   });
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data: z.infer<typeof DropoutSchoolSchema>) => {
     console.log(data);
+    const response = await dropoutSchool(data.schoolId, data.dropoutReason);
+    console.log(response);
+
+    if (!response.success) {
+      toast({
+        variant: "destructive",
+        title: "Submission Error",
+        description:
+          response.message ??
+          "Something went wrong during submission, please try again",
+      });
+      return;
+    }
+
+    toast({
+      variant: "default",
+      title: "Success",
+      description: `Successfully droppedout ${schoolName}`,
+    });
+    form.reset();
+    setFormDialogOpen(false);
+    setConfirmDialogOpen(false);
   };
 
   const [formDialogOpen, setFormDialogOpen] = React.useState<boolean>(false);
