@@ -25,6 +25,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
+import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon, Loader2 } from "lucide-react";
 import React from "react";
@@ -114,9 +115,9 @@ export function DropoutSchool({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Lack of understanding of program and timelines">
-                      Lack of understanding of program and timelines
-                    </SelectItem>
+                    {SCHOOL_DROPOUT_REASONS.map((reason) => (
+                      <SelectItem value={reason}>{reason}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
