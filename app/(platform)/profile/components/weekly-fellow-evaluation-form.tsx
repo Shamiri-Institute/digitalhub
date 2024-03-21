@@ -64,7 +64,7 @@ function generateWeekFieldValues() {
 const InputSchema = WeeklyFellowRatingSchema.pick({
   programDeliveryNotes: true,
   dressingAndGroomingNotes: true,
-  attendanceNotes: true,
+  punctualityNotes: true,
   behaviourNotes: true,
   week: true,
   behaviourRating: true,
@@ -91,7 +91,7 @@ export default function WeeklyEvaluationForm({
     defaultValues: {
       programDeliveryNotes: "",
       dressingAndGroomingNotes: "",
-      attendanceNotes: "",
+      punctualityNotes: "",
       behaviourNotes: "",
       behaviourRating: 0,
       programDeliveryRating: 0,
@@ -291,7 +291,7 @@ export default function WeeklyEvaluationForm({
                   <FormField
                     control={form.control}
                     // todo: update this name on the schema as well
-                    name="attendanceNotes"
+                    name="punctualityNotes"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
@@ -355,9 +355,9 @@ export default function WeeklyEvaluationForm({
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-bold">
-                            Attendance Notes - ({pr.punctualityRating})
+                            Punctuality Notes - ({pr.punctualityRating})
                           </TableCell>
-                          <TableCell>{pr.attendanceNotes}</TableCell>
+                          <TableCell>{pr.punctualityNotes}</TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>

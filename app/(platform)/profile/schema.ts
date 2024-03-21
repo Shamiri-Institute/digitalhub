@@ -27,10 +27,10 @@ export const OverallFellowSchema = z.object({
     .string({ required_error: "Please input dressing and grooming notes" })
     .trim()
     .min(1, { message: "Please input dressing and grooming notes" }),
-  attendanceNotes: z
-    .string({ required_error: "Please input attendance notes" })
+  punctualityNotes: z
+    .string({ required_error: "Please input punctuality notes" })
     .trim()
-    .min(1, { message: "Please input attendance notes" }),
+    .min(1, { message: "Please input punctuality notes" }),
   fellowId: z.string(),
   supervisorId: z.string(),
 });
@@ -53,7 +53,7 @@ export const WeeklyFellowRatingSchema = z.object({
   dressingAndGroomingNotes: stringValidation(
     "Please input dressing and grooming notes",
   ),
-  attendanceNotes: stringValidation("Please input attendance notes"),
+  punctualityNotes: stringValidation("Please input punctuality notes"),
   fellowId: z.string(),
   supervisorId: z.string(),
   behaviourRating: z.number().min(1, { message: "Please input a rating " }),
