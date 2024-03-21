@@ -843,7 +843,7 @@ model OverallFellowEvaluation {
   fellowBehaviourNotes     String     @map("fellow_behaviour_notes") @db.Text()
   programDeliveryNotes     String     @map("program_delivery_notes") @db.Text()
   dressingAndGroomingNotes String     @map("dressing_and_grooming_notes") @db.Text()
-  attendanceNotes          String     @map("attendance_notes") @db.Text()
+  punctualityNotes         String     @map("punctuality_notes") @db.Text()
 
   @@map("overall_fellow_evaluations")
 }
@@ -974,7 +974,7 @@ model WeeklyFellowRatings {
   programDeliveryRating     Int?       @map("program_delivery_rating")
   dressingAndGroomingNotes  String     @map("dressing_and_grooming_notes") @db.Text()
   dressingAndGroomingRating Int?       @map("dressing_and_grooming_rating")
-  attendanceNotes           String     @map("attendance_notes") @db.Text()
+  punctualityNotes          String     @map("punctuality_notes") @db.Text()
   punctualityRating         Int?       @map("punctuality_rating")
   fellowId                  String     @map("fellow_id") @db.VarChar(255)
   fellow                    Fellow     @relation(fields: [fellowId], references: [id])
