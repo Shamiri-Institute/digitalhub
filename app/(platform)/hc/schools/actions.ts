@@ -3,7 +3,8 @@
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
-import { DropoutSchoolSchema } from "../schemas";
+import { z } from "zod";
+import { DropoutSchoolSchema, WeeklyHubReportSchema } from "../schemas";
 
 export async function fetchSchoolData(hubId: string) {
   return await db.school.findMany({
@@ -100,5 +101,34 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
       success: false,
       message: "Something went wrong while trying to drop out the school",
     };
+  }
+}
+
+export async function submitWeeklyHubReport(
+  data: z.infer<typeof WeeklyHubReportSchema>,
+) {
+  try {
+    const parsedData = WeeklyHubReportSchema.parse(data);
+
+    await db.weeklyHubReport.create({
+      data: {
+        week: parsedData.week,
+        reportedChallenges: parsedData.reportedChallenges,
+        recommendations: parsedData.recommendations,
+        positiveHighlights: parsedData.positiveHighlights,
+        hubId: parsedData.hubId,
+        submittedBy: parsedData.hubCoordinatorId,
+      },
+    });
+
+    // TODO:
+    // this should revalidate the reports page
+    return {
+      success: true,
+      message: "Successfully submitted the weekly report",
+    };
+  } catch (e) {
+    console.error(e);
+    return { success: false, message: "Something went wrong" };
   }
 }
