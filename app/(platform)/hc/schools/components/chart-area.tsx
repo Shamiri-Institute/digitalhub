@@ -79,11 +79,8 @@ export default function ChartArea({
                   position="center"
                   className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {
-                    schoolDataCompletenessData.find((d) => (d.name = "actual"))
-                      ?.value
-                  }
-                  &#37;
+                  {schoolDataCompletenessData.find((d) => (d.name = "actual"))
+                    ?.value + "%"}
                 </Label>
                 {schoolDataCompletenessData.map(({ name }) => (
                   <Cell
