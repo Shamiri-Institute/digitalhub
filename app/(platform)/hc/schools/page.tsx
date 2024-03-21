@@ -1,5 +1,4 @@
 import { currentHubCoordinator } from "#/app/auth";
-import { Button } from "#/components/ui/button";
 import { Command, CommandInput } from "#/components/ui/command";
 import PageHeading from "#/components/ui/page-heading";
 import {
@@ -11,12 +10,11 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import Image from "next/image";
-import AddCircleOutlined from "../../../../public/icons/add-circle-outline.svg";
 import { fetchDropoutReasons, fetchSchoolData } from "./actions";
 import ChartArea from "./components/chart-area";
 import { columns } from "./components/columns";
 import SchoolsDataTable from "./components/data-table";
+import WeeklyHubReportButtonAndForm from "./components/weekly-hub-report-button-and-form";
 
 export default async function SchoolsPage() {
   const hubCoordinator = await currentHubCoordinator();
@@ -58,21 +56,13 @@ export default async function SchoolsPage() {
           </Select>
         </div>
         <div className="flex items-center gap-3">
-          <Button className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
-            <Image
-              unoptimized
-              priority
-              src={AddCircleOutlined}
-              alt="Add icon circle outlined"
-              width={24}
-              height={24}
-            />
-            Weekly Hub Report
-          </Button>
+          <WeeklyHubReportButtonAndForm
+            hubCoordinatorId={hubCoordinator?.id as string}
+            hubId={hubCoordinator?.assignedHubId as string}
+          />
           {/* TODO: dispaly options button */}
         </div>
       </div>
-      {/* TODO: better to use grid here for responsive views */}
       <ChartArea dropoutData={dropoutData} />
       <Separator />
       <div className="pt-5">

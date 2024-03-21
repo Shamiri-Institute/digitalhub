@@ -12,3 +12,12 @@ export const DropoutSchoolSchema = z.object({
     }),
   }),
 });
+
+export const WeeklyHubReportSchema = z.object({
+  hubId: stringValidation("Missing hub ID"),
+  hubCoordinatorId: stringValidation("Missing hub coordinator ID"),
+  week: z.coerce.date({ required_error: "Please select a week" }),
+  positiveHighlights: stringValidation("Please input postive highlights"),
+  reportedChallenges: stringValidation("Please input reported challenges"),
+  recommendations: stringValidation("Please input recommendations"),
+});
