@@ -10,7 +10,11 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import { fetchDropoutReasons, fetchSchoolData } from "./actions";
+import {
+  fetchDropoutReasons,
+  fetchSchoolData,
+  fetchSchoolDataCompletenessData,
+} from "./actions";
 import ChartArea from "./components/chart-area";
 import { columns } from "./components/columns";
 import SchoolsDataTable from "./components/data-table";
@@ -23,6 +27,10 @@ export default async function SchoolsPage() {
   const dropoutData = await fetchDropoutReasons(
     hubCoordinator?.assignedHubId as string,
   );
+  const schoolDataCompletenessPercentage =
+    await fetchSchoolDataCompletenessData(
+      hubCoordinator?.assignedHubId as string,
+    );
 
   return (
     <>
@@ -63,7 +71,10 @@ export default async function SchoolsPage() {
           {/* TODO: dispaly options button */}
         </div>
       </div>
-      <ChartArea dropoutData={dropoutData} />
+      <ChartArea
+        dropoutData={dropoutData}
+        schoolDataCompletenessData={schoolDataCompletenessPercentage}
+      />
       <Separator />
       <div className="pt-5">
         <SchoolsDataTable data={data} columns={columns} />
