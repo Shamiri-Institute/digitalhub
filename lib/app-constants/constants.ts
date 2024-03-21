@@ -13,3 +13,8 @@ export const SCHOOL_DROPOUT_REASONS_MAPPING = {
 export const SCHOOL_DROPOUT_REASONS = Object.keys(
   SCHOOL_DROPOUT_REASONS_MAPPING,
 ) as string[];
+
+export const SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING = {
+  actual: config.theme?.extend?.colors["shamiri-new-blue"],
+  difference: "#E5F3FF",
+};
