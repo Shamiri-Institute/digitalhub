@@ -113,7 +113,7 @@ export default function WeeklyHubReportButtonAndForm({
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader className="text- font-semibold leading-7">
+        <DialogHeader className="text-xl font-semibold leading-7">
           Submit weekly hub report
         </DialogHeader>
         <Separator />
@@ -193,7 +193,7 @@ export default function WeeklyHubReportButtonAndForm({
                 )}
               />
             </div>
-            <Separator />
+            <Separator className="my-4" />
             <DialogFooter>
               <Button
                 variant="ghost"
