@@ -25,6 +25,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
+import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import Image from "next/image";
@@ -74,7 +75,26 @@ export default function WeeklyHubReportButtonAndForm({
   });
 
   const onSubmit = async (data: z.infer<typeof WeeklyHubReportSchema>) => {
-    await submitWeeklyHubReport(data);
+    const response = await submitWeeklyHubReport(data);
+    if (!response.success) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description:
+          response.message ??
+          "Something went wrong during submission, please try again",
+      });
+      return;
+    }
+
+    toast({
+      variant: "default",
+      title: "Success",
+      description: "Successfully submitted weekly evaluation",
+    });
+
+    form.reset();
+    setDialogOpen(false);
   };
 
   return (

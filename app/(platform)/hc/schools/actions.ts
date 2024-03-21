@@ -107,5 +107,28 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
 export async function submitWeeklyHubReport(
   data: z.infer<typeof WeeklyHubReportSchema>,
 ) {
-  console.log(data);
+  try {
+    const parsedData = WeeklyHubReportSchema.parse(data);
+
+    await db.weeklyHubReport.create({
+      data: {
+        week: parsedData.week,
+        reportedChallenges: parsedData.reportedChallenges,
+        recommendations: parsedData.recommendations,
+        positiveHighlights: parsedData.positiveHighlights,
+        hubId: parsedData.hubId,
+        submittedBy: parsedData.hubCoordinatorId,
+      },
+    });
+
+    // TODO:
+    // this should revalidate the reports page
+    return {
+      success: true,
+      message: "Successfully submitted the weekly report",
+    };
+  } catch (e) {
+    console.error(e);
+    return { success: false, message: "Something went wrong" };
+  }
 }
