@@ -42,6 +42,35 @@ export async function fetchSessionAttendanceData(hubId: string) {
   return sessionAttendanceData;
 }
 
+export async function fetchSchoolDataCompletenessData(hubId: string) {
+  // TODO: uncomment the school_sub_county query and adjust division from 6.0 -> 7.0
+  const [schoolAttendanceData] = await db.$queryRaw<{ percentage: number }[]>`
+    SELECT
+      AVG((
+        (CASE WHEN school_county IS NOT NULL THEN 1 ELSE 0 END)
+        -- + (CASE WHEN school_sub_county is null THEN 1 ELSE 0 END)
+        + (CASE WHEN school_type IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN school_demographics IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN boarding_day IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN point_person_name IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN point_person_phone IS NOT NULL THEN 1 ELSE 0 END)
+      ) / 6.0 * 100) AS percentage
+    FROM schools
+    WHERE hub_id = ${hubId}
+  `;
+
+  if (!schoolAttendanceData) {
+    return [];
+  }
+
+  const percentage = +Number(schoolAttendanceData.percentage).toFixed(2);
+
+  return [
+    { name: "actual", value: percentage },
+    { name: "difference", value: 100 - percentage },
+  ];
+}
+
 export type DropoutReasonsGraphData = {
   name: string;
   value: number;
@@ -60,7 +89,6 @@ export async function fetchDropoutReasons(hubId: string) {
       dropout_reason
   `;
 
-  // necessary loop since prisma returns bigints as the default numeric type 😩
   dropoutData.forEach((data) => {
     data.value = Number(data.value);
   });
