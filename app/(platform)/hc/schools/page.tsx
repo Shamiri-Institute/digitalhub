@@ -58,7 +58,7 @@ export default async function SchoolsPage() {
         <div className="flex items-center gap-3">
           <WeeklyHubReportButtonAndForm
             hubCoordinatorId={hubCoordinator?.id as string}
-            hubId={hubCoordinator?.id as string}
+            hubId={hubCoordinator?.assignedHubId as string}
           />
           {/* TODO: dispaly options button */}
         </div>
