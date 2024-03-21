@@ -33,6 +33,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import AddCircleOutlined from "../../../../../public/icons/add-circle-outline.svg";
 import { WeeklyHubReportSchema } from "../../schemas";
+import { submitWeeklyHubReport } from "../actions";
 
 function generateWeekFieldValues() {
   const numWeeks = 4;
@@ -67,10 +68,14 @@ export default function WeeklyHubReportButtonAndForm({
       positiveHighlights: "",
       recommendations: "",
       reportedChallenges: "",
+      hubCoordinatorId,
+      hubId,
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof WeeklyHubReportSchema>) => {};
+  const onSubmit = async (data: z.infer<typeof WeeklyHubReportSchema>) => {
+    await submitWeeklyHubReport(data);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>

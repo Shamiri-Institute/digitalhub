@@ -56,11 +56,13 @@ export default async function SchoolsPage() {
           </Select>
         </div>
         <div className="flex items-center gap-3">
-          <WeeklyHubReportButtonAndForm />
+          <WeeklyHubReportButtonAndForm
+            hubCoordinatorId={hubCoordinator?.id as string}
+            hubId={hubCoordinator?.id as string}
+          />
           {/* TODO: dispaly options button */}
         </div>
       </div>
-      {/* TODO: better to use grid here for responsive views */}
       <ChartArea dropoutData={dropoutData} />
       <Separator />
       <div className="pt-5">
