@@ -1,3 +1,4 @@
+import { SessionStatus } from "@prisma/client";
 import { addHours, format } from "date-fns";
 import { useEffect, useState } from "react";
 
@@ -56,6 +57,7 @@ function SessionDetail({
 
   const schoolName = session.school.schoolName;
   const completed = session.sessionDate < new Date();
+  const cancelled = session.status === SessionStatus.Cancelled;
 
   const isCompact = layout === "compact";
   const isExpanded = layout === "expanded";
@@ -68,10 +70,12 @@ function SessionDetail({
         {
           "border-green-border": completed,
           "border-blue-border": !completed,
+          "border-red-border": cancelled,
         },
         {
           "bg-green-bg": completed,
           "bg-blue-bg": !completed,
+          "bg-red-bg": cancelled,
         },
       )}
     >
@@ -79,15 +83,17 @@ function SessionDetail({
         className={cn("text-[0.825rem] font-semibold", {
           "text-green-base": completed,
           "text-blue-base": !completed,
+          "text-red-base": cancelled,
         })}
       >
         <div className="flex items-center gap-1">
           {completed && (
             <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
           )}
-          {!completed && (
+          {!completed && !cancelled && (
             <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
           )}
+          {cancelled && <Icons.crossCircleFilled className="h-4 w-4" />}
           {isExpanded && <div>{sessionDisplayName(session.sessionType)}</div>}
           {isCompact && (
             <div>
@@ -97,8 +103,11 @@ function SessionDetail({
         </div>
         {isExpanded && (
           <>
-            <div>{schoolName}</div>
-            <div>{timeLabels.durationLabel}</div>
+            <div className="truncate">{schoolName}</div>
+            <div>
+              {timeLabels.durationLabel}
+              <span className="invisible">t</span>
+            </div>
           </>
         )}
       </div>

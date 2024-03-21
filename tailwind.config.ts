@@ -83,6 +83,9 @@ const config: Config = {
         "blue-border": "rgba(204, 231, 255, 1)", // Light/Blue/Border
         "blue-bg": "rgba(229, 243, 255, 1)", // Light/Blue/Background
         "blue-base": "rgba(0, 133, 255, 1)", // Light/Blue/Base
+        "red-border": "hsl(359, 85%, 90%)", // Light/Red/Border
+        "red-bg": "hsla(0, 100%, 62%, 0.1)", // Light/Red/Background
+        "red-base": "hsla(0, 81%, 54%, 1)", // Light/Red/Base
       },
       borderRadius: {
         lg: "var(--radius)",

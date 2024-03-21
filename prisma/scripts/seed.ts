@@ -1,4 +1,4 @@
-import { ImplementerRole, Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { addDays, addHours, setMinutes } from "date-fns";
 
 import { objectId } from "#/lib/crypto";
@@ -364,6 +364,7 @@ const ids = {
                     },
                     Session_02: {
                       id: objectId("sess"),
+                      status: SessionStatus.Cancelled,
                       sessionType: "s1",
                       sessionName: "Session 01",
                       sessionDate: setMinutes(addDays(new Date(), 3), 0),
@@ -593,6 +594,7 @@ async function seedDatabase() {
             await db.interventionSession.create({
               data: {
                 id: session.id,
+                status: (session as any).status,
                 sessionType: session.sessionType,
                 sessionName: session.sessionName,
                 sessionDate: session.sessionDate,
