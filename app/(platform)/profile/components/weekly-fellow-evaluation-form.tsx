@@ -68,23 +68,10 @@ const InputSchema = WeeklyFellowRatingSchema.pick({
   behaviourNotes: true,
   week: true,
   behaviourRating: true,
+  programDeliveryRating: true,
+  dressingAndGroomingRating: true,
+  punctualityRating: true,
 });
-
-export interface RatingState {
-  ratings: {
-    programDeliveryRating: number;
-    dressingAndGroomingRating: number;
-    punctualityRating: number;
-  };
-}
-
-const initialState: RatingState = {
-  ratings: {
-    programDeliveryRating: 0,
-    dressingAndGroomingRating: 0,
-    punctualityRating: 0,
-  },
-};
 
 export default function WeeklyEvaluationForm({
   children,
@@ -107,6 +94,9 @@ export default function WeeklyEvaluationForm({
       attendanceNotes: "",
       behaviourNotes: "",
       behaviourRating: 0,
+      programDeliveryRating: 0,
+      dressingAndGroomingRating: 0,
+      punctualityRating: 0,
     },
   });
 
@@ -117,23 +107,7 @@ export default function WeeklyEvaluationForm({
       supervisorId,
     };
 
-    if (
-      ratingState.ratings.programDeliveryRating === 0 ||
-      ratingState.ratings.dressingAndGroomingRating === 0 ||
-      ratingState.ratings.punctualityRating === 0
-    ) {
-      toast({
-        variant: "destructive",
-        title: "Submission error",
-        description: "Please rate all the fields before submitting",
-      });
-      return;
-    }
-
-    const response = await submitWeeklyFellowRating(
-      weeklyRatingBody,
-      ratingState,
-    );
+    const response = await submitWeeklyFellowRating(weeklyRatingBody);
 
     if (!response.success) {
       toast({
@@ -153,24 +127,8 @@ export default function WeeklyEvaluationForm({
     });
 
     form.reset();
-    setRatingState(initialState);
     setDialogOpen(false);
   }
-
-  const onRatingSelect = (
-    kind:
-      | "behaviourRating"
-      | "programDeliveryRating"
-      | "dressingAndGroomingRating"
-      | "punctualityRating",
-    rating: number,
-  ) =>
-    setRatingState((prev) => ({
-      ratings: { ...prev.ratings, [kind]: rating },
-    }));
-
-  const [ratingState, setRatingState] =
-    React.useState<RatingState>(initialState);
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -216,7 +174,7 @@ export default function WeeklyEvaluationForm({
 
               <div className="px-6">
                 <div className="flex items-center justify-between">
-                  <p>Fellow Behavour</p>
+                  <FormLabel>Fellow Behaviour</FormLabel>
                   <FormField
                     control={form.control}
                     name="behaviourRating"
@@ -247,73 +205,103 @@ export default function WeeklyEvaluationForm({
                 </div>
               </div>
               <div className="px-6">
-                <FormField
-                  control={form.control}
-                  name="programDeliveryNotes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center">
-                        <FormLabel>Program Delivery</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Program Delivery</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="programDeliveryRating"
+                    render={({ field: { value, onChange } }) => (
+                      <FormItem>
                         <RatingStars
-                          onSelect={(rating) => {
-                            onRatingSelect("programDeliveryRating", rating);
-                          }}
-                          rating={ratingState.ratings.programDeliveryRating}
+                          onSelect={(rating) => onChange(rating)}
+                          rating={value}
                         />
-                      </div>
-                      <FormControl>
-                        <Textarea className="resize-none" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="programDeliveryNotes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea className="resize-none" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
+
               <div className="px-6">
-                <FormField
-                  control={form.control}
-                  name="dressingAndGroomingNotes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center">
-                        <FormLabel>Dressing and Grooming</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Dressing and Grooming</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="dressingAndGroomingRating"
+                    render={({ field: { value, onChange } }) => (
+                      <FormItem>
                         <RatingStars
-                          onSelect={(rating) => {
-                            onRatingSelect("dressingAndGroomingRating", rating);
-                          }}
-                          rating={ratingState.ratings.dressingAndGroomingRating}
+                          onSelect={(rating) => onChange(rating)}
+                          rating={value}
                         />
-                      </div>
-                      <FormControl>
-                        <Textarea className="resize-none" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="dressingAndGroomingNotes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea className="resize-none" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
+
               <div className="px-6">
-                <FormField
-                  control={form.control}
-                  name="attendanceNotes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center">
-                        <FormLabel>Punctuality</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Punctuality</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="punctualityRating"
+                    render={({ field: { value, onChange } }) => (
+                      <FormItem>
                         <RatingStars
-                          onSelect={(rating) => {
-                            onRatingSelect("punctualityRating", rating);
-                          }}
-                          rating={ratingState.ratings.punctualityRating}
+                          onSelect={(rating) => onChange(rating)}
+                          rating={value}
                         />
-                      </div>
-                      <FormControl>
-                        <Textarea className="resize-none" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div>
+                  <FormField
+                    control={form.control}
+                    // todo: update this name on the schema as well
+                    name="attendanceNotes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea className="resize-none" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             </div>
             <div className="flex justify-end px-6 py-6">
