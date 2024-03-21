@@ -14,7 +14,7 @@ export const DropoutSchoolSchema = z.object({
 });
 
 export const WeeklyHubReportSchema = z.object({
-  week: z.date(),
+  week: z.coerce.date({ required_error: "Please select a week" }),
   positiveHighlights: stringValidation("Please input postive highlights"),
   reportedChallenges: stringValidation("Please input reported challenges"),
   recommendations: stringValidation("Please input recommendations"),

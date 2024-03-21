@@ -3,7 +3,8 @@
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
-import { DropoutSchoolSchema } from "../schemas";
+import { z } from "zod";
+import { DropoutSchoolSchema, WeeklyHubReportSchema } from "../schemas";
 
 export async function fetchSchoolData(hubId: string) {
   return await db.school.findMany({
@@ -101,4 +102,10 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
       message: "Something went wrong while trying to drop out the school",
     };
   }
+}
+
+export async function submitWeeklyHubReport(
+  data: z.infer<typeof WeeklyHubReportSchema>,
+) {
+  console.log(data);
 }

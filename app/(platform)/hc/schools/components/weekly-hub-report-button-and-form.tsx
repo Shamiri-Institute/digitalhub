@@ -53,7 +53,13 @@ function generateWeekFieldValues() {
   return selectValues;
 }
 
-export default function WeeklyHubReportButtonAndForm() {
+export default function WeeklyHubReportButtonAndForm({
+  hubCoordinatorId,
+  hubId,
+}: {
+  hubCoordinatorId: string;
+  hubId: string;
+}) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const form = useForm<z.infer<typeof WeeklyHubReportSchema>>({
     resolver: zodResolver(WeeklyHubReportSchema),
@@ -61,9 +67,11 @@ export default function WeeklyHubReportButtonAndForm() {
       positiveHighlights: "",
       recommendations: "",
       reportedChallenges: "",
-      week: undefined,
     },
   });
+
+  const onSubmit = async (data: z.infer<typeof WeeklyHubReportSchema>) => {};
+
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
@@ -85,7 +93,7 @@ export default function WeeklyHubReportButtonAndForm() {
         </DialogHeader>
         <Separator />
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((data) => console.log(data))}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="space-y-4">
               <FormField
                 control={form.control}
@@ -95,6 +103,7 @@ export default function WeeklyHubReportButtonAndForm() {
                     <FormLabel>Select week</FormLabel>
                     <Select
                       onValueChange={field.onChange}
+                      // @ts-ignore
                       defaultValue={field.value}
                     >
                       <FormControl>
