@@ -6,30 +6,6 @@ import { db } from "#/lib/db";
 import { ScheduleCalendar } from "./_components/schedule-calendar";
 import { ScheduleHeader } from "./_components/schedule-header";
 
-type ISession = {
-  kind: "Pre" | "S1" | "S2" | "S3" | "S4";
-  duration: {
-    start: string;
-    end: string;
-  };
-  date: string;
-  school: string;
-  state: "occurred" | "upcoming" | "rescheduled" | "cancelled";
-};
-
-const sessions: ISession[] = [
-  {
-    kind: "Pre",
-    duration: {
-      start: "6:00AM",
-      end: "7:30AM",
-    },
-    date: "2023-06-05",
-    school: "Olympic Secondary School",
-    state: "occurred",
-  },
-];
-
 export default async function HubCoordinatorSchedulePage() {
   const coordinator = await currentHubCoordinator();
   if (!coordinator) {

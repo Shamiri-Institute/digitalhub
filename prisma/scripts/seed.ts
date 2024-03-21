@@ -1,8 +1,8 @@
 import { ImplementerRole, Prisma } from "@prisma/client";
+import { addDays, addHours, setMinutes } from "date-fns";
 
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { addDays, subDays } from "date-fns";
 
 const ids = {
   implementers: {
@@ -155,7 +155,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: subDays(new Date(), 2),
+                      sessionDate: setMinutes(addDays(new Date(), 12), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), 12), 0),
+                        2,
+                      ),
                       sessionRating: 4,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -163,7 +167,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s1",
                       sessionName: "Session 01",
-                      sessionDate: addDays(new Date(), 7),
+                      sessionDate: setMinutes(addDays(new Date(), 7), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), 7), 0),
+                        1.5,
+                      ),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -245,7 +253,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: addDays(new Date(), -11),
+                      sessionDate: setMinutes(addDays(new Date(), -11), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), -11), 0),
+                        2,
+                      ),
                       sessionRating: 4,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -253,7 +265,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s1",
                       sessionName: "Session 01",
-                      sessionDate: addDays(new Date(), -3),
+                      sessionDate: setMinutes(addDays(new Date(), -3), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), -3), 0),
+                        1.5,
+                      ),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -261,7 +277,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s2",
                       sessionName: "Session 02",
-                      sessionDate: addDays(new Date(), 0),
+                      sessionDate: setMinutes(addDays(new Date(), 0), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), 0), 0),
+                        1.5,
+                      ),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -269,7 +289,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s3",
                       sessionName: "Session 03",
-                      sessionDate: addDays(new Date(), 7),
+                      sessionDate: setMinutes(addDays(new Date(), 7), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), 7), 0),
+                        1.5,
+                      ),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -277,7 +301,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s4",
                       sessionName: "Session 04",
-                      sessionDate: addDays(new Date(), 10),
+                      sessionDate: setMinutes(addDays(new Date(), 10), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), 10), 0),
+                        1.5,
+                      ),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -326,7 +354,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: addDays(new Date(), -1),
+                      sessionDate: setMinutes(addDays(new Date(), -1), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), -1), 0),
+                        2,
+                      ),
                       sessionRating: 4,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -334,7 +366,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s1",
                       sessionName: "Session 01",
-                      sessionDate: addDays(new Date(), 3),
+                      sessionDate: setMinutes(addDays(new Date(), 3), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), 3), 0),
+                        1.5,
+                      ),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -342,7 +378,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s2",
                       sessionName: "Session 02",
-                      sessionDate: addDays(new Date(), 7),
+                      sessionDate: setMinutes(addDays(new Date(), 7), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), 7), 0),
+                        1.5,
+                      ),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -350,7 +390,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s3",
                       sessionName: "Session 03",
-                      sessionDate: addDays(new Date(), 11),
+                      sessionDate: setMinutes(addDays(new Date(), 11), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), 11), 0),
+                        1.5,
+                      ),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -358,7 +402,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s4",
                       sessionName: "Session 04",
-                      sessionDate: addDays(new Date(), 12),
+                      sessionDate: setMinutes(addDays(new Date(), 12), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), 12), 0),
+                        1.5,
+                      ),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },

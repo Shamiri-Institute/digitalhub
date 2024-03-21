@@ -1,3 +1,6 @@
+import { addHours, format } from "date-fns";
+import { useEffect, useState } from "react";
+
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
@@ -33,8 +36,23 @@ function SessionDetail({
   session: Session;
   layout: "compact" | "expanded";
 }) {
-  const startTimeLabel = "2:30PM";
-  const durationLabel = "2:30 - 3:00PM";
+  const [timeLabels, setTimeLabels] = useState({
+    startTimeLabel: "",
+    durationLabel: "",
+  });
+
+  useEffect(() => {
+    const startTimeLabel = format(session.sessionDate, "h:mma");
+    const durationLabel = `${format(session.sessionDate, "h:mm")} - ${format(
+      session.sessionEndTime ?? addHours(session.sessionDate, 1.5),
+      "h:mma",
+    )}`;
+
+    setTimeLabels({
+      startTimeLabel,
+      durationLabel,
+    });
+  }, [session.sessionDate, session.sessionEndTime]);
 
   const schoolName = session.school.schoolName;
   const completed = session.sessionDate < new Date();
@@ -58,7 +76,7 @@ function SessionDetail({
       )}
     >
       <div
-        className={cn("text-sm font-semibold", {
+        className={cn("text-[0.825rem] font-semibold", {
           "text-green-base": completed,
           "text-blue-base": !completed,
         })}
@@ -73,14 +91,14 @@ function SessionDetail({
           {isExpanded && <div>{sessionDisplayName(session.sessionType)}</div>}
           {isCompact && (
             <div>
-              {session.sessionName} - {startTimeLabel}
+              {session.sessionName} - {timeLabels.startTimeLabel}
             </div>
           )}
         </div>
         {isExpanded && (
           <>
             <div>{schoolName}</div>
-            <div>{durationLabel}</div>
+            <div>{timeLabels.durationLabel}</div>
           </>
         )}
       </div>
