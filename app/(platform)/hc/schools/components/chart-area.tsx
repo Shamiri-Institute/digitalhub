@@ -6,26 +6,35 @@ import {
   SCHOOL_DROPOUT_REASONS_MAPPING,
 } from "#/lib/app-constants/constants";
 import {
+  CartesianGrid,
   Cell,
   Label,
+  Legend,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 import {
   DropoutReasonsGraphData,
+  SessionRatingAverages,
   fetchSchoolDataCompletenessData,
 } from "../actions";
 
 export default function ChartArea({
   dropoutData,
   schoolDataCompletenessData,
+  sessionRatingsData,
 }: {
   dropoutData: DropoutReasonsGraphData[];
   schoolDataCompletenessData: Awaited<
     ReturnType<typeof fetchSchoolDataCompletenessData>
   >;
+  sessionRatingsData: SessionRatingAverages[];
 }) {
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
@@ -63,7 +72,7 @@ export default function ChartArea({
         ) : null}
       </ChartCard>
       <ChartCard title="School information completion">
-        {schoolDataCompletenessData ? (
+        {schoolDataCompletenessData.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
@@ -95,7 +104,22 @@ export default function ChartArea({
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="Ratings" />
+      <ChartCard title="Ratings">
+        {sessionRatingsData?.length ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart width={307} height={307} data={sessionRatingsData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="session_type" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line dataKey="student_behaviour" stroke="#0085FF" />
+              <Line dataKey="admin_support" stroke="#00BA34" />
+              <Line dataKey="workload" stroke="#F98600" />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : null}
+      </ChartCard>
     </div>
   );
 }
