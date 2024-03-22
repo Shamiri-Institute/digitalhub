@@ -397,7 +397,7 @@ function RatingStars({
 
         return (
           <button type="button" key={i} onClick={() => onSelect(i)}>
-            <Icons.startOutline
+            <Icons.starOutline
               key={i}
               className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7"
             />
