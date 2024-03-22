@@ -1,4 +1,5 @@
 "use client";
+import { Icons } from "#/components/icons";
 import {
   Accordion,
   AccordionContent,
@@ -63,9 +64,13 @@ function generateWeekFieldValues() {
 const InputSchema = WeeklyFellowRatingSchema.pick({
   programDeliveryNotes: true,
   dressingAndGroomingNotes: true,
-  attendanceNotes: true,
+  punctualityNotes: true,
   behaviourNotes: true,
   week: true,
+  behaviourRating: true,
+  programDeliveryRating: true,
+  dressingAndGroomingRating: true,
+  punctualityRating: true,
 });
 
 export default function WeeklyEvaluationForm({
@@ -86,8 +91,12 @@ export default function WeeklyEvaluationForm({
     defaultValues: {
       programDeliveryNotes: "",
       dressingAndGroomingNotes: "",
-      attendanceNotes: "",
+      punctualityNotes: "",
       behaviourNotes: "",
+      behaviourRating: 0,
+      programDeliveryRating: 0,
+      dressingAndGroomingRating: 0,
+      punctualityRating: 0,
     },
   });
 
@@ -164,64 +173,135 @@ export default function WeeklyEvaluationForm({
               </div>
 
               <div className="px-6">
-                <FormField
-                  control={form.control}
-                  name="behaviourNotes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fellow Behaviour</FormLabel>
-                      <FormControl>
-                        <Textarea className="resize-none" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="flex items-center justify-between">
+                  <FormLabel>Fellow Behaviour</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="behaviourRating"
+                    render={({ field: { value, onChange } }) => (
+                      <FormItem>
+                        <RatingStars
+                          onSelect={(rating) => onChange(rating)}
+                          rating={value}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="behaviourNotes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea className="resize-none" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
               <div className="px-6">
-                <FormField
-                  control={form.control}
-                  name="programDeliveryNotes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Program Delivery</FormLabel>
-                      <FormControl>
-                        <Textarea className="resize-none" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="flex items-center justify-between">
+                  <FormLabel>Program Delivery</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="programDeliveryRating"
+                    render={({ field: { value, onChange } }) => (
+                      <FormItem>
+                        <RatingStars
+                          onSelect={(rating) => onChange(rating)}
+                          rating={value}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="programDeliveryNotes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea className="resize-none" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
+
               <div className="px-6">
-                <FormField
-                  control={form.control}
-                  name="dressingAndGroomingNotes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Dressing and Grooming</FormLabel>
-                      <FormControl>
-                        <Textarea className="resize-none" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="flex items-center justify-between">
+                  <FormLabel>Dressing and Grooming</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="dressingAndGroomingRating"
+                    render={({ field: { value, onChange } }) => (
+                      <FormItem>
+                        <RatingStars
+                          onSelect={(rating) => onChange(rating)}
+                          rating={value}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div>
+                  <FormField
+                    control={form.control}
+                    name="dressingAndGroomingNotes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea className="resize-none" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
+
               <div className="px-6">
-                <FormField
-                  control={form.control}
-                  name="attendanceNotes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Attendance</FormLabel>
-                      <FormControl>
-                        <Textarea className="resize-none" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="flex items-center justify-between">
+                  <FormLabel>Punctuality</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="punctualityRating"
+                    render={({ field: { value, onChange } }) => (
+                      <FormItem>
+                        <RatingStars
+                          onSelect={(rating) => onChange(rating)}
+                          rating={value}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div>
+                  <FormField
+                    control={form.control}
+                    // todo: update this name on the schema as well
+                    name="punctualityNotes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea className="resize-none" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             </div>
             <div className="flex justify-end px-6 py-6">
@@ -255,27 +335,29 @@ export default function WeeklyEvaluationForm({
                       <TableBody>
                         <TableRow>
                           <TableCell className="font-bold">
-                            Behaviour Notes
+                            Behaviour Notes - ({pr.behaviourRating})
                           </TableCell>
                           <TableCell>{pr.behaviourNotes}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-bold">
-                            Program Delivery Notes
+                            Program Delivery Notes - ({pr.programDeliveryRating}
+                            )
                           </TableCell>
                           <TableCell>{pr.programDeliveryNotes}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-bold">
-                            Dressing and Grooming Notes
+                            Dressing and Grooming Notes - (
+                            {pr.dressingAndGroomingRating})
                           </TableCell>
                           <TableCell>{pr.dressingAndGroomingNotes}</TableCell>
                         </TableRow>
                         <TableRow>
                           <TableCell className="font-bold">
-                            Attendance Notes
+                            Punctuality Notes - ({pr.punctualityRating})
                           </TableCell>
-                          <TableCell>{pr.attendanceNotes}</TableCell>
+                          <TableCell>{pr.punctualityNotes}</TableCell>
                         </TableRow>
                       </TableBody>
                     </Table>
@@ -289,5 +371,39 @@ export default function WeeklyEvaluationForm({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function RatingStars({
+  rating,
+  onSelect,
+}: {
+  rating: number;
+  onSelect: (rating: number) => void;
+}) {
+  return (
+    <div className="flex flex-1 justify-end">
+      {[1, 2, 3, 4, 5].map((i) => {
+        if (i <= rating) {
+          return (
+            <button type="button" key={i} onClick={() => onSelect(i)}>
+              <Icons.star
+                key={i}
+                className="ml-4 h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7"
+              />
+            </button>
+          );
+        }
+
+        return (
+          <button type="button" key={i} onClick={() => onSelect(i)}>
+            <Icons.startOutline
+              key={i}
+              className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7"
+            />
+          </button>
+        );
+      })}
+    </div>
   );
 }
