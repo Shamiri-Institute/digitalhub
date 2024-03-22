@@ -1813,13 +1813,9 @@ export async function addNonShamiriStudentViaClinicalScreening(
 }
 
 export async function editWeeklyFellowRating(
-  data: Pick<
+  data: Omit<
     WeeklyFellowRatings,
-    | "id"
-    | "behaviourNotes"
-    | "punctualityNotes"
-    | "dressingAndGroomingNotes"
-    | "programDeliveryNotes"
+    "createdAt" | "updatedAt" | "fellowId" | "supervisorId" | "week"
   >,
 ) {
   try {
@@ -1832,6 +1828,10 @@ export async function editWeeklyFellowRating(
         punctualityNotes: data.punctualityNotes,
         dressingAndGroomingNotes: data.dressingAndGroomingNotes,
         programDeliveryNotes: data.programDeliveryNotes,
+        behaviourRating: data.behaviourRating,
+        dressingAndGroomingRating: data.dressingAndGroomingRating,
+        programDeliveryRating: data.programDeliveryRating,
+        punctualityRating: data.punctualityRating,
       },
     });
     revalidatePath("/profile");
