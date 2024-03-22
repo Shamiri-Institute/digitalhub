@@ -4,6 +4,7 @@ import {
   Fellow,
   FellowAttendance,
   Prisma,
+  WeeklyFellowRatings,
   caseStatusOptions,
   riskStatusOptions,
 } from "@prisma/client";
@@ -1808,5 +1809,37 @@ export async function addNonShamiriStudentViaClinicalScreening(
   } catch (error) {
     console.error(error);
     return { success: false, error: "Something went wrong" };
+  }
+}
+
+export async function editWeeklyFellowRating(
+  data: Omit<
+    WeeklyFellowRatings,
+    "createdAt" | "updatedAt" | "fellowId" | "supervisorId" | "week"
+  >,
+) {
+  try {
+    const result = await db.weeklyFellowRatings.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        behaviourNotes: data.behaviourNotes,
+        punctualityNotes: data.punctualityNotes,
+        dressingAndGroomingNotes: data.dressingAndGroomingNotes,
+        programDeliveryNotes: data.programDeliveryNotes,
+        behaviourRating: data.behaviourRating,
+        dressingAndGroomingRating: data.dressingAndGroomingRating,
+        programDeliveryRating: data.programDeliveryRating,
+        punctualityRating: data.punctualityRating,
+      },
+    });
+    revalidatePath("/profile");
+    return { success: true, data: result };
+  } catch (e) {
+    console.error(e);
+    return {
+      error: "Something went wrong during submission, please try again.",
+    };
   }
 }
