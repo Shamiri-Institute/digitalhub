@@ -67,8 +67,11 @@ export async function submitWeeklyFellowRating(
 ) {
   try {
     const parsedData = WeeklyFellowRatingSchema.parse(data);
+
     await db.weeklyFellowRatings.create({
-      data: parsedData,
+      data: {
+        ...parsedData,
+      },
     });
 
     revalidatePath("/profile");
