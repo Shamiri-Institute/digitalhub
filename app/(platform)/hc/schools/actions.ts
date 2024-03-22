@@ -160,3 +160,42 @@ export async function submitWeeklyHubReport(
     return { success: false, message: "Something went wrong" };
   }
 }
+
+export type SessionRatingAverages = {
+  session_type: "s0" | "s1" | "s2" | "s3" | "s4";
+  student_behaviour: number;
+  admin_support: number;
+  workload: number;
+};
+
+export async function fetchSessionRatingAverages(hubId: string) {
+  const ratingAverages = await db.$queryRaw<SessionRatingAverages[]>`
+    SELECT
+      ses.session_type AS session_type,
+      AVG(isr.student_behavior_rating) AS student_behavior,
+      AVG(isr.admin_support_rating) AS admin_support,
+      AVG(isr.workload_rating) AS workload
+    FROM intervention_session_ratings isr
+    INNER JOIN supervisors AS sup ON isr.supervisor_id = sup.id
+    INNER JOIN intervention_sessions AS ses ON isr.session_id = ses.id
+    WHERE
+      sup.hub_id = ${hubId}
+    GROUP BY
+      ses.session_type
+    ORDER BY
+      ses.session_type
+  `;
+
+  if (!ratingAverages.length) {
+    return [];
+  }
+
+  // @ts-ignore
+  ratingAverages.forEach((item) => {
+    item.student_behaviour = Number(item.student_behaviour);
+    item.admin_support = Number(item.admin_support);
+    item.workload = Number(item.workload);
+  });
+
+  return ratingAverages;
+}
