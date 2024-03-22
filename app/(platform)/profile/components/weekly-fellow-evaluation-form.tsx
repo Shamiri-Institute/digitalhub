@@ -22,6 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from "#/components/ui/form";
+import { Input } from "#/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -383,19 +384,19 @@ function RenderPastWeeklyEvaluations({
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
 
   const handleEdit = async () => {
-    let weeeklyEvaluation: Pick<
+    let weeeklyEvaluation: Omit<
       WeeklyFellowRatings,
-      | "id"
-      | "behaviourNotes"
-      | "punctualityNotes"
-      | "dressingAndGroomingNotes"
-      | "programDeliveryNotes"
+      "createdAt" | "updatedAt" | "fellowId" | "supervisorId" | "week"
     > = {
       behaviourNotes: evaluationData.behaviourNotes,
       dressingAndGroomingNotes: evaluationData.dressingAndGroomingNotes,
       programDeliveryNotes: evaluationData.programDeliveryNotes,
       punctualityNotes: evaluationData.punctualityNotes,
       id: evaluationData.id,
+      behaviourRating: evaluationData.behaviourRating,
+      dressingAndGroomingRating: evaluationData.dressingAndGroomingRating,
+      programDeliveryRating: evaluationData.programDeliveryRating,
+      punctualityRating: evaluationData.punctualityRating,
     };
     try {
       setIsSubmitting(true);
@@ -436,7 +437,29 @@ function RenderPastWeeklyEvaluations({
           <TableBody>
             <TableRow>
               <TableCell className="font-bold">
-                Behaviour Notes - ({evaluationData.behaviourRating})
+                <div className="flex items-center">
+                  Behaviour Notes -
+                  <Input
+                    type="number"
+                    max={5}
+                    min={1}
+                    className="ml-2 w-14"
+                    value={String(evaluationData.behaviourRating)}
+                    onChange={(e) => {
+                      let value = e.target.valueAsNumber;
+                      if (value > 5) {
+                        value = 5;
+                      }
+                      if (value < 1) {
+                        value = 1;
+                      }
+                      setEvaluationData({
+                        ...evaluationData,
+                        behaviourRating: value,
+                      });
+                    }}
+                  />
+                </div>
               </TableCell>
               <TableCell>
                 <Textarea
@@ -452,8 +475,29 @@ function RenderPastWeeklyEvaluations({
             </TableRow>
             <TableRow>
               <TableCell className="font-bold">
-                Program Delivery Notes - ({evaluationData.programDeliveryRating}
-                )
+                <div className="flex items-center">
+                  Program Delivery Notes -
+                  <Input
+                    type="number"
+                    max={5}
+                    min={1}
+                    className="ml-2 w-14"
+                    value={String(evaluationData.programDeliveryRating)}
+                    onChange={(e) => {
+                      let value = e.target.valueAsNumber;
+                      if (value > 5) {
+                        value = 5;
+                      }
+                      if (value < 1) {
+                        value = 1;
+                      }
+                      setEvaluationData({
+                        ...evaluationData,
+                        programDeliveryRating: value,
+                      });
+                    }}
+                  />
+                </div>
               </TableCell>
               <TableCell>
                 <Textarea
@@ -469,8 +513,29 @@ function RenderPastWeeklyEvaluations({
             </TableRow>
             <TableRow>
               <TableCell className="font-bold">
-                Dressing and Grooming Notes - (
-                {evaluationData.dressingAndGroomingRating})
+                <div className="flex items-center">
+                  Dressing & Grooming -
+                  <Input
+                    type="number"
+                    max={5}
+                    min={1}
+                    className="ml-2 w-14"
+                    value={String(evaluationData.dressingAndGroomingRating)}
+                    onChange={(e) => {
+                      let value = e.target.valueAsNumber;
+                      if (value > 5) {
+                        value = 5;
+                      }
+                      if (value < 1) {
+                        value = 1;
+                      }
+                      setEvaluationData({
+                        ...evaluationData,
+                        dressingAndGroomingRating: value,
+                      });
+                    }}
+                  />
+                </div>
               </TableCell>
               <TableCell>
                 <Textarea
@@ -486,7 +551,29 @@ function RenderPastWeeklyEvaluations({
             </TableRow>
             <TableRow>
               <TableCell className="font-bold">
-                Punctuality Notes - ({evaluationData.punctualityRating})
+                <div className="flex items-center">
+                  Punctuality Notes -
+                  <Input
+                    type="number"
+                    max={5}
+                    min={1}
+                    className="ml-2 w-14"
+                    value={String(evaluationData.punctualityRating)}
+                    onChange={(e) => {
+                      let value = e.target.valueAsNumber;
+                      if (value > 5) {
+                        value = 5;
+                      }
+                      if (value < 1) {
+                        value = 1;
+                      }
+                      setEvaluationData({
+                        ...evaluationData,
+                        punctualityRating: value,
+                      });
+                    }}
+                  />
+                </div>
               </TableCell>
               <TableCell>
                 <Textarea
