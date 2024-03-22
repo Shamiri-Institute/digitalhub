@@ -868,7 +868,7 @@ model OverallFellowEvaluation {
   fellowBehaviourNotes     String     @map("fellow_behaviour_notes") @db.Text()
   programDeliveryNotes     String     @map("program_delivery_notes") @db.Text()
   dressingAndGroomingNotes String     @map("dressing_and_grooming_notes") @db.Text()
-  attendanceNotes          String     @map("attendance_notes") @db.Text()
+  punctualityNotes         String     @map("punctuality_notes") @db.Text()
 
   @@map("overall_fellow_evaluations")
 }
@@ -1008,18 +1008,22 @@ model FellowComplaints {
 }
 
 model WeeklyFellowRatings {
-  id                       String     @id @default(cuid())
-  createdAt                DateTime   @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt                DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
-  week                     DateTime   @db.Date // stores the week of the evaluation
-  behaviourNotes           String     @map("behaviour_notes") @db.Text()
-  programDeliveryNotes     String     @map("program_delivery_notes") @db.Text()
-  dressingAndGroomingNotes String     @map("dressing_and_grooming_notes") @db.Text()
-  attendanceNotes          String     @map("attendance_notes") @db.Text()
-  fellowId                 String     @map("fellow_id") @db.VarChar(255)
-  fellow                   Fellow     @relation(fields: [fellowId], references: [id])
-  supervisorId             String     @map("supervisor_id") @db.Text()
-  supervisor               Supervisor @relation(fields: [supervisorId], references: [id])
+  id                        String     @id @default(cuid())
+  createdAt                 DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                 DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
+  week                      DateTime   @db.Date // stores the week of the evaluation
+  behaviourNotes            String     @map("behaviour_notes") @db.Text()
+  behaviourRating           Int?       @map("behaviour_rating")
+  programDeliveryNotes      String     @map("program_delivery_notes") @db.Text()
+  programDeliveryRating     Int?       @map("program_delivery_rating")
+  dressingAndGroomingNotes  String     @map("dressing_and_grooming_notes") @db.Text()
+  dressingAndGroomingRating Int?       @map("dressing_and_grooming_rating")
+  punctualityNotes          String     @map("punctuality_notes") @db.Text()
+  punctualityRating         Int?       @map("punctuality_rating")
+  fellowId                  String     @map("fellow_id") @db.VarChar(255)
+  fellow                    Fellow     @relation(fields: [fellowId], references: [id])
+  supervisorId              String     @map("supervisor_id") @db.Text()
+  supervisor                Supervisor @relation(fields: [supervisorId], references: [id])
 
   @@map("weekly_fellow_ratings")
 }
