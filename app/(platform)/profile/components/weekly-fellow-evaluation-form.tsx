@@ -1,4 +1,5 @@
 "use client";
+import { editWeeklyFellowRating } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import {
   Accordion,
@@ -21,6 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from "#/components/ui/form";
+import { Input } from "#/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -326,43 +328,7 @@ export default function WeeklyEvaluationForm({
           {previousRatings?.length ? (
             <Accordion type="single" collapsible className="mt-2 w-full">
               {previousRatings.map((pr) => (
-                <AccordionItem value={`item-${pr.id}`} key={pr.id}>
-                  <AccordionTrigger>
-                    Week of {pr.week.toLocaleDateString()}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <Table>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="font-bold">
-                            Behaviour Notes - ({pr.behaviourRating})
-                          </TableCell>
-                          <TableCell>{pr.behaviourNotes}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-bold">
-                            Program Delivery Notes - ({pr.programDeliveryRating}
-                            )
-                          </TableCell>
-                          <TableCell>{pr.programDeliveryNotes}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-bold">
-                            Dressing and Grooming Notes - (
-                            {pr.dressingAndGroomingRating})
-                          </TableCell>
-                          <TableCell>{pr.dressingAndGroomingNotes}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-bold">
-                            Punctuality Notes - ({pr.punctualityRating})
-                          </TableCell>
-                          <TableCell>{pr.punctualityNotes}</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </AccordionContent>
-                </AccordionItem>
+                <RenderPastWeeklyEvaluations key={pr.id} previousRatings={pr} />
               ))}
             </Accordion>
           ) : (
@@ -405,5 +371,236 @@ function RatingStars({
         );
       })}
     </div>
+  );
+}
+
+function RenderPastWeeklyEvaluations({
+  previousRatings,
+}: {
+  previousRatings: WeeklyFellowRatings;
+}) {
+  const [evaluationData, setEvaluationData] =
+    React.useState<WeeklyFellowRatings>(previousRatings);
+  const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
+
+  const handleEdit = async () => {
+    let weeeklyEvaluation: Omit<
+      WeeklyFellowRatings,
+      "createdAt" | "updatedAt" | "fellowId" | "supervisorId" | "week"
+    > = {
+      behaviourNotes: evaluationData.behaviourNotes,
+      dressingAndGroomingNotes: evaluationData.dressingAndGroomingNotes,
+      programDeliveryNotes: evaluationData.programDeliveryNotes,
+      punctualityNotes: evaluationData.punctualityNotes,
+      id: evaluationData.id,
+      behaviourRating: evaluationData.behaviourRating,
+      dressingAndGroomingRating: evaluationData.dressingAndGroomingRating,
+      programDeliveryRating: evaluationData.programDeliveryRating,
+      punctualityRating: evaluationData.punctualityRating,
+    };
+    try {
+      setIsSubmitting(true);
+      const response = await editWeeklyFellowRating(weeeklyEvaluation);
+      if (!response.success) {
+        toast({
+          variant: "destructive",
+          title: "Submission error",
+          description: response.error,
+        });
+        return;
+      } else {
+        toast({
+          variant: "default",
+          title: "Success",
+          description: "Successfully edited weekly evaluation",
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description: "Something went wrong during submission, please try again",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <AccordionItem value={`item-${evaluationData.id}`} key={evaluationData.id}>
+      <AccordionTrigger>
+        Week of {evaluationData.week.toLocaleDateString()}
+      </AccordionTrigger>
+      <AccordionContent>
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-bold">
+                <div className="flex items-center">
+                  Behaviour Notes -
+                  <Input
+                    type="number"
+                    max={5}
+                    min={1}
+                    className="ml-2 w-14"
+                    value={String(evaluationData.behaviourRating)}
+                    onChange={(e) => {
+                      let value = e.target.valueAsNumber;
+                      if (value > 5) {
+                        value = 5;
+                      }
+                      if (value < 1) {
+                        value = 1;
+                      }
+                      setEvaluationData({
+                        ...evaluationData,
+                        behaviourRating: value,
+                      });
+                    }}
+                  />
+                </div>
+              </TableCell>
+              <TableCell>
+                <Textarea
+                  value={evaluationData.behaviourNotes}
+                  onChange={(e) =>
+                    setEvaluationData({
+                      ...evaluationData,
+                      behaviourNotes: e.target.value,
+                    })
+                  }
+                />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-bold">
+                <div className="flex items-center">
+                  Program Delivery Notes -
+                  <Input
+                    type="number"
+                    max={5}
+                    min={1}
+                    className="ml-2 w-14"
+                    value={String(evaluationData.programDeliveryRating)}
+                    onChange={(e) => {
+                      let value = e.target.valueAsNumber;
+                      if (value > 5) {
+                        value = 5;
+                      }
+                      if (value < 1) {
+                        value = 1;
+                      }
+                      setEvaluationData({
+                        ...evaluationData,
+                        programDeliveryRating: value,
+                      });
+                    }}
+                  />
+                </div>
+              </TableCell>
+              <TableCell>
+                <Textarea
+                  value={evaluationData.programDeliveryNotes}
+                  onChange={(e) =>
+                    setEvaluationData({
+                      ...evaluationData,
+                      programDeliveryNotes: e.target.value,
+                    })
+                  }
+                />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-bold">
+                <div className="flex items-center">
+                  Dressing & Grooming -
+                  <Input
+                    type="number"
+                    max={5}
+                    min={1}
+                    className="ml-2 w-14"
+                    value={String(evaluationData.dressingAndGroomingRating)}
+                    onChange={(e) => {
+                      let value = e.target.valueAsNumber;
+                      if (value > 5) {
+                        value = 5;
+                      }
+                      if (value < 1) {
+                        value = 1;
+                      }
+                      setEvaluationData({
+                        ...evaluationData,
+                        dressingAndGroomingRating: value,
+                      });
+                    }}
+                  />
+                </div>
+              </TableCell>
+              <TableCell>
+                <Textarea
+                  value={evaluationData.dressingAndGroomingNotes}
+                  onChange={(e) =>
+                    setEvaluationData({
+                      ...evaluationData,
+                      dressingAndGroomingNotes: e.target.value,
+                    })
+                  }
+                />
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-bold">
+                <div className="flex items-center">
+                  Punctuality Notes -
+                  <Input
+                    type="number"
+                    max={5}
+                    min={1}
+                    className="ml-2 w-14"
+                    value={String(evaluationData.punctualityRating)}
+                    onChange={(e) => {
+                      let value = e.target.valueAsNumber;
+                      if (value > 5) {
+                        value = 5;
+                      }
+                      if (value < 1) {
+                        value = 1;
+                      }
+                      setEvaluationData({
+                        ...evaluationData,
+                        punctualityRating: value,
+                      });
+                    }}
+                  />
+                </div>
+              </TableCell>
+              <TableCell>
+                <Textarea
+                  value={evaluationData.punctualityNotes}
+                  onChange={(e) =>
+                    setEvaluationData({
+                      ...evaluationData,
+                      punctualityNotes: e.target.value,
+                    })
+                  }
+                />
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+        <Button
+          onClick={handleEdit}
+          disabled={isSubmitting}
+          variant="destructive"
+          className="mt-4"
+        >
+          {isSubmitting ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : null}
+          Edit
+        </Button>
+      </AccordionContent>
+    </AccordionItem>
   );
 }
