@@ -14,6 +14,7 @@ import {
   fetchDropoutReasons,
   fetchSchoolData,
   fetchSchoolDataCompletenessData,
+  fetchSessionRatingAverages,
 } from "./actions";
 import ChartArea from "./components/chart-area";
 import { columns } from "./components/columns";
@@ -31,6 +32,10 @@ export default async function SchoolsPage() {
     await fetchSchoolDataCompletenessData(
       hubCoordinator?.assignedHubId as string,
     );
+
+  const sessionRatings = await fetchSessionRatingAverages(
+    hubCoordinator?.assignedHubId as string,
+  );
 
   return (
     <>
@@ -74,6 +79,7 @@ export default async function SchoolsPage() {
       <ChartArea
         dropoutData={dropoutData}
         schoolDataCompletenessData={schoolDataCompletenessPercentage}
+        sessionRatingsData={sessionRatings}
       />
       <Separator />
       <div className="pt-5">
