@@ -275,9 +275,8 @@ export function FellowAttendanceDot({
           }}
           onSubmit={onDialogSubmit}
         >
-          <button
+          <div
             onClick={onDotClick}
-            disabled={shouldBeDisabled}
             className={cn(
               "mx-1 h-5 w-5 rounded-full transition-all",
               {
@@ -288,7 +287,7 @@ export function FellowAttendanceDot({
             data-testid="attendance-dot"
           >
             <span className="hidden">{status}</span>
-          </button>
+          </div>
         </AttendanceConfirmationDialog>
       </DisableFutureAttendanceMarkingTooltip>
     </div>
