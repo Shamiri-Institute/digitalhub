@@ -38,7 +38,7 @@ const InputSchema = OverallFellowSchema.pick({
   fellowBehaviourNotes: true,
   programDeliveryNotes: true,
   dressingAndGroomingNotes: true,
-  attendanceNotes: true,
+  punctualityNotes: true,
 });
 
 export default function FellowEvaluationForm(props: Props) {
@@ -50,7 +50,7 @@ export default function FellowEvaluationForm(props: Props) {
       fellowBehaviourNotes: "",
       programDeliveryNotes: "",
       dressingAndGroomingNotes: "",
-      attendanceNotes: "",
+      punctualityNotes: "",
     },
   });
 
@@ -148,10 +148,10 @@ export default function FellowEvaluationForm(props: Props) {
                 />
               </div>
               <div>
-                <p>Attendance</p>
+                <p>Punctuation</p>
                 <FormField
                   control={form.control}
-                  name="attendanceNotes"
+                  name="punctualityNotes"
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>

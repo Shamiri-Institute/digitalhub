@@ -41,7 +41,6 @@ export default function ChartArea({
   schoolAttendances: SchoolAttendances[];
   sessionRatingsData: SessionRatingAverages[];
 }) {
-  console.log({ schoolAttendances });
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
       <ChartCard title="Attendance">
