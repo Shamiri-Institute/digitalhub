@@ -6,6 +6,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { DropoutSchoolSchema, WeeklyHubReportSchema } from "../schemas";
 
+/**
+ * TODO: the functions here should also be cognizant of the project
+ */
+
 export async function fetchSchoolData(hubId: string) {
   return await db.school.findMany({
     where: {
@@ -198,4 +202,48 @@ export async function fetchSessionRatingAverages(hubId: string) {
   });
 
   return ratingAverages;
+}
+
+export type SchoolAttendances = {
+  session_type: string;
+  count_attendance_marked: number;
+  count_attendance_unmarked: number;
+};
+
+export async function fetchSchoolAttendances(hubId: string) {
+  const [schoolCount] = await db.$queryRaw<{ count: number }[]>`
+    SELECT
+      COUNT(*) AS "count"
+    FROM
+      schools
+    WHERE
+      hub_id = ${hubId}
+  `;
+
+  const numSchools = Number(schoolCount?.count) ?? 0;
+
+  const schoolAttendances = await db.$queryRaw<
+    { count: number; session_type: string }[]
+  >`
+    SELECT
+      session_type,
+      count(distinct sa.school_id) AS "count"
+    FROM
+      student_attendances sa
+    LEFT JOIN schools ON sa.school_id = schools.id
+    LEFT JOIN intervention_sessions ON sa.session_id = intervention_sessions.id
+    WHERE
+      schools.hub_id = ${hubId}
+    GROUP BY
+      session_type
+    ORDER BY
+      session_type ASC`;
+
+  return schoolAttendances.map<SchoolAttendances>(
+    ({ session_type, count }) => ({
+      session_type,
+      count_attendance_marked: Number(count),
+      count_attendance_unmarked: numSchools - Number(count),
+    }),
+  );
 }

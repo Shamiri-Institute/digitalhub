@@ -6,6 +6,8 @@ import {
   SCHOOL_DROPOUT_REASONS_MAPPING,
 } from "#/lib/app-constants/constants";
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
   Cell,
   Label,
@@ -21,6 +23,7 @@ import {
 } from "recharts";
 import {
   DropoutReasonsGraphData,
+  SchoolAttendances,
   SessionRatingAverages,
   fetchSchoolDataCompletenessData,
 } from "../actions";
@@ -29,16 +32,40 @@ export default function ChartArea({
   dropoutData,
   schoolDataCompletenessData,
   sessionRatingsData,
+  schoolAttendances,
 }: {
   dropoutData: DropoutReasonsGraphData[];
   schoolDataCompletenessData: Awaited<
     ReturnType<typeof fetchSchoolDataCompletenessData>
   >;
+  schoolAttendances: SchoolAttendances[];
   sessionRatingsData: SessionRatingAverages[];
 }) {
+  console.log({ schoolAttendances });
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
-      <ChartCard title="Attendance" />
+      <ChartCard title="Attendance">
+        {schoolAttendances?.length ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart width={307} height={307} data={schoolAttendances}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="session_type" />
+              <YAxis />
+              <Tooltip />
+              <Bar
+                dataKey="count_attendance_marked"
+                stackId="a"
+                fill="#0085FF"
+              />
+              <Bar
+                dataKey="count_attendance_unmarked"
+                stackId="a"
+                fill="#CCE7FF"
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : null}
+      </ChartCard>
       <ChartCard title="Drop out reasons">
         {dropoutData.length ? (
           <ResponsiveContainer width="100%" height="100%">
