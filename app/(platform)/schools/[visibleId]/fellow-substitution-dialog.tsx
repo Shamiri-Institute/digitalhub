@@ -109,7 +109,7 @@ export function FellowSubstitutionDialog({
     }
 
     initFellowAttendances();
-  }, [fellow.id]);
+  }, [fellow.id, schoolId]);
 
   const [supervisors, setSupervisors] =
     React.useState<Prisma.SupervisorGetPayload<{}>[]>();
