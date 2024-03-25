@@ -12,6 +12,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import {
   fetchDropoutReasons,
+  fetchSchoolAttendances,
   fetchSchoolData,
   fetchSchoolDataCompletenessData,
   fetchSessionRatingAverages,
@@ -34,6 +35,10 @@ export default async function SchoolsPage() {
     );
 
   const sessionRatings = await fetchSessionRatingAverages(
+    hubCoordinator?.assignedHubId as string,
+  );
+
+  const schoolAttendanceData = await fetchSchoolAttendances(
     hubCoordinator?.assignedHubId as string,
   );
 
@@ -80,6 +85,7 @@ export default async function SchoolsPage() {
         dropoutData={dropoutData}
         schoolDataCompletenessData={schoolDataCompletenessPercentage}
         sessionRatingsData={sessionRatings}
+        schoolAttendances={schoolAttendanceData}
       />
       <Separator />
       <div className="pt-5">
