@@ -41,6 +41,7 @@ export default function FellowCardMenu({
         <MenuLineItem>
           <FellowSubstitutionDialog
             fellow={fellow}
+            schoolId={school.id}
             close={() => setOpen(false)}
           >
             <div className="cursor-pointer">Substitute Fellow</div>

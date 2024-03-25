@@ -46,10 +46,12 @@ const FormSchema = z.object({
 
 export function FellowSubstitutionDialog({
   fellow,
+  schoolId,
   children,
   close,
 }: {
   fellow: Prisma.FellowGetPayload<{}>;
+  schoolId: string;
   children: React.ReactNode;
   close: () => void;
 }) {
@@ -95,6 +97,7 @@ export function FellowSubstitutionDialog({
       const fellowSessions = fellowAttendances
         .map((attendance) => attendance.session)
         .filter(notEmpty)
+        .filter((session) => session.schoolId === schoolId)
         .map((session) => ({
           ...session,
           fellowAttendanceId: fellowAttendances.find(
