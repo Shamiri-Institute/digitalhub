@@ -10,7 +10,7 @@ import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { School } from "@prisma/client";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -64,8 +64,6 @@ export function MySchool({ school }: { school: School | null }) {
   });
   const { toast } = useToast();
 
-  const router = useRouter();
-
   const [schoolGender, setSchoolGender] = useState<string>(
     school?.schoolDemographics || "",
   );
@@ -98,8 +96,6 @@ export function MySchool({ school }: { school: School | null }) {
         variant: "default",
         title: "Assigned school details updated",
       });
-
-      window.location.href = "/profile/myschool";
     } else {
       toast({
         variant: "destructive",
@@ -111,9 +107,9 @@ export function MySchool({ school }: { school: School | null }) {
   return (
     <div className="flex flex-col">
       <div className="mb-5 mt-2 flex items-center justify-between">
-        <button className="flex flex-1" onClick={() => router.back()}>
+        <Link className="flex flex-1" href={"/profile"}>
           <Icons.chevronLeft className="h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
-        </button>
+        </Link>
       </div>
       <h3 className="mb-2 text-base font-semibold text-brand xl:text-2xl">
         My School
