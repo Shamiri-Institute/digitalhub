@@ -96,8 +96,9 @@ function SessionDetail({
           {cancelled && <Icons.crossCircleFilled className="h-4 w-4" />}
           {isExpanded && <div>{sessionDisplayName(session.sessionType)}</div>}
           {isCompact && (
-            <div>
-              {session.sessionName} - {timeLabels.startTimeLabel}
+            <div className="truncate">
+              {sessionDisplayName(session.sessionType)} -{" "}
+              {timeLabels.startTimeLabel}
             </div>
           )}
         </div>

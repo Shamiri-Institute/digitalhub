@@ -10,6 +10,8 @@ import {
   isSameDay,
 } from "@internationalized/date";
 import { Prisma } from "@prisma/client";
+import { type AriaButtonProps } from "@react-aria/button";
+import { filterDOMProps } from "@react-aria/utils";
 import React, { createContext, useContext } from "react";
 import {
   useCalendar,
@@ -244,8 +246,8 @@ function NavigationButtons({
   prevProps,
   nextProps,
 }: {
-  prevProps: React.ButtonHTMLAttributes<HTMLButtonElement>;
-  nextProps: React.ButtonHTMLAttributes<HTMLButtonElement>;
+  prevProps: AriaButtonProps;
+  nextProps: AriaButtonProps;
 }) {
   return (
     <div
@@ -255,14 +257,14 @@ function NavigationButtons({
       <button
         className="inline-flex items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50"
         aria-label="Previous Month"
-        {...prevProps}
+        {...filterDOMProps(prevProps)}
       >
         <Icons.chevronLeft className="h-5 w-5" />
       </button>
       <button
         className="inline-flex items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50"
         aria-label="Next Month"
-        {...nextProps}
+        {...filterDOMProps(nextProps)}
       >
         <Icons.chevronRight className="h-5 w-5" />
       </button>
