@@ -59,18 +59,6 @@ export function WeekView({ state }: { state: CalendarState }) {
     return `${hourIn12HourFormat}:00 ${period}`;
   }
 
-  const firstSessionRef = useRef<HTMLDivElement>(null);
-  const { sessions } = useSessions({ date: state.value });
-
-  useEffect(() => {
-    if (firstSessionRef.current) {
-      firstSessionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }
-  }, [sessions]);
-
   return (
     <table
       {...gridProps}
@@ -110,7 +98,6 @@ export function WeekView({ state }: { state: CalendarState }) {
                     hour={hour}
                     date={date}
                     state={state}
-                    firstSessionRef={firstSessionRef}
                   />
                 ) : (
                   <td key={idx} />
@@ -127,12 +114,10 @@ function CalendarCell({
   hour,
   date,
   state,
-  firstSessionRef,
 }: {
   hour: number;
   date: CalendarDate;
   state: CalendarState;
-  firstSessionRef: React.RefObject<HTMLDivElement>;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -165,11 +150,7 @@ function CalendarCell({
             "h-[85px] xl:h-[112px]",
             "w-[140px] xl:w-[185px]",
             "border-t border-grey-border",
-            {
-              "[scroll-margin-top:20px]": sessions.length !== 0,
-            },
           )}
-          ref={sessions.length !== 0 ? firstSessionRef : null}
         >
           <SessionList sessions={sessions} />
         </div>

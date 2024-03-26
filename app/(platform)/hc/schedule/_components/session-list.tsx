@@ -87,7 +87,7 @@ function SessionDetail({
         })}
       >
         <div className="flex items-center gap-1">
-          {completed && (
+          {completed && !cancelled && (
             <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
           )}
           {!completed && !cancelled && (

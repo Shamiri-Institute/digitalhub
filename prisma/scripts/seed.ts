@@ -1,5 +1,5 @@
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
-import { addDays, addHours, setMinutes } from "date-fns";
+import { addDays, addHours, setHours, setMinutes } from "date-fns";
 
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -253,9 +253,12 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: setMinutes(addDays(new Date(), -11), 0),
-                      sessionEndTime: addHours(
+                      sessionDate: setHours(
                         setMinutes(addDays(new Date(), -11), 0),
+                        6,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), -11), 0), 6),
                         2,
                       ),
                       sessionRating: 4,
@@ -265,9 +268,12 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s1",
                       sessionName: "Session 01",
-                      sessionDate: setMinutes(addDays(new Date(), -3), 0),
-                      sessionEndTime: addHours(
+                      sessionDate: setHours(
                         setMinutes(addDays(new Date(), -3), 0),
+                        10,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), -3), 0), 10),
                         1.5,
                       ),
                       sessionRating: 5,
@@ -277,9 +283,12 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s2",
                       sessionName: "Session 02",
-                      sessionDate: setMinutes(addDays(new Date(), 0), 0),
-                      sessionEndTime: addHours(
+                      sessionDate: setHours(
                         setMinutes(addDays(new Date(), 0), 0),
+                        11,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 0), 0), 11),
                         1.5,
                       ),
                       sessionRating: 5,
@@ -289,9 +298,12 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s3",
                       sessionName: "Session 03",
-                      sessionDate: setMinutes(addDays(new Date(), 7), 0),
-                      sessionEndTime: addHours(
+                      sessionDate: setHours(
                         setMinutes(addDays(new Date(), 7), 0),
+                        11,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 7), 0), 11),
                         1.5,
                       ),
                       sessionRating: 5,
@@ -301,9 +313,12 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s4",
                       sessionName: "Session 04",
-                      sessionDate: setMinutes(addDays(new Date(), 10), 0),
-                      sessionEndTime: addHours(
+                      sessionDate: setHours(
                         setMinutes(addDays(new Date(), 10), 0),
+                        2,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 10), 0), 2),
                         1.5,
                       ),
                       sessionRating: 5,
@@ -353,10 +368,14 @@ const ids = {
                     Session_01: {
                       id: objectId("sess"),
                       sessionType: "s0",
+                      status: SessionStatus.Cancelled,
                       sessionName: "Presession",
-                      sessionDate: setMinutes(addDays(new Date(), -1), 0),
-                      sessionEndTime: addHours(
+                      sessionDate: setHours(
                         setMinutes(addDays(new Date(), -1), 0),
+                        6,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), -1), 0), 6),
                         2,
                       ),
                       sessionRating: 4,
@@ -364,12 +383,14 @@ const ids = {
                     },
                     Session_02: {
                       id: objectId("sess"),
-                      status: SessionStatus.Cancelled,
                       sessionType: "s1",
                       sessionName: "Session 01",
-                      sessionDate: setMinutes(addDays(new Date(), 3), 0),
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), -1), 0),
+                        8,
+                      ),
                       sessionEndTime: addHours(
-                        setMinutes(addDays(new Date(), 3), 0),
+                        setHours(setMinutes(addDays(new Date(), -1), 0), 8),
                         1.5,
                       ),
                       sessionRating: 5,
@@ -379,9 +400,12 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s2",
                       sessionName: "Session 02",
-                      sessionDate: setMinutes(addDays(new Date(), 7), 0),
-                      sessionEndTime: addHours(
+                      sessionDate: setHours(
                         setMinutes(addDays(new Date(), 7), 0),
+                        8,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 7), 0), 8),
                         1.5,
                       ),
                       sessionRating: 5,
@@ -391,9 +415,12 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s3",
                       sessionName: "Session 03",
-                      sessionDate: setMinutes(addDays(new Date(), 11), 0),
-                      sessionEndTime: addHours(
+                      sessionDate: setHours(
                         setMinutes(addDays(new Date(), 11), 0),
+                        1,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 11), 0), 1),
                         1.5,
                       ),
                       sessionRating: 5,
@@ -403,9 +430,12 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s4",
                       sessionName: "Session 04",
-                      sessionDate: setMinutes(addDays(new Date(), 12), 0),
-                      sessionEndTime: addHours(
+                      sessionDate: setHours(
                         setMinutes(addDays(new Date(), 12), 0),
+                        1,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 12), 0), 1),
                         1.5,
                       ),
                       sessionRating: 5,
