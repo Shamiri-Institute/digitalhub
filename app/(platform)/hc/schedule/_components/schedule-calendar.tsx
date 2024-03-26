@@ -16,6 +16,7 @@ import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
 import { Session, SessionsProvider } from "./sessions-provider";
 import { TableView } from "./table-view";
+import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
 
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
@@ -39,29 +40,41 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   return (
     <SessionsProvider sessions={sessions}>
       <ModeProvider>
-        <div className="flex gap-2">
-          <div className="flex gap-6">
-            <div className="text-2xl font-semibold leading-8">{title}</div>
-            <NavigationButtons
-              prevProps={prevButtonProps}
-              nextProps={nextButtonProps}
+        <TitleProvider>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-6">
+              <ScheduleTitle fallbackTitle={title} />
+              <NavigationButtons
+                prevProps={prevButtonProps}
+                nextProps={nextButtonProps}
+              />
+            </div>
+            <div className="mx-2">
+              <ScheduleModeToggle />
+            </div>
+          </div>
+          <div className="mt-4">
+            <CalendarView
+              monthProps={{ state, weekdayStyle: "long" }}
+              weekProps={{}}
+              dayProps={{}}
+              listProps={{}}
+              tableProps={{}}
             />
           </div>
-          <div className="mx-2">
-            <ScheduleModeToggle />
-          </div>
-        </div>
-        <div className="mt-4">
-          <CalendarView
-            monthProps={{ state, weekdayStyle: "long" }}
-            weekProps={{}}
-            dayProps={{}}
-            listProps={{}}
-            tableProps={{}}
-          />
-        </div>
+        </TitleProvider>
       </ModeProvider>
     </SessionsProvider>
+  );
+}
+
+function ScheduleTitle({ fallbackTitle }: { fallbackTitle: string }) {
+  const { title } = useTitle();
+
+  return (
+    <div className="text-2xl font-semibold leading-8">
+      {title || fallbackTitle}
+    </div>
   );
 }
 
@@ -87,7 +100,7 @@ function CalendarView({
     case "month":
       return <MonthView {...monthProps} />;
     case "week":
-      return <WeekView {...weekProps} />;
+      return <WeekView />;
     case "day":
       return <DayView {...dayProps} />;
     case "list":

@@ -18,7 +18,7 @@ export const useMode = () => {
 };
 
 export function ModeProvider({ children }: PropsWithChildren<{}>) {
-  const [mode, setMode] = useState<Mode>("month");
+  const [mode, setMode] = useState<Mode>("week");
 
   return (
     <ModeContext.Provider value={{ mode, setMode }}>
