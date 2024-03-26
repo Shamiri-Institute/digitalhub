@@ -574,7 +574,8 @@ model School {
   schoolName           String                @map("school_name") @db.VarChar(255) // e.g. Garden Estate
   schoolType           String?               @map("school_type") @db.VarChar(255)
   schoolEmail          String?               @map("school_email") @db.VarChar(255)
-  schoolCounty         String?               @map("school_county") @db.VarChar(255) // e.g. Makueni
+  schoolCounty         String?               @map("school_county") @db.VarChar(255) // e.g. Nairobi
+  schoolSubCounty      String?               @map("school_sub_county") @db.VarChar(255) // e.g. Kamukunji
   schoolDemographics   String?               @map("school_demographics") @db.VarChar(255) // e.g. Mixed
   visibleId            String                @unique @map("visible_id") @db.VarChar(100) // e.g. T2PS_School_6
   implementerId        String?               @map("implementer_id") @db.VarChar(255) // TODO: to be replaced by join table
