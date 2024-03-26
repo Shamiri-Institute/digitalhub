@@ -1,30 +1,22 @@
 "use client";
 
-import {
-  CalendarDate,
-  DateValue,
-  createCalendar,
-  getWeeksInMonth,
-} from "@internationalized/date";
-import { type AriaButtonProps } from "@react-aria/button";
+import { DateValue, createCalendar } from "@internationalized/date";
+import type { AriaButtonProps } from "@react-aria/button";
 import { filterDOMProps } from "@react-aria/utils";
-import React from "react";
-import {
-  useCalendar,
-  useCalendarCell,
-  useCalendarGrid,
-  useLocale,
-} from "react-aria";
+import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
-import { cn } from "#/lib/utils";
 
+import { DayView } from "./day-view";
+import { ListView } from "./list-view";
 import { ModeProvider, useMode } from "./mode-provider";
+import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import { SessionList } from "./session-list";
-import { Session, SessionsProvider, useSessions } from "./sessions-provider";
+import { Session, SessionsProvider } from "./sessions-provider";
+import { TableView } from "./table-view";
+import { WeekView } from "./week-view";
 
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
   sessions: Session[];
@@ -39,8 +31,10 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     createCalendar,
   });
 
-  const { calendarProps, prevButtonProps, nextButtonProps, title } =
-    useCalendar(calendarStateProps, state);
+  const { prevButtonProps, nextButtonProps, title } = useCalendar(
+    calendarStateProps,
+    state,
+  );
 
   return (
     <SessionsProvider sessions={sessions}>
@@ -61,6 +55,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
           <CalendarView
             monthProps={{ state, weekdayStyle: "long" }}
             weekProps={{}}
+            dayProps={{}}
+            listProps={{}}
+            tableProps={{}}
           />
         </div>
       </ModeProvider>
@@ -100,121 +97,6 @@ function CalendarView({
     default:
       throw new Error(`Invalid mode: ${mode}`);
   }
-}
-
-function WeekView() {
-  return <div>Week view</div>;
-}
-
-function ListView() {
-  return <div>List view</div>;
-}
-
-function DayView() {
-  return <div>Day view</div>;
-}
-
-function TableView() {
-  return <div>Table view</div>;
-}
-
-function MonthView({
-  state,
-  ...props
-}: {
-  state: CalendarState;
-  weekdayStyle: CalendarGridProps["weekdayStyle"];
-}) {
-  const { locale } = useLocale();
-  const { gridProps, headerProps, weekDays } = useCalendarGrid(props, state);
-
-  const weeksInMonth = getWeeksInMonth(state.visibleRange.start, locale);
-
-  return (
-    <table
-      {...gridProps}
-      className="border-separate overflow-hidden rounded-[0.4375rem] border border-grey-border [border-spacing:0]"
-    >
-      <thead {...headerProps}>
-        <tr className="divide-x divide-grey-border bg-grey-bg">
-          {weekDays.map((day, index) => (
-            <th key={index} className="px-4 py-3 text-left">
-              {day}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
-          <tr key={weekIndex} className="divide-x divide-grey-border">
-            {state
-              .getDatesInWeek(weekIndex)
-              .map((date, i) =>
-                date ? (
-                  <CalendarCell key={i} state={state} date={date} />
-                ) : (
-                  <td key={i} />
-                ),
-              )}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-function CalendarCell({
-  state,
-  date,
-}: {
-  state: CalendarState;
-  date: CalendarDate;
-}) {
-  let ref = React.useRef(null);
-  let {
-    cellProps,
-    buttonProps,
-    isSelected,
-    isOutsideVisibleRange,
-    isDisabled,
-    isUnavailable,
-    formattedDate,
-  } = useCalendarCell({ date }, state, ref);
-
-  const { sessions } = useSessions(date);
-
-  return (
-    <td {...cellProps} className="p-0">
-      <div
-        {...buttonProps}
-        ref={ref}
-        className={cn("cell", {
-          selected: isSelected,
-          disabled: isDisabled,
-          unavailable: isUnavailable,
-        })}
-      >
-        <div
-          className={cn(
-            "flex flex-col gap-[8px] overflow-y-scroll",
-            "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
-            "h-[120px] xl:h-[144px]",
-            "w-[165px] xl:w-[198px]",
-            "border-t border-grey-border",
-          )}
-        >
-          <div
-            className={cn({
-              "text-grey-c3": isOutsideVisibleRange,
-            })}
-          >
-            {formattedDate}
-          </div>
-          <SessionList sessions={sessions} />
-        </div>
-      </div>
-    </td>
-  );
 }
 
 function NavigationButtons({
