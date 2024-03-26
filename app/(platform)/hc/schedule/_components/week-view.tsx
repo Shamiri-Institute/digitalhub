@@ -86,7 +86,12 @@ export function WeekView({ state }: { state: CalendarState }) {
       <tbody>
         {hours.map((hour, idx) => (
           <tr key={idx} className="divide-x divide-grey-border">
-            <td className="flex truncate border-t border-grey-border bg-grey-bg px-4 py-3 text-grey-c3">
+            <td
+              className={cn(
+                "flex truncate border-t border-grey-border bg-grey-bg px-4 py-3 text-grey-c3",
+                "h-[85px] xl:h-[112px]",
+              )}
+            >
               {formatHour(hour)}
             </td>
             {state
