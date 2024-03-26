@@ -4,7 +4,7 @@ import { updateAssignedSchoolDetails } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
-import { Form, FormField } from "#/components/ui/form";
+import { Form, FormField, FormLabel } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
@@ -139,6 +139,9 @@ export function MySchool({ school }: { school: School | null }) {
                     name="numbersExpected"
                     render={({ field }) => (
                       <div className="mt-3 grid w-full gap-1.5">
+                        <FormLabel className="text-white">
+                          Promised number of students
+                        </FormLabel>
                         <Input
                           id="numbersExpected"
                           name="numbersExpected"
@@ -160,6 +163,9 @@ export function MySchool({ school }: { school: School | null }) {
                     name="pointPersonName"
                     render={({ field }) => (
                       <div className="mt-2 grid w-full gap-1.5">
+                        <FormLabel className="text-white">
+                          Point person name
+                        </FormLabel>
                         <Input
                           id="pointPersonName"
                           name="pointPersonName"
@@ -178,6 +184,9 @@ export function MySchool({ school }: { school: School | null }) {
                       name="pointPersonEmail"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">
+                            Point person email
+                          </FormLabel>
                           <Input
                             id="pointPersonEmail"
                             name="pointPersonEmail"
@@ -200,6 +209,9 @@ export function MySchool({ school }: { school: School | null }) {
                       name="pointPersonPhone"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">
+                            Point person phone
+                          </FormLabel>
                           <Input
                             id="pointPersonPhone"
                             name="pointPersonPhone"
@@ -223,6 +235,9 @@ export function MySchool({ school }: { school: School | null }) {
                     name="schoolEmail"
                     render={({ field }) => (
                       <div className="mt-2 grid w-full gap-1.5">
+                        <FormLabel className="text-white">
+                          School Email
+                        </FormLabel>
                         <Input
                           id="schoolEmail"
                           name="schoolEmail"
@@ -241,6 +256,9 @@ export function MySchool({ school }: { school: School | null }) {
                       name="schoolCounty"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">
+                            School county
+                          </FormLabel>
                           <Input
                             id="schoolCounty"
                             name="schoolCounty"
