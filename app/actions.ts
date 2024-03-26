@@ -1140,7 +1140,7 @@ export async function updateAssignedSchoolDetails(
         ...data,
       },
     });
-
+    revalidatePath("/profile/myschool?sid=" + school?.visibleId);
     return { school };
   } catch (error: unknown) {
     if (error instanceof Error) {
