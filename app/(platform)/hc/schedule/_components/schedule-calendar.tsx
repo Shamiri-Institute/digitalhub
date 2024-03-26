@@ -21,6 +21,7 @@ import { CalendarState, useCalendarState } from "react-stately";
 import { Icons } from "#/components/icons";
 import { cn } from "#/lib/utils";
 
+import { ModeProvider } from "./mode-provider";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
 import { SessionList } from "./session-list";
 import { Session, SessionsProvider, useSessions } from "./sessions-provider";
@@ -43,21 +44,23 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   return (
     <SessionsProvider sessions={sessions}>
-      <div className="flex gap-2">
-        <div className="flex gap-6">
-          <div className="text-2xl font-semibold leading-8">{title}</div>
-          <NavigationButtons
-            prevProps={prevButtonProps}
-            nextProps={nextButtonProps}
-          />
+      <ModeProvider>
+        <div className="flex gap-2">
+          <div className="flex gap-6">
+            <div className="text-2xl font-semibold leading-8">{title}</div>
+            <NavigationButtons
+              prevProps={prevButtonProps}
+              nextProps={nextButtonProps}
+            />
+          </div>
+          <div className="mx-2">
+            <ScheduleModeToggle />
+          </div>
         </div>
-        <div className="mx-2">
-          <ScheduleModeToggle />
+        <div className="mt-4">
+          <CalendarGrid state={state} weekdayStyle="long" />
         </div>
-      </div>
-      <div className="mt-4">
-        <CalendarGrid state={state} weekdayStyle="long" />
-      </div>
+      </ModeProvider>
     </SessionsProvider>
   );
 }

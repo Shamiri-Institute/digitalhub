@@ -1,16 +1,15 @@
-import { useState } from "react";
-
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 
+import { useMode } from "./mode-provider";
+
 export function ScheduleModeToggle() {
-  const [mode, setMode] = useState<"day" | "week" | "month" | "list-view">(
-    "month",
-  );
+  const { mode, setMode } = useMode();
 
   return (
     <ToggleGroup
       type="single"
       value={mode}
+      onValueChange={setMode}
       className="gap-0 divide-x divide-gray-300 overflow-hidden rounded-xl border border-gray-300 py-0 shadow"
     >
       <ToggleGroupItem
