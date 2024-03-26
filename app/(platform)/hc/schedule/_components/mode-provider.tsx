@@ -1,6 +1,6 @@
 import { PropsWithChildren, createContext, useContext, useState } from "react";
 
-type Mode = "day" | "week" | "month" | "list" | "table";
+export type Mode = "day" | "week" | "month" | "list" | "table";
 
 interface ModeContextType {
   mode: Mode;

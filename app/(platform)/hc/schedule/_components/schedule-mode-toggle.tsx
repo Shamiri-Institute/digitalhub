@@ -1,6 +1,6 @@
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 
-import { useMode } from "./mode-provider";
+import { useMode, type Mode } from "./mode-provider";
 
 export function ScheduleModeToggle() {
   const { mode, setMode } = useMode();
@@ -9,7 +9,9 @@ export function ScheduleModeToggle() {
     <ToggleGroup
       type="single"
       value={mode}
-      onValueChange={setMode}
+      onValueChange={(mode) => {
+        if (mode) setMode(mode as Mode);
+      }}
       className="gap-0 divide-x divide-gray-300 overflow-hidden rounded-xl border border-gray-300 py-0 shadow"
     >
       <ToggleGroupItem
