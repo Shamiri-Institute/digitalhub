@@ -26,6 +26,7 @@ export default async function MySchoolPage({
       <div>
         <strong>{assignedSchool?.schoolName}</strong> has dropped out.{" "}
         <strong>{assignedSchool.dropoutReason}</strong>
+        <MySchool school={assignedSchool} />;
       </div>
     );
   }
