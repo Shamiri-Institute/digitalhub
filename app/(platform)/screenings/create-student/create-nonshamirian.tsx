@@ -169,7 +169,7 @@ export default function CreateNonShamiriStudentPage({
                                 }
                               />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-h-64 overflow-y-auto">
                               {schools.map((school, index) => (
                                 <SelectItem key={index} value={school.id}>
                                   {school.schoolName}
