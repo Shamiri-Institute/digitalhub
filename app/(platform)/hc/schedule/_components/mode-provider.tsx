@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode, PropsWithChildren } from "react";
+import { PropsWithChildren, createContext, useContext, useState } from "react";
 
-type Mode = "day" | "week" | "month" | "list-view";
+type Mode = "day" | "week" | "month" | "list" | "table";
 
 interface ModeContextType {
   mode: Mode;
@@ -17,9 +17,7 @@ export const useMode = () => {
   return context;
 };
 
-export function ModeProvider({
-  children,
-}: PropsWithChildren<{}>) {
+export function ModeProvider({ children }: PropsWithChildren<{}>) {
   const [mode, setMode] = useState<Mode>("month");
 
   return (
@@ -27,4 +25,4 @@ export function ModeProvider({
       {children}
     </ModeContext.Provider>
   );
-};
+}

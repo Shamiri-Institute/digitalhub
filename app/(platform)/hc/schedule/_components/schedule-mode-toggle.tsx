@@ -14,31 +14,38 @@ export function ScheduleModeToggle() {
     >
       <ToggleGroupItem
         value="day"
-        aria-label="Toggle day"
+        aria-label="Select day view"
         className="rounded-none border-0 text-base"
       >
         Day
       </ToggleGroupItem>
       <ToggleGroupItem
         value="week"
-        aria-label="Toggle week"
+        aria-label="Select week view"
         className="rounded-none border-0 text-base"
       >
         Week
       </ToggleGroupItem>
       <ToggleGroupItem
         value="month"
-        aria-label="Toggle month"
+        aria-label="Select month view"
         className="rounded-none border-0 text-base"
       >
         Month
       </ToggleGroupItem>
       <ToggleGroupItem
-        value="list-view"
-        aria-label="Toggle list view"
+        value="table"
+        aria-label="Select table view"
         className="rounded-none border-0 text-base"
       >
-        List view
+        Table
+      </ToggleGroupItem>
+      <ToggleGroupItem
+        value="list"
+        aria-label="Select list view"
+        className="rounded-none border-0 text-base"
+      >
+        List
       </ToggleGroupItem>
     </ToggleGroup>
   );

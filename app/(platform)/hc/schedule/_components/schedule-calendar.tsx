@@ -21,7 +21,7 @@ import { CalendarState, useCalendarState } from "react-stately";
 import { Icons } from "#/components/icons";
 import { cn } from "#/lib/utils";
 
-import { ModeProvider } from "./mode-provider";
+import { ModeProvider, useMode } from "./mode-provider";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
 import { SessionList } from "./session-list";
 import { Session, SessionsProvider, useSessions } from "./sessions-provider";
@@ -58,14 +58,67 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
           </div>
         </div>
         <div className="mt-4">
-          <CalendarGrid state={state} weekdayStyle="long" />
+          <CalendarView
+            monthProps={{ state, weekdayStyle: "long" }}
+            weekProps={{}}
+          />
         </div>
       </ModeProvider>
     </SessionsProvider>
   );
 }
 
-function CalendarGrid({
+function CalendarView({
+  monthProps,
+  weekProps,
+  dayProps,
+  listProps,
+  tableProps,
+}: {
+  monthProps: {
+    state: CalendarState;
+    weekdayStyle: CalendarGridProps["weekdayStyle"];
+  };
+  weekProps: {};
+  dayProps: {};
+  listProps: {};
+  tableProps: {};
+}) {
+  const { mode } = useMode();
+
+  switch (mode) {
+    case "month":
+      return <MonthView {...monthProps} />;
+    case "week":
+      return <WeekView {...weekProps} />;
+    case "day":
+      return <DayView {...dayProps} />;
+    case "list":
+      return <ListView {...listProps} />;
+    case "table":
+      return <TableView {...tableProps} />;
+    default:
+      throw new Error(`Invalid mode: ${mode}`);
+  }
+}
+
+function WeekView() {
+  return <div>Week view</div>;
+}
+
+function ListView() {
+  return <div>List view</div>;
+}
+
+function DayView() {
+  return <div>Day view</div>;
+}
+
+function TableView() {
+  return <div>Table view</div>;
+}
+
+function MonthView({
   state,
   ...props
 }: {
