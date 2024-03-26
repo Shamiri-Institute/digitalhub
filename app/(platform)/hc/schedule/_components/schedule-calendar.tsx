@@ -1,18 +1,14 @@
 "use client";
 
-import { getCalendarDate } from "#/lib/date-utils";
-import { cn } from "#/lib/utils";
 import {
   CalendarDate,
   DateValue,
   createCalendar,
   getWeeksInMonth,
-  isSameDay,
 } from "@internationalized/date";
-import { Prisma } from "@prisma/client";
 import { type AriaButtonProps } from "@react-aria/button";
 import { filterDOMProps } from "@react-aria/utils";
-import React, { createContext, useContext } from "react";
+import React from "react";
 import {
   useCalendar,
   useCalendarCell,
@@ -23,55 +19,15 @@ import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
-import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
+import { cn } from "#/lib/utils";
 
+import { ScheduleModeToggle } from "./schedule-mode-toggle";
 import { SessionList } from "./session-list";
-
-export type Session = Prisma.InterventionSessionGetPayload<{
-  include: { school: true };
-}>;
+import { Session, SessionsProvider, useSessions } from "./sessions-provider";
 
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
   sessions: Session[];
 };
-
-type SessionsContextType = {
-  sessions: Session[];
-};
-
-const SessionsContext = createContext<SessionsContextType | undefined>(
-  undefined,
-);
-
-function SessionsProvider({
-  children,
-  sessions,
-}: React.PropsWithChildren<{
-  sessions: Session[];
-}>) {
-  return (
-    <SessionsContext.Provider value={{ sessions }}>
-      {children}
-    </SessionsContext.Provider>
-  );
-}
-
-function useSessions(date: CalendarDate) {
-  const context = useContext(SessionsContext);
-  if (context === undefined) {
-    throw new Error("useSessions must be used within a SessionsProvider");
-  }
-
-  const { sessions } = context;
-
-  const filteredSessions = sessions.filter((session) => {
-    return isSameDay(date, getCalendarDate(session.sessionDate));
-  });
-
-  return {
-    sessions: filteredSessions,
-  };
-}
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const { sessions, ...calendarStateProps } = props;
@@ -96,7 +52,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
           />
         </div>
         <div className="mx-2">
-          <ScheduleMode />
+          <ScheduleModeToggle />
         </div>
       </div>
       <div className="mt-4">
@@ -106,7 +62,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   );
 }
 
-export function CalendarGrid({
+function CalendarGrid({
   state,
   ...props
 }: {
@@ -202,43 +158,6 @@ function CalendarCell({
         </div>
       </div>
     </td>
-  );
-}
-function ScheduleMode() {
-  return (
-    <ToggleGroup
-      type="single"
-      className="gap-0 divide-x divide-gray-300 overflow-hidden rounded-xl border border-gray-300 py-0 shadow"
-    >
-      <ToggleGroupItem
-        value="day"
-        aria-label="Toggle day"
-        className="rounded-none border-0 text-base"
-      >
-        Day
-      </ToggleGroupItem>
-      <ToggleGroupItem
-        value="week"
-        aria-label="Toggle week"
-        className="rounded-none border-0 text-base"
-      >
-        Week
-      </ToggleGroupItem>
-      <ToggleGroupItem
-        value="month"
-        aria-label="Toggle month"
-        className="rounded-none border-0 text-base"
-      >
-        Month
-      </ToggleGroupItem>
-      <ToggleGroupItem
-        value="list-view"
-        aria-label="Toggle list view"
-        className="rounded-none border-0 text-base"
-      >
-        List view
-      </ToggleGroupItem>
-    </ToggleGroup>
   );
 }
 

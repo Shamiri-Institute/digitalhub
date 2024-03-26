@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
-import type { Session } from "./schedule-calendar";
+import type { Session } from "./sessions-provider";
 
 export function SessionList({ sessions }: { sessions: Session[] }) {
   if (sessions.length === 0) {
