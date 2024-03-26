@@ -53,6 +53,7 @@ export function MonthView({
     </table>
   );
 }
+
 export function CalendarCell({
   state,
   date,
@@ -60,8 +61,8 @@ export function CalendarCell({
   state: CalendarState;
   date: CalendarDate;
 }) {
-  let ref = useRef(null);
-  let {
+  const ref = useRef<HTMLDivElement>(null);
+  const {
     cellProps,
     buttonProps,
     isSelected,
@@ -71,7 +72,7 @@ export function CalendarCell({
     formattedDate,
   } = useCalendarCell({ date }, state, ref);
 
-  const { sessions } = useSessions(date);
+  const { sessions } = useSessions({ date });
 
   return (
     <td {...cellProps} className="p-0">

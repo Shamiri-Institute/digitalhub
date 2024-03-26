@@ -1,6 +1,11 @@
 "use client";
 
-import { DateValue, createCalendar } from "@internationalized/date";
+import {
+  DateValue,
+  createCalendar,
+  getLocalTimeZone,
+  today,
+} from "@internationalized/date";
 import type { AriaButtonProps } from "@react-aria/button";
 import { filterDOMProps } from "@react-aria/utils";
 import { useCalendar, useLocale } from "react-aria";
@@ -14,31 +19,38 @@ import { ListView } from "./list-view";
 import { ModeProvider, useMode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import { Session, SessionsProvider } from "./sessions-provider";
+import { SessionsProvider } from "./sessions-provider";
 import { TableView } from "./table-view";
 import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
 
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
-  sessions: Session[];
+  hubId: string;
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
-  const { sessions, ...calendarStateProps } = props;
+  const { hubId, ...calendarStateProps } = props;
   const { locale } = useLocale();
-  const state = useCalendarState({
+  const monthState = useCalendarState({
     ...calendarStateProps,
+    locale,
+    createCalendar,
+  });
+
+  const weekState = useCalendarState({
+    value: today(getLocalTimeZone()),
+    visibleDuration: { weeks: 1 },
     locale,
     createCalendar,
   });
 
   const { prevButtonProps, nextButtonProps, title } = useCalendar(
     calendarStateProps,
-    state,
+    monthState,
   );
 
   return (
-    <SessionsProvider sessions={sessions}>
+    <SessionsProvider hubId={hubId}>
       <ModeProvider>
         <TitleProvider>
           <div className="flex items-center gap-2">
@@ -55,8 +67,8 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
           </div>
           <div className="mt-4">
             <CalendarView
-              monthProps={{ state, weekdayStyle: "long" }}
-              weekProps={{}}
+              monthProps={{ state: monthState, weekdayStyle: "long" }}
+              weekProps={{ state: weekState }}
               dayProps={{}}
               listProps={{}}
               tableProps={{}}
@@ -89,7 +101,9 @@ function CalendarView({
     state: CalendarState;
     weekdayStyle: CalendarGridProps["weekdayStyle"];
   };
-  weekProps: {};
+  weekProps: {
+    state: CalendarState;
+  };
   dayProps: {};
   listProps: {};
   tableProps: {};
@@ -100,7 +114,11 @@ function CalendarView({
     case "month":
       return <MonthView {...monthProps} />;
     case "week":
-      return <WeekView />;
+      return weekProps.state.value ? (
+        <WeekView {...weekProps} />
+      ) : (
+        <div>Loading...</div>
+      );
     case "day":
       return <DayView {...dayProps} />;
     case "list":
@@ -121,7 +139,7 @@ function NavigationButtons({
 }) {
   return (
     <div
-      className="inline-flex divide-x divide-gray-300 overflow-auto rounded-xl border border-gray-300 shadow"
+      className="inline-flex divide-x divide-gray-300 overflow-auto rounded-xl border border-gray-300 shadow-sm"
       role="group"
     >
       <button

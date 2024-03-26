@@ -1,24 +1,22 @@
-import { createCalendar, isToday } from "@internationalized/date";
+import { CalendarDate, isToday } from "@internationalized/date";
 import { useEffect, useRef } from "react";
 import {
   useCalendar,
+  useCalendarCell,
   useCalendarGrid,
   useDateFormatter,
   useLocale,
 } from "react-aria";
-import { useCalendarState } from "react-stately";
+import { CalendarState } from "react-stately";
 
 import { cn } from "#/lib/utils";
+import { SessionList } from "./session-list";
+import { useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
-export function WeekView() {
+export function WeekView({ state }: { state: CalendarState }) {
   const ref = useRef();
   const { locale } = useLocale();
-  const state = useCalendarState({
-    visibleDuration: { weeks: 1 },
-    locale,
-    createCalendar,
-  });
   const { calendarProps, prevButtonProps, nextButtonProps } = useCalendar(
     {},
     state,
@@ -52,6 +50,27 @@ export function WeekView() {
     state.timeZone,
   ]);
 
+  // 6 AM - 6 PM session scheduling window
+  const hours = Array.from({ length: 13 }, (_, i) => 6 + i);
+
+  function formatHour(hour: number) {
+    const hourIn12HourFormat = hour % 12 === 0 ? 12 : hour % 12;
+    const period = hour < 12 ? "AM" : "PM";
+    return `${hourIn12HourFormat}:00 ${period}`;
+  }
+
+  const firstSessionRef = useRef<HTMLDivElement>(null);
+  const { sessions } = useSessions({ date: state.value });
+
+  useEffect(() => {
+    if (firstSessionRef.current) {
+      firstSessionRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [sessions]);
+
   return (
     <table
       {...gridProps}
@@ -64,9 +83,8 @@ export function WeekView() {
             date ? (
               <th
                 key={i}
-                className={cn("px-4 py-3", {
-                  "text-blue-base":
-                    state.value && isToday(state.value, state.timeZone),
+                className={cn("px-4 py-3 text-left", {
+                  "text-blue-base": isToday(date, state.timeZone), // FIXME: not working
                 })}
               >
                 {date.day} - {dayFormatter.format(date.toDate(state.timeZone))}
@@ -77,7 +95,85 @@ export function WeekView() {
           )}
         </tr>
       </thead>
-      <tbody></tbody>
+      <tbody>
+        {hours.map((hour, idx) => (
+          <tr key={idx} className="divide-x divide-grey-border">
+            <td className="flex truncate border-t border-grey-border bg-grey-bg px-4 py-3 text-grey-c3">
+              {formatHour(hour)}
+            </td>
+            {state
+              .getDatesInWeek(0)
+              .map((date, idx) =>
+                date ? (
+                  <CalendarCell
+                    key={idx}
+                    hour={hour}
+                    date={date}
+                    state={state}
+                    firstSessionRef={firstSessionRef}
+                  />
+                ) : (
+                  <td key={idx} />
+                ),
+              )}
+          </tr>
+        ))}
+      </tbody>
     </table>
+  );
+}
+
+function CalendarCell({
+  hour,
+  date,
+  state,
+  firstSessionRef,
+}: {
+  hour: number;
+  date: CalendarDate;
+  state: CalendarState;
+  firstSessionRef: React.RefObject<HTMLDivElement>;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const {
+    cellProps,
+    buttonProps,
+    isSelected,
+    isOutsideVisibleRange,
+    isDisabled,
+    isUnavailable,
+    formattedDate,
+  } = useCalendarCell({ date }, state, ref);
+
+  const { sessions } = useSessions({ date, hour });
+
+  return (
+    <td {...cellProps} className="p-0">
+      <div
+        {...buttonProps}
+        ref={ref}
+        className={cn("cell", {
+          selected: isSelected,
+          disabled: isDisabled,
+          unavailable: isUnavailable,
+        })}
+      >
+        <div
+          className={cn(
+            "flex flex-col gap-[8px] overflow-y-scroll",
+            "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
+            "h-[85px] xl:h-[112px]",
+            "w-[140px] xl:w-[185px]",
+            "border-t border-grey-border",
+            {
+              "[scroll-margin-top:20px]": sessions.length !== 0,
+            },
+          )}
+          ref={sessions.length !== 0 ? firstSessionRef : null}
+        >
+          <SessionList sessions={sessions} />
+        </div>
+      </div>
+    </td>
   );
 }
