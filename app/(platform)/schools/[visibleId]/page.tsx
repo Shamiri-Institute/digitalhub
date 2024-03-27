@@ -246,12 +246,15 @@ async function FellowCard({
     (group) => group.leaderId === fellow.id,
   );
 
-  const groupStudentCount = await db.student.count({
-    where: {
-      schoolId: school.id,
-      assignedGroupId: fellowGroup?.id,
-    },
-  });
+  let groupStudentCount: number = 0;
+  if (fellowGroup) {
+    groupStudentCount = await db.student.count({
+      where: {
+        schoolId: school.id,
+        assignedGroupId: fellowGroup?.id,
+      },
+    });
+  }
 
   return (
     <div className="rounded border p-8 shadow-md">
