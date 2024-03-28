@@ -34,6 +34,7 @@ export default async function FellowSessionsPage({
         include: {
           school: true,
           session: true,
+          delayedPaymentRequests: true,
         },
         orderBy: {
           sessionNumber: "asc",
