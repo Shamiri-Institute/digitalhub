@@ -7,7 +7,11 @@ export function FellowAttendanceTable({
   attendance,
 }: {
   attendance: Prisma.FellowAttendanceGetPayload<{
-    include: { school: true; session: true };
+    include: {
+      school: true;
+      session: true;
+      delayedPaymentRequests: true;
+    };
   }>[];
 }) {
   return (
@@ -39,6 +43,12 @@ export function FellowAttendanceTable({
                       className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                     >
                       Date
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Status
                     </th>
                   </tr>
                 </thead>
@@ -74,6 +84,9 @@ export function FellowAttendanceTable({
                             ? format(att.session.sessionDate, "dd MMM yyyy")
                             : "N/A"}
                         </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {renderPaymentStatus(att)}
+                        </td>
                       </tr>
                     ))}
                 </tbody>
@@ -84,4 +97,48 @@ export function FellowAttendanceTable({
       </div>
     </div>
   );
+}
+
+function renderPaymentStatus(
+  att: Prisma.FellowAttendanceGetPayload<{
+    include: {
+      school: true;
+      session: true;
+      delayedPaymentRequests: true;
+    };
+  }>,
+) {
+  const delayedPaymentRequest = att.delayedPaymentRequests.find(
+    (delayedPaymentRequest) =>
+      delayedPaymentRequest.fellowAttendanceId === att.id,
+  );
+
+  const checkIfDelayedPaymentRequestIsProcessed =
+    delayedPaymentRequest?.fulfilledAt;
+
+  if (att.attended && att.processedAt) {
+    return (
+      <span className="text-green-500">
+        Payment initiated{" "}
+        {delayedPaymentRequest
+          ? `(Delayed -${checkIfDelayedPaymentRequestIsProcessed ? "fullfiled" : "pending"})`
+          : ""}
+      </span>
+    );
+  }
+  if (att.attended && !att.processedAt) {
+    return (
+      <span className="text-yellow-500">
+        Pending approval{" "}
+        {delayedPaymentRequest
+          ? `(Delayed -${checkIfDelayedPaymentRequestIsProcessed ? "fullfiled" : "pending"})`
+          : ""}
+      </span>
+    );
+  }
+
+  if (!att.attended) {
+    return <span className="text-red-500">Not attended</span>;
+  }
+  return <span className="text-gray-500">N/A</span>;
 }
