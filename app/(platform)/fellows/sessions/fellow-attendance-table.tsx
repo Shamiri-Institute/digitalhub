@@ -42,7 +42,13 @@ export function FellowAttendanceTable({
                       scope="col"
                       className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                     >
-                      Date
+                      Session Date
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Date Marked
                     </th>
                     <th
                       scope="col"
@@ -85,6 +91,11 @@ export function FellowAttendanceTable({
                             : "N/A"}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {att.updatedAt
+                            ? format(att.updatedAt, "dd MMM yyyy")
+                            : "N/A"}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {renderPaymentStatus(att)}
                         </td>
                       </tr>
@@ -113,26 +124,17 @@ function renderPaymentStatus(
       delayedPaymentRequest.fellowAttendanceId === att.id,
   );
 
-  const checkIfDelayedPaymentRequestIsProcessed =
-    delayedPaymentRequest?.fulfilledAt;
-
   if (att.attended && att.processedAt) {
     return (
       <span className="text-green-500">
-        Payment initiated{" "}
-        {delayedPaymentRequest
-          ? `(Delayed -${checkIfDelayedPaymentRequestIsProcessed ? "fullfiled" : "pending"})`
-          : ""}
+        Payment initiated {delayedPaymentRequest ? `(Delayed)` : ""}
       </span>
     );
   }
   if (att.attended && !att.processedAt) {
     return (
       <span className="text-yellow-500">
-        Pending approval{" "}
-        {delayedPaymentRequest
-          ? `(Delayed -${checkIfDelayedPaymentRequestIsProcessed ? "fullfiled" : "pending"})`
-          : ""}
+        Pending approval {delayedPaymentRequest ? `(Delayed)` : ""}
       </span>
     );
   }
