@@ -44,6 +44,12 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     createCalendar,
   });
 
+  const dayState = useCalendarState({
+    value: today(getLocalTimeZone()),
+    locale,
+    createCalendar,
+  });
+
   const { prevButtonProps, nextButtonProps, title } = useCalendar(
     calendarStateProps,
     monthState,
@@ -69,7 +75,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
             <CalendarView
               monthProps={{ state: monthState, weekdayStyle: "long" }}
               weekProps={{ state: weekState }}
-              dayProps={{}}
+              dayProps={{ state: dayState }}
               listProps={{}}
               tableProps={{}}
             />
@@ -104,7 +110,9 @@ function CalendarView({
   weekProps: {
     state: CalendarState;
   };
-  dayProps: {};
+  dayProps: {
+    state: CalendarState;
+  };
   listProps: {};
   tableProps: {};
 }) {
