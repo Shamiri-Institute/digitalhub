@@ -62,18 +62,22 @@ export function WeekView({ state }: { state: CalendarState }) {
   return (
     <table
       {...gridProps}
-      className="border-separate overflow-hidden rounded-[0.4375rem] border border-grey-border [border-spacing:0]"
+      className="block border-separate overflow-hidden rounded-[0.4375rem] border border-grey-border [border-spacing:0]"
     >
-      <thead>
-        <tr className="divide-x divide-grey-border bg-grey-bg">
-          <th className="w-[94px] px-4 py-3"></th>
+      <thead className="block">
+        <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
+          <th className="w-[103px] px-4 py-3"></th>
           {state.getDatesInWeek(0).map((date, i) =>
             date ? (
               <th
                 key={i}
-                className={cn("px-4 py-3 text-left", {
-                  "text-blue-base": isToday(date, state.timeZone), // FIXME: not working
-                })}
+                className={cn(
+                  "w-[141px] shrink-0 xl:w-[186px]",
+                  "block px-4 py-3 text-left",
+                  {
+                    "text-blue-base": isToday(date, state.timeZone), // FIXME: not working
+                  },
+                )}
               >
                 {date.day} - {dayFormatter.format(date.toDate(state.timeZone))}
               </th>
@@ -83,29 +87,35 @@ export function WeekView({ state }: { state: CalendarState }) {
           )}
         </tr>
       </thead>
-      <tbody>
-        {hours.map((hour, idx) => (
-          <tr key={idx} className="divide-x divide-grey-border">
+      <tbody className="block h-[700px] overflow-y-scroll">
+        {hours.map((hour, rowIdx) => (
+          <tr key={rowIdx} className="flex divide-x divide-grey-border">
             <td
               className={cn(
                 "flex truncate border-t border-grey-border bg-grey-bg px-4 py-3 text-grey-c3",
                 "h-[85px] xl:h-[112px]",
+                "w-[103px]",
+                "text-sm",
+                {
+                  "border-t-0": rowIdx === 0,
+                },
               )}
             >
               {formatHour(hour)}
             </td>
             {state
               .getDatesInWeek(0)
-              .map((date, idx) =>
+              .map((date, colIdx) =>
                 date ? (
                   <CalendarCell
-                    key={idx}
+                    key={colIdx}
+                    rowIdx={rowIdx}
                     hour={hour}
                     date={date}
                     state={state}
                   />
                 ) : (
-                  <td key={idx} />
+                  <td key={colIdx} />
                 ),
               )}
           </tr>
@@ -116,10 +126,12 @@ export function WeekView({ state }: { state: CalendarState }) {
 }
 
 function CalendarCell({
+  rowIdx,
   hour,
   date,
   state,
 }: {
+  rowIdx: number;
   hour: number;
   date: CalendarDate;
   state: CalendarState;
@@ -155,6 +167,9 @@ function CalendarCell({
             "h-[85px] xl:h-[112px]",
             "w-[140px] xl:w-[185px]",
             "border-t border-grey-border",
+            {
+              "border-t-0": rowIdx === 0,
+            },
           )}
         >
           <SessionList sessions={sessions} />

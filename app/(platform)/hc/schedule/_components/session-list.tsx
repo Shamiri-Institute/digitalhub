@@ -115,26 +115,3 @@ function SessionDetail({
     </div>
   );
 }
-
-// function SessionList({
-//   sessions,
-// }: {
-//   sessions: Prisma.InterventionSessionGetPayload<{}>[];
-// }) {
-//   if (sessions.length === 0) {
-//     return null;
-//   }
-//   return (
-//     <Popover>
-//       <PopoverTrigger>
-//         {sessions.map((sess) => (
-//           <div key={sess.id}>{sess.sessionName}</div>
-//         ))}
-//       </PopoverTrigger>
-//       <PopoverContent className="w-full max-w-xs">
-//         <input />
-//         <button onClick={() => console.log("button clicked")}>Click me</button>
-//       </PopoverContent>
-//     </Popover>
-//   );
-// }
