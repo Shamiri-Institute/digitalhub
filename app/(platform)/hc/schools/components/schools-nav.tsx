@@ -16,6 +16,7 @@ export default function SchoolsNav({ visibleId }: { visibleId: string }) {
     <div className="flex max-w-fit gap-x-2 rounded-lg border-shamiri-light-grey bg-background-secondary text-base font-semibold leading-6">
       {options.map((option) => (
         <Link
+          key={option.name}
           href={option.href}
           className={cn(
             "px-3 py-2",

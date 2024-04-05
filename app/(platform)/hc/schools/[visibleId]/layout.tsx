@@ -1,5 +1,12 @@
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "#/components/ui/accordion";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import Link from "next/link";
 import SchoolsNav from "../components/schools-nav";
 
 export default async function SchoolViewLayout({
@@ -47,7 +54,50 @@ export default async function SchoolViewLayout({
         </div>
         <Separator />
         <div>Session pills go here</div>
-        <div>School information goes here</div>
+        <div>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="contact-information">
+              <AccordionTrigger>Contact Details</AccordionTrigger>
+              <AccordionContent>
+                <div>
+                  <p>Phone Number</p>
+                  <p>N/A</p>
+                </div>
+                <div>
+                  <p>Email</p>
+                  <Link href={`mailto:${school?.schoolEmail}`}>
+                    {school?.schoolEmail}
+                  </Link>
+                </div>
+                <div>
+                  <p>Location</p>
+                  <p>
+                    N/A: please add link to google maps since we have lat/long
+                    values
+                  </p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="school-information">
+              <AccordionTrigger>Information</AccordionTrigger>
+              <AccordionContent>
+                <div>
+                  <p>Type</p>
+                  <p>Hub</p>
+                </div>
+                <div>
+                  <p>Point person</p>
+                </div>
+                <div>
+                  <p>Point person phone number</p>
+                </div>
+                <div>
+                  <p>Description</p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
       </div>
       <div className="w-full space-y-5 pb-6 pl-6 pr-8 pt-5">
         <SchoolsNav visibleId={visibleId} />
