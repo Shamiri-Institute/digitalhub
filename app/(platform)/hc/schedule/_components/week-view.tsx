@@ -9,7 +9,13 @@ import {
 } from "react-aria";
 import { CalendarState } from "react-stately";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
+
 import { SessionList } from "./session-list";
 import { useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
@@ -67,24 +73,20 @@ export function WeekView({ state }: { state: CalendarState }) {
       <thead className="block">
         <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
           <th className="w-[103px] px-4 py-3"></th>
-          {state.getDatesInWeek(0).map((date, i) =>
-            date ? (
-              <th
-                key={i}
-                className={cn(
-                  "w-[141px] shrink-0 xl:w-[186px]",
-                  "block px-4 py-3 text-left",
-                  {
-                    "text-blue-base": isToday(date, state.timeZone), // FIXME: not working
-                  },
-                )}
-              >
-                {date.day} - {dayFormatter.format(date.toDate(state.timeZone))}
-              </th>
-            ) : (
-              <td key={i} />
-            ),
-          )}
+          {state
+            .getDatesInWeek(0)
+            .map((date, i) =>
+              date ? (
+                <CalendarHeaderCell
+                  key={i}
+                  date={date}
+                  state={state}
+                  dayFormatter={dayFormatter}
+                />
+              ) : (
+                <td key={i} />
+              ),
+            )}
         </tr>
       </thead>
       <tbody className="block h-[700px] overflow-y-scroll">
@@ -122,6 +124,45 @@ export function WeekView({ state }: { state: CalendarState }) {
         ))}
       </tbody>
     </table>
+  );
+}
+
+function CalendarHeaderCell({
+  date,
+  state,
+  dayFormatter,
+}: {
+  date: CalendarDate;
+  state: CalendarState;
+  dayFormatter: any;
+}) {
+  const { sessions } = useSessions({ date });
+  const hasSessions = sessions.length > 0;
+  return date ? (
+    <th
+      className={cn(
+        "w-[141px] shrink-0 xl:w-[186px]",
+        "relative px-4 py-3 text-left",
+        "flex items-center justify-between",
+        {
+          "text-blue-base": isToday(date, state.timeZone),
+        },
+      )}
+    >
+      {date.day} - {dayFormatter.format(date.toDate(state.timeZone))}
+      {hasSessions && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-base"></span>
+          </TooltipTrigger>
+          <TooltipContent side="top">
+            {sessions.length} sessions today
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </th>
+  ) : (
+    <td />
   );
 }
 
