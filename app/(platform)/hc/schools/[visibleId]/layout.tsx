@@ -49,8 +49,9 @@ export default async function SchoolViewLayout({
         <div>Session pills go here</div>
         <div>School information goes here</div>
       </div>
-      <div>
+      <div className="w-full space-y-5 pb-6 pl-6 pr-8 pt-5">
         <SchoolsNav visibleId={visibleId} />
+        <Separator />
         {children}
       </div>
     </div>

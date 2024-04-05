@@ -13,7 +13,7 @@ export default function SchoolsNav({ visibleId }: { visibleId: string }) {
   ];
 
   return (
-    <div className="flex gap-x-2 bg-background-secondary">
+    <div className="flex max-w-fit gap-x-2 rounded-lg border-shamiri-light-grey bg-background-secondary text-base font-semibold leading-6">
       {options.map((option) => (
         <Link
           href={option.href}
