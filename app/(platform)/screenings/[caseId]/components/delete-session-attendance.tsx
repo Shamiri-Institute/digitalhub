@@ -8,20 +8,10 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-
 import { deleteClinicalCaseSessionAttendanceDate } from "#/app/actions";
 import { useToast } from "#/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-
-const FormSchema = z.object({
-  dateOfSession: z.date({
-    required_error: "Please select the date of session.",
-  }),
-});
 
 export function DeleteClinicalSessionDateDialog({
   sessionId,
@@ -35,13 +25,6 @@ export function DeleteClinicalSessionDateDialog({
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const { toast } = useToast();
-
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
-      dateOfSession: undefined,
-    },
-  });
 
   async function handleDeleteSession(sessionId: string) {
     try {
@@ -63,7 +46,6 @@ export function DeleteClinicalSessionDateDialog({
         title: "Session attendance recorded deleted successfully",
       });
 
-      form.reset();
       setDialogOpen(false);
       window.location.href = `/screenings/${caseId}`;
     } catch (error) {
