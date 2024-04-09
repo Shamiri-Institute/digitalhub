@@ -13,12 +13,16 @@ import {
 import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
-import format from "date-fns/format";
 import { MoreHorizontal } from "lucide-react";
 import React from "react";
 
-export type SchoolFellowTableData = Prisma.FellowGetPayload<{}>
-
+export type SchoolFellowTableData = Prisma.FellowGetPayload<{
+  include: {
+    groups: true;
+    supervisor: true;
+    weeklyFellowRatings: true;
+  };
+}>;
 
 function MenuItem({
   children,
@@ -56,51 +60,30 @@ export const columns: ColumnDef<SchoolFellowTableData>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "studentName",
-    header: "Student Name",
+    accessorKey: "fellowName",
+    header: "Name",
+  },
+  // TODO: add average rating column
+  {
+    // TODO: add correct display component
+    accessorKey: "droppedOut",
+    header: "Active Status",
+  },
+  // TODO:: confirm if we are showing groups the fellow is handling in the school
+  {
+    accessorFn: (row) => row.groups.length,
+    header: "No. of groups",
   },
   {
-    // TODO: this computation should be done during the fetch and possible user an accessor Function
-    accessorKey: "assignedGroupId",
-    header: "Group No.",
-  },
-  {
-    accessorFn: (row) => `${row.age} yrs`,
-    header: "Age",
-  },
-  {
-    header: "Shamiri ID",
-    accessorKey: "id",
-  },
-  {
-    header: "Clinical Sessions",
-    accessorFn: (row) =>
-      row.clinicalCases?.reduce((acc, val) => acc + val.sessions.length, 0),
-  },
-  {
-    header: "Gender",
-    accessorKey: "gender",
-  },
-  {
-    header: "Contact No.",
+    header: "Phone Number",
     accessorKey: "phoneNumber",
   },
   {
-    header: "Admission Number",
-    accessorKey: "admissionNumber",
+    // TODO: add component for displaying this
+    header: "Supervisor",
+    accessorFn: (row) => row.supervisor?.supervisorName,
   },
-  {
-    header: "Stream",
-    accessorKey: "stream",
-  },
-  {
-    header: "Class/Form",
-    accessorKey: "form",
-  },
-  {
-    header: "Date added",
-    accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
-  },
+  // TODO: confirm what will be showed for number of schools
   {
     id: "actions",
     cell: ({ row }) => (
@@ -113,17 +96,18 @@ export const columns: ColumnDef<SchoolFellowTableData>[] = [
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Edit Information</DropdownMenuItem>
-          <DropdownMenuItem>Mark Student Attendance</DropdownMenuItem>
-          <DropdownMenuItem>View group transfer history</DropdownMenuItem>
-          <DropdownMenuItem>View attendance history</DropdownMenuItem>
-          <DropdownMenuItem>Add clinical case</DropdownMenuItem>
-          <DropdownMenuItem>Reporting notes</DropdownMenuItem>
+          <DropdownMenuItem>View Fellow information</DropdownMenuItem>
+          <DropdownMenuItem>Assign supervisor</DropdownMenuItem>
+          <DropdownMenuItem>View students in group</DropdownMenuItem>
+          <DropdownMenuItem>Session attendance history</DropdownMenuItem>
+          <DropdownMenuItem>View student group evaluation</DropdownMenuItem>
+          <DropdownMenuItem>View weekly fellow evaluation</DropdownMenuItem>
+          <DropdownMenuItem>View complaints</DropdownMenuItem>
           <DropdownMenuItem>
-            <div className="text-shamiri-red">Drop-out student</div>
+            <div className="text-shamiri-red">Drop-out fellow</div>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     ),
   },
-]
+];
