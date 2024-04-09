@@ -6,7 +6,11 @@ import {
 } from "#/components/ui/accordion";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import Image from "next/image";
 import Link from "next/link";
+import LocationIcon from "../../../../../public/icons/location-pin-icon.svg";
+import MailIcon from "../../../../../public/icons/mail-icon.svg";
+import PhoneIcon from "../../../../../public/icons/telephone-icon.svg";
 import SchoolsNav from "../components/schools-nav";
 
 export default async function SchoolViewLayout({
@@ -32,6 +36,7 @@ export default async function SchoolViewLayout({
           },
         },
       },
+      hub: true,
     },
   });
 
@@ -58,20 +63,60 @@ export default async function SchoolViewLayout({
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="contact-information">
               <AccordionTrigger>Contact Details</AccordionTrigger>
-              <AccordionContent>
-                <div>
-                  <p>Phone Number</p>
-                  <p>N/A</p>
+              <AccordionContent className="space-y-3">
+                <div className="text-sm font-medium leading-5">
+                  <div className="flex items-center gap-2">
+                    <Image
+                      unoptimized
+                      priority
+                      src={PhoneIcon}
+                      alt="Telephone Icon"
+                      width={16}
+                      height={16}
+                    />
+                    {/*TODO: inter */}
+                    <p className="text-shamiri-black">Phone Number</p>
+                  </div>
+                  <p className="text-shamiri-text-grey">N/A</p>
                 </div>
-                <div>
-                  <p>Email</p>
-                  <Link href={`mailto:${school?.schoolEmail}`}>
-                    {school?.schoolEmail}
-                  </Link>
+                <div className="text-sm font-medium leading-5">
+                  <div className="flex items-center gap-2">
+                    <Image
+                      unoptimized
+                      priority
+                      src={MailIcon}
+                      alt="Mail Icon"
+                      width={16}
+                      height={16}
+                    />
+                    <p className="text-sm font-medium leading-5 text-shamiri-black">
+                      Email
+                    </p>
+                  </div>
+                  {school?.schoolEmail ? (
+                    <Link
+                      href={`mailto:${school?.schoolEmail}`}
+                      className="text-shamiri-text-grey"
+                    >
+                      {school?.schoolEmail}
+                    </Link>
+                  ) : (
+                    <p className="text-shamiri-text-grey">N/A</p>
+                  )}
                 </div>
-                <div>
-                  <p>Location</p>
-                  <p>
+                <div className="text-sm font-medium leading-5">
+                  <div className="flex items-center gap-2">
+                    <Image
+                      unoptimized
+                      priority
+                      src={LocationIcon}
+                      alt="Mail Icon"
+                      width={16}
+                      height={16}
+                    />
+                    <p className="text-shamiri-black">Location</p>
+                  </div>
+                  <p className="text-shamiri-text-grey">
                     N/A: please add link to google maps since we have lat/long
                     values
                   </p>
@@ -80,19 +125,43 @@ export default async function SchoolViewLayout({
             </AccordionItem>
             <AccordionItem value="school-information">
               <AccordionTrigger>Information</AccordionTrigger>
-              <AccordionContent>
+              <AccordionContent className="space-y-3 text-sm font-medium leading-5">
                 <div>
-                  <p>Type</p>
-                  <p>Hub</p>
+                  <p className="text-shamiri-black" s>
+                    Type
+                  </p>
+                  <p className="text-shamiri-text-grey">{school?.schoolType}</p>
                 </div>
                 <div>
-                  <p>Point person</p>
+                  <p className="text-shamiri-black">Hub</p>
+                  <p className="text-shamiri-text-grey">
+                    {school?.hub?.hubName}
+                  </p>
                 </div>
                 <div>
-                  <p>Point person phone number</p>
+                  <p className="text-shamiri-black">Point person</p>
+                  <p className="text-shamiri-text-grey">
+                    {school?.pointPersonName}
+                  </p>
                 </div>
                 <div>
-                  <p>Description</p>
+                  <p className="text-shamiri-black">
+                    Point person phone number
+                  </p>
+                  {school?.pointPersonPhone ? (
+                    <Link
+                      href={`tel:${school?.pointPersonPhone}`}
+                      className="text-shamiri-text-grey"
+                    >
+                      {school?.pointPersonPhone}
+                    </Link>
+                  ) : (
+                    <p className="text-shamiri-text-grey">N/A</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-shamiri-black">Description</p>
+                  <p className="text-shamiri-text-grey">N/A</p>
                 </div>
               </AccordionContent>
             </AccordionItem>
