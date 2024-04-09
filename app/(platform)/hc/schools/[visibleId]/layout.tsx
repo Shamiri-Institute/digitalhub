@@ -146,9 +146,7 @@ export default async function SchoolViewLayout({
               <AccordionTrigger>Information</AccordionTrigger>
               <AccordionContent className="space-y-3 text-sm font-medium leading-5">
                 <div>
-                  <p className="text-shamiri-black" s>
-                    Type
-                  </p>
+                  <p className="text-shamiri-black">Type</p>
                   <p className="text-shamiri-text-grey">{school?.schoolType}</p>
                 </div>
                 <div>
