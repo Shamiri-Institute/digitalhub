@@ -108,7 +108,7 @@ export function RefferedCasesTab({
   }
 
   return (
-    <Card className="pr-3.5bg-white my-2 flex  items-center justify-between gap-5 p-4">
+    <Card className="my-2 flex items-center justify-between  gap-5 bg-white p-4 pr-3.5">
       <p className="text-base font-medium text-brand">{name}</p>
       <span className="text-sm font-normal text-muted-foreground">
         {handleWordLimit(referralNotes, 50)}
