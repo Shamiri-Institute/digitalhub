@@ -89,7 +89,11 @@ export default async function SchoolsPage() {
       />
       <Separator />
       <div className="pt-5">
-        <SchoolsDataTable data={data} columns={columns} />
+        <SchoolsDataTable
+          data={data}
+          columns={columns}
+          emptyStateMessage="No schools found for this hub"
+        />
       </div>
     </>
   );
