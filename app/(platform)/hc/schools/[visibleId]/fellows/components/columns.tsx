@@ -20,7 +20,11 @@ import React from "react";
 export type SchoolFellowTableData = Prisma.FellowGetPayload<{
   include: {
     groups: true;
-    supervisor: true;
+    supervisor: {
+      include: {
+        fellows: true;
+      };
+    };
     weeklyFellowRatings: true;
   };
 }>;

@@ -19,7 +19,11 @@ export default async function FellowsPage({
     },
     include: {
       groups: true,
-      supervisor: true,
+      supervisor: {
+        include: {
+          fellows: true,
+        },
+      },
       weeklyFellowRatings: true,
     },
   });
