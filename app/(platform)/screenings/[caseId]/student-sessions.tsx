@@ -19,23 +19,13 @@ export function Sessions({
 }) {
   return (
     <div className="flex flex-col">
-      <Card className="pr-3.5bg-white my-2 w-full gap-5 p-4">
-        <div className="mb-2 flex flex-1 justify-between">
-          <p className="flex-1 text-base font-medium text-muted-foreground">
-            No.
-          </p>
-          <p className="flex-1 text-base font-medium text-muted-foreground">
-            Created
-          </p>
-          <p className="flex-1 text-base font-medium text-muted-foreground">
-            Session
-          </p>
-          <p className="flex-1 text-base font-medium text-muted-foreground">
-            Session Date
-          </p>
-          <p className="flex-1 text-right text-base font-medium text-muted-foreground">
-            Updated
-          </p>
+      <Card className="my-2 w-full gap-5 bg-white p-4 pr-3.5">
+        <div className="mb-2 flex flex-1 justify-between text-base font-medium text-muted-foreground">
+          <p className="flex-1">No.</p>
+          <p className="flex-1">Created</p>
+          <p className="flex-1">Session</p>
+          <p className="flex-1">Session Date</p>
+          <p className="flex-1 text-right">Updated</p>
         </div>
         <Separator />
         <>
@@ -89,16 +79,12 @@ function SessionsCard({
 }) {
   return (
     <div className="border-b pb-1 last:border-none">
-      <div className="mt-2 flex flex-col sm:flex-row">
-        <p className="flex-1 text-sm  text-brand">{id + 1}.</p>
-        <p className="flex-1 text-sm text-brand">
-          {new Date(createdAt).toLocaleDateString()}
-        </p>
-        <p className="flex-1 text-sm  text-brand">{session}</p>
-        <p className="flex-1 text-sm  text-brand">
-          {new Date(date).toLocaleDateString()}
-        </p>
-        <p className="flex-1 text-left  text-sm   text-brand sm:text-right">
+      <div className="mt-2 flex flex-col text-sm text-brand sm:flex-row">
+        <p className="flex-1">{id + 1}.</p>
+        <p className="flex-1">{new Date(createdAt).toLocaleDateString()}</p>
+        <p className="flex-1">{session}</p>
+        <p className="flex-1">{new Date(date).toLocaleDateString()}</p>
+        <p className="flex-1 text-left sm:text-right">
           {new Date(updatedAt).toLocaleDateString()}
         </p>
       </div>
