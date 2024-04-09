@@ -87,7 +87,9 @@ export const columns: ColumnDef<SchoolFellowTableData>[] = [
   {
     // TODO: add component for displaying this
     header: "Supervisor",
-    accessorFn: (row) => row.supervisor?.supervisorName,
+    cell: ({ row }) => (
+      <Badge variant="default">{row.original.supervisor?.supervisorName}</Badge>
+    ),
   },
   // TODO: confirm what will be showed for number of schools
   {
