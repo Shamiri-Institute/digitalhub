@@ -113,8 +113,8 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
       data: {
         dropoutReason: data.dropoutReason,
         droppedOut: true,
-        droppedOutAt: new Date(),
-        droppedOutBy: hubCoordinator.id,
+        // droppedOutAt: new Date(), TODO: add this column
+        // droppedOutBy: hubCoordinator.id, TODO: add this column
       },
       where: {
         id: data.schoolId,
