@@ -58,7 +58,26 @@ export default async function SchoolViewLayout({
           </h2>
         </div>
         <Separator />
-        <div>Session pills go here</div>
+        <div className="flex w-full items-center justify-around self-stretch rounded-lg border-shamiri-light-grey bg-background-secondary text-center">
+          <div>
+            <p className="text-sm font-medium leading-5 text-shamiri-text-grey">
+              Sessions
+            </p>
+            <p>{school?._count.interventionSessions}</p>
+          </div>
+          <div className="border-x-1-shamiri-light-grey">
+            <p className="text-sm font-medium leading-5 text-shamiri-text-grey">
+              Fellows
+            </p>
+            <p>{school?._count.interventionGroups}</p>
+          </div>
+          <div>
+            <p className="text-sm font-medium leading-5 text-shamiri-text-grey">
+              Students
+            </p>
+            <p>{school?._count.students}</p>
+          </div>
+        </div>
         <div>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="contact-information">
