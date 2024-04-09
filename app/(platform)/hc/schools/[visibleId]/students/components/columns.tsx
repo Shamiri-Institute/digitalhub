@@ -21,11 +21,11 @@ export type SchoolStudentTableData = Prisma.StudentGetPayload<{
   include: {
     clinicalCases: {
       include: {
-        sessions: true
-      }
-    }
-    assignedGroup: true,
-  }
+        sessions: true;
+      };
+    };
+    assignedGroup: true;
+  };
 }>;
 
 function MenuItem({
@@ -82,7 +82,8 @@ export const columns: ColumnDef<SchoolStudentTableData>[] = [
   },
   {
     header: "Clinical Sessions",
-    accessorFn: (row) => row.clinicalCases?.reduce((acc, val) => acc + val.sessions.length, 0)
+    accessorFn: (row) =>
+      row.clinicalCases?.reduce((acc, val) => acc + val.sessions.length, 0),
   },
   {
     header: "Gender",
@@ -98,15 +99,15 @@ export const columns: ColumnDef<SchoolStudentTableData>[] = [
   },
   {
     header: "Stream",
-    accessorKey: "stream"
+    accessorKey: "stream",
   },
   {
     header: "Class/Form",
-    accessorKey: 'form',
+    accessorKey: "form",
   },
   {
     header: "Date added",
-    accessorFn: (row) => format(row.createdAt, 'dd/MM/yyyy')
+    accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
   },
   {
     id: "actions",
@@ -120,15 +121,15 @@ export const columns: ColumnDef<SchoolStudentTableData>[] = [
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            Edit Information
-          </DropdownMenuItem>
+          <DropdownMenuItem>Edit Information</DropdownMenuItem>
           <DropdownMenuItem>Mark Student Attendance</DropdownMenuItem>
           <DropdownMenuItem>View group transfer history</DropdownMenuItem>
           <DropdownMenuItem>View attendance history</DropdownMenuItem>
           <DropdownMenuItem>Add clinical case</DropdownMenuItem>
           <DropdownMenuItem>Reporting notes</DropdownMenuItem>
-          <DropdownMenuItem><div className="text-shamiri-red">Drop-out student</div></DropdownMenuItem>
+          <DropdownMenuItem>
+            <div className="text-shamiri-red">Drop-out student</div>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     ),

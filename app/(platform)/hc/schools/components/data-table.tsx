@@ -36,7 +36,8 @@ interface DataTableProps<TData, TValue> {
 export default function DataTable<TData, TValue>({
   columns,
   data,
-}: DataTableProps<TData, TValue>) {
+  emptyStateMessage,
+}: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
@@ -133,7 +134,9 @@ export default function DataTable<TData, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length}>No schools found</TableCell>
+              <TableCell colSpan={columns.length}>
+                {emptyStateMessage}
+              </TableCell>
             </TableRow>
           )}
         </TableBody>
