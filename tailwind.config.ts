@@ -43,6 +43,7 @@ export const config: Config = {
         "shamiri-dark-blue": "#002244",
         "shamiri-text-grey": "#969696",
         "shamiri-text-dark-grey": "#585757",
+        "shamiri-light-grey": "#E8E8E8",
         "shamiri-graph-green": "#00BA34",
         "shamiri-graph-yellow": "#FACC15",
         "shamiri-graph-purple": "#8B2CE9",

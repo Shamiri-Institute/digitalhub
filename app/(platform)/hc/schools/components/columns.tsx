@@ -15,6 +15,7 @@ import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import format from "date-fns/format";
 import { MoreHorizontal } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 import { DropoutSchool } from "../../components/dropout-school-form";
 
@@ -137,10 +138,14 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>View school</DropdownMenuItem>
+          <DropdownMenuItem>
+            <Link href={`/hc/schools/${row.original.visibleId}`}>
+              View school
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem>Edit school information</DropdownMenuItem>
           <DropdownMenuItem>Assign point supervisor</DropdownMenuItem>
-          {!row.original.droppedOutAt ? (
+          {!row.original.droppedOut ? (
             <MenuItem className="text-shamiri-red">
               <DropoutSchool
                 schoolId={row.original.id}
