@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
@@ -66,7 +67,12 @@ export const columns: ColumnDef<SchoolFellowTableData>[] = [
   // TODO: add average rating column
   {
     // TODO: add correct display component
-    accessorKey: "droppedOut",
+    cell: ({ row }) =>
+      row.original.droppedOutAt || row.original.droppedOut ? (
+        <Badge variant="destructive">Inactive</Badge>
+      ) : (
+        <Badge variant="shamiri-green">Active</Badge>
+      ),
     header: "Active Status",
   },
   // TODO:: confirm if we are showing groups the fellow is handling in the school
