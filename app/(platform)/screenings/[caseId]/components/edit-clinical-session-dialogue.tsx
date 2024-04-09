@@ -82,7 +82,6 @@ export function EditClinicalSessionDateDialog({
 
       form.reset();
       setDialogOpen(false);
-      window.location.href = `/screenings/${caseId}`;
     } catch (error) {
       console.error(error);
     }

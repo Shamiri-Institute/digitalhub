@@ -47,7 +47,6 @@ export function DeleteClinicalSessionDateDialog({
       });
 
       setDialogOpen(false);
-      window.location.href = `/screenings/${caseId}`;
     } catch (error) {
       console.error(error);
     } finally {
