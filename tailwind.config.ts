@@ -49,6 +49,9 @@ export const config: Config = {
         "shamiri-graph-purple": "#8B2CE9",
         "shamiri-red": "#DE5E68",
         "shamiri-black": "#1C1C1C",
+        "shamiri-light-green": "#E5F8EB",
+        "shamiri-green": "#00BA34",
+        "shamiri-border-green": "#CCF1D6",
         canvas: "hsl(var(--canvas))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
