@@ -73,7 +73,7 @@ export const columns: ColumnDef<SchoolStudentTableData>[] = [
     header: "Group No.",
   },
   {
-    accessorFn: (row) => `${row.age} yrs`,
+    accessorFn: (row) => (row.age || row.age === 0 ? `${row.age} yrs` : "N/A"),
     header: "Age",
   },
   {
