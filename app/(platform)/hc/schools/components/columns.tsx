@@ -145,7 +145,7 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
           </DropdownMenuItem>
           <DropdownMenuItem>Edit school information</DropdownMenuItem>
           <DropdownMenuItem>Assign point supervisor</DropdownMenuItem>
-          {!row.original.droppedOut ? (
+          {!row.original.droppedOut || !row.original.droppedOutAt ? (
             <MenuItem className="text-shamiri-red">
               <DropoutSchool
                 schoolId={row.original.id}

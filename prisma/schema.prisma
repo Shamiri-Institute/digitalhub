@@ -593,6 +593,8 @@ model School {
   longitude            Float?                @map("longitude")
   latitude             Float?                @map("latitude")
   droppedOut           Boolean?              @map("dropped_out")
+  droppedOutAt         DateTime?             @map("dropped_out_at") @db.Timestamptz()
+  // TODO: add column(s) for who dropped out the school
   dropoutReason        String?               @map("dropout_reason")
   assignedSupervisorId String?               @map("assigned_supervisor_id") @db.VarChar(255)
   assignedSupervisor   Supervisor?           @relation(fields: [assignedSupervisorId], references: [id])
@@ -603,22 +605,20 @@ model School {
   interventionGroups   InterventionGroup[]
   schoolImplementers   SchoolImplementer[]
 
-  preSessionDate              DateTime?       @map("pre_session_date") // TODO: remove after data migration
-  session1Date                DateTime?       @map("session_1_date") // TODO: remove after data migration
-  session2Date                DateTime?       @map("session_2_date") // TODO: remove after data migration
-  session3Date                DateTime?       @map("session_3_date") // TODO: remove after data migration
-  session4Date                DateTime?       @map("session_4_date") // TODO: remove after data migration
-  clinicalFollowup1Date       DateTime?       @map("clinical_followup_1_date") // TODO: remove after data migration
-  clinicalFollowup2Date       DateTime?       @map("clinical_followup_2_date") // TODO: remove after data migration
-  clinicalFollowup3Date       DateTime?       @map("clinical_followup_3_date") // TODO: remove after data migration
-  clinicalFollowup4Date       DateTime?       @map("clinical_followup_4_date") // TODO: remove after data migration
-  clinicalFollowup5Date       DateTime?       @map("clinical_followup_5_date") // TODO: remove after data migration
-  clinicalFollowup6Date       DateTime?       @map("clinical_followup_6_date") // TODO: remove after data migration
-  clinicalFollowup7Date       DateTime?       @map("clinical_followup_7_date") // TODO: remove after data migration
-  clinicalFollowup8Date       DateTime?       @map("clinical_followup_8_date") // TODO: remove after data migration
-  dataCollectionFollowup1Date DateTime?       @map("data_collection_followup_1_date") // TODO: remove after data migration
-  HubCoordinator              HubCoordinator? @relation(fields: [hubCoordinatorId], references: [id])
-  hubCoordinatorId            String?         @db.VarChar(255)
+  preSessionDate              DateTime? @map("pre_session_date") // TODO: remove after data migration
+  session1Date                DateTime? @map("session_1_date") // TODO: remove after data migration
+  session2Date                DateTime? @map("session_2_date") // TODO: remove after data migration
+  session3Date                DateTime? @map("session_3_date") // TODO: remove after data migration
+  session4Date                DateTime? @map("session_4_date") // TODO: remove after data migration
+  clinicalFollowup1Date       DateTime? @map("clinical_followup_1_date") // TODO: remove after data migration
+  clinicalFollowup2Date       DateTime? @map("clinical_followup_2_date") // TODO: remove after data migration
+  clinicalFollowup3Date       DateTime? @map("clinical_followup_3_date") // TODO: remove after data migration
+  clinicalFollowup4Date       DateTime? @map("clinical_followup_4_date") // TODO: remove after data migration
+  clinicalFollowup5Date       DateTime? @map("clinical_followup_5_date") // TODO: remove after data migration
+  clinicalFollowup6Date       DateTime? @map("clinical_followup_6_date") // TODO: remove after data migration
+  clinicalFollowup7Date       DateTime? @map("clinical_followup_7_date") // TODO: remove after data migration
+  clinicalFollowup8Date       DateTime? @map("clinical_followup_8_date") // TODO: remove after data migration
+  dataCollectionFollowup1Date DateTime? @map("data_collection_followup_1_date") // TODO: remove after data migration
 
   @@map("schools")
 }
@@ -685,7 +685,6 @@ model HubCoordinator {
   assignedHubId         String?                @map("assigned_hub_id") @db.VarChar(255)
   assignedHub           Hub?                   @relation(fields: [assignedHubId], references: [id])
   reimbursementRequests ReimbursementRequest[]
-  droppedOutSchools     School[]
   weeklyHubReports      WeeklyHubReport[]
 
   @@map("hub_coordinators")
