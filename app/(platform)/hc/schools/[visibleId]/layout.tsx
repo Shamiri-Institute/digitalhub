@@ -40,15 +40,16 @@ export default async function SchoolViewLayout({
     },
   });
 
-  const avatarContent = school?.schoolName
-    .split(" ")
-    .filter((i) => i.toLowerCase() !== "school")
-    .map((i) => i[0]?.toUpperCase())
-    .join("");
+  const avatarContent =
+    school?.schoolName
+      .split(" ")
+      .filter((i) => i.toLowerCase() !== "school")
+      .map((i) => i[0]?.toUpperCase())
+      .join("") ?? "N/A";
 
   return (
     <div className="flex">
-      <div className="space-y-6 border-r-shamiri-light-grey px-6 py-8">
+      <div className="space-y-6 border-r border-solid border-shamiri-light-grey px-6 py-8">
         <div className="flex items-center gap-x-4">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-shamiri-new-light-blue p-[18px] text-xl font-semibold text-shamiri-new-blue">
             {avatarContent}
@@ -58,14 +59,14 @@ export default async function SchoolViewLayout({
           </h2>
         </div>
         <Separator />
-        <div className="flex w-full items-center justify-around self-stretch rounded-lg border-shamiri-light-grey bg-background-secondary text-center">
+        <div className="grid grid-cols-3 justify-items-stretch divide-x divide-shamiri-light-grey rounded-lg border border-shamiri-light-grey bg-background-secondary text-center">
           <div>
             <p className="text-sm font-medium leading-5 text-shamiri-text-grey">
               Sessions
             </p>
             <p>{school?._count.interventionSessions}</p>
           </div>
-          <div className="border-x-1-shamiri-light-grey">
+          <div>
             <p className="text-sm font-medium leading-5 text-shamiri-text-grey">
               Fellows
             </p>
