@@ -1,6 +1,6 @@
-import { Fellow, School, Supervisor } from "@prisma/client";
+import { Fellow, School, SessionStatus, Supervisor } from "@prisma/client";
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { addDays, addWeeks, setHours, setMinutes } from "date-fns";
+import { addDays, addHours, addWeeks, setHours, setMinutes } from "date-fns";
 import { describe, expect, test, vi } from "vitest";
 
 import { FellowAttendanceDot } from "#/app/(platform)/schools/[visibleId]/fellow-attendance-dot";
@@ -191,6 +191,9 @@ function generateFellowAttendanceDotProps({
         updatedAt: new Date("2024-01-23T09:34:41.351Z"),
         archivedAt: null,
         sessionDate: sessionDate,
+        sessionEndTime: addHours(sessionDate, 1.5),
+        scheduleHistory: JSON.stringify({}),
+        status: SessionStatus.Scheduled,
         sessionName: "Session 3",
         sessionType: "s3",
         schoolId: "sch_01hmttqzhgerar24yk4gdj90mn",

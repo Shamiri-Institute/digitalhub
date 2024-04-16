@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss";
 
-const config: Config = {
+export const config: Config = {
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -33,12 +33,25 @@ const config: Config = {
         },
         "background-secondary": "#F7F7F7",
         "shamiri-light-red": "#E92C2C",
+        "shamiri-light-red-background-base": "#FF3B3B",
         "shamiri-blue": "#0474bc", // DEPRECATED: switch shamiri-blue to shamiri-new-blue
         "shamiri-new-blue": "#0085FF",
+        "shamiri-new-light-blue": "#E5F3FF",
+        "shamiri-new-lighter-blue": "#CCE7FF",
         "shamiri-blue-darker": "#045e96",
         "shamiri-light-blue": "#b0d5ea",
         "shamiri-dark-blue": "#002244",
+        "shamiri-text-grey": "#969696",
+        "shamiri-text-dark-grey": "#585757",
+        "shamiri-light-grey": "#E8E8E8",
+        "shamiri-graph-green": "#00BA34",
+        "shamiri-graph-yellow": "#FACC15",
+        "shamiri-graph-purple": "#8B2CE9",
         "shamiri-red": "#DE5E68",
+        "shamiri-black": "#1C1C1C",
+        "shamiri-light-green": "#E5F8EB",
+        "shamiri-green": "#00BA34",
+        "shamiri-border-green": "#CCF1D6",
         canvas: "hsl(var(--canvas))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -74,7 +87,19 @@ const config: Config = {
           "foreground-accent": "hsl(var(--active-card-foreground-accent))",
         },
         // From Figma
-        "light-grey": "rgba(173, 173, 173, 1)",
+        grey: "rgba(173, 173, 173, 1)",
+        "grey-c3": "rgba(150, 150, 150, 1)", // Light/Grayscale/Content 3
+        "grey-border": "rgba(232, 232, 232, 1)", // Light/Grayscale/Border
+        "grey-bg": "rgba(252, 252, 252, 1)", // BG/Gray
+        "green-border": "rgba(204, 241, 214, 1)", // Light/Green/Border
+        "green-bg": "rgba(229, 248, 235, 1)", // Light/Green/Background
+        "green-base": "rgba(0, 186, 52, 1)", // Light/Green/Base
+        "blue-border": "rgba(204, 231, 255, 1)", // Light/Blue/Border
+        "blue-bg": "rgba(229, 243, 255, 1)", // Light/Blue/Background
+        "blue-base": "rgba(0, 133, 255, 1)", // Light/Blue/Base
+        "red-border": "hsl(359, 85%, 90%)", // Light/Red/Border
+        "red-bg": "hsla(0, 100%, 62%, 0.1)", // Light/Red/Background
+        "red-base": "hsla(0, 81%, 54%, 1)", // Light/Red/Base
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -107,6 +132,6 @@ const config: Config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-};
+} as const;
 
 export default config;
