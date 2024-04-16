@@ -137,7 +137,9 @@ export async function getCurrentUser() {
   return { session, user, membership, personnelRole };
 }
 
-export async function getCurrentPersonnel(): Promise<CurrentSupervisor | null> {
+export async function getCurrentPersonnel(): Promise<
+  CurrentSupervisor | CurrentHubCoordinator | null
+> {
   const user = await getCurrentUser();
   if (!user) {
     return null;
@@ -150,6 +152,10 @@ export async function getCurrentPersonnel(): Promise<CurrentSupervisor | null> {
 
   if (personnelRole === "supervisor") {
     return await currentSupervisor();
+  }
+
+  if (personnelRole === "hc") {
+    return await currentHubCoordinator();
   }
 
   return null;
