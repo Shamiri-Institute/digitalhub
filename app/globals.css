@@ -72,3 +72,37 @@
     scrollbar-width: none; /* Firefox */
   }
 }
+
+/* adjustments for react-aria */
+/* TODO: make more specific to avoid collisions with non react-aria tables */
+@layer base {
+  tbody > td[role="gridcell"] {
+    padding: 0;
+  }
+
+  tbody > tr:last-child {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-color: #e8e8e8;
+  }
+
+  tbody td[role="gridcell"]:last-child {
+    border-right-width: 1px;
+    border-right-style: solid;
+    border-color: #e8e8e8;
+  }
+
+  tbody > tr:last-child > td[role="gridcell"] {
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-color: #e8e8e8;
+  }
+
+  tbody > tr:last-child > td[role="gridcell"]:last-child {
+    border-bottom-right-radius: 7px;
+  }
+
+  tbody > tr:last-child > td[role="gridcell"]:first-child {
+    border-bottom-left-radius: 7px;
+  }
+}

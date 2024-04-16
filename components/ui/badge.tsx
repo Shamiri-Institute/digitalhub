@@ -3,18 +3,21 @@ import * as React from "react";
 
 import { cn } from "#/lib/utils";
 
+// TODO: FONT FIGTREE
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-md border px-1.5 py-0.5 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 leading-5",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
+          "border-shamiri-new-blue bg-shamiri-new-light-blue text-shamiri-new-blue",
         secondary:
           "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
+          "text-shamiri-light-red bg-shamiri-light-red-background-base/[.1] border-shamiri-light-red",
         outline: "text-foreground",
+        "shamiri-green":
+          "bg-shamiri-light-green border-shamiri-green text-shamiri-green",
       },
     },
     defaultVariants: {
