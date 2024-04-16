@@ -1,21 +1,31 @@
 "use client";
 
-import { useRef } from "react";
-import { useCalendarCell, useDateFormatter, useLocale } from "react-aria";
+import { CalendarDate } from "@internationalized/date";
+import { useEffect, useRef, useState } from "react";
+import {
+  useCalendar,
+  useCalendarCell,
+  useDateFormatter,
+  useLocale,
+} from "react-aria";
 import { CalendarState } from "react-stately";
 
 import { cn } from "#/lib/utils";
-import { CalendarDate } from "@internationalized/date";
+
 import { SessionList } from "./session-list";
 import { useSessions } from "./sessions-provider";
+import { useTitle } from "./title-provider";
 
 export function DayView({ state }: { state: CalendarState }) {
   const ref = useRef();
   const { locale } = useLocale();
+  const { calendarProps, prevButtonProps, nextButtonProps } = useCalendar(
+    {},
+    state,
+  );
+
   const dayFormatter = useDateFormatter({ weekday: "long" });
 
-  // Assuming you have a way to determine the current day
-  console.log({ state });
   const currentDate = state.visibleRange.start;
 
   // 6 AM - 6 PM session scheduling window
@@ -27,14 +37,29 @@ export function DayView({ state }: { state: CalendarState }) {
     return `${hourIn12HourFormat}:00 ${period}`;
   }
 
+  const [headerLabel, setHeaderLabel] = useState("");
+  useEffect(() => {
+    setHeaderLabel(
+      `${currentDate.day} - ${dayFormatter.format(currentDate.toDate(state.timeZone))}`,
+    );
+  }, [currentDate, dayFormatter, state.timeZone]);
+
+  const { setTitle } = useTitle();
+  const titleFormatter = useDateFormatter({
+    day: "numeric",
+    month: "long",
+  });
+  useEffect(() => {
+    setTitle(`${titleFormatter.format(currentDate.toDate(state.timeZone))}`);
+  }, [currentDate, setTitle, state.timeZone, titleFormatter]);
+
   return (
     <table className="block border-separate overflow-hidden rounded-[0.4375rem] border border-grey-border [border-spacing:0]">
       <thead className="block">
         <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
           <th className="w-[103px] px-4 py-3"></th>
-          <th className="relative flex w-[141px] shrink-0 items-center justify-between px-4 py-3 text-left xl:w-[186px]">
-            {currentDate.day} -{" "}
-            {dayFormatter.format(currentDate.toDate(state.timeZone))}
+          <th className="relative flex w-[141px] shrink-0 items-center justify-between px-4 py-3 text-left text-blue-base xl:w-[186px]">
+            {headerLabel}&#8203;
           </th>
         </tr>
       </thead>
@@ -45,7 +70,7 @@ export function DayView({ state }: { state: CalendarState }) {
               className={cn(
                 "flex truncate border-t border-grey-border bg-grey-bg px-4 py-3 text-grey-c3",
                 "h-[85px] xl:h-[112px]",
-                "w-[103px]",
+                "w-[103px] shrink-0",
                 "text-sm",
                 {
                   "border-t-0": rowIdx === 0,
@@ -54,10 +79,10 @@ export function DayView({ state }: { state: CalendarState }) {
             >
               {formatHour(hour)}
             </td>
-            <CalendarCell
+            <DayCalendarCell
               rowIdx={rowIdx}
               hour={hour}
-              date={currentDate}
+              date={state.value}
               state={state}
             />
           </tr>
@@ -67,7 +92,7 @@ export function DayView({ state }: { state: CalendarState }) {
   );
 }
 
-function CalendarCell({
+function DayCalendarCell({
   rowIdx,
   hour,
   date,
@@ -85,11 +110,11 @@ function CalendarCell({
   const { sessions } = useSessions({ date, hour });
 
   return (
-    <td {...cellProps} className="p-0">
+    <td {...cellProps} className="w-full p-0">
       <div
         {...buttonProps}
         ref={ref}
-        className={cn("cell", {
+        className={cn("cell w-full", {
           selected: isSelected,
           disabled: isDisabled,
           unavailable: isUnavailable,
@@ -100,7 +125,7 @@ function CalendarCell({
             "flex flex-col gap-[8px] overflow-y-scroll",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
             "h-[85px] xl:h-[112px]",
-            "w-[140px] xl:w-[185px]",
+            "w-full",
             "border-t border-grey-border",
             { "border-t-0": rowIdx === 0 },
           )}

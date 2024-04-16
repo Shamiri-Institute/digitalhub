@@ -77,7 +77,7 @@ export function WeekView({ state }: { state: CalendarState }) {
             .getDatesInWeek(0)
             .map((date, i) =>
               date ? (
-                <CalendarHeaderCell
+                <WeekCalendarHeaderCell
                   key={i}
                   date={date}
                   state={state}
@@ -109,7 +109,7 @@ export function WeekView({ state }: { state: CalendarState }) {
               .getDatesInWeek(0)
               .map((date, colIdx) =>
                 date ? (
-                  <CalendarCell
+                  <WeekCalendarCell
                     key={colIdx}
                     rowIdx={rowIdx}
                     hour={hour}
@@ -127,7 +127,7 @@ export function WeekView({ state }: { state: CalendarState }) {
   );
 }
 
-function CalendarHeaderCell({
+function WeekCalendarHeaderCell({
   date,
   state,
   dayFormatter,
@@ -166,7 +166,7 @@ function CalendarHeaderCell({
   );
 }
 
-function CalendarCell({
+function WeekCalendarCell({
   rowIdx,
   hour,
   date,

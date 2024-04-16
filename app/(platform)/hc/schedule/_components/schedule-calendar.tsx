@@ -14,9 +14,10 @@ import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
+import { useSearchParams } from "next/navigation";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
-import { ModeProvider, useMode } from "./mode-provider";
+import { ModeProvider, useMode, type Mode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
 import { SessionsProvider } from "./sessions-provider";
@@ -33,6 +34,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const { locale } = useLocale();
   const monthState = useCalendarState({
     ...calendarStateProps,
+    value: today(getLocalTimeZone()),
     locale,
     createCalendar,
   });
@@ -46,6 +48,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   const dayState = useCalendarState({
     value: today(getLocalTimeZone()),
+    visibleDuration: { days: 1 },
     locale,
     createCalendar,
   });
@@ -55,9 +58,12 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     monthState,
   );
 
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode") ?? "week";
+
   return (
     <SessionsProvider hubId={hubId}>
-      <ModeProvider>
+      <ModeProvider defaultMode={mode as Mode}>
         <TitleProvider>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-6">
@@ -128,7 +134,11 @@ function CalendarView({
         <div>Loading...</div>
       );
     case "day":
-      return <DayView {...dayProps} />;
+      return dayProps.state.value ? (
+        <DayView {...dayProps} />
+      ) : (
+        <div>Loading...</div>
+      );
     case "list":
       return <ListView {...listProps} />;
     case "table":

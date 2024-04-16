@@ -453,7 +453,124 @@ const ids = {
                       gender: "F",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
-                      assignedGroupId: "08G1",
+                      assignedGroupId: "09G1",
+                    },
+                  },
+                },
+
+                ANS24_School_10: {
+                  id: objectId("sch"),
+                  visibleId: "ANS24_School_10",
+                  schoolName: "Jamhuri High School",
+                  schoolType: "Extra county",
+                  schoolEmail: "jamhuri@example.com",
+                  schoolCounty: "Nairobi",
+                  schoolDemographics: "Boys",
+                  pointPersonId: "000",
+                  pointPersonName: "Dennis Ondari",
+                  pointPersonPhone: "718312099/0735520758",
+                  numbersExpected: 674,
+                  principalName: "Duncan Juma",
+                  assignedSupervisorVisibleId: "SPV24_S_02",
+
+                  groups: {
+                    ANS24_Group_01: {
+                      id: "10G1",
+                      groupName: "G1",
+                      groupFellowVisibleId: "TFW24_S_01",
+                    },
+                  },
+
+                  sessions: {
+                    Session_01: {
+                      id: objectId("sess"),
+                      sessionType: "s0",
+                      status: SessionStatus.Cancelled,
+                      sessionName: "Presession",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), -1), 0),
+                        15,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), -1), 0), 15),
+                        1.5,
+                      ),
+                      sessionRating: 4,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_02: {
+                      id: objectId("sess"),
+                      sessionType: "s1",
+                      sessionName: "Session 01",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 0), 0),
+                        15,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 0), 0), 15),
+                        1.5,
+                      ),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_03: {
+                      id: objectId("sess"),
+                      sessionType: "s2",
+                      sessionName: "Session 02",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 7), 0),
+                        17,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 7), 0), 17),
+                        1.5,
+                      ),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_04: {
+                      id: objectId("sess"),
+                      sessionType: "s3",
+                      sessionName: "Session 03",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 11), 0),
+                        18,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 11), 0), 18),
+                        1.5,
+                      ),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_05: {
+                      id: objectId("sess"),
+                      sessionType: "s4",
+                      sessionName: "Session 04",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 12), 0),
+                        18,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 12), 0), 18),
+                        1.5,
+                      ),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                  },
+
+                  students: {
+                    ANS24_10_Stu_01: {
+                      id: objectId("stu"),
+                      visibleId: "ANS24_10_Stu_01",
+                      studentName: "Daina Kathambi",
+                      admissionNumber: "ADM123",
+                      age: 17,
+                      gender: "F",
+                      condition: "Shamiri",
+                      fellowVisibleId: "TFW24_S_02",
+                      assignedGroupId: "10G1",
                     },
                   },
                 },

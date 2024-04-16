@@ -1,6 +1,11 @@
 import { CalendarDate, getWeeksInMonth } from "@internationalized/date";
-import { useRef } from "react";
-import { useCalendarCell, useCalendarGrid, useLocale } from "react-aria";
+import { useEffect, useRef } from "react";
+import {
+  useCalendarCell,
+  useCalendarGrid,
+  useDateFormatter,
+  useLocale,
+} from "react-aria";
 import type { CalendarGridProps } from "react-aria-components";
 import { CalendarState } from "react-stately";
 
@@ -8,6 +13,7 @@ import { cn } from "#/lib/utils";
 
 import { SessionList } from "./session-list";
 import { useSessions } from "./sessions-provider";
+import { useTitle } from "./title-provider";
 
 export function MonthView({
   state,
@@ -20,6 +26,17 @@ export function MonthView({
   const { gridProps, headerProps, weekDays } = useCalendarGrid(props, state);
 
   const weeksInMonth = getWeeksInMonth(state.visibleRange.start, locale);
+
+  const { setTitle } = useTitle();
+  const titleFormatter = useDateFormatter({
+    month: "long",
+    year: "numeric",
+  });
+  useEffect(() => {
+    if (state.value) {
+      setTitle(`${titleFormatter.format(state.value.toDate(state.timeZone))}`);
+    }
+  }, [setTitle, state.timeZone, state.value, titleFormatter]);
 
   return (
     <table
@@ -42,7 +59,7 @@ export function MonthView({
               .getDatesInWeek(weekIndex)
               .map((date, i) =>
                 date ? (
-                  <CalendarCell key={i} state={state} date={date} />
+                  <MonthCalendarCell key={i} state={state} date={date} />
                 ) : (
                   <td key={i} />
                 ),
@@ -54,7 +71,7 @@ export function MonthView({
   );
 }
 
-export function CalendarCell({
+export function MonthCalendarCell({
   state,
   date,
 }: {
