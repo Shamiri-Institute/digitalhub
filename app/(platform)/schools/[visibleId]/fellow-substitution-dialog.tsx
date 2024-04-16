@@ -46,10 +46,12 @@ const FormSchema = z.object({
 
 export function FellowSubstitutionDialog({
   fellow,
+  schoolId,
   children,
   close,
 }: {
   fellow: Prisma.FellowGetPayload<{}>;
+  schoolId: string;
   children: React.ReactNode;
   close: () => void;
 }) {
@@ -95,6 +97,7 @@ export function FellowSubstitutionDialog({
       const fellowSessions = fellowAttendances
         .map((attendance) => attendance.session)
         .filter(notEmpty)
+        .filter((session) => session.schoolId === schoolId)
         .map((session) => ({
           ...session,
           fellowAttendanceId: fellowAttendances.find(
@@ -106,7 +109,7 @@ export function FellowSubstitutionDialog({
     }
 
     initFellowAttendances();
-  }, [fellow.id]);
+  }, [fellow.id, schoolId]);
 
   const [supervisors, setSupervisors] =
     React.useState<Prisma.SupervisorGetPayload<{}>[]>();
@@ -191,7 +194,7 @@ export function FellowSubstitutionDialog({
                             }
                           />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-64 overflow-y-auto">
                           {fellowInterventionSessions.map((session) => (
                             <SelectItem
                               key={session.fellowAttendanceId}
@@ -239,7 +242,7 @@ export function FellowSubstitutionDialog({
                             }
                           />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-64 overflow-y-auto">
                           {supervisors?.map((supervisor) => (
                             <SelectItem
                               key={supervisor.id}
@@ -279,7 +282,7 @@ export function FellowSubstitutionDialog({
                             }
                           />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-64 overflow-y-auto">
                           {fellows?.map((fellow) => (
                             <SelectItem key={fellow.id} value={fellow.id}>
                               {fellow.fellowName} - {fellow.visibleId}

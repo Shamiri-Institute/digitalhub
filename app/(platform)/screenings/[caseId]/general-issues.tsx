@@ -1,64 +1,85 @@
-import { updateClinicalCaseGeneralPresentingIssue } from "#/app/actions";
+import { CurrentCase } from "#/app/(platform)/screenings/screen";
+import {
+  updateClinicalCaseGeneralPresentingIssue,
+  updateClinicalCaseGeneralPresentingIssueOtherField,
+} from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
 import { Input } from "#/components/ui/input";
 import { Separator } from "#/components/ui/separator";
+import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import {
-  ClinicalScreeningInfo,
-  ClinicalSessionAttendance,
-  Student,
-} from "@prisma/client";
-import { useState } from "react";
 
-type CurrentCase = ClinicalScreeningInfo & {
-  student: Student;
-  sessions: ClinicalSessionAttendance[];
-};
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 export default function GeneralIssues({
   currentcase,
 }: {
   currentcase: CurrentCase;
 }) {
-  const [selected, setSelected] = useState<string>(
-    currentcase.generalPresentingIssues || "",
-  );
-  const [other, setOther] = useState<string>(
+  const { toast } = useToast();
+
+  const [selected, setSelected] = useState<CurrentCase>(currentcase);
+  const [otherText, setOther] = useState<string>(
     currentcase.generalPresentingIssuesOtherSpecified || "",
   );
+  const [otherOption, setOtherOption] = useState<boolean>(
+    currentcase.generalPresentingIssuesOtherSpecified ? true : false,
+  );
+  const [addingNote, setAddingNote] = useState<boolean>(false);
 
   const handleOther = (e: React.ChangeEvent<HTMLInputElement>) => {
     setOther(e.target.value);
   };
 
-  const handleOption = async (option: string) => {
-    setSelected(option);
+  const handleOption = async (option: { [key: string]: boolean }) => {
+    setSelected({
+      ...selected,
+      ...option,
+    });
+
     try {
-      if (option !== "Other") {
+      if (!option.others) {
         await updateClinicalCaseGeneralPresentingIssue(
           currentcase.id,
           option,
-          other,
+          otherText,
         );
       }
+      toast({
+        variant: "default",
+        title: "Changes Saved Successfully",
+      });
     } catch (error) {
-      console.log(error);
+      toast({
+        variant: "destructive",
+        title: "Error saving changes. Please try again.",
+      });
+      console.error(error);
     }
   };
 
   const handleOtherOption = async () => {
     try {
-      if (other.trim() === currentcase.generalPresentingIssuesOtherSpecified) {
+      if (
+        otherText.trim() === currentcase.generalPresentingIssuesOtherSpecified
+      ) {
         return;
       }
-      await updateClinicalCaseGeneralPresentingIssue(
+      setAddingNote(true);
+      await updateClinicalCaseGeneralPresentingIssueOtherField(
         currentcase.id,
-        selected,
-        other.trim(),
+        otherText,
       );
+      toast({
+        variant: "default",
+        title: "Note Added Successfully",
+      });
     } catch (error) {
-      console.log(error);
+      console.error(error);
+    } finally {
+      setAddingNote(false);
     }
   };
 
@@ -68,51 +89,116 @@ export default function GeneralIssues({
       <h3 className="mb-2 mt-3 text-sm font-medium text-muted-foreground">
         General
       </h3>
+
       <div className="flex flex-col">
         <div className="my-1 flex gap-2">
           <GeneralOption
-            option="Academic challenges"
-            selected={selected}
+            option="Academic Struggles"
+            valKey="academicStruggles"
+            selected={selected?.academicStruggles ?? false}
+            setSelected={handleOption}
+          />
+
+          <GeneralOption
+            option="Home Environment"
+            valKey="homeEnvironment"
+            selected={selected?.homeEnvironment ?? false}
             setSelected={handleOption}
           />
           <GeneralOption
-            option="Family issues"
-            selected={selected}
-            setSelected={handleOption}
-          />
-          <GeneralOption
-            option="Peer pressure"
-            selected={selected}
+            option="Anxiety"
+            selected={selected?.anxiety ?? false}
+            valKey="anxiety"
             setSelected={handleOption}
           />
         </div>
         <div className="my-1 flex gap-2">
           <GeneralOption
-            option="Romantic r/ship issues"
-            selected={selected}
+            option="Blended Family Dynamics"
+            valKey="blendedFamilyDynamics"
+            selected={selected?.blendedFamilyDynamics ?? false}
             setSelected={handleOption}
           />
           <GeneralOption
-            option="Self-esteem issues"
-            selected={selected}
+            option="Parent-Child Relationships"
+            valKey="parentChildRelationships"
+            selected={selected?.parentChildRelationships ?? false}
             setSelected={handleOption}
           />
           <GeneralOption
-            option="Other"
-            selected={selected}
+            option="Student-Teacher Relationships"
+            valKey="studentTeacherRelationships"
+            selected={selected?.studentTeacherRelationships ?? false}
             setSelected={handleOption}
+          />
+        </div>
+        <div className="my-1 flex gap-2">
+          <GeneralOption
+            option="Unresolved Grief/Loss"
+            valKey="unresolvedGriefLoss"
+            selected={selected?.unresolvedGriefLoss ?? false}
+            setSelected={handleOption}
+          />
+          <GeneralOption
+            option="Medical Condition"
+            valKey="medicalCondition"
+            selected={selected?.medicalCondition ?? false}
+            setSelected={handleOption}
+          />
+          <GeneralOption
+            option="Self-Perception"
+            valKey="selfPerception"
+            selected={selected?.selfPerception ?? false}
+            setSelected={handleOption}
+          />
+        </div>
+
+        <div className="my-1 flex gap-2">
+          <GeneralOption
+            option="Self-Regulation"
+            valKey="selfRegulation"
+            selected={selected?.selfRegulation ?? false}
+            setSelected={handleOption}
+          />
+          <GeneralOption
+            option="Peer Relationships"
+            valKey="peerRelationships"
+            selected={selected?.peerRelationships ?? false}
+            setSelected={handleOption}
+          />
+
+          <GeneralOption
+            option="Sexuality/ Sexual Identity"
+            selected={selected.sexuality ?? false}
+            setSelected={handleOption}
+            valKey="sexuality"
+          />
+        </div>
+
+        <div className="my-1 flex gap-2">
+          <GeneralOption
+            option="Non-Suicidal Self Injury"
+            selected={selected.nonSuicidalSelfInjury ?? false}
+            setSelected={handleOption}
+            valKey="nonSuicidalSelfInjury"
+          />
+          <GeneralOption
+            option="Others"
+            valKey="others"
+            selected={otherOption}
+            setSelected={() => setOtherOption(!otherOption)}
           />
         </div>
       </div>
 
-      {selected === "Other" && (
+      {otherOption && (
         <>
           <div className="mt-2 px-[1px]">
             <Input
               id="other"
               name="other"
               type="text"
-              value={other}
+              value={otherText}
               onChange={handleOther}
               placeholder="Other? Type here"
               className="resize-none bg-card"
@@ -123,10 +209,12 @@ export default function GeneralIssues({
             variant="brand"
             className="mt-2 w-full"
             disabled={
-              other.trim() === currentcase.generalPresentingIssuesOtherSpecified
+              otherText.trim() ===
+              currentcase.generalPresentingIssuesOtherSpecified
             }
           >
-            Add Note
+            {addingNote && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {addingNote ? "Adding Note..." : "Add Note"}
           </Button>
         </>
       )}
@@ -138,19 +226,21 @@ function GeneralOption({
   option,
   selected,
   setSelected,
+  valKey,
 }: {
   option: string;
-  selected: string;
-  setSelected: (option: string) => void;
+  selected: boolean;
+  valKey: string;
+  setSelected: (option: { [key: string]: boolean }) => void;
 }) {
   return (
     <Card
-      className={cn(
-        "flex flex-1 rounded-sm",
-        selected === option && "bg-shamiri-blue",
-      )}
+      className={cn("flex flex-1 rounded-sm", selected && "bg-shamiri-blue")}
     >
-      <button className="flex-1 px-3 py-4" onClick={() => setSelected(option)}>
+      <button
+        className="flex-1 px-3 py-4"
+        onClick={() => setSelected({ [valKey]: !selected })}
+      >
         <p className="text-xs font-medium text-brand">{option}</p>
       </button>
     </Card>

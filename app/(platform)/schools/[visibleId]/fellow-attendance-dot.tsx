@@ -23,6 +23,7 @@ import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import type { AttendanceStatus, SessionLabel } from "#/types/app";
 import type { FellowWithAttendance } from "#/types/prisma";
+import { addBreadcrumb } from "@sentry/nextjs";
 
 const dotColor = (status: AttendanceStatus) => ({
   "bg-[#85A070]": status === "present",
@@ -144,12 +145,33 @@ export function FellowAttendanceDot({
       throw Error(`No session found for sessionItem`);
     }
 
-    await submitDelayedPaymentRequest({
-      fellowId: fellow.visibleId,
+    const dprResponse = await submitDelayedPaymentRequest({
+      fellowId: fellow.id,
       supervisorId: supervisor.id,
       interventionSessionId: sessionItem.session?.id,
       attendanceId: response.fellowAttendanceId,
     });
+
+    if (!dprResponse.success) {
+      await markAttendance(
+        status,
+        sessionItem.label,
+        fellow.visibleId,
+        school.visibleId,
+      );
+
+      toast({
+        variant: "destructive",
+        title: "Unable to create delayed payment request",
+      });
+
+      addBreadcrumb({
+        message: "Unable to create delayed payment request",
+        data: {
+          response,
+        },
+      });
+    }
 
     setDialogOpen(false);
   };
@@ -253,9 +275,8 @@ export function FellowAttendanceDot({
           }}
           onSubmit={onDialogSubmit}
         >
-          <button
+          <div
             onClick={onDotClick}
-            disabled={shouldBeDisabled}
             className={cn(
               "mx-1 h-5 w-5 rounded-full transition-all",
               {
@@ -266,7 +287,7 @@ export function FellowAttendanceDot({
             data-testid="attendance-dot"
           >
             <span className="hidden">{status}</span>
-          </button>
+          </div>
         </AttendanceConfirmationDialog>
       </DisableFutureAttendanceMarkingTooltip>
     </div>

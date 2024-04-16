@@ -1,6 +1,6 @@
 import type { Config } from "tailwindcss";
 
-const config: Config = {
+export const config: Config = {
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -32,12 +32,26 @@ const config: Config = {
           foreground: "hsl(var(--brand-foreground))",
         },
         "background-secondary": "#F7F7F7",
+        "shamiri-light-red": "#E92C2C",
+        "shamiri-light-red-background-base": "#FF3B3B",
         "shamiri-blue": "#0474bc", // DEPRECATED: switch shamiri-blue to shamiri-new-blue
         "shamiri-new-blue": "#0085FF",
+        "shamiri-new-light-blue": "#E5F3FF",
+        "shamiri-new-lighter-blue": "#CCE7FF",
         "shamiri-blue-darker": "#045e96",
         "shamiri-light-blue": "#b0d5ea",
         "shamiri-dark-blue": "#002244",
+        "shamiri-text-grey": "#969696",
+        "shamiri-text-dark-grey": "#585757",
+        "shamiri-light-grey": "#E8E8E8",
+        "shamiri-graph-green": "#00BA34",
+        "shamiri-graph-yellow": "#FACC15",
+        "shamiri-graph-purple": "#8B2CE9",
         "shamiri-red": "#DE5E68",
+        "shamiri-black": "#1C1C1C",
+        "shamiri-light-green": "#E5F8EB",
+        "shamiri-green": "#00BA34",
+        "shamiri-border-green": "#CCF1D6",
         canvas: "hsl(var(--canvas))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -118,6 +132,6 @@ const config: Config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-};
+} as const;
 
 export default config;

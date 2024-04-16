@@ -9,7 +9,7 @@ import type { CurrentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
-import { Form, FormField } from "#/components/ui/form";
+import { Form, FormField, FormLabel } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { useToast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
@@ -151,15 +151,15 @@ export default function EditProfileBio({
         </button>
       </div>
 
-      <Card className="mb-4 flex flex-col gap-5 bg-brand p-5 py-8 pr-3.5">
+      <Card className="mb-4 flex flex-col gap-3 bg-brand p-5 py-8 pr-3.5">
         <h3 className="text-base font-semibold text-muted-foreground">
           My Info
         </h3>
-        <h3 className="text-base font-semibold text-shamiri-light-blue ">
+        <h3 className="text-lg font-semibold text-shamiri-light-blue ">
           {supervisor.supervisorName}
         </h3>
-        <div className=" space-y-6">
-          <div className="mt-6 space-y-6">
+        <div>
+          <div className="space-y-6">
             <Form {...form}>
               <form
                 id="modifyFellowForm"
@@ -169,31 +169,39 @@ export default function EditProfileBio({
                 className="overflow-hidden text-ellipsis px-1"
               >
                 <div>
-                  <FormField
-                    control={form.control}
-                    name="supervisorEmail"
-                    render={({ field }) => (
-                      <div className="mt-2 grid w-full gap-1.5">
-                        <Input
-                          id="supervisorEmail"
-                          name="supervisorEmail"
-                          onChange={field.onChange}
-                          type="email"
-                          defaultValue={
-                            supervisor?.supervisorEmail || field.value
-                          }
-                          placeholder="Personal email address"
-                          className="resize-none bg-card"
-                        />
-                      </div>
-                    )}
-                  />
+                  <div>
+                    <FormField
+                      control={form.control}
+                      name="supervisorEmail"
+                      render={({ field }) => (
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">
+                            Shamiri Email
+                          </FormLabel>
+                          <Input
+                            id="supervisorEmail"
+                            name="supervisorEmail"
+                            onChange={field.onChange}
+                            type="email"
+                            defaultValue={
+                              supervisor?.supervisorEmail || field.value
+                            }
+                            placeholder="Shamiri email address"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      )}
+                    />
+                  </div>
                   <div>
                     <FormField
                       control={form.control}
                       name="cellNumber"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">
+                            Cell Number
+                          </FormLabel>
                           <Input
                             id="cellNumber"
                             name="cellNumber"
@@ -213,6 +221,9 @@ export default function EditProfileBio({
                       name="idNumber"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">
+                            ID Number
+                          </FormLabel>
                           <Input
                             id="idNumber"
                             name="idNumber"
@@ -227,6 +238,7 @@ export default function EditProfileBio({
                     />
                   </div>
                   <div>
+                    <h3 className="my-2 text-gray-400">Date of birth</h3>
                     <FormField
                       control={form.control}
                       name="dateOfBirth"
@@ -241,9 +253,7 @@ export default function EditProfileBio({
                               supervisor?.dateOfBirth
                                 ? format(supervisor?.dateOfBirth, "yyyy-MM-dd")
                                 : undefined
-                            } //todo: fix the defaultValue type error
-                            // defaultValue={new Date().toISOString().substring(0, 10) || field.value}
-                            // defaultValue={field.value ? format(field.value, 'yyyy-MM-dd') : undefined}
+                            }
                             placeholder="MM/DD/YYYY"
                             className="resize-none bg-card"
                           />
@@ -254,7 +264,7 @@ export default function EditProfileBio({
                 </div>
 
                 <div>
-                  <h3 className="mb-4 text-gray-400">Gender</h3>
+                  <h3 className="my-2 text-gray-400">Gender</h3>
                   <div className="grid grid-cols-3 gap-x-2 gap-y-2">
                     <Button
                       className={cn(
@@ -299,12 +309,13 @@ export default function EditProfileBio({
                   </div>
                 </div>
                 <div>
-                  <h3 className="mb-4  text-gray-400">Mpesa</h3>
+                  <h3 className="my-2  text-gray-400">MPESA</h3>
                   <FormField
                     control={form.control}
                     name="mpesaName"
                     render={({ field }) => (
                       <div className="mt-2 grid w-full gap-1.5">
+                        <FormLabel className="text-white">Mpesa Name</FormLabel>
                         <Input
                           id="mpesaName"
                           name="mpesaName"
@@ -323,6 +334,9 @@ export default function EditProfileBio({
                       name="mpesaNumber"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">
+                            Mpesa Number
+                          </FormLabel>
                           <Input
                             id="mpesaNumber"
                             name="mpesaNumber"
@@ -340,12 +354,13 @@ export default function EditProfileBio({
                   </div>
                 </div>
                 <div>
-                  <h3 className="mb-4 text-gray-400">Bank</h3>
+                  <h3 className="my-2 text-gray-400">Bank</h3>
                   <FormField
                     control={form.control}
                     name="bankName"
                     render={({ field }) => (
                       <div className="mt-2 grid w-full gap-1.5">
+                        <FormLabel className="text-white">Bank Name</FormLabel>
                         <Input
                           id="bankName"
                           name="bankName"
@@ -364,6 +379,9 @@ export default function EditProfileBio({
                       name="bankBranch"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">
+                            Bank Branch
+                          </FormLabel>
                           <Input
                             id="bankBranch"
                             name="bankBranch"
@@ -383,6 +401,9 @@ export default function EditProfileBio({
                       name="bankAccountNumber"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">
+                            Bank Account
+                          </FormLabel>
                           <Input
                             id="bankAccountNumber"
                             name="bankAccountNumber"
@@ -404,6 +425,9 @@ export default function EditProfileBio({
                       name="bankAccountName"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">
+                            Bank Account Holder
+                          </FormLabel>
                           <Input
                             id="bankAccountName"
                             name="bankAccountName"
@@ -427,6 +451,8 @@ export default function EditProfileBio({
                     name="nssf"
                     render={({ field }) => (
                       <div className="mt-2 grid w-full gap-1.5">
+                        <FormLabel className="text-white">NSSF</FormLabel>
+
                         <Input
                           id="nssf"
                           name="nssf"
@@ -445,6 +471,7 @@ export default function EditProfileBio({
                       name="nhif"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">NHIF</FormLabel>
                           <Input
                             id="nhif"
                             name="nhif"
@@ -464,6 +491,8 @@ export default function EditProfileBio({
                       name="kra"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">KRA</FormLabel>
+
                           <Input
                             id="kra"
                             name="kra"
@@ -483,6 +512,8 @@ export default function EditProfileBio({
                       name="county"
                       render={({ field }) => (
                         <div className="mt-8 grid w-full gap-1.5">
+                          <FormLabel className="text-white">County</FormLabel>
+
                           <Input
                             id="county"
                             name="county"
@@ -502,6 +533,9 @@ export default function EditProfileBio({
                       name="subCounty"
                       render={({ field }) => (
                         <div className="mt-2 grid w-full gap-1.5">
+                          <FormLabel className="text-white">
+                            Sub County
+                          </FormLabel>
                           <Input
                             id="subCounty"
                             name="subCounty"

@@ -5,6 +5,7 @@ import {
   FellowAttendance,
   ImplementerRole,
   Prisma,
+  WeeklyFellowRatings,
   caseStatusOptions,
   riskStatusOptions,
 } from "@prisma/client";
@@ -15,7 +16,10 @@ import { ModifyFellowData } from "#/app/(platform)/schools/[visibleId]/fellow-mo
 import type { ModifyStudentData } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
 import { getCurrentUser } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
+import {
+  CURRENT_PROJECT_ID,
+  SHOW_DUPLICATE_ID_CHECKBOX,
+} from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getHighestValue } from "#/lib/utils";
@@ -562,7 +566,11 @@ export async function dropoutStudentWithReason(
 
 export async function modifyStudent(
   data: ModifyStudentData & { mode: "create" | "edit" },
-): Promise<{ error: string } | { student: Prisma.StudentGetPayload<{}> }> {
+): Promise<
+  | { error: string }
+  | { error: string; action: typeof SHOW_DUPLICATE_ID_CHECKBOX }
+  | { student: Prisma.StudentGetPayload<{}> }
+> {
   try {
     if (data.mode === "create") {
       revalidatePath(
@@ -608,6 +616,7 @@ async function updateStudent(
     return { error: "Something went wrong during student update" };
   }
 }
+
 async function createStudent(data: ModifyStudentData) {
   try {
     const fellow = await db.fellow.findUniqueOrThrow({
@@ -632,11 +641,15 @@ async function createStudent(data: ModifyStudentData) {
         schoolId: school.id,
         admissionNumber: data.admissionNumber,
       },
+      include: {
+        assignedGroup: true,
+      },
     });
-    if (duplicateStudent) {
+    if (duplicateStudent && !data.isDuplicateAdmissionNumber) {
       if (!data.isTransfer) {
         return {
-          error: "Duplicate admission number. Mark as transfer if applicable.",
+          error: `Duplicate admission number (Name: ${duplicateStudent.studentName}, Admission number: ${duplicateStudent.admissionNumber}, Form: ${duplicateStudent.form}, Stream: ${duplicateStudent.stream}, Group: ${duplicateStudent.assignedGroup?.groupName ?? "N/A"}) Mark as a student transfer from a different group if applicable. Or mark if the student shares an admission number with another student in the school.`,
+          action: SHOW_DUPLICATE_ID_CHECKBOX,
         };
       }
 
@@ -1134,7 +1147,7 @@ export async function updateAssignedSchoolDetails(
         ...data,
       },
     });
-
+    revalidatePath("/profile/myschool?sid=" + school?.visibleId);
     return { school };
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -1340,7 +1353,7 @@ export async function updateClinicalCaseStatus(
 
 export async function updateClinicalCaseGeneralPresentingIssue(
   caseId: string,
-  presentingIssue: string,
+  presentingIssue: { [k: string]: boolean },
   presentingIssueOtherSpecified: string,
 ) {
   try {
@@ -1349,11 +1362,32 @@ export async function updateClinicalCaseGeneralPresentingIssue(
         id: caseId,
       },
       data: {
-        generalPresentingIssues: presentingIssue,
+        ...presentingIssue,
         generalPresentingIssuesOtherSpecified: presentingIssueOtherSpecified,
       },
     });
     revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function updateClinicalCaseGeneralPresentingIssueOtherField(
+  caseId: string,
+  presentingIssueOtherSpecified: string,
+) {
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: caseId,
+      },
+      data: {
+        generalPresentingIssuesOtherSpecified: presentingIssueOtherSpecified,
+      },
+    });
+    revalidatePath(`/screenings/${caseId}`);
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -1440,6 +1474,8 @@ export async function initialReferralFromClinicalCaseSupervisor(data: {
               },
             },
           },
+          initialReferredFrom: data.referredFrom,
+          initialReferredFromSpecified: data.referredFromSpecified ?? "",
         },
       });
     } else {
@@ -1633,7 +1669,7 @@ export async function flagClinicalCaseForFollowUp(data: {
       },
       data: {
         flagged: true,
-        caseReport: data.reason,
+        flaggedReason: data.reason,
       },
     });
 
@@ -1661,5 +1697,156 @@ export async function storeSupervisorProgressNotes(
   } catch (error) {
     console.error(error);
     return { success: false, error: "Something went wrong" };
+  }
+}
+
+export async function rateGroup(payload: {
+  key:
+    | "engagement1"
+    | "engagement2"
+    | "engagement3"
+    | "engagementComment"
+    | "cooperation1"
+    | "cooperation2"
+    | "cooperation3"
+    | "cooperationComment"
+    | "content"
+    | "contentComment";
+  rating: number | string;
+  groupId: string;
+  id: string | undefined;
+  path: string;
+  isAllSessionsEvaluation?: boolean;
+}) {
+  try {
+    // todo: to be updated once the all session eveluation is done
+    if (!payload.id) {
+      await db.interventionGroupReport.create({
+        data: {
+          id: objectId("ige"),
+          groupId: payload.groupId,
+          [payload.key]: payload.rating,
+          isAllReport: payload.isAllSessionsEvaluation,
+        },
+      });
+    } else {
+      await db.interventionGroupReport.update({
+        where: {
+          id: payload.id,
+        },
+        data: {
+          [payload.key]: payload.rating,
+          isAllReport: payload.isAllSessionsEvaluation,
+        },
+      });
+    }
+    revalidatePath(payload.path);
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Something went wrong" };
+  }
+}
+
+export async function addNonShamiriStudentViaClinicalScreening(
+  data: {
+    studentName: string;
+    admissionNumber: string;
+    age: string;
+    county: string;
+    form: string;
+    contactNumber?: string;
+    stream: string;
+    gender: string;
+    schoolId: string;
+  },
+  {
+    implementerId,
+    supervisorId,
+  }: {
+    implementerId: string;
+    supervisorId: string;
+  },
+) {
+  try {
+    const duplicateStudent = await db.student.findFirst({
+      where: {
+        schoolId: data.schoolId,
+        admissionNumber: data.admissionNumber,
+      },
+    });
+
+    if (duplicateStudent) {
+      return {
+        success: false,
+        error: `Duplicate student record (Name: ${duplicateStudent.studentName}, Admission number: ${duplicateStudent.admissionNumber}, Form: ${duplicateStudent.form}, Stream: ${duplicateStudent.stream}. This student already exists.`,
+      };
+    }
+
+    const studentCount = await db.student.count();
+    const studentVisibleId = generateStudentVisibleID("CLN", studentCount);
+
+    const student = await db.student.create({
+      data: {
+        id: objectId("stu"),
+        studentName: data.studentName,
+        visibleId: studentVisibleId,
+        supervisorId: supervisorId,
+        implementerId: implementerId,
+        schoolId: data.schoolId,
+        yearOfImplementation: new Date().getFullYear(),
+        admissionNumber: data.admissionNumber,
+        age: parseInt(data.age),
+        gender: data.gender,
+        form: parseInt(data.form),
+        stream: data.stream,
+        county: data.county,
+        phoneNumber: data.contactNumber,
+        isClinicalCase: true,
+      },
+    });
+
+    await createClinicalCase({
+      schoolId: data.schoolId,
+      currentSupervisorId: supervisorId,
+      studentId: student.id,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: "Something went wrong" };
+  }
+}
+
+export async function editWeeklyFellowRating(
+  data: Omit<
+    WeeklyFellowRatings,
+    "createdAt" | "updatedAt" | "fellowId" | "supervisorId" | "week"
+  >,
+) {
+  try {
+    const result = await db.weeklyFellowRatings.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        behaviourNotes: data.behaviourNotes,
+        punctualityNotes: data.punctualityNotes,
+        dressingAndGroomingNotes: data.dressingAndGroomingNotes,
+        programDeliveryNotes: data.programDeliveryNotes,
+        behaviourRating: data.behaviourRating,
+        dressingAndGroomingRating: data.dressingAndGroomingRating,
+        programDeliveryRating: data.programDeliveryRating,
+        punctualityRating: data.punctualityRating,
+      },
+    });
+    revalidatePath("/profile");
+    return { success: true, data: result };
+  } catch (e) {
+    console.error(e);
+    return {
+      error: "Something went wrong during submission, please try again.",
+    };
   }
 }
