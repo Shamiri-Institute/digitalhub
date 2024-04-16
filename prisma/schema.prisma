@@ -690,13 +690,22 @@ model HubCoordinator {
   @@map("hub_coordinators")
 }
 
+enum SessionStatus {
+  Scheduled
+  Rescheduled
+  Cancelled
+}
+
 /// Intervention sessions represent the school-wide intervention event happening
 model InterventionSession {
   id                      String                      @id @db.VarChar(255)
   createdAt               DateTime                    @default(now()) @map("created_at")
   updatedAt               DateTime                    @updatedAt @map("updated_at")
   archivedAt              DateTime?                   @map("archived_at")
-  sessionDate             DateTime                    @map("session_date")
+  sessionDate             DateTime                    @map("session_date") // TODO: rename to sessionStartTime in separate PR / deployment
+  sessionEndTime          DateTime?                   @map("session_end_time")
+  scheduleHistory         Json?                       @map("schedule_history") // e.g. [ { startTime, endTime, userId } ]
+  status                  SessionStatus?              @default(Scheduled)
   sessionName             String                      @map("session_name") @db.VarChar(255)
   sessionType             String                      @map("session_type") @db.VarChar(255) // e.g. s0, s1, s2, s3, s4, fu1, fu2, ..., fu8, 
   // TODO: consider adding column for sessionIndex Int, while sessionType tracks, intervention, dataCollation, followUp

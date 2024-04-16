@@ -1,4 +1,5 @@
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
+import { addDays, addHours, setHours, setMinutes } from "date-fns";
 
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -29,7 +30,7 @@ const ids = {
               visibleId: "24_Hub_01",
               hubName: "Dagoretti/Westlands",
 
-              hubCoordinator: {
+              coordinator: {
                 id: objectId("hc"),
                 visibleId: "24_HC_01",
                 coordinatorName: "Perez Ambala",
@@ -118,32 +119,32 @@ const ids = {
 
                   groups: {
                     ANS24_Group_01: {
-                      id: "G1",
+                      id: "07G1",
                       groupName: "G1",
                       groupFellowVisibleId: "TFW24_S_01",
                     },
                     ANS24_Group_02: {
-                      id: "G2",
+                      id: "07G2",
                       groupName: "G2",
                       groupFellowVisibleId: "TFW24_S_01",
                     },
                     ANS24_Group_03: {
-                      id: "G3",
+                      id: "07G3",
                       groupName: "G3",
                       groupFellowVisibleId: "TFW24_S_01",
                     },
                     ANS24_Group_04: {
-                      id: "G4",
+                      id: "07G4",
                       groupName: "G4",
                       groupFellowVisibleId: "TFW24_S_01",
                     },
                     ANS24_Group_05: {
-                      id: "G5",
+                      id: "07G5",
                       groupName: "G5",
                       groupFellowVisibleId: "TFW24_S_01",
                     },
                     ANS24_Group_06: {
-                      id: "G6",
+                      id: "07G6",
                       groupName: "G6",
                       groupFellowVisibleId: "TFW24_S_01",
                     },
@@ -154,7 +155,11 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: new Date("2024-01-15"),
+                      sessionDate: setMinutes(addDays(new Date(), 12), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), 12), 0),
+                        2,
+                      ),
                       sessionRating: 4,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -162,59 +167,298 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s1",
                       sessionName: "Session 01",
-                      sessionDate: new Date("2024-02-15"),
+                      sessionDate: setMinutes(addDays(new Date(), 7), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), 7), 0),
+                        1.5,
+                      ),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_01",
                     },
                   },
 
                   students: {
-                    ANS24_Stu_01: {
+                    ANS24_07_Stu_01: {
                       id: objectId("stu"),
-                      visibleId: "ANS24_Stu_01",
+                      visibleId: "ANS24_07_Stu_01",
                       studentName: "Alice Mwangi",
                       admissionNumber: "ADM123",
                       age: 17,
                       gender: "F",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_01",
-                      assignedGroupId: "G1",
+                      assignedGroupId: "07G1",
                     },
-                    ANS24_Stu_02: {
+                    ANS24_07_Stu_02: {
                       id: objectId("stu"),
-                      visibleId: "ANS24_Stu_02",
+                      visibleId: "ANS24_07_Stu_02",
                       studentName: "Bob Otieno",
                       admissionNumber: "ADM124",
                       age: 16,
                       gender: "M",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_01",
-                      assignedGroupId: "G1",
+                      assignedGroupId: "07G1",
                     },
-                    ANS24_Stu_03: {
+                    ANS24_07_Stu_03: {
                       id: objectId("stu"),
-                      visibleId: "ANS24_Stu_03",
+                      visibleId: "ANS24_07_Stu_03",
                       studentName: "Caroline Njeri",
                       admissionNumber: "ADM125",
                       age: 15,
                       gender: "F",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
-                      assignedGroupId: "G1",
+                      assignedGroupId: "07G1",
                     },
-                    ANS24_Stu_04: {
+                    ANS24_07_Stu_04: {
                       id: objectId("stu"),
-                      visibleId: "ANS24_Stu_04",
+                      visibleId: "ANS24_07_Stu_04",
                       studentName: "David Kimani",
                       admissionNumber: "ADM126",
                       age: 14,
                       gender: "M",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
-                      assignedGroupId: "G1",
+                      assignedGroupId: "07G1",
                     },
                   },
                 },
+
+                ANS24_School_09: {
+                  id: objectId("sch"),
+                  visibleId: "ANS24_School_09",
+                  schoolName: "Beth Mugo High School",
+                  schoolType: "Sub county",
+                  schoolEmail: "bethmugo@example.com",
+                  schoolCounty: "Nairobi",
+                  schoolDemographics: "Mixed",
+                  pointPersonId: "721296099",
+                  pointPersonName: "Tabitha Matara",
+                  pointPersonPhone: "N/A",
+                  numbersExpected: 1000,
+                  principalName: "Emily W. Masele",
+                  assignedSupervisorVisibleId: "SPV24_S_01",
+
+                  groups: {
+                    ANS24_Group_01: {
+                      id: "09G1",
+                      groupName: "G1",
+                      groupFellowVisibleId: "TFW24_S_01",
+                    },
+                  },
+
+                  sessions: {
+                    Session_01: {
+                      id: objectId("sess"),
+                      sessionType: "s0",
+                      status: SessionStatus.Cancelled,
+                      sessionName: "Presession",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), -1), 0),
+                        6,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), -1), 0), 6),
+                        2,
+                      ),
+                      sessionRating: 4,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_02: {
+                      id: objectId("sess"),
+                      sessionType: "s1",
+                      sessionName: "Session 01",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), -1), 0),
+                        8,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), -1), 0), 8),
+                        1.5,
+                      ),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_03: {
+                      id: objectId("sess"),
+                      sessionType: "s2",
+                      sessionName: "Session 02",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 7), 0),
+                        8,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 7), 0), 8),
+                        1.5,
+                      ),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_04: {
+                      id: objectId("sess"),
+                      sessionType: "s3",
+                      sessionName: "Session 03",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 11), 0),
+                        1,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 11), 0), 1),
+                        1.5,
+                      ),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_05: {
+                      id: objectId("sess"),
+                      sessionType: "s4",
+                      sessionName: "Session 04",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 12), 0),
+                        1,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 12), 0), 1),
+                        1.5,
+                      ),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                  },
+
+                  students: {
+                    ANS24_09_Stu_01: {
+                      id: objectId("stu"),
+                      visibleId: "ANS24_09_Stu_01",
+                      studentName: "Alice Mwangi",
+                      admissionNumber: "ADM123",
+                      age: 17,
+                      gender: "F",
+                      condition: "Shamiri",
+                      fellowVisibleId: "TFW24_S_02",
+                      assignedGroupId: "09G1",
+                    },
+                  },
+                },
+
+                ANS24_School_10: {
+                  id: objectId("sch"),
+                  visibleId: "ANS24_School_10",
+                  schoolName: "Jamhuri High School",
+                  schoolType: "Extra county",
+                  schoolEmail: "jamhuri@example.com",
+                  schoolCounty: "Nairobi",
+                  schoolDemographics: "Boys",
+                  pointPersonId: "000",
+                  pointPersonName: "Dennis Ondari",
+                  pointPersonPhone: "718312099/0735520758",
+                  numbersExpected: 674,
+                  principalName: "Duncan Juma",
+                  assignedSupervisorVisibleId: "SPV24_S_02",
+
+                  groups: {
+                    ANS24_Group_01: {
+                      id: "10G1",
+                      groupName: "G1",
+                      groupFellowVisibleId: "TFW24_S_01",
+                    },
+                  },
+
+                  sessions: {
+                    Session_01: {
+                      id: objectId("sess"),
+                      sessionType: "s0",
+                      status: SessionStatus.Cancelled,
+                      sessionName: "Presession",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), -1), 0),
+                        15,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), -1), 0), 15),
+                        1.5,
+                      ),
+                      sessionRating: 4,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_02: {
+                      id: objectId("sess"),
+                      sessionType: "s1",
+                      sessionName: "Session 01",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 0), 0),
+                        15,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 0), 0), 15),
+                        1.5,
+                      ),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_03: {
+                      id: objectId("sess"),
+                      sessionType: "s2",
+                      sessionName: "Session 02",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 7), 0),
+                        17,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 7), 0), 17),
+                        1.5,
+                      ),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_04: {
+                      id: objectId("sess"),
+                      sessionType: "s3",
+                      sessionName: "Session 03",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 11), 0),
+                        18,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 11), 0), 18),
+                        1.5,
+                      ),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                    Session_05: {
+                      id: objectId("sess"),
+                      sessionType: "s4",
+                      sessionName: "Session 04",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 12), 0),
+                        18,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 12), 0), 18),
+                        1.5,
+                      ),
+                      sessionRating: 5,
+                      supervisorVisibleId: "SPV24_S_01",
+                    },
+                  },
+
+                  students: {
+                    ANS24_10_Stu_01: {
+                      id: objectId("stu"),
+                      visibleId: "ANS24_10_Stu_01",
+                      studentName: "Daina Kathambi",
+                      admissionNumber: "ADM123",
+                      age: 17,
+                      gender: "F",
+                      condition: "Shamiri",
+                      fellowVisibleId: "TFW24_S_02",
+                      assignedGroupId: "10G1",
+                    },
+                  },
+                },
+
                 ANS24_School_08: {
                   id: objectId("sch"),
                   visibleId: "ANS24_School_08",
@@ -339,8 +583,8 @@ const ids = {
         edmund: {
           id: objectId("user"),
           email: "edmund@shamiri.institute",
-          role: ImplementerRole.SUPERVISOR,
-          roleByVisibleId: "SPV24_S_01",
+          role: ImplementerRole.HUB_COORDINATOR,
+          roleByVisibleId: "24_HC_01",
         },
         benny: {
           id: objectId("user"),
@@ -404,15 +648,15 @@ async function seedDatabase() {
           },
         });
 
-        const { hubCoordinator } = hub;
+        const { coordinator } = hub;
         await db.hubCoordinator.create({
           data: {
-            id: hubCoordinator.id,
-            visibleId: hubCoordinator.visibleId,
-            coordinatorName: hubCoordinator.coordinatorName,
-            coordinatorEmail: hubCoordinator.coordinatorEmail,
+            id: coordinator.id,
             implementerId: implementer.id,
             assignedHubId: createdHub.id,
+            visibleId: coordinator.visibleId,
+            coordinatorName: coordinator.coordinatorName,
+            coordinatorEmail: coordinator.coordinatorEmail,
           },
         });
 
@@ -496,6 +740,7 @@ async function seedDatabase() {
             await db.interventionSession.create({
               data: {
                 id: session.id,
+                status: (session as any).status,
                 sessionType: session.sessionType,
                 sessionName: session.sessionName,
                 sessionDate: session.sessionDate,
@@ -558,11 +803,27 @@ async function seedDatabase() {
     }
 
     for (const user of Object.values(implementer.users)) {
-      const supervisor = await db.supervisor.findUniqueOrThrow({
-        where: {
-          visibleId: user.roleByVisibleId,
-        },
-      });
+      let personnel:
+        | Prisma.SupervisorGetPayload<{}>
+        | Prisma.HubCoordinatorGetPayload<{}>
+        | null = null;
+
+      if (user.role === ImplementerRole.SUPERVISOR) {
+        personnel = await db.supervisor.findUniqueOrThrow({
+          where: {
+            visibleId: user.roleByVisibleId,
+          },
+        });
+      } else if (user.role === ImplementerRole.HUB_COORDINATOR) {
+        personnel = await db.hubCoordinator.findUniqueOrThrow({
+          where: {
+            visibleId: user.roleByVisibleId,
+          },
+        });
+      } else {
+        throw new Error(`Unhandled role: ${(user as any).role}`);
+      }
+
       await db.user.create({
         data: {
           id: user.id,
@@ -571,7 +832,7 @@ async function seedDatabase() {
             create: {
               implementerId: implementer.id,
               role: user.role,
-              identifier: supervisor.id,
+              identifier: personnel.id,
             },
           },
         },
