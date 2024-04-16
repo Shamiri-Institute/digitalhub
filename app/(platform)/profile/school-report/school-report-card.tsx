@@ -78,7 +78,7 @@ export function SchoolReportCard({
           <button
             onClick={onOccurrenceToggleClick}
             className={cn(
-              "h-6 w-6 rounded-full bg-light-grey",
+              "bg-light-grey h-6 w-6 rounded-full",
               occurring ? "bg-muted-green" : "bg-light-grey",
             )}
           >
