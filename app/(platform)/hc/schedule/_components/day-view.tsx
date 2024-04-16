@@ -1,15 +1,15 @@
 "use client";
 
-import { CalendarDate } from "@internationalized/date";
+import { CalendarDate, isToday } from "@internationalized/date";
 import { useEffect, useRef, useState } from "react";
-import {
-  useCalendar,
-  useCalendarCell,
-  useDateFormatter,
-  useLocale,
-} from "react-aria";
+import { useCalendarCell, useDateFormatter } from "react-aria";
 import { CalendarState } from "react-stately";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 
 import { SessionList } from "./session-list";
@@ -17,13 +17,6 @@ import { useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
 export function DayView({ state }: { state: CalendarState }) {
-  const ref = useRef();
-  const { locale } = useLocale();
-  const { calendarProps, prevButtonProps, nextButtonProps } = useCalendar(
-    {},
-    state,
-  );
-
   const dayFormatter = useDateFormatter({ weekday: "long" });
 
   const currentDate = state.visibleRange.start;
@@ -53,13 +46,33 @@ export function DayView({ state }: { state: CalendarState }) {
     setTitle(`${titleFormatter.format(currentDate.toDate(state.timeZone))}`);
   }, [currentDate, setTitle, state.timeZone, titleFormatter]);
 
+  const { sessions } = useSessions({ date: currentDate });
+  const hasSessions = sessions.length > 0;
+
   return (
     <table className="block border-separate overflow-hidden rounded-[0.4375rem] border border-grey-border [border-spacing:0]">
       <thead className="block">
         <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
           <th className="w-[103px] px-4 py-3"></th>
-          <th className="relative flex w-[141px] shrink-0 items-center justify-between px-4 py-3 text-left text-blue-base xl:w-[186px]">
+          <th
+            className={cn(
+              "relative flex shrink-0 items-center justify-between gap-2 px-4 py-3 text-left",
+              {
+                "text-blue-base": isToday(currentDate, state.timeZone),
+              },
+            )}
+          >
             {headerLabel}&#8203;
+            {hasSessions && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-base"></span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {sessions.length} sessions on this day
+                </TooltipContent>
+              </Tooltip>
+            )}
           </th>
         </tr>
       </thead>
@@ -82,7 +95,7 @@ export function DayView({ state }: { state: CalendarState }) {
             <DayCalendarCell
               rowIdx={rowIdx}
               hour={hour}
-              date={state.value}
+              date={currentDate}
               state={state}
             />
           </tr>

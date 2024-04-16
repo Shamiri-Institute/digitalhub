@@ -1,12 +1,6 @@
 import { CalendarDate, isToday } from "@internationalized/date";
 import { useEffect, useRef } from "react";
-import {
-  useCalendar,
-  useCalendarCell,
-  useCalendarGrid,
-  useDateFormatter,
-  useLocale,
-} from "react-aria";
+import { useCalendarCell, useCalendarGrid, useDateFormatter } from "react-aria";
 import { CalendarState } from "react-stately";
 
 import {
@@ -21,13 +15,6 @@ import { useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
 export function WeekView({ state }: { state: CalendarState }) {
-  const ref = useRef();
-  const { locale } = useLocale();
-  const { calendarProps, prevButtonProps, nextButtonProps } = useCalendar(
-    {},
-    state,
-  );
-
   const { gridProps } = useCalendarGrid({ weekdayStyle: "long" }, state);
 
   const startDate = state.visibleRange.start;
@@ -156,7 +143,7 @@ function WeekCalendarHeaderCell({
             <span className="h-1.5 w-1.5 rounded-full bg-blue-base"></span>
           </TooltipTrigger>
           <TooltipContent side="top">
-            {sessions.length} sessions today
+            {sessions.length} sessions on this day
           </TooltipContent>
         </Tooltip>
       )}

@@ -11,7 +11,7 @@ import { useButton } from "@react-aria/button";
 import { useFocusRing } from "@react-aria/focus";
 import { mergeProps } from "@react-aria/utils";
 import { useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { CalendarState, useCalendarState } from "react-stately";
@@ -35,24 +35,23 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const { hubId, ...calendarStateProps } = props;
   const { locale } = useLocale();
-  const [date, setDate] = useState<DateValue>(today(getLocalTimeZone()));
 
   const monthState = useCalendarState({
     ...calendarStateProps,
-    value: date,
+    value: today(getLocalTimeZone()),
     locale,
     createCalendar,
   });
 
   const weekState = useCalendarState({
-    value: date,
+    value: today(getLocalTimeZone()),
     visibleDuration: { weeks: 1 },
     locale,
     createCalendar,
   });
 
   const dayState = useCalendarState({
-    value: date,
+    value: today(getLocalTimeZone()),
     visibleDuration: { days: 1 },
     locale,
     createCalendar,
@@ -107,12 +106,11 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 <ScheduleModeToggle />
               </div>
             </div>
-            <>
-              <SessionsLoadingIndicator />
+            <SessionsLoader>
               <CreateSessionButton />
-            </>
+            </SessionsLoader>
           </div>
-          <div className="mt-4">
+          <div className="mt-4 ">
             <CalendarView
               monthProps={{ state: monthState, weekdayStyle: "long" }}
               weekProps={{ state: weekState }}
@@ -146,7 +144,7 @@ function ScheduleTitle({ fallbackTitle }: { fallbackTitle: string }) {
   );
 }
 
-function SessionsLoadingIndicator() {
+function SessionsLoader({ children }: { children: React.ReactNode }) {
   const { loading } = useSessions({});
 
   if (loading) {
@@ -163,18 +161,18 @@ function SessionsLoadingIndicator() {
           cy="12"
           r="10"
           stroke="currentColor"
-          stroke-width="4"
-        ></circle>
+          strokeWidth="4"
+        />
         <path
           className="opacity-75"
           fill="currentColor"
           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        ></path>
+        />
       </svg>
     );
   }
 
-  return null;
+  return <div className="h-9">{children}</div>;
 }
 
 function CalendarView({
@@ -260,7 +258,7 @@ function NavigationButton({
     <button
       {...mergeProps(buttonProps, focusProps)}
       ref={ref}
-      className={`inline-flex h-9 items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50 ${
+      className={`inline-flex h-9 items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50 focus:outline-0 ${
         isFocusVisible ? "ring-2 ring-blue-base ring-offset-2" : ""
       }`}
     >
