@@ -38,6 +38,7 @@ export function ScheduleModeToggle() {
       <ToggleGroupItem
         value="table"
         aria-label="Select table view"
+        disabled
         className="rounded-none border-0 text-base"
       >
         Table
@@ -45,6 +46,7 @@ export function ScheduleModeToggle() {
       <ToggleGroupItem
         value="list"
         aria-label="Select list view"
+        disabled
         className="rounded-none border-0 text-base"
       >
         List
