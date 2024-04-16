@@ -109,6 +109,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
             </div>
             <>
               <SessionsLoadingIndicator />
+              <CreateSessionButton />
             </>
           </div>
           <div className="mt-4">
@@ -123,6 +124,15 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
         </TitleProvider>
       </ModeProvider>
     </SessionsProvider>
+  );
+}
+
+function CreateSessionButton() {
+  return (
+    <button className="hover:bg-blue-dark flex items-center gap-2 rounded-md bg-blue-base px-3 py-2 text-white">
+      <Icons.plusCircle className="h-5 w-5" />
+      <span className="text-white">Schedule a session</span>
+    </button>
   );
 }
 
