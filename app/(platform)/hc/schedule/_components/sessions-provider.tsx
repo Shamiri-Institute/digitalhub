@@ -17,6 +17,7 @@ const SessionsContext = createContext<SessionsContextType | undefined>(
 
 type SessionsContextType = {
   sessions: Session[];
+  loading: boolean;
 };
 
 export type Session = Prisma.InterventionSessionGetPayload<{
@@ -30,18 +31,20 @@ export function SessionsProvider({
   hubId: string;
 }>) {
   const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSessions = async () => {
       const fetchedSessions = await fetchInterventionSessions({ hubId });
       setSessions(fetchedSessions);
+      setLoading(false);
     };
 
     fetchSessions();
   }, [hubId]);
 
   return (
-    <SessionsContext.Provider value={{ sessions }}>
+    <SessionsContext.Provider value={{ sessions, loading }}>
       {children}
     </SessionsContext.Provider>
   );
@@ -51,7 +54,7 @@ export function useSessions({
   date,
   hour,
 }: {
-  date: CalendarDate;
+  date?: CalendarDate;
   hour?: number;
 }) {
   const context = useContext(SessionsContext);
@@ -59,7 +62,11 @@ export function useSessions({
     throw new Error("useSessions must be used within a SessionsProvider");
   }
 
-  const { sessions } = context;
+  const { sessions, loading } = context;
+
+  if (!date) {
+    return { sessions, loading };
+  }
 
   let filteredSessions = sessions.filter((session) => {
     return isSameDay(date, getCalendarDate(session.sessionDate));
@@ -73,5 +80,6 @@ export function useSessions({
 
   return {
     sessions: filteredSessions,
+    loading,
   };
 }

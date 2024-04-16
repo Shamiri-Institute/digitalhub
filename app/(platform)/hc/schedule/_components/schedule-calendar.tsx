@@ -7,20 +7,23 @@ import {
   today,
 } from "@internationalized/date";
 import type { AriaButtonProps } from "@react-aria/button";
-import { filterDOMProps } from "@react-aria/utils";
+import { useButton } from "@react-aria/button";
+import { useFocusRing } from "@react-aria/focus";
+import { mergeProps } from "@react-aria/utils";
+import { useSearchParams } from "next/navigation";
+import { useRef, useState } from "react";
 import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
-import { useSearchParams } from "next/navigation";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { ModeProvider, useMode, type Mode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import { SessionsProvider } from "./sessions-provider";
+import { SessionsProvider, useSessions } from "./sessions-provider";
 import { TableView } from "./table-view";
 import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
@@ -32,50 +35,81 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const { hubId, ...calendarStateProps } = props;
   const { locale } = useLocale();
+  const [date, setDate] = useState<DateValue>(today(getLocalTimeZone()));
+
   const monthState = useCalendarState({
     ...calendarStateProps,
-    value: today(getLocalTimeZone()),
+    value: date,
     locale,
     createCalendar,
   });
 
   const weekState = useCalendarState({
-    value: today(getLocalTimeZone()),
+    value: date,
     visibleDuration: { weeks: 1 },
     locale,
     createCalendar,
   });
 
   const dayState = useCalendarState({
-    value: today(getLocalTimeZone()),
+    value: date,
     visibleDuration: { days: 1 },
     locale,
     createCalendar,
   });
 
-  const { prevButtonProps, nextButtonProps, title } = useCalendar(
-    calendarStateProps,
-    monthState,
-  );
+  const month = useCalendar(calendarStateProps, monthState);
+
+  const week = useCalendar(calendarStateProps, weekState);
+
+  const day = useCalendar(calendarStateProps, dayState);
 
   const searchParams = useSearchParams();
-  const mode = searchParams.get("mode") ?? "week";
+  const mode = searchParams.get("mode") ?? "month";
+
+  let title = "";
+  let prevButtonProps: AriaButtonProps = {};
+  let nextButtonProps: AriaButtonProps = {};
+  switch (mode) {
+    case "month":
+      title = month.title;
+      prevButtonProps = month.prevButtonProps;
+      nextButtonProps = month.nextButtonProps;
+      break;
+    case "week":
+      title = week.title;
+      prevButtonProps = week.prevButtonProps;
+      nextButtonProps = week.nextButtonProps;
+      break;
+    case "day":
+      title = day.title;
+      prevButtonProps = day.prevButtonProps;
+      nextButtonProps = day.nextButtonProps;
+      break;
+    default:
+      throw new Error(`Invalid mode: ${mode}`);
+  }
 
   return (
     <SessionsProvider hubId={hubId}>
       <ModeProvider defaultMode={mode as Mode}>
         <TitleProvider>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-6">
-              <ScheduleTitle fallbackTitle={title} />
-              <NavigationButtons
-                prevProps={prevButtonProps}
-                nextProps={nextButtonProps}
-              />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-6">
+                <ScheduleTitle fallbackTitle={title} />
+                <NavigationButtons
+                  prevProps={prevButtonProps}
+                  nextProps={nextButtonProps}
+                />
+              </div>
+              <div className="mx-2">
+                <ScheduleModeToggle />
+              </div>
             </div>
-            <div className="mx-2">
-              <ScheduleModeToggle />
-            </div>
+            <>
+              <SessionsLoadingIndicator />
+            </>
           </div>
           <div className="mt-4">
             <CalendarView
@@ -100,6 +134,37 @@ function ScheduleTitle({ fallbackTitle }: { fallbackTitle: string }) {
       {title || fallbackTitle}
     </div>
   );
+}
+
+function SessionsLoadingIndicator() {
+  const { loading } = useSessions({});
+
+  if (loading) {
+    return (
+      <svg
+        className="-ml-1 mr-6 h-5 w-5 animate-spin text-blue-base"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+    );
+  }
+
+  return null;
 }
 
 function CalendarView({
@@ -160,20 +225,36 @@ function NavigationButtons({
       className="inline-flex divide-x divide-gray-300 overflow-auto rounded-xl border border-gray-300 shadow-sm"
       role="group"
     >
-      <button
-        className="inline-flex items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50"
-        aria-label="Previous Month"
-        {...filterDOMProps(prevProps)}
-      >
+      <NavigationButton aria-label="Previous Month" {...prevProps}>
         <Icons.chevronLeft className="h-5 w-5" />
-      </button>
-      <button
-        className="inline-flex items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50"
-        aria-label="Next Month"
-        {...filterDOMProps(nextProps)}
-      >
+      </NavigationButton>
+
+      <NavigationButton aria-label="Next Month" {...nextProps}>
         <Icons.chevronRight className="h-5 w-5" />
-      </button>
+      </NavigationButton>
     </div>
+  );
+}
+
+function NavigationButton({
+  children,
+  ...props
+}: {
+  children: React.ReactNode;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const { buttonProps } = useButton(props, ref);
+  const { focusProps, isFocusVisible } = useFocusRing();
+
+  return (
+    <button
+      {...mergeProps(buttonProps, focusProps)}
+      ref={ref}
+      className={`inline-flex h-9 items-center bg-white px-2 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-50 ${
+        isFocusVisible ? "ring-2 ring-blue-base ring-offset-2" : ""
+      }`}
+    >
+      {children}
+    </button>
   );
 }
