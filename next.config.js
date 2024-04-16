@@ -3,6 +3,15 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
+  async redirects() {
+    return [
+      {
+        source: "/hc",
+        destination: "/hc/schedule",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
