@@ -3,6 +3,7 @@ import {
   Banknote,
   Calendar,
   Check,
+  CheckCircle,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -11,6 +12,7 @@ import {
   GraduationCap,
   GraduationCapIcon,
   HeartPulse,
+  HelpCircle,
   LayoutDashboard,
   ListTodo,
   LucideProps,
@@ -42,6 +44,7 @@ export const Icons = {
   moon: Moon,
   calendar: Calendar,
   check: Check,
+  checkCircle: CheckCircle,
   chevronsUpDown: ChevronsUpDown,
   chevronLeft: ChevronLeft,
   graduationCap: GraduationCap,
@@ -65,6 +68,7 @@ export const Icons = {
   xIcon: XIcon,
   startOutline: Star,
   heartPulse: HeartPulse,
+  helpCircle: HelpCircle,
 
   // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (
@@ -771,6 +775,24 @@ export const Icons = {
         strokeWidth={2}
         strokeLinecap="round"
         strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  crossCircleFilled: ({ className, ...props }: LucideProps) => (
+    <svg
+      width={13}
+      height={12}
+      viewBox="0 0 13 12"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M6.85742 1C4.09242 1 1.85742 3.235 1.85742 6C1.85742 8.765 4.09242 11 6.85742 11C9.62242 11 11.8574 8.765 11.8574 6C11.8574 3.235 9.62242 1 6.85742 1ZM9.00742 8.15C8.81242 8.345 8.49742 8.345 8.30242 8.15L6.85742 6.705L5.41242 8.15C5.21742 8.345 4.90242 8.345 4.70742 8.15C4.51242 7.955 4.51242 7.64 4.70742 7.445L6.15242 6L4.70742 4.555C4.51242 4.36 4.51242 4.045 4.70742 3.85C4.90242 3.655 5.21742 3.655 5.41242 3.85L6.85742 5.295L8.30242 3.85C8.49742 3.655 8.81242 3.655 9.00742 3.85C9.20242 4.045 9.20242 4.36 9.00742 4.555L7.56242 6L9.00742 7.445C9.19742 7.635 9.19742 7.955 9.00742 8.15Z"
+        fill="currentColor"
       />
     </svg>
   ),

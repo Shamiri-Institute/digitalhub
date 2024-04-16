@@ -73,7 +73,19 @@ const config: Config = {
           "foreground-accent": "hsl(var(--active-card-foreground-accent))",
         },
         // From Figma
-        "light-grey": "rgba(173, 173, 173, 1)",
+        grey: "rgba(173, 173, 173, 1)",
+        "grey-c3": "rgba(150, 150, 150, 1)", // Light/Grayscale/Content 3
+        "grey-border": "rgba(232, 232, 232, 1)", // Light/Grayscale/Border
+        "grey-bg": "rgba(252, 252, 252, 1)", // BG/Gray
+        "green-border": "rgba(204, 241, 214, 1)", // Light/Green/Border
+        "green-bg": "rgba(229, 248, 235, 1)", // Light/Green/Background
+        "green-base": "rgba(0, 186, 52, 1)", // Light/Green/Base
+        "blue-border": "rgba(204, 231, 255, 1)", // Light/Blue/Border
+        "blue-bg": "rgba(229, 243, 255, 1)", // Light/Blue/Background
+        "blue-base": "rgba(0, 133, 255, 1)", // Light/Blue/Base
+        "red-border": "hsl(359, 85%, 90%)", // Light/Red/Border
+        "red-bg": "hsla(0, 100%, 62%, 0.1)", // Light/Red/Background
+        "red-base": "hsla(0, 81%, 54%, 1)", // Light/Red/Base
       },
       borderRadius: {
         lg: "var(--radius)",
