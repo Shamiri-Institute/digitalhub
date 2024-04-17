@@ -179,6 +179,10 @@ function FellowCardMenu({
         <MenuLineItem>
           <FellowEvaluationForm
             fellowName={fellow.fellowName ?? ""}
+            behaviourRating={fellow.behaviourRating}
+            programDeliveryRating={fellow.programDeliveryRating}
+            dressingAndGroomingRating={fellow.dressingAndGroomingRating}
+            punctualityRating={fellow.punctualityRating}
             fellowId={fellow.id}
             supervisorId={fellow.supervisorId ?? ""}
             previousReportingNotes={fellow.fellowReportingNotes ?? []}

@@ -6,6 +6,7 @@ import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
 import { redirect } from "next/navigation";
 import { SessionHistory } from "./session-history";
+import { Prisma } from "@prisma/client";
 
 export default async function FellowSessionsPage({
   searchParams,
@@ -46,7 +47,31 @@ export default async function FellowSessionsPage({
     return <p>Fellow not found with id: {fid}</p>;
   }
 
-  const allFellowsInHub: NonNullable<CurrentSupervisor>["fellows"] =
+  type FellowsInHub = Prisma.FellowGetPayload<{
+    include: {
+      hub: true,
+      fellowAttendances: {
+        include: {
+          repaymentRequests: true
+        }
+      },
+      fellowReportingNotes: true,
+      fellowComplaints: true,
+      overallFellowEvaluation: true,
+      weeklyFellowRatings: true,
+      repaymentRequests: {
+        include: {
+          fellowAttendance: {
+            include: {
+              group: true
+            }
+          }
+        }
+      }
+    }
+  }>
+
+  const allFellowsInHub =
     await db.fellow.findMany({
       where: {
         hubId: supervisor.hubId,
