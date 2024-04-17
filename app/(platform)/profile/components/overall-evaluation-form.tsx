@@ -1,4 +1,5 @@
 "use client";
+import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -23,7 +24,6 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { submitOverallFellowReport } from "../actions";
 import { OverallFellowSchema } from "../schema";
-import { Icons } from "#/components/icons";
 
 type Props = {
   children: React.ReactNode;
@@ -185,11 +185,7 @@ export default function FellowEvaluationForm(props: Props) {
   );
 }
 
-function RatingStars({
-  rating,
-}: {
-  rating: number;
-}) {
+function RatingStars({ rating }: { rating: number }) {
   return (
     <div className="flex flex-1 justify-end">
       {[1, 2, 3, 4, 5].map((i) => {
@@ -212,4 +208,3 @@ function RatingStars({
     </div>
   );
 }
-

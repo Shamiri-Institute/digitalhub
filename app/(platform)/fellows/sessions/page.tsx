@@ -1,12 +1,11 @@
 import Link from "next/link";
 
-import { CurrentSupervisor, currentSupervisor } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
 import { redirect } from "next/navigation";
 import { SessionHistory } from "./session-history";
-import { Prisma } from "@prisma/client";
 
 export default async function FellowSessionsPage({
   searchParams,
@@ -47,15 +46,22 @@ export default async function FellowSessionsPage({
     return <p>Fellow not found with id: {fid}</p>;
   }
 
-  type FellowsInHub = Prisma.FellowGetPayload<{
+  const allFellowsInHub = await db.fellow.findMany({
+    where: {
+      hubId: supervisor.hubId,
+    },
     include: {
       hub: true,
       fellowAttendances: {
         include: {
-          repaymentRequests: true
-        }
+          repaymentRequests: true,
+        },
       },
-      fellowReportingNotes: true,
+      fellowReportingNotes: {
+        include: {
+          supervisor: true,
+        },
+      },
       fellowComplaints: true,
       overallFellowEvaluation: true,
       weeklyFellowRatings: true,
@@ -63,46 +69,14 @@ export default async function FellowSessionsPage({
         include: {
           fellowAttendance: {
             include: {
-              group: true
-            }
-          }
-        }
-      }
-    }
-  }>
-
-  const allFellowsInHub =
-    await db.fellow.findMany({
-      where: {
-        hubId: supervisor.hubId,
-      },
-      include: {
-        hub: true,
-        fellowAttendances: {
-          include: {
-            repaymentRequests: true,
-          },
-        },
-        fellowReportingNotes: {
-          include: {
-            supervisor: true,
-          },
-        },
-        fellowComplaints: true,
-        overallFellowEvaluation: true,
-        weeklyFellowRatings: true,
-        repaymentRequests: {
-          include: {
-            fellowAttendance: {
-              include: {
-                group: true,
-                school: true,
-              },
+              group: true,
+              school: true,
             },
           },
         },
       },
-    });
+    },
+  });
 
   return (
     <main className="max-w-3xl">
