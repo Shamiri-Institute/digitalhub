@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { CurrentSupervisor, currentSupervisor } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
@@ -46,38 +46,37 @@ export default async function FellowSessionsPage({
     return <p>Fellow not found with id: {fid}</p>;
   }
 
-  const allFellowsInHub: NonNullable<CurrentSupervisor>["fellows"] =
-    await db.fellow.findMany({
-      where: {
-        hubId: supervisor.hubId,
+  const allFellowsInHub = await db.fellow.findMany({
+    where: {
+      hubId: supervisor.hubId,
+    },
+    include: {
+      hub: true,
+      fellowAttendances: {
+        include: {
+          repaymentRequests: true,
+        },
       },
-      include: {
-        hub: true,
-        fellowAttendances: {
-          include: {
-            repaymentRequests: true,
-          },
+      fellowReportingNotes: {
+        include: {
+          supervisor: true,
         },
-        fellowReportingNotes: {
-          include: {
-            supervisor: true,
-          },
-        },
-        fellowComplaints: true,
-        overallFellowEvaluation: true,
-        weeklyFellowRatings: true,
-        repaymentRequests: {
-          include: {
-            fellowAttendance: {
-              include: {
-                group: true,
-                school: true,
-              },
+      },
+      fellowComplaints: true,
+      overallFellowEvaluation: true,
+      weeklyFellowRatings: true,
+      repaymentRequests: {
+        include: {
+          fellowAttendance: {
+            include: {
+              group: true,
+              school: true,
             },
           },
         },
       },
-    });
+    },
+  });
 
   return (
     <main className="max-w-3xl">

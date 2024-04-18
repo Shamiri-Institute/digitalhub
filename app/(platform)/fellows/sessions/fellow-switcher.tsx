@@ -1,7 +1,7 @@
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
 import * as React from "react";
 
-import { CurrentSupervisor } from "#/app/auth";
+import { FellowsInHub } from "#/app/(platform)/fellows/sessions/session-history";
 import { Button } from "#/components/ui/button";
 import {
   Command,
@@ -24,7 +24,7 @@ export function FellowSwitcher({
 }: {
   fellowVisibleId: string | null;
   setFellowVisibleId: (fid: string) => void;
-  fellows: NonNullable<CurrentSupervisor>["fellows"];
+  fellows: FellowsInHub;
 }) {
   const [open, setOpen] = React.useState(false);
 

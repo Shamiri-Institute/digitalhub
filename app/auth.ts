@@ -103,7 +103,33 @@ export async function currentSupervisor() {
     return null;
   }
 
-  return supervisor;
+  const fellowAvgRatings = await db.weeklyFellowRatings.groupBy({
+    by: ["fellowId"],
+    _avg: {
+      behaviourRating: true,
+      programDeliveryRating: true,
+      dressingAndGroomingRating: true,
+      punctualityRating: true,
+    },
+    where: {
+      fellowId: {
+        in: supervisor.fellows.map((fellow) => fellow.id),
+      },
+    },
+  });
+
+  const newFellowsData = supervisor.fellows.map((fellow) => {
+    const ratings = fellowAvgRatings.find((i) => i.fellowId === fellow.id);
+    return {
+      ...fellow,
+      behaviourRating: ratings?._avg.behaviourRating,
+      programDeliveryRating: ratings?._avg.programDeliveryRating,
+      dressingAndGroomingRating: ratings?._avg.dressingAndGroomingRating,
+      punctualityRating: ratings?._avg.punctualityRating,
+    };
+  });
+
+  return { ...supervisor, fellows: newFellowsData };
 }
 
 export type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>;
