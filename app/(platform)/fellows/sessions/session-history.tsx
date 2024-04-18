@@ -6,8 +6,36 @@ import { AttendancePieChart } from "#/app/(platform)/fellows/sessions/attendance
 import { FellowAttendanceTable } from "#/app/(platform)/fellows/sessions/fellow-attendance-table";
 import { FellowSwitcher } from "#/app/(platform)/fellows/sessions/fellow-switcher";
 import { WeeklySessionsAttendedChart } from "#/app/(platform)/fellows/sessions/weekly-sessions-attended-chart";
-import { CurrentSupervisor } from "#/app/auth";
 import { ordinalSuffixOf } from "#/lib/utils";
+
+export type FellowsInHub = Prisma.FellowGetPayload<{
+  include: {
+    hub: true;
+    fellowAttendances: {
+      include: {
+        repaymentRequests: true;
+      };
+    };
+    fellowReportingNotes: {
+      include: {
+        supervisor: true;
+      };
+    };
+    fellowComplaints: true;
+    overallFellowEvaluation: true;
+    weeklyFellowRatings: true;
+    repaymentRequests: {
+      include: {
+        fellowAttendance: {
+          include: {
+            group: true;
+            school: true;
+          };
+        };
+      };
+    };
+  };
+}>[];
 
 export function SessionHistory({
   fellow,
@@ -15,7 +43,7 @@ export function SessionHistory({
   sessionsAttended,
 }: {
   fellow: Prisma.FellowGetPayload<{ include: { fellowAttendances: true } }>;
-  fellows: NonNullable<CurrentSupervisor>["fellows"];
+  fellows: FellowsInHub;
   sessionsAttended: Prisma.FellowAttendanceGetPayload<{
     include: {
       school: true;
