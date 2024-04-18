@@ -1,4 +1,5 @@
 "use client";
+import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -28,6 +29,10 @@ type Props = {
   children: React.ReactNode;
   fellowName: string;
   fellowId: string;
+  behaviourRating?: number;
+  programDeliveryRating?: number;
+  dressingAndGroomingRating?: number;
+  punctualityRating?: number;
   supervisorId: string;
   previousReportingNotes?: (Prisma.FellowReportingNotesGetPayload<{}> & {
     supervisor: Prisma.SupervisorGetPayload<{}>;
@@ -100,7 +105,7 @@ export default function FellowEvaluationForm(props: Props) {
               <div>
                 <div className="flex gap-4">
                   <p>Fellow Behaviour</p>
-                  <div></div>
+                  <RatingStars rating={props.behaviourRating ?? 0} />
                 </div>
                 <FormField
                   control={form.control}
@@ -118,6 +123,7 @@ export default function FellowEvaluationForm(props: Props) {
               <div>
                 <div className="flex gap-4">
                   <p>Program delivery</p>
+                  <RatingStars rating={props.programDeliveryRating ?? 0} />
                 </div>
                 <FormField
                   control={form.control}
@@ -133,7 +139,10 @@ export default function FellowEvaluationForm(props: Props) {
                 />
               </div>
               <div>
-                <p>Dressing and grooming</p>
+                <div className="flex gap-2">
+                  <p>Dressing and grooming</p>
+                  <RatingStars rating={props.dressingAndGroomingRating ?? 0} />
+                </div>
                 <FormField
                   control={form.control}
                   name="dressingAndGroomingNotes"
@@ -148,7 +157,10 @@ export default function FellowEvaluationForm(props: Props) {
                 />
               </div>
               <div>
-                <p>Punctuation</p>
+                <div className="flex gap-2">
+                  <p>Punctuation</p>
+                  <RatingStars rating={props.punctualityRating ?? 0} />
+                </div>
                 <FormField
                   control={form.control}
                   name="punctualityNotes"
@@ -170,5 +182,29 @@ export default function FellowEvaluationForm(props: Props) {
         </Form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function RatingStars({ rating }: { rating: number }) {
+  return (
+    <div className="flex flex-1 justify-end">
+      {[1, 2, 3, 4, 5].map((i) => {
+        if (i <= Math.round(rating)) {
+          return (
+            <Icons.star
+              key={i}
+              className="ml-4 h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7"
+            />
+          );
+        }
+
+        return (
+          <Icons.starOutline
+            key={i}
+            className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7"
+          />
+        );
+      })}
+    </div>
   );
 }
