@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
@@ -78,6 +79,15 @@ export const columns: ColumnDef<SupervisorsData>[] = [
   {
     header: "Phone Number",
     accessorFn: (row) => row.cellNumber,
+  },
+  {
+    header: "Active",
+    cell: ({ row }) =>
+      row.original.archivedAt || row.original.droppedOut ? (
+        <Badge variant="destructive">Inactive</Badge>
+      ) : (
+        <Badge variant="shamiri-green">Active</Badge>
+      ),
   },
   {
     id: "actions",
