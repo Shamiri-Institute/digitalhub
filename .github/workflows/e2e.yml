@@ -1,79 +1,79 @@
-# name: Playwright end-to-end tests
+name: Playwright end-to-end tests
 
-# on:
-#   push:
-#   branches: [main]
-#   pull_request:
-#     branches: [main]
+on:
+  push:
+  branches: [main]
+  pull_request:
+    branches: [main]
 
-# env:
-#   GOOGLE_ID: mock-google-client-id
-#   GOOGLE_SECRET: mock-google-secret
-#   AWS_ACCESS_KEY_ID: mock-aws-access-key-id
-#   AWS_SECRET_ACCESS_KEY: mock-aws-secret-access-key
-#   NEXTAUTH_URL: http://localhost:3000
-#   NEXTAUTH_SECRET: test-auth-secret
-#   PLAYWRIGHT_VERSION: ""
-#   DATABASE_URL: postgres://youth:thriving@localhost:5432/shamiri_db?pool_timeout=30
+env:
+  GOOGLE_ID: mock-google-client-id
+  GOOGLE_SECRET: mock-google-secret
+  AWS_ACCESS_KEY_ID: mock-aws-access-key-id
+  AWS_SECRET_ACCESS_KEY: mock-aws-secret-access-key
+  NEXTAUTH_URL: http://localhost:3000
+  NEXTAUTH_SECRET: test-auth-secret
+  PLAYWRIGHT_VERSION: ""
+  DATABASE_URL: postgres://youth:thriving@localhost:5432/shamiri_db?pool_timeout=30
 
-# jobs:
-#   e2e-tests:
-#     runs-on: ubuntu-latest
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
 
-#     services:
-#       postgres:
-#         image: postgres:15.3
-#         env:
-#           POSTGRES_USER: youth
-#           POSTGRES_PASSWORD: thriving
-#           POSTGRES_DB: shamiri_db
-#         options: >-
-#           --health-cmd pg_isready
-#           --health-interval 10s
-#           --health-timeout 5s
-#           --health-retries 5
-#         ports:
-#           - 5432:5432
+    services:
+      postgres:
+        image: postgres:15.3
+        env:
+          POSTGRES_USER: youth
+          POSTGRES_PASSWORD: thriving
+          POSTGRES_DB: shamiri_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
-#     steps:
-#       - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v3
 
-#       - uses: actions/setup-node@v4
-#         with:
-#           node-version: 18
-#           cache: "npm"
-#       - name: Install dependencies
-#         run: npm ci
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
 
-#         # Install and cache Playwright deps
-#       - name: Get installed Playwright version
-#         id: playwright-version
-#         run: echo "PLAYWRIGHT_VERSION=$(node -e "const fs = require('fs'); const packageLock = JSON.parse(fs.readFileSync('./package-lock.json')); console.log(packageLock['packages']['node_modules/playwright']['version'])")" >> $GITHUB_ENV
-#       - name: Cache playwright binaries
-#         uses: actions/cache@v4
-#         id: playwright-cache
-#         with:
-#           path: |
-#             ~/.cache/ms-playwright
-#           key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
-#       - run: npx playwright install --with-deps
-#         if: steps.playwright-cache.outputs.cache-hit != 'true'
-#       - run: npx playwright install-deps
-#         if: steps.playwright-cache.outputs.cache-hit == 'true'
+        # Install and cache Playwright deps
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: echo "PLAYWRIGHT_VERSION=$(node -e "const fs = require('fs'); const packageLock = JSON.parse(fs.readFileSync('./package-lock.json')); console.log(packageLock['packages']['node_modules/playwright']['version'])")" >> $GITHUB_ENV
+      - name: Cache playwright binaries
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+      - run: npx playwright install --with-deps
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+      - run: npx playwright install-deps
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
 
-#       - name: Migrate database
-#         run: npm run db:dev:migrate
-#       - name: Load test database dump
-#         run: npm run test:db:load
-#         env:
-#           PGPASSWORD: thriving
+      - name: Migrate database
+        run: npm run db:dev:migrate
+      - name: Load test database dump
+        run: npm run test:db:load
+        env:
+          PGPASSWORD: thriving
 
-#       - name: Run playwright tests
-#         run: npm run test:ci
+      - name: Run playwright tests
+        run: npm run test:ci
 
-#       - uses: actions/upload-artifact@v3
-#         if: always()
-#         with:
-#           name: playwright-artifacts
-#           path: .artifacts
-#           retention-days: 30
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-artifacts
+          path: .artifacts
+          retention-days: 30
