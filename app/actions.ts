@@ -1850,3 +1850,43 @@ export async function editWeeklyFellowRating(
     };
   }
 }
+
+export async function editClinicalCaseSessionAttendanceDate(data: {
+  dateOfSession: Date;
+  sessionId: string;
+}) {
+  try {
+    await db.clinicalSessionAttendance.update({
+      where: {
+        id: data.sessionId,
+      },
+      data: {
+        date: data.dateOfSession,
+      },
+    });
+
+    revalidatePath(`/screenings`);
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function deleteClinicalCaseSessionAttendanceDate(data: {
+  sessionId: string;
+}) {
+  try {
+    await db.clinicalSessionAttendance.delete({
+      where: {
+        id: data.sessionId,
+      },
+    });
+
+    revalidatePath(`/screenings`);
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
