@@ -246,6 +246,9 @@ function PersonnelToolPopover({ children }: { children: React.ReactNode }) {
 }
 
 function getInitials(name: string) {
+  if (name === "N/A") {
+    return "N/A";
+  }
   const nameArray = name.split(" ");
   const firstNameIn = nameArray[0]?.charAt(0).toUpperCase();
   const lastNameIn = nameArray[nameArray.length - 1]?.charAt(0).toUpperCase();
