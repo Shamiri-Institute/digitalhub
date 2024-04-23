@@ -18,15 +18,19 @@ import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
-import BarchartIcon from "../public/icons/bar-chart-icon.svg";
-import CalendarIcon from "../public/icons/calendar-icon.svg";
+import {
+  BarChartIcon,
+  CalendarIcon,
+  GraduationCapIcon,
+  PeopleIcon,
+  PeopleIconAlternate,
+  SchoolIcon,
+} from "./ui/layout-icons";
+
+import { cn } from "#/lib/utils";
 import FeedbackIcon from "../public/icons/feedback-icon.svg";
-import GraduationCapIcon from "../public/icons/graduation-cap-icon.svg";
 import HelpIcon from "../public/icons/help-icon.svg";
 import NotificationIcon from "../public/icons/notification-icon.svg";
-import PeopleIconAlternate from "../public/icons/people-icon-alternate.svg";
-import PeopleIcon from "../public/icons/people-icon.svg";
-import SchoolIcon from "../public/icons/school-icon.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -38,6 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <LayoutV2
         userName={session.data?.user.name ?? "N/A"}
         avatarUrl={session.data?.user.image}
+        pathname={pathname}
       >
         {children}
       </LayoutV2>
@@ -72,11 +77,24 @@ function LayoutV2({
   children,
   userName,
   avatarUrl,
+  pathname,
 }: {
   children: React.ReactNode;
   userName: string;
   avatarUrl?: string | null;
+  pathname: string;
 }) {
+  const [, subRoute] = pathname.slice(1).split("/"); // get the path under the 'hc' route. fix this when we add other roles
+  const schoolsActive = subRoute?.includes("schools");
+  const scheduleActive = subRoute?.includes("schedule");
+  const supervisorsActive = subRoute?.includes("supervisor");
+  const fellowsActive = subRoute?.includes("fellow");
+  const studentsActive = subRoute?.includes("student");
+  const reportingActive = subRoute?.includes("reporting");
+
+  const activeColor = "#0085FF";
+  const inactiveColour = "#969696";
+
   return (
     <>
       <header className="bg-background-secondary">
@@ -169,51 +187,61 @@ function LayoutV2({
         <div className="no-scrollbar flex gap-8 overflow-x-auto px-6">
           {/*TODO: the items in this list should depend on the user's role */}
           <div className="flex gap-2 py-2">
-            <Image
-              unoptimized
-              priority
-              src={CalendarIcon}
-              alt="Schedule Icon"
+            <CalendarIcon
+              fill={scheduleActive ? activeColor : inactiveColour}
             />
-            <Link href="/hc/schedule">Schedule</Link>
+            <Link
+              href="/hc/schedule"
+              className={cn(scheduleActive && "text-shamiri-new-blue")}
+            >
+              Schedule
+            </Link>
           </div>
           <div className="flex gap-2 py-2">
-            <Image unoptimized priority src={SchoolIcon} alt="School Icon" />
-            <Link href="/hc/schools">Schools</Link>
+            <SchoolIcon fill={schoolsActive ? activeColor : inactiveColour} />
+            <Link
+              href="/hc/schools"
+              className={cn(schoolsActive && "text-shamiri-new-blue")}
+            >
+              Schools
+            </Link>
           </div>
           <div className="flex gap-2 py-2">
-            <Image
-              unoptimized
-              priority
-              src={PeopleIcon}
-              alt="Supervisors Icon"
+            <PeopleIcon
+              fill={supervisorsActive ? activeColor : inactiveColour}
             />
-            <Link href="/hc/supervisors">Supervisors</Link>
+            <Link
+              href="/hc/supervisors"
+              className={cn(supervisorsActive && "text-shamiri-new-blue")}
+            >
+              Supervisors
+            </Link>
           </div>
           <div className="flex gap-2 py-2">
-            <Image
-              unoptimized
-              priority
-              src={PeopleIconAlternate}
-              alt="Fellow Icon"
+            <PeopleIconAlternate
+              fill={fellowsActive ? activeColor : inactiveColour}
             />
-            <Link href="/hc/fellows">Fellows</Link>
+            <Link
+              href="/hc/fellows"
+              className={cn(fellowsActive && "text-shamiri-new-blue")}
+            >
+              Fellows
+            </Link>
           </div>
           <div className="flex gap-2 py-2">
-            <Image
-              unoptimized
-              priority
-              src={GraduationCapIcon}
-              alt="Students icon"
+            <GraduationCapIcon
+              fill={studentsActive ? activeColor : inactiveColour}
             />
-            <Link href="/hc/students">Students</Link>
+            <Link
+              href="/hc/students"
+              className={cn(studentsActive && "text-shamiri-new-blue")}
+            >
+              Students
+            </Link>
           </div>
           <div className="flex gap-2 py-2">
-            <Image
-              unoptimized
-              priority
-              src={BarchartIcon}
-              alt="Reporting icon"
+            <BarChartIcon
+              fill={reportingActive ? activeColor : inactiveColour}
             />
             <Link href="/hc/reporting">Reporting</Link>
             <Image
