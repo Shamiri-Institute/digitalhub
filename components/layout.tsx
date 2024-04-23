@@ -14,6 +14,7 @@ import {
   PopoverTrigger,
 } from "#/components/ui/popover";
 import { constants } from "#/lib/constants";
+import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
@@ -26,12 +27,21 @@ import NotificationIcon from "../public/icons/notification-icon.svg";
 import PeopleIconAlternate from "../public/icons/people-icon-alternate.svg";
 import PeopleIcon from "../public/icons/people-icon.svg";
 import SchoolIcon from "../public/icons/school-icon.svg";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const session = useSession();
 
   if (pathname.startsWith("/hc")) {
-    return <LayoutV2>{children}</LayoutV2>;
+    return (
+      <LayoutV2
+        userName={session.data?.user.name ?? "N/A"}
+        avatarUrl={session.data?.user.image}
+      >
+        {children}
+      </LayoutV2>
+    );
   }
 
   return (
@@ -58,7 +68,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function LayoutV2({ children }: { children: React.ReactNode }) {
+function LayoutV2({
+  children,
+  userName,
+  avatarUrl,
+}: {
+  children: React.ReactNode;
+  userName: string;
+  avatarUrl?: string | null;
+}) {
   return (
     <>
       <header className="bg-background-secondary">
@@ -104,17 +122,47 @@ function LayoutV2({ children }: { children: React.ReactNode }) {
                 height={24}
               />
               {/*TODO: notification counter */}
-              <div className="flex space-x-2">
-                {/* TODO: figure out which parts of the component should be clickable */}
-                <div>{/* TODO: avatar icon */}A</div>
-                <p>Leroy Jenkins</p>
-                <Image
-                  unoptimized
-                  priority
-                  src={ArrowDropdown}
-                  alt="Profile/Setting arrow drop down icon"
-                />
-              </div>
+              <Popover>
+                <PopoverTrigger>
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="h-8 w-8">
+                      {avatarUrl ? (
+                        <AvatarImage src={avatarUrl} width={32} height={32} />
+                      ) : null}
+                      <AvatarFallback>{getInitials(userName)}</AvatarFallback>
+                    </Avatar>
+                    <p>{userName}</p>
+                    <Image
+                      unoptimized
+                      priority
+                      src={ArrowDropdown}
+                      alt="Profile/Setting arrow drop down icon"
+                    />
+                  </div>
+                </PopoverTrigger>
+                <PopoverContent>
+                  <button
+                    className="flex items-center gap-3"
+                    onClick={() => signOut({ callbackUrl: "/login" })}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 20 20"
+                      fill="none"
+                    >
+                      <path
+                        fill-rule="evenodd"
+                        clip-rule="evenodd"
+                        d="M10.0001 2.5C9.54173 2.5 9.16673 2.875 9.16673 3.33333V10C9.16673 10.4583 9.54173 10.8333 10.0001 10.8333C10.4584 10.8333 10.8334 10.4583 10.8334 10V3.33333C10.8334 2.875 10.4584 2.5 10.0001 2.5ZM14.2834 4.88333C13.9584 5.20833 13.9667 5.71667 14.2751 6.04167C15.2167 7.04167 15.8001 8.375 15.8334 9.85C15.9084 13.0417 13.2667 15.7917 10.0751 15.825C6.81673 15.875 4.16673 13.25 4.16673 10C4.16673 8.46667 4.7584 7.075 5.72506 6.03333C6.0334 5.70833 6.0334 5.2 5.71673 4.88333C5.3834 4.55 4.84173 4.55833 4.52506 4.9C3.31673 6.18333 2.5584 7.89167 2.50006 9.78333C2.3834 13.85 5.69173 17.3667 9.7584 17.4917C14.0084 17.625 17.5001 14.2167 17.5001 9.99167C17.5001 8.01667 16.7334 6.23333 15.4834 4.9C15.1667 4.55833 14.6167 4.55 14.2834 4.88333Z"
+                        fill="#969696"
+                      />
+                    </svg>
+                    <p>Sign out</p>
+                  </button>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
@@ -195,4 +243,20 @@ function PersonnelToolPopover({ children }: { children: React.ReactNode }) {
       </PopoverContent>
     </Popover>
   );
+}
+
+function getInitials(name: string) {
+  const nameArray = name.split(" ");
+  const firstNameIn = nameArray[0]?.charAt(0).toUpperCase();
+  const lastNameIn = nameArray[nameArray.length - 1]?.charAt(0).toUpperCase();
+
+  if (firstNameIn && lastNameIn) {
+    return firstNameIn + lastNameIn;
+  }
+
+  if (firstNameIn) {
+    return firstNameIn;
+  }
+
+  return "N/A";
 }
