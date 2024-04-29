@@ -684,6 +684,14 @@ async function createStudent(data: ModifyStudentData) {
         },
       });
 
+      await db.studentGroupTransferTrail.create({
+        data: {
+          currentGroupId: newGroup.id,
+          studentId: student.id,
+          fromGroupId: duplicateStudent.assignedGroupId,
+        },
+      });
+
       return { student };
     } else if (data.isTransfer) {
       return {
