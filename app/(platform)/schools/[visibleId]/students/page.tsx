@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { notFound } from "next/navigation";
 
+import StudentTransferTrail from "#/app/(platform)/schools/[visibleId]/students/components/student-transfer-trail";
 import { StudentDropoutDialog } from "#/app/(platform)/schools/[visibleId]/students/dropout-dialog";
 import { StudentAttendanceDot } from "#/app/(platform)/schools/[visibleId]/students/student-attendance-dot";
 import { StudentModifyDialog } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
@@ -14,6 +15,8 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
+import { Loader2 } from "lucide-react";
+import { Suspense } from "react";
 import ComplaintDialog from "./record-complaint-dialog";
 
 export default async function SchoolStudentsPage({
@@ -110,6 +113,15 @@ export default async function SchoolStudentsPage({
           group={fellowGroupInfo}
         />
       </div>
+      <Suspense
+        fallback={
+          <div>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          </div>
+        }
+      >
+        <StudentTransferTrail schoolId={school.id} />
+      </Suspense>
     </main>
   );
 }
