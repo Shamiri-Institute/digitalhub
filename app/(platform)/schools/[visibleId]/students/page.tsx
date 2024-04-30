@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { StudentDropoutDialog } from "#/app/(platform)/schools/[visibleId]/students/dropout-dialog";
 import { StudentAttendanceDot } from "#/app/(platform)/schools/[visibleId]/students/student-attendance-dot";
 import { StudentModifyDialog } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
+import { StudentUndoDropoutDialog } from "#/app/(platform)/schools/[visibleId]/students/undo-dropout-dialog";
 import { Back } from "#/components/common/back";
 import { Icons } from "#/components/icons";
 import {
@@ -300,7 +301,14 @@ function StudentCard({
                   <StudentDropoutDialog student={student}>
                     <div className="cursor-pointer">Dropout student</div>
                   </StudentDropoutDialog>
-                ) : null}
+                ) : (
+                  <StudentUndoDropoutDialog
+                    student={student}
+                    revalidationPath={`/students?fellowId=${fellow?.visibleId}`}
+                  >
+                    <div className="cursor-pointer">Undo Dropout</div>
+                  </StudentUndoDropoutDialog>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
