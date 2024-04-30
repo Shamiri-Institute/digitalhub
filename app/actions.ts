@@ -1890,3 +1890,23 @@ export async function deleteClinicalCaseSessionAttendanceDate(data: {
     return { error: "Something went wrong" };
   }
 }
+
+export async function undropoutStudent(studentId: string, path: string) {
+  try {
+    await db.student.update({
+      where: {
+        id: studentId,
+      },
+      data: {
+        droppedOut: false,
+        dropOutReason: null,
+        droppedOutAt: null,
+      },
+    });
+    revalidatePath(path);
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong", success: false };
+  }
+}
