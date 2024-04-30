@@ -2,6 +2,10 @@ import { StudentTransferTrailCard } from "#/app/(platform)/schools/[visibleId]/s
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 
+type UniqueStudent = {
+  [key: string]: boolean;
+};
+
 export default async function StudentTransferTrail({
   schoolId,
 }: {
@@ -38,13 +42,23 @@ export default async function StudentTransferTrail({
     },
   );
 
+  const uniqueStudentsInstance: UniqueStudent = {};
+
+  const uniqueList = studentGroupTransferTrail.filter((instance) => {
+    if (!uniqueStudentsInstance[instance.studentId]) {
+      uniqueStudentsInstance[instance.studentId] = true;
+      return true;
+    }
+    return false;
+  });
+
   return (
     <>
       <h3 className="mt-4 text-2xl font-semibold">Transferred Students</h3>
       <Separator className="my-2" />
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {studentGroupTransferTrail.map((studentGroupTransferTrail) => (
+        {uniqueList.map((studentGroupTransferTrail) => (
           <StudentTransferTrailCard
             key={studentGroupTransferTrail.id}
             student={studentGroupTransferTrail.student}
