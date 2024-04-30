@@ -1891,11 +1891,11 @@ export async function deleteClinicalCaseSessionAttendanceDate(data: {
   }
 }
 
-export async function undropoutStudent(studendId: string, path: string) {
+export async function undropoutStudent(studentId: string, path: string) {
   try {
     await db.student.update({
       where: {
-        id: studendId,
+        id: studentId,
       },
       data: {
         droppedOut: false,

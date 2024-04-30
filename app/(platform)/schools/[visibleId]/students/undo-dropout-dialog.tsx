@@ -26,11 +26,11 @@ export function StudentUndoDropoutDialog({
   revalidationPath: string;
 }) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [isSubmiting, setIsSubmiting] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleUndropout = async () => {
     try {
-      setIsSubmiting(true);
+      setIsSubmitting(true);
       const response = await undropoutStudent(student.id, revalidationPath);
       if (response.error) {
         toast({
@@ -51,7 +51,7 @@ export function StudentUndoDropoutDialog({
         title: `Something went wrong. Please try again.`,
       });
     } finally {
-      setIsSubmiting(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -79,7 +79,7 @@ export function StudentUndoDropoutDialog({
                 Cancel
               </Button>
               <Button variant="default" onClick={handleUndropout}>
-                {isSubmiting ? (
+                {isSubmitting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
                 Confirm
