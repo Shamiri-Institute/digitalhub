@@ -57,14 +57,18 @@ export function StudentTransferTrailCard({
 
             <AccordionContent>
               <ol className="m-5 list-decimal text-brand">
-                {studentTrail.map((trail) => (
-                  <SingleHistory
-                    key={trail.id}
-                    referredFrom={trail?.fromGroupId!}
-                    referredTo={trail.currentGroupId}
-                    date={trail.createdAt}
-                  />
-                ))}
+                {studentTrail.map((trail) => {
+                  if (trail.studentId === student.id) {
+                    return (
+                      <SingleHistory
+                        key={trail.id}
+                        referredFrom={trail?.fromGroupId!}
+                        referredTo={trail.currentGroupId}
+                        date={trail.createdAt}
+                      />
+                    );
+                  }
+                })}
               </ol>
             </AccordionContent>
           </AccordionItem>
@@ -74,7 +78,7 @@ export function StudentTransferTrailCard({
   );
 }
 
-function SingleHistory({
+export function SingleHistory({
   date = new Date(),
   referredFrom = "",
   referredTo = "",
