@@ -1,18 +1,25 @@
 import { StudentTransferTrailCard } from "#/app/(platform)/schools/[visibleId]/students/components/student-transfer-trail-card";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import { Prisma } from "@prisma/client";
 
 type UniqueStudent = {
   [key: string]: boolean;
 };
+type GroupType = {
+  groupId: string;
+  groupName: string;
+};
 
 export default async function StudentTransferTrail({
   schoolId,
+  group,
 }: {
   schoolId: string;
+  group?: GroupType;
 }) {
-  const studentGroupTransferTrail = await db.studentGroupTransferTrail.findMany(
-    {
+  const studentGroupTransferTrailData =
+    await db.studentGroupTransferTrail.findMany({
       where: {
         student: {
           school: {
@@ -30,27 +37,34 @@ export default async function StudentTransferTrail({
       orderBy: {
         createdAt: "desc",
       },
-    },
-  );
-
-  const studentTrail = studentGroupTransferTrail.filter(
-    (studentGroupTransferTrail) => {
-      return (
-        studentGroupTransferTrail.studentId ===
-        studentGroupTransferTrail.studentId
-      );
-    },
-  );
+    });
 
   const uniqueStudentsInstance: UniqueStudent = {};
 
-  const uniqueList = studentGroupTransferTrail.filter((instance) => {
+  let uniqueList: Prisma.StudentGroupTransferTrailGetPayload<{
+    include: {
+      student: {
+        include: {
+          fellow: true;
+        };
+      };
+    };
+  }>[] = [];
+
+  for (const instance of studentGroupTransferTrailData) {
+    if (instance.student.assignedGroupId === group?.groupId) {
+      continue;
+    }
+
     if (!uniqueStudentsInstance[instance.studentId]) {
       uniqueStudentsInstance[instance.studentId] = true;
-      return true;
+      uniqueList.push(instance);
     }
-    return false;
-  });
+  }
+
+  if (uniqueList.length === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -62,7 +76,7 @@ export default async function StudentTransferTrail({
           <StudentTransferTrailCard
             key={studentGroupTransferTrail.id}
             student={studentGroupTransferTrail.student}
-            studentTrail={studentTrail}
+            studentTrail={studentGroupTransferTrailData}
           />
         ))}
       </div>
