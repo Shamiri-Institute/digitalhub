@@ -1132,7 +1132,7 @@ model WeeklyHubReport {
 model StudentGroupTransferTrail {
   id             String   @id @default(cuid())
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz()
   studentId      String   @map("student_id")
   student        Student  @relation(fields: [studentId], references: [id])
   currentGroupId String   @map("current_group_id")
