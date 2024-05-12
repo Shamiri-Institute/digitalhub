@@ -9,6 +9,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { AgeLimitConfirmationDialogue } from "#/app/(platform)/schools/[visibleId]/fellow-age-limits-dialogue";
 import { modifyFellow } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -111,8 +112,27 @@ export function FellowModifyDialog({
   });
 
   const [isSheetOpen, setIsSheetOpen] = React.useState(false);
-
+  //new
+  const [open, setDialogOpen] = React.useState<boolean>(false);
+  const [ageValue, setAgeValue] = React.useState<number>(0);
+  const [continueProcess, setContinueProcess] = React.useState<boolean>(false);
+  const [formData, setFormData] = React.useState<ModifyFellowData | null>(null);
+  // end of new
   async function onSubmit(data: ModifyFellowData) {
+    // new
+    if (data.dateOfBirth && !continueProcess) {
+      const dobYear = new Date(data.dateOfBirth).getFullYear();
+      const currentYear = new Date().getFullYear();
+      const age = currentYear - dobYear;
+      if (age < 15 || age > 24) {
+        setFormData(data);
+        setAgeValue(age);
+        setDialogOpen(true);
+        return;
+      }
+    }
+    //end of new
+
     const response = await modifyFellow({
       ...data,
       mode,
@@ -149,11 +169,24 @@ export function FellowModifyDialog({
         title: "Something went wrong",
       });
     }
+    setContinueProcess(false);
   }
 
   function onError(errors: any) {
     console.log({ errors });
   }
+  // new
+  const handleContinue = async () => {
+    // console.log("sjskskskk");
+    if (formData) {
+      // console.log("handleSubmit");
+      // console.log({ formData });
+      setContinueProcess((prev) => true);
+      setDialogOpen((prev) => !prev);
+      await onSubmit(formData);
+    }
+  };
+  // end of new
 
   return (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -458,6 +491,14 @@ export function FellowModifyDialog({
             </div>
           </form>
         </Form>
+        {/* new */}
+        <AgeLimitConfirmationDialogue
+          ageValue={ageValue}
+          open={open}
+          setDialogOpen={setDialogOpen}
+          handleSubmit={handleContinue}
+        />
+        {/* end of new */}
       </SheetContent>
     </Sheet>
   );
