@@ -1,11 +1,11 @@
 import Link from "next/link";
 
+import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
 import { CurrentSupervisor, currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
 import { db } from "#/lib/db";
 import { getInitials } from "#/lib/utils";
-import { FellowModifyDialog } from "../schools/[visibleId]/fellow-modify-dialog";
 import FellowCard from "./components/fellow-card";
 import { MySchools } from "./my-schools";
 import { ReimbursementRequests } from "./reimbursement-requests";
