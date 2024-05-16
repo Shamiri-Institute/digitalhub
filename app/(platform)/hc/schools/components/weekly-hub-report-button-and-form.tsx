@@ -1,5 +1,6 @@
 "use client";
 
+import RatingStars from "#/components/rating-stars";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -28,6 +29,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, startOfWeek, subWeeks } from "date-fns";
+import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -66,9 +68,17 @@ export default function WeeklyHubReportButtonAndForm({
   const form = useForm<z.infer<typeof WeeklyHubReportSchema>>({
     resolver: zodResolver(WeeklyHubReportSchema),
     defaultValues: {
-      positiveHighlights: "",
+      successes: "",
+      challenges: "",
+      schoolRelatedIssuesAndObservations: "",
+      schoolRelatedIssuesAndObservationRating: 0,
+      hubRelatedIssuesAndObservations: "",
+      hubRelatedIssuesAndObservationsRating: 0,
+      supervisorRelatedIssuesAndObservations: "",
+      supervisorRelatedIssuesAndObservationsRating: 0,
+      fellowRelatedIssuesAndObservations: "",
+      fellowRelatedIssuesAndObservationsRating: 0,
       recommendations: "",
-      reportedChallenges: "",
       hubCoordinatorId,
       hubId,
     },
@@ -112,7 +122,7 @@ export default function WeeklyHubReportButtonAndForm({
           Weekly Hub Report
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-xl font-semibold leading-7">
           Submit weekly hub report
         </DialogHeader>
@@ -141,12 +151,55 @@ export default function WeeklyHubReportButtonAndForm({
                   </FormItem>
                 )}
               />
+              <div className="flex items-center">
+                <FormField
+                  control={form.control}
+                  name="hubRelatedIssuesAndObservations"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex">
+                        Hub Related Issues and Observations{" "}
+                        <FormField
+                          control={form.control}
+                          name="hubRelatedIssuesAndObservationsRating"
+                          render={({ field }) => (
+                            <RatingStars
+                              rating={field.value}
+                              onSelect={field.onChange}
+                            />
+                          )}
+                        />
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder=""
+                          className="resize-none"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
-                name="positiveHighlights"
+                name="schoolRelatedIssuesAndObservations"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Positive Highlights</FormLabel>
+                    <FormLabel className="flex">
+                      School Related Issues and Observations
+                      <FormField
+                        control={form.control}
+                        name="schoolRelatedIssuesAndObservationRating"
+                        render={({ field }) => (
+                          <RatingStars
+                            rating={field.value}
+                            onSelect={field.onChange}
+                          />
+                        )}
+                      />
+                    </FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder=""
@@ -160,10 +213,85 @@ export default function WeeklyHubReportButtonAndForm({
               />
               <FormField
                 control={form.control}
-                name="reportedChallenges"
+                name="supervisorRelatedIssuesAndObservations"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Reported Challenges</FormLabel>
+                    <FormLabel className="flex">
+                      Supervisor Related Issues and Observations
+                      <FormField
+                        control={form.control}
+                        name="supervisorRelatedIssuesAndObservationsRating"
+                        render={({ field }) => (
+                          <RatingStars
+                            rating={field.value}
+                            onSelect={field.onChange}
+                          />
+                        )}
+                      />
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder=""
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="fellowRelatedIssuesAndObservations"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex">
+                      Fellow Related Issues and Observations
+                      <FormField
+                        control={form.control}
+                        name="fellowRelatedIssuesAndObservationsRating"
+                        render={({ field }) => (
+                          <RatingStars
+                            rating={field.value}
+                            onSelect={field.onChange}
+                          />
+                        )}
+                      />
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder=""
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="successes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Successes</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder=""
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="challenges"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Challenges</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder=""
@@ -197,11 +325,18 @@ export default function WeeklyHubReportButtonAndForm({
             <DialogFooter>
               <Button
                 variant="ghost"
-                className="text-base font-semibold leading-6 text-shamiri-new-blue"
+                className="text-base font-semibold leading-6 text-shamiri-red"
+                onClick={() => {
+                  form.reset();
+                  setDialogOpen(false);
+                }}
               >
                 Cancel
               </Button>
               <Button className="bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
+                {form.formState.isSubmitting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
                 Submit
               </Button>
             </DialogFooter>
