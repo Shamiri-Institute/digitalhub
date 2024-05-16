@@ -142,14 +142,7 @@ export async function submitWeeklyHubReport(
     const parsedData = WeeklyHubReportSchema.parse(data);
 
     await db.weeklyHubReport.create({
-      data: {
-        week: parsedData.week,
-        reportedChallenges: parsedData.reportedChallenges,
-        recommendations: parsedData.recommendations,
-        positiveHighlights: parsedData.positiveHighlights,
-        hubId: parsedData.hubId,
-        submittedBy: parsedData.hubCoordinatorId,
-      },
+      data: parsedData,
     });
 
     // TODO:
