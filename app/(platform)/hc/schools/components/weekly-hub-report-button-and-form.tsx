@@ -79,7 +79,7 @@ export default function WeeklyHubReportButtonAndForm({
       fellowRelatedIssuesAndObservations: "",
       fellowRelatedIssuesAndObservationsRating: 0,
       recommendations: "",
-      hubCoordinatorId,
+      submittedBy: hubCoordinatorId,
       hubId,
     },
   });
@@ -100,7 +100,7 @@ export default function WeeklyHubReportButtonAndForm({
     toast({
       variant: "default",
       title: "Success",
-      description: "Successfully submitted weekly evaluation",
+      description: "Successfully submitted weekly hub report",
     });
 
     form.reset();
@@ -157,7 +157,7 @@ export default function WeeklyHubReportButtonAndForm({
                   name="hubRelatedIssuesAndObservations"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex">
+                      <FormLabel className="flex gap-4">
                         Hub Related Issues and Observations{" "}
                         <FormField
                           control={form.control}
@@ -187,7 +187,7 @@ export default function WeeklyHubReportButtonAndForm({
                 name="schoolRelatedIssuesAndObservations"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex">
+                    <FormLabel className="flex gap-4">
                       School Related Issues and Observations
                       <FormField
                         control={form.control}
@@ -216,7 +216,7 @@ export default function WeeklyHubReportButtonAndForm({
                 name="supervisorRelatedIssuesAndObservations"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex">
+                    <FormLabel className="flex gap-4">
                       Supervisor Related Issues and Observations
                       <FormField
                         control={form.control}
@@ -245,7 +245,7 @@ export default function WeeklyHubReportButtonAndForm({
                 name="fellowRelatedIssuesAndObservations"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex">
+                    <FormLabel className="flex gap-4">
                       Fellow Related Issues and Observations
                       <FormField
                         control={form.control}

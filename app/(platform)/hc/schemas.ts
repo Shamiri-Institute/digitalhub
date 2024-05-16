@@ -15,7 +15,7 @@ export const DropoutSchoolSchema = z.object({
 
 export const WeeklyHubReportSchema = z.object({
   hubId: stringValidation("Missing hub ID"),
-  hubCoordinatorId: stringValidation("Missing hub coordinator ID"),
+  submittedBy: stringValidation("Missing hub coordinator ID"),
   week: z.coerce.date({ required_error: "Please select a week" }),
   recommendations: stringValidation("Please input recommendations"),
   schoolRelatedIssuesAndObservations: stringValidation(),
