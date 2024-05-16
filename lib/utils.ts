@@ -88,7 +88,7 @@ export function isSessionScheduled(
   );
 }
 
-export function stringValidation(message: string) {
+export function stringValidation(message: string | undefined = "Required*") {
   return z.string({ required_error: message }).trim().min(1, { message });
 }
 

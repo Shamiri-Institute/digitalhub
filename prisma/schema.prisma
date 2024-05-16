@@ -1113,17 +1113,25 @@ model ProjectImplementer {
 }
 
 model WeeklyHubReport {
-  id                 String         @id @default(cuid())
-  createdAt          DateTime       @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt          DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
-  positiveHighlights String         @map("positive_highlights") @db.Text
-  reportedChallenges String         @map("reported_challenges") @db.Text
-  recommendations    String         @map("recommendations") @db.Text
-  week               DateTime       @db.Date // stores the week of the report
-  submittedBy        String         @map("submitted_by") @db.VarChar(255)
-  hubCoordinator     HubCoordinator @relation(fields: [submittedBy], references: [id])
-  hubId              String         @map("hub_id") @db.VarChar(255)
-  hub                Hub            @relation(fields: [hubId], references: [id])
+  id                                           String         @id @default(cuid())
+  createdAt                                    DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                                    DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
+  schoolRelatedIssuesAndObservations           String         @map("school_related_issues_and_observations") @db.Text
+  schoolRelatedIssuesAndObservationRating      Int            @map("school_related_issues_and_observations_rating")
+  supervisorRelatedIssuesAndObservations       String         @map("supervisor_related_issues_and_observations") @db.Text
+  supervisorRelatedIssuesAndObservationsRating Int            @map("supervisor_related_issues_and_observations_rating")
+  fellowRelatedIssuesAndObservations           String         @map("fellow_related_issues_and_observations") @db.Text
+  fellowRelatedIssuesAndObservationsRating     Int            @map("fellow_related_issues_and_observations_rating")
+  hubRelatedIssuesAndObservations              String         @map("hub_related_issues_and_observations") @db.Text
+  hubRelatedIssuesAndObservationsRating        Int            @map("hub_related_issues_and_observations_rating")
+  successes                                    String         @db.Text
+  challenges                                   String         @db.Text
+  recommendations                              String         @map("recommendations") @db.Text
+  week                                         DateTime       @db.Date // stores the week of the report
+  submittedBy                                  String         @map("submitted_by") @db.VarChar(255)
+  hubCoordinator                               HubCoordinator @relation(fields: [submittedBy], references: [id])
+  hubId                                        String         @map("hub_id") @db.VarChar(255)
+  hub                                          Hub            @relation(fields: [hubId], references: [id])
 
   @@map("weekly_hub_reports")
 }
