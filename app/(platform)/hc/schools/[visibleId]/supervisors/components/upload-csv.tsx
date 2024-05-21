@@ -16,9 +16,7 @@ export function BatchUploadDownloadSupervisors() {
       >
         Download supervisor csv template
       </Button>
-      <FileUploader
-        url='/api/csv-uploads/supervisors'
-      />
+      <FileUploader url="/api/csv-uploads/supervisors" />
     </div>
   );
 }

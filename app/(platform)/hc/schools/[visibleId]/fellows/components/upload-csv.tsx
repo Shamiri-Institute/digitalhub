@@ -16,9 +16,7 @@ export function BatchUploadDownloadFellow() {
       >
         Download fellow csv template
       </Button>
-      <FileUploader
-        url="/api/csv-uploads/fellows"
-      />
+      <FileUploader url="/api/csv-uploads/fellows" />
     </div>
   );
 }
