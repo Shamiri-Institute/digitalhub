@@ -1,3 +1,4 @@
+import { BatchUploadDownloadSupervisors } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/upload-csv";
 import { db } from "#/lib/db";
 import DataTable from "../../components/data-table";
 import { columns } from "./components/columns";
@@ -26,10 +27,13 @@ export default async function SupervisorsPage({
   });
 
   return (
-    <DataTable
-      data={supervisors}
-      columns={columns}
-      emptyStateMessage="No supervisors found for this school"
-    />
+    <>
+      <DataTable
+        data={supervisors}
+        columns={columns}
+        emptyStateMessage="No supervisors found for this school"
+      />
+      <BatchUploadDownloadSupervisors />
+    </>
   );
 }
