@@ -30,6 +30,7 @@ import {
   SunMedium,
   Users2,
   XIcon,
+  UploadCloudIcon,
   // StarIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -69,7 +70,7 @@ export const Icons = {
   starOutline: Star,
   heartPulse: HeartPulse,
   helpCircle: HelpCircle,
-
+  uploadCloudIcon: UploadCloudIcon,
   // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (
     <svg
