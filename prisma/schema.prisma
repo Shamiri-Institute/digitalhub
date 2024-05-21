@@ -527,6 +527,7 @@ model Supervisor {
   visibleId                 String                      @unique @map("visible_id") @db.VarChar(100)
   supervisorName            String?                     @map("supervisor_name") @db.VarChar(255)
   supervisorEmail           String?                     @map("supervisor_email") @db.VarChar(255)
+  personalEmail             String?                     @map("personal_email") @db.VarChar(255)
   idNumber                  String?                     @map("id_number") @db.VarChar(255)
   cellNumber                String?                     @map("cell_number") @db.VarChar(255)
   mpesaName                 String?                     @map("mpesa_name") @db.VarChar(255)
