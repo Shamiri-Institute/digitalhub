@@ -79,7 +79,7 @@ export function SchoolReportCard({
             onClick={onOccurrenceToggleClick}
             className={cn(
               "bg-light-grey h-6 w-6 rounded-full",
-              occurring ? "bg-muted-green" : "bg-light-grey",
+              occurring ? "bg-muted-green" : "bg-shamiri-text-dark-grey",
             )}
           >
             <span className="sr-only">
