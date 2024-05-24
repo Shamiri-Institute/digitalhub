@@ -3,7 +3,7 @@
 import { Prisma } from "@prisma/client";
 import differenceInYears from "date-fns/differenceInYears";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { RequestRepaymentDialog } from "#/app/(platform)/profile/components/request-repayment-dialog";
 import { Icons } from "#/components/icons";
@@ -26,8 +26,7 @@ import FellowDetailsForm from "./fellow-management-form";
 import FellowEvaluationForm from "./overall-evaluation-form";
 import ReportingNotesForm from "./reporting-notes-form";
 import WeeklyEvaluationForm from "./weekly-fellow-evaluation-form";
-
-// TODO: Lazy load data on joins
+import { fetchFellowRatings } from "#/lib/actions/fetch-fellow-ratings";
 
 export default function FellowCard<T extends Prisma.FellowGetPayload<{
   include: {
@@ -172,6 +171,22 @@ function FellowCardMenu<T extends Prisma.FellowGetPayload<{
 }) {
   const [open, setOpen] = useState(false);
   const closeDialog = () => setOpen(false);
+  const [behaviourRating, setBehaviourRating] = useState(0)
+  const [programDeliveryRating, setProgramDeliveryRating] = useState(0)
+  const [dressingAndGroomingRating, setDressingAndGroomingRating] = useState(0)
+  const [punctualityRating, setPunctualityRating] = useState(0)
+
+  useEffect(()=>{
+    async function getData(){
+      const response = await fetchFellowRatings(fellow.id)
+      setBehaviourRating(response.behaviourRating ?? 0)
+      setProgramDeliveryRating(response.programDeliveryRating ?? 0)
+      setDressingAndGroomingRating(response.dressingAndGroomingRating ?? 0)
+      setPunctualityRating(response.punctualityRating ?? 0)
+    }
+
+    getData()
+  },[])
 
   return (
     <DropdownMenu>
@@ -203,16 +218,10 @@ function FellowCardMenu<T extends Prisma.FellowGetPayload<{
         <MenuLineItem>
           <FellowEvaluationForm
             fellowName={fellow.fellowName ?? ""}
-            // TODO: Lazy load
-
-            // behaviourRating={fellow.behaviourRating ?? 0}
-            // programDeliveryRating={fellow.programDeliveryRating ?? 0}
-            // dressingAndGroomingRating={fellow.dressingAndGroomingRating ?? 0}
-            // punctualityRating={fellow.punctualityRating ?? 0}
-            behaviourRating={0}
-            programDeliveryRating={0}
-            dressingAndGroomingRating={0}
-            punctualityRating={0}
+            behaviourRating={behaviourRating}
+            programDeliveryRating={programDeliveryRating}
+            dressingAndGroomingRating={dressingAndGroomingRating}
+            punctualityRating={punctualityRating}
             fellowId={fellow.id}
             supervisorId={fellow.supervisorId ?? ""}
             previousReportingNotes={fellow.fellowReportingNotes ?? []}
