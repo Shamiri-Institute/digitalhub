@@ -13,7 +13,8 @@ export const config: Config = {
       center: true,
       padding: "2rem",
       screens: {
-        "2xl": "1400px",
+        // DEFAULT: '0.5rem',
+        // "2xl": "1400px",
       },
     },
     extend: {
