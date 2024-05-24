@@ -1,11 +1,11 @@
 "use client";
 
+import { Prisma } from "@prisma/client";
 import differenceInYears from "date-fns/differenceInYears";
 import Link from "next/link";
 import { useState } from "react";
 
 import { RequestRepaymentDialog } from "#/app/(platform)/profile/components/request-repayment-dialog";
-import type { CurrentSupervisor } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Card } from "#/components/ui/card";
@@ -27,11 +27,25 @@ import FellowEvaluationForm from "./overall-evaluation-form";
 import ReportingNotesForm from "./reporting-notes-form";
 import WeeklyEvaluationForm from "./weekly-fellow-evaluation-form";
 
-export default function FellowCard({
+// TODO: Lazy load data on joins
+
+export default function FellowCard<T extends Prisma.FellowGetPayload<{
+  include: {
+    fellowAttendances: true,
+    hub: true,
+    weeklyFellowRatings: true,
+    fellowComplaints: true,
+    fellowReportingNotes: {
+      include: {
+        supervisor: true
+      }
+    }
+  }
+}>>({
   fellow,
   assigned,
 }: {
-  fellow: NonNullable<CurrentSupervisor>["fellows"][number];
+  fellow: T;
   assigned?: boolean;
 }) {
   return (
@@ -139,11 +153,21 @@ function CardDetailLineItem({
   );
 }
 
-function FellowCardMenu({
+function FellowCardMenu<T extends Prisma.FellowGetPayload<{
+  include: {
+    weeklyFellowRatings: true,
+    fellowComplaints: true,
+    fellowReportingNotes: {
+      include: {
+        supervisor: true
+      }
+    }
+  }
+}>>({
   fellow,
   children,
 }: {
-  fellow: NonNullable<CurrentSupervisor>["fellows"][number];
+  fellow: T;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -179,10 +203,16 @@ function FellowCardMenu({
         <MenuLineItem>
           <FellowEvaluationForm
             fellowName={fellow.fellowName ?? ""}
-            behaviourRating={fellow.behaviourRating ?? 0}
-            programDeliveryRating={fellow.programDeliveryRating ?? 0}
-            dressingAndGroomingRating={fellow.dressingAndGroomingRating ?? 0}
-            punctualityRating={fellow.punctualityRating ?? 0}
+            // TODO: Lazy load
+
+            // behaviourRating={fellow.behaviourRating ?? 0}
+            // programDeliveryRating={fellow.programDeliveryRating ?? 0}
+            // dressingAndGroomingRating={fellow.dressingAndGroomingRating ?? 0}
+            // punctualityRating={fellow.punctualityRating ?? 0}
+            behaviourRating={0}
+            programDeliveryRating={0}
+            dressingAndGroomingRating={0}
+            punctualityRating={0}
             fellowId={fellow.id}
             supervisorId={fellow.supervisorId ?? ""}
             previousReportingNotes={fellow.fellowReportingNotes ?? []}

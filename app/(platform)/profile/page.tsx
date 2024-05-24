@@ -1,9 +1,9 @@
+import { Prisma } from "@prisma/client";
 import Link from "next/link";
 
-import { CurrentSupervisor, currentSupervisor } from "#/app/auth";
+import { fetchCurrentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
-import { db } from "#/lib/db";
 import { getInitials } from "#/lib/utils";
 import { FellowModifyDialog } from "../schools/[visibleId]/fellow-modify-dialog";
 import FellowCard from "./components/fellow-card";
@@ -11,56 +11,84 @@ import { MySchools } from "./my-schools";
 import { ReimbursementRequests } from "./reimbursement-requests";
 
 export default async function SupervisorProfile() {
-  let supervisor = await currentSupervisor();
-  if (!supervisor) {
-    return <InvalidPersonnelRole role="supervisor" />;
-  }
-
-  const fellowsCount = supervisor.fellows.length;
-
-  // SELECT COUNT(*) FROM schools WHERE hub_id = 'hub_01hetrj9mhf8kbq9tcm3eyg66v';
-
-  const schoolCount = await db.school.count({
-    where: {
-      hubId: supervisor.hubId,
+  let supervisor: Prisma.SupervisorGetPayload<{
+    include: {
+      _count: {
+        select: { fellows: true, assignedSchools: true },
+      },
+      fellows: {
+        include: {
+          _count: {
+            select: {
+              students: true
+            }
+          },
+          fellowAttendances: true,
+          hub: true,
+          weeklyFellowRatings: true,
+          fellowComplaints: true,
+          fellowReportingNotes: {
+            include: {
+              supervisor: true
+            }
+          }
+        }
+      },
+      reimbursementRequests: {
+        orderBy: {
+          incurredAt: "desc",
+        },
+      },
+      implementer: true,
+      hub: true,
+      assignedSchools: true
+    }, 
+  }>| null = await fetchCurrentSupervisor({
+    include: {
+      _count: {
+        select: { fellows: true, assignedSchools: true },
+      },
+      fellows: {
+        include: {
+          _count: {
+            select: {
+              students: true
+            }
+          },
+          fellowAttendances: true,
+          hub: true,
+          weeklyFellowRatings: true,
+          fellowComplaints: true,
+          fellowReportingNotes: {
+            include: {
+              supervisor: true
+            }
+          }
+        },
+      },
+      reimbursementRequests: {
+        orderBy: {
+          incurredAt: "desc",
+        },
+      },
+      implementer: true,
+      hub: true,
+      assignedSchools: true
     },
   });
 
-  // STUDENT COUNT
-
-  // SELECT * FROM fellows WHERE supervisor_id = current_supervisor_id INNER JOIN students ON fellows.id = students.fellow_id
-
-  // SELECT fellows.fellow_name, students.student_name FROM fellows INNER JOIN students ON fellows.id = students.fellow_id WHERE fellows.supervisor_id = 'sup_01hetrjb41f80a5hee3430bh79';
-
-  const studentCount = (
-    await db.fellow.findMany({
-      where: {
-        supervisorId: supervisor.id,
-      },
-      include: {
-        students: true,
-      },
-    })
-  )
-    .map((fellow) => fellow.students.length)
-    .reduce((a, b) => a + b, 0);
+  if (supervisor === null) {
+    return <InvalidPersonnelRole role="supervisor" />;
+  }
+  const fellowsCount = supervisor._count.fellows;
+  const schoolCount = supervisor._count.assignedSchools
+  const studentCount = supervisor.fellows
+  .map((fellow: any) => fellow._count.students)
+  .reduce((a: any, b: any) => a + b, 0);
 
   let supervisorName = supervisor.supervisorName ?? "N/A";
 
-  const reimbursementRequests = await db.reimbursementRequest.findMany({
-    where: {
-      supervisorId: supervisor.id,
-    },
-    orderBy: {
-      incurredAt: "desc",
-    },
-  });
-
-  const implementer = await db.implementer.findFirst({
-    where: {
-      id: supervisor.hub?.implementerId,
-    },
-  });
+  const implementer = supervisor.implementer
 
   const modifyDialogInfo = {
     hubVisibleId: supervisor.hub?.visibleId!,
@@ -100,7 +128,7 @@ export default async function SupervisorProfile() {
       </div>
 
       <MyFellows fellows={supervisor.fellows} />
-      <ReimbursementRequests requests={reimbursementRequests} />
+      <ReimbursementRequests requests={supervisor.reimbursementRequests} />
     </main>
   );
 }
@@ -172,15 +200,27 @@ function ProfileHeader({
   );
 }
 
-function MyFellows({
+function MyFellows<T extends Prisma.FellowGetPayload<{
+  include: {
+    fellowAttendances: true,
+    hub: true
+    weeklyFellowRatings: true,
+    fellowComplaints: true,
+    fellowReportingNotes: {
+      include: {
+        supervisor: true
+      }
+    }
+  }
+}>>({
   fellows,
 }: {
-  fellows: NonNullable<CurrentSupervisor>["fellows"];
+  fellows: T[];
 }) {
   return (
     <div className="mt-6 grid grid-cols-1 gap-4 sm:items-center sm:gap-6 md:grid-cols-2">
       {fellows.map((fellow) => (
-        <FellowCard key={fellow.id} fellow={fellow} />
+        <FellowCard<T> key={fellow.id} fellow={fellow} />
       ))}
     </div>
   );

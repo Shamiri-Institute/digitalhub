@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { getServerSession } from "next-auth";
 
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
@@ -30,6 +31,30 @@ export async function currentHubCoordinator() {
 }
 
 export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
+export type CurrentNewSupervisor = Awaited<ReturnType<typeof fetchCurrentSupervisor>>;
+
+export async function fetchCurrentSupervisor<T extends Prisma.SupervisorFindFirstArgs>(options: T): Promise<any | null> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { membership } = user;
+
+  const { identifier } = membership;
+  if (!identifier) {
+    return null;
+  }
+
+  const supervisor = await db.supervisor.findFirst({
+    ...{
+      where: { id: identifier }
+    },
+    ...options,
+  })
+
+  return supervisor
+}
+
 
 export async function currentSupervisor() {
   const user = await getCurrentUser();

@@ -1,7 +1,7 @@
 "use server";
 
 import { SchoolCardProfile } from "#/app/(platform)/profile/components/school-card";
-import { CurrentSupervisor } from "#/app/auth";
+import { CurrentNewSupervisor } from "#/app/auth";
 import { getSchoolsForSupervisor } from "#/lib/actions/get-schools-for-supervisor";
 import { Prisma } from "@prisma/client";
 
@@ -13,7 +13,7 @@ type SchoolWithSessions = {
 export async function MySchools({
   supervisor,
 }: {
-  supervisor: NonNullable<CurrentSupervisor>;
+  supervisor: NonNullable<CurrentNewSupervisor>;
 }) {
   const fetchedSchools = await getSchoolsForSupervisor(supervisor);
   const schools: SchoolWithSessions[] = fetchedSchools || [];

@@ -34,9 +34,11 @@ type Props = {
   dressingAndGroomingRating?: number;
   punctualityRating?: number;
   supervisorId: string;
-  previousReportingNotes?: (Prisma.FellowReportingNotesGetPayload<{}> & {
-    supervisor: Prisma.SupervisorGetPayload<{}>;
-  })[];
+  previousReportingNotes?: (Prisma.FellowReportingNotesGetPayload<{
+    include: {
+      supervisor: true
+    }
+  }>)[];
 };
 
 const InputSchema = OverallFellowSchema.pick({
