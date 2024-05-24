@@ -598,6 +598,12 @@ const ids = {
           role: ImplementerRole.SUPERVISOR,
           roleByVisibleId: "SPV24_S_01",
         },
+        davis: {
+          id: objectId("user"),
+          email: "wambugu.davis@shamiri.institute",
+          role: ImplementerRole.SUPERVISOR,
+          roleByVisibleId: "SPV24_S_01",
+        },
       },
     },
   },
@@ -792,9 +798,9 @@ async function seedDatabase() {
                 school: {
                   connect: { id: createdSchool.id },
                 },
-                assignedGroup: {
-                  connect: { id: student.assignedGroupId },
-                },
+                // assignedGroup: {
+                //   connect: { id: student.assignedGroupId },
+                // },
               },
             });
           }
