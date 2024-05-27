@@ -1767,6 +1767,7 @@ export async function addNonShamiriStudentViaClinicalScreening(
     stream: string;
     gender: string;
     schoolId: string;
+    studentGroup?: string;
   },
   {
     implementerId,
@@ -1811,6 +1812,7 @@ export async function addNonShamiriStudentViaClinicalScreening(
         county: data.county,
         phoneNumber: data.contactNumber,
         isClinicalCase: true,
+        groupName: data.studentGroup,
       },
     });
 
