@@ -36,7 +36,10 @@ export const NonShamirianStudentSchema = z.object({
   age: stringValidation("Please enter the student's age."),
 
   county: stringValidation("Please enter the student's county."),
-
+  studentGroup: z
+    .string({ required_error: "Please enter the student's group." })
+    .trim()
+    .optional(),
   form: stringValidation("Please enter the student's form."),
   contactNumber: stringValidation(
     "Please enter the student's contact number.",
@@ -72,6 +75,7 @@ export default function CreateNonShamiriStudentPage({
       schoolId: "",
       stream: "",
       studentName: "",
+      studentGroup: "",
     },
   });
 
@@ -211,7 +215,6 @@ export default function CreateNonShamiriStudentPage({
                   )}
                 />
               </div>
-
               <div>
                 <FormField
                   control={form.control}
@@ -238,29 +241,44 @@ export default function CreateNonShamiriStudentPage({
                   )}
                 />
               </div>
-
-              <div>
+              <div className="px-6">
                 <FormField
                   control={form.control}
-                  name="county"
+                  name="gender"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>County</FormLabel>
-
+                      <FormLabel>Gender</FormLabel>
                       <FormControl>
-                        <div className="mt-2 grid w-full gap-1.5">
-                          <Input
-                            id="county"
-                            name="county"
-                            type="text"
-                            onChange={field.onChange}
-                            defaultValue={field.value}
-                            placeholder="County: eg Nairobi"
-                            className="resize-none bg-card"
-                          />
-                        </div>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="Male" />
+                            </FormControl>
+                            <FormLabel className="active:scale-95">
+                              Male
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="Female" />
+                            </FormControl>
+                            <FormLabel className="active:scale-95">
+                              Female
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="Other" />
+                            </FormControl>
+                            <FormLabel className="active:scale-95">
+                              Other
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -322,32 +340,6 @@ export default function CreateNonShamiriStudentPage({
               <div>
                 <FormField
                   control={form.control}
-                  name="contactNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Number</FormLabel>
-                      <FormControl>
-                        <div className="mt-2 grid w-full gap-1.5">
-                          <Input
-                            id="contactNumber"
-                            name="contactNumber"
-                            type="text"
-                            onChange={field.onChange}
-                            defaultValue={field.value}
-                            placeholder="Contact number eg. 0712345678"
-                            className="resize-none bg-card"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div>
-                <FormField
-                  control={form.control}
                   name="stream"
                   render={({ field }) => (
                     <FormItem>
@@ -371,44 +363,81 @@ export default function CreateNonShamiriStudentPage({
                 />
               </div>
 
-              <div className="px-6">
+              <div>
                 <FormField
                   control={form.control}
-                  name="gender"
+                  name="studentGroup"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Gender</FormLabel>
+                      <FormLabel>Student&apos;s Group</FormLabel>
+
                       <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="Male" />
-                            </FormControl>
-                            <FormLabel className="active:scale-95">
-                              Male
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="Female" />
-                            </FormControl>
-                            <FormLabel className="active:scale-95">
-                              Female
-                            </FormLabel>
-                          </FormItem>
-                          <FormItem className="flex items-center space-x-3 space-y-0">
-                            <FormControl>
-                              <RadioGroupItem value="Other" />
-                            </FormControl>
-                            <FormLabel className="active:scale-95">
-                              Other
-                            </FormLabel>
-                          </FormItem>
-                        </RadioGroup>
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="studentGroup"
+                            name="studentGroup"
+                            type="text"
+                            onChange={field.onChange}
+                            defaultValue={field.value}
+                            placeholder="Student group eg. 11_A22"
+                            className="resize-none bg-card"
+                          />
+                        </div>
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div>
+                <FormField
+                  control={form.control}
+                  name="county"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>County</FormLabel>
+
+                      <FormControl>
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="county"
+                            name="county"
+                            type="text"
+                            onChange={field.onChange}
+                            defaultValue={field.value}
+                            placeholder="County: eg Nairobi"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div>
+                <FormField
+                  control={form.control}
+                  name="contactNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Number</FormLabel>
+                      <FormControl>
+                        <div className="mt-2 grid w-full gap-1.5">
+                          <Input
+                            id="contactNumber"
+                            name="contactNumber"
+                            type="text"
+                            onChange={field.onChange}
+                            defaultValue={field.value}
+                            placeholder="Contact number eg. 0712345678"
+                            className="resize-none bg-card"
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />

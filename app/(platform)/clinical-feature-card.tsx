@@ -119,16 +119,17 @@ function ClinicalCasesDonutChart({
     return null;
   }
 
-  const emptyDataObject = [{
-    name: '',
-    value: 100
-  }]
+  const emptyDataObject = [
+    {
+      name: "",
+      value: 100,
+    },
+  ];
 
-  
   const sum = data.reduce((a, b) => {
-    return a + b.value
-  }, 0)
-  
+    return a + b.value;
+  }, 0);
+
   return (
     <PieChart width={100} height={100}>
       <Pie
@@ -143,7 +144,10 @@ function ClinicalCasesDonutChart({
         stroke="none"
       >
         {data.map((entry, index) => (
-          <Cell key={`cell-${index}`} fill={sum === 0 ? '#e5e7eb' : colors[index % colors.length]} />
+          <Cell
+            key={`cell-${index}`}
+            fill={sum === 0 ? "#e5e7eb" : colors[index % colors.length]}
+          />
         ))}
       </Pie>
     </PieChart>
