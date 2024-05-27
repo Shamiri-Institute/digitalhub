@@ -536,7 +536,7 @@ const ids = {
                       gender: "F",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
-                      assignedGroupId: "G1",
+                      assignedGroupId: "G11",
                     },
                     ANS24_Stu_02: {
                       id: objectId("stu"),
@@ -547,7 +547,7 @@ const ids = {
                       gender: "M",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
-                      assignedGroupId: "G1",
+                      assignedGroupId: "G11",
                     },
                     ANS24_Stu_03: {
                       id: objectId("stu"),
@@ -558,7 +558,7 @@ const ids = {
                       gender: "F",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
-                      assignedGroupId: "G1",
+                      assignedGroupId: "G11",
                     },
                     ANS24_Stu_04: {
                       id: objectId("stu"),
@@ -569,7 +569,7 @@ const ids = {
                       gender: "M",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
-                      assignedGroupId: "G1",
+                      assignedGroupId: "G11",
                     },
                   },
                 },
