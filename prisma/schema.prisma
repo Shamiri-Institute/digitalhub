@@ -254,6 +254,7 @@ model StudentAttendance {
   absenceReason String?             @map("absence_reason")
   sessionId     String              @map("session_id")
   session       InterventionSession @relation(fields: [sessionId], references: [id])
+  // update this
   groupId       String              @map("group_id") @db.VarChar(255)
   group         InterventionGroup   @relation(fields: [groupId], references: [id])
 
