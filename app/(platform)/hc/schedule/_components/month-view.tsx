@@ -16,9 +16,14 @@ import { CalendarState } from "react-stately";
 
 import { cn } from "#/lib/utils";
 
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SessionList } from "./session-list";
 import { useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export function MonthView({
   state,
@@ -37,52 +42,80 @@ export function MonthView({
     month: "long",
     year: "numeric",
   });
+  const headerRowRef: any = useRef(null);
+
   useEffect(() => {
     if (state.value) {
       setTitle(`${titleFormatter.format(state.value.toDate(state.timeZone))}`);
     }
   }, [setTitle, state.timeZone, state.value, titleFormatter]);
 
+  useGSAP(
+    () => {
+      if (headerRowRef !== null) {
+        gsap.timeline({
+          scrollTrigger: {
+            trigger: headerRowRef.current,
+            start: () => "top top",
+            end: () => "+=100%",
+            scrub: true,
+            pin: true,
+            pinSpacing: false,
+            // markers: true,
+          },
+        });
+      }
+    },
+    { scope: headerRowRef },
+  );
+
   return (
-    <table
-      {...gridProps}
-      className="w-full table-fixed border-separate overflow-hidden rounded-[0.4375rem] border border-grey-border [border-spacing:0]"
-    >
-      <thead {...headerProps}>
-        <tr className="divide-x divide-grey-border bg-grey-bg">
-          {weekDays.map((day, index) => (
-            <th
-              key={index}
-              className={cn("px-4 py-3 text-left", {
-                "bg-background-secondary": index === 0 || index === 6,
-              })}
-            >
-              {day}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
-          <tr key={weekIndex} className="divide-x divide-grey-border">
-            {state
-              .getDatesInWeek(weekIndex)
-              .map((date, i) =>
-                date ? (
-                  <MonthCalendarCell
-                    key={i}
-                    state={state}
-                    date={date}
-                    weekend={isWeekend(date, "en-US")}
-                  />
-                ) : (
-                  <td key={i} />
-                ),
-              )}
+    <div>
+      <table
+        ref={headerRowRef}
+        className="z-10 w-full table-fixed border-separate overflow-hidden rounded-t-[0.4375rem] border border-grey-border bg-white [border-spacing:0]"
+      >
+        <thead {...headerProps}>
+          <tr className="divide-x divide-grey-border bg-grey-bg">
+            {weekDays.map((day, index) => (
+              <th
+                key={index}
+                className={cn("px-4 py-3 text-left", {
+                  "bg-background-secondary": index === 0 || index === 6,
+                })}
+              >
+                {day}
+              </th>
+            ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+      </table>
+      <table
+        {...gridProps}
+        className="w-full table-fixed border-separate overflow-hidden rounded-b-[0.4375rem] border border-grey-border [border-spacing:0]"
+      >
+        <tbody>
+          {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
+            <tr key={weekIndex} className="divide-x divide-grey-border">
+              {state
+                .getDatesInWeek(weekIndex)
+                .map((date, i) =>
+                  date ? (
+                    <MonthCalendarCell
+                      key={i}
+                      state={state}
+                      date={date}
+                      weekend={isWeekend(date, "en-US")}
+                    />
+                  ) : (
+                    <td key={i} />
+                  ),
+                )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

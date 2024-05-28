@@ -110,7 +110,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
               <CreateSessionButton />
             </SessionsLoader>
           </div>
-          <div className="w-full mt-4">
+          <div className="mt-4 w-full">
             <CalendarView
               monthProps={{ state: monthState, weekdayStyle: "long" }}
               weekProps={{ state: weekState }}
