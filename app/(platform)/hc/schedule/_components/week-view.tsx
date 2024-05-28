@@ -10,11 +10,14 @@ import {
 } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 import { SessionList } from "./session-list";
 import { useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
 export function WeekView({ state }: { state: CalendarState }) {
+  const headerRowRef: any = useRef(null);
   const { gridProps, headerProps } = useCalendarGrid(
     { weekdayStyle: "long" },
     state,
@@ -57,70 +60,96 @@ export function WeekView({ state }: { state: CalendarState }) {
     return `${hourIn12HourFormat}:00 ${period}`;
   }
 
+  useGSAP(
+    () => {
+      if (headerRowRef !== null) {
+        gsap.timeline({
+          scrollTrigger: {
+            trigger: headerRowRef.current,
+            start: () => "top top",
+            end: () => "+=150%",
+            scrub: true,
+            pin: true,
+            pinSpacing: false,
+            // markers: true,
+          },
+        });
+      }
+    },
+    { scope: headerRowRef },
+  );
+
   return (
-    <table
-      {...gridProps}
-      className="w-full table-fixed border-separate overflow-hidden rounded-[0.4375rem] border border-grey-border [border-spacing:0]"
-    >
-      <thead {...headerProps}>
-        <tr className="divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
-          <th className="table-cell w-[103px] bg-background-secondary px-4 py-3"></th>
-          {state
-            .getDatesInWeek(0)
-            .map((date, i) =>
-              date ? (
-                <WeekCalendarHeaderCell
-                  key={i}
-                  colIdx={i}
-                  date={date}
-                  state={state}
-                  dayFormatter={dayFormatter}
-                />
-              ) : (
-                <td key={i} />
-              ),
-            )}
-        </tr>
-      </thead>
-      <tbody ref={tableBodyRef} className="w-full">
-        {hours.map((hour, rowIdx) => (
-          <tr
-            key={rowIdx}
-            className="table-row w-full divide-x divide-grey-border"
-          >
-            <td
-              className={cn(
-                "table-cell truncate border-t border-grey-border bg-grey-bg px-4 py-3 text-grey-c3",
-                "h-[85px] xl:h-[112px]",
-                "w-[103px]",
-                "bg-background-secondary text-sm",
-                {
-                  // "border-t-0": rowIdx === 0,
-                },
-              )}
-            >
-              <div className="flex">{formatHour(hour)}</div>
-            </td>
+    <div>
+      <table
+        ref={headerRowRef}
+        className="z-10 w-full table-fixed border-separate overflow-hidden rounded-t-[0.4375rem] border border-grey-border bg-white [border-spacing:0]"
+      >
+        <thead {...headerProps}>
+          <tr className="divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
+            <th className="table-cell w-[103px] bg-background-secondary px-4 py-3"></th>
             {state
               .getDatesInWeek(0)
-              .map((date, colIdx) =>
+              .map((date, i) =>
                 date ? (
-                  <WeekCalendarCell
-                    key={colIdx}
-                    colIdx={colIdx}
-                    rowIdx={rowIdx}
-                    hour={hour}
+                  <WeekCalendarHeaderCell
+                    key={i}
+                    colIdx={i}
                     date={date}
                     state={state}
+                    dayFormatter={dayFormatter}
                   />
                 ) : (
-                  <td key={colIdx} />
+                  <td key={i} />
                 ),
               )}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+      </table>
+      <table
+        {...gridProps}
+        className="w-full table-fixed border-separate overflow-hidden rounded-b-[0.4375rem] border border-grey-border [border-spacing:0]"
+      >
+        <tbody ref={tableBodyRef} className="w-full">
+          {hours.map((hour, rowIdx) => (
+            <tr
+              key={rowIdx}
+              className="table-row w-full divide-x divide-grey-border"
+            >
+              <td
+                className={cn(
+                  "table-cell truncate border-t border-grey-border bg-grey-bg px-4 py-3 text-grey-c3",
+                  "h-[85px] xl:h-[112px]",
+                  "w-[103px]",
+                  "bg-background-secondary text-sm",
+                  {
+                    // "border-t-0": rowIdx === 0,
+                  },
+                )}
+              >
+                <div className="flex">{formatHour(hour)}</div>
+              </td>
+              {state
+                .getDatesInWeek(0)
+                .map((date, colIdx) =>
+                  date ? (
+                    <WeekCalendarCell
+                      key={colIdx}
+                      colIdx={colIdx}
+                      rowIdx={rowIdx}
+                      hour={hour}
+                      date={date}
+                      state={state}
+                    />
+                  ) : (
+                    <td key={colIdx} />
+                  ),
+                )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
