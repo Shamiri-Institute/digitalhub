@@ -1,5 +1,5 @@
 import { CalendarDate, isToday } from "@internationalized/date";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useDateFormatter } from "react-aria";
 import { CalendarState } from "react-stately";
 
@@ -15,7 +15,10 @@ import { useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
 export function WeekView({ state }: { state: CalendarState }) {
-  const { gridProps } = useCalendarGrid({ weekdayStyle: "long" }, state);
+  const { gridProps, headerProps } = useCalendarGrid(
+    { weekdayStyle: "long" },
+    state,
+  );
 
   const startDate = state.visibleRange.start;
 
@@ -26,6 +29,8 @@ export function WeekView({ state }: { state: CalendarState }) {
   const dayFormatter = useDateFormatter({
     weekday: "long",
   });
+
+  const tableBodyRef: React.Ref<any | null> = useRef(null);
 
   const { setTitle } = useTitle();
   useEffect(() => {
@@ -55,17 +60,18 @@ export function WeekView({ state }: { state: CalendarState }) {
   return (
     <table
       {...gridProps}
-      className="block border-separate overflow-hidden rounded-[0.4375rem] border border-grey-border [border-spacing:0]"
+      className="w-full table-fixed border-separate overflow-hidden rounded-[0.4375rem] border border-grey-border [border-spacing:0]"
     >
-      <thead className="block">
-        <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
-          <th className="w-[103px] px-4 py-3"></th>
+      <thead {...headerProps}>
+        <tr className="divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
+          <th className="table-cell w-[103px] bg-background-secondary px-4 py-3"></th>
           {state
             .getDatesInWeek(0)
             .map((date, i) =>
               date ? (
                 <WeekCalendarHeaderCell
                   key={i}
+                  colIdx={i}
                   date={date}
                   state={state}
                   dayFormatter={dayFormatter}
@@ -76,21 +82,24 @@ export function WeekView({ state }: { state: CalendarState }) {
             )}
         </tr>
       </thead>
-      <tbody className="block h-[700px] overflow-y-scroll">
+      <tbody ref={tableBodyRef} className="w-full">
         {hours.map((hour, rowIdx) => (
-          <tr key={rowIdx} className="flex divide-x divide-grey-border">
+          <tr
+            key={rowIdx}
+            className="table-row w-full divide-x divide-grey-border"
+          >
             <td
               className={cn(
-                "flex truncate border-t border-grey-border bg-grey-bg px-4 py-3 text-grey-c3",
+                "table-cell truncate border-t border-grey-border bg-grey-bg px-4 py-3 text-grey-c3",
                 "h-[85px] xl:h-[112px]",
                 "w-[103px]",
-                "text-sm",
+                "bg-background-secondary text-sm",
                 {
-                  "border-t-0": rowIdx === 0,
+                  // "border-t-0": rowIdx === 0,
                 },
               )}
             >
-              {formatHour(hour)}
+              <div className="flex">{formatHour(hour)}</div>
             </td>
             {state
               .getDatesInWeek(0)
@@ -98,6 +107,7 @@ export function WeekView({ state }: { state: CalendarState }) {
                 date ? (
                   <WeekCalendarCell
                     key={colIdx}
+                    colIdx={colIdx}
                     rowIdx={rowIdx}
                     hour={hour}
                     date={date}
@@ -118,23 +128,21 @@ function WeekCalendarHeaderCell({
   date,
   state,
   dayFormatter,
+  colIdx,
 }: {
   date: CalendarDate;
   state: CalendarState;
   dayFormatter: any;
+  colIdx: number;
 }) {
   const { sessions } = useSessions({ date });
   const hasSessions = sessions.length > 0;
   return date ? (
     <th
-      className={cn(
-        "w-[141px] shrink-0 xl:w-[186px]",
-        "relative px-4 py-3 text-left",
-        "flex items-center justify-between",
-        {
-          "text-blue-base": isToday(date, state.timeZone),
-        },
-      )}
+      className={cn("table-cell", "relative px-4 py-3 text-left", {
+        "text-blue-base": isToday(date, state.timeZone),
+        "bg-background-secondary": colIdx === 0 || colIdx === 6,
+      })}
     >
       {date.day} - {dayFormatter.format(date.toDate(state.timeZone))}
       {hasSessions && (
@@ -155,11 +163,13 @@ function WeekCalendarHeaderCell({
 
 function WeekCalendarCell({
   rowIdx,
+  colIdx,
   hour,
   date,
   state,
 }: {
   rowIdx: number;
+  colIdx: number;
   hour: number;
   date: CalendarDate;
   state: CalendarState;
@@ -178,11 +188,11 @@ function WeekCalendarCell({
   const { sessions } = useSessions({ date, hour });
 
   return (
-    <td {...cellProps} className="p-0">
+    <td {...cellProps} className="table-cell border-t border-grey-border p-0">
       <div
         {...buttonProps}
         ref={ref}
-        className={cn("cell", {
+        className={cn("cell w-full transition ease-in-out", {
           selected: isSelected,
           disabled: isDisabled,
           unavailable: isUnavailable,
@@ -190,13 +200,12 @@ function WeekCalendarCell({
       >
         <div
           className={cn(
-            "flex flex-col gap-[8px] overflow-y-scroll",
+            "flex flex-col gap-[8px] overflow-y-auto",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
             "h-[85px] xl:h-[112px]",
-            "w-[140px] xl:w-[185px]",
             "border-t border-grey-border",
             {
-              "border-t-0": rowIdx === 0,
+              "bg-background-secondary": colIdx === 0 || colIdx === 6,
             },
           )}
         >
