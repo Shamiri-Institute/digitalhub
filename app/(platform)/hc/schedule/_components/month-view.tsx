@@ -73,14 +73,14 @@ export function MonthView({
     <div>
       <table
         ref={headerRowRef}
-        className="z-10 w-full table-fixed border-separate overflow-hidden rounded-t-[0.4375rem] border border-grey-border bg-white [border-spacing:0]"
+        className="schedule-table z-10 rounded-t-[0.4375rem] bg-white"
       >
         <thead {...headerProps}>
-          <tr className="divide-x divide-grey-border bg-grey-bg">
+          <tr>
             {weekDays.map((day, index) => (
               <th
                 key={index}
-                className={cn("px-4 py-3 text-left", {
+                className={cn({
                   "bg-background-secondary": index === 0 || index === 6,
                 })}
               >
@@ -90,13 +90,10 @@ export function MonthView({
           </tr>
         </thead>
       </table>
-      <table
-        {...gridProps}
-        className="w-full table-fixed border-separate overflow-hidden rounded-b-[0.4375rem] border border-grey-border [border-spacing:0]"
-      >
+      <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
         <tbody>
           {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
-            <tr key={weekIndex} className="divide-x divide-grey-border">
+            <tr key={weekIndex}>
               {state
                 .getDatesInWeek(weekIndex)
                 .map((date, i) =>
@@ -144,7 +141,7 @@ export function MonthCalendarCell({
   return (
     <td
       {...cellProps}
-      className={cn("table-cell border-t border-grey-border p-0", {
+      className={cn({
         "bg-background-secondary": weekend,
       })}
     >

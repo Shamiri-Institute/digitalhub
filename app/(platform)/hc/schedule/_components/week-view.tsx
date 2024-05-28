@@ -1,5 +1,5 @@
 import { CalendarDate, isToday } from "@internationalized/date";
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useDateFormatter } from "react-aria";
 import { CalendarState } from "react-stately";
 
@@ -32,8 +32,6 @@ export function WeekView({ state }: { state: CalendarState }) {
   const dayFormatter = useDateFormatter({
     weekday: "long",
   });
-
-  const tableBodyRef: React.Ref<any | null> = useRef(null);
 
   const { setTitle } = useTitle();
   useEffect(() => {
@@ -83,11 +81,11 @@ export function WeekView({ state }: { state: CalendarState }) {
     <div>
       <table
         ref={headerRowRef}
-        className="z-10 w-full table-fixed border-separate overflow-hidden rounded-t-[0.4375rem] border border-grey-border bg-white [border-spacing:0]"
+        className="schedule-table z-10 rounded-t-[0.4375rem]"
       >
         <thead {...headerProps}>
-          <tr className="divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
-            <th className="table-cell w-[103px] bg-background-secondary px-4 py-3"></th>
+          <tr className="border-b border-grey-border">
+            <th className="time-cell"></th>
             {state
               .getDatesInWeek(0)
               .map((date, i) =>
@@ -106,11 +104,8 @@ export function WeekView({ state }: { state: CalendarState }) {
           </tr>
         </thead>
       </table>
-      <table
-        {...gridProps}
-        className="w-full table-fixed border-separate overflow-hidden rounded-b-[0.4375rem] border border-grey-border [border-spacing:0]"
-      >
-        <tbody ref={tableBodyRef} className="w-full">
+      <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
+        <tbody className="w-full">
           {hours.map((hour, rowIdx) => (
             <tr
               key={rowIdx}
@@ -118,13 +113,10 @@ export function WeekView({ state }: { state: CalendarState }) {
             >
               <td
                 className={cn(
-                  "table-cell truncate border-t border-grey-border bg-grey-bg px-4 py-3 text-grey-c3",
+                  "time-cell truncate",
                   "h-[85px] xl:h-[112px]",
                   "w-[103px]",
                   "bg-background-secondary text-sm",
-                  {
-                    // "border-t-0": rowIdx === 0,
-                  },
                 )}
               >
                 <div className="flex">{formatHour(hour)}</div>
@@ -217,7 +209,7 @@ function WeekCalendarCell({
   const { sessions } = useSessions({ date, hour });
 
   return (
-    <td {...cellProps} className="table-cell border-t border-grey-border p-0">
+    <td {...cellProps}>
       <div
         {...buttonProps}
         ref={ref}
