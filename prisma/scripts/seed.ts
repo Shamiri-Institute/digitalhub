@@ -19,10 +19,10 @@ const ids = {
       countyOfOperation: "Nairobi",
 
       projects: {
-        "2024_Project_1": {
-          id: "2024_Project_1",
-          visibleId: "2024_Project_1",
-          projectName: "Anansi 100K Phase 1",
+        "2024P2_Project_1": {
+          id: "2024P2_Project_1",
+          visibleId: "2024P2_Project_1",
+          projectName: "Anansi 100K Phase 2",
 
           hubs: {
             "24_Hub_01": {
@@ -66,6 +66,20 @@ const ids = {
                   dateOfBirth: new Date("1980-08-15"),
                   gender: "Female",
                 },
+                SPV24_S_03: {
+                  id: objectId("sup"),
+                  visibleId: "SPV24_S_03",
+                  supervisorName: "Ian Nene",
+                  supervisorEmail: "ian.nene@example.com",
+                  idNumber: "200200300",
+                  cellNumber: "+2547232000004",
+                  mpesaName: "Ian Nene",
+                  mpesaNumber: "+2547232000004",
+                  county: "Migori",
+                  subCounty: "Awendo",
+                  dateOfBirth: new Date("1980-08-15"),
+                  gender: "Male",
+                },
               },
 
               fellows: {
@@ -99,6 +113,21 @@ const ids = {
                   gender: "Female",
                   supervisorVisibleId: "SPV24_S_02",
                 },
+                TFW24_S_03: {
+                  id: objectId("fel"),
+                  visibleId: "TFW24_S_03",
+                  fellowName: "Ian Doe",
+                  fellowEmail: "janedoe@example.com",
+                  mpesaName: "Ian Doe",
+                  mpesaNumber: "+254700000002",
+                  idNumber: "87654321",
+                  cellNumber: "+254700000002",
+                  county: "Nairobi",
+                  subCounty: "Dagoretti",
+                  dateOfBirth: new Date("2000-02-02"),
+                  gender: "Female",
+                  supervisorVisibleId: "SPV24_S_03",
+                },
               },
 
               schools: {
@@ -115,7 +144,7 @@ const ids = {
                   pointPersonPhone: "+254 722 229 367",
                   numbersExpected: 2200,
                   principalName: "L. O. Nyachwera",
-                  assignedSupervisorVisibleId: "SPV24_S_01",
+                  assignedSupervisorVisibleId: "SPV24_S_03",
 
                   groups: {
                     ANS24_Group_01: {
@@ -338,6 +367,17 @@ const ids = {
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
                       assignedGroupId: "09G1",
+                    },
+                    ANS24_09_Stu_02: {
+                      id: objectId("stu"),
+                      visibleId: "ANS24_09_Stu_02",
+                      studentName: "Otieno Mwangi",
+                      admissionNumber: "ADM153",
+                      age: 19,
+                      gender: "F",
+                      condition: "Shamiri",
+                      fellowVisibleId: "TFW24_S_03",
+                      assignedGroupId: null,
                     },
                   },
                 },
@@ -798,9 +838,11 @@ async function seedDatabase() {
                 school: {
                   connect: { id: createdSchool.id },
                 },
-                assignedGroup: {
-                  connect: { id: student.assignedGroupId },
-                },
+                assignedGroup: student.assignedGroupId
+                  ? {
+                      connect: { id: student.assignedGroupId },
+                    }
+                  : undefined,
               },
             });
           }
