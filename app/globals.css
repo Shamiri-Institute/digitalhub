@@ -114,7 +114,7 @@
         @apply cursor-pointer flex gap-2 transition ease-in-out
     }
 
-    .nav-link svg {
+    .nav-link svg{
         @apply text-shamiri-text-grey
     }
 
@@ -137,13 +137,5 @@
 
     .tab-link.active svg, .tab-link:hover svg {
         @apply text-shamiri-new-blue
-    }
-
-    .popover-links span {
-        @apply cursor-pointer py-1.5 px-3
-    }
-
-    .popover-links span:hover {
-        @apply bg-shamiri-new-blue/[0.1]
     }
 }
