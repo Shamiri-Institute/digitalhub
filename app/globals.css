@@ -3,150 +3,148 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    :root {
+        --background: 0 0% 100%;
+        --foreground: 240 10% 3.9%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 240 10% 3.9%;
 
-    --active-card: 210 100% 13%;
-    --active-card-foreground: 0 0% 100%;
-    --active-card-foreground-accent: 202 58% 80%;
+        --active-card: 210 100% 13%;
+        --active-card-foreground: 0 0% 100%;
+        --active-card-foreground-accent: 202 58% 80%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 240 10% 3.9%;
 
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
+        --primary: 240 5.9% 10%;
+        --primary-foreground: 0 0% 98%;
 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+        --secondary: 240 4.8% 95.9%;
+        --secondary-foreground: 240 5.9% 10%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+        --muted: 240 4.8% 95.9%;
+        --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+        --accent: 240 4.8% 95.9%;
+        --accent-foreground: 240 5.9% 10%;
 
-    --destructive: 354 66% 62%;
-    --destructive-foreground: 0 0% 98%;
+        --destructive: 354 66% 62%;
+        --destructive-foreground: 0 0% 98%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 221 83% 53%;
+        --border: 240 5.9% 90%;
+        --input: 240 5.9% 90%;
+        --ring: 221 83% 53%;
 
-    --radius: 0.5rem;
+        --radius: 0.5rem;
 
-    --brand: 210 100% 13%;
-    --brand-foreground: 240 10% 0%;
+        --brand: 210 100% 13%;
+        --brand-foreground: 240 10% 0%;
 
-    --canvas: 0 0% 98%;
+        --canvas: 0 0% 98%;
 
-    --muted-green: 99 22% 53%;
-    --muted-yellow: 42 95% 57%;
-    --muted-pink: 319 40% 70%;
-    --muted-sky: 202 58% 80%;
+        --muted-green: 99 22% 53%;
+        --muted-yellow: 42 95% 57%;
+        --muted-pink: 319 40% 70%;
+        --muted-sky: 202 58% 80%;
 
-    --brand-light-gray: 0 4% 51%;
-  }
+        --brand-light-gray: 0 4% 51%;
+    }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+    * {
+        @apply border-border;
+    }
 
-  body {
-    @apply bg-background text-foreground;
-  }
+    body {
+        @apply bg-background text-foreground;
+    }
 }
 
 @layer utilities {
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
 
-  /* Hide scrollbar for IE, Edge and Firefox */
-  .no-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-  }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+    }
 }
 
 /* adjustments for react-aria */
 /* TODO: make more specific to avoid collisions with non react-aria tables */
 @layer base {
-  tbody > td[role="gridcell"] {
-    padding: 0;
-  }
+    tbody > td[role="gridcell"] {
+        padding: 0;
+    }
 
-  tbody > tr:last-child {
-    border-bottom-width: 1px;
-    border-bottom-style: solid;
-    border-color: #e8e8e8;
-  }
+    tbody > tr:last-child {
+        border-bottom-width: 1px;
+        border-bottom-style: solid;
+        border-color: #e8e8e8;
+    }
 
-  tbody td[role="gridcell"]:last-child {
-    border-right-width: 1px;
-    border-right-style: solid;
-    border-color: #e8e8e8;
-  }
+    tbody td[role="gridcell"]:last-child {
+        border-right-width: 1px;
+        border-right-style: solid;
+        border-color: #e8e8e8;
+    }
 
-  tbody > tr:last-child > td[role="gridcell"] {
-    border-bottom-width: 1px;
-    border-bottom-style: solid;
-    border-color: #e8e8e8;
-  }
+    tbody > tr:last-child > td[role="gridcell"] {
+        border-bottom-width: 1px;
+        border-bottom-style: solid;
+        border-color: #e8e8e8;
+    }
 
-  tbody > tr:last-child > td[role="gridcell"]:last-child {
-    border-bottom-right-radius: 7px;
-  }
+    tbody > tr:last-child > td[role="gridcell"]:last-child {
+        border-bottom-right-radius: 7px;
+    }
 
-  tbody > tr:last-child > td[role="gridcell"]:first-child {
-    border-bottom-left-radius: 7px;
-  }
+    tbody > tr:last-child > td[role="gridcell"]:first-child {
+        border-bottom-left-radius: 7px;
+    }
 }
 
 @layer components {
-  .nav-link {
-    @apply flex cursor-pointer gap-2 transition ease-in-out;
-  }
 
-  .nav-link svg {
-    @apply text-shamiri-text-grey;
-  }
+    .nav-link {
+        @apply cursor-pointer flex gap-2 transition ease-in-out
+    }
 
-  .nav-link:hover,
-  .nav-link:hover svg {
-    @apply text-shamiri-new-blue;
-  }
+    .nav-link svg {
+        @apply text-shamiri-text-grey
+    }
 
-  .tab-link {
-    border-bottom-width: 3px;
-    @apply flex gap-2 border-transparent py-2 transition ease-in-out;
-  }
+    .nav-link:hover, .nav-link:hover svg {
+        @apply text-shamiri-new-blue
+    }
 
-  .tab-link svg {
-    @apply text-shamiri-text-grey transition ease-in-out;
-  }
+    .tab-link {
+        border-bottom-width: 3px;
+        @apply flex gap-2 py-2 border-transparent transition ease-in-out
+    }
 
-  .tab-link.active,
-  .tab-link:hover {
-    @apply border-shamiri-new-blue text-shamiri-new-blue;
-  }
+    .tab-link svg {
+        @apply text-shamiri-text-grey transition ease-in-out
+    }
 
-  .tab-link.active svg,
-  .tab-link:hover svg {
-    @apply text-shamiri-new-blue;
-  }
+    .tab-link.active, .tab-link:hover {
+        @apply text-shamiri-new-blue border-shamiri-new-blue
+    }
 
-  .popover-links span {
-    @apply cursor-pointer px-3 py-1.5;
-  }
+    .tab-link.active svg, .tab-link:hover svg {
+        @apply text-shamiri-new-blue
+    }
 
-  .popover-links span:hover {
-    @apply bg-shamiri-new-blue/[0.1];
-  }
+    .popover-links span {
+        @apply cursor-pointer py-1.5 px-3
+    }
+
+    .popover-links span:hover {
+        @apply bg-shamiri-new-blue/[0.1]
+    }
 }

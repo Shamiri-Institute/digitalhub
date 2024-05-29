@@ -135,7 +135,7 @@ function DayCalendarCell({
       >
         <div
           className={cn(
-            "flex flex-col gap-[8px] overflow-y-auto",
+            "flex flex-col gap-[8px] overflow-y-scroll",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
             "h-[85px] xl:h-[112px]",
             "w-full",
