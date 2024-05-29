@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
   const { day, effectiveDate, implementerId } = params.data;
   const forceSend = searchParams.get("send") === "1";
   const saveFile = searchParams.get("save") === "1";
+  const dryRun = searchParams.get("dryRun") === "1";
 
   try {
     const totalPayoutReport = await calculatePayouts({
@@ -114,6 +115,7 @@ export async function GET(request: NextRequest) {
       attachmentContent: totalCsvBuffer.toString(),
       payoutReport: totalPayoutReport,
       forceSend,
+      dryRun,
     });
 
     console.log(
@@ -130,6 +132,7 @@ export async function GET(request: NextRequest) {
       attachmentContent: repaymentsCsvBuffer.toString(),
       repaymentReport: repaymentsPayoutReport,
       forceSend,
+      dryRun,
     });
 
     const supervisors = await fetchSupervisors();
@@ -193,6 +196,7 @@ export async function GET(request: NextRequest) {
         attachmentContent: csvBuffer.toString(),
         payoutReport: supervisorPayoutReport,
         forceSend,
+        dryRun,
       });
 
       console.log(
@@ -200,16 +204,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    await markAttendancesProcessed(totalPayoutReport.attendancesProcessed);
-    await markDelayedPaymentsFulfilled(
-      totalPayoutReport.delayedPaymentsFulfilled,
-    );
-    await markRepaymentRequestFulfilled(
-      repaymentsPayoutReport.repaymentRequestsFulfilled,
-    );
-    await markPayoutReconciliationsExecuted(
-      totalPayoutReport.reconciliationsFulfilled,
-    );
+    if (dryRun) {
+      console.debug("Dry run, not marking processed");
+    } else {
+      await markAttendancesProcessed(totalPayoutReport.attendancesProcessed);
+      await markDelayedPaymentsFulfilled(
+        totalPayoutReport.delayedPaymentsFulfilled,
+      );
+      await markRepaymentRequestFulfilled(
+        repaymentsPayoutReport.repaymentRequestsFulfilled,
+      );
+      await markPayoutReconciliationsExecuted(
+        totalPayoutReport.reconciliationsFulfilled,
+      );
+    }
 
     return NextResponse.json({
       message: `Tabulated ${totalPayoutReport.payoutDetails.length} payouts`,

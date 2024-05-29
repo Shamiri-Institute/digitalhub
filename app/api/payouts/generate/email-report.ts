@@ -17,6 +17,7 @@ interface EmailProperties {
   attachmentContent: string;
   payoutReport: PayoutReport;
   forceSend?: boolean;
+  dryRun?: boolean;
 }
 
 export async function emailPayoutReport(props: EmailProperties) {
@@ -32,6 +33,8 @@ export async function emailPayoutReport(props: EmailProperties) {
 
   if (constants.NEXT_PUBLIC_ENV === "production" || props.forceSend) {
     await sendEmailWithAttachment(emailInput);
+  } else if (props.dryRun) {
+    console.debug("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
   } else {
     console.debug("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
     console.debug("To force send email, set send=1 query param.");
@@ -55,6 +58,8 @@ export async function emailRepaymentReport(
 
   if (constants.NEXT_PUBLIC_ENV === "production" || props.forceSend) {
     await sendEmailWithAttachment(emailInput);
+  } else if (props.dryRun) {
+    console.debug("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
   } else {
     console.debug("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
     console.debug("To force send email, set send=1 query param.");
