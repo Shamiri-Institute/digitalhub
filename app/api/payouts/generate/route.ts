@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import * as fastcsv from "fast-csv";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
@@ -13,6 +12,7 @@ import type { PayoutDetail } from "#/app/api/payouts/generate/types";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import { notEmpty } from "#/lib/utils";
+import { format } from "date-fns";
 import { calculatePayouts } from "./calculate-payouts";
 
 export const revalidate = 0;
@@ -31,15 +31,18 @@ export async function GET(request: NextRequest) {
     .object({
       day: z.enum(["M", "R"]),
       effectiveDate: z.date().optional().default(new Date()),
+      implementerId: z.string(),
     })
     .safeParse({
       day: searchParams.get("day"),
       effectiveDate: searchParams.get("effectiveDate") ?? undefined,
+      implementerId: searchParams.get("implementerId"),
     });
   if (!params.success) {
-    return NextResponse.json({ error: "Invalid day" }, { status: 400 });
+    console.log(params.error);
+    return NextResponse.json({ error: "Bad Request" }, { status: 400 });
   }
-  const { day, effectiveDate } = params.data;
+  const { day, effectiveDate, implementerId } = params.data;
   const forceSend = searchParams.get("send") === "1";
   const saveFile = searchParams.get("save") === "1";
 
@@ -47,6 +50,7 @@ export async function GET(request: NextRequest) {
     const totalPayoutReport = await calculatePayouts({
       day,
       effectiveDate,
+      implementerId,
     });
     const { payoutPeriod } = totalPayoutReport;
     const totalCsvFileName = `total-payouts-${format(
@@ -59,7 +63,7 @@ export async function GET(request: NextRequest) {
       saveFile,
     });
 
-    const repaymentsPayoutReport = await calculateRepayments();
+    const repaymentsPayoutReport = await calculateRepayments({ implementerId });
     const repaymentsCsvFileName = `repayments-${format(effectiveDate, "yyyy-MM-dd")}.csv`;
     const repaymentsCsvBuffer = await generateCsv({
       payoutDetails: repaymentsPayoutReport.payoutDetails,
@@ -76,6 +80,8 @@ export async function GET(request: NextRequest) {
       "daya@shamiri.institute",
       "tech@shamiri.institute",
     ];
+    // const destinationEmails = ["wambugu.davis@shamiri.institute"];
+    // const ccEmails = ["edmund@agency.fund"];
 
     await emailPayoutReport({
       sourceEmail,
@@ -114,6 +120,7 @@ export async function GET(request: NextRequest) {
         day,
         effectiveDate,
         supervisorId: supervisor.id,
+        implementerId,
       });
 
       const csvBuffer = await generateCsvBuffer(
