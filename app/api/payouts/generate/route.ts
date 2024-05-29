@@ -73,15 +73,31 @@ export async function GET(request: NextRequest) {
 
     const sourceEmail = '"Shamiri Digital Hub" <tech@shamiri.institute>';
 
-    // TODO: update these to the actual email addresses for each implementer
-    const destinationEmails = ["ngatti@shamiri.institute"];
-    const ccEmails = [
-      "waweru@shamiri.institute",
-      "ngatia@shamiri.institute",
-      "nyareso@shamiri.institute",
-      "daya@shamiri.institute",
-      "tech@shamiri.institute",
-    ];
+    let destinationEmails: string[] = [];
+    let ccEmails: string[] = [];
+
+    const implementer = await db.implementer.findUniqueOrThrow({
+      where: { id: implementerId },
+      include: {
+        hubCoordinators: true,
+      },
+    });
+
+    if (implementer.visibleId === "Imp_1") {
+      destinationEmails = ["ngatti@shamiri.institute"];
+      ccEmails = [
+        "waweru@shamiri.institute",
+        "ngatia@shamiri.institute",
+        "nyareso@shamiri.institute",
+        "daya@shamiri.institute",
+        "tech@shamiri.institute",
+      ];
+    } else {
+      destinationEmails = [
+        implementer.pointPersonEmail ?? "tech@shamiri.institute",
+      ];
+      ccEmails = implementer.hubCoordinators.map((coordinator) => coordinator.coordinatorEmail).filter(notEmpty)
+    }
 
     await emailPayoutReport({
       sourceEmail,
