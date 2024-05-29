@@ -72,6 +72,8 @@ export async function GET(request: NextRequest) {
     });
 
     const sourceEmail = '"Shamiri Digital Hub" <tech@shamiri.institute>';
+
+    // TODO: update these to the actual email addresses for each implementer
     const destinationEmails = ["ngatti@shamiri.institute"];
     const ccEmails = [
       "waweru@shamiri.institute",
@@ -80,8 +82,6 @@ export async function GET(request: NextRequest) {
       "daya@shamiri.institute",
       "tech@shamiri.institute",
     ];
-    // const destinationEmails = ["wambugu.davis@shamiri.institute"];
-    // const ccEmails = ["edmund@agency.fund"];
 
     await emailPayoutReport({
       sourceEmail,

@@ -26,10 +26,14 @@ export async function GET(request: NextRequest) {
 
   const implementers = await db.implementer.findMany();
   const implementerEndpoints = implementers.map((implementer) => {
-    return `${process.env.NEXT_PUBLIC_APP_URL}/api/payouts/all?day=${params.data.day}&implementerId=${implementer.id}`;
+    const endpoint = `${process.env.NEXT_PUBLIC_APP_URL}/api/payouts/generate?${new URLSearchParams(
+      {
+        ...Object.fromEntries(searchParams),
+        implementerId: implementer.id,
+      },
+    )}`;
+    return endpoint;
   });
-
-  console.log(implementers);
 
   const responses = await Promise.all(
     implementerEndpoints.map((endpoint) => {
@@ -41,13 +45,11 @@ export async function GET(request: NextRequest) {
     }),
   );
 
-  console.log(responses);
   const data = await Promise.all(
     responses.map((response: Response) => {
       return response.json();
     }),
   );
 
-  console.log(data);
   return NextResponse.json({ data });
 }
