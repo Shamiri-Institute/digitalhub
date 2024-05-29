@@ -96,7 +96,9 @@ export async function GET(request: NextRequest) {
       destinationEmails = [
         implementer.pointPersonEmail ?? "tech@shamiri.institute",
       ];
-      ccEmails = implementer.hubCoordinators.map((coordinator) => coordinator.coordinatorEmail).filter(notEmpty)
+      ccEmails = implementer.hubCoordinators
+        .map((coordinator) => coordinator.coordinatorEmail)
+        .filter(notEmpty);
     }
 
     await emailPayoutReport({
