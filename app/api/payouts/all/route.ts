@@ -2,6 +2,9 @@ import { db } from "#/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+export const revalidate = 0;
+export const maxDuration = 300;
+
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
