@@ -93,7 +93,7 @@ export default async function Page() {
         },
         where: {
           createdAt: {
-            gte: new Date(2024, 0, 29), //date when sessions started
+            gte: new Date(2024, 5, 20), //date when sessions started
           },
         },
       });
@@ -116,7 +116,7 @@ export default async function Page() {
           currentSupervisor: {
             hubId: supervisor?.hubId,
             createdAt: {
-              gte: new Date(2024, 0, 29), //date when sessions started
+              gte: new Date(2024, 5, 20), //date when sessions started
             },
           },
         },
