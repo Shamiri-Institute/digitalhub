@@ -21,7 +21,9 @@ export function register() {
     console.info(`${leftPad}\x1b[34mConnecting to database\x1b[0m`);
     if (databaseHost !== "localhost") {
       console.warn(
-        `${leftPad}${color}WARNING: You are connected to the production database!\x1b[0m`,
+        `${leftPad}${color}WARNING: You are connected to the ${
+          databaseName.includes("preview") ? "preview" : "production"
+        } database!\x1b[0m`,
       );
     }
     console.log(`${leftPad}${color}Database host: ${databaseHost}\x1b[0m`);
