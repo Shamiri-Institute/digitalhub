@@ -75,7 +75,7 @@ export function DayView({ state }: { state: CalendarState }) {
     <div>
       <table
         ref={headerRowRef}
-        className="schedule-table rounded-t-[0.4375rem]"
+        className="schedule-table z-10 rounded-t-[0.4375rem] bg-white"
       >
         <thead>
           <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
