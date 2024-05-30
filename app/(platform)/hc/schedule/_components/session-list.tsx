@@ -10,6 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "#/components/ui/popover";
+import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import type { Session } from "./sessions-provider";
 
@@ -54,6 +55,9 @@ function SessionDetail({
   });
   const [open, setOpen] = React.useState(false);
 
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode") ?? undefined;
+
   useEffect(() => {
     const startTimeLabel = format(session.sessionDate, "h:mma");
     const durationLabel = `${format(session.sessionDate, "h:mm")} - ${format(
@@ -77,7 +81,7 @@ function SessionDetail({
   return (
     <div className="relative">
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger>
+        <PopoverTrigger className="w-full">
           <div
             className={cn(
               "px-2 py-1",
@@ -113,20 +117,23 @@ function SessionDetail({
                   <div>{sessionDisplayName(session.sessionType)}</div>
                 )}
                 {isCompact && (
-                  <div className="truncate">
+                  <div className="flex gap-1 truncate">
                     {sessionDisplayName(session.sessionType)} -{" "}
                     {timeLabels.startTimeLabel}
+                    {mode === "day" && (
+                      <div className="truncate">- {schoolName}</div>
+                    )}
                   </div>
                 )}
               </div>
               {isExpanded && (
-                <>
+                <div className="text-left">
                   <div className="truncate">{schoolName}</div>
-                  <div className="text-left">
+                  <div>
                     {timeLabels.durationLabel}
                     <span className="invisible">t</span>
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>
