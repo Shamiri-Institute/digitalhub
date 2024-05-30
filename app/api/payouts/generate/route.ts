@@ -100,6 +100,8 @@ export async function GET(request: NextRequest) {
       ccEmails = implementer.hubCoordinators
         .map((coordinator) => coordinator.coordinatorEmail)
         .filter(notEmpty);
+
+      ccEmails.unshift("tech@shamiri.institute");
     }
 
     await emailPayoutReport({
@@ -135,7 +137,7 @@ export async function GET(request: NextRequest) {
       dryRun,
     });
 
-    const supervisors = await fetchSupervisors();
+    const supervisors = await fetchSupervisors({ implementerId });
     for (const supervisor of supervisors) {
       const supervisorPayoutReport = await calculatePayouts({
         day,
@@ -236,11 +238,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function fetchSupervisors() {
+async function fetchSupervisors({ implementerId }: { implementerId: string }) {
   const supervisors = await db.supervisor.findMany({
     where: {
       hub: {
         projectId: CURRENT_PROJECT_ID,
+        implementerId,
       },
     },
     include: {
