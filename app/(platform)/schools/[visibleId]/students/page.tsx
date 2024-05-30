@@ -346,6 +346,7 @@ function StudentCard({
             session={session}
             student={student}
             group={group}
+            fellowId={fellow.id}
           />
         ))}
       </div>
