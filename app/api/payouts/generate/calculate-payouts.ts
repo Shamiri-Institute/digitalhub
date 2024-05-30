@@ -18,10 +18,12 @@ export async function calculatePayouts({
   day,
   effectiveDate,
   supervisorId,
+  implementerId,
 }: {
   day: PayoutDay;
   effectiveDate: Date;
   supervisorId?: string;
+  implementerId: string;
 }): Promise<PayoutReport> {
   const payoutPeriodStart = getPayoutPeriodStartDate(day, effectiveDate);
   const payoutPeriodEnd = getPayoutPeriodEndDate(day, effectiveDate);
@@ -44,6 +46,7 @@ export async function calculatePayouts({
       },
       fellow: {
         OR: [{ droppedOut: false }, { droppedOut: null }],
+        implementerId,
       },
     },
     include: {
@@ -69,6 +72,7 @@ export async function calculatePayouts({
       },
       fellow: {
         OR: [{ droppedOut: false }, { droppedOut: null }],
+        implementerId,
       },
       ...(supervisorId && {
         supervisorId,
@@ -121,6 +125,7 @@ export async function calculatePayouts({
       },
       fellow: {
         OR: [{ droppedOut: false }, { droppedOut: null }],
+        implementerId,
       },
       executedAt: null,
     },

@@ -380,25 +380,21 @@ export async function markStudentAttendance({
   studentVisibleId,
   schoolVisibleId,
   groupId,
+  fellowId,
 }: {
   status: AttendanceStatus;
   label: SessionLabel;
   studentVisibleId: string;
   schoolVisibleId: string;
   groupId?: string;
+  fellowId: string;
 }) {
   try {
     const attendanceBoolean = attendanceStatusToBoolean(status);
 
     const student = await db.student.findUniqueOrThrow({
       where: { visibleId: studentVisibleId },
-      include: {
-        assignedGroup: true,
-      },
     });
-    if (!student.assignedGroup) {
-      throw new Error(`Student (${student.visibleId}) has no assigned group`);
-    }
 
     const school = await db.school.findUniqueOrThrow({
       where: { visibleId: schoolVisibleId },
@@ -422,17 +418,10 @@ export async function markStudentAttendance({
       };
     }
 
-    if (student.assignedGroup.leaderId === null) {
-      return {
-        error: `Group ${student.assignedGroup.groupName} has no leader. Please contact hub coordinator to assign a group leader so we can track this.`,
-      };
-    }
-
     let attendance = await db.studentAttendance.findFirst({
       where: {
         studentId: student.id,
         schoolId: school.id,
-        fellowId: student.assignedGroup.leaderId,
         sessionId: interventionSession.id,
         groupId: groupId,
       },
@@ -452,10 +441,9 @@ export async function markStudentAttendance({
           projectId: CURRENT_PROJECT_ID,
           studentId: student.id,
           schoolId: school.id,
-          fellowId: student.assignedGroup.leaderId,
           sessionId: interventionSession.id,
-          groupId: student.assignedGroup.id,
           attended: attendanceBoolean,
+          fellowId,
         },
       });
     }
@@ -1767,6 +1755,7 @@ export async function addNonShamiriStudentViaClinicalScreening(
     stream: string;
     gender: string;
     schoolId: string;
+    studentGroup?: string;
   },
   {
     implementerId,
@@ -1811,6 +1800,7 @@ export async function addNonShamiriStudentViaClinicalScreening(
         county: data.county,
         phoneNumber: data.contactNumber,
         isClinicalCase: true,
+        groupName: data.studentGroup,
       },
     });
 

@@ -2,7 +2,11 @@ import { processAttendances } from "#/app/api/payouts/generate/payout-utils";
 import type { RepaymentReport } from "#/app/api/payouts/generate/types";
 import { db } from "#/lib/db";
 
-export async function calculateRepayments(): Promise<RepaymentReport> {
+export async function calculateRepayments({
+  implementerId,
+}: {
+  implementerId: string;
+}): Promise<RepaymentReport> {
   const repaymentRequests = await db.repaymentRequest.findMany({
     where: {
       AND: {
@@ -11,6 +15,7 @@ export async function calculateRepayments(): Promise<RepaymentReport> {
       },
       fellow: {
         OR: [{ droppedOut: false }, { droppedOut: null }],
+        implementerId,
       },
     },
     include: {
