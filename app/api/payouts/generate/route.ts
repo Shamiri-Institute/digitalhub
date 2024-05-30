@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import * as fastcsv from "fast-csv";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
@@ -13,33 +12,46 @@ import type { PayoutDetail } from "#/app/api/payouts/generate/types";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import { notEmpty } from "#/lib/utils";
+import { format } from "date-fns";
 import { calculatePayouts } from "./calculate-payouts";
 
 export const revalidate = 0;
 export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response("Unauthorized", {
+      status: 401,
+    });
+  }
+
   const { searchParams } = request.nextUrl;
   const params = z
     .object({
       day: z.enum(["M", "R"]),
       effectiveDate: z.date().optional().default(new Date()),
+      implementerId: z.string(),
     })
     .safeParse({
       day: searchParams.get("day"),
       effectiveDate: searchParams.get("effectiveDate") ?? undefined,
+      implementerId: searchParams.get("implementerId"),
     });
   if (!params.success) {
-    return NextResponse.json({ error: "Invalid day" }, { status: 400 });
+    console.log(params.error);
+    return NextResponse.json({ error: "Bad Request" }, { status: 400 });
   }
-  const { day, effectiveDate } = params.data;
+  const { day, effectiveDate, implementerId } = params.data;
   const forceSend = searchParams.get("send") === "1";
   const saveFile = searchParams.get("save") === "1";
+  const dryRun = searchParams.get("dryRun") === "1";
 
   try {
     const totalPayoutReport = await calculatePayouts({
       day,
       effectiveDate,
+      implementerId,
     });
     const { payoutPeriod } = totalPayoutReport;
     const totalCsvFileName = `total-payouts-${format(
@@ -52,7 +64,7 @@ export async function GET(request: NextRequest) {
       saveFile,
     });
 
-    const repaymentsPayoutReport = await calculateRepayments();
+    const repaymentsPayoutReport = await calculateRepayments({ implementerId });
     const repaymentsCsvFileName = `repayments-${format(effectiveDate, "yyyy-MM-dd")}.csv`;
     const repaymentsCsvBuffer = await generateCsv({
       payoutDetails: repaymentsPayoutReport.payoutDetails,
@@ -61,14 +73,36 @@ export async function GET(request: NextRequest) {
     });
 
     const sourceEmail = '"Shamiri Digital Hub" <tech@shamiri.institute>';
-    const destinationEmails = ["ngatti@shamiri.institute"];
-    const ccEmails = [
-      "waweru@shamiri.institute",
-      "ngatia@shamiri.institute",
-      "nyareso@shamiri.institute",
-      "daya@shamiri.institute",
-      "tech@shamiri.institute",
-    ];
+
+    let destinationEmails: string[] = [];
+    let ccEmails: string[] = [];
+
+    const implementer = await db.implementer.findUniqueOrThrow({
+      where: { id: implementerId },
+      include: {
+        hubCoordinators: true,
+      },
+    });
+
+    if (implementer.visibleId === "Imp_1") {
+      destinationEmails = ["ngatti@shamiri.institute"];
+      ccEmails = [
+        "waweru@shamiri.institute",
+        "ngatia@shamiri.institute",
+        "nyareso@shamiri.institute",
+        "daya@shamiri.institute",
+        "tech@shamiri.institute",
+      ];
+    } else {
+      destinationEmails = [
+        implementer.pointPersonEmail ?? "tech@shamiri.institute",
+      ];
+      ccEmails = implementer.hubCoordinators
+        .map((coordinator) => coordinator.coordinatorEmail)
+        .filter(notEmpty);
+
+      ccEmails.unshift("tech@shamiri.institute");
+    }
 
     await emailPayoutReport({
       sourceEmail,
@@ -83,6 +117,7 @@ export async function GET(request: NextRequest) {
       attachmentContent: totalCsvBuffer.toString(),
       payoutReport: totalPayoutReport,
       forceSend,
+      dryRun,
     });
 
     console.log(
@@ -99,14 +134,16 @@ export async function GET(request: NextRequest) {
       attachmentContent: repaymentsCsvBuffer.toString(),
       repaymentReport: repaymentsPayoutReport,
       forceSend,
+      dryRun,
     });
 
-    const supervisors = await fetchSupervisors();
+    const supervisors = await fetchSupervisors({ implementerId });
     for (const supervisor of supervisors) {
       const supervisorPayoutReport = await calculatePayouts({
         day,
         effectiveDate,
         supervisorId: supervisor.id,
+        implementerId,
       });
 
       const csvBuffer = await generateCsvBuffer(
@@ -161,6 +198,7 @@ export async function GET(request: NextRequest) {
         attachmentContent: csvBuffer.toString(),
         payoutReport: supervisorPayoutReport,
         forceSend,
+        dryRun,
       });
 
       console.log(
@@ -168,16 +206,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    await markAttendancesProcessed(totalPayoutReport.attendancesProcessed);
-    await markDelayedPaymentsFulfilled(
-      totalPayoutReport.delayedPaymentsFulfilled,
-    );
-    await markRepaymentRequestFulfilled(
-      repaymentsPayoutReport.repaymentRequestsFulfilled,
-    );
-    await markPayoutReconciliationsExecuted(
-      totalPayoutReport.reconciliationsFulfilled,
-    );
+    if (dryRun) {
+      console.debug("Dry run, not marking processed");
+    } else {
+      await markAttendancesProcessed(totalPayoutReport.attendancesProcessed);
+      await markDelayedPaymentsFulfilled(
+        totalPayoutReport.delayedPaymentsFulfilled,
+      );
+      await markRepaymentRequestFulfilled(
+        repaymentsPayoutReport.repaymentRequestsFulfilled,
+      );
+      await markPayoutReconciliationsExecuted(
+        totalPayoutReport.reconciliationsFulfilled,
+      );
+    }
 
     return NextResponse.json({
       message: `Tabulated ${totalPayoutReport.payoutDetails.length} payouts`,
@@ -196,11 +238,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function fetchSupervisors() {
+async function fetchSupervisors({ implementerId }: { implementerId: string }) {
   const supervisors = await db.supervisor.findMany({
     where: {
       hub: {
         projectId: CURRENT_PROJECT_ID,
+        implementerId,
       },
     },
     include: {

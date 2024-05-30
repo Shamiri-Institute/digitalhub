@@ -141,33 +141,4 @@
   .tab-link:hover svg {
     @apply text-shamiri-new-blue;
   }
-
-  .popover-links span {
-    @apply cursor-pointer px-3 py-1.5;
-  }
-
-  .popover-links span:hover {
-    @apply bg-shamiri-new-blue/[0.1];
-  }
-
-  .schedule-table {
-    @apply w-full table-fixed border-separate overflow-hidden border border-grey-border bg-white [border-spacing:0];
-  }
-
-  .schedule-table tr {
-    @apply divide-x divide-grey-border;
-  }
-
-  .schedule-table th {
-    @apply px-4 py-3 text-left;
-  }
-
-  .schedule-table td {
-    @apply table-cell border-t border-grey-border p-0;
-  }
-
-  .schedule-table td.time-cell,
-  .schedule-table th.time-cell {
-    @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
-  }
 }
