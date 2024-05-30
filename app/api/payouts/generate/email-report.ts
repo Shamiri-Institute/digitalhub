@@ -31,13 +31,14 @@ export async function emailPayoutReport(props: EmailProperties) {
     },
   };
 
-  if (constants.NEXT_PUBLIC_ENV === "production" || props.forceSend) {
+  if (
+    (constants.NEXT_PUBLIC_ENV === "production" || props.forceSend) &&
+    !props.dryRun
+  ) {
     await sendEmailWithAttachment(emailInput);
-  } else if (props.dryRun) {
-    console.debug("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
   } else {
-    console.debug("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
-    console.debug("To force send email, set send=1 query param.");
+    console.warn("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
+    console.warn("To force send email, set send=1 query param.");
   }
 }
 
@@ -56,13 +57,14 @@ export async function emailRepaymentReport(
     },
   };
 
-  if (constants.NEXT_PUBLIC_ENV === "production" || props.forceSend) {
+  if (
+    (constants.NEXT_PUBLIC_ENV === "production" || props.forceSend) &&
+    !props.dryRun
+  ) {
     await sendEmailWithAttachment(emailInput);
-  } else if (props.dryRun) {
-    console.debug("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
   } else {
-    console.debug("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
-    console.debug("To force send email, set send=1 query param.");
+    console.warn("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
+    console.warn("To force send email, set send=1 query param.");
   }
 }
 
