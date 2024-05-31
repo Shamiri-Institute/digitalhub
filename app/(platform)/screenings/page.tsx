@@ -96,6 +96,13 @@ export default async function Page() {
             gte: new Date("2024-05-20"), //date when sessions started
           },
         },
+        orderBy: {
+          currentSupervisor: {
+            hub: {
+              id: "asc",
+            },
+          },
+        },
       });
     } else {
       return await db.clinicalScreeningInfo.findMany({
