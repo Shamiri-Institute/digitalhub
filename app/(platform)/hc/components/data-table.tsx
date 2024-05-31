@@ -26,7 +26,7 @@ import {
 } from "@tanstack/react-table";
 import Image from "next/image";
 import { useState } from "react";
-import SettingsIcon from "../../../../../public/icons/settings-icon.svg";
+import SettingsIcon from "../../../../public/icons/settings-icon.svg";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];

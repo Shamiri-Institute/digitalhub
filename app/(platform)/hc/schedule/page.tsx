@@ -16,7 +16,7 @@ export default async function HubCoordinatorSchedulePage() {
   }
 
   return (
-    <main className="w-full px-[24px] pb-[24px] pt-[20px]">
+    <main className="w-full pb-[24px] pt-[20px]">
       <ScheduleHeader sessions={20} fellows={14} cases={23} />
       <Separator className="my-5 bg-[#E8E8E8]" />
       <ScheduleCalendar
