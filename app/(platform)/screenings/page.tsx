@@ -93,7 +93,7 @@ export default async function Page() {
         },
         where: {
           createdAt: {
-            gte: new Date(2024, 5, 20), //date when sessions started
+            gte: new Date("2024-05-20"), //date when sessions started
           },
         },
       });
@@ -101,11 +101,7 @@ export default async function Page() {
       return await db.clinicalScreeningInfo.findMany({
         include: {
           student: true,
-          sessions: {
-            orderBy: {
-              date: "desc",
-            },
-          },
+          sessions: true,
           currentSupervisor: {
             include: {
               hub: true,
