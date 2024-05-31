@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import type { PayoutDetail } from "#/app/api/payouts/generate/types";
 import { sessionDisplayName } from "#/lib/utils";
 
-export const PRE_SESSION_COMPENSATION = 500;
+export const PRE_SESSION_COMPENSATION = 1000;
 export const MAIN_SESSION_COMPENSATION = 1500;
 
 export const processAttendances = (
