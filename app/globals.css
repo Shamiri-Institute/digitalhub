@@ -60,6 +60,10 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  label {
+    @apply text-gray-600
+  }
 }
 
 @layer utilities {
@@ -169,5 +173,17 @@
   .schedule-table td.time-cell,
   .schedule-table th.time-cell {
     @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
+  }
+
+  .form-toggle{
+    @apply mt-1.5 rounded-md border bg-background-secondary text-shamiri-text-dark-grey justify-start
+  }
+
+  .form-toggle .form-toggle-button{
+    @apply text-base transition ease-in-out flex-1
+  }
+
+  .form-toggle .form-toggle-button[data-state='on']{
+    @apply bg-white drop-shadow-xl text-black border
   }
 }
