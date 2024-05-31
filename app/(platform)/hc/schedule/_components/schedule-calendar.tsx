@@ -57,11 +57,20 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     createCalendar,
   });
 
+  const tableViewState = useCalendarState({
+    value: today(getLocalTimeZone()),
+    visibleDuration: { weeks: 1 },
+    locale,
+    createCalendar,
+  });
+
   const month = useCalendar(calendarStateProps, monthState);
 
   const week = useCalendar(calendarStateProps, weekState);
 
   const day = useCalendar(calendarStateProps, dayState);
+
+  const table = useCalendar(calendarStateProps, tableViewState);
 
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") ?? "month";
@@ -84,6 +93,11 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       title = day.title;
       prevButtonProps = day.prevButtonProps;
       nextButtonProps = day.nextButtonProps;
+      break;
+    case "table":
+      title = month.title;
+      prevButtonProps = month.prevButtonProps;
+      nextButtonProps = month.nextButtonProps;
       break;
     default:
       throw new Error(`Invalid mode: ${mode}`);
@@ -116,7 +130,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
               weekProps={{ state: weekState }}
               dayProps={{ state: dayState }}
               listProps={{}}
-              tableProps={{}}
+              tableProps={{ state: tableViewState, hubId }}
             />
           </div>
         </TitleProvider>
@@ -193,7 +207,10 @@ function CalendarView({
     state: CalendarState;
   };
   listProps: {};
-  tableProps: {};
+  tableProps: {
+    state: CalendarState;
+    hubId: string;
+  };
 }) {
   const { mode } = useMode();
 
