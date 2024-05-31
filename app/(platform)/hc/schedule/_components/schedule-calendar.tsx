@@ -18,6 +18,14 @@ import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
+import { ScheduleNewSession } from "#/app/(platform)/hc/components/schedule-new-session-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogPortal,
+  DialogTrigger,
+} from "#/components/ui/dialog";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { ModeProvider, useMode, type Mode } from "./mode-provider";
@@ -141,10 +149,22 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
 function CreateSessionButton() {
   return (
-    <button className="hover:bg-blue-dark flex items-center gap-2 rounded-md bg-blue-base px-3 py-2 text-white">
-      <Icons.plusCircle className="h-5 w-5" />
-      <span className="text-white">Schedule a session</span>
-    </button>
+    <Dialog>
+      <DialogTrigger>
+        <button className="hover:bg-blue-dark flex items-center gap-2 rounded-md bg-blue-base px-3 py-2 text-white">
+          <Icons.plusCircle className="h-5 w-5" />
+          <span className="text-white">Schedule a session</span>
+        </button>
+      </DialogTrigger>
+      <DialogPortal>
+        <DialogContent>
+          <DialogHeader className="border-b">
+            <span className="pb-4 text-xl font-bold">Schedule a session</span>
+          </DialogHeader>
+          <ScheduleNewSession />
+        </DialogContent>
+      </DialogPortal>
+    </Dialog>
   );
 }
 
