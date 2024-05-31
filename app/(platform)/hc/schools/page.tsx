@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
+import SchoolsDataTable from "../components/data-table";
 import {
   fetchDropoutReasons,
   fetchSchoolAttendances,
@@ -19,7 +20,6 @@ import {
 } from "./actions";
 import ChartArea from "./components/chart-area";
 import { columns } from "./components/columns";
-import SchoolsDataTable from "./components/data-table";
 import WeeklyHubReportButtonAndForm from "./components/weekly-hub-report-button-and-form";
 
 export default async function SchoolsPage() {
