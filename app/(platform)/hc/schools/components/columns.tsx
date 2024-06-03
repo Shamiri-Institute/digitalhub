@@ -30,7 +30,7 @@ function MenuItem({
   className,
 }: {
   children: React.ReactNode;
-  className: string;
+  className?: string;
 }) {
   return (
     <div className={cn("cursor-pointer px-3 py-2", className)}>{children}</div>
@@ -143,7 +143,9 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
               View school
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem>Edit school information</DropdownMenuItem>
+          <MenuItem>
+            Edit school information
+          </MenuItem>
           <DropdownMenuItem>Assign point supervisor</DropdownMenuItem>
           {!row.original.droppedOut || !row.original.droppedOutAt ? (
             <MenuItem className="text-shamiri-red">
