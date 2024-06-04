@@ -18,6 +18,7 @@ import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { DropoutSchool } from "../../components/dropout-school-form";
+import EditSchoolDetailsForm from "./edit-school-details-form";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {
@@ -144,7 +145,9 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
             </Link>
           </DropdownMenuItem>
           <MenuItem>
-            Edit school information
+            <EditSchoolDetailsForm schoolInfo={row.original}>
+              <div>Edit School Information</div>
+            </EditSchoolDetailsForm>
           </MenuItem>
           <DropdownMenuItem>Assign point supervisor</DropdownMenuItem>
           {!row.original.droppedOut || !row.original.droppedOutAt ? (
