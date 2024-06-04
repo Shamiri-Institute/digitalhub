@@ -4,7 +4,7 @@ import {
   KENYAN_COUNTIES,
   SCHOOL_DEMOGRAPHICS,
   SCHOOL_TYPES,
-} from "#/lib/constants";
+} from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
 
