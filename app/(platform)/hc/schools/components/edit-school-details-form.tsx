@@ -56,8 +56,16 @@ export default function EditSchoolDetailsForm({
   const form = useForm<z.infer<typeof EditSchoolSchema>>({
     resolver: zodResolver(EditSchoolSchema),
     defaultValues: {
-      numbersExpected: schoolInfo.numbersExpected as number,
-      schoolEmail: schoolInfo.schoolEmail as string,
+      numbersExpected: schoolInfo.numbersExpected ?? undefined,
+      schoolEmail: schoolInfo.schoolEmail ?? "",
+      /* TODO:
+       * All the ts-ignores are for data that's meant to be some sort of enum.
+       * However the prisma schema and old data in the DB forces us to make the form backwards-compatible and allow users
+       * to clean up the data.
+       *
+       * once we clean up the data in the database and update the prisma schema then we can remove the ts-ignores
+       * it's safe to assume that zod would still parse the incoming data anyway
+       */
       // @ts-ignore
       schoolDemographics: schoolInfo.schoolDemographics,
       // @ts-ignore
@@ -66,9 +74,9 @@ export default function EditSchoolDetailsForm({
       boardingDay: schoolInfo.boardingDay,
       // @ts-ignore
       schoolType: schoolInfo.schoolType,
-      pointPersonPhone: schoolInfo.pointPersonPhone ?? "",
-      pointPersonEmail: schoolInfo.pointPersonEmail ?? "",
-      pointPersonName: schoolInfo.pointPersonName ?? "",
+      pointPersonPhone: schoolInfo.pointPersonPhone ?? undefined,
+      pointPersonEmail: schoolInfo.pointPersonEmail ?? undefined,
+      pointPersonName: schoolInfo.pointPersonName ?? undefined,
     },
   });
 

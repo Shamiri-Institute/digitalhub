@@ -57,12 +57,17 @@ export const EditSchoolSchema = z.object({
   schoolDemographics: z.enum(SCHOOL_DEMOGRAPHICS).optional(),
   boardingDay: z.enum(BOARDING_DAY_TYPES).optional(),
   schoolType: z.enum(SCHOOL_TYPES).optional(),
-  pointPersonName: z.string().nullable(),
-  pointPersonEmail: z.string().email().nullable(),
+  pointPersonName: z
+    .string({ required_error: "Please enter the Point Person's Name" })
+    .optional(),
+  pointPersonEmail: z
+    .string({ required_error: "Please enter the Point Peron's Email" })
+    .email()
+    .optional(),
   pointPersonPhone: z
-    .string()
+    .string({ required_error: "Please enter the Point Person's phone number" })
     .refine((val) => isValidPhoneNumber(val, "KE"), {
       message: "Please enter a valid Kenyan Phone Number",
     })
-    .nullable(),
+    .optional(),
 });
