@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
+import { toast } from "#/components/ui/use-toast";
 import {
   BOARDING_DAY_TYPES,
   KENYAN_COUNTIES,
@@ -37,9 +38,9 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { EditSchoolSchema } from "../../schemas";
+import { editSchoolInformation } from "../actions";
 import { SchoolsTableData } from "./columns";
 
-// TODO might not make sense to resuse original schema
 export default function EditSchoolDetailsForm({
   children,
   schoolInfo,
@@ -58,6 +59,8 @@ export default function EditSchoolDetailsForm({
       numbersExpected: schoolInfo.numbersExpected as number,
       schoolEmail: schoolInfo.schoolEmail as string,
       // @ts-ignore
+      schoolDemographics: schoolInfo.schoolDemographics,
+      // @ts-ignore
       schoolCounty: schoolInfo.schoolCounty,
       // @ts-ignore
       boardingDay: schoolInfo.boardingDay,
@@ -70,7 +73,29 @@ export default function EditSchoolDetailsForm({
     form.reset();
   }, [dialogOpen]);
 
-  const onSubmit = (data) => console.log(data);
+  const onSubmit = async (data: z.infer<typeof EditSchoolSchema>) => {
+    const response = await editSchoolInformation(schoolInfo.id, data);
+
+    if (!response.success) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description:
+          response.message ??
+          "Something went wrong during submission, please try again",
+      });
+      return;
+    }
+
+    toast({
+      variant: "default",
+      title: "Success",
+      description: "Successfully submitted weekly evaluation",
+    });
+
+    form.reset();
+    setDialogOpen(false);
+  };
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

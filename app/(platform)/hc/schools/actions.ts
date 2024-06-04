@@ -273,7 +273,8 @@ export async function editSchoolInformation(
     console.error(err);
     return {
       success: false,
-      message: "could not update the school details",
+      message:
+        (err as Error)?.message ?? "Sorry, could not update the school details",
     };
   }
 }
