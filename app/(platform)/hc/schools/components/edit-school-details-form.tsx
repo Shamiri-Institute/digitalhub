@@ -31,7 +31,7 @@ import {
   KENYAN_COUNTIES,
   SCHOOL_DEMOGRAPHICS,
   SCHOOL_TYPES,
-} from "#/lib/constants";
+} from "#/lib/app-constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
