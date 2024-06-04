@@ -1,11 +1,12 @@
-import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import {
   BOARDING_DAY_TYPES,
   KENYAN_COUNTIES,
   SCHOOL_DEMOGRAPHICS,
+  SCHOOL_DROPOUT_REASONS,
   SCHOOL_TYPES,
 } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
 
 export const DropoutSchoolSchema = z.object({
@@ -56,4 +57,12 @@ export const EditSchoolSchema = z.object({
   schoolDemographics: z.enum(SCHOOL_DEMOGRAPHICS).optional(),
   boardingDay: z.enum(BOARDING_DAY_TYPES).optional(),
   schoolType: z.enum(SCHOOL_TYPES).optional(),
+  pointPersonName: z.string().nullable(),
+  pointPersonEmail: z.string().email().nullable(),
+  pointPersonPhone: z
+    .string()
+    .refine((val) => isValidPhoneNumber(val, "KE"), {
+      message: "Please enter a valid Kenyan Phone Number",
+    })
+    .nullable(),
 });

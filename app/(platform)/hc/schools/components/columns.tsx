@@ -5,7 +5,6 @@ import { Checkbox } from "#/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -34,7 +33,9 @@ function MenuItem({
   className?: string;
 }) {
   return (
-    <div className={cn("cursor-pointer px-3 py-2", className)}>{children}</div>
+    <div className={cn("cursor-pointer px-3 py-2 text-sm", className)}>
+      {children}
+    </div>
   );
 }
 
@@ -139,17 +140,17 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
+          <MenuItem>
             <Link href={`/hc/schools/${row.original.visibleId}`}>
               View school
             </Link>
-          </DropdownMenuItem>
+          </MenuItem>
           <MenuItem>
             <EditSchoolDetailsForm schoolInfo={row.original}>
               <div>Edit School Information</div>
             </EditSchoolDetailsForm>
           </MenuItem>
-          <DropdownMenuItem>Assign point supervisor</DropdownMenuItem>
+          <MenuItem>Assign point supervisor</MenuItem>
           {!row.original.droppedOut || !row.original.droppedOutAt ? (
             <MenuItem className="text-shamiri-red">
               <DropoutSchool

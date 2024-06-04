@@ -66,6 +66,9 @@ export default function EditSchoolDetailsForm({
       boardingDay: schoolInfo.boardingDay,
       // @ts-ignore
       schoolType: schoolInfo.schoolType,
+      pointPersonPhone: schoolInfo.pointPersonPhone ?? "",
+      pointPersonEmail: schoolInfo.pointPersonEmail ?? "",
+      pointPersonName: schoolInfo.pointPersonName ?? "",
     },
   });
 
@@ -100,7 +103,7 @@ export default function EditSchoolDetailsForm({
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-h-[90vh]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
@@ -134,6 +137,47 @@ export default function EditSchoolDetailsForm({
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="pointPersonName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Point Person Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pointPersonEmail"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Point Person Email</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pointPersonPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Point Person Phone Number</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="tel" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="schoolCounty"
