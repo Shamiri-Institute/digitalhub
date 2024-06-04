@@ -42,7 +42,6 @@ export async function createNewSession(
       },
     });
 
-    // revalidatePath("/hc/schedule");
     return {
       success: true,
       message: "Successfully scheduled new session ",
