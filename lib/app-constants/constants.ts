@@ -37,7 +37,7 @@ export const SESSION_TYPES: { name: string; description: string }[] = [
     description: "S3",
   },
   {
-    session: "s4",
+    name: "s4",
     description: "S4",
   },
 ];
