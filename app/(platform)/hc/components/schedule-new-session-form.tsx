@@ -98,10 +98,6 @@ export function ScheduleNewSession({
     toggleDialog(false);
   };
 
-  // useEffect(() => {
-  //   console.log(hubCoordinator);
-  // }, [hubCoordinator]);
-
   const checkSessionExists = () => {
     const values = form.getValues(["schoolId", "sessionType"]);
     if (values.length > 1) {
