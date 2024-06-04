@@ -62,7 +62,7 @@
   }
 
   label {
-    @apply text-gray-600
+    @apply text-gray-600;
   }
 }
 
@@ -175,15 +175,15 @@
     @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
   }
 
-  .form-toggle{
-    @apply mt-1.5 rounded-md border bg-background-secondary text-shamiri-text-dark-grey justify-start
+  .form-toggle {
+    @apply mt-1.5 justify-start rounded-md border bg-background-secondary text-shamiri-text-dark-grey;
   }
 
-  .form-toggle .form-toggle-button{
-    @apply text-base transition ease-in-out flex-1
+  .form-toggle .form-toggle-button {
+    @apply flex-1 text-base transition ease-in-out;
   }
 
-  .form-toggle .form-toggle-button[data-state='on']{
-    @apply bg-white drop-shadow-xl text-black border
+  .form-toggle .form-toggle-button[data-state="on"] {
+    @apply border bg-white text-black drop-shadow-xl;
   }
 }
