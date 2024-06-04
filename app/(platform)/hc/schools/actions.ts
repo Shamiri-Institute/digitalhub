@@ -4,7 +4,11 @@ import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { DropoutSchoolSchema, WeeklyHubReportSchema } from "../schemas";
+import {
+  DropoutSchoolSchema,
+  EditSchoolSchema,
+  WeeklyHubReportSchema,
+} from "../schemas";
 
 /**
  * TODO: the functions here should also be cognizant of the project
@@ -238,4 +242,38 @@ export async function fetchSchoolAttendances(hubId: string) {
       count_attendance_unmarked: numSchools - Number(count),
     }),
   );
+}
+
+export async function editSchoolInformation(
+  schoolId: string,
+  schoolInfo: z.infer<typeof EditSchoolSchema>,
+) {
+  try {
+    const authedCoordinator = await currentHubCoordinator();
+
+    if (!authedCoordinator) {
+      throw new Error("User not authorised to perform this function");
+    }
+
+    const parsedData = EditSchoolSchema.parse(schoolInfo);
+
+    await db.school.update({
+      where: {
+        id: schoolId,
+      },
+      data: parsedData,
+    });
+
+    revalidatePath("/hc/schools");
+    return {
+      success: true,
+      message: "successfully updated school information for",
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message: "could not update the school details",
+    };
+  }
 }
