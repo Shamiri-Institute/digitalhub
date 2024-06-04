@@ -22,7 +22,6 @@ export function TableView({
     }
 
     fetchAttendances();
-    console.log(hubId, attendances);
   }, []);
 
   const columns = [
