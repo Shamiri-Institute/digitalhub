@@ -11,7 +11,7 @@ import { useButton } from "@react-aria/button";
 import { useFocusRing } from "@react-aria/focus";
 import { mergeProps } from "@react-aria/utils";
 import { useSearchParams } from "next/navigation";
-import { useRef } from "react";
+import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { CalendarState, useCalendarState } from "react-stately";
@@ -43,6 +43,7 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const { hubId, ...calendarStateProps } = props;
   const { locale } = useLocale();
+  const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
 
   const monthState = useCalendarState({
     ...calendarStateProps,
@@ -129,7 +130,10 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
               </div>
             </div>
             <SessionsLoader>
-              <CreateSessionButton />
+              <CreateSessionButton
+                open={newScheduleDialog}
+                setDialogOpen={setNewScheduleDialog}
+              />
             </SessionsLoader>
           </div>
           <div className="mt-4 w-full">
@@ -147,9 +151,15 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   );
 }
 
-function CreateSessionButton() {
+function CreateSessionButton({
+  open,
+  setDialogOpen,
+}: {
+  open: boolean;
+  setDialogOpen: Dispatch<SetStateAction<boolean>>;
+}) {
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger>
         <button className="hover:bg-blue-dark flex items-center gap-2 rounded-md bg-blue-base px-3 py-2 text-white">
           <Icons.plusCircle className="h-5 w-5" />
@@ -161,7 +171,7 @@ function CreateSessionButton() {
           <DialogHeader className="border-b">
             <span className="pb-4 text-xl font-bold">Schedule a session</span>
           </DialogHeader>
-          <ScheduleNewSession />
+          <ScheduleNewSession toggleDialog={setDialogOpen} />
         </DialogContent>
       </DialogPortal>
     </Dialog>

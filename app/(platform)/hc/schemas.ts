@@ -32,10 +32,11 @@ export const WeeklyHubReportSchema = z.object({
 
 export const ScheduleNewSessionSchema = z.object({
   sessionType: stringValidation("Please select a session type"),
-  school: stringValidation("Please select a school"),
+  schoolId: stringValidation("Please select a school"),
   sessionDate: z.coerce.date({ required_error: "Please select a date" }),
   sessionStartTime: stringValidation("Please select a start time"),
   sessionDuration: stringValidation("Please select the session's duration"),
-  notifications: stringValidation(),
-  sendReminders: stringValidation("Please select a send reminder option"),
+  projectId: z.string().optional(),
+  // notifications: stringValidation(),
+  // sendReminders: stringValidation("Please select a send reminder option"),
 });
