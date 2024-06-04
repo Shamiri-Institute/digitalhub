@@ -48,13 +48,20 @@ export async function GET(request: NextRequest) {
   const dryRun = searchParams.get("dryRun") === "1";
 
   try {
+    const implementer = await db.implementer.findUniqueOrThrow({
+      where: { id: implementerId },
+      include: {
+        hubCoordinators: true,
+      },
+    });
+
     const totalPayoutReport = await calculatePayouts({
       day,
       effectiveDate,
       implementerId,
     });
     const { payoutPeriod } = totalPayoutReport;
-    const totalCsvFileName = `total-payouts-${format(
+    const totalCsvFileName = `total-payouts-${implementer.visibleId}-${format(
       payoutPeriod.startDate,
       "yyyy-MM-dd",
     )}-to-${format(payoutPeriod.endDate, "yyyy-MM-dd")}.csv`;
@@ -65,7 +72,7 @@ export async function GET(request: NextRequest) {
     });
 
     const repaymentsPayoutReport = await calculateRepayments({ implementerId });
-    const repaymentsCsvFileName = `repayments-${format(effectiveDate, "yyyy-MM-dd")}.csv`;
+    const repaymentsCsvFileName = `repayments-${implementer.visibleId}-${format(effectiveDate, "yyyy-MM-dd")}.csv`;
     const repaymentsCsvBuffer = await generateCsv({
       payoutDetails: repaymentsPayoutReport.payoutDetails,
       fileName: repaymentsCsvFileName,
@@ -76,13 +83,6 @@ export async function GET(request: NextRequest) {
 
     let destinationEmails: string[] = [];
     let ccEmails: string[] = [];
-
-    const implementer = await db.implementer.findUniqueOrThrow({
-      where: { id: implementerId },
-      include: {
-        hubCoordinators: true,
-      },
-    });
 
     if (implementer.visibleId === "Imp_1") {
       destinationEmails = ["ngatti@shamiri.institute"];
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
       sourceEmail,
       destinationEmails,
       ccEmails,
-      subject: `Payouts for sessions ${format(
+      subject: `Payouts for ${implementer.implementerName} sessions ${format(
         payoutPeriod.startDate,
         "yyyy-MM-dd",
       )} to ${format(payoutPeriod.endDate, "yyyy-MM-dd")}`,
@@ -121,14 +121,14 @@ export async function GET(request: NextRequest) {
     });
 
     console.log(
-      `Emailed total payout report to ${destinationEmails.join(", ")} and cc'ed ${ccEmails.join(", ")}`,
+      `Emailed total payout report for ${implementer.implementerName} to ${destinationEmails.join(", ")} and cc'ed ${ccEmails.join(", ")}`,
     );
 
     await emailRepaymentReport({
       sourceEmail,
       destinationEmails,
       ccEmails,
-      subject: `Repayment requested as of ${format(effectiveDate, "yyyy-MM-dd")}`,
+      subject: `Repayments requested for ${implementer.implementerName} as of ${format(effectiveDate, "yyyy-MM-dd")}`,
       bodyText: `Please find the attached repayments CSV.`,
       attachmentName: repaymentsCsvFileName,
       attachmentContent: repaymentsCsvBuffer.toString(),
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
           return row;
         }),
       );
-      const fileName = `supervisor-${supervisor.visibleId}-payouts-${format(
+      const fileName = `implementer-${implementer.visibleId}-supervisor-${supervisor.visibleId}-payouts-${format(
         payoutPeriod.startDate,
         "yyyy-MM-dd",
       )}-to-${format(payoutPeriod.endDate, "yyyy-MM-dd")}.csv`;
@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
         sourceEmail,
         destinationEmails,
         ccEmails,
-        subject: `Payouts for ${supervisor.supervisorName}'s fellows' sessions ${format(
+        subject: `Payouts for ${implementer.implementerName} ${supervisor.supervisorName}'s fellows' sessions ${format(
           payoutPeriod.startDate,
           "yyyy-MM-dd",
         )} to ${format(payoutPeriod.endDate, "yyyy-MM-dd")}`,
@@ -202,12 +202,12 @@ export async function GET(request: NextRequest) {
       });
 
       console.log(
-        `Emailed supervisor ${supervisor.visibleId} payout report to ${supervisor.supervisorEmail} and cc'ed ${hubCoordinatorEmails.join(", ")}`,
+        `Emailed supervisor ${supervisor.visibleId} payout report for ${implementer.implementerName} to ${supervisor.supervisorEmail} and cc'ed ${hubCoordinatorEmails.join(", ")}`,
       );
     }
 
     if (dryRun) {
-      console.debug("Dry run, not marking processed");
+      console.warn("Dry run, not marking processed");
     } else {
       await markAttendancesProcessed(totalPayoutReport.attendancesProcessed);
       await markDelayedPaymentsFulfilled(
@@ -222,7 +222,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: `Tabulated ${totalPayoutReport.payoutDetails.length} payouts`,
+      message: `Tabulated ${totalPayoutReport.payoutDetails.length} payouts for ${implementer.implementerName}`,
       effectiveDate,
       payoutReport: totalPayoutReport,
     });
