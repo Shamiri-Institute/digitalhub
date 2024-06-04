@@ -4,6 +4,14 @@ export const SCHOOL_DEMOGRAPHICS = ["Girls", "Boys", "Mixed"] as const;
 
 export const BOARDING_DAY_TYPES = ["Day", "Boarding", "Mixed"] as const;
 
+export const SCHOOL_TYPES = [
+  "County",
+  "Sub-county",
+  "Extra-county",
+  "Community",
+  "National",
+] as const;
+
 export const KENYAN_COUNTIES = [
   "Mombasa",
   "Kwale",
