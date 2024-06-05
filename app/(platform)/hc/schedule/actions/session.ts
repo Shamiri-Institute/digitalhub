@@ -49,10 +49,10 @@ export async function createNewSession(
 
     return {
       success: true,
-      message: "Successfully scheduled new session ",
+      message: "Successfully scheduled new session.",
     };
-  } catch (e: any) {
-    // console.error(e);
-    return { success: false, message: "something went wrong" };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong while scheduling a new session" };
   }
 }
