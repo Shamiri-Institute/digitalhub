@@ -29,12 +29,7 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
       <SessionDetail session={sessions[0]!} layout="compact" />
       <SessionDetail session={sessions[1]!} layout="compact" />
       {restCount > 0 && (
-        <div
-          className="text-sm font-semibold text-grey-c3"
-          onClick={() => {
-            console.log(restCount);
-          }}
-        >
+        <div className="text-sm font-semibold text-grey-c3">
           + {restCount} more
         </div>
       )}
