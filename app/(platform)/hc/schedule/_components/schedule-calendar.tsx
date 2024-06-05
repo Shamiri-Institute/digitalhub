@@ -26,6 +26,7 @@ import {
   DialogPortal,
   DialogTrigger,
 } from "#/components/ui/dialog";
+import { Prisma } from "@prisma/client";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { ModeProvider, useMode, type Mode } from "./mode-provider";
@@ -38,10 +39,11 @@ import { WeekView } from "./week-view";
 
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
   hubId: string;
+  schools: Prisma.SchoolGetPayload<{}>[];
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
-  const { hubId, ...calendarStateProps } = props;
+  const { hubId, schools, ...calendarStateProps } = props;
   const { locale } = useLocale();
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
 
@@ -133,6 +135,8 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
               <CreateSessionButton
                 open={newScheduleDialog}
                 setDialogOpen={setNewScheduleDialog}
+                schools={schools}
+                hubId={hubId}
               />
             </SessionsLoader>
           </div>
@@ -154,9 +158,13 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 function CreateSessionButton({
   open,
   setDialogOpen,
+  hubId,
+  schools,
 }: {
   open: boolean;
   setDialogOpen: Dispatch<SetStateAction<boolean>>;
+  hubId: string;
+  schools: Prisma.SchoolGetPayload<{}>[];
 }) {
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -171,7 +179,11 @@ function CreateSessionButton({
           <DialogHeader className="border-b">
             <span className="pb-4 text-xl font-bold">Schedule a session</span>
           </DialogHeader>
-          <ScheduleNewSession toggleDialog={setDialogOpen} />
+          <ScheduleNewSession
+            toggleDialog={setDialogOpen}
+            schools={schools}
+            hubId={hubId}
+          />
         </DialogContent>
       </DialogPortal>
     </Dialog>

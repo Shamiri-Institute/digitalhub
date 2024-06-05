@@ -1,4 +1,3 @@
-import HubCoordinatorContext from "#/app/(platform)/hc/context/hub-coordinator";
 import { SessionsContext } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
 import { createNewSession } from "#/app/(platform)/hc/schedule/actions/session";
 import { Icons } from "#/components/icons";
@@ -28,6 +27,7 @@ import { SESSION_TYPES } from "#/lib/app-constants/constants";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Prisma } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { Dispatch, SetStateAction, useContext } from "react";
@@ -37,11 +37,14 @@ import { ScheduleNewSessionSchema } from "../schemas";
 
 export function ScheduleNewSession({
   toggleDialog,
+  schools,
+  hubId,
 }: {
   toggleDialog: Dispatch<SetStateAction<boolean>>;
+  schools: Prisma.SchoolGetPayload<{}>[];
+  hubId: string;
 }) {
   const { toast } = useToast();
-  const { hubCoordinator } = useContext(HubCoordinatorContext);
   const { sessions, setSessions } = useContext(SessionsContext);
 
   const form = useForm<z.infer<typeof ScheduleNewSessionSchema>>({
@@ -61,20 +64,14 @@ export function ScheduleNewSession({
       data.sessionStartTime +
       ":00";
     data.sessionDate = new Date(sessionDate);
-
-    if (hubCoordinator && hubCoordinator.assignedHub !== null) {
-      data.projectId =
-        hubCoordinator.assignedHub.projectId ?? CURRENT_PROJECT_ID;
-    }
+    data.projectId = CURRENT_PROJECT_ID;
 
     await createNewSession(data)
       .then(async (response) => {
-        if (hubCoordinator && hubCoordinator.assignedHubId !== null) {
-          const fetchedSessions = await fetchInterventionSessions({
-            hubId: hubCoordinator.assignedHubId,
-          });
-          setSessions(fetchedSessions);
-        }
+        const fetchedSessions = await fetchInterventionSessions({
+          hubId,
+        });
+        setSessions(fetchedSessions);
         if (response.success) {
           toast({
             variant: "default",
@@ -174,13 +171,11 @@ export function ScheduleNewSession({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {hubCoordinator &&
-                    hubCoordinator.assignedHub &&
-                    hubCoordinator.assignedHub.schools.map((school) => (
-                      <SelectItem key={school.id} value={school.id}>
-                        {school.schoolName}
-                      </SelectItem>
-                    ))}
+                  {schools.map((school) => (
+                    <SelectItem key={school.id} value={school.id}>
+                      {school.schoolName}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
