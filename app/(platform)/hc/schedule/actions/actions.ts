@@ -1,6 +1,7 @@
 "use server";
 
 import { ScheduleNewSessionSchema } from "#/app/(platform)/hc/schemas";
+import { getCurrentUser } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { addHours, addMinutes } from "date-fns";
@@ -9,6 +10,10 @@ import { z } from "zod";
 export async function createNewSession(
   data: z.infer<typeof ScheduleNewSessionSchema>,
 ) {
+  const user = getCurrentUser();
+  if (user === null)
+    return { success: false, message: "Unauthenticated user." };
+
   try {
     const parsedData = ScheduleNewSessionSchema.parse(data);
 
@@ -47,7 +52,7 @@ export async function createNewSession(
       message: "Successfully scheduled new session ",
     };
   } catch (e: any) {
-    console.error(e);
+    // console.error(e);
     return { success: false, message: "something went wrong" };
   }
 }
