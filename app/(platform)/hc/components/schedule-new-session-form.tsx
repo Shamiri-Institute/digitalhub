@@ -1,6 +1,6 @@
 import HubCoordinatorContext from "#/app/(platform)/hc/context/hub-coordinator";
 import { SessionsContext } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
-import { createNewSession } from "#/app/(platform)/hc/schedule/actions/actions";
+import { createNewSession } from "#/app/(platform)/hc/schedule/actions/session";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
