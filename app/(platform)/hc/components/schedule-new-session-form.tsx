@@ -66,33 +66,32 @@ export function ScheduleNewSession({
     data.sessionDate = new Date(sessionDate);
     data.projectId = CURRENT_PROJECT_ID;
 
-    await createNewSession(data)
-      .then(async (response) => {
+    try {
+      const response = await createNewSession(data);
+      if (response.success) {
         const fetchedSessions = await fetchInterventionSessions({
           hubId,
         });
         setSessions(fetchedSessions);
-        if (response.success) {
-          toast({
-            variant: "default",
-            title: "Success",
-            description: `Successfully created new session`,
-          });
-          return;
-        }
-      })
-      .catch((error) => {
-        console.log(error);
+
         toast({
-          variant: "destructive",
-          title: "Submission Error",
-          description:
-            error.response.message ??
-            "Something went wrong during submission, please try again",
+          variant: "default",
+          title: "Success",
+          description: `Successfully created new session`,
         });
+        form.reset();
+        toggleDialog(false);
+        return;
+      }
+    } catch (error: unknown) {
+      console.log(error);
+      toast({
+        variant: "destructive",
+        title: "Submission Error",
+        description:
+          "Something went wrong while scheduling a session, please try again",
       });
-    form.reset();
-    toggleDialog(false);
+    }
   };
 
   const checkSessionExists = () => {
