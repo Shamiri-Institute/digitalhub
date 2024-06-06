@@ -550,6 +550,7 @@ model Supervisor {
   fellows                   Fellow[]
   students                  Student[]
   fellowAttendances         FellowAttendance[]
+  supervisorAttendances         SupervisorAttendance[]
   sessionRatings            InterventionSessionRating[]
   sessionNotes              InterventionSessionNote[]
   reimbursementRequests     ReimbursementRequest[]
@@ -565,6 +566,29 @@ model Supervisor {
   assignedSchools           School[]
 
   @@map("supervisors")
+}
+
+/// SupervisorAttendance is a representation of the attendance of a supervisor in a session. It is used to track the attendance of supervisors in sessions but also track the session in the future.
+
+model SupervisorAttendance {
+  id                     Int                     @id @default(autoincrement())
+  visibleId              String                  @unique @map("visible_id") @db.VarChar(100)
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  processedAt            DateTime?               @map("processed_at")
+  projectId              String                 @map("project_id")
+  project                Project                @relation(fields: [projectId], references: [id])
+  schoolId               String                  @map("school_id") @db.VarChar(255)
+  school                 School                  @relation(fields: [schoolId], references: [id])
+  supervisorId           String                  @map("supervisor_id") @db.VarChar(255)
+  supervisor             Supervisor              @relation(fields: [supervisorId], references: [id])
+  attended               Boolean?                @map("attended")
+  absenceReason          String?                 @map("absence_reason")
+  absenceComments          String?                 @map("absence_comments")@db.Text
+  sessionId              String                 @map("session_id")
+  session                InterventionSession    @relation(fields: [sessionId], references: [id])
+
+  @@map("supervisor_attendances")
 }
 
 /// Schools should not be duped across projects to ensure accurate reach tabulation
@@ -603,6 +627,7 @@ model School {
   students             Student[]
   studentAttendances   StudentAttendance[]
   fellowAttendances    FellowAttendance[]
+  supervisorAttendances    SupervisorAttendance[]
   interventionSessions InterventionSession[]
   interventionGroups   InterventionGroup[]
   schoolImplementers   SchoolImplementer[]
@@ -721,6 +746,7 @@ model InterventionSession {
   sessionRatings          InterventionSessionRating[]
   sessionNotes            InterventionSessionNote[]
   fellowAttendances       FellowAttendance[]
+  supervisorAttendances       SupervisorAttendance[]
   studentAttendances      StudentAttendance[]
   delayedPaymentRequests  DelayedPaymentRequest[]
   InterventionGroupReport InterventionGroupReport[]
@@ -1096,6 +1122,7 @@ model Project {
   hubs                 Hub[]
   studentAttendances   StudentAttendance[]
   fellowAttendances    FellowAttendance[]
+  supervisorAttendances    SupervisorAttendance[]
   interventionSessions InterventionSession[]
   interventionGroups   InterventionGroup[]
   projectImplementers  ProjectImplementer[]
