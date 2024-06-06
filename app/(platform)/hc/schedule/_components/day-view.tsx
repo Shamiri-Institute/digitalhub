@@ -12,11 +12,14 @@ import {
 } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 import { SessionList } from "./session-list";
 import { useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
 export function DayView({ state }: { state: CalendarState }) {
+  const headerRowRef: any = useRef(null);
   const dayFormatter = useDateFormatter({ weekday: "long" });
 
   const currentDate = state.visibleRange.start;
@@ -49,59 +52,82 @@ export function DayView({ state }: { state: CalendarState }) {
   const { sessions } = useSessions({ date: currentDate });
   const hasSessions = sessions.length > 0;
 
+  useGSAP(
+    () => {
+      if (headerRowRef !== null) {
+        gsap.timeline({
+          scrollTrigger: {
+            trigger: headerRowRef.current,
+            start: () => "top top",
+            end: () => "+=150%",
+            scrub: true,
+            pin: true,
+            pinSpacing: false,
+            // markers: true,
+          },
+        });
+      }
+    },
+    { scope: headerRowRef },
+  );
+
   return (
-    <table className="block border-separate overflow-hidden rounded-[0.4375rem] border border-grey-border [border-spacing:0]">
-      <thead className="block">
-        <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
-          <th className="w-[103px] px-4 py-3"></th>
-          <th
-            className={cn(
-              "relative flex shrink-0 items-center justify-between gap-2 px-4 py-3 text-left",
-              {
-                "text-blue-base": isToday(currentDate, state.timeZone),
-              },
-            )}
-          >
-            {headerLabel}&#8203;
-            {hasSessions && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="h-1.5 w-1.5 rounded-full bg-blue-base"></span>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  {sessions.length} sessions on this day
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </th>
-        </tr>
-      </thead>
-      <tbody className="block h-[700px] overflow-y-scroll">
-        {hours.map((hour, rowIdx) => (
-          <tr key={rowIdx} className="flex divide-x divide-grey-border">
-            <td
+    <div>
+      <table
+        ref={headerRowRef}
+        className="schedule-table z-10 rounded-t-[0.4375rem] bg-white"
+      >
+        <thead>
+          <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
+            <th className="time-cell"></th>
+            <th
               className={cn(
-                "flex truncate border-t border-grey-border bg-grey-bg px-4 py-3 text-grey-c3",
-                "h-[85px] xl:h-[112px]",
-                "w-[103px] shrink-0",
-                "text-sm",
+                "relative flex shrink-0 items-center justify-between gap-2",
                 {
-                  "border-t-0": rowIdx === 0,
+                  "text-blue-base": isToday(currentDate, state.timeZone),
                 },
               )}
             >
-              {formatHour(hour)}
-            </td>
-            <DayCalendarCell
-              rowIdx={rowIdx}
-              hour={hour}
-              date={currentDate}
-              state={state}
-            />
+              {headerLabel}&#8203;
+              {hasSessions && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="h-1.5 w-1.5 rounded-full bg-blue-base"></span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    {sessions.length} sessions on this day
+                  </TooltipContent>
+                </Tooltip>
+              )}
+            </th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+      </table>
+      <table className="schedule-table rounded-b-[0.4375rem]">
+        <tbody>
+          {hours.map((hour, rowIdx) => (
+            <tr key={rowIdx}>
+              <td
+                className={cn(
+                  "time-cell truncate",
+                  "h-[85px] xl:h-[112px]",
+                  "w-[103px] shrink-0",
+                  "text-sm",
+                )}
+              >
+                {formatHour(hour)}
+              </td>
+              <DayCalendarCell
+                rowIdx={rowIdx}
+                hour={hour}
+                date={currentDate}
+                state={state}
+              />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -123,7 +149,7 @@ function DayCalendarCell({
   const { sessions } = useSessions({ date, hour });
 
   return (
-    <td {...cellProps} className="w-full p-0">
+    <td {...cellProps}>
       <div
         {...buttonProps}
         ref={ref}
@@ -135,7 +161,7 @@ function DayCalendarCell({
       >
         <div
           className={cn(
-            "flex flex-col gap-[8px] overflow-y-scroll",
+            "flex flex-col gap-[8px] overflow-y-auto",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
             "h-[85px] xl:h-[112px]",
             "w-full",
