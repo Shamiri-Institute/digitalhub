@@ -2,9 +2,8 @@
 CREATE TABLE "supervisor_attendances" (
     "id" SERIAL NOT NULL,
     "visible_id" VARCHAR(100) NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-    "processed_at" TIMESTAMP(3),
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMPTZ NOT NULL,
     "project_id" TEXT NOT NULL,
     "school_id" VARCHAR(255) NOT NULL,
     "supervisor_id" VARCHAR(255) NOT NULL,
