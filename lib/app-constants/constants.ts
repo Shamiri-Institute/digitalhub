@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { config } from "../../tailwind.config.ts";
+import { config } from "#/tailwind.config";
 
 export const SCHOOL_DROPOUT_REASONS_MAPPING = {
   "lack of understanding of the program and the timelines":
@@ -80,3 +80,26 @@ export const KENYAN_COUNTIES = [
   "Nyamira",
   "Nairobi",
 ] as const;
+
+export const SESSION_TYPES: { name: string; description: string }[] = [
+  {
+    name: "s0",
+    description: "PRE",
+  },
+  {
+    name: "s1",
+    description: "S1",
+  },
+  {
+    name: "s2",
+    description: "S2",
+  },
+  {
+    name: "s3",
+    description: "S3",
+  },
+  {
+    name: "s4",
+    description: "S4",
+  },
+];

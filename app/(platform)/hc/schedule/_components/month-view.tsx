@@ -1,4 +1,9 @@
-import { CalendarDate, getWeeksInMonth } from "@internationalized/date";
+import {
+  CalendarDate,
+  getWeeksInMonth,
+  isSameDay,
+  isWeekend,
+} from "@internationalized/date";
 import { useEffect, useRef } from "react";
 import {
   useCalendarCell,
@@ -11,9 +16,14 @@ import { CalendarState } from "react-stately";
 
 import { cn } from "#/lib/utils";
 
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SessionList } from "./session-list";
 import { useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export function MonthView({
   state,
@@ -32,51 +42,88 @@ export function MonthView({
     month: "long",
     year: "numeric",
   });
+  const headerRowRef: any = useRef(null);
+
   useEffect(() => {
     if (state.value) {
       setTitle(`${titleFormatter.format(state.value.toDate(state.timeZone))}`);
     }
   }, [setTitle, state.timeZone, state.value, titleFormatter]);
 
+  useGSAP(
+    () => {
+      if (headerRowRef !== null) {
+        gsap.timeline({
+          scrollTrigger: {
+            trigger: headerRowRef.current,
+            start: () => "top top",
+            end: () => "+=100%",
+            scrub: true,
+            pin: true,
+            pinSpacing: false,
+            // markers: true,
+          },
+        });
+      }
+    },
+    { scope: headerRowRef },
+  );
+
   return (
-    <table
-      {...gridProps}
-      className="border-separate overflow-hidden rounded-[0.4375rem] border border-grey-border [border-spacing:0]"
-    >
-      <thead {...headerProps}>
-        <tr className="divide-x divide-grey-border bg-grey-bg">
-          {weekDays.map((day, index) => (
-            <th key={index} className="px-4 py-3 text-left">
-              {day}
-            </th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
-          <tr key={weekIndex} className="divide-x divide-grey-border">
-            {state
-              .getDatesInWeek(weekIndex)
-              .map((date, i) =>
-                date ? (
-                  <MonthCalendarCell key={i} state={state} date={date} />
-                ) : (
-                  <td key={i} />
-                ),
-              )}
+    <div>
+      <table
+        ref={headerRowRef}
+        className="schedule-table z-10 rounded-t-[0.4375rem] bg-white"
+      >
+        <thead {...headerProps}>
+          <tr>
+            {weekDays.map((day, index) => (
+              <th
+                key={index}
+                className={cn({
+                  "bg-background-secondary": index === 0 || index === 6,
+                })}
+              >
+                {day}
+              </th>
+            ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+      </table>
+      <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
+        <tbody>
+          {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
+            <tr key={weekIndex}>
+              {state
+                .getDatesInWeek(weekIndex)
+                .map((date, i) =>
+                  date ? (
+                    <MonthCalendarCell
+                      key={i}
+                      state={state}
+                      date={date}
+                      weekend={isWeekend(date, "en-US")}
+                    />
+                  ) : (
+                    <td key={i} />
+                  ),
+                )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
 export function MonthCalendarCell({
   state,
   date,
+  weekend,
 }: {
   state: CalendarState;
   date: CalendarDate;
+  weekend: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -92,31 +139,53 @@ export function MonthCalendarCell({
   const { sessions } = useSessions({ date });
 
   return (
-    <td {...cellProps} className="p-0">
+    <td
+      {...cellProps}
+      className={cn({
+        "bg-background-secondary": weekend,
+      })}
+    >
       <div
         {...buttonProps}
         ref={ref}
-        className={cn("cell", {
+        className={cn("cell w-full transition ease-in-out", {
+          "outline outline-2 outline-shamiri-new-blue": isSameDay(
+            date,
+            state.focusedDate,
+          ),
           selected: isSelected,
           disabled: isDisabled,
           unavailable: isUnavailable,
         })}
+        onClick={() => {
+          state.setFocusedDate(date);
+        }}
       >
         <div
           className={cn(
-            "flex flex-col gap-[8px] overflow-y-scroll",
+            "flex flex-col gap-[8px] overflow-y-auto",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
             "h-[120px] xl:h-[144px]",
-            "w-[165px] xl:w-[198px]",
-            "border-t border-grey-border",
           )}
         >
           <div
-            className={cn({
+            className={cn("flex", {
               "text-grey-c3": isOutsideVisibleRange,
             })}
           >
-            {formattedDate}
+            <div
+              className={cn(
+                "flex h-6 w-6 items-center justify-center rounded-full p-0.5",
+                {
+                  "bg-shamiri-new-blue text-white": isSameDay(
+                    date,
+                    state.focusedDate,
+                  ),
+                },
+              )}
+            >
+              {formattedDate}
+            </div>
           </div>
           <SessionList sessions={sessions} />
         </div>

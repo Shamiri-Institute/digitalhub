@@ -201,7 +201,22 @@ function LayoutV2({
           </div>
         </div>
       </header>
-      <main className="container pt-5">{children}</main>
+      <main className="container pt-2">{children}</main>
+      <footer className="border-t bg-background-secondary">
+        <div className="container py-2">
+          <div className="flex items-center justify-between text-sm font-medium text-shamiri-text-grey">
+            <div>
+              <p className="">
+                © Copyright {new Date().getFullYear()} Shamiri Institute Inc.
+              </p>
+            </div>
+            <div className="flex gap-x-6">
+              <span>Terms of Use</span>
+              <span>Privacy Policy</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </>
   );
 }

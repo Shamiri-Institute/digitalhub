@@ -1,7 +1,9 @@
 import { CalendarDate, isSameDay } from "@internationalized/date";
 import { Prisma } from "@prisma/client";
 import {
+  Dispatch,
   PropsWithChildren,
+  SetStateAction,
   createContext,
   useContext,
   useEffect,
@@ -11,14 +13,17 @@ import {
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
 import { getCalendarDate } from "#/lib/date-utils";
 
-const SessionsContext = createContext<SessionsContextType | undefined>(
-  undefined,
-);
-
 type SessionsContextType = {
   sessions: Session[];
   loading: boolean;
+  setSessions: Dispatch<SetStateAction<Session[]>>;
 };
+
+export const SessionsContext = createContext<SessionsContextType>({
+  sessions: [],
+  loading: false,
+  setSessions: () => {},
+});
 
 export type Session = Prisma.InterventionSessionGetPayload<{
   include: { school: true };
@@ -39,12 +44,11 @@ export function SessionsProvider({
       setSessions(fetchedSessions);
       setLoading(false);
     };
-
     fetchSessions();
   }, [hubId]);
 
   return (
-    <SessionsContext.Provider value={{ sessions, loading }}>
+    <SessionsContext.Provider value={{ sessions, loading, setSessions }}>
       {children}
     </SessionsContext.Provider>
   );

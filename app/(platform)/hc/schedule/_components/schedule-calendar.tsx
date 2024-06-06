@@ -11,13 +11,22 @@ import { useButton } from "@react-aria/button";
 import { useFocusRing } from "@react-aria/focus";
 import { mergeProps } from "@react-aria/utils";
 import { useSearchParams } from "next/navigation";
-import { useRef } from "react";
+import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
+import { ScheduleNewSession } from "#/app/(platform)/hc/components/schedule-new-session-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogPortal,
+  DialogTrigger,
+} from "#/components/ui/dialog";
+import { Prisma } from "@prisma/client";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { ModeProvider, useMode, type Mode } from "./mode-provider";
@@ -30,11 +39,13 @@ import { WeekView } from "./week-view";
 
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
   hubId: string;
+  schools: Prisma.SchoolGetPayload<{}>[];
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
-  const { hubId, ...calendarStateProps } = props;
+  const { hubId, schools, ...calendarStateProps } = props;
   const { locale } = useLocale();
+  const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
 
   const monthState = useCalendarState({
     ...calendarStateProps,
@@ -57,11 +68,20 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     createCalendar,
   });
 
+  const tableViewState = useCalendarState({
+    value: today(getLocalTimeZone()),
+    visibleDuration: { weeks: 1 },
+    locale,
+    createCalendar,
+  });
+
   const month = useCalendar(calendarStateProps, monthState);
 
   const week = useCalendar(calendarStateProps, weekState);
 
   const day = useCalendar(calendarStateProps, dayState);
+
+  const table = useCalendar(calendarStateProps, tableViewState);
 
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") ?? "month";
@@ -85,6 +105,11 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       prevButtonProps = day.prevButtonProps;
       nextButtonProps = day.nextButtonProps;
       break;
+    case "table":
+      title = month.title;
+      prevButtonProps = month.prevButtonProps;
+      nextButtonProps = month.nextButtonProps;
+      break;
     default:
       throw new Error(`Invalid mode: ${mode}`);
   }
@@ -107,16 +132,21 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
               </div>
             </div>
             <SessionsLoader>
-              <CreateSessionButton />
+              <CreateSessionButton
+                open={newScheduleDialog}
+                setDialogOpen={setNewScheduleDialog}
+                schools={schools}
+                hubId={hubId}
+              />
             </SessionsLoader>
           </div>
-          <div className="mt-4 ">
+          <div className="mt-4 w-full">
             <CalendarView
               monthProps={{ state: monthState, weekdayStyle: "long" }}
               weekProps={{ state: weekState }}
               dayProps={{ state: dayState }}
               listProps={{}}
-              tableProps={{}}
+              tableProps={{ state: tableViewState, hubId }}
             />
           </div>
         </TitleProvider>
@@ -125,12 +155,38 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   );
 }
 
-function CreateSessionButton() {
+function CreateSessionButton({
+  open,
+  setDialogOpen,
+  hubId,
+  schools,
+}: {
+  open: boolean;
+  setDialogOpen: Dispatch<SetStateAction<boolean>>;
+  hubId: string;
+  schools: Prisma.SchoolGetPayload<{}>[];
+}) {
   return (
-    <button className="hover:bg-blue-dark flex items-center gap-2 rounded-md bg-blue-base px-3 py-2 text-white">
-      <Icons.plusCircle className="h-5 w-5" />
-      <span className="text-white">Schedule a session</span>
-    </button>
+    <Dialog open={open} onOpenChange={setDialogOpen}>
+      <DialogTrigger>
+        <button className="hover:bg-blue-dark flex items-center gap-2 rounded-md bg-blue-base px-3 py-2 text-white">
+          <Icons.plusCircle className="h-5 w-5" />
+          <span className="text-white">Schedule a session</span>
+        </button>
+      </DialogTrigger>
+      <DialogPortal>
+        <DialogContent>
+          <DialogHeader className="border-b">
+            <span className="pb-4 text-xl font-bold">Schedule a session</span>
+          </DialogHeader>
+          <ScheduleNewSession
+            toggleDialog={setDialogOpen}
+            schools={schools}
+            hubId={hubId}
+          />
+        </DialogContent>
+      </DialogPortal>
+    </Dialog>
   );
 }
 
@@ -193,7 +249,10 @@ function CalendarView({
     state: CalendarState;
   };
   listProps: {};
-  tableProps: {};
+  tableProps: {
+    state: CalendarState;
+    hubId: string;
+  };
 }) {
   const { mode } = useMode();
 
