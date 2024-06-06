@@ -257,7 +257,7 @@ export async function editSchoolInformation(
 
     const parsedData = EditSchoolSchema.parse(schoolInfo);
 
-    await db.school.update({
+    const { schoolName } = await db.school.update({
       where: {
         id: schoolId,
       },
@@ -267,7 +267,7 @@ export async function editSchoolInformation(
     revalidatePath("/hc/schools");
     return {
       success: true,
-      message: "successfully updated school information for",
+      message: `Successfully updated school information for ${schoolName}`,
     };
   } catch (err) {
     console.error(err);
