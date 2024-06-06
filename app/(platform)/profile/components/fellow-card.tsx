@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
+import clsx from "clsx";
 import {
   FellowDropoutDialog,
   FellowUndropoutDialog,
@@ -56,6 +57,16 @@ export default function FellowCard({
           </h3>
           <p className="text-xs font-medium text-muted-foreground lg:text-sm">
             Shamiri ID: {fellow.visibleId}
+          </p>
+          <p
+            className={clsx(
+              "text-xs font-medium lg:text-sm",
+              fellow.mpesaNumber
+                ? "text-muted-foreground"
+                : "text-shamiri-light-red",
+            )}
+          >
+            Mpesa Number: {fellow.mpesaNumber ?? "N/A"}
           </p>
           {(fellow.droppedOutAt || fellow.droppedOut) && (
             <div>
