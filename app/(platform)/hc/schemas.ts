@@ -1,5 +1,12 @@
-import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
+import {
+  BOARDING_DAY_TYPES,
+  KENYAN_COUNTIES,
+  SCHOOL_DEMOGRAPHICS,
+  SCHOOL_DROPOUT_REASONS,
+  SCHOOL_TYPES,
+} from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
 
 export const DropoutSchoolSchema = z.object({
@@ -28,6 +35,41 @@ export const WeeklyHubReportSchema = z.object({
   hubRelatedIssuesAndObservationsRating: z.number().lte(5),
   successes: stringValidation(),
   challenges: stringValidation(),
+});
+
+export const EditSchoolSchema = z.object({
+  numbersExpected: z.coerce
+    .number({
+      required_error: "Please enter the promised number of students.",
+    })
+    .optional(),
+  schoolEmail: z
+    .string({
+      required_error: "Please enter the school's email.",
+    })
+    .optional(),
+  schoolCounty: z.enum(KENYAN_COUNTIES).optional(),
+  schoolContact: z
+    .string({
+      required_error: "Please enter the school's contact number.",
+    })
+    .optional(),
+  schoolDemographics: z.enum(SCHOOL_DEMOGRAPHICS).optional(),
+  boardingDay: z.enum(BOARDING_DAY_TYPES).optional(),
+  schoolType: z.enum(SCHOOL_TYPES).optional(),
+  pointPersonName: z
+    .string({ required_error: "Please enter the Point Person's Name" })
+    .optional(),
+  pointPersonEmail: z
+    .string({ required_error: "Please enter the Point Peron's Email" })
+    .email()
+    .optional(),
+  pointPersonPhone: z
+    .string({ required_error: "Please enter the Point Person's phone number" })
+    .refine((val) => isValidPhoneNumber(val, "KE"), {
+      message: "Please enter a valid Kenyan Phone Number",
+    })
+    .optional(),
 });
 
 export const ScheduleNewSessionSchema = z.object({
