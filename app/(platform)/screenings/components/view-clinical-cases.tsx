@@ -48,12 +48,12 @@ export function ListViewOfClinicalCases({
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="w-full justify-evenly bg-white">
             <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="Active" className="">
-              Active
+            <TabsTrigger value="No" className="">
+              No
             </TabsTrigger>
-            <TabsTrigger value="FollowUp">Follow-up</TabsTrigger>
-            <TabsTrigger value="Terminated">Terminated</TabsTrigger>
-            <TabsTrigger value="Referred">Referred</TabsTrigger>
+            <TabsTrigger value="Low">Low</TabsTrigger>
+            <TabsTrigger value="Medium">Medium</TabsTrigger>
+            <TabsTrigger value="High">High</TabsTrigger>
           </TabsList>
           <TabsContent value="all">
             <ClinicalCasses
@@ -62,31 +62,31 @@ export function ListViewOfClinicalCases({
               currentSupervisorId={currentSupervisorId}
             />
           </TabsContent>
-          <TabsContent value="Active">
+          <TabsContent value="No">
             <ClinicalCasses
               cases={cases}
-              option={"Active"}
+              option={"No"}
               currentSupervisorId={currentSupervisorId}
             />
           </TabsContent>
-          <TabsContent value="FollowUp">
+          <TabsContent value="Low">
             <ClinicalCasses
               cases={cases}
-              option={"FollowUp"}
+              option={"Low"}
               currentSupervisorId={currentSupervisorId}
             />
           </TabsContent>
-          <TabsContent value="Terminated">
+          <TabsContent value="Medium">
             <ClinicalCasses
               cases={cases}
-              option={"Terminated"}
+              option={"Medium"}
               currentSupervisorId={currentSupervisorId}
             />
           </TabsContent>
-          <TabsContent value="Referred">
+          <TabsContent value="High">
             <ClinicalCasses
               cases={cases}
-              option={"Referred"}
+              option={"High"}
               currentSupervisorId={currentSupervisorId}
             />
           </TabsContent>
@@ -101,13 +101,13 @@ function ClinicalCasses({
   cases = [],
   currentSupervisorId,
 }: {
-  option: "all" | "Active" | "FollowUp" | "Terminated" | "Referred";
+  option: "all" | "No" | "Low" | "Medium" | "High";
   cases?: CasesType[];
   currentSupervisorId?: string;
 }) {
   const newList = cases.filter((item) => {
     if (option === "all") return true;
-    if (item.caseStatus === option) return true;
+    if (item.riskStatus === option) return true;
   });
 
   return (
@@ -116,6 +116,11 @@ function ClinicalCasses({
       data-testid={constants.CLINICAL_CASES_LIST}
     >
       <div className="mb-2 flex flex-1 justify-between">
+        {currentSupervisorId && (
+          <p className="flex-1 text-base font-medium text-muted-foreground">
+            Hub
+          </p>
+        )}
         {currentSupervisorId && (
           <p className="flex-1 text-base font-medium text-muted-foreground">
             Supervisor
@@ -139,6 +144,7 @@ function ClinicalCasses({
           caseId={stud.id}
           name={stud.student.studentName}
           currentSupervisorId={currentSupervisorId}
+          hubName={stud.currentSupervisor.hub?.hubName}
           supervisor={stud.currentSupervisor.supervisorName}
           session={
             stud.sessions
@@ -169,6 +175,7 @@ function ClinicalCassesCard({
   caseId,
   supervisor,
   currentSupervisorId,
+  hubName,
 }: {
   name: string | null;
   session: string;
@@ -177,10 +184,14 @@ function ClinicalCassesCard({
   caseId: string;
   supervisor: string | null;
   currentSupervisorId?: string;
+  hubName?: string;
 }) {
   return (
     <Link href={`/screenings/${caseId}`}>
       <div className="mt-2 flex flex-1 items-center justify-between border-b last:border-none">
+        {currentSupervisorId && (
+          <p className="flex-1 text-left text-sm text-brand">{hubName}</p>
+        )}
         {currentSupervisorId && (
           <p className="flex-1 text-left text-sm text-brand">{supervisor}</p>
         )}
