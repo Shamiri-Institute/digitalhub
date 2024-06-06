@@ -14,6 +14,7 @@ import { db } from "#/lib/db";
 import { cn } from "#/lib/utils";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 import type { FellowWithAttendance } from "#/types/prisma";
+import clsx from "clsx";
 
 export default async function SchoolDetailPage({
   params: { visibleId },
@@ -286,6 +287,14 @@ async function FellowCard({
       </div>
       <p className="mt-1 text-sm text-gray-600">
         Shamiri ID: {fellow.visibleId}
+      </p>
+      <p
+        className={clsx(
+          "mt-1 text-sm",
+          fellow.mpesaNumber ? "text-gray-600" : "text-shamiri-light-red",
+        )}
+      >
+        Mpesa Number: {fellow.mpesaNumber ?? "N/A"}
       </p>
       <p className="mt-1 text-sm text-gray-600">
         Group: {fellowGroup?.groupName ?? "N/A"}
