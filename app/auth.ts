@@ -22,7 +22,11 @@ export async function currentHubCoordinator() {
   const hubCoordinator = await db.hubCoordinator.findFirst({
     where: { id: identifier },
     include: {
-      assignedHub: true,
+      assignedHub: {
+        include: {
+          schools: true,
+        },
+      },
     },
   });
 
