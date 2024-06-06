@@ -93,11 +93,19 @@ export default async function Page() {
         },
         where: {
           createdAt: {
-            gte: new Date(2024, 5, 20), //date when sessions started
+            gte: new Date("2024-05-20"), //date when sessions started
+          },
+        },
+        orderBy: {
+          currentSupervisor: {
+            hub: {
+              id: "asc",
+            },
           },
         },
       });
-    } else {
+    } else if (supervisor?.id === "COS24P2_002") {
+      // assigned to 24P2_Hub_02 by default but we also need data for 24P2_Hub_06
       return await db.clinicalScreeningInfo.findMany({
         include: {
           student: true,
@@ -114,9 +122,106 @@ export default async function Page() {
         },
         where: {
           currentSupervisor: {
+            hub: { id: { in: ["24P2_Hub_02", "24P2_Hub_06"] } },
+            createdAt: {
+              gte: new Date("2024-05-20"), //date when p2 2024 sessions started
+            },
+          },
+        },
+      });
+    } else if (supervisor?.id === "COS24P2_003") {
+      // assigned to 24P2_Hub_03, 24P2_Hub_04
+      return await db.clinicalScreeningInfo.findMany({
+        include: {
+          student: true,
+          sessions: {
+            orderBy: {
+              date: "desc",
+            },
+          },
+          currentSupervisor: {
+            include: {
+              hub: true,
+            },
+          },
+        },
+        where: {
+          currentSupervisor: {
+            hub: { id: { in: ["24P2_Hub_03", "24P2_Hub_04"] } },
+            createdAt: {
+              gte: new Date("2024-05-20"), //date when p2 2024 sessions started
+            },
+          },
+        },
+      });
+    } else if (supervisor?.id === "COS24P2_001") {
+      // assigned to 24P2_Hub_01, 24P2_Hub_05
+      return await db.clinicalScreeningInfo.findMany({
+        include: {
+          student: true,
+          sessions: {
+            orderBy: {
+              date: "desc",
+            },
+          },
+          currentSupervisor: {
+            include: {
+              hub: true,
+            },
+          },
+        },
+        where: {
+          currentSupervisor: {
+            hub: { id: { in: ["24P2_Hub_01", "24P2_Hub_05"] } },
+            createdAt: {
+              gte: new Date("2024-05-20"), //date when p2 2024 sessions started
+            },
+          },
+        },
+      });
+    } else if (supervisor?.id === "COS24P2_004") {
+      // assigned to 24P2_Hub_10, 24P2_Hub_13
+      return await db.clinicalScreeningInfo.findMany({
+        include: {
+          student: true,
+          sessions: {
+            orderBy: {
+              date: "desc",
+            },
+          },
+          currentSupervisor: {
+            include: {
+              hub: true,
+            },
+          },
+        },
+        where: {
+          currentSupervisor: {
+            hub: {
+              id: { in: ["24P2_Hub_10", "24P2_Hub_13"] },
+            },
+            createdAt: {
+              gte: new Date("2024-05-20"), //date when p2 2024 sessions started
+            },
+          },
+        },
+      });
+    } else {
+      return await db.clinicalScreeningInfo.findMany({
+        include: {
+          student: true,
+          sessions: true,
+          currentSupervisor: {
+            include: {
+              hub: true,
+            },
+          },
+        },
+        where: {
+          currentSupervisor: {
             hubId: supervisor?.hubId,
             createdAt: {
-              gte: new Date(2024, 5, 20), //date when sessions started
+              gte: new Date("2024-05-20"), //date when sessions started
             },
           },
         },
@@ -131,13 +236,16 @@ export default async function Page() {
     if (supervisor?.id === "Shamiri_CO") {
       return true;
     }
-    if (supervisor?.id === "COS24_001") {
+    if (supervisor?.id === "COS24P2_002") {
       return true;
     }
-    if (supervisor?.id === "COS24_002") {
+    if (supervisor?.id === "COS24P2_003") {
       return true;
     }
-    if (supervisor?.id === "COS24_003") {
+    if (supervisor?.id === "COS24P2_001") {
+      return true;
+    }
+    if (supervisor?.id === "COS24P2_004") {
       return true;
     }
     return false;
