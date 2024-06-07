@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
   const params = z
     .object({
       day: z.enum(["M", "R"]),
-      effectiveDate: z.date().optional().default(new Date()),
+      effectiveDate: z.coerce.date().optional().default(new Date()),
       implementerId: z.string(),
     })
     .safeParse({
