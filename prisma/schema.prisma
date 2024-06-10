@@ -571,7 +571,7 @@ model Supervisor {
 /// SupervisorAttendance is a representation of the attendance of a supervisor in a session. It is used to track the attendance of supervisors in sessions but also track the session in the future.
 
 model SupervisorAttendance {
-  id              Int                 @id @default(autoincrement())
+  id              String              @id @default(cuid())
   visibleId       String              @unique @map("visible_id") @db.VarChar(100)
   createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
