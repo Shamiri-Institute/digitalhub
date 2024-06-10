@@ -550,6 +550,7 @@ model Supervisor {
   fellows                   Fellow[]
   students                  Student[]
   fellowAttendances         FellowAttendance[]
+  supervisorAttendances     SupervisorAttendance[]
   sessionRatings            InterventionSessionRating[]
   sessionNotes              InterventionSessionNote[]
   reimbursementRequests     ReimbursementRequest[]
@@ -567,45 +568,68 @@ model Supervisor {
   @@map("supervisors")
 }
 
+/// SupervisorAttendance is a representation of the attendance of a supervisor in a session. It is used to track the attendance of supervisors in sessions but also track the session in the future.
+
+model SupervisorAttendance {
+  id              String              @id @default(cuid())
+  visibleId       String              @unique @map("visible_id") @db.VarChar(100)
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
+  projectId       String              @map("project_id")
+  project         Project             @relation(fields: [projectId], references: [id])
+  schoolId        String              @map("school_id") @db.VarChar(255)
+  school          School              @relation(fields: [schoolId], references: [id])
+  supervisorId    String              @map("supervisor_id") @db.VarChar(255)
+  supervisor      Supervisor          @relation(fields: [supervisorId], references: [id])
+  attended        Boolean?            @map("attended")
+  absenceReason   String?             @map("absence_reason")
+  absenceComments String?             @map("absence_comments") @db.Text
+  sessionId       String              @map("session_id")
+  session         InterventionSession @relation(fields: [sessionId], references: [id])
+
+  @@map("supervisor_attendances")
+}
+
 /// Schools should not be duped across projects to ensure accurate reach tabulation
 model School {
-  id                   String                @id @db.VarChar(255)
-  createdAt            DateTime              @default(now()) @map("created_at")
-  updatedAt            DateTime              @updatedAt @map("updated_at")
-  archivedAt           DateTime?             @map("archived_at")
-  schoolName           String                @map("school_name") @db.VarChar(255) // e.g. Garden Estate
-  schoolType           String?               @map("school_type") @db.VarChar(255)
-  schoolEmail          String?               @map("school_email") @db.VarChar(255)
-  schoolCounty         String?               @map("school_county") @db.VarChar(255) // e.g. Nairobi
-  schoolSubCounty      String?               @map("school_sub_county") @db.VarChar(255) // e.g. Kamukunji
-  schoolDemographics   String?               @map("school_demographics") @db.VarChar(255) // e.g. Mixed
-  visibleId            String                @unique @map("visible_id") @db.VarChar(100) // e.g. T2PS_School_6
-  implementerId        String?               @map("implementer_id") @db.VarChar(255) // TODO: to be replaced by join table
-  implementer          Implementer?          @relation(fields: [implementerId], references: [id])
-  hubId                String?               @map("hub_id") @db.VarChar(255)
-  hub                  Hub?                  @relation(fields: [hubId], references: [id])
-  pointPersonName      String?               @map("point_person_name") @db.VarChar(255)
-  pointPersonId        String?               @map("point_person_id") @db.VarChar(255)
-  pointPersonPhone     String?               @map("point_person_phone") @db.VarChar(255)
-  pointPersonEmail     String?               @map("point_person_email") @db.VarChar(255)
-  principalName        String?               @map("principal_name")
-  principalPhone       String?               @map("principal_phone")
-  numbersExpected      Int?                  @map("numbers_expected") // e.g. 700
-  boardingDay          String?               @map("boarding_day") @db.VarChar(255) // e.g. Day and boarding
-  longitude            Float?                @map("longitude")
-  latitude             Float?                @map("latitude")
-  droppedOut           Boolean?              @map("dropped_out")
-  droppedOutAt         DateTime?             @map("dropped_out_at") @db.Timestamptz()
+  id                    String                 @id @db.VarChar(255)
+  createdAt             DateTime               @default(now()) @map("created_at")
+  updatedAt             DateTime               @updatedAt @map("updated_at")
+  archivedAt            DateTime?              @map("archived_at")
+  schoolName            String                 @map("school_name") @db.VarChar(255) // e.g. Garden Estate
+  schoolType            String?                @map("school_type") @db.VarChar(255)
+  schoolEmail           String?                @map("school_email") @db.VarChar(255)
+  schoolCounty          String?                @map("school_county") @db.VarChar(255) // e.g. Nairobi
+  schoolSubCounty       String?                @map("school_sub_county") @db.VarChar(255) // e.g. Kamukunji
+  schoolDemographics    String?                @map("school_demographics") @db.VarChar(255) // e.g. Mixed
+  visibleId             String                 @unique @map("visible_id") @db.VarChar(100) // e.g. T2PS_School_6
+  implementerId         String?                @map("implementer_id") @db.VarChar(255) // TODO: to be replaced by join table
+  implementer           Implementer?           @relation(fields: [implementerId], references: [id])
+  hubId                 String?                @map("hub_id") @db.VarChar(255)
+  hub                   Hub?                   @relation(fields: [hubId], references: [id])
+  pointPersonName       String?                @map("point_person_name") @db.VarChar(255)
+  pointPersonId         String?                @map("point_person_id") @db.VarChar(255)
+  pointPersonPhone      String?                @map("point_person_phone") @db.VarChar(255)
+  pointPersonEmail      String?                @map("point_person_email") @db.VarChar(255)
+  principalName         String?                @map("principal_name")
+  principalPhone        String?                @map("principal_phone")
+  numbersExpected       Int?                   @map("numbers_expected") // e.g. 700
+  boardingDay           String?                @map("boarding_day") @db.VarChar(255) // e.g. Day and boarding
+  longitude             Float?                 @map("longitude")
+  latitude              Float?                 @map("latitude")
+  droppedOut            Boolean?               @map("dropped_out")
+  droppedOutAt          DateTime?              @map("dropped_out_at") @db.Timestamptz()
   // TODO: add column(s) for who dropped out the school
-  dropoutReason        String?               @map("dropout_reason")
-  assignedSupervisorId String?               @map("assigned_supervisor_id") @db.VarChar(255)
-  assignedSupervisor   Supervisor?           @relation(fields: [assignedSupervisorId], references: [id])
-  students             Student[]
-  studentAttendances   StudentAttendance[]
-  fellowAttendances    FellowAttendance[]
-  interventionSessions InterventionSession[]
-  interventionGroups   InterventionGroup[]
-  schoolImplementers   SchoolImplementer[]
+  dropoutReason         String?                @map("dropout_reason")
+  assignedSupervisorId  String?                @map("assigned_supervisor_id") @db.VarChar(255)
+  assignedSupervisor    Supervisor?            @relation(fields: [assignedSupervisorId], references: [id])
+  students              Student[]
+  studentAttendances    StudentAttendance[]
+  fellowAttendances     FellowAttendance[]
+  supervisorAttendances SupervisorAttendance[]
+  interventionSessions  InterventionSession[]
+  interventionGroups    InterventionGroup[]
+  schoolImplementers    SchoolImplementer[]
 
   preSessionDate              DateTime? @map("pre_session_date") // TODO: remove after data migration
   session1Date                DateTime? @map("session_1_date") // TODO: remove after data migration
@@ -709,7 +733,7 @@ model InterventionSession {
   scheduleHistory         Json?                       @map("schedule_history") // e.g. [ { startTime, endTime, userId } ]
   status                  SessionStatus?              @default(Scheduled)
   sessionName             String                      @map("session_name") @db.VarChar(255)
-  sessionType             String                      @map("session_type") @db.VarChar(255) // e.g. s0, s1, s2, s3, s4, fu1, fu2, ..., fu8, 
+  sessionType             String                      @map("session_type") @db.VarChar(255) // e.g. s0, s1, s2, s3, s4, fu1, fu2, ..., fu8,
   // TODO: consider adding column for sessionIndex Int, while sessionType tracks, intervention, dataCollation, followUp
   schoolId                String                      @map("school_id") @db.VarChar(255)
   school                  School                      @relation(fields: [schoolId], references: [id])
@@ -721,6 +745,7 @@ model InterventionSession {
   sessionRatings          InterventionSessionRating[]
   sessionNotes            InterventionSessionNote[]
   fellowAttendances       FellowAttendance[]
+  supervisorAttendances   SupervisorAttendance[]
   studentAttendances      StudentAttendance[]
   delayedPaymentRequests  DelayedPaymentRequest[]
   InterventionGroupReport InterventionGroupReport[]
@@ -1080,25 +1105,26 @@ model PayoutReconciliation {
 
 // this model will force us to actually think about super users if we want to track who created a record
 model Project {
-  id                   String                @id @default(cuid())
-  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt            DateTime              @updatedAt @map("updated_at")
-  visibleId            String                @unique @map("visible_id") @db.VarChar(255)
-  name                 String                @db.VarChar(100)
-  projectLead          String?               @map("project_lead") @db.VarChar(255) // consider if this is necessary
-  funder               String?               @db.VarChar(255) // additional info required on what we need to do with this field
-  budget               Int?
-  phase                Int?
-  estimatedStartDate   DateTime?             @map("estimated_start_date") @db.Date
-  estimatedEndDate     DateTime?             @map("estimated_end_date") @db.Date
-  actualStartDate      DateTime?             @map("actual_start_date") @db.Date
-  actualEndDate        DateTime?             @map("actual_end_date") @db.Date
-  hubs                 Hub[]
-  studentAttendances   StudentAttendance[]
-  fellowAttendances    FellowAttendance[]
-  interventionSessions InterventionSession[]
-  interventionGroups   InterventionGroup[]
-  projectImplementers  ProjectImplementer[]
+  id                    String                 @id @default(cuid())
+  createdAt             DateTime               @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt             DateTime               @updatedAt @map("updated_at")
+  visibleId             String                 @unique @map("visible_id") @db.VarChar(255)
+  name                  String                 @db.VarChar(100)
+  projectLead           String?                @map("project_lead") @db.VarChar(255) // consider if this is necessary
+  funder                String?                @db.VarChar(255) // additional info required on what we need to do with this field
+  budget                Int?
+  phase                 Int?
+  estimatedStartDate    DateTime?              @map("estimated_start_date") @db.Date
+  estimatedEndDate      DateTime?              @map("estimated_end_date") @db.Date
+  actualStartDate       DateTime?              @map("actual_start_date") @db.Date
+  actualEndDate         DateTime?              @map("actual_end_date") @db.Date
+  hubs                  Hub[]
+  studentAttendances    StudentAttendance[]
+  fellowAttendances     FellowAttendance[]
+  supervisorAttendances SupervisorAttendance[]
+  interventionSessions  InterventionSession[]
+  interventionGroups    InterventionGroup[]
+  projectImplementers   ProjectImplementer[]
 
   @@map("projects")
 }
