@@ -247,7 +247,7 @@ export default function SupervisorAttendance({
                 columns={columns as ColumnDef<unknown>[]}
                 data={attendances}
                 editColumns={false}
-                className={"data-table"}
+                className={"data-table data-table-action"}
                 emptyStateMessage="No fellows associated with this school"
               />
               <div className="flex justify-end gap-6">

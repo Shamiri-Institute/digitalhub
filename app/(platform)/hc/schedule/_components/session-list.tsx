@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
+import FellowAttendance from "#/app/(platform)/hc/schedule/_components/fellow-attendance";
 import SupervisorAttendance from "#/app/(platform)/hc/schedule/_components/supervisor-attendance";
 import {
   DropdownMenu,
@@ -56,6 +57,8 @@ export function SessionDetail({
   });
   const [open, setOpen] = React.useState(false);
   const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
+    React.useState(false);
+  const [fellowAttendanceDialog, setFellowAttendanceDialog] =
     React.useState(false);
 
   const searchParams = useSearchParams();
@@ -174,7 +177,13 @@ export function SessionDetail({
                 Mark supervisor attendance
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem>View fellow attendance</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setFellowAttendanceDialog(true);
+              }}
+            >
+              View fellow attendance
+            </DropdownMenuItem>
             <DropdownMenuItem>Weekly session report</DropdownMenuItem>
             <DropdownMenuItem className="text-shamiri-light-red">
               Archive
@@ -185,6 +194,11 @@ export function SessionDetail({
       <SupervisorAttendance
         isOpen={supervisorAttendanceDialog}
         onChange={setSupervisorAttendanceDialog}
+        session={session}
+      />
+      <FellowAttendance
+        isOpen={fellowAttendanceDialog}
+        onChange={setFellowAttendanceDialog}
         session={session}
       />
     </div>
