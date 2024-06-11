@@ -31,11 +31,15 @@ import SettingsIcon from "../../../../public/icons/settings-icon.svg";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  editColumns?: boolean;
+  className?: string;
 }
 
 export default function DataTable<TData, TValue>({
   columns,
   data,
+  editColumns = true,
+  className,
   emptyStateMessage,
 }: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -55,41 +59,43 @@ export default function DataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 bg-white text-sm font-semibold leading-5 text-shamiri-black"
-            >
-              Edit Columns
-              <Image
-                unoptimized
-                priority
-                src={SettingsIcon}
-                alt="Setting Icon"
-                width={24}
-                height={24}
-              />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {table
-              .getAllColumns()
-              .filter((col) => col.getCanHide())
-              .map((col) => (
-                <DropdownMenuCheckboxItem
-                  key={col.id}
-                  checked={col.getIsVisible()}
-                  onCheckedChange={(val) => col.toggleVisibility(!!val)}
-                >
-                  {col.id}
-                </DropdownMenuCheckboxItem>
-              ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <Table>
+      {editColumns && (
+        <div className="flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 bg-white text-sm font-semibold leading-5 text-shamiri-black"
+              >
+                Edit Columns
+                <Image
+                  unoptimized
+                  priority
+                  src={SettingsIcon}
+                  alt="Setting Icon"
+                  width={24}
+                  height={24}
+                />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {table
+                .getAllColumns()
+                .filter((col) => col.getCanHide())
+                .map((col) => (
+                  <DropdownMenuCheckboxItem
+                    key={col.id}
+                    checked={col.getIsVisible()}
+                    onCheckedChange={(val) => col.toggleVisibility(!!val)}
+                  >
+                    {col.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+      <Table className={className}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -126,7 +132,15 @@ export default function DataTable<TData, TValue>({
                 data-state={row.getIsSelected() && "Selected"}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="border !px-4 py-2">
+                  <TableCell
+                    key={cell.id}
+                    className={cn(
+                      "border",
+                      cell.column.columnDef.id === "button"
+                        ? "relative !p-0"
+                        : "!px-4 py-2",
+                    )}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

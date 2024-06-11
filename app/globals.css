@@ -175,6 +175,32 @@
     @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
   }
 
+  .data-table {
+    @apply table-fixed rounded-lg border border-grey-border;
+  }
+
+  .data-table tr td:last-child,
+  .data-table thead th:last-child {
+    @apply w-[50px] min-w-[40px] max-w-[50px] cursor-pointer;
+  }
+
+  .data-table thead th:last-child {
+    @apply border-l;
+  }
+
+  .data-table tbody tr,
+  .data-table tbody td {
+    @apply transition ease-in-out;
+  }
+
+  .data-table tbody tr:hover td {
+    @apply bg-gray-100 transition ease-in-out;
+  }
+
+  .data-table tbody tr:hover td:last-child {
+    @apply bg-transparent;
+  }
+
   .form-toggle {
     @apply mt-1.5 justify-start rounded-md border bg-background-secondary text-shamiri-text-dark-grey;
   }
