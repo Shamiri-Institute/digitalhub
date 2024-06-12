@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import * as fastcsv from "fast-csv";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
   const params = z
     .object({
       day: z.enum(["M", "R"]),
-      effectiveDate: z.date().optional().default(new Date()),
+      effectiveDate: z.coerce.date().optional().default(new Date()),
       implementerId: z.string(),
     })
     .safeParse({
@@ -227,9 +228,12 @@ export async function GET(request: NextRequest) {
       payoutReport: totalPayoutReport,
     });
   } catch (error: unknown) {
+    Sentry.captureException(error);
     if (error instanceof Error) {
+      console.error(error.message);
       return NextResponse.json({ error: error.message }, { status: 400 });
     } else {
+      console.error(error);
       return NextResponse.json(
         { error: "An unknown error occurred" },
         { status: 500 },
