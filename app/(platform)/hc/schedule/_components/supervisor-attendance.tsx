@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/use-toast";
-import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
+import { fetchSupervisorsWithAttendances } from "#/lib/actions/fetch-supervisors";
 import { cn } from "#/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
@@ -179,7 +179,7 @@ export default function SupervisorAttendance({
   useEffect(() => {
     try {
       const fetchAttendances = async () => {
-        const supervisors = await fetchSupervisorAttendances({
+        const supervisors = await fetchSupervisorsWithAttendances({
           where: {
             assignedSchools: {
               some: {
