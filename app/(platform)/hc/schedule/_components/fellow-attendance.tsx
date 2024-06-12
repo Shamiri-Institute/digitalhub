@@ -9,13 +9,29 @@ import {
   DialogHeader,
   DialogPortal,
 } from "#/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "#/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
-import { fetchFellowAttendances } from "#/lib/actions/fetch-fellow-attendances";
+import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
 import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 
 export default function FellowAttendance({
   isOpen,
@@ -121,13 +137,22 @@ export default function FellowAttendance({
             avgProgramDeliveryRating) /
           4;
 
+        const remainder = avg - Math.floor(avg);
         return (
-          <div className="flex items-center gap-1 text-shamiri-graph-yellow">
+          <div className="flex items-center gap-1 text-shamiri-light-orange">
             {Array.from(Array(Math.floor(avg)).keys()).map((index) => {
               return <Icons.starRating key={index} className="h-5 w-5" />;
             })}
-            {Math.ceil(avg) - avg !== 0 ? (
-              <Icons.starRatingOutline className="h-5 w-5" />
+            {remainder > 0 ? (
+              <div className="relative h-5 w-5 shrink">
+                <Icons.starRating className="h-full w-full text-shamiri-light-grey" />
+                <div
+                  className="absolute inset-y-0 left-0 overflow-hidden"
+                  style={{ width: remainder * 100 + "%" }}
+                >
+                  <Icons.starRating className="h-5 w-5" />
+                </div>
+              </div>
             ) : null}
           </div>
         );
@@ -145,28 +170,44 @@ export default function FellowAttendance({
   ];
 
   const [attendances, setAttendances] = useState<
+    Prisma.SupervisorAttendanceGetPayload<{
+      include: {
+        supervisor: true;
+        session: {
+          include: {
+            fellowAttendances: {
+              include: {
+                fellow: {
+                  include: {
+                    weeklyFellowRatings: true;
+                  };
+                };
+                group: true;
+              };
+            };
+          };
+        };
+      };
+    }>[]
+  >([]);
+  const [fellowAttendances, setFellowAttendances] = useState<
     Prisma.FellowAttendanceGetPayload<{}>[]
   >([]);
 
   useEffect(() => {
     try {
       const fetchAttendances = async () => {
-        const fellowAttendances = await fetchFellowAttendances({
+        const supervisorAttendances = await fetchSupervisorAttendances({
           where: {
+            school: {
+              hubId: session.school.hubId,
+            },
             session: {
               id: session.id,
             },
           },
-          include: {
-            fellow: {
-              include: {
-                weeklyFellowRatings: true,
-              },
-            },
-            group: true,
-          },
         });
-        setAttendances(fellowAttendances);
+        setAttendances(supervisorAttendances);
         console.log(attendances);
       };
       fetchAttendances();
@@ -176,10 +217,12 @@ export default function FellowAttendance({
         variant: "destructive",
         title: "Fetch failed!",
         description:
-          "Something went wrong while fetching supervisor data, please try again.",
+          "Something went wrong while fetching attendance data, please try again.",
       });
     }
-  }, [isOpen, session.school.hubId]);
+  }, [isOpen]);
+
+  const form = useForm<{ supervisor: string }>({});
 
   return (
     <div>
@@ -194,10 +237,63 @@ export default function FellowAttendance({
               layout={"compact"}
               withDropdown={false}
             />
+            <div className="mb-4">
+              <Form {...form}>
+                <FormField
+                  control={form.control}
+                  name="supervisor"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel className={"text-sm"}>
+                        Select a supervisor
+                      </FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          const supervisorAttendance = attendances.find(
+                            (attendance) => attendance.supervisorId === value,
+                          );
+                          if (supervisorAttendance !== undefined) {
+                            const currentSupervisorFellowAttendances =
+                              supervisorAttendance.session.fellowAttendances.filter(
+                                (attendance) => {
+                                  return attendance.supervisorId === value;
+                                },
+                              );
+                            setFellowAttendances(
+                              currentSupervisorFellowAttendances,
+                            );
+                          }
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a supervisor" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {attendances.map((attendance) => (
+                            <SelectItem
+                              key={attendance.supervisorId}
+                              value={attendance.supervisorId}
+                            >
+                              {attendance.supervisor.supervisorName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </Form>
+            </div>
             <div className="space-y-4 pt-2">
+              {/* TODO: https://github.com/TanStack/table/issues/4382 --> ColumnDef types gives typescript error */}
               <DataTable
                 columns={columns as ColumnDef<unknown>[]}
-                data={attendances}
+                data={fellowAttendances}
                 editColumns={false}
                 className={"data-table"}
                 emptyStateMessage="No fellows associated with this session"
