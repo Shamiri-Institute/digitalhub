@@ -18,7 +18,13 @@ import { Loader2 } from "lucide-react";
 
 import { ChangeEvent, useState } from "react";
 
-export default function FileUploader() {
+export default function FileUploader({
+  url,
+  type,
+}: {
+  url: string;
+  type: string;
+}) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -52,7 +58,7 @@ export default function FileUploader() {
     try {
       setUploading(true);
 
-      const resp = await fetch("/api/csv-uploads/fellows", {
+      const resp = await fetch(url, {
         method: "POST",
         body: formData,
       });
@@ -89,7 +95,7 @@ export default function FileUploader() {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader className="text-xl font-semibold leading-7">
-          Upload fellows csv
+          Upload {type} csv
         </DialogHeader>
         <div
           className={clsx(
