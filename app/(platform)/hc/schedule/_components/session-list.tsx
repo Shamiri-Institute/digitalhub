@@ -162,7 +162,7 @@ export function SessionDetail({
             {completed && !cancelled ? (
               <DropdownMenuItem
                 onClick={() => {
-                  // setSupervisorAttendanceDialog(true);
+                  setSupervisorAttendanceDialog(true);
                 }}
               >
                 View supervisor attendance

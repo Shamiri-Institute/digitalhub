@@ -53,6 +53,7 @@ export const config: Config = {
         "shamiri-light-green": "#E5F8EB",
         "shamiri-green": "#00BA34",
         "shamiri-border-green": "#CCF1D6",
+        "shamiri-light-orange": "#F98600",
         canvas: "hsl(var(--canvas))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
