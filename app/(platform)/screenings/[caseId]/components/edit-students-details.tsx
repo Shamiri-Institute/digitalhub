@@ -15,6 +15,7 @@ import { useToast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
+import { addBreadcrumb } from "@sentry/nextjs";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -102,7 +103,10 @@ export default function EditStudentDetails({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit, (errors) => {
-              console.log(errors);
+              addBreadcrumb({
+                message: "Failed to submit form",
+                data: { errors },
+              });
             })}
           >
             <div className="mt-6 space-y-6 px-[0.9px]">
