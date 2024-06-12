@@ -9,7 +9,7 @@ export async function fetchFellowAttendances({
   include,
 }: {
   where: Prisma.FellowAttendanceWhereInput;
-  include: Prisma.FellowAttendanceInclude;
+  include?: Prisma.FellowAttendanceInclude;
 }) {
   const attendances = await db.fellowAttendance.findMany({
     where,
