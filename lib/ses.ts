@@ -6,7 +6,7 @@ import {
 
 import { env } from "#/env";
 
-const SES_EMAILS_PER_SECOND_RATE_LIMIT = 14;
+const SES_EMAILS_PER_SECOND_RATE_LIMIT = 5;
 const ONE_SECOND_IN_MS = 1000;
 const SLEEP_TIME_MS = ONE_SECOND_IN_MS / SES_EMAILS_PER_SECOND_RATE_LIMIT;
 
