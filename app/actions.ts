@@ -1908,3 +1908,49 @@ export async function undropoutStudent(studentId: string, path: string) {
     return { error: "Something went wrong", success: false };
   }
 }
+
+export async function editStudentInfoFromClinicalCaseScreen(
+  {
+    studentId,
+    screeningId,
+  }: {
+    studentId: string;
+    screeningId: string;
+  },
+  data: {
+    studentName: string;
+    admissionNumber: string;
+    age: string;
+    county: string;
+    form: string;
+    contactNumber?: string;
+    stream: string;
+    gender: string;
+    studentGroup?: string;
+  },
+) {
+  try {
+    await db.student.update({
+      where: {
+        id: studentId,
+      },
+      data: {
+        studentName: data.studentName,
+        admissionNumber: data.admissionNumber,
+        age: parseInt(data.age),
+        gender: data.gender,
+        form: parseInt(data.form),
+        stream: data.stream,
+        county: data.county,
+        phoneNumber: data.contactNumber,
+        groupName: data.studentGroup,
+      },
+    });
+
+    revalidatePath(`/screenings/${screeningId}`);
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
