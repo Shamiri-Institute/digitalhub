@@ -21,6 +21,7 @@ import {
   MoreHorizontal,
   MoreVertical,
   Network,
+  PencilLineIcon,
   PieChart,
   PlusCircle,
   Search,
@@ -69,6 +70,7 @@ export const Icons = {
   starOutline: Star,
   heartPulse: HeartPulse,
   helpCircle: HelpCircle,
+  PencilLine: PencilLineIcon,
 
   // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (

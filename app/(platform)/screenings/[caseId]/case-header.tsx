@@ -1,8 +1,10 @@
 "use client";
+import EditStudentDetails from "#/app/(platform)/screenings/[caseId]/components/edit-students-details";
 import { FlagStudentDialog } from "#/app/(platform)/screenings/[caseId]/components/flag-reason-dialog";
 import { CurrentCase } from "#/app/(platform)/screenings/screen";
 import { updateClinicalCaseStatus } from "#/app/actions";
 import { Icons } from "#/components/icons";
+import { Dialog, DialogContent, DialogTrigger } from "#/components/ui/dialog";
 import { cn, getInitials } from "#/lib/utils";
 import { caseStatusOptions } from "@prisma/client";
 import Link from "next/link";
@@ -36,6 +38,7 @@ export default function CaseHeader({
   const [selected, setSelected] = useState<string>(currentcase.caseStatus);
   const [color, setColor] = useState<string | undefined>("");
   const [flagged, setFlagged] = useState<boolean>(currentcase.flagged);
+  const [open, setOpen] = useState(false);
 
   const handleOption = async (status: caseStatusOptions) => {
     try {
@@ -102,13 +105,31 @@ export default function CaseHeader({
           </div>
         </div>
         <div className="ml-6 flex flex-1 flex-col justify-center ">
-          <div className="flex flex-col">
-            <p className="text-base font-bold text-brand">
-              {currentcase.student.studentName}
-            </p>
-            <p className="text-sm font-medium text-muted-foreground">
-              Shamiri ID: {currentcase.student.visibleId}
-            </p>
+          <div className="flex justify-between">
+            <div className="flex flex-col">
+              <p className="text-base font-bold text-brand">
+                {currentcase.student.studentName}
+              </p>
+              <p className="text-sm font-medium text-muted-foreground">
+                Shamiri ID: {currentcase.student.visibleId}
+              </p>
+            </div>
+            <div className="flex items-center">
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger>
+                  <div className="px-3">
+                    <Icons.PencilLine className="h-4 w-4" />
+                  </div>
+                </DialogTrigger>
+                <DialogContent className="max-h-screen overflow-y-scroll">
+                  <EditStudentDetails
+                    student={currentcase.student}
+                    caseId={currentcase.id}
+                    setOpen={setOpen}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
           <div className="mt-1 flex justify-between">
             {casesColorOptions.map((stud) => (
