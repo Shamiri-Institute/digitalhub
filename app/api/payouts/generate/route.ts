@@ -330,7 +330,7 @@ async function markRepaymentRequestFulfilled(
 }
 
 async function markPayoutReconciliationsExecuted(
-  reconciliationsExecuted: Processed[],
+  reconciliationsExecuted: (Processed & { newPayout?: PayoutDetail })[],
 ): Promise<void> {
   const ids = reconciliationsExecuted
     .map((r) => parseInt(r.id))
@@ -339,4 +339,26 @@ async function markPayoutReconciliationsExecuted(
     where: { id: { in: ids } },
     data: { executedAt: new Date() },
   });
+
+  for (const reconciliationExecuted of reconciliationsExecuted) {
+    const oldPayoutReconciliation =
+      await db.payoutReconciliation.findUniqueOrThrow({
+        where: { id: parseInt(reconciliationExecuted.id) },
+      });
+
+    if (reconciliationExecuted.newPayout) {
+      const newPayout = reconciliationExecuted.newPayout;
+      await db.payoutReconciliation.create({
+        data: {
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          executedAt: null,
+          fellowId: oldPayoutReconciliation.fellowId,
+          amount: newPayout.kesPayoutAmount,
+          description: newPayout.notes,
+          relatedDetails: oldPayoutReconciliation.relatedDetails ?? {},
+        },
+      });
+    }
+  }
 }
