@@ -23,7 +23,7 @@ interface EmailProperties {
 export async function emailPayoutReport(props: EmailProperties) {
   let emailProps = props;
   if (props.dryRun) {
-    emailProps.subject = "[DRY RUN] " + emailProps.subject;
+    emailProps.subject = "[PREVIEW] " + emailProps.subject;
     emailProps.ccEmails = ["tech@shamiri.institute"];
     emailProps.destinationEmails = ["tech@shamiri.institute"];
   }
@@ -74,7 +74,7 @@ export async function emailRepaymentReport(
 }
 
 export function constructPayoutEmailBody(props: EmailProperties): string {
-  const {
+  let {
     sourceEmail,
 
     destinationEmails,
@@ -96,6 +96,12 @@ export function constructPayoutEmailBody(props: EmailProperties): string {
     payoutReport.totalPayoutAmountWithMpesaInfo
       ? `The total payout amount is KES ${payoutReport.totalPayoutAmount}.`
       : `The total payout amount is KES ${payoutReport.totalPayoutAmount} and the total payout amount with Mpesa info present is KES ${payoutReport.totalPayoutAmountWithMpesaInfo}.`;
+
+  if (props.dryRun) {
+    bodyText =
+      "This is a preview of an upcoming report. Review it and let support know if you have any concerns.\n\n" +
+      bodyText;
+  }
 
   return `From: ${sourceEmail}
 To: ${destinationEmails.join(", ")}
