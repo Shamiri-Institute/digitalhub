@@ -158,37 +158,35 @@ export function SessionDetail({
             </span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <div className="popover-links flex flex-col">
-            {completed && !cancelled ? (
-              <DropdownMenuItem
-                onClick={() => {
-                  setSupervisorAttendanceDialog(true);
-                }}
-              >
-                View supervisor attendance
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem
-                className="w-full"
-                onClick={() => {
-                  setSupervisorAttendanceDialog(true);
-                }}
-              >
-                Mark supervisor attendance
-              </DropdownMenuItem>
-            )}
+          {session.occurred ? (
             <DropdownMenuItem
               onClick={() => {
-                setFellowAttendanceDialog(true);
+                setSupervisorAttendanceDialog(true);
               }}
             >
-              View fellow attendance
+              View supervisor attendance
             </DropdownMenuItem>
-            <DropdownMenuItem>Weekly session report</DropdownMenuItem>
-            <DropdownMenuItem className="text-shamiri-light-red">
-              Archive
+          ) : (
+            <DropdownMenuItem
+              className="w-full"
+              onClick={() => {
+                setSupervisorAttendanceDialog(true);
+              }}
+            >
+              Mark supervisor attendance
             </DropdownMenuItem>
-          </div>
+          )}
+          <DropdownMenuItem
+            onClick={() => {
+              setFellowAttendanceDialog(true);
+            }}
+          >
+            View fellow attendance
+          </DropdownMenuItem>
+          <DropdownMenuItem>Weekly session report</DropdownMenuItem>
+          <DropdownMenuItem className="text-shamiri-light-red">
+            Archive
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <SupervisorAttendance

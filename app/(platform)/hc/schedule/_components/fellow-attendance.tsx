@@ -208,7 +208,6 @@ export default function FellowAttendance({
           },
         });
         setAttendances(supervisorAttendances);
-        console.log(attendances);
       };
       fetchAttendances();
     } catch (error: unknown) {

@@ -110,6 +110,9 @@ export default function DataTable<TData, TValue>({
                     )
                       ? "py-3"
                       : "py-2",
+                    header.column.columnDef.id === "button"
+                      ? "w-[50px] min-w-[40px] max-w-[50px]"
+                      : null,
                   )}
                 >
                   {header.isPlaceholder
@@ -135,9 +138,9 @@ export default function DataTable<TData, TValue>({
                   <TableCell
                     key={cell.id}
                     className={cn(
-                      "border",
+                      "border-y border-l",
                       cell.column.columnDef.id === "button"
-                        ? "relative !p-0"
+                        ? "relative cursor-pointer border-l-0 !p-0"
                         : "!px-4 py-2",
                     )}
                   >
