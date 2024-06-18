@@ -169,10 +169,10 @@ function CreateSessionButton({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger>
-        <button className="hover:bg-blue-dark flex items-center gap-2 rounded-md bg-blue-base px-3 py-2 text-white">
+        <div className="hover:bg-blue-dark flex items-center gap-2 rounded-md bg-blue-base px-3 py-2 text-white">
           <Icons.plusCircle className="h-5 w-5" />
           <span className="text-white">Schedule a session</span>
-        </button>
+        </div>
       </DialogTrigger>
       <DialogPortal>
         <DialogContent>

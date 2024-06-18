@@ -69,15 +69,29 @@ const ids = {
                 SPV24_S_03: {
                   id: objectId("sup"),
                   visibleId: "SPV24_S_03",
-                  supervisorName: "Ian Nene",
-                  supervisorEmail: "ian.nene@example.com",
-                  idNumber: "200200300",
-                  cellNumber: "+2547232000004",
-                  mpesaName: "Ian Nene",
-                  mpesaNumber: "+2547232000004",
-                  county: "Migori",
-                  subCounty: "Awendo",
-                  dateOfBirth: new Date("1980-08-15"),
+                  supervisorName: "Adam Martin",
+                  supervisorEmail: "adam.martin@example.com",
+                  idNumber: "210200300",
+                  cellNumber: "+254723400055",
+                  mpesaName: "Adam Martin",
+                  mpesaNumber: "+254723400004",
+                  county: "Kajiado",
+                  subCounty: "Kitengela",
+                  dateOfBirth: new Date("1980-08-22"),
+                  gender: "Male",
+                },
+                SPV24_S_04: {
+                  id: objectId("sup"),
+                  visibleId: "SPV24_S_04",
+                  supervisorName: "Bilkisu Gadisa",
+                  supervisorEmail: "bilkisu@example.com",
+                  idNumber: "210200322",
+                  cellNumber: "+254726400007",
+                  mpesaName: "Bilkisu Gadisa",
+                  mpesaNumber: "+254726400007",
+                  county: "Mombasa",
+                  subCounty: "Nyali",
+                  dateOfBirth: new Date("1980-08-22"),
                   gender: "Male",
                 },
               },
@@ -111,22 +125,82 @@ const ids = {
                   subCounty: "Dagoretti",
                   dateOfBirth: new Date("2000-02-02"),
                   gender: "Female",
-                  supervisorVisibleId: "SPV24_S_02",
+                  supervisorVisibleId: "SPV24_S_01",
                 },
                 TFW24_S_03: {
                   id: objectId("fel"),
                   visibleId: "TFW24_S_03",
-                  fellowName: "Ian Doe",
-                  fellowEmail: "janedoe@example.com",
-                  mpesaName: "Ian Doe",
-                  mpesaNumber: "+254700000002",
-                  idNumber: "87654321",
-                  cellNumber: "+254700000002",
-                  county: "Nairobi",
-                  subCounty: "Dagoretti",
+                  fellowName: "Seble Yishak",
+                  fellowEmail: "seble@example.com",
+                  mpesaName: "Seble Yishak",
+                  mpesaNumber: "+254702300001",
+                  idNumber: "123000001",
+                  cellNumber: "+254702300001",
+                  county: "Kiambu",
+                  subCounty: "Ruiru",
                   dateOfBirth: new Date("2000-02-02"),
                   gender: "Female",
+                  supervisorVisibleId: "SPV24_S_02",
+                },
+                TFW24_S_04: {
+                  id: objectId("fel"),
+                  visibleId: "TFW24_S_04",
+                  fellowName: "Sani Chinenye",
+                  fellowEmail: "chineye@example.com",
+                  mpesaName: "Sani Chinenye",
+                  mpesaNumber: "+254702300002",
+                  idNumber: "123000002",
+                  cellNumber: "+254702300002",
+                  county: "Kiambu",
+                  subCounty: "Thika",
+                  dateOfBirth: new Date("2000-02-01"),
+                  gender: "Female",
+                  supervisorVisibleId: "SPV24_S_02",
+                },
+                TFW24_S_05: {
+                  id: objectId("fel"),
+                  visibleId: "TFW24_S_05",
+                  fellowName: "Ousmane Fadzai",
+                  fellowEmail: "ousmane@example.com",
+                  mpesaName: "Ousmane Fadzai",
+                  mpesaNumber: "+254702300003",
+                  idNumber: "123000003",
+                  cellNumber: "+254702300003",
+                  county: "Kajiado",
+                  subCounty: "Athi River",
+                  dateOfBirth: new Date("2000-02-01"),
+                  gender: "Male",
                   supervisorVisibleId: "SPV24_S_03",
+                },
+                TFW24_S_06: {
+                  id: objectId("fel"),
+                  visibleId: "TFW24_S_06",
+                  fellowName: "Aberash Ola",
+                  fellowEmail: "aberash@example.com",
+                  mpesaName: "Aberash Ola",
+                  mpesaNumber: "+254702300004",
+                  idNumber: "123000004",
+                  cellNumber: "+254702300004",
+                  county: "Kajiado",
+                  subCounty: "Kitengela",
+                  dateOfBirth: new Date("2000-06-01"),
+                  gender: "Male",
+                  supervisorVisibleId: "SPV24_S_04",
+                },
+                TFW24_S_07: {
+                  id: objectId("fel"),
+                  visibleId: "TFW24_S_07",
+                  fellowName: "Aïssatou Yared",
+                  fellowEmail: "yared@example.com",
+                  mpesaName: "Aïssatou Yared",
+                  mpesaNumber: "+254702300005",
+                  idNumber: "123000005",
+                  cellNumber: "+254702300054",
+                  county: "Mombasa",
+                  subCounty: "Nyali",
+                  dateOfBirth: new Date("2000-07-01"),
+                  gender: "Female",
+                  supervisorVisibleId: "SPV24_S_04",
                 },
               },
 
@@ -144,7 +218,7 @@ const ids = {
                   pointPersonPhone: "+254 722 229 367",
                   numbersExpected: 2200,
                   principalName: "L. O. Nyachwera",
-                  assignedSupervisorVisibleId: "SPV24_S_03",
+                  assignedSupervisorVisibleId: "SPV24_S_01",
 
                   groups: {
                     ANS24_Group_01: {
@@ -184,10 +258,10 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: setMinutes(addDays(new Date(), -1), 0),
+                      sessionDate: setMinutes(addDays(new Date(), -2), 0),
                       sessionEndTime: addHours(
-                        setMinutes(addDays(new Date(), -1), 0),
-                        2,
+                        setMinutes(addDays(new Date(), -2), 0),
+                        1.5,
                       ),
                       sessionRating: 4,
                       supervisorVisibleId: "SPV24_S_01",
@@ -253,44 +327,7 @@ const ids = {
                     },
                   },
 
-                  fellowAttendances: {
-                    FA_1: {
-                      visibleId: "FA_1",
-                      session: "Session_01",
-                      fellowId: "TFW24_S_01",
-                      supervisorId: "SPV24_S_01",
-                      attended: true,
-                      groupId: "07G1",
-                      delayedPayments: [],
-                      repaymentRequests: [
-                        {
-                          id: "RR_1",
-                        },
-                      ],
-                    },
-                    FA_2: {
-                      visibleId: "FA_2",
-                      session: "Session_02",
-                      fellowId: "TFW24_S_01",
-                      supervisorId: "SPV24_S_01",
-                      attended: true,
-                      groupId: "07G1",
-                      delayedPayments: [],
-                      repaymentRequests: [],
-                    },
-                    FA_3: {
-                      visibleId: "FA_3",
-                      session: "Session_01",
-                      fellowId: "TFW24_S_02",
-                      supervisorId: "SPV24_S_01",
-                      attended: true,
-                      groupId: "07G2",
-                      delayedPayments: [],
-                      repaymentRequests: [],
-                    },
-                  },
-
-                  payoutReconciliations: {},
+                  supervisorAttendances: {},
                 },
 
                 ANS24_School_09: {
@@ -306,7 +343,7 @@ const ids = {
                   pointPersonPhone: "N/A",
                   numbersExpected: 1000,
                   principalName: "Emily W. Masele",
-                  assignedSupervisorVisibleId: "SPV24_S_01",
+                  assignedSupervisorVisibleId: "SPV24_S_02",
 
                   groups: {
                     ANS24_Group_01: {
@@ -333,96 +370,23 @@ const ids = {
                       sessionRating: 4,
                       supervisorVisibleId: "SPV24_S_01",
                     },
-                    Session_02: {
-                      id: objectId("sess"),
-                      sessionType: "s1",
-                      sessionName: "Session 01",
-                      sessionDate: setHours(
-                        setMinutes(addDays(new Date(), -1), 0),
-                        8,
-                      ),
-                      sessionEndTime: addHours(
-                        setHours(setMinutes(addDays(new Date(), -1), 0), 8),
-                        1.5,
-                      ),
-                      sessionRating: 5,
-                      supervisorVisibleId: "SPV24_S_01",
-                    },
-                    Session_03: {
-                      id: objectId("sess"),
-                      sessionType: "s2",
-                      sessionName: "Session 02",
-                      sessionDate: setHours(
-                        setMinutes(addDays(new Date(), 7), 0),
-                        8,
-                      ),
-                      sessionEndTime: addHours(
-                        setHours(setMinutes(addDays(new Date(), 7), 0), 8),
-                        1.5,
-                      ),
-                      sessionRating: 5,
-                      supervisorVisibleId: "SPV24_S_01",
-                    },
-                    Session_04: {
-                      id: objectId("sess"),
-                      sessionType: "s3",
-                      sessionName: "Session 03",
-                      sessionDate: setHours(
-                        setMinutes(addDays(new Date(), 11), 0),
-                        1,
-                      ),
-                      sessionEndTime: addHours(
-                        setHours(setMinutes(addDays(new Date(), 11), 0), 1),
-                        1.5,
-                      ),
-                      sessionRating: 5,
-                      supervisorVisibleId: "SPV24_S_01",
-                    },
-                    Session_05: {
-                      id: objectId("sess"),
-                      sessionType: "s4",
-                      sessionName: "Session 04",
-                      sessionDate: setHours(
-                        setMinutes(addDays(new Date(), 12), 0),
-                        1,
-                      ),
-                      sessionEndTime: addHours(
-                        setHours(setMinutes(addDays(new Date(), 12), 0), 1),
-                        1.5,
-                      ),
-                      sessionRating: 5,
-                      supervisorVisibleId: "SPV24_S_01",
-                    },
                   },
 
                   students: {
                     ANS24_09_Stu_01: {
                       id: objectId("stu"),
                       visibleId: "ANS24_09_Stu_01",
-                      studentName: "Alice Mwangi",
+                      studentName: "Bahati Ejiroghene",
                       admissionNumber: "ADM123",
                       age: 17,
-                      gender: "F",
+                      gender: "M",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
                       assignedGroupId: "09G1",
                     },
-                    ANS24_09_Stu_02: {
-                      id: objectId("stu"),
-                      visibleId: "ANS24_09_Stu_02",
-                      studentName: "Otieno Mwangi",
-                      admissionNumber: "ADM153",
-                      age: 19,
-                      gender: "F",
-                      condition: "Shamiri",
-                      fellowVisibleId: "TFW24_S_03",
-                      assignedGroupId: null,
-                    },
                   },
 
-                  fellowAttendances: {},
-
-                  payoutReconciliations: {},
+                  supervisorAttendances: {},
                 },
 
                 ANS24_School_10: {
@@ -438,7 +402,7 @@ const ids = {
                   pointPersonPhone: "718312099/0735520758",
                   numbersExpected: 674,
                   principalName: "Duncan Juma",
-                  assignedSupervisorVisibleId: "SPV24_S_02",
+                  assignedSupervisorVisibleId: "SPV24_S_03",
 
                   groups: {
                     ANS24_Group_01: {
@@ -452,78 +416,15 @@ const ids = {
                     Session_01: {
                       id: objectId("sess"),
                       sessionType: "s0",
-                      status: SessionStatus.Cancelled,
                       sessionName: "Presession",
                       sessionDate: setHours(
-                        setMinutes(addDays(new Date(), -7), 0),
+                        setMinutes(addDays(new Date(), 1), 0),
                         15,
                       ),
                       sessionEndTime: addHours(
-                        setHours(setMinutes(addDays(new Date(), -7), 0), 15),
+                        setHours(setMinutes(addDays(new Date(), 1), 0), 15),
                         1.5,
                       ),
-                      sessionRating: 4,
-                      supervisorVisibleId: "SPV24_S_01",
-                    },
-                    Session_02: {
-                      id: objectId("sess"),
-                      sessionType: "s1",
-                      sessionName: "Session 01",
-                      sessionDate: setHours(
-                        setMinutes(addDays(new Date(), 0), 0),
-                        15,
-                      ),
-                      sessionEndTime: addHours(
-                        setHours(setMinutes(addDays(new Date(), 0), 0), 15),
-                        1.5,
-                      ),
-                      sessionRating: 5,
-                      supervisorVisibleId: "SPV24_S_01",
-                    },
-                    Session_03: {
-                      id: objectId("sess"),
-                      sessionType: "s2",
-                      sessionName: "Session 02",
-                      sessionDate: setHours(
-                        setMinutes(addDays(new Date(), 7), 0),
-                        17,
-                      ),
-                      sessionEndTime: addHours(
-                        setHours(setMinutes(addDays(new Date(), 7), 0), 17),
-                        1.5,
-                      ),
-                      sessionRating: 5,
-                      supervisorVisibleId: "SPV24_S_01",
-                    },
-                    Session_04: {
-                      id: objectId("sess"),
-                      sessionType: "s3",
-                      sessionName: "Session 03",
-                      sessionDate: setHours(
-                        setMinutes(addDays(new Date(), 11), 0),
-                        18,
-                      ),
-                      sessionEndTime: addHours(
-                        setHours(setMinutes(addDays(new Date(), 11), 0), 18),
-                        1.5,
-                      ),
-                      sessionRating: 5,
-                      supervisorVisibleId: "SPV24_S_01",
-                    },
-                    Session_05: {
-                      id: objectId("sess"),
-                      sessionType: "s4",
-                      sessionName: "Session 04",
-                      sessionDate: setHours(
-                        setMinutes(addDays(new Date(), 12), 0),
-                        18,
-                      ),
-                      sessionEndTime: addHours(
-                        setHours(setMinutes(addDays(new Date(), 12), 0), 18),
-                        1.5,
-                      ),
-                      sessionRating: 5,
-                      supervisorVisibleId: "SPV24_S_01",
                     },
                   },
 
@@ -541,27 +442,13 @@ const ids = {
                     },
                   },
 
-                  fellowAttendances: {
-                    FA_11: {
-                      visibleId: "FA_11",
-                      session: "Session_01",
-                      fellowId: "TFW24_S_01",
-                      supervisorId: "SPV24_S_01",
-                      attended: true,
-                      groupId: "10G1",
-                      delayedPayments: [
-                        {
-                          id: "DPR_1",
-                        },
-                      ],
-                      repaymentRequests: [],
-                    },
-                  },
-
-                  payoutReconciliations: {
-                    PR_1: {
-                      amount: 100,
-                      fellowId: "TFW24_S_01",
+                  supervisorAttendances: {
+                    SUPA_001: {
+                      id: objectId("supa"),
+                      visibleId: "ANS24_07_SUPA_001",
+                      attended: null,
+                      supervisorVisibleId: "SPV24_S_03",
+                      sessionType: "s0",
                     },
                   },
                 },
@@ -579,7 +466,7 @@ const ids = {
                   pointPersonPhone: "+254 722 229 229",
                   numbersExpected: 220,
                   principalName: "Amazing principal",
-                  assignedSupervisorVisibleId: "SPV24_S_02",
+                  assignedSupervisorVisibleId: "SPV24_S_03",
 
                   groups: {
                     ANS24_Group_01: {
@@ -619,17 +506,16 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: new Date("2024-04-16"),
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 1), 0),
+                        15,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 1), 0), 15),
+                        1.5,
+                      ),
                       sessionRating: 4,
-                      supervisorVisibleId: "SPV24_S_02",
-                    },
-                    Session_02: {
-                      id: objectId("sess"),
-                      sessionType: "s1",
-                      sessionName: "Session 01",
-                      sessionDate: new Date("2024-05-15"),
-                      sessionRating: 5,
-                      supervisorVisibleId: "SPV24_S_02",
+                      supervisorVisibleId: "SPV24_S_03",
                     },
                   },
 
@@ -680,9 +566,67 @@ const ids = {
                     },
                   },
 
-                  fellowAttendances: {},
+                  supervisorAttendances: {
+                    SUPA_002: {
+                      id: objectId("supa"),
+                      visibleId: "ANS24_07_SUPA_002",
+                      attended: null,
+                      supervisorVisibleId: "SPV24_S_03",
+                      sessionType: "s0",
+                    },
+                  },
+                },
 
-                  payoutReconciliations: {},
+                ANS24_School_11: {
+                  id: objectId("sch"),
+                  visibleId: "ANS24_School_11",
+                  schoolName: "State House Girls High School",
+                  schoolType: "National",
+                  schoolEmail: "statehouse@example.com",
+                  schoolCounty: "Nairobi",
+                  schoolDemographics: "Girls",
+                  pointPersonId: "746229367",
+                  pointPersonName: "Jack Morrison",
+                  pointPersonPhone: "+254 722 229 229",
+                  numbersExpected: 220,
+                  principalName: "Amazing principal",
+                  assignedSupervisorVisibleId: "SPV24_S_02",
+
+                  groups: {},
+
+                  sessions: {
+                    Session_01: {
+                      id: objectId("sess"),
+                      sessionType: "s0",
+                      sessionName: "Presession",
+                      sessionDate: setHours(
+                        setMinutes(addDays(new Date(), 1), 0),
+                        15,
+                      ),
+                      sessionEndTime: addHours(
+                        setHours(setMinutes(addDays(new Date(), 1), 0), 15),
+                        1.5,
+                      ),
+                      sessionRating: 4,
+                      supervisorVisibleId: "SPV24_S_03",
+                    },
+                  },
+
+                  students: {
+                    ANS24_Stu_011: {
+                      id: objectId("stu"),
+                      visibleId: "ANS24_Stu_051",
+                      studentName: "Alice Mwangi",
+                      admissionNumber: "ADM123",
+                      age: 17,
+                      gender: "F",
+                      condition: "Shamiri",
+                      fellowVisibleId: "TFW24_S_02",
+                      assignedGroupId: "G11",
+                    },
+                  },
+
+                  supervisorAttendances: {},
                 },
               },
             },
@@ -891,6 +835,37 @@ async function seedDatabase() {
             });
           }
 
+          for (const supervisorAttendance of Object.values(
+            school.supervisorAttendances,
+          )) {
+            const supervisor = await db.supervisor.findUniqueOrThrow({
+              where: {
+                visibleId: supervisorAttendance.supervisorVisibleId,
+              },
+            });
+
+            const session = await db.interventionSession.findUniqueOrThrow({
+              where: {
+                interventionBySchoolIdAndSessionType: {
+                  schoolId: createdSchool.id,
+                  sessionType: supervisorAttendance.sessionType,
+                },
+              },
+            });
+
+            await db.supervisorAttendance.create({
+              data: {
+                id: supervisorAttendance.id,
+                visibleId: supervisorAttendance.visibleId,
+                supervisorId: supervisor.id,
+                attended: supervisorAttendance.attended,
+                projectId: createdProject.id,
+                schoolId: createdSchool.id,
+                sessionId: session.id,
+              },
+            });
+          }
+
           for (const student of Object.values(school.students)) {
             await db.student.create({
               data: {
@@ -909,77 +884,9 @@ async function seedDatabase() {
                 school: {
                   connect: { id: createdSchool.id },
                 },
-                assignedGroup: student.assignedGroupId
-                  ? {
-                      connect: { id: student.assignedGroupId },
-                    }
-                  : undefined,
-              },
-            });
-          }
-
-          for (const fellowAttendance of Object.values(
-            school.fellowAttendances,
-          )) {
-            const fellow = await db.fellow.findUniqueOrThrow({
-              where: {
-                visibleId: fellowAttendance.fellowId,
-              },
-            });
-
-            const supervisor = await db.supervisor.findUniqueOrThrow({
-              where: {
-                visibleId: fellowAttendance.supervisorId,
-              },
-            });
-
-            // @ts-ignore
-            const session = school.sessions[fellowAttendance.session];
-            await db.fellowAttendance.create({
-              data: {
-                visibleId: fellowAttendance.visibleId,
-                sessionId: session.id,
-                fellowId: fellow.id,
-                supervisorId: supervisor.id,
-                attended: true,
-                groupId: fellowAttendance.groupId,
-                schoolId: school.id,
-                delayedPaymentRequests: {
-                  create: fellowAttendance.delayedPayments.map(() => {
-                    return {
-                      fellowId: fellow.id,
-                      supervisorId: supervisor.id,
-                      interventionSessionId: session.id,
-                    };
-                  }),
+                assignedGroup: {
+                  connect: { id: student.assignedGroupId },
                 },
-                repaymentRequests: {
-                  create: fellowAttendance.repaymentRequests.map(() => {
-                    return {
-                      fellowId: fellow.id,
-                      supervisorId: supervisor.id,
-                      hubId: hub.id,
-                    };
-                  }),
-                },
-              },
-            });
-          }
-
-          for (const payoutReconciliation of Object.values(
-            school.payoutReconciliations,
-          )) {
-            const fellow = await db.fellow.findUniqueOrThrow({
-              where: {
-                visibleId: payoutReconciliation.fellowId,
-              },
-            });
-            // @ts-ignore
-            // const session = school.sessions[fellowAttendance.session];
-            await db.payoutReconciliation.create({
-              data: {
-                amount: payoutReconciliation.amount,
-                fellowId: fellow.id,
               },
             });
           }
