@@ -1093,7 +1093,7 @@ model PayoutReconciliation {
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
   executedAt     DateTime? @map("executed_at") @db.Timestamptz()
-  amount         Int
+  amount         Int // negative if the session was marked true but later realized it didn't happen but payment has already been made out
   currency       String    @default("KES") @db.VarChar(3) // ISO 4217 code
   description    String?
   fellowId       String    @map("fellow_id")
