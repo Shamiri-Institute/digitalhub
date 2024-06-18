@@ -41,7 +41,7 @@ export async function emailPayoutReport(props: EmailProperties) {
     await sendEmailWithAttachment(emailInput);
   } else {
     console.warn("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
-    console.warn("To force send email, set send=1 query param.");
+    console.warn("To force send email, set forceSend=1 query param.");
   }
 }
 

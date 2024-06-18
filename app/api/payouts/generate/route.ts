@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Bad Request" }, { status: 400 });
   }
   const { day, implementerId } = params.data;
-  const forceSend = searchParams.get("send") === "1";
-  const saveFile = searchParams.get("save") === "1";
+  const forceSend = searchParams.get("forceSend") === "1";
+  const saveFile = searchParams.get("saveFile") === "1";
   const dryRun = searchParams.get("dryRun") === "1";
 
   const effectiveDateParam = params.data.effectiveDate;
