@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
+import { appUrl } from "#/app/api/utils";
+
 export async function GET() {
   return NextResponse.json({
     status: "ok",
-    host: process.env.VERCEL_URL || process.env.NEXT_PUBLIC_APP_URL,
+    host: appUrl(),
   });
 }

@@ -1,6 +1,8 @@
-import { db } from "#/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+
+import { appUrl } from "#/app/api/utils";
+import { db } from "#/lib/db";
 
 export const revalidate = 0;
 export const maxDuration = 300;
@@ -29,12 +31,10 @@ export async function GET(request: NextRequest) {
 
   const implementers = await db.implementer.findMany();
   const implementerEndpoints = implementers.map((implementer) => {
-    const endpoint = `${process.env.VERCEL_URL || process.env.NEXT_PUBLIC_APP_URL}/api/payouts/generate?${new URLSearchParams(
-      {
-        ...Object.fromEntries(searchParams),
-        implementerId: implementer.id,
-      },
-    )}`;
+    const endpoint = `${appUrl()}/api/payouts/generate?${new URLSearchParams({
+      ...Object.fromEntries(searchParams),
+      implementerId: implementer.id,
+    })}`;
     return endpoint;
   });
 
