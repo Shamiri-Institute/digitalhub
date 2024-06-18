@@ -168,20 +168,21 @@ export default function SupervisorAttendance({
           return null;
         } else {
           return (
-            <div
-              className="absolute inset-0 border-l bg-white"
-              onClick={() => {
-                markAttendance(data, true);
-              }}
-            >
-              <div className="flex h-full w-full items-center justify-center">
+            <div className="absolute inset-0 border-l bg-white">
+              <div
+                className="flex h-full w-full items-center justify-center"
+                onClick={() => {
+                  console.log("Attended!");
+                  markAttendance(data, true);
+                }}
+              >
                 <Icons.checkCircle className="h-5 w-5 text-shamiri-graph-green" />
               </div>
             </div>
           );
         }
       },
-      id: "button",
+      id: "button2",
       header: undefined,
     }),
     columnHelper.accessor("attendance", {
@@ -228,6 +229,7 @@ export default function SupervisorAttendance({
             <div
               className="absolute inset-0 border-l bg-white"
               onClick={() => {
+                console.log("Missed");
                 markAttendance(data, false);
               }}
             >
@@ -310,12 +312,7 @@ export default function SupervisorAttendance({
     <div>
       <Dialog open={isOpen} onOpenChange={onChange} modal={true}>
         <DialogPortal>
-          <DialogContent
-            className="w-4/5 max-w-none"
-            onOpenAutoFocus={(e) => {
-              e.preventDefault();
-            }}
-          >
+          <DialogContent className="w-5/6 max-w-none lg:w-4/5">
             <DialogHeader>
               <span className="text-xl font-bold">
                 Mark supervisor attendance
