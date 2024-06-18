@@ -24,6 +24,8 @@ export async function emailPayoutReport(props: EmailProperties) {
   let emailProps = props;
   if (props.dryRun) {
     emailProps.subject = "[DRY RUN] " + emailProps.subject;
+    emailProps.ccEmails = ["tech@shamiri.institute"];
+    emailProps.destinationEmails = ["tech@shamiri.institute"];
   }
   const emailBody = constructPayoutEmailBody(emailProps);
 
