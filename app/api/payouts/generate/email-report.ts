@@ -21,24 +21,29 @@ interface EmailProperties {
 }
 
 export async function emailPayoutReport(props: EmailProperties) {
-  const emailBody = constructPayoutEmailBody(props);
+  let emailProps = props;
+  if (props.dryRun) {
+    emailProps.subject = "[PREVIEW] " + emailProps.subject;
+    emailProps.ccEmails = ["tech@shamiri.institute"];
+    emailProps.destinationEmails = ["tech@shamiri.institute"];
+  }
+  const emailBody = constructPayoutEmailBody(emailProps);
 
   const emailInput: SendRawEmailCommandInput = {
-    Source: props.sourceEmail,
-    Destinations: [...props.destinationEmails, ...props.ccEmails],
+    Source: props.dryRun ? "tech@shamiri.institute" : props.sourceEmail,
+    Destinations: props.dryRun
+      ? [...props.destinationEmails, ...props.ccEmails]
+      : ["tech@shamiri.institute"],
     RawMessage: {
       Data: Buffer.from(emailBody),
     },
   };
 
-  if (
-    (constants.NEXT_PUBLIC_ENV === "production" || props.forceSend) &&
-    !props.dryRun
-  ) {
+  if (constants.NEXT_PUBLIC_ENV === "production" || props.forceSend) {
     await sendEmailWithAttachment(emailInput);
   } else {
     console.warn("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);
-    console.warn("To force send email, set send=1 query param.");
+    console.warn("To force send email, set forceSend=1 query param.");
   }
 }
 
@@ -69,7 +74,7 @@ export async function emailRepaymentReport(
 }
 
 export function constructPayoutEmailBody(props: EmailProperties): string {
-  const {
+  let {
     sourceEmail,
 
     destinationEmails,
@@ -91,6 +96,12 @@ export function constructPayoutEmailBody(props: EmailProperties): string {
     payoutReport.totalPayoutAmountWithMpesaInfo
       ? `The total payout amount is KES ${payoutReport.totalPayoutAmount}.`
       : `The total payout amount is KES ${payoutReport.totalPayoutAmount} and the total payout amount with Mpesa info present is KES ${payoutReport.totalPayoutAmountWithMpesaInfo}.`;
+
+  if (props.dryRun) {
+    bodyText =
+      "This is a preview of an upcoming report. Review it and let support know if you have any concerns.\n\n" +
+      bodyText;
+  }
 
   return `From: ${sourceEmail}
 To: ${destinationEmails.join(", ")}
