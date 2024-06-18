@@ -21,20 +21,23 @@ interface EmailProperties {
 }
 
 export async function emailPayoutReport(props: EmailProperties) {
-  const emailBody = constructPayoutEmailBody(props);
+  let emailProps = props;
+  if (props.dryRun) {
+    emailProps.subject = "[DRY RUN] " + emailProps.subject;
+  }
+  const emailBody = constructPayoutEmailBody(emailProps);
 
   const emailInput: SendRawEmailCommandInput = {
-    Source: props.sourceEmail,
-    Destinations: [...props.destinationEmails, ...props.ccEmails],
+    Source: props.dryRun ? "tech@shamiri.institute" : props.sourceEmail,
+    Destinations: props.dryRun
+      ? [...props.destinationEmails, ...props.ccEmails]
+      : ["tech@shamiri.institute"],
     RawMessage: {
       Data: Buffer.from(emailBody),
     },
   };
 
-  if (
-    (constants.NEXT_PUBLIC_ENV === "production" || props.forceSend) &&
-    !props.dryRun
-  ) {
+  if (constants.NEXT_PUBLIC_ENV === "production" || props.forceSend) {
     await sendEmailWithAttachment(emailInput);
   } else {
     console.warn("EMAIL NOT SENT OUTSIDE OF PRODUCTION:", emailInput);

@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
   const implementers = await db.implementer.findMany();
   const implementerEndpoints = implementers.map((implementer) => {
-    const endpoint = `${process.env.NEXT_PUBLIC_APP_URL}/api/payouts/generate?${new URLSearchParams(
+    const endpoint = `${process.env.VERCEL_URL || process.env.NEXT_PUBLIC_APP_URL}/api/payouts/generate?${new URLSearchParams(
       {
         ...Object.fromEntries(searchParams),
         implementerId: implementer.id,
