@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
+import { format } from "date-fns";
 import * as fastcsv from "fast-csv";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
@@ -10,10 +11,10 @@ import {
   emailRepaymentReport,
 } from "#/app/api/payouts/generate/email-report";
 import type { PayoutDetail } from "#/app/api/payouts/generate/types";
+import { parseRelativeDate } from "#/app/api/utils";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import { notEmpty } from "#/lib/utils";
-import { format } from "date-fns";
 import { calculatePayouts } from "./calculate-payouts";
 
 export const revalidate = 0;
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
   const params = z
     .object({
       day: z.enum(["M", "R"]),
-      effectiveDate: z.coerce.date().optional().default(new Date()),
+      effectiveDate: z.string().optional().default(""),
       implementerId: z.string(),
     })
     .safeParse({
@@ -43,10 +44,23 @@ export async function GET(request: NextRequest) {
     console.log(params.error);
     return NextResponse.json({ error: "Bad Request" }, { status: 400 });
   }
-  const { day, effectiveDate, implementerId } = params.data;
+  const { day, implementerId } = params.data;
   const forceSend = searchParams.get("send") === "1";
   const saveFile = searchParams.get("save") === "1";
   const dryRun = searchParams.get("dryRun") === "1";
+
+  const effectiveDateParam = params.data.effectiveDate;
+  let effectiveDate: Date;
+  if (
+    effectiveDateParam.startsWith("NEXT_") ||
+    effectiveDateParam.startsWith("PREV_")
+  ) {
+    effectiveDate = parseRelativeDate(effectiveDateParam);
+  } else if (effectiveDateParam) {
+    effectiveDate = new Date(effectiveDateParam);
+  } else {
+    effectiveDate = new Date();
+  }
 
   try {
     const implementer = await db.implementer.findUniqueOrThrow({

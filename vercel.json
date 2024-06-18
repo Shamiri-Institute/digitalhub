@@ -2,12 +2,20 @@
   "regions": ["cpt1"],
   "crons": [
     {
-      "path": "/api/payouts/all?day=R",
-      "schedule": "0 8 * * 4"
+      "path": "/api/payouts/all?day=M&effectiveDate=NEXT_1&dryRun=1",
+      "schedule": "0 8 * * 0"
     },
     {
       "path": "/api/payouts/all?day=M",
       "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/payouts/all?day=R&effectiveDate=NEXT_1&dryRun=1",
+      "schedule": "0 8 * * 3"
+    },
+    {
+      "path": "/api/payouts/all?day=R",
+      "schedule": "0 8 * * 4"
     }
   ]
 }
