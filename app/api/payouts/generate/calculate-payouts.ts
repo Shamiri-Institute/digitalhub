@@ -161,7 +161,7 @@ export async function calculatePayouts({
 
         newPayout = {
           ...payout,
-          kesPayoutAmount: balance,
+          kesPayoutAmount: -1 * balance,
           notes: `${payout.notes}. Balance carried forward from ${format(effectiveDate, "yyyy/mm/dd")}, ${balance} remaining.`,
         };
       } else {
