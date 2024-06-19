@@ -43,26 +43,30 @@ export default function FellowAttendance({
   session: Session;
 }) {
   const columnHelper = createColumnHelper<
-    Prisma.FellowAttendanceGetPayload<{
+    Prisma.FellowGetPayload<{
       include: {
-        fellow: {
+        weeklyFellowRatings: true;
+        fellowAttendances: {
           include: {
-            weeklyFellowRatings: true;
+            group: true;
           };
         };
-        group: true;
       };
     }>
   >();
   const columns = [
     {
       id: "name",
-      accessorKey: "fellow.fellowName",
+      accessorKey: "fellowName",
       header: "Name",
     },
-    columnHelper.accessor("attended", {
+    columnHelper.accessor("fellowAttendances", {
       cell: (props) => {
-        const attended = props.getValue();
+        const fellowAttendances = props.getValue();
+        const sessionAttended = fellowAttendances.find((fa) => {
+          return fa.sessionId === session.id;
+        });
+        const attended = sessionAttended?.attended;
         return (
           <div className="flex">
             <div
@@ -71,16 +75,17 @@ export default function FellowAttendance({
                 {
                   "border-green-border": attended,
                   "border-red-border": !attended,
-                  "border-blue-border": attended === undefined,
+                  "border-blue-border":
+                    attended === undefined || attended === null,
                 },
                 {
                   "bg-green-bg": attended,
                   "bg-red-bg": !attended,
-                  "bg-blue-bg": attended === undefined,
+                  "bg-blue-bg": attended === undefined || attended === null,
                 },
               )}
             >
-              {attended === undefined ? (
+              {attended === undefined || attended === null ? (
                 <div className="flex items-center gap-1 text-blue-base">
                   <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
                   <span>Not marked</span>
@@ -103,9 +108,9 @@ export default function FellowAttendance({
           </div>
         );
       },
-      header: "Point Schools",
+      header: "Attendance",
     }),
-    columnHelper.accessor("fellow.weeklyFellowRatings", {
+    columnHelper.accessor("weeklyFellowRatings", {
       cell: (props) => {
         const ratings: Prisma.WeeklyFellowRatingsGetPayload<{}>[] =
           props.getValue();
@@ -139,50 +144,73 @@ export default function FellowAttendance({
 
         const remainder = avg - Math.floor(avg);
         return (
-          <div className="flex items-center gap-1 text-shamiri-light-orange">
-            {Array.from(Array(Math.floor(avg)).keys()).map((index) => {
-              return <Icons.starRating key={index} className="h-5 w-5" />;
-            })}
-            {remainder > 0 ? (
-              <div className="relative h-5 w-5 shrink">
-                <Icons.starRating className="h-full w-full text-shamiri-light-grey" />
-                <div
-                  className="absolute inset-y-0 left-0 overflow-hidden"
-                  style={{ width: remainder * 100 + "%" }}
-                >
-                  <Icons.starRating className="h-5 w-5" />
+          <div className="relative flex items-center gap-1">
+            {Array.from(Array(5).keys()).map((index) => {
+              return (
+                <div key={index.toString()} className="relative h-5 w-5 shrink">
+                  <Icons.starRating className="h-full w-full text-shamiri-light-grey" />
                 </div>
-              </div>
-            ) : null}
+              );
+            })}
+            <div className="absolute inset-0 flex items-center gap-1 text-shamiri-light-orange">
+              {Array.from(Array(Math.floor(avg)).keys()).map((index) => {
+                return <Icons.starRating key={index} className="h-5 w-5" />;
+              })}
+              {remainder > 0 ? (
+                <div className="relative h-5 w-5 shrink">
+                  <Icons.starRating className="h-full w-full text-transparent" />
+                  <div
+                    className="absolute inset-y-0 left-0 overflow-hidden"
+                    style={{ width: remainder * 100 + "%" }}
+                  >
+                    <Icons.starRating className="h-5 w-5" />
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </div>
         );
       },
       header: "Average Rating",
     }),
     {
-      accessorKey: "fellow.cellNumber",
+      accessorKey: "cellNumber",
       header: "Phone number",
     },
-    {
-      accessorKey: "group.groupName",
-      header: "Group No.",
-    },
+    columnHelper.accessor("fellowAttendances", {
+      cell: (props) => {
+        const fellowAttendances = props.getValue();
+        const sessionAttended = fellowAttendances.find((fa) => {
+          return fa.sessionId === session.id;
+        });
+        const groupName =
+          sessionAttended?.group !== null
+            ? sessionAttended?.group.groupName
+            : "";
+        return <span>{groupName}</span>;
+      },
+      header: "Group Name",
+    }),
   ];
 
   const [attendances, setAttendances] = useState<
     Prisma.SupervisorAttendanceGetPayload<{
       include: {
-        supervisor: true;
-        session: {
+        supervisor: {
           include: {
-            fellowAttendances: {
+            fellows: {
               include: {
-                fellow: {
+                weeklyFellowRatings: true;
+                groups: {
                   include: {
-                    weeklyFellowRatings: true;
+                    school: true;
                   };
                 };
-                group: true;
+                fellowAttendances: {
+                  include: {
+                    group: true;
+                  };
+                };
               };
             };
           };
@@ -190,8 +218,17 @@ export default function FellowAttendance({
       };
     }>[]
   >([]);
-  const [fellowAttendances, setFellowAttendances] = useState<
-    Prisma.FellowAttendanceGetPayload<{}>[]
+  const [fellows, setFellows] = useState<
+    Prisma.FellowGetPayload<{
+      include: {
+        weeklyFellowRatings: true;
+        fellowAttendances: {
+          include: {
+            group: true;
+          };
+        };
+      };
+    }>[]
   >([]);
 
   useEffect(() => {
@@ -208,6 +245,7 @@ export default function FellowAttendance({
           },
         });
         setAttendances(supervisorAttendances);
+        console.log(supervisorAttendances);
       };
       fetchAttendances();
     } catch (error: unknown) {
@@ -253,15 +291,17 @@ export default function FellowAttendance({
                             (attendance) => attendance.supervisorId === value,
                           );
                           if (supervisorAttendance !== undefined) {
-                            const currentSupervisorFellowAttendances =
-                              supervisorAttendance.session.fellowAttendances.filter(
-                                (attendance) => {
-                                  return attendance.supervisorId === value;
-                                },
-                              );
-                            setFellowAttendances(
-                              currentSupervisorFellowAttendances,
-                            );
+                            // const currentSupervisorFellowAttendances =
+                            //   supervisorAttendance.session.fellowAttendances.filter(
+                            //     (attendance) => {
+                            //       return attendance.supervisorId === value;
+                            //     },
+                            //   );
+                            // setFellowAttendances(
+                            //   currentSupervisorFellowAttendances,
+                            // );
+
+                            setFellows(supervisorAttendance.supervisor.fellows);
                           }
                         }}
                         defaultValue={field.value}
@@ -292,7 +332,7 @@ export default function FellowAttendance({
               {/* TODO: https://github.com/TanStack/table/issues/4382 --> ColumnDef types gives typescript error */}
               <DataTable
                 columns={columns as ColumnDef<unknown>[]}
-                data={fellowAttendances}
+                data={fellows}
                 editColumns={false}
                 className={"data-table"}
                 emptyStateMessage="No fellows associated with this session"
