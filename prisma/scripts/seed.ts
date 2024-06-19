@@ -185,7 +185,7 @@ const ids = {
                   subCounty: "Kitengela",
                   dateOfBirth: new Date("2000-06-01"),
                   gender: "Male",
-                  supervisorVisibleId: "SPV24_S_04",
+                  supervisorVisibleId: "SPV24_S_03",
                 },
                 TFW24_S_07: {
                   id: objectId("fel"),
@@ -200,7 +200,7 @@ const ids = {
                   subCounty: "Nyali",
                   dateOfBirth: new Date("2000-07-01"),
                   gender: "Female",
-                  supervisorVisibleId: "SPV24_S_04",
+                  supervisorVisibleId: "SPV24_S_03",
                 },
               },
 
@@ -218,7 +218,7 @@ const ids = {
                   pointPersonPhone: "+254 722 229 367",
                   numbersExpected: 2200,
                   principalName: "L. O. Nyachwera",
-                  assignedSupervisorVisibleId: "SPV24_S_01",
+                  assignedSupervisorVisibleId: "SPV24_S_03",
 
                   groups: {
                     ANS24_Group_01: {
@@ -327,7 +327,36 @@ const ids = {
                     },
                   },
 
-                  supervisorAttendances: {},
+                  supervisorAttendances: {
+                    SUPA_002: {
+                      id: objectId("supa"),
+                      visibleId: "ANS24_07_SUPA_002",
+                      attended: null,
+                      supervisorVisibleId: "SPV24_S_03",
+                      sessionType: "s1",
+                    },
+                  },
+
+                  fellowAttendances: {
+                    FELATT_1: {
+                      id: 1,
+                      visibleId: "ANS24_07_FELATT_1",
+                      attended: null,
+                      supervisorVisibleId: "SPV24_S_03",
+                      fellowVisibleId: "TFW24_S_05",
+                      sessionType: "s1",
+                      groupId: "07G1",
+                    },
+                    FELATT_2: {
+                      id: 2,
+                      visibleId: "ANS24_07_FELATT_2",
+                      attended: true,
+                      supervisorVisibleId: "SPV24_S_03",
+                      fellowVisibleId: "TFW24_S_06",
+                      sessionType: "s1",
+                      groupId: "07G2",
+                    },
+                  },
                 },
 
                 ANS24_School_09: {
@@ -387,6 +416,8 @@ const ids = {
                   },
 
                   supervisorAttendances: {},
+
+                  fellowAttendances: {},
                 },
 
                 ANS24_School_10: {
@@ -451,6 +482,8 @@ const ids = {
                       sessionType: "s0",
                     },
                   },
+
+                  fellowAttendances: {},
                 },
 
                 ANS24_School_08: {
@@ -566,15 +599,9 @@ const ids = {
                     },
                   },
 
-                  supervisorAttendances: {
-                    SUPA_002: {
-                      id: objectId("supa"),
-                      visibleId: "ANS24_07_SUPA_002",
-                      attended: null,
-                      supervisorVisibleId: "SPV24_S_03",
-                      sessionType: "s0",
-                    },
-                  },
+                  supervisorAttendances: {},
+
+                  fellowAttendances: {},
                 },
 
                 ANS24_School_11: {
@@ -627,6 +654,8 @@ const ids = {
                   },
 
                   supervisorAttendances: {},
+
+                  fellowAttendances: {},
                 },
               },
             },
@@ -862,6 +891,45 @@ async function seedDatabase() {
                 projectId: createdProject.id,
                 schoolId: createdSchool.id,
                 sessionId: session.id,
+              },
+            });
+          }
+
+          for (const fellowAttendance of Object.values(
+            school.fellowAttendances,
+          )) {
+            const fellow = await db.fellow.findUniqueOrThrow({
+              where: {
+                visibleId: fellowAttendance.fellowVisibleId,
+              },
+            });
+
+            const supervisor = await db.supervisor.findUniqueOrThrow({
+              where: {
+                visibleId: fellowAttendance.supervisorVisibleId,
+              },
+            });
+
+            const session = await db.interventionSession.findUniqueOrThrow({
+              where: {
+                interventionBySchoolIdAndSessionType: {
+                  schoolId: createdSchool.id,
+                  sessionType: fellowAttendance.sessionType,
+                },
+              },
+            });
+
+            await db.fellowAttendance.create({
+              data: {
+                id: fellowAttendance.id,
+                visibleId: fellowAttendance.visibleId,
+                supervisorId: supervisor.id,
+                fellowId: fellow.id,
+                attended: fellowAttendance.attended,
+                projectId: createdProject.id,
+                schoolId: createdSchool.id,
+                sessionId: session.id,
+                groupId: fellowAttendance.groupId,
               },
             });
           }

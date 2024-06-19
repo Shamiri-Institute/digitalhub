@@ -49,17 +49,16 @@ export async function fetchSupervisorAttendances({
   return await db.supervisorAttendance.findMany({
     where,
     include: {
-      supervisor: true,
-      session: {
+      supervisor: {
         include: {
-          fellowAttendances: {
+          fellows: {
             include: {
-              fellow: {
+              weeklyFellowRatings: true,
+              fellowAttendances: {
                 include: {
-                  weeklyFellowRatings: true,
+                  group: true,
                 },
               },
-              group: true,
             },
           },
         },
