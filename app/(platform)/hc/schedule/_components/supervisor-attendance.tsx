@@ -226,7 +226,7 @@ export default function SupervisorAttendance({
           );
         } else {
           return (
-            <div
+            <button
               className="absolute inset-0 border-l bg-white"
               onClick={() => {
                 console.log("Missed");
@@ -236,7 +236,7 @@ export default function SupervisorAttendance({
               <div className="flex h-full w-full items-center justify-center">
                 <Icons.crossCircleFilled className="h-5 w-5 text-shamiri-light-red" />
               </div>
-            </div>
+            </button>
           );
         }
       },
@@ -304,7 +304,6 @@ export default function SupervisorAttendance({
           setAttendances(attendancesCopy);
         }
       }
-      console.log("Marked!", attended);
     });
   }
 
