@@ -31,7 +31,6 @@ export async function fetchSupervisorsWithAttendances({
     include: {
       fellows: {
         include: {
-          students: true,
           fellowAttendances: true,
         },
       },
@@ -51,16 +50,7 @@ export async function fetchSupervisorAttendances({
     include: {
       supervisor: {
         include: {
-          fellows: {
-            include: {
-              weeklyFellowRatings: true,
-              fellowAttendances: {
-                include: {
-                  group: true,
-                },
-              },
-            },
-          },
+          fellows: true,
         },
       },
     },
