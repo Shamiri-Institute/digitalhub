@@ -222,7 +222,6 @@ export default function FellowAttendance({
           } else return fellowAttendance;
         });
       setFellows(tableData);
-      console.log(fellows);
     }
   }, [fellowAttendances, selectedSupervisor, supervisorAttendances]);
 
