@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
+import { fetchSessionFellowAttendances } from "#/lib/actions/fetch-fellow-attendances";
 import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
 import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
@@ -33,6 +34,15 @@ import { createColumnHelper } from "@tanstack/table-core";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
+export type FellowAttendancesTableData = {
+  fellowId: string;
+  fellowName: string | null;
+  cellNumber: string | null;
+  attended: boolean | null;
+  supervisorId: string | null;
+  groupName: string | null;
+  averageRating: number | null;
+};
 export default function FellowAttendance({
   isOpen,
   onChange,
@@ -42,31 +52,16 @@ export default function FellowAttendance({
   onChange: Dispatch<SetStateAction<boolean>>;
   session: Session;
 }) {
-  const columnHelper = createColumnHelper<
-    Prisma.FellowGetPayload<{
-      include: {
-        weeklyFellowRatings: true;
-        fellowAttendances: {
-          include: {
-            group: true;
-          };
-        };
-      };
-    }>
-  >();
+  const columnHelper = createColumnHelper<FellowAttendancesTableData>();
   const columns = [
     {
       id: "name",
       accessorKey: "fellowName",
       header: "Name",
     },
-    columnHelper.accessor("fellowAttendances", {
+    columnHelper.accessor("attended", {
       cell: (props) => {
-        const fellowAttendances = props.getValue();
-        const sessionAttended = fellowAttendances.find((fa) => {
-          return fa.sessionId === session.id;
-        });
-        const attended = sessionAttended?.attended;
+        const attended = props.getValue();
         return (
           <div className="flex">
             <div
@@ -110,39 +105,10 @@ export default function FellowAttendance({
       },
       header: "Attendance",
     }),
-    columnHelper.accessor("weeklyFellowRatings", {
+    columnHelper.accessor("averageRating", {
       cell: (props) => {
-        const ratings: Prisma.WeeklyFellowRatingsGetPayload<{}>[] =
-          props.getValue();
-
-        const avgBehaviorRating = ratings.reduce((a, b) => {
-          return b.behaviourRating !== null ? a + b.behaviourRating : a;
-        }, 0);
-
-        const avgPunctualityRating = ratings.reduce((a, b) => {
-          return b.punctualityRating !== null ? a + b.punctualityRating : a;
-        }, 0);
-
-        const avgDressingAndGroomingRating = ratings.reduce((a, b) => {
-          return b.dressingAndGroomingRating !== null
-            ? a + b.dressingAndGroomingRating
-            : a;
-        }, 0);
-
-        const avgProgramDeliveryRating = ratings.reduce((a, b) => {
-          return b.programDeliveryRating !== null
-            ? a + b.programDeliveryRating
-            : a;
-        }, 0);
-
-        const avg =
-          (avgBehaviorRating +
-            avgPunctualityRating +
-            avgDressingAndGroomingRating +
-            avgProgramDeliveryRating) /
-          4;
-
-        const remainder = avg - Math.floor(avg);
+        const rating = props.getValue() ?? 0;
+        const remainder = rating - Math.floor(rating);
         return (
           <div className="relative flex items-center gap-1">
             {Array.from(Array(5).keys()).map((index) => {
@@ -153,7 +119,7 @@ export default function FellowAttendance({
               );
             })}
             <div className="absolute inset-0 flex items-center gap-1 text-shamiri-light-orange">
-              {Array.from(Array(Math.floor(avg)).keys()).map((index) => {
+              {Array.from(Array(Math.floor(rating)).keys()).map((index) => {
                 return <Icons.starRating key={index} className="h-5 w-5" />;
               })}
               {remainder > 0 ? (
@@ -175,61 +141,30 @@ export default function FellowAttendance({
     }),
     {
       accessorKey: "cellNumber",
-      header: "Phone number",
+      header: "Phone Number",
     },
-    columnHelper.accessor("fellowAttendances", {
-      cell: (props) => {
-        const fellowAttendances = props.getValue();
-        const sessionAttended = fellowAttendances.find((fa) => {
-          return fa.sessionId === session.id;
-        });
-        const groupName =
-          sessionAttended?.group !== null
-            ? sessionAttended?.group.groupName
-            : "";
-        return <span>{groupName}</span>;
-      },
+    {
+      accessorKey: "groupName",
       header: "Group Name",
-    }),
+    },
   ];
 
-  const [attendances, setAttendances] = useState<
+  const [supervisorAttendances, setSupervisorAttendances] = useState<
     Prisma.SupervisorAttendanceGetPayload<{
       include: {
         supervisor: {
           include: {
-            fellows: {
-              include: {
-                weeklyFellowRatings: true;
-                groups: {
-                  include: {
-                    school: true;
-                  };
-                };
-                fellowAttendances: {
-                  include: {
-                    group: true;
-                  };
-                };
-              };
-            };
+            fellows: true;
           };
         };
       };
     }>[]
   >([]);
-  const [fellows, setFellows] = useState<
-    Prisma.FellowGetPayload<{
-      include: {
-        weeklyFellowRatings: true;
-        fellowAttendances: {
-          include: {
-            group: true;
-          };
-        };
-      };
-    }>[]
+  const [selectedSupervisor, setSelectedSupervisor] = useState<string>();
+  const [fellowAttendances, setFellowAttendances] = useState<
+    FellowAttendancesTableData[]
   >([]);
+  const [fellows, setFellows] = useState<FellowAttendancesTableData[]>([]);
 
   useEffect(() => {
     try {
@@ -237,15 +172,19 @@ export default function FellowAttendance({
         const supervisorAttendances = await fetchSupervisorAttendances({
           where: {
             school: {
-              hubId: session.school.hubId,
+              id: session.schoolId,
             },
             session: {
               id: session.id,
             },
           },
         });
-        setAttendances(supervisorAttendances);
-        console.log(supervisorAttendances);
+        setSupervisorAttendances(supervisorAttendances);
+
+        const fellowAttendances = await fetchSessionFellowAttendances({
+          sessionId: session.id,
+        });
+        setFellowAttendances(fellowAttendances);
       };
       fetchAttendances();
     } catch (error: unknown) {
@@ -258,6 +197,34 @@ export default function FellowAttendance({
       });
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const supervisorAttendance = supervisorAttendances.find(
+      (attendance) => attendance.supervisorId === selectedSupervisor,
+    );
+    if (supervisorAttendance !== undefined) {
+      const tableData: FellowAttendancesTableData[] =
+        supervisorAttendance.supervisor.fellows.map((fellow) => {
+          const fellowAttendance = fellowAttendances.find(
+            (attendance) => attendance.fellowId === fellow.id,
+          );
+
+          if (fellowAttendance === undefined) {
+            return {
+              fellowId: fellow.id,
+              fellowName: fellow.fellowName ?? null,
+              cellNumber: fellow.cellNumber ?? null,
+              attended: null,
+              supervisorId: fellow.supervisorId,
+              groupName: null,
+              averageRating: null,
+            };
+          } else return fellowAttendance;
+        });
+      setFellows(tableData);
+      console.log(fellows);
+    }
+  }, [fellowAttendances, selectedSupervisor, supervisorAttendances]);
 
   const form = useForm<{ supervisor: string }>({});
 
@@ -287,22 +254,7 @@ export default function FellowAttendance({
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
-                          const supervisorAttendance = attendances.find(
-                            (attendance) => attendance.supervisorId === value,
-                          );
-                          if (supervisorAttendance !== undefined) {
-                            // const currentSupervisorFellowAttendances =
-                            //   supervisorAttendance.session.fellowAttendances.filter(
-                            //     (attendance) => {
-                            //       return attendance.supervisorId === value;
-                            //     },
-                            //   );
-                            // setFellowAttendances(
-                            //   currentSupervisorFellowAttendances,
-                            // );
-
-                            setFellows(supervisorAttendance.supervisor.fellows);
-                          }
+                          setSelectedSupervisor(value);
                         }}
                         defaultValue={field.value}
                       >
@@ -312,7 +264,7 @@ export default function FellowAttendance({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {attendances.map((attendance) => (
+                          {supervisorAttendances.map((attendance) => (
                             <SelectItem
                               key={attendance.supervisorId}
                               value={attendance.supervisorId}
