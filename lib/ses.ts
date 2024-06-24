@@ -6,9 +6,10 @@ import {
 
 import { env } from "#/env";
 
-const SES_EMAILS_PER_SECOND_RATE_LIMIT = 14;
+const SES_EMAILS_PER_SECOND_RATE_LIMIT = 5;
 const ONE_SECOND_IN_MS = 1000;
 const SLEEP_TIME_MS = ONE_SECOND_IN_MS / SES_EMAILS_PER_SECOND_RATE_LIMIT;
+const MAX_RETRIES = 10;
 
 const ses = new SES({
   region: env.AWS_REGION,
@@ -19,15 +20,37 @@ const ses = new SES({
 });
 
 export async function sendEmail(input: SendEmailCommandInput) {
-  const response = await ses.sendEmail(input);
-  await throttle();
-  return response;
+  return await sendWithRetry(() => ses.sendEmail(input));
 }
 
 export async function sendEmailWithAttachment(input: SendRawEmailCommandInput) {
-  const response = await ses.sendRawEmail(input);
-  await throttle();
-  return response;
+  return await sendWithRetry(() => ses.sendRawEmail(input));
+}
+
+async function sendWithRetry(
+  sendFunction: () => Promise<any>,
+  retries = MAX_RETRIES,
+) {
+  let attempt = 0;
+  while (attempt < retries) {
+    try {
+      if (attempt > 5) {
+        console.warn(
+          `Email attempt #${attempt} of ${retries} failed. Retrying...`,
+        );
+      }
+      const response = await sendFunction();
+      await throttle();
+      return response;
+    } catch (error) {
+      attempt++;
+      if (attempt >= retries) {
+        throw error;
+      }
+      const delay = SLEEP_TIME_MS * Math.pow(2, attempt);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
 }
 
 async function throttle() {

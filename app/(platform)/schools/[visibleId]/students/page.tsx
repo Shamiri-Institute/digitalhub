@@ -1,12 +1,17 @@
-import { Prisma } from "@prisma/client";
-import { notFound } from "next/navigation";
-
+import StudentTransferTrail from "#/app/(platform)/schools/[visibleId]/students/components/student-transfer-trail";
+import { SingleHistory } from "#/app/(platform)/schools/[visibleId]/students/components/student-transfer-trail-card";
 import { StudentDropoutDialog } from "#/app/(platform)/schools/[visibleId]/students/dropout-dialog";
 import { StudentAttendanceDot } from "#/app/(platform)/schools/[visibleId]/students/student-attendance-dot";
 import { StudentModifyDialog } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
 import { StudentUndoDropoutDialog } from "#/app/(platform)/schools/[visibleId]/students/undo-dropout-dialog";
 import { Back } from "#/components/common/back";
 import { Icons } from "#/components/icons";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "#/components/ui/accordion";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +20,10 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
+import { Prisma } from "@prisma/client";
+import { Loader2 } from "lucide-react";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import ComplaintDialog from "./record-complaint-dialog";
 
 export default async function SchoolStudentsPage({
@@ -61,6 +70,7 @@ export default async function SchoolStudentsPage({
       implementer: true,
       studentComplaints: true,
       studentAttendances: { include: { session: true } },
+      studentGroupTransferTrail: true,
     },
     orderBy: { visibleId: "asc" },
   });
@@ -111,6 +121,15 @@ export default async function SchoolStudentsPage({
           group={fellowGroupInfo}
         />
       </div>
+      <Suspense
+        fallback={
+          <div>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          </div>
+        }
+      >
+        <StudentTransferTrail schoolId={school.id} group={fellowGroupInfo} />
+      </Suspense>
     </main>
   );
 }
@@ -164,6 +183,7 @@ function StudentsList({
           session: true;
         };
       };
+      studentGroupTransferTrail: true;
     };
   }>[];
   group?: { groupId: string; groupName: string };
@@ -227,6 +247,7 @@ function StudentCard({
           session: true;
         };
       };
+      studentGroupTransferTrail: true;
     };
   }>;
   school: Prisma.SchoolGetPayload<{}>;
@@ -325,6 +346,7 @@ function StudentCard({
             session={session}
             student={student}
             group={group}
+            fellowId={fellow.id}
           />
         ))}
       </div>
@@ -343,6 +365,28 @@ function StudentCard({
           <span>Not marked</span>
         </div>
       </div>
+      {student?.studentGroupTransferTrail?.length > 0 && (
+        <Accordion type="single" collapsible className="mt-4">
+          <AccordionItem value={`id-${student.visibleId}`}>
+            <AccordionTrigger className={"items-right pt-0"}>
+              <span className="text-brand">View group transfer history</span>
+            </AccordionTrigger>
+
+            <AccordionContent>
+              <ol className="list-decimal text-brand">
+                {student.studentGroupTransferTrail.map((transfer) => (
+                  <SingleHistory
+                    key={transfer.id}
+                    referredFrom={transfer?.fromGroupId!}
+                    referredTo={transfer.currentGroupId}
+                    date={transfer.createdAt}
+                  />
+                ))}
+              </ol>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      )}
     </div>
   );
 }

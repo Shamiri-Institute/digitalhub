@@ -4,7 +4,11 @@ import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { DropoutSchoolSchema, WeeklyHubReportSchema } from "../schemas";
+import {
+  DropoutSchoolSchema,
+  EditSchoolSchema,
+  WeeklyHubReportSchema,
+} from "../schemas";
 
 /**
  * TODO: the functions here should also be cognizant of the project
@@ -142,14 +146,7 @@ export async function submitWeeklyHubReport(
     const parsedData = WeeklyHubReportSchema.parse(data);
 
     await db.weeklyHubReport.create({
-      data: {
-        week: parsedData.week,
-        reportedChallenges: parsedData.reportedChallenges,
-        recommendations: parsedData.recommendations,
-        positiveHighlights: parsedData.positiveHighlights,
-        hubId: parsedData.hubId,
-        submittedBy: parsedData.hubCoordinatorId,
-      },
+      data: parsedData,
     });
 
     // TODO:
@@ -245,4 +242,39 @@ export async function fetchSchoolAttendances(hubId: string) {
       count_attendance_unmarked: numSchools - Number(count),
     }),
   );
+}
+
+export async function editSchoolInformation(
+  schoolId: string,
+  schoolInfo: z.infer<typeof EditSchoolSchema>,
+) {
+  try {
+    const authedCoordinator = await currentHubCoordinator();
+
+    if (!authedCoordinator) {
+      throw new Error("User not authorised to perform this function");
+    }
+
+    const parsedData = EditSchoolSchema.parse(schoolInfo);
+
+    const { schoolName } = await db.school.update({
+      where: {
+        id: schoolId,
+      },
+      data: parsedData,
+    });
+
+    revalidatePath("/hc/schools");
+    return {
+      success: true,
+      message: `Successfully updated school information for ${schoolName}`,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ?? "Sorry, could not update the school details",
+    };
+  }
 }

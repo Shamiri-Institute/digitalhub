@@ -10,12 +10,18 @@ import {
 } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
 import { SessionList } from "./session-list";
 import { useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
 export function WeekView({ state }: { state: CalendarState }) {
-  const { gridProps } = useCalendarGrid({ weekdayStyle: "long" }, state);
+  const headerRowRef: any = useRef(null);
+  const { gridProps, headerProps } = useCalendarGrid(
+    { weekdayStyle: "long" },
+    state,
+  );
 
   const startDate = state.visibleRange.start;
 
@@ -52,65 +58,90 @@ export function WeekView({ state }: { state: CalendarState }) {
     return `${hourIn12HourFormat}:00 ${period}`;
   }
 
+  useGSAP(
+    () => {
+      if (headerRowRef !== null) {
+        gsap.timeline({
+          scrollTrigger: {
+            trigger: headerRowRef.current,
+            start: () => "top top",
+            end: () => "+=150%",
+            scrub: true,
+            pin: true,
+            pinSpacing: false,
+            // markers: true,
+          },
+        });
+      }
+    },
+    { scope: headerRowRef },
+  );
+
   return (
-    <table
-      {...gridProps}
-      className="block border-separate overflow-hidden rounded-[0.4375rem] border border-grey-border [border-spacing:0]"
-    >
-      <thead className="block">
-        <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
-          <th className="w-[103px] px-4 py-3"></th>
-          {state
-            .getDatesInWeek(0)
-            .map((date, i) =>
-              date ? (
-                <WeekCalendarHeaderCell
-                  key={i}
-                  date={date}
-                  state={state}
-                  dayFormatter={dayFormatter}
-                />
-              ) : (
-                <td key={i} />
-              ),
-            )}
-        </tr>
-      </thead>
-      <tbody className="block h-[700px] overflow-y-scroll">
-        {hours.map((hour, rowIdx) => (
-          <tr key={rowIdx} className="flex divide-x divide-grey-border">
-            <td
-              className={cn(
-                "flex truncate border-t border-grey-border bg-grey-bg px-4 py-3 text-grey-c3",
-                "h-[85px] xl:h-[112px]",
-                "w-[103px]",
-                "text-sm",
-                {
-                  "border-t-0": rowIdx === 0,
-                },
-              )}
-            >
-              {formatHour(hour)}
-            </td>
+    <div>
+      <table
+        ref={headerRowRef}
+        className="schedule-table z-10 rounded-t-[0.4375rem]"
+      >
+        <thead {...headerProps}>
+          <tr className="border-b border-grey-border">
+            <th className="time-cell"></th>
             {state
               .getDatesInWeek(0)
-              .map((date, colIdx) =>
+              .map((date, i) =>
                 date ? (
-                  <WeekCalendarCell
-                    key={colIdx}
-                    rowIdx={rowIdx}
-                    hour={hour}
+                  <WeekCalendarHeaderCell
+                    key={i}
+                    colIdx={i}
                     date={date}
                     state={state}
+                    dayFormatter={dayFormatter}
                   />
                 ) : (
-                  <td key={colIdx} />
+                  <td key={i} />
                 ),
               )}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+      </table>
+      <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
+        <tbody className="w-full">
+          {hours.map((hour, rowIdx) => (
+            <tr
+              key={rowIdx}
+              className="table-row w-full divide-x divide-grey-border"
+            >
+              <td
+                className={cn(
+                  "time-cell truncate",
+                  "h-[85px] xl:h-[112px]",
+                  "w-[103px]",
+                  "bg-background-secondary text-sm",
+                )}
+              >
+                <div className="flex">{formatHour(hour)}</div>
+              </td>
+              {state
+                .getDatesInWeek(0)
+                .map((date, colIdx) =>
+                  date ? (
+                    <WeekCalendarCell
+                      key={colIdx}
+                      colIdx={colIdx}
+                      rowIdx={rowIdx}
+                      hour={hour}
+                      date={date}
+                      state={state}
+                    />
+                  ) : (
+                    <td key={colIdx} />
+                  ),
+                )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -118,23 +149,21 @@ function WeekCalendarHeaderCell({
   date,
   state,
   dayFormatter,
+  colIdx,
 }: {
   date: CalendarDate;
   state: CalendarState;
   dayFormatter: any;
+  colIdx: number;
 }) {
   const { sessions } = useSessions({ date });
   const hasSessions = sessions.length > 0;
   return date ? (
     <th
-      className={cn(
-        "w-[141px] shrink-0 xl:w-[186px]",
-        "relative px-4 py-3 text-left",
-        "flex items-center justify-between",
-        {
-          "text-blue-base": isToday(date, state.timeZone),
-        },
-      )}
+      className={cn("table-cell", "relative px-4 py-3 text-left", {
+        "text-blue-base": isToday(date, state.timeZone),
+        "bg-background-secondary": colIdx === 0 || colIdx === 6,
+      })}
     >
       {date.day} - {dayFormatter.format(date.toDate(state.timeZone))}
       {hasSessions && (
@@ -155,11 +184,13 @@ function WeekCalendarHeaderCell({
 
 function WeekCalendarCell({
   rowIdx,
+  colIdx,
   hour,
   date,
   state,
 }: {
   rowIdx: number;
+  colIdx: number;
   hour: number;
   date: CalendarDate;
   state: CalendarState;
@@ -178,11 +209,11 @@ function WeekCalendarCell({
   const { sessions } = useSessions({ date, hour });
 
   return (
-    <td {...cellProps} className="p-0">
+    <td {...cellProps}>
       <div
         {...buttonProps}
         ref={ref}
-        className={cn("cell", {
+        className={cn("cell w-full transition ease-in-out", {
           selected: isSelected,
           disabled: isDisabled,
           unavailable: isUnavailable,
@@ -190,13 +221,12 @@ function WeekCalendarCell({
       >
         <div
           className={cn(
-            "flex flex-col gap-[8px] overflow-y-scroll",
+            "flex flex-col gap-[8px] overflow-y-auto",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
             "h-[85px] xl:h-[112px]",
-            "w-[140px] xl:w-[185px]",
             "border-t border-grey-border",
             {
-              "border-t-0": rowIdx === 0,
+              "bg-background-secondary": colIdx === 0 || colIdx === 6,
             },
           )}
         >

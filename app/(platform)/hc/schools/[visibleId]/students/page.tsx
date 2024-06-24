@@ -1,6 +1,6 @@
 import { BatchUploadDownloadStudents } from "#/app/(platform)/hc/schools/[visibleId]/students/components/upload-csv";
 import { db } from "#/lib/db";
-import DataTable from "../../components/data-table";
+import DataTable from "../../../components/data-table";
 import { columns } from "./components/columns";
 
 export default async function StudentsPage({

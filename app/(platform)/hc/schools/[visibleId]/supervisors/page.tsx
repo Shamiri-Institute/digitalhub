@@ -1,6 +1,6 @@
 import { BatchUploadDownloadSupervisors } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/upload-csv";
 import { db } from "#/lib/db";
-import DataTable from "../../components/data-table";
+import DataTable from "../../../components/data-table";
 import { columns } from "./components/columns";
 
 export default async function SupervisorsPage({

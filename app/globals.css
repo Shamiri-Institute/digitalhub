@@ -56,8 +56,13 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  label {
+    @apply text-gray-600;
   }
 }
 
@@ -66,6 +71,7 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   /* Hide scrollbar for IE, Edge and Firefox */
   .no-scrollbar {
     -ms-overflow-style: none; /* IE and Edge */
@@ -104,5 +110,106 @@
 
   tbody > tr:last-child > td[role="gridcell"]:first-child {
     border-bottom-left-radius: 7px;
+  }
+}
+
+@layer components {
+  .nav-link {
+    @apply flex cursor-pointer gap-2 transition ease-in-out;
+  }
+
+  .nav-link svg {
+    @apply text-shamiri-text-grey;
+  }
+
+  .nav-link:hover,
+  .nav-link:hover svg {
+    @apply text-shamiri-new-blue;
+  }
+
+  .tab-link {
+    border-bottom-width: 3px;
+    @apply flex gap-2 border-transparent py-2 transition ease-in-out;
+  }
+
+  .tab-link svg {
+    @apply text-shamiri-text-grey transition ease-in-out;
+  }
+
+  .tab-link.active,
+  .tab-link:hover {
+    @apply border-shamiri-new-blue text-shamiri-new-blue;
+  }
+
+  .tab-link.active svg,
+  .tab-link:hover svg {
+    @apply text-shamiri-new-blue;
+  }
+
+  .popover-links span {
+    @apply cursor-pointer px-3 py-1.5;
+  }
+
+  .popover-links span:hover {
+    @apply bg-shamiri-new-blue/[0.1];
+  }
+
+  .schedule-table {
+    @apply w-full table-fixed border-separate overflow-hidden border border-grey-border bg-white [border-spacing:0];
+  }
+
+  .schedule-table tr {
+    @apply divide-x divide-grey-border;
+  }
+
+  .schedule-table th {
+    @apply px-4 py-3 text-left;
+  }
+
+  .schedule-table td {
+    @apply table-cell border-t border-grey-border p-0;
+  }
+
+  .schedule-table td.time-cell,
+  .schedule-table th.time-cell {
+    @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
+  }
+
+  .data-table {
+    @apply table-fixed rounded-lg border border-grey-border;
+  }
+
+  .data-table tr td:last-child,
+  .data-table thead th:last-child {
+    @apply w-[50px] min-w-[40px] max-w-[50px] cursor-pointer;
+  }
+
+  .data-table thead th:last-child {
+    @apply border-l;
+  }
+
+  .data-table tbody tr,
+  .data-table tbody td {
+    @apply transition ease-in-out;
+  }
+
+  .data-table tbody tr:hover td {
+    @apply bg-gray-100 transition ease-in-out;
+  }
+
+  .data-table tbody tr:hover td:last-child {
+    @apply bg-transparent;
+  }
+
+  .form-toggle {
+    @apply mt-1.5 justify-start rounded-md border bg-background-secondary text-shamiri-text-dark-grey;
+  }
+
+  .form-toggle .form-toggle-button {
+    @apply flex-1 text-base transition ease-in-out;
+  }
+
+  .form-toggle .form-toggle-button[data-state="on"] {
+    @apply border bg-white text-black drop-shadow-xl;
   }
 }

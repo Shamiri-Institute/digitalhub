@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { format } from "date-fns";
 import * as fastcsv from "fast-csv";
 import { NextRequest, NextResponse } from "next/server";
@@ -10,6 +11,7 @@ import {
   emailRepaymentReport,
 } from "#/app/api/payouts/generate/email-report";
 import type { PayoutDetail } from "#/app/api/payouts/generate/types";
+import { parseRelativeDate } from "#/app/api/utils";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import { notEmpty } from "#/lib/utils";
@@ -19,30 +21,62 @@ export const revalidate = 0;
 export const maxDuration = 300;
 
 export async function GET(request: NextRequest) {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response("Unauthorized", {
+      status: 401,
+    });
+  }
+
   const { searchParams } = request.nextUrl;
   const params = z
     .object({
       day: z.enum(["M", "R"]),
-      effectiveDate: z.date().optional().default(new Date()),
+      effectiveDate: z.string().optional().default(""),
+      implementerId: z.string(),
     })
     .safeParse({
       day: searchParams.get("day"),
       effectiveDate: searchParams.get("effectiveDate") ?? undefined,
+      implementerId: searchParams.get("implementerId"),
     });
   if (!params.success) {
-    return NextResponse.json({ error: "Invalid day" }, { status: 400 });
+    console.log(params.error);
+    return NextResponse.json({ error: "Bad Request" }, { status: 400 });
   }
-  const { day, effectiveDate } = params.data;
-  const forceSend = searchParams.get("send") === "1";
-  const saveFile = searchParams.get("save") === "1";
+  const { day, implementerId } = params.data;
+  const forceSend = searchParams.get("forceSend") === "1";
+  const saveFile = searchParams.get("saveFile") === "1";
+  const dryRun = searchParams.get("dryRun") === "1";
+
+  const effectiveDateParam = params.data.effectiveDate;
+  let effectiveDate: Date;
+  if (
+    effectiveDateParam.startsWith("NEXT_") ||
+    effectiveDateParam.startsWith("PREV_")
+  ) {
+    effectiveDate = parseRelativeDate(effectiveDateParam);
+  } else if (effectiveDateParam) {
+    effectiveDate = new Date(effectiveDateParam);
+  } else {
+    effectiveDate = new Date();
+  }
 
   try {
+    const implementer = await db.implementer.findUniqueOrThrow({
+      where: { id: implementerId },
+      include: {
+        hubCoordinators: true,
+      },
+    });
+
     const totalPayoutReport = await calculatePayouts({
       day,
       effectiveDate,
+      implementerId,
     });
     const { payoutPeriod } = totalPayoutReport;
-    const totalCsvFileName = `total-payouts-${format(
+    const totalCsvFileName = `total-payouts-${implementer.visibleId}-${format(
       payoutPeriod.startDate,
       "yyyy-MM-dd",
     )}-to-${format(payoutPeriod.endDate, "yyyy-MM-dd")}.csv`;
@@ -52,8 +86,8 @@ export async function GET(request: NextRequest) {
       saveFile,
     });
 
-    const repaymentsPayoutReport = await calculateRepayments();
-    const repaymentsCsvFileName = `repayments-${format(effectiveDate, "yyyy-MM-dd")}.csv`;
+    const repaymentsPayoutReport = await calculateRepayments({ implementerId });
+    const repaymentsCsvFileName = `repayments-${implementer.visibleId}-${format(effectiveDate, "yyyy-MM-dd")}.csv`;
     const repaymentsCsvBuffer = await generateCsv({
       payoutDetails: repaymentsPayoutReport.payoutDetails,
       fileName: repaymentsCsvFileName,
@@ -61,20 +95,35 @@ export async function GET(request: NextRequest) {
     });
 
     const sourceEmail = '"Shamiri Digital Hub" <tech@shamiri.institute>';
-    const destinationEmails = ["ngatti@shamiri.institute"];
-    const ccEmails = [
-      "waweru@shamiri.institute",
-      "ngatia@shamiri.institute",
-      "nyareso@shamiri.institute",
-      "daya@shamiri.institute",
-      "tech@shamiri.institute",
-    ];
+
+    let destinationEmails: string[] = [];
+    let ccEmails: string[] = [];
+
+    if (implementer.visibleId === "Imp_1") {
+      destinationEmails = ["ngatti@shamiri.institute"];
+      ccEmails = [
+        "waweru@shamiri.institute",
+        "ngatia@shamiri.institute",
+        "nyareso@shamiri.institute",
+        "daya@shamiri.institute",
+        "tech@shamiri.institute",
+      ];
+    } else {
+      destinationEmails = [
+        implementer.pointPersonEmail ?? "tech@shamiri.institute",
+      ];
+      ccEmails = implementer.hubCoordinators
+        .map((coordinator) => coordinator.coordinatorEmail)
+        .filter(notEmpty);
+
+      ccEmails.unshift("tech@shamiri.institute");
+    }
 
     await emailPayoutReport({
       sourceEmail,
       destinationEmails,
       ccEmails,
-      subject: `Payouts for sessions ${format(
+      subject: `Payouts for ${implementer.implementerName} sessions ${format(
         payoutPeriod.startDate,
         "yyyy-MM-dd",
       )} to ${format(payoutPeriod.endDate, "yyyy-MM-dd")}`,
@@ -83,30 +132,33 @@ export async function GET(request: NextRequest) {
       attachmentContent: totalCsvBuffer.toString(),
       payoutReport: totalPayoutReport,
       forceSend,
+      dryRun,
     });
 
     console.log(
-      `Emailed total payout report to ${destinationEmails.join(", ")} and cc'ed ${ccEmails.join(", ")}`,
+      `Emailed total payout report for ${implementer.implementerName} to ${destinationEmails.join(", ")} and cc'ed ${ccEmails.join(", ")}`,
     );
 
     await emailRepaymentReport({
       sourceEmail,
       destinationEmails,
       ccEmails,
-      subject: `Repayment requested as of ${format(effectiveDate, "yyyy-MM-dd")}`,
+      subject: `Repayments requested for ${implementer.implementerName} as of ${format(effectiveDate, "yyyy-MM-dd")}`,
       bodyText: `Please find the attached repayments CSV.`,
       attachmentName: repaymentsCsvFileName,
       attachmentContent: repaymentsCsvBuffer.toString(),
       repaymentReport: repaymentsPayoutReport,
       forceSend,
+      dryRun,
     });
 
-    const supervisors = await fetchSupervisors();
+    const supervisors = await fetchSupervisors({ implementerId });
     for (const supervisor of supervisors) {
       const supervisorPayoutReport = await calculatePayouts({
         day,
         effectiveDate,
         supervisorId: supervisor.id,
+        implementerId,
       });
 
       const csvBuffer = await generateCsvBuffer(
@@ -120,7 +172,7 @@ export async function GET(request: NextRequest) {
           return row;
         }),
       );
-      const fileName = `supervisor-${supervisor.visibleId}-payouts-${format(
+      const fileName = `implementer-${implementer.visibleId}-supervisor-${supervisor.visibleId}-payouts-${format(
         payoutPeriod.startDate,
         "yyyy-MM-dd",
       )}-to-${format(payoutPeriod.endDate, "yyyy-MM-dd")}.csv`;
@@ -152,7 +204,7 @@ export async function GET(request: NextRequest) {
         sourceEmail,
         destinationEmails,
         ccEmails,
-        subject: `Payouts for ${supervisor.supervisorName}'s fellows' sessions ${format(
+        subject: `Payouts for ${implementer.implementerName} ${supervisor.supervisorName}'s fellows' sessions ${format(
           payoutPeriod.startDate,
           "yyyy-MM-dd",
         )} to ${format(payoutPeriod.endDate, "yyyy-MM-dd")}`,
@@ -161,33 +213,41 @@ export async function GET(request: NextRequest) {
         attachmentContent: csvBuffer.toString(),
         payoutReport: supervisorPayoutReport,
         forceSend,
+        dryRun,
       });
 
       console.log(
-        `Emailed supervisor ${supervisor.visibleId} payout report to ${supervisor.supervisorEmail} and cc'ed ${hubCoordinatorEmails.join(", ")}`,
+        `Emailed supervisor ${supervisor.visibleId} payout report for ${implementer.implementerName} to ${supervisor.supervisorEmail} and cc'ed ${hubCoordinatorEmails.join(", ")}`,
       );
     }
 
-    await markAttendancesProcessed(totalPayoutReport.attendancesProcessed);
-    await markDelayedPaymentsFulfilled(
-      totalPayoutReport.delayedPaymentsFulfilled,
-    );
-    await markRepaymentRequestFulfilled(
-      repaymentsPayoutReport.repaymentRequestsFulfilled,
-    );
-    await markPayoutReconciliationsExecuted(
-      totalPayoutReport.reconciliationsFulfilled,
-    );
+    if (dryRun) {
+      console.warn("Dry run, not marking processed");
+    } else {
+      await markAttendancesProcessed(totalPayoutReport.attendancesProcessed);
+      await markDelayedPaymentsFulfilled(
+        totalPayoutReport.delayedPaymentsFulfilled,
+      );
+      await markRepaymentRequestFulfilled(
+        repaymentsPayoutReport.repaymentRequestsFulfilled,
+      );
+      await markPayoutReconciliationsExecuted(
+        totalPayoutReport.reconciliationsFulfilled,
+      );
+    }
 
     return NextResponse.json({
-      message: `Tabulated ${totalPayoutReport.payoutDetails.length} payouts`,
+      message: `Tabulated ${totalPayoutReport.payoutDetails.length} payouts for ${implementer.implementerName}`,
       effectiveDate,
       payoutReport: totalPayoutReport,
     });
   } catch (error: unknown) {
+    Sentry.captureException(error);
     if (error instanceof Error) {
+      console.error(error.message);
       return NextResponse.json({ error: error.message }, { status: 400 });
     } else {
+      console.error(error);
       return NextResponse.json(
         { error: "An unknown error occurred" },
         { status: 500 },
@@ -196,11 +256,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function fetchSupervisors() {
+async function fetchSupervisors({ implementerId }: { implementerId: string }) {
   const supervisors = await db.supervisor.findMany({
     where: {
       hub: {
         projectId: CURRENT_PROJECT_ID,
+        implementerId,
       },
     },
     include: {
@@ -283,7 +344,7 @@ async function markRepaymentRequestFulfilled(
 }
 
 async function markPayoutReconciliationsExecuted(
-  reconciliationsExecuted: Processed[],
+  reconciliationsExecuted: (Processed & { newPayout?: PayoutDetail })[],
 ): Promise<void> {
   const ids = reconciliationsExecuted
     .map((r) => parseInt(r.id))
@@ -292,4 +353,26 @@ async function markPayoutReconciliationsExecuted(
     where: { id: { in: ids } },
     data: { executedAt: new Date() },
   });
+
+  for (const reconciliationExecuted of reconciliationsExecuted) {
+    const oldPayoutReconciliation =
+      await db.payoutReconciliation.findUniqueOrThrow({
+        where: { id: parseInt(reconciliationExecuted.id) },
+      });
+
+    if (reconciliationExecuted.newPayout) {
+      const newPayout = reconciliationExecuted.newPayout;
+      await db.payoutReconciliation.create({
+        data: {
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          executedAt: null,
+          fellowId: oldPayoutReconciliation.fellowId,
+          amount: newPayout.kesPayoutAmount,
+          description: newPayout.notes,
+          relatedDetails: oldPayoutReconciliation.relatedDetails ?? {},
+        },
+      });
+    }
+  }
 }

@@ -19,10 +19,10 @@ const ids = {
       countyOfOperation: "Nairobi",
 
       projects: {
-        "2024_Project_1": {
-          id: "2024_Project_1",
-          visibleId: "2024_Project_1",
-          projectName: "Anansi 100K Phase 1",
+        "2024P2_Project_1": {
+          id: "2024P2_Project_1",
+          visibleId: "2024P2_Project_1",
+          projectName: "Anansi 100K Phase 2",
 
           hubs: {
             "24_Hub_01": {
@@ -66,6 +66,20 @@ const ids = {
                   dateOfBirth: new Date("1980-08-15"),
                   gender: "Female",
                 },
+                SPV24_S_03: {
+                  id: objectId("sup"),
+                  visibleId: "SPV24_S_03",
+                  supervisorName: "Ian Nene",
+                  supervisorEmail: "ian.nene@example.com",
+                  idNumber: "200200300",
+                  cellNumber: "+2547232000004",
+                  mpesaName: "Ian Nene",
+                  mpesaNumber: "+2547232000004",
+                  county: "Migori",
+                  subCounty: "Awendo",
+                  dateOfBirth: new Date("1980-08-15"),
+                  gender: "Male",
+                },
               },
 
               fellows: {
@@ -99,6 +113,21 @@ const ids = {
                   gender: "Female",
                   supervisorVisibleId: "SPV24_S_02",
                 },
+                TFW24_S_03: {
+                  id: objectId("fel"),
+                  visibleId: "TFW24_S_03",
+                  fellowName: "Ian Doe",
+                  fellowEmail: "janedoe@example.com",
+                  mpesaName: "Ian Doe",
+                  mpesaNumber: "+254700000002",
+                  idNumber: "87654321",
+                  cellNumber: "+254700000002",
+                  county: "Nairobi",
+                  subCounty: "Dagoretti",
+                  dateOfBirth: new Date("2000-02-02"),
+                  gender: "Female",
+                  supervisorVisibleId: "SPV24_S_03",
+                },
               },
 
               schools: {
@@ -115,7 +144,7 @@ const ids = {
                   pointPersonPhone: "+254 722 229 367",
                   numbersExpected: 2200,
                   principalName: "L. O. Nyachwera",
-                  assignedSupervisorVisibleId: "SPV24_S_01",
+                  assignedSupervisorVisibleId: "SPV24_S_03",
 
                   groups: {
                     ANS24_Group_01: {
@@ -155,9 +184,9 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: setMinutes(addDays(new Date(), 12), 0),
+                      sessionDate: setMinutes(addDays(new Date(), -1), 0),
                       sessionEndTime: addHours(
-                        setMinutes(addDays(new Date(), 12), 0),
+                        setMinutes(addDays(new Date(), -1), 0),
                         2,
                       ),
                       sessionRating: 4,
@@ -167,9 +196,9 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s1",
                       sessionName: "Session 01",
-                      sessionDate: setMinutes(addDays(new Date(), 7), 0),
+                      sessionDate: setMinutes(addDays(new Date(), 0), 0),
                       sessionEndTime: addHours(
-                        setMinutes(addDays(new Date(), 7), 0),
+                        setMinutes(addDays(new Date(), 0), 0),
                         1.5,
                       ),
                       sessionRating: 5,
@@ -223,6 +252,45 @@ const ids = {
                       assignedGroupId: "07G1",
                     },
                   },
+
+                  fellowAttendances: {
+                    FA_1: {
+                      visibleId: "FA_1",
+                      session: "Session_01",
+                      fellowId: "TFW24_S_01",
+                      supervisorId: "SPV24_S_01",
+                      attended: true,
+                      groupId: "07G1",
+                      delayedPayments: [],
+                      repaymentRequests: [
+                        {
+                          id: "RR_1",
+                        },
+                      ],
+                    },
+                    FA_2: {
+                      visibleId: "FA_2",
+                      session: "Session_02",
+                      fellowId: "TFW24_S_01",
+                      supervisorId: "SPV24_S_01",
+                      attended: true,
+                      groupId: "07G1",
+                      delayedPayments: [],
+                      repaymentRequests: [],
+                    },
+                    FA_3: {
+                      visibleId: "FA_3",
+                      session: "Session_01",
+                      fellowId: "TFW24_S_02",
+                      supervisorId: "SPV24_S_01",
+                      attended: true,
+                      groupId: "07G2",
+                      delayedPayments: [],
+                      repaymentRequests: [],
+                    },
+                  },
+
+                  payoutReconciliations: {},
                 },
 
                 ANS24_School_09: {
@@ -339,7 +407,22 @@ const ids = {
                       fellowVisibleId: "TFW24_S_02",
                       assignedGroupId: "09G1",
                     },
+                    ANS24_09_Stu_02: {
+                      id: objectId("stu"),
+                      visibleId: "ANS24_09_Stu_02",
+                      studentName: "Otieno Mwangi",
+                      admissionNumber: "ADM153",
+                      age: 19,
+                      gender: "F",
+                      condition: "Shamiri",
+                      fellowVisibleId: "TFW24_S_03",
+                      assignedGroupId: null,
+                    },
                   },
+
+                  fellowAttendances: {},
+
+                  payoutReconciliations: {},
                 },
 
                 ANS24_School_10: {
@@ -372,11 +455,11 @@ const ids = {
                       status: SessionStatus.Cancelled,
                       sessionName: "Presession",
                       sessionDate: setHours(
-                        setMinutes(addDays(new Date(), -1), 0),
+                        setMinutes(addDays(new Date(), -7), 0),
                         15,
                       ),
                       sessionEndTime: addHours(
-                        setHours(setMinutes(addDays(new Date(), -1), 0), 15),
+                        setHours(setMinutes(addDays(new Date(), -7), 0), 15),
                         1.5,
                       ),
                       sessionRating: 4,
@@ -455,6 +538,30 @@ const ids = {
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
                       assignedGroupId: "10G1",
+                    },
+                  },
+
+                  fellowAttendances: {
+                    FA_11: {
+                      visibleId: "FA_11",
+                      session: "Session_01",
+                      fellowId: "TFW24_S_01",
+                      supervisorId: "SPV24_S_01",
+                      attended: true,
+                      groupId: "10G1",
+                      delayedPayments: [
+                        {
+                          id: "DPR_1",
+                        },
+                      ],
+                      repaymentRequests: [],
+                    },
+                  },
+
+                  payoutReconciliations: {
+                    PR_1: {
+                      amount: 100,
+                      fellowId: "TFW24_S_01",
                     },
                   },
                 },
@@ -536,7 +643,7 @@ const ids = {
                       gender: "F",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
-                      assignedGroupId: "G1",
+                      assignedGroupId: "G11",
                     },
                     ANS24_Stu_02: {
                       id: objectId("stu"),
@@ -547,7 +654,7 @@ const ids = {
                       gender: "M",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
-                      assignedGroupId: "G1",
+                      assignedGroupId: "G11",
                     },
                     ANS24_Stu_03: {
                       id: objectId("stu"),
@@ -558,7 +665,7 @@ const ids = {
                       gender: "F",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
-                      assignedGroupId: "G1",
+                      assignedGroupId: "G11",
                     },
                     ANS24_Stu_04: {
                       id: objectId("stu"),
@@ -569,9 +676,13 @@ const ids = {
                       gender: "M",
                       condition: "Shamiri",
                       fellowVisibleId: "TFW24_S_02",
-                      assignedGroupId: "G1",
+                      assignedGroupId: "G11",
                     },
                   },
+
+                  fellowAttendances: {},
+
+                  payoutReconciliations: {},
                 },
               },
             },
@@ -595,6 +706,12 @@ const ids = {
         shadrack: {
           id: objectId("user"),
           email: "shadrack.lilan@shamiri.institute",
+          role: ImplementerRole.SUPERVISOR,
+          roleByVisibleId: "SPV24_S_01",
+        },
+        davis: {
+          id: objectId("user"),
+          email: "wambugu.davis@shamiri.institute",
           role: ImplementerRole.SUPERVISOR,
           roleByVisibleId: "SPV24_S_01",
         },
@@ -792,9 +909,77 @@ async function seedDatabase() {
                 school: {
                   connect: { id: createdSchool.id },
                 },
-                assignedGroup: {
-                  connect: { id: student.assignedGroupId },
+                assignedGroup: student.assignedGroupId
+                  ? {
+                      connect: { id: student.assignedGroupId },
+                    }
+                  : undefined,
+              },
+            });
+          }
+
+          for (const fellowAttendance of Object.values(
+            school.fellowAttendances,
+          )) {
+            const fellow = await db.fellow.findUniqueOrThrow({
+              where: {
+                visibleId: fellowAttendance.fellowId,
+              },
+            });
+
+            const supervisor = await db.supervisor.findUniqueOrThrow({
+              where: {
+                visibleId: fellowAttendance.supervisorId,
+              },
+            });
+
+            // @ts-ignore
+            const session = school.sessions[fellowAttendance.session];
+            await db.fellowAttendance.create({
+              data: {
+                visibleId: fellowAttendance.visibleId,
+                sessionId: session.id,
+                fellowId: fellow.id,
+                supervisorId: supervisor.id,
+                attended: true,
+                groupId: fellowAttendance.groupId,
+                schoolId: school.id,
+                delayedPaymentRequests: {
+                  create: fellowAttendance.delayedPayments.map(() => {
+                    return {
+                      fellowId: fellow.id,
+                      supervisorId: supervisor.id,
+                      interventionSessionId: session.id,
+                    };
+                  }),
                 },
+                repaymentRequests: {
+                  create: fellowAttendance.repaymentRequests.map(() => {
+                    return {
+                      fellowId: fellow.id,
+                      supervisorId: supervisor.id,
+                      hubId: hub.id,
+                    };
+                  }),
+                },
+              },
+            });
+          }
+
+          for (const payoutReconciliation of Object.values(
+            school.payoutReconciliations,
+          )) {
+            const fellow = await db.fellow.findUniqueOrThrow({
+              where: {
+                visibleId: payoutReconciliation.fellowId,
+              },
+            });
+            // @ts-ignore
+            // const session = school.sessions[fellowAttendance.session];
+            await db.payoutReconciliation.create({
+              data: {
+                amount: payoutReconciliation.amount,
+                fellowId: fellow.id,
               },
             });
           }

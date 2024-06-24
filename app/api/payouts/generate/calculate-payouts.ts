@@ -1,5 +1,7 @@
+import * as Sentry from "@sentry/nextjs";
 import {
   addDays,
+  format,
   isSameDay,
   setHours,
   setMinutes,
@@ -8,7 +10,11 @@ import {
 } from "date-fns";
 
 import { processAttendances } from "#/app/api/payouts/generate/payout-utils";
-import type { PayoutDay, PayoutReport } from "#/app/api/payouts/generate/types";
+import type {
+  PayoutDay,
+  PayoutDetail,
+  PayoutReport,
+} from "#/app/api/payouts/generate/types";
 import { db } from "#/lib/db";
 
 const PAY_PERIOD_CUTOFF_HOUR = 6; // 6am UTC / 9am EAT
@@ -18,10 +24,12 @@ export async function calculatePayouts({
   day,
   effectiveDate,
   supervisorId,
+  implementerId,
 }: {
   day: PayoutDay;
   effectiveDate: Date;
   supervisorId?: string;
+  implementerId: string;
 }): Promise<PayoutReport> {
   const payoutPeriodStart = getPayoutPeriodStartDate(day, effectiveDate);
   const payoutPeriodEnd = getPayoutPeriodEndDate(day, effectiveDate);
@@ -44,6 +52,7 @@ export async function calculatePayouts({
       },
       fellow: {
         OR: [{ droppedOut: false }, { droppedOut: null }],
+        implementerId,
       },
     },
     include: {
@@ -69,6 +78,7 @@ export async function calculatePayouts({
       },
       fellow: {
         OR: [{ droppedOut: false }, { droppedOut: null }],
+        implementerId,
       },
       ...(supervisorId && {
         supervisorId,
@@ -121,6 +131,7 @@ export async function calculatePayouts({
       },
       fellow: {
         OR: [{ droppedOut: false }, { droppedOut: null }],
+        implementerId,
       },
       executedAt: null,
     },
@@ -132,20 +143,47 @@ export async function calculatePayouts({
     },
   });
 
-  const reconciliationsFulfilled: { id: string }[] = [];
+  const reconciliationsFulfilled: { id: string; newPayout?: PayoutDetail }[] =
+    [];
   for (const reconciliation of reconciliations) {
     const payout = payouts[reconciliation.fellow.visibleId];
     if (payout) {
-      payout.kesPayoutAmount += reconciliation.amount;
-      if (payout.notes.length !== 0) {
-        payout.notes += "/";
-      }
-      payout.notes +=
-        reconciliation.description ??
-        `Adjustment of ${reconciliation.amount} ${reconciliation.currency} made.`;
+      let newPayout: PayoutDetail | undefined = undefined;
+      if (
+        reconciliation.amount < 0 &&
+        payout.kesPayoutAmount < Math.abs(reconciliation.amount)
+      ) {
+        const balance =
+          Math.abs(reconciliation.amount) - payout.kesPayoutAmount;
+        const oldPayoutAmount = payout.kesPayoutAmount;
+        payout.kesPayoutAmount = 0;
+        payout.notes += `/${oldPayoutAmount} ${reconciliation.currency} not paid. Negative balance of ${balance} ${reconciliation.currency} carried forward.`;
 
-      reconciliationsFulfilled.push({ id: reconciliation.id.toString() });
+        newPayout = {
+          ...payout,
+          kesPayoutAmount: -1 * balance,
+          notes: `${payout.notes}. Balance carried forward from ${format(effectiveDate, "yyyy/MM/dd")}, ${balance} remaining.`,
+        };
+      } else {
+        payout.kesPayoutAmount += reconciliation.amount;
+        if (payout.notes.length !== 0) {
+          payout.notes += "/";
+        }
+        payout.notes +=
+          reconciliation.description ??
+          `Adjustment of ${reconciliation.amount} ${reconciliation.currency} made.`;
+      }
+
+      reconciliationsFulfilled.push({
+        id: reconciliation.id.toString(),
+        newPayout,
+      });
     } else {
+      Sentry.captureException(
+        new Error(
+          `Reconciliation for fellow ${reconciliation.fellow.visibleId} not found in payouts`,
+        ),
+      );
       console.warn(
         `Reconciliation for fellow ${reconciliation.fellow.visibleId} not found in payouts`,
       );
