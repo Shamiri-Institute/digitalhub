@@ -513,6 +513,7 @@ model FellowAttendance {
   group                  InterventionGroup?      @relation(fields: [groupId], references: [id])
   repaymentRequests      RepaymentRequest[]
   delayedPaymentRequests DelayedPaymentRequest[]
+  PayoutStatements       PayoutStatements[]
 
   @@map("fellow_attendances")
 }
@@ -564,6 +565,7 @@ model Supervisor {
   weeklyFellowRatings       WeeklyFellowRatings[]
   delayedPaymentRequests    DelayedPaymentRequest[]
   assignedSchools           School[]
+  PayoutStatements          PayoutStatements[]
 
   @@map("supervisors")
 }
@@ -1174,4 +1176,20 @@ model StudentGroupTransferTrail {
   fromGroupId    String?  @map("from_group_id")
 
   @@map("student_group_transfer_trail")
+}
+
+model PayoutStatements {
+  id                 String           @id @default(cuid())
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
+  fellowAttendanceId Int              @map("fellow_attendance_id")
+  fellowAttendance   FellowAttendance @relation(fields: [fellowAttendanceId], references: [id])
+  amount             Int
+  reason             String
+  createdBy          String           @map("created_by")
+  supervisor         Supervisor       @relation(fields: [createdBy], references: [id])
+  description        String?
+  notes              String?
+  executedAt         DateTime?        @map("executed_at") @db.Timestamptz()
+  mpesaNumber        String?          @map("mpesa_number")
 }
