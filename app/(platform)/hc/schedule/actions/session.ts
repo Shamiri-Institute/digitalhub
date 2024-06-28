@@ -2,10 +2,21 @@
 
 import { ScheduleNewSessionSchema } from "#/app/(platform)/hc/schemas";
 import { getCurrentUser } from "#/app/auth";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { Prisma } from "@prisma/client";
 import { addHours, addMinutes } from "date-fns";
 import { z } from "zod";
+
+function generateSupervisorAttendanceVisibleId(
+  supervisorId: string,
+  schoolId: string,
+  sessionLabel: string,
+) {
+  const randomString = Math.random().toString(36).substring(7);
+  return `${supervisorId}_${schoolId}_${sessionLabel}_${randomString}`;
+}
 
 export async function createNewSession(
   data: z.infer<typeof ScheduleNewSessionSchema>,
@@ -31,6 +42,21 @@ export async function createNewSession(
       addMinutes(parsedData.sessionDate, minutes),
       hours,
     );
+    const hubSupervisors = await db.supervisor.findMany();
+    const supervisorAttendances: Prisma.SupervisorAttendanceCreateManySessionInput[] =
+      hubSupervisors.map((supervisor) => {
+        return {
+          id: objectId("supatt"),
+          visibleId: generateSupervisorAttendanceVisibleId(
+            supervisor.id,
+            parsedData.schoolId,
+            parsedData.sessionType,
+          ),
+          projectId: parsedData.projectId ?? CURRENT_PROJECT_ID,
+          supervisorId: supervisor.id,
+          schoolId: parsedData.schoolId,
+        };
+      });
     await db.interventionSession.create({
       data: {
         id: objectId("isess"),
@@ -44,6 +70,14 @@ export async function createNewSession(
         schoolId: parsedData.schoolId,
         occurred: false,
         projectId: parsedData.projectId,
+        supervisorAttendances: {
+          createMany: {
+            data: supervisorAttendances,
+          },
+        },
+      },
+      include: {
+        supervisorAttendances: true,
       },
     });
 
