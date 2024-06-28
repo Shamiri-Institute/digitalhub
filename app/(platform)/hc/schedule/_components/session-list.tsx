@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
+import FellowAttendance from "#/app/(platform)/hc/schedule/_components/fellow-attendance";
 import SupervisorAttendance from "#/app/(platform)/hc/schedule/_components/supervisor-attendance";
 import {
   DropdownMenu,
@@ -56,6 +57,8 @@ export function SessionDetail({
   });
   const [open, setOpen] = React.useState(false);
   const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
+    React.useState(false);
+  const [fellowAttendanceDialog, setFellowAttendanceDialog] =
     React.useState(false);
 
   const searchParams = useSearchParams();
@@ -155,36 +158,45 @@ export function SessionDetail({
             </span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <div className="popover-links flex flex-col">
-            {completed && !cancelled ? (
-              <DropdownMenuItem
-                onClick={() => {
-                  // setSupervisorAttendanceDialog(true);
-                }}
-              >
-                View supervisor attendance
-              </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem
-                className="w-full"
-                onClick={() => {
-                  setSupervisorAttendanceDialog(true);
-                }}
-              >
-                Mark supervisor attendance
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem>View fellow attendance</DropdownMenuItem>
-            <DropdownMenuItem>Weekly session report</DropdownMenuItem>
-            <DropdownMenuItem className="text-shamiri-light-red">
-              Archive
+          {session.occurred ? (
+            <DropdownMenuItem
+              onClick={() => {
+                setSupervisorAttendanceDialog(true);
+              }}
+            >
+              View supervisor attendance
             </DropdownMenuItem>
-          </div>
+          ) : (
+            <DropdownMenuItem
+              className="w-full"
+              onClick={() => {
+                setSupervisorAttendanceDialog(true);
+              }}
+            >
+              Mark supervisor attendance
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem
+            onClick={() => {
+              setFellowAttendanceDialog(true);
+            }}
+          >
+            View fellow attendance
+          </DropdownMenuItem>
+          <DropdownMenuItem>Weekly session report</DropdownMenuItem>
+          <DropdownMenuItem className="text-shamiri-light-red">
+            Archive
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
       <SupervisorAttendance
         isOpen={supervisorAttendanceDialog}
         onChange={setSupervisorAttendanceDialog}
+        session={session}
+      />
+      <FellowAttendance
+        isOpen={fellowAttendanceDialog}
+        onChange={setFellowAttendanceDialog}
         session={session}
       />
     </div>
