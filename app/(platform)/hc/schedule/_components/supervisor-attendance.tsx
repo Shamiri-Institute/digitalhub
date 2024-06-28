@@ -1,6 +1,7 @@
 import DataTable from "#/app/(platform)/hc/components/data-table";
 import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
 import type { Session } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
+import { markSupervisorAttendance } from "#/app/(platform)/hc/schedule/actions/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -19,7 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { toast } from "#/components/ui/use-toast";
-import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
+import { fetchSupervisorsWithAttendances } from "#/lib/actions/fetch-supervisors";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
@@ -34,6 +36,14 @@ type SupervisorAttendanceTableData = {
   fellows: string;
 };
 
+type AttendanceData = {
+  projectId: string;
+  schoolId: string;
+  supervisorId: string;
+  sessionId: string;
+  sessionType: string;
+};
+
 export default function SupervisorAttendance({
   isOpen,
   onChange,
@@ -43,6 +53,16 @@ export default function SupervisorAttendance({
   onChange: Dispatch<SetStateAction<boolean>>;
   session: Session;
 }) {
+  const [attendances, setAttendances] = useState<
+    SupervisorAttendanceTableData[]
+  >([]);
+  const [loadingIndices, setLoadingIndices] = useState<
+    {
+      id: string;
+      attended: boolean;
+    }[]
+  >([]);
+
   const columnHelper = createColumnHelper<SupervisorAttendanceTableData>();
   const columns = [
     {
@@ -61,16 +81,17 @@ export default function SupervisorAttendance({
                 {
                   "border-green-border": attended,
                   "border-red-border": !attended,
-                  "border-blue-border": attended === undefined,
+                  "border-blue-border":
+                    attended === undefined || attended === null,
                 },
                 {
                   "bg-green-bg": attended,
                   "bg-red-bg": !attended,
-                  "bg-blue-bg": attended === undefined,
+                  "bg-blue-bg": attended === undefined || attended === null,
                 },
               )}
             >
-              {attended === undefined ? (
+              {attended === null || attended === undefined ? (
                 <div className="flex items-center gap-1 text-blue-base">
                   <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
                   <span>Not marked</span>
@@ -93,7 +114,7 @@ export default function SupervisorAttendance({
           </div>
         );
       },
-      header: "Point Schools",
+      header: "Attendance",
     }),
     columnHelper.accessor("pointSchools", {
       cell: (props) => {
@@ -133,59 +154,103 @@ export default function SupervisorAttendance({
       accessorKey: "fellows",
       header: "No. of fellows",
     },
-    {
-      id: "button",
-      header: undefined,
-      cell: ({ row }: any) => {
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="absolute inset-0">
-                <div className="flex h-full w-full items-center justify-center">
-                  <Icons.moreHorizontal className="h-5 w-5" />
-                </div>
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuContent
-                align="end"
-                onCloseAutoFocus={(e) => {
-                  e.preventDefault();
+    columnHelper.accessor("attendance", {
+      cell: (props) => {
+        const attended = props.getValue();
+        const data = {
+          sessionId: session.id,
+          sessionType: session.sessionType,
+          projectId: CURRENT_PROJECT_ID,
+          schoolId: session.schoolId,
+          supervisorId: props.row.original.id,
+        };
+        if (attended !== null && attended !== undefined) {
+          return null;
+        } else {
+          return (
+            <div className="absolute inset-0 border-l bg-white">
+              <div
+                className="flex h-full w-full items-center justify-center"
+                onClick={() => {
+                  console.log("Attended!");
+                  markAttendance(data, true);
                 }}
               >
-                <DropdownMenuLabel>
-                  <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-                    Actions
-                  </span>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Mark delayed attendance</DropdownMenuItem>
-                <DropdownMenuItem>Fellow attendance history</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenuPortal>
-          </DropdownMenu>
-        );
+                <Icons.checkCircle className="h-5 w-5 text-shamiri-graph-green" />
+              </div>
+            </div>
+          );
+        }
       },
-      enableSorting: false,
-      enableHiding: false,
-    },
+      id: "button2",
+      header: undefined,
+    }),
+    columnHelper.accessor("attendance", {
+      cell: (props) => {
+        const attended = props.getValue();
+        const data = {
+          sessionId: session.id,
+          sessionType: session.sessionType,
+          projectId: CURRENT_PROJECT_ID,
+          schoolId: session.schoolId,
+          supervisorId: props.row.original.id,
+        };
+        if (attended !== null && attended !== undefined) {
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="absolute inset-0 border-l bg-white">
+                  <div className="flex h-full w-full items-center justify-center">
+                    <Icons.moreHorizontal className="h-5 w-5" />
+                  </div>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuContent
+                  align="end"
+                  onCloseAutoFocus={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <DropdownMenuLabel>
+                    <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                      Actions
+                    </span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>Mark delayed attendance</DropdownMenuItem>
+                  <DropdownMenuItem>Fellow attendance history</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenuPortal>
+            </DropdownMenu>
+          );
+        } else {
+          return (
+            <button
+              className="absolute inset-0 border-l bg-white"
+              onClick={() => {
+                console.log("Missed");
+                markAttendance(data, false);
+              }}
+            >
+              <div className="flex h-full w-full items-center justify-center">
+                <Icons.crossCircleFilled className="h-5 w-5 text-shamiri-light-red" />
+              </div>
+            </button>
+          );
+        }
+      },
+      id: "button",
+      header: undefined,
+    }),
   ];
-
-  const [attendances, setAttendances] = useState<
-    SupervisorAttendanceTableData[]
-  >([]);
-  // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     try {
       const fetchAttendances = async () => {
-        const supervisors = await fetchSupervisorAttendances({
+        const supervisors = await fetchSupervisorsWithAttendances({
           where: {
-            assignedSchools: {
-              some: {
-                hubId: session.school.hubId,
-              },
-            },
+            hubId: session.school.hubId,
           },
         });
         const tableData = supervisors.map((supervisor) => {
@@ -226,11 +291,27 @@ export default function SupervisorAttendance({
     }
   }, [isOpen, session.school.hubId]);
 
+  function markAttendance(data: AttendanceData, attended?: boolean) {
+    markSupervisorAttendance({ ...data, attended }).then((result) => {
+      const index = attendances.findIndex(
+        (attendance) => attendance.id === result.data?.supervisorId,
+      );
+
+      if (index !== -1) {
+        let attendancesCopy = [...attendances];
+        if (attendancesCopy[index] !== undefined) {
+          attendancesCopy[index]!.attendance = attended;
+          setAttendances(attendancesCopy);
+        }
+      }
+    });
+  }
+
   return (
     <div>
       <Dialog open={isOpen} onOpenChange={onChange} modal={true}>
         <DialogPortal>
-          <DialogContent className="w-3/4 max-w-none">
+          <DialogContent className="w-5/6 max-w-none lg:w-4/5">
             <DialogHeader>
               <span className="text-xl font-bold">
                 Mark supervisor attendance
@@ -247,7 +328,7 @@ export default function SupervisorAttendance({
                 columns={columns as ColumnDef<unknown>[]}
                 data={attendances}
                 editColumns={false}
-                className={"data-table"}
+                className={"data-table data-table-action"}
                 emptyStateMessage="No fellows associated with this school"
               />
               <div className="flex justify-end gap-6">
