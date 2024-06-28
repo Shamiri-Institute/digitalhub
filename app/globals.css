@@ -26,7 +26,7 @@
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 240 4.8% 95.9%;
+    --accent: 208, 100%, 95%, 1;
     --accent-foreground: 240 5.9% 10%;
 
     --destructive: 354 66% 62%;
@@ -146,14 +146,6 @@
     @apply text-shamiri-new-blue;
   }
 
-  .popover-links span {
-    @apply cursor-pointer px-3 py-1.5;
-  }
-
-  .popover-links span:hover {
-    @apply bg-shamiri-new-blue/[0.1];
-  }
-
   .schedule-table {
     @apply w-full table-fixed border-separate overflow-hidden border border-grey-border bg-white [border-spacing:0];
   }
@@ -179,14 +171,17 @@
     @apply table-fixed rounded-lg border border-grey-border;
   }
 
-  .data-table tr td:last-child,
-  .data-table thead th:last-child {
-    @apply w-[50px] min-w-[40px] max-w-[50px] cursor-pointer;
-  }
-
-  .data-table thead th:last-child {
-    @apply border-l;
-  }
+  /* TODO: Replace with passed styling props to columns */
+  /*.data-table.data-table-action tr td:last-child,*/
+  /*.data-table.data-table-action thead th:last-child {*/
+  /*  @apply w-[50px] min-w-[40px] max-w-[50px] cursor-pointer;*/
+  /*}*/
+  /*.data-table.data-table-action tbody tr:hover td:last-child {*/
+  /*  @apply bg-transparent;*/
+  /*}*/
+  /*.data-table thead th:last-child {*/
+  /*  @apply border-l;*/
+  /*}*/
 
   .data-table tbody tr,
   .data-table tbody td {
@@ -195,10 +190,6 @@
 
   .data-table tbody tr:hover td {
     @apply bg-gray-100 transition ease-in-out;
-  }
-
-  .data-table tbody tr:hover td:last-child {
-    @apply bg-transparent;
   }
 
   .form-toggle {

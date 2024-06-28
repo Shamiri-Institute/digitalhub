@@ -82,3 +82,12 @@ export const ScheduleNewSessionSchema = z.object({
   // notifications: stringValidation(),
   // sendReminders: stringValidation("Please select a send reminder option"),
 });
+
+export const MarkSupervisorAttendanceSchema = z.object({
+  projectId: z.string(),
+  schoolId: z.string(),
+  supervisorId: z.string(),
+  attended: z.boolean().optional(),
+  sessionId: z.string(),
+  sessionType: z.string(),
+});
