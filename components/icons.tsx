@@ -12,6 +12,7 @@ import {
   GraduationCapIcon,
   HeartPulse,
   HelpCircle,
+  Hourglass,
   LayoutDashboard,
   ListTodo,
   LucideProps,
@@ -69,6 +70,7 @@ export const Icons = {
   heartPulse: HeartPulse,
   helpCircle: HelpCircle,
   PencilLine: PencilLineIcon,
+  hourglass: Hourglass,
 
   // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (

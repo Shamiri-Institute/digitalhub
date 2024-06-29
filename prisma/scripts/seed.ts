@@ -842,6 +842,27 @@ async function seedDatabase() {
                 project: {
                   connect: { id: createdProject.id },
                 },
+                supervisorAttendances: {
+                  createMany: {
+                    data: Object.values(hub.supervisors).map((supervisor) => {
+                      return {
+                        id: objectId("supatt"),
+                        visibleId:
+                          supervisor.id +
+                          " _" +
+                          createdSchool.id +
+                          "_" +
+                          session.sessionType,
+                        projectId: createdProject.id,
+                        supervisorId: supervisor.id,
+                        schoolId: createdSchool.id,
+                      };
+                    }),
+                  },
+                },
+              },
+              include: {
+                supervisorAttendances: true,
               },
             });
           }
@@ -860,37 +881,6 @@ async function seedDatabase() {
                 school: {
                   connect: { id: createdSchool.id },
                 },
-              },
-            });
-          }
-
-          for (const supervisorAttendance of Object.values(
-            school.supervisorAttendances,
-          )) {
-            const supervisor = await db.supervisor.findUniqueOrThrow({
-              where: {
-                visibleId: supervisorAttendance.supervisorVisibleId,
-              },
-            });
-
-            const session = await db.interventionSession.findUniqueOrThrow({
-              where: {
-                interventionBySchoolIdAndSessionType: {
-                  schoolId: createdSchool.id,
-                  sessionType: supervisorAttendance.sessionType,
-                },
-              },
-            });
-
-            await db.supervisorAttendance.create({
-              data: {
-                id: supervisorAttendance.id,
-                visibleId: supervisorAttendance.visibleId,
-                supervisorId: supervisor.id,
-                attended: supervisorAttendance.attended,
-                projectId: createdProject.id,
-                schoolId: createdSchool.id,
-                sessionId: session.id,
               },
             });
           }

@@ -17,6 +17,8 @@ import {
 import { cn } from "#/lib/utils";
 import {
   ColumnDef,
+  OnChangeFn,
+  RowSelectionState,
   SortingState,
   VisibilityState,
   flexRender,
@@ -25,7 +27,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SettingsIcon from "../../../../public/icons/settings-icon.svg";
 
 interface DataTableProps<TData, TValue> {
@@ -33,6 +35,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   editColumns?: boolean;
   className?: string;
+  onRowSelectionChange?: (rows: unknown[]) => void;
 }
 
 export default function DataTable<TData, TValue>({
@@ -41,10 +44,15 @@ export default function DataTable<TData, TValue>({
   editColumns = true,
   className,
   emptyStateMessage,
+  onRowSelectionChange,
 }: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+
+  const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (state) => {
+    setRowSelection(state);
+  };
 
   const table = useReactTable({
     data,
@@ -56,6 +64,13 @@ export default function DataTable<TData, TValue>({
     onRowSelectionChange: setRowSelection,
     state: { sorting, columnVisibility, rowSelection },
   });
+
+  useEffect(() => {
+    const rows = table.getSelectedRowModel().rows;
+    if (onRowSelectionChange) {
+      onRowSelectionChange(rows.map((row) => row.original));
+    }
+  }, [onRowSelectionChange, rowSelection, table]);
 
   return (
     <div>
@@ -103,7 +118,7 @@ export default function DataTable<TData, TValue>({
                 <TableHead
                   key={header.id}
                   className={cn(
-                    "!px-4 text-sm font-semibold leading-5 text-shamiri-text-grey",
+                    "rounded bg-background-secondary !px-4 text-sm font-semibold leading-5 text-shamiri-text-grey",
                     ["actions", "select"].includes(
                       //@ts-ignore
                       header.column.columnDef.header,
@@ -111,7 +126,7 @@ export default function DataTable<TData, TValue>({
                       ? "py-3"
                       : "py-2",
                     header.column.columnDef.id === "button" ||
-                      header.column.columnDef.id === "button2"
+                      header.column.columnDef.id === "checkbox"
                       ? "w-[50px] min-w-[40px] max-w-[50px]"
                       : null,
                   )}
@@ -141,7 +156,7 @@ export default function DataTable<TData, TValue>({
                     className={cn(
                       "border-y border-l",
                       cell.column.columnDef.id === "button" ||
-                        cell.column.columnDef.id === "button2"
+                        cell.column.columnDef.id === "checkbox"
                         ? "relative cursor-pointer border-l-0 !p-0"
                         : "!px-4 py-2",
                     )}
