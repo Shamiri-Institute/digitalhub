@@ -168,20 +168,8 @@
   }
 
   .data-table {
-    @apply table-fixed rounded-lg border border-grey-border;
+    @apply table-fixed border-separate border-spacing-0 rounded border border-grey-border;
   }
-
-  /* TODO: Replace with passed styling props to columns */
-  /*.data-table.data-table-action tr td:last-child,*/
-  /*.data-table.data-table-action thead th:last-child {*/
-  /*  @apply w-[50px] min-w-[40px] max-w-[50px] cursor-pointer;*/
-  /*}*/
-  /*.data-table.data-table-action tbody tr:hover td:last-child {*/
-  /*  @apply bg-transparent;*/
-  /*}*/
-  /*.data-table thead th:last-child {*/
-  /*  @apply border-l;*/
-  /*}*/
 
   .data-table tbody tr,
   .data-table tbody td {
