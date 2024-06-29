@@ -50,7 +50,12 @@ export async function fetchSupervisorAttendances({
     include: {
       supervisor: {
         include: {
-          fellows: true,
+          fellows: {
+            include: {
+              fellowAttendances: true,
+            },
+          },
+          assignedSchools: true,
         },
       },
     },
