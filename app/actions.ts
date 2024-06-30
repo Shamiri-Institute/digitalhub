@@ -253,13 +253,15 @@ export async function markFellowAttendance(
         },
       });
 
-      if (payout) {
+      if (payout && attendanceStatusToBoolean(status) !== null) {
         await db.payoutStatements.create({
           data: {
-            reason: "reconciliation",
+            reason: attendanceStatusToBoolean(status)
+              ? "session_attendance"
+              : "reconciliation",
             fellowAttendanceId: attendance.id,
             amount: attendanceStatusToBoolean(status)
-              ? payout.amount
+              ? Math.abs(payout.amount) // ensure that money owed to fellows for attending sessions is always +ve
               : -payout.amount,
             mpesaNumber: fellow.mpesaNumber,
             createdBy: attendance.supervisorId,
