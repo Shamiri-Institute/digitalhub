@@ -61,6 +61,13 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     createCalendar,
   });
 
+  const listState = useCalendarState({
+    value: today(getLocalTimeZone()),
+    visibleDuration: { weeks: 1 },
+    locale,
+    createCalendar,
+  });
+
   const dayState = useCalendarState({
     value: today(getLocalTimeZone()),
     visibleDuration: { days: 1 },
@@ -68,7 +75,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     createCalendar,
   });
 
-  const tableViewState = useCalendarState({
+  const tableState = useCalendarState({
     value: today(getLocalTimeZone()),
     visibleDuration: { weeks: 1 },
     locale,
@@ -81,7 +88,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   const day = useCalendar(calendarStateProps, dayState);
 
-  const table = useCalendar(calendarStateProps, tableViewState);
+  const list = useCalendar(calendarStateProps, listState);
+
+  const table = useCalendar(calendarStateProps, tableState);
 
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") ?? "month";
@@ -109,6 +118,11 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       title = month.title;
       prevButtonProps = month.prevButtonProps;
       nextButtonProps = month.nextButtonProps;
+      break;
+    case "list":
+      title = week.title;
+      prevButtonProps = list.prevButtonProps;
+      nextButtonProps = list.nextButtonProps;
       break;
     default:
       throw new Error(`Invalid mode: ${mode}`);
@@ -145,8 +159,8 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
               monthProps={{ state: monthState, weekdayStyle: "long" }}
               weekProps={{ state: weekState }}
               dayProps={{ state: dayState }}
-              listProps={{}}
-              tableProps={{ state: tableViewState, hubId }}
+              listProps={{ state: listState, hubId }}
+              tableProps={{ state: tableState, hubId }}
             />
           </div>
         </TitleProvider>
@@ -248,7 +262,10 @@ function CalendarView({
   dayProps: {
     state: CalendarState;
   };
-  listProps: {};
+  listProps: {
+    state: CalendarState;
+    hubId: string;
+  };
   tableProps: {
     state: CalendarState;
     hubId: string;
