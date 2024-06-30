@@ -25,6 +25,10 @@ import { db } from "#/lib/db";
 import { getHighestValue } from "#/lib/utils";
 import { EditFellowSchema } from "#/lib/validators";
 import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
+import {
+  MAIN_SESSION_COMPENSATION,
+  PRE_SESSION_COMPENSATION,
+} from "./api/payouts/generate/payout-utils";
 
 export async function inviteUserToImplementer(prevState: any, formData: any) {
   try {
@@ -239,6 +243,29 @@ export async function markFellowAttendance(
           attended: attendanceStatusToBoolean(status),
         },
       });
+
+      const payout = await db.payoutStatements.findFirst({
+        where: {
+          fellowAttendanceId: attendance.id,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      if (payout) {
+        await db.payoutStatements.create({
+          data: {
+            reason: "reconciliation",
+            fellowAttendanceId: attendance.id,
+            amount: attendanceStatusToBoolean(status)
+              ? payout.amount
+              : -payout.amount,
+            mpesaNumber: fellow.mpesaNumber,
+            createdBy: attendance.supervisorId,
+          },
+        });
+      }
     } else {
       attendance = await db.fellowAttendance.create({
         data: {
@@ -259,6 +286,23 @@ export async function markFellowAttendance(
           projectId: CURRENT_PROJECT_ID,
         },
       });
+
+      if (attendanceStatusToBoolean(status)) {
+        const sessionType = `s${sessionNumber}`;
+        const compensation =
+          sessionType === "s0"
+            ? PRE_SESSION_COMPENSATION
+            : MAIN_SESSION_COMPENSATION;
+        await db.payoutStatements.create({
+          data: {
+            reason: "session_attendance",
+            fellowAttendanceId: attendance.id,
+            amount: compensation,
+            createdBy: fellow.supervisorId,
+            mpesaNumber: fellow.mpesaNumber,
+          },
+        });
+      }
     }
 
     return {

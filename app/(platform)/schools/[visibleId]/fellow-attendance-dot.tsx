@@ -145,6 +145,7 @@ export function FellowAttendanceDot({
       throw Error(`No session found for sessionItem`);
     }
 
+    // deprecated
     const dprResponse = await submitDelayedPaymentRequest({
       fellowId: fellow.id,
       supervisorId: supervisor.id,
