@@ -127,7 +127,7 @@ export default function DataTable<TData, TValue>({
                       : "py-2",
                     header.column.columnDef.id === "button" ||
                       header.column.columnDef.id === "checkbox"
-                      ? "w-[50px] min-w-[40px] max-w-[50px]"
+                      ? "action-cell"
                       : null,
                   )}
                 >

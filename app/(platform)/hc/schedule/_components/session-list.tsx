@@ -114,12 +114,12 @@ export function SessionDetail({
         >
           <div className="flex items-center gap-1">
             {completed && !cancelled && (
-              <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
+              <Icons.checkCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
             )}
             {!completed && !cancelled && (
-              <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
+              <Icons.helpCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
             )}
-            {cancelled && <Icons.crossCircleFilled className="h-4 w-4" />}
+            {cancelled && <Icons.crossCircleFilled className="h-3.5 w-3.5" />}
             {isExpanded && <div>{sessionDisplayName(session.sessionType)}</div>}
             {isCompact && (
               <div className="flex gap-1 truncate">
