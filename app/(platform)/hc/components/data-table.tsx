@@ -72,6 +72,10 @@ export default function DataTable<TData, TValue>({
     }
   }, [onRowSelectionChange, rowSelection, table]);
 
+  // useEffect(() => {
+  //   table.resetRowSelection();
+  // }, [data, table]);
+
   return (
     <div>
       {editColumns && (
@@ -147,7 +151,7 @@ export default function DataTable<TData, TValue>({
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
-                className="text-sm font-medium leading-5 text-shamiri-text-dark-grey"
+                className="text-sm font-medium leading-5 text-shamiri-text-dark-grey data-[state=Selected]:bg-blue-bg"
                 data-state={row.getIsSelected() && "Selected"}
               >
                 {row.getVisibleCells().map((cell) => (
