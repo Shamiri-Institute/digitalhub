@@ -25,25 +25,7 @@ import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
 import { cn } from "#/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
-
-export type SupervisorAttendanceTableData = {
-  id: string;
-  supervisorId: string;
-  supervisorName: string;
-  pointSchools: string[];
-  attendance?: boolean | null;
-  phoneNumber: string;
-  fellows: string;
-};
-
-type AttendanceData = {
-  projectId: string;
-  schoolId: string;
-  supervisorId: string;
-  sessionId: string;
-  sessionType: string;
-};
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 export default function SupervisorAttendance({
   isOpen,
@@ -57,166 +39,6 @@ export default function SupervisorAttendance({
   const [attendances, setAttendances] = useState<
     SupervisorAttendanceTableData[]
   >([]);
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const columnHelper = createColumnHelper<SupervisorAttendanceTableData>();
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor("id", {
-        header: ({ table }) => (
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
-            aria-label="Select all"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
-          />
-        ),
-        cell: ({ row }) => (
-          <div className="flex items-center justify-center">
-            <Checkbox
-              checked={row.getIsSelected()}
-              onCheckedChange={(val) => row.toggleSelected(!!val)}
-              aria-label="Select row"
-              className={
-                "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-              }
-            />
-          </div>
-        ),
-        id: "checkbox",
-      }),
-      {
-        id: "name",
-        accessorKey: "supervisorName",
-        header: "Name",
-      },
-      columnHelper.accessor("attendance", {
-        cell: (props) => {
-          const attended = props.getValue();
-          return (
-            <div className="flex">
-              <div
-                className={cn(
-                  "flex items-center rounded-[0.25rem] border px-1.5 py-0.5",
-                  {
-                    "border-green-border": attended,
-                    "border-red-border": !attended,
-                    "border-blue-border":
-                      attended === undefined || attended === null,
-                  },
-                  {
-                    "bg-green-bg": attended,
-                    "bg-red-bg": !attended,
-                    "bg-blue-bg": attended === undefined || attended === null,
-                  },
-                )}
-              >
-                {attended === null || attended === undefined ? (
-                  <div className="flex items-center gap-1 text-blue-base">
-                    <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
-                    <span>Not marked</span>
-                  </div>
-                ) : attended ? (
-                  <div className="flex items-center gap-1 text-green-base">
-                    <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
-                    <span>Attended</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 text-red-base">
-                    <Icons.crossCircleFilled
-                      className="h-3 w-3"
-                      strokeWidth={2.5}
-                    />
-                    <span>Missed</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        },
-        header: "Attendance",
-      }),
-      columnHelper.accessor("pointSchools", {
-        cell: (props) => {
-          const schools = props.getValue();
-          if (schools.length > 1) {
-            return (
-              <div className="relative flex items-center">
-                <span>{schools[0]},</span>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <span className="ml-2 cursor-pointer select-none text-shamiri-new-blue">
-                      +{schools?.length - 1}
-                    </span>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuContent>
-                      <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
-                        {schools.slice(1).map((school, index) => {
-                          return <span key={index.toString()}>{school}</span>;
-                        })}
-                      </div>
-                    </DropdownMenuContent>
-                  </DropdownMenuPortal>
-                </DropdownMenu>
-              </div>
-            );
-          }
-          return <span>{schools[0]}</span>;
-        },
-        header: "Point Schools",
-      }),
-      {
-        accessorKey: "phoneNumber",
-        header: "Phone number",
-      },
-      {
-        accessorKey: "fellows",
-        header: "No. of fellows",
-      },
-      columnHelper.accessor("attendance", {
-        cell: (props) => {
-          return (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="absolute inset-0 border-l bg-white">
-                  <div className="flex h-full w-full items-center justify-center">
-                    <Icons.moreHorizontal className="h-5 w-5" />
-                  </div>
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuPortal>
-                <DropdownMenuContent
-                  align="end"
-                  onCloseAutoFocus={(e) => {
-                    e.preventDefault();
-                  }}
-                >
-                  <DropdownMenuLabel>
-                    <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-                      Actions
-                    </span>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Mark delayed attendance</DropdownMenuItem>
-                  <DropdownMenuItem>Fellow attendance history</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenuPortal>
-            </DropdownMenu>
-          );
-        },
-        id: "button",
-        header: undefined,
-      }),
-    ],
-    [],
-  );
 
   useEffect(() => {
     try {
@@ -271,38 +93,6 @@ export default function SupervisorAttendance({
     }
   }, [isOpen, session.school.hubId]);
 
-  async function batchMarkAttendances(attended: boolean | null) {
-    setLoading(true);
-    try {
-      const ids = (selectedRows as SupervisorAttendanceTableData[]).map(
-        (row) => row.id,
-      );
-      const response = await markManySupervisorAttendance(ids, attended);
-      if (response.success) {
-        let attendancesCopy = [...attendances];
-        attendancesCopy = attendancesCopy.map((attendance) => {
-          if (ids.includes(attendance.id)) {
-            attendance.attendance = attended;
-          }
-          return attendance;
-        });
-        setAttendances(attendancesCopy);
-        setLoading(false);
-        toast({
-          variant: "default",
-          title: response.data?.count + " rows marked successfully",
-        });
-      }
-    } catch (error: unknown) {
-      console.log(error);
-      setLoading(false);
-      toast({
-        variant: "destructive",
-        description: "Something went wrong, please try again",
-      });
-    }
-  }
-
   return (
     <div>
       <Dialog open={isOpen} onOpenChange={onChange} modal={true}>
@@ -318,95 +108,326 @@ export default function SupervisorAttendance({
               layout={"compact"}
               withDropdown={false}
             />
-            <div className="space-y-4 pt-2">
-              {/* TODO: https://github.com/TanStack/table/issues/4382 --> ColumnDef types gives typescript error */}
-              <DataTable
-                columns={columns as ColumnDef<unknown>[]}
-                data={attendances}
-                editColumns={false}
-                className={"data-table data-table-action"}
-                emptyStateMessage="No supervisors associated with this session"
-                onRowSelectionChange={setSelectedRows as () => {}}
-              />
-              <div className="flex justify-end gap-4">
-                {selectedRows.length > 0 ? (
-                  <div className="flex items-center justify-end gap-3">
-                    <div className="px-3 text-sm">
-                      {loading ? (
-                        <div className="flex items-center gap-2 text-shamiri-new-blue">
-                          <span>Updating rows</span>
-                          <Icons.hourglass
-                            className={"h-3.5 w-3.5 animate-pulse"}
-                          />
-                        </div>
-                      ) : selectedRows.length === 1 ? (
-                        <span className="text-shamiri-text-dark-grey/50">
-                          Mark row as:
-                        </span>
-                      ) : selectedRows.length > 1 ? (
-                        <span className="text-shamiri-text-dark-grey/50">
-                          Mark {selectedRows.length} rows as:
-                        </span>
-                      ) : null}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      className="hover:bg-blue-bg active:scale-x-95"
-                      disabled={loading}
-                      onClick={() => {
-                        batchMarkAttendances(null);
-                      }}
-                    >
-                      <div className="flex items-center gap-2 text-shamiri-new-blue">
-                        <Icons.helpCircle className="h-4 w-4" />
-                        <span>Not marked</span>
-                      </div>
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      className="hover:bg-red-bg active:scale-x-95"
-                      disabled={loading}
-                      onClick={() => {
-                        batchMarkAttendances(false);
-                      }}
-                    >
-                      <div className="flex items-center gap-2 text-shamiri-light-red">
-                        <Icons.crossCircleFilled className="h-4 w-4" />
-                        <span>Missed</span>
-                      </div>
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      className="hover:bg-green-bg active:scale-x-95"
-                      disabled={loading}
-                      onClick={() => {
-                        batchMarkAttendances(true);
-                      }}
-                    >
-                      <div className="flex items-center gap-2 text-shamiri-green">
-                        <Icons.checkCircle className="h-4 w-4" />
-                        <span>Attended</span>
-                      </div>
-                    </Button>
-                  </div>
-                ) : null}
-                <Button
-                  type="button"
-                  disabled={loading}
-                  className="border-0 bg-shamiri-new-blue text-white hover:bg-shamiri-new-blue/80"
-                  onClick={() => {
-                    onChange(false);
-                  }}
-                >
-                  Done
-                </Button>
-              </div>
-            </div>
+            <SupervisorAttendanceDataTable
+              columns={columns() as ColumnDef<unknown>[]}
+              data={attendances}
+              onChangeData={setAttendances}
+              closeDialogFn={onChange}
+            />
           </DialogContent>
         </DialogPortal>
       </Dialog>
     </div>
   );
 }
+
+export function SupervisorAttendanceDataTable({
+  columns,
+  data,
+  onChangeData,
+  closeDialogFn,
+  emptyStateMessage = "No supervisors associated with this session",
+}: {
+  columns: ColumnDef<unknown>[];
+  data: SupervisorAttendanceTableData[];
+  onChangeData: Dispatch<SetStateAction<SupervisorAttendanceTableData[]>>;
+  closeDialogFn?: Dispatch<SetStateAction<boolean>>;
+  emptyStateMessage?: string;
+}) {
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [loading, setLoading] = useState(false);
+  async function batchMarkAttendances(attended: boolean | null) {
+    setLoading(true);
+    try {
+      const ids = (selectedRows as SupervisorAttendanceTableData[]).map(
+        (row) => row.id,
+      );
+      const response = await markManySupervisorAttendance(ids, attended);
+      if (response.success) {
+        let attendancesCopy = [...data];
+        attendancesCopy = attendancesCopy.map((attendance) => {
+          if (ids.includes(attendance.id)) {
+            attendance.attendance = attended;
+          }
+          return attendance;
+        });
+        onChangeData(attendancesCopy);
+        setLoading(false);
+        toast({
+          variant: "default",
+          title: response.data?.count + " rows marked successfully",
+        });
+      }
+    } catch (error: unknown) {
+      console.log(error);
+      setLoading(false);
+      toast({
+        variant: "destructive",
+        description: "Something went wrong, please try again",
+      });
+    }
+  }
+  return (
+    <div className="space-y-4 pt-2">
+      {/* TODO: https://github.com/TanStack/table/issues/4382 --> ColumnDef types gives typescript error */}
+      <DataTable
+        columns={columns}
+        data={data}
+        editColumns={false}
+        className={"data-table data-table-action"}
+        emptyStateMessage={emptyStateMessage}
+        onRowSelectionChange={setSelectedRows as () => {}}
+      />
+      <div className="flex justify-end gap-4">
+        {selectedRows.length > 0 ? (
+          <div className="flex items-center justify-end gap-3">
+            <div className="px-3 text-sm">
+              {loading ? (
+                <div className="flex items-center gap-2 text-shamiri-new-blue">
+                  <span>Updating rows</span>
+                  <Icons.hourglass className={"h-3.5 w-3.5 animate-pulse"} />
+                </div>
+              ) : selectedRows.length === 1 ? (
+                <span className="text-shamiri-text-dark-grey/50">
+                  Mark row as:
+                </span>
+              ) : selectedRows.length > 1 ? (
+                <span className="text-shamiri-text-dark-grey/50">
+                  Mark {selectedRows.length} rows as:
+                </span>
+              ) : null}
+            </div>
+            <Button
+              variant="ghost"
+              className="hover:bg-blue-bg active:scale-x-95"
+              disabled={loading}
+              onClick={() => {
+                batchMarkAttendances(null);
+              }}
+            >
+              <div className="flex items-center gap-2 text-shamiri-new-blue">
+                <Icons.helpCircle className="h-4 w-4" />
+                <span>Not marked</span>
+              </div>
+            </Button>
+
+            <Button
+              variant="ghost"
+              className="hover:bg-red-bg active:scale-x-95"
+              disabled={loading}
+              onClick={() => {
+                batchMarkAttendances(false);
+              }}
+            >
+              <div className="flex items-center gap-2 text-shamiri-light-red">
+                <Icons.crossCircleFilled className="h-4 w-4" />
+                <span>Missed</span>
+              </div>
+            </Button>
+
+            <Button
+              variant="ghost"
+              className="hover:bg-green-bg active:scale-x-95"
+              disabled={loading}
+              onClick={() => {
+                batchMarkAttendances(true);
+              }}
+            >
+              <div className="flex items-center gap-2 text-shamiri-green">
+                <Icons.checkCircle className="h-4 w-4" />
+                <span>Attended</span>
+              </div>
+            </Button>
+          </div>
+        ) : null}
+        {closeDialogFn && (
+          <Button
+            type="button"
+            disabled={loading}
+            className="border-0 bg-shamiri-new-blue text-white hover:bg-shamiri-new-blue/80"
+            onClick={() => {
+              closeDialogFn(false);
+            }}
+          >
+            Done
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export type SupervisorAttendanceTableData = {
+  id: string;
+  supervisorId: string;
+  supervisorName: string;
+  pointSchools?: string[];
+  attendance?: boolean | null;
+  phoneNumber: string;
+  fellows: string;
+  schoolName?: string;
+};
+
+export const columns = () => {
+  const columnHelper = createColumnHelper<SupervisorAttendanceTableData>();
+  return [
+    columnHelper.accessor("id", {
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
+          aria-label="Select all"
+          className={
+            "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+          }
+        />
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(val) => row.toggleSelected(!!val)}
+            aria-label="Select row"
+            className={
+              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+            }
+          />
+        </div>
+      ),
+      id: "checkbox",
+    }),
+    {
+      id: "name",
+      accessorKey: "supervisorName",
+      header: "Name",
+    },
+    columnHelper.accessor("attendance", {
+      cell: (props) => {
+        const attended = props.getValue();
+        return (
+          <div className="flex">
+            <div
+              className={cn(
+                "flex items-center rounded-[0.25rem] border px-1.5 py-0.5",
+                {
+                  "border-green-border": attended,
+                  "border-red-border": !attended,
+                  "border-blue-border":
+                    attended === undefined || attended === null,
+                },
+                {
+                  "bg-green-bg": attended,
+                  "bg-red-bg": !attended,
+                  "bg-blue-bg": attended === undefined || attended === null,
+                },
+              )}
+            >
+              {attended === null || attended === undefined ? (
+                <div className="flex items-center gap-1 text-blue-base">
+                  <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
+                  <span>Not marked</span>
+                </div>
+              ) : attended ? (
+                <div className="flex items-center gap-1 text-green-base">
+                  <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
+                  <span>Attended</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 text-red-base">
+                  <Icons.crossCircleFilled
+                    className="h-3 w-3"
+                    strokeWidth={2.5}
+                  />
+                  <span>Missed</span>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      },
+      header: "Attendance",
+      id: "attendance",
+    }),
+    columnHelper.accessor("pointSchools", {
+      cell: (props) => {
+        const schools = props.getValue();
+        if (!schools) {
+          return null;
+        }
+        if (schools.length > 1) {
+          return (
+            <div className="relative flex items-center">
+              <span>{schools[0]},</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <span className="ml-2 cursor-pointer select-none text-shamiri-new-blue">
+                    +{schools?.length - 1}
+                  </span>
+                </DropdownMenuTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuContent>
+                    <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
+                      {schools.slice(1).map((school, index) => {
+                        return <span key={index.toString()}>{school}</span>;
+                      })}
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenuPortal>
+              </DropdownMenu>
+            </div>
+          );
+        }
+        return <span>{schools[0]}</span>;
+      },
+      header: "Point Schools",
+      id: "pointSchools",
+    }),
+    {
+      accessorKey: "phoneNumber",
+      header: "Phone number",
+      id: "phoneNumber",
+    },
+    {
+      accessorKey: "fellows",
+      header: "No. of fellows",
+      id: "fellows",
+    },
+    columnHelper.accessor("attendance", {
+      cell: (props) => {
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="absolute inset-0 border-l bg-white">
+                <div className="flex h-full w-full items-center justify-center">
+                  <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
+                </div>
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuContent
+                align="end"
+                onCloseAutoFocus={(e) => {
+                  e.preventDefault();
+                }}
+              >
+                <DropdownMenuLabel>
+                  <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                    Actions
+                  </span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>Mark delayed attendance</DropdownMenuItem>
+                <DropdownMenuItem>Fellow attendance history</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
+          </DropdownMenu>
+        );
+      },
+      id: "button",
+      header: undefined,
+    }),
+  ];
+};

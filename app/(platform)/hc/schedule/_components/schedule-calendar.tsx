@@ -18,7 +18,7 @@ import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
-import { ScheduleNewSession } from "#/app/(platform)/hc/components/schedule-new-session-form";
+import { ScheduleNewSession } from "#/app/(platform)/hc/schedule/_components/schedule-new-session-form";
 import {
   Dialog,
   DialogContent,
@@ -115,9 +115,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       nextButtonProps = day.nextButtonProps;
       break;
     case "table":
-      title = month.title;
-      prevButtonProps = month.prevButtonProps;
-      nextButtonProps = month.nextButtonProps;
+      title = table.title;
+      prevButtonProps = table.prevButtonProps;
+      nextButtonProps = table.nextButtonProps;
       break;
     case "list":
       title = week.title;

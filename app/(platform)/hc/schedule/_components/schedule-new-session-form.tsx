@@ -33,7 +33,7 @@ import { format } from "date-fns";
 import { Dispatch, SetStateAction, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ScheduleNewSessionSchema } from "../schemas";
+import { ScheduleNewSessionSchema } from "../../schemas";
 
 export function ScheduleNewSession({
   toggleDialog,
