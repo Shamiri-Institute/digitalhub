@@ -21,9 +21,16 @@ import { ChangeEvent, useState } from "react";
 export default function FileUploader({
   url,
   type,
+  metadata,
 }: {
   url: string;
   type: string;
+  metadata?: {
+    hubId: string;
+    implementerId: string;
+    projectId: string;
+    schoolId?: string;
+  };
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -54,6 +61,13 @@ export default function FileUploader({
 
     const fileContent = await readFileContent(selectedFile);
     formData.append("file", fileContent, selectedFile.name);
+
+    if (metadata && metadata.schoolId) {
+      formData.append("schoolId", metadata.schoolId);
+      formData.append("hubId", metadata.hubId);
+      formData.append("implementerId", metadata.implementerId);
+      formData.append("projectId", metadata.projectId);
+    }
 
     try {
       setUploading(true);
