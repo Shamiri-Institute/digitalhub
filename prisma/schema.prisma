@@ -513,7 +513,7 @@ model FellowAttendance {
   group                  InterventionGroup?      @relation(fields: [groupId], references: [id])
   repaymentRequests      RepaymentRequest[]
   delayedPaymentRequests DelayedPaymentRequest[]
-  PayoutStatements       PayoutStatements[]
+  payoutStatements       PayoutStatements[]
 
   @@map("fellow_attendances")
 }
@@ -565,7 +565,7 @@ model Supervisor {
   weeklyFellowRatings       WeeklyFellowRatings[]
   delayedPaymentRequests    DelayedPaymentRequest[]
   assignedSchools           School[]
-  PayoutStatements          PayoutStatements[]
+  payoutStatements          PayoutStatements[]
 
   @@map("supervisors")
 }
@@ -1192,4 +1192,6 @@ model PayoutStatements {
   notes              String?
   executedAt         DateTime?        @map("executed_at") @db.Timestamptz()
   mpesaNumber        String?          @map("mpesa_number")
+
+  @@map("payout_statements")
 }
