@@ -34,15 +34,6 @@ import { createColumnHelper } from "@tanstack/table-core";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
-export type FellowAttendancesTableData = {
-  fellowId: string;
-  fellowName: string | null;
-  cellNumber: string | null;
-  attended: boolean | null;
-  supervisorId: string | null;
-  groupName: string | null;
-  averageRating: number | null;
-};
 export default function FellowAttendance({
   isOpen,
   onChange,
@@ -52,8 +43,217 @@ export default function FellowAttendance({
   onChange: Dispatch<SetStateAction<boolean>>;
   session: Session;
 }) {
+  const [supervisorAttendances, setSupervisorAttendances] = useState<
+    Prisma.SupervisorAttendanceGetPayload<{
+      include: {
+        supervisor: {
+          include: {
+            fellows: true;
+          };
+        };
+      };
+    }>[]
+  >([]);
+  const [selectedSupervisor, setSelectedSupervisor] = useState<string>();
+  const [fellowAttendances, setFellowAttendances] = useState<
+    FellowAttendancesTableData[]
+  >([]);
+  const [fellows, setFellows] = useState<FellowAttendancesTableData[]>([]);
+
+  useEffect(() => {
+    try {
+      const fetchAttendances = async () => {
+        const supervisorAttendances = await fetchSupervisorAttendances({
+          where: {
+            school: {
+              id: session.schoolId,
+            },
+            session: {
+              id: session.id,
+            },
+            attended: true,
+          },
+        });
+        setSupervisorAttendances(supervisorAttendances);
+
+        const fellowAttendances = await fetchSessionFellowAttendances({
+          sessionId: session.id,
+        });
+        setFellowAttendances(fellowAttendances);
+      };
+      fetchAttendances();
+    } catch (error: unknown) {
+      console.log(error);
+      toast({
+        variant: "destructive",
+        title: "Fetch failed!",
+        description:
+          "Something went wrong while fetching attendance data, please try again.",
+      });
+    }
+  }, [isOpen, session.id, session.schoolId]);
+
+  useEffect(() => {
+    const supervisorAttendance = supervisorAttendances.find(
+      (attendance) => attendance.supervisorId === selectedSupervisor,
+    );
+    if (supervisorAttendance !== undefined) {
+      const tableData: FellowAttendancesTableData[] =
+        supervisorAttendance.supervisor.fellows.map((fellow) => {
+          const fellowAttendance = fellowAttendances.find(
+            (attendance) => attendance.fellowId === fellow.id,
+          );
+
+          if (fellowAttendance === undefined) {
+            return {
+              fellowId: fellow.id,
+              fellowName: fellow.fellowName ?? null,
+              cellNumber: fellow.cellNumber ?? null,
+              attended: null,
+              supervisorId: fellow.supervisorId,
+              groupName: null,
+              averageRating: null,
+            };
+          } else return fellowAttendance;
+        });
+      setFellows(tableData);
+    }
+  }, [fellowAttendances, selectedSupervisor, supervisorAttendances]);
+
+  const form = useForm<{ supervisor: string }>({});
+
+  return (
+    <div>
+      <Dialog open={isOpen} onOpenChange={onChange} modal={true}>
+        <DialogPortal>
+          <DialogContent className="w-3/4 max-w-none">
+            <DialogHeader>
+              <span className="text-xl font-bold">View fellow attendance</span>
+            </DialogHeader>
+            <SessionDetail
+              session={session}
+              layout={"compact"}
+              withDropdown={false}
+            />
+            <div className="mb-4">
+              <Form {...form}>
+                <FormField
+                  control={form.control}
+                  name="supervisor"
+                  render={({ field }) => (
+                    <FormItem className="space-y-2">
+                      <FormLabel className={"text-sm"}>
+                        Select a supervisor
+                      </FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setSelectedSupervisor(value);
+                        }}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a supervisor" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {supervisorAttendances.map((attendance) => (
+                            <SelectItem
+                              key={attendance.supervisorId}
+                              value={attendance.supervisorId}
+                            >
+                              {attendance.supervisor.supervisorName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </Form>
+            </div>
+            <div className="space-y-4 pt-2">
+              {/* TODO: https://github.com/TanStack/table/issues/4382 --> ColumnDef types gives typescript error */}
+              <FellowAttendanceDataTable
+                columns={columns() as ColumnDef<unknown>[]}
+                data={fellows}
+                editColumns={false}
+                emptyStateMessage="No fellows associated with this session"
+              />
+              <div className="flex justify-end gap-6">
+                <Button
+                  variant="ghost"
+                  type="button"
+                  className="border-0 text-shamiri-new-blue"
+                  onClick={() => {
+                    onChange(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button className="bg-shamiri-new-blue">Done</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </DialogPortal>
+      </Dialog>
+    </div>
+  );
+}
+
+export function FellowAttendanceDataTable({
+  columns,
+  data,
+  editColumns = false,
+  closeDialogFn,
+  emptyStateMessage = "No supervisors associated with this session",
+}: {
+  columns: ColumnDef<unknown>[];
+  data: FellowAttendancesTableData[];
+  editColumns?: boolean;
+  onChangeData?: Dispatch<SetStateAction<FellowAttendancesTableData[]>>;
+  closeDialogFn?: Dispatch<SetStateAction<boolean>>;
+  emptyStateMessage?: string;
+}) {
+  return (
+    <div>
+      <DataTable
+        columns={columns as ColumnDef<unknown>[]}
+        data={data}
+        editColumns={editColumns}
+        className={"data-table"}
+        emptyStateMessage="No sessions scheduled for today."
+      />
+      {closeDialogFn && (
+        <Button
+          type="button"
+          className="border-0 bg-shamiri-new-blue text-white hover:bg-shamiri-new-blue/80"
+          onClick={() => {
+            closeDialogFn(false);
+          }}
+        >
+          Done
+        </Button>
+      )}
+    </div>
+  );
+}
+
+export type FellowAttendancesTableData = {
+  fellowId: string;
+  fellowName: string | null;
+  cellNumber: string | null;
+  attended: boolean | null;
+  supervisorId: string | null;
+  groupName: string | null;
+  averageRating: number | null;
+};
+
+export const columns = () => {
   const columnHelper = createColumnHelper<FellowAttendancesTableData>();
-  const columns = [
+  return [
     {
       id: "name",
       accessorKey: "fellowName",
@@ -148,164 +348,4 @@ export default function FellowAttendance({
       header: "Group Name",
     },
   ];
-
-  const [supervisorAttendances, setSupervisorAttendances] = useState<
-    Prisma.SupervisorAttendanceGetPayload<{
-      include: {
-        supervisor: {
-          include: {
-            fellows: true;
-          };
-        };
-      };
-    }>[]
-  >([]);
-  const [selectedSupervisor, setSelectedSupervisor] = useState<string>();
-  const [fellowAttendances, setFellowAttendances] = useState<
-    FellowAttendancesTableData[]
-  >([]);
-  const [fellows, setFellows] = useState<FellowAttendancesTableData[]>([]);
-
-  useEffect(() => {
-    try {
-      const fetchAttendances = async () => {
-        const supervisorAttendances = await fetchSupervisorAttendances({
-          where: {
-            school: {
-              id: session.schoolId,
-            },
-            session: {
-              id: session.id,
-            },
-            attended: true,
-          },
-        });
-        setSupervisorAttendances(supervisorAttendances);
-
-        const fellowAttendances = await fetchSessionFellowAttendances({
-          sessionId: session.id,
-        });
-        setFellowAttendances(fellowAttendances);
-      };
-      fetchAttendances();
-    } catch (error: unknown) {
-      console.log(error);
-      toast({
-        variant: "destructive",
-        title: "Fetch failed!",
-        description:
-          "Something went wrong while fetching attendance data, please try again.",
-      });
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    const supervisorAttendance = supervisorAttendances.find(
-      (attendance) => attendance.supervisorId === selectedSupervisor,
-    );
-    if (supervisorAttendance !== undefined) {
-      const tableData: FellowAttendancesTableData[] =
-        supervisorAttendance.supervisor.fellows.map((fellow) => {
-          const fellowAttendance = fellowAttendances.find(
-            (attendance) => attendance.fellowId === fellow.id,
-          );
-
-          if (fellowAttendance === undefined) {
-            return {
-              fellowId: fellow.id,
-              fellowName: fellow.fellowName ?? null,
-              cellNumber: fellow.cellNumber ?? null,
-              attended: null,
-              supervisorId: fellow.supervisorId,
-              groupName: null,
-              averageRating: null,
-            };
-          } else return fellowAttendance;
-        });
-      setFellows(tableData);
-    }
-  }, [fellowAttendances, selectedSupervisor, supervisorAttendances]);
-
-  const form = useForm<{ supervisor: string }>({});
-
-  return (
-    <div>
-      <Dialog open={isOpen} onOpenChange={onChange} modal={true}>
-        <DialogPortal>
-          <DialogContent className="w-3/4 max-w-none">
-            <DialogHeader>
-              <span className="text-xl font-bold">View fellow attendance</span>
-            </DialogHeader>
-            <SessionDetail
-              session={session}
-              layout={"compact"}
-              withDropdown={false}
-            />
-            <div className="mb-4">
-              <Form {...form}>
-                <FormField
-                  control={form.control}
-                  name="supervisor"
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className={"text-sm"}>
-                        Select a supervisor
-                      </FormLabel>
-                      <Select
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          setSelectedSupervisor(value);
-                        }}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a supervisor" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {supervisorAttendances.map((attendance) => (
-                            <SelectItem
-                              key={attendance.supervisorId}
-                              value={attendance.supervisorId}
-                            >
-                              {attendance.supervisor.supervisorName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </Form>
-            </div>
-            <div className="space-y-4 pt-2">
-              {/* TODO: https://github.com/TanStack/table/issues/4382 --> ColumnDef types gives typescript error */}
-              <DataTable
-                columns={columns as ColumnDef<unknown>[]}
-                data={fellows}
-                editColumns={false}
-                className={"data-table"}
-                emptyStateMessage="No fellows associated with this session"
-              />
-              <div className="flex justify-end gap-6">
-                <Button
-                  variant="ghost"
-                  type="button"
-                  className="border-0 text-shamiri-new-blue"
-                  onClick={() => {
-                    onChange(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button className="bg-shamiri-new-blue">Done</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </DialogPortal>
-      </Dialog>
-    </div>
-  );
-}
+};
