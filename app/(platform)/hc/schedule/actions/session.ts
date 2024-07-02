@@ -76,9 +76,6 @@ export async function createNewSession(
           },
         },
       },
-      include: {
-        supervisorAttendances: true,
-      },
     });
 
     return {
