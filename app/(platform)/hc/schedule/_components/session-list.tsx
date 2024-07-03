@@ -1,12 +1,12 @@
 import { SessionStatus } from "@prisma/client";
 import { addHours, format } from "date-fns";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
-import FellowAttendance from "#/app/(platform)/hc/schedule/_components/fellow-attendance";
-import SupervisorAttendance from "#/app/(platform)/hc/schedule/_components/supervisor-attendance";
+import { FellowAttendanceContext } from "#/app/(platform)/hc/schedule/context/fellow-attendance-dialog-context";
+import { SupervisorAttendanceContext } from "#/app/(platform)/hc/schedule/context/supervisor-attendance-dialog-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -56,13 +56,19 @@ export function SessionDetail({
     durationLabel: "",
   });
   const [open, setOpen] = React.useState(false);
-  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
-    React.useState(false);
-  const [fellowAttendanceDialog, setFellowAttendanceDialog] =
-    React.useState(false);
 
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") ?? undefined;
+
+  const supervisorAttendanceContext = useContext(SupervisorAttendanceContext);
+  const fellowAttendanceContext = useContext(FellowAttendanceContext);
+
+  useEffect(() => {
+    if (open) {
+      supervisorAttendanceContext.setSession(session);
+      fellowAttendanceContext.setSession(session);
+    }
+  }, [open, session]);
 
   useEffect(() => {
     const startTimeLabel = format(session.sessionDate, "h:mma");
@@ -160,8 +166,9 @@ export function SessionDetail({
           <DropdownMenuSeparator />
           {session.occurred ? (
             <DropdownMenuItem
-              onClick={() => {
-                setSupervisorAttendanceDialog(true);
+              onClick={(e) => {
+                e.stopPropagation();
+                supervisorAttendanceContext.setIsOpen(true);
               }}
             >
               View supervisor attendance
@@ -169,16 +176,18 @@ export function SessionDetail({
           ) : (
             <DropdownMenuItem
               className="w-full"
-              onClick={() => {
-                setSupervisorAttendanceDialog(true);
+              onClick={(e) => {
+                e.stopPropagation();
+                supervisorAttendanceContext.setIsOpen(true);
               }}
             >
               Mark supervisor attendance
             </DropdownMenuItem>
           )}
           <DropdownMenuItem
-            onClick={() => {
-              setFellowAttendanceDialog(true);
+            onClick={(e) => {
+              e.stopPropagation();
+              fellowAttendanceContext.setIsOpen(true);
             }}
           >
             View fellow attendance
@@ -189,16 +198,6 @@ export function SessionDetail({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <SupervisorAttendance
-        isOpen={supervisorAttendanceDialog}
-        onChange={setSupervisorAttendanceDialog}
-        session={session}
-      />
-      <FellowAttendance
-        isOpen={fellowAttendanceDialog}
-        onChange={setFellowAttendanceDialog}
-        session={session}
-      />
     </div>
   ) : (
     renderSessionDetails()

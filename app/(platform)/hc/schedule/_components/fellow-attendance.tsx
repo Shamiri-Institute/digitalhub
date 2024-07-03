@@ -1,6 +1,6 @@
 import DataTable from "#/app/(platform)/hc/components/data-table";
 import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
-import type { Session } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
+import { FellowAttendanceContext } from "#/app/(platform)/hc/schedule/context/fellow-attendance-dialog-context";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -31,18 +31,17 @@ import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useForm } from "react-hook-form";
 
-export default function FellowAttendance({
-  isOpen,
-  onChange,
-  session,
-}: {
-  isOpen: boolean;
-  onChange: Dispatch<SetStateAction<boolean>>;
-  session: Session;
-}) {
+export default function FellowAttendance() {
+  const context = useContext(FellowAttendanceContext);
   const [supervisorAttendances, setSupervisorAttendances] = useState<
     Prisma.SupervisorAttendanceGetPayload<{
       include: {
@@ -66,20 +65,22 @@ export default function FellowAttendance({
         const supervisorAttendances = await fetchSupervisorAttendances({
           where: {
             school: {
-              id: session.schoolId,
+              id: context.session?.schoolId,
             },
             session: {
-              id: session.id,
+              id: context.session?.id,
             },
             attended: true,
           },
         });
         setSupervisorAttendances(supervisorAttendances);
 
-        const fellowAttendances = await fetchSessionFellowAttendances({
-          sessionId: session.id,
-        });
-        setFellowAttendances(fellowAttendances);
+        const fellowAttendances =
+          context.session &&
+          (await fetchSessionFellowAttendances({
+            sessionId: context.session?.id,
+          }));
+        setFellowAttendances(fellowAttendances ?? []);
       };
       fetchAttendances();
     } catch (error: unknown) {
@@ -91,7 +92,7 @@ export default function FellowAttendance({
           "Something went wrong while fetching attendance data, please try again.",
       });
     }
-  }, [isOpen, session.id, session.schoolId]);
+  }, [context.isOpen, context.session]);
 
   useEffect(() => {
     const supervisorAttendance = supervisorAttendances.find(
@@ -120,21 +121,33 @@ export default function FellowAttendance({
     }
   }, [fellowAttendances, selectedSupervisor, supervisorAttendances]);
 
+  useEffect(() => {
+    if (!context.isOpen) {
+      setFellows([]);
+    }
+  }, [context.isOpen]);
+
   const form = useForm<{ supervisor: string }>({});
 
   return (
     <div>
-      <Dialog open={isOpen} onOpenChange={onChange} modal={true}>
+      <Dialog
+        open={context.isOpen}
+        onOpenChange={context.setIsOpen}
+        modal={true}
+      >
         <DialogPortal>
           <DialogContent className="w-3/4 max-w-none">
             <DialogHeader>
               <span className="text-xl font-bold">View fellow attendance</span>
             </DialogHeader>
-            <SessionDetail
-              session={session}
-              layout={"compact"}
-              withDropdown={false}
-            />
+            {context.session && (
+              <SessionDetail
+                session={context.session}
+                layout={"compact"}
+                withDropdown={false}
+              />
+            )}
             <div className="mb-4">
               <Form {...form}>
                 <FormField
@@ -180,7 +193,6 @@ export default function FellowAttendance({
                 columns={columns() as ColumnDef<unknown>[]}
                 data={fellows}
                 editColumns={false}
-                emptyStateMessage="No fellows associated with this session"
               />
               <div className="flex justify-end gap-6">
                 <Button
@@ -188,7 +200,7 @@ export default function FellowAttendance({
                   type="button"
                   className="border-0 text-shamiri-new-blue"
                   onClick={() => {
-                    onChange(false);
+                    context.setIsOpen(false);
                   }}
                 >
                   Cancel
@@ -208,7 +220,7 @@ export function FellowAttendanceDataTable({
   data,
   editColumns = false,
   closeDialogFn,
-  emptyStateMessage = "No supervisors associated with this session",
+  emptyStateMessage = "No fellows associated with this session",
 }: {
   columns: ColumnDef<unknown>[];
   data: FellowAttendancesTableData[];
@@ -224,7 +236,7 @@ export function FellowAttendanceDataTable({
         data={data}
         editColumns={editColumns}
         className={"data-table"}
-        emptyStateMessage="No sessions scheduled for today."
+        emptyStateMessage={emptyStateMessage}
       />
       {closeDialogFn && (
         <Button
