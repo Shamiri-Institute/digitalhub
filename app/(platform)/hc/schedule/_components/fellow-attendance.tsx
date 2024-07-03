@@ -177,6 +177,7 @@ export default function FellowAttendance({
             session: {
               id: session.id,
             },
+            attended: true,
           },
         });
         setSupervisorAttendances(supervisorAttendances);
