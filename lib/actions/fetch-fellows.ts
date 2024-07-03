@@ -11,3 +11,11 @@ export async function fetchFellows({
 }) {
   return db.fellow.findMany({ where });
 }
+
+export async function fetchFellowsWithSupervisor({
+  where,
+}: {
+  where: Prisma.FellowWhereInput;
+}) {
+  return db.fellow.findMany({ where, include: { supervisor: true } });
+}
