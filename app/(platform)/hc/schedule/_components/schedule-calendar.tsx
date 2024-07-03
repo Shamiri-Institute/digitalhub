@@ -18,7 +18,11 @@ import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
+import FellowAttendance from "#/app/(platform)/hc/schedule/_components/fellow-attendance";
 import { ScheduleNewSession } from "#/app/(platform)/hc/schedule/_components/schedule-new-session-form";
+import SupervisorAttendance from "#/app/(platform)/hc/schedule/_components/supervisor-attendance";
+import { FellowAttendanceContext } from "#/app/(platform)/hc/schedule/context/fellow-attendance-dialog-context";
+import { SupervisorAttendanceContext } from "#/app/(platform)/hc/schedule/context/supervisor-attendance-dialog-context";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +31,7 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { Prisma } from "@prisma/client";
+import * as React from "react";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { ModeProvider, useMode, type Mode } from "./mode-provider";
@@ -273,28 +278,65 @@ function CalendarView({
 }) {
   const { mode } = useMode();
 
-  switch (mode) {
-    case "month":
-      return <MonthView {...monthProps} />;
-    case "week":
-      return weekProps.state.value ? (
-        <WeekView {...weekProps} />
-      ) : (
-        <div>Loading...</div>
-      );
-    case "day":
-      return dayProps.state.value ? (
-        <DayView {...dayProps} />
-      ) : (
-        <div>Loading...</div>
-      );
-    case "list":
-      return <ListView {...listProps} />;
-    case "table":
-      return <TableView {...tableProps} />;
-    default:
-      throw new Error(`Invalid mode: ${mode}`);
-  }
+  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
+    React.useState(false);
+  const [fellowAttendanceDialog, setFellowAttendanceDialog] =
+    React.useState(false);
+  const [session, setSession] =
+    React.useState<Prisma.InterventionSessionGetPayload<{
+      include: { school: true };
+    }> | null>(null);
+
+  const activeMode = () => {
+    switch (mode) {
+      case "month":
+        return <MonthView {...monthProps} />;
+      case "week":
+        return weekProps.state.value ? (
+          <WeekView {...weekProps} />
+        ) : (
+          <div>Loading...</div>
+        );
+      case "day":
+        return dayProps.state.value ? (
+          <DayView {...dayProps} />
+        ) : (
+          <div>Loading...</div>
+        );
+      case "list":
+        return <ListView {...listProps} />;
+      case "table":
+        return <TableView {...tableProps} />;
+      default:
+        throw new Error(`Invalid mode: ${mode}`);
+    }
+  };
+
+  return (
+    <div>
+      <SupervisorAttendanceContext.Provider
+        value={{
+          isOpen: supervisorAttendanceDialog,
+          setIsOpen: setSupervisorAttendanceDialog,
+          session,
+          setSession,
+        }}
+      >
+        <FellowAttendanceContext.Provider
+          value={{
+            isOpen: fellowAttendanceDialog,
+            setIsOpen: setFellowAttendanceDialog,
+            session,
+            setSession,
+          }}
+        >
+          {activeMode()}
+          <FellowAttendance />
+        </FellowAttendanceContext.Provider>
+        <SupervisorAttendance />
+      </SupervisorAttendanceContext.Provider>
+    </div>
+  );
 }
 
 function NavigationButtons({

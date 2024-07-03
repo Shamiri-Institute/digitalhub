@@ -1,7 +1,7 @@
 import DataTable from "#/app/(platform)/hc/components/data-table";
 import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
-import type { Session } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
 import { markManySupervisorAttendance } from "#/app/(platform)/hc/schedule/actions/supervisor-attendance";
+import { SupervisorAttendanceContext } from "#/app/(platform)/hc/schedule/context/supervisor-attendance-dialog-context";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -25,17 +25,16 @@ import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
 import { cn } from "#/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
-export default function SupervisorAttendance({
-  isOpen,
-  onChange,
-  session,
-}: {
-  isOpen: boolean;
-  onChange: Dispatch<SetStateAction<boolean>>;
-  session: Session;
-}) {
+export default function SupervisorAttendance() {
+  const context = useContext(SupervisorAttendanceContext);
   const [attendances, setAttendances] = useState<
     SupervisorAttendanceTableData[]
   >([]);
@@ -46,10 +45,10 @@ export default function SupervisorAttendance({
         const attendances = await fetchSupervisorAttendances({
           where: {
             school: {
-              id: session.schoolId,
+              id: context.session?.schoolId,
             },
             session: {
-              id: session.id,
+              id: context.session?.id,
             },
           },
         });
@@ -57,7 +56,7 @@ export default function SupervisorAttendance({
           const totalAttendedFellows = attendance.supervisor.fellows.filter(
             (fellow) => {
               const attended = fellow.fellowAttendances.find(
-                (attendance) => attendance.sessionId === session.id,
+                (attendance) => attendance.sessionId === context.session?.id,
               );
               if (attended) {
                 return fellow;
@@ -91,11 +90,15 @@ export default function SupervisorAttendance({
           "Something went wrong while fetching supervisor data, please try again.",
       });
     }
-  }, [isOpen, session.school.hubId]);
+  }, [context.isOpen, context.session]);
 
   return (
     <div>
-      <Dialog open={isOpen} onOpenChange={onChange} modal={true}>
+      <Dialog
+        open={context.isOpen}
+        onOpenChange={context.setIsOpen}
+        modal={true}
+      >
         <DialogPortal>
           <DialogContent className="w-5/6 max-w-none lg:w-4/5">
             <DialogHeader>
@@ -103,16 +106,18 @@ export default function SupervisorAttendance({
                 Mark supervisor attendance
               </span>
             </DialogHeader>
-            <SessionDetail
-              session={session}
-              layout={"compact"}
-              withDropdown={false}
-            />
+            {context.session && (
+              <SessionDetail
+                session={context.session}
+                layout={"compact"}
+                withDropdown={false}
+              />
+            )}
             <SupervisorAttendanceDataTable
               columns={columns() as ColumnDef<unknown>[]}
               data={attendances}
               onChangeData={setAttendances}
-              closeDialogFn={onChange}
+              closeDialogFn={context.setIsOpen}
             />
           </DialogContent>
         </DialogPortal>
