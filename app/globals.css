@@ -171,8 +171,8 @@
     @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
   }
 
-  .schedule-table tbody:first-child tr:first-child td{
-    @apply border-t-0 !important
+  .schedule-table tbody:first-child tr:first-child td {
+    @apply border-t-0 !important;
   }
 
   .data-table {
@@ -188,8 +188,8 @@
     @apply bg-gray-100 transition ease-in-out;
   }
 
-  .action-cell{
-    @apply w-[50px] min-w-[40px] max-w-[50px] !important
+  .action-cell {
+    @apply w-[50px] min-w-[40px] max-w-[50px] !important;
   }
 
   .form-toggle {
