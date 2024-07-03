@@ -1,5 +1,6 @@
 import DataTable from "#/app/(platform)/hc/components/data-table";
 import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
+import { fetchSessionFellowAttendances } from "#/app/(platform)/hc/schedule/actions/fellow-attendances";
 import { FellowAttendanceContext } from "#/app/(platform)/hc/schedule/context/fellow-attendance-dialog-context";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -25,7 +26,6 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
-import { fetchSessionFellowAttendances } from "#/lib/actions/fetch-fellow-attendances";
 import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
 import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
@@ -230,7 +230,7 @@ export function FellowAttendanceDataTable({
   emptyStateMessage?: string;
 }) {
   return (
-    <div>
+    <div className="space-y-4 pt-2">
       <DataTable
         columns={columns as ColumnDef<unknown>[]}
         data={data}
@@ -254,11 +254,14 @@ export function FellowAttendanceDataTable({
 }
 
 export type FellowAttendancesTableData = {
+  sessionId?: string;
   fellowId: string;
   fellowName: string | null;
   cellNumber: string | null;
   attended: boolean | null;
+  supervisorName?: string | null;
   supervisorId: string | null;
+  schoolName?: string | null;
   groupName: string | null;
   averageRating: number | null;
 };
@@ -316,6 +319,7 @@ export const columns = () => {
         );
       },
       header: "Attendance",
+      id: "attendance",
     }),
     columnHelper.accessor("averageRating", {
       cell: (props) => {
@@ -350,13 +354,16 @@ export const columns = () => {
         );
       },
       header: "Average Rating",
+      id: "averageRating",
     }),
     {
       accessorKey: "cellNumber",
+      id: "cellNumber",
       header: "Phone Number",
     },
     {
       accessorKey: "groupName",
+      id: "groupName",
       header: "Group Name",
     },
   ];
