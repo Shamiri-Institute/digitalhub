@@ -17,8 +17,6 @@ import {
 import { cn } from "#/lib/utils";
 import {
   ColumnDef,
-  OnChangeFn,
-  RowSelectionState,
   SortingState,
   VisibilityState,
   flexRender,
@@ -50,10 +48,6 @@ export default function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
 
-  const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (state) => {
-    setRowSelection(state);
-  };
-
   const table = useReactTable({
     data,
     columns,
@@ -71,10 +65,6 @@ export default function DataTable<TData, TValue>({
       onRowSelectionChange(rows.map((row) => row.original));
     }
   }, [onRowSelectionChange, rowSelection, table]);
-
-  // useEffect(() => {
-  //   table.resetRowSelection();
-  // }, [data, table]);
 
   return (
     <div>
