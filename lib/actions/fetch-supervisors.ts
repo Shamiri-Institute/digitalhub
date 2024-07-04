@@ -30,6 +30,7 @@ export async function fetchSupervisorAttendances({
     where,
     include: {
       school: true,
+      session: true,
       supervisor: {
         include: {
           fellows: {

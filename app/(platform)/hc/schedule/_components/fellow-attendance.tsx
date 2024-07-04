@@ -264,6 +264,8 @@ export type FellowAttendancesTableData = {
   schoolName?: string | null;
   groupName: string | null;
   averageRating: number | null;
+  sessionType?: string;
+  occurred?: boolean | null;
 };
 
 export const columns = () => {
@@ -364,7 +366,7 @@ export const columns = () => {
     {
       accessorKey: "groupName",
       id: "groupName",
-      header: "Group Name",
+      header: "Group",
     },
   ];
 };
