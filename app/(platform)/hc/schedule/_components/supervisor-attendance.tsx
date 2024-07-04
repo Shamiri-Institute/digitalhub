@@ -271,6 +271,8 @@ export type SupervisorAttendanceTableData = {
   phoneNumber: string;
   fellows: string;
   schoolName?: string;
+  sessionType?: string;
+  occurred?: boolean | null;
 };
 
 export const columns = () => {
