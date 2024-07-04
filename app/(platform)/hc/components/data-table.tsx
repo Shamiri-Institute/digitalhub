@@ -61,7 +61,7 @@ export default function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
     state: { sorting, columnVisibility, rowSelection },
   });
 
@@ -72,9 +72,9 @@ export default function DataTable<TData, TValue>({
     }
   }, [onRowSelectionChange, rowSelection, table]);
 
-  // useEffect(() => {
-  //   table.resetRowSelection();
-  // }, [data, table]);
+  useEffect(() => {
+    table.resetRowSelection();
+  }, [data, table]);
 
   return (
     <div>
