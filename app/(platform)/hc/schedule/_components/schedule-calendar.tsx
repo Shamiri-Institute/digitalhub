@@ -11,7 +11,14 @@ import { useButton } from "@react-aria/button";
 import { useFocusRing } from "@react-aria/focus";
 import { mergeProps } from "@react-aria/utils";
 import { useSearchParams } from "next/navigation";
-import { Dispatch, SetStateAction, useRef, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { CalendarState, useCalendarState } from "react-stately";
@@ -22,7 +29,15 @@ import FellowAttendance from "#/app/(platform)/hc/schedule/_components/fellow-at
 import { ScheduleNewSession } from "#/app/(platform)/hc/schedule/_components/schedule-new-session-form";
 import SupervisorAttendance from "#/app/(platform)/hc/schedule/_components/supervisor-attendance";
 import { FellowAttendanceContext } from "#/app/(platform)/hc/schedule/context/fellow-attendance-dialog-context";
+import {
+  DateRangeType,
+  Filters,
+  FiltersContext,
+  sessionTypeFilterOptions,
+  statusFilterOptions,
+} from "#/app/(platform)/hc/schedule/context/filters-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/schedule/context/supervisor-attendance-dialog-context";
+import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -30,7 +45,16 @@ import {
   DialogPortal,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { Prisma } from "@prisma/client";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
+import { SESSION_TYPES } from "#/lib/app-constants/constants";
+import { Prisma, SessionStatus } from "@prisma/client";
 import * as React from "react";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
@@ -100,6 +124,14 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") ?? "month";
 
+  const [filters, setFilters] = useState<Filters>({
+    sessionTypes: sessionTypeFilterOptions,
+    statusTypes: statusFilterOptions,
+    dates: ["day", "week", "month"].includes(mode)
+      ? (mode as DateRangeType)
+      : "week",
+  });
+
   let title = "";
   let prevButtonProps: AriaButtonProps = {};
   let nextButtonProps: AriaButtonProps = {};
@@ -149,6 +181,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
               <div className="mx-2">
                 <ScheduleModeToggle />
               </div>
+              <FiltersContext.Provider value={{ filters, setFilters }}>
+                <FilterToggle />
+              </FiltersContext.Provider>
             </div>
             <SessionsLoader>
               <CreateSessionButton
@@ -160,13 +195,15 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
             </SessionsLoader>
           </div>
           <div className="mt-4 w-full">
-            <CalendarView
-              monthProps={{ state: monthState, weekdayStyle: "long" }}
-              weekProps={{ state: weekState }}
-              dayProps={{ state: dayState }}
-              listProps={{ state: listState, hubId }}
-              tableProps={{ state: tableState, hubId }}
-            />
+            <FiltersContext.Provider value={{ filters, setFilters }}>
+              <CalendarView
+                monthProps={{ state: monthState, weekdayStyle: "long" }}
+                weekProps={{ state: weekState }}
+                dayProps={{ state: dayState }}
+                listProps={{ state: listState, hubId }}
+                tableProps={{ state: tableState, hubId }}
+              />
+            </FiltersContext.Provider>
           </div>
         </TitleProvider>
       </ModeProvider>
@@ -382,5 +419,144 @@ function NavigationButton({
     >
       {children}
     </button>
+  );
+}
+
+function FilterToggle() {
+  const [open, setOpen] = useState(false);
+  const { filters, setFilters } = useContext(FiltersContext);
+  const { mode } = useMode();
+
+  const [sessionTypes, setSessionTypes] = useState(filters.sessionTypes);
+  const [statusTypes, setStatusTypes] = useState(filters.statusTypes);
+
+  const dateFilterOptions: { label: string; value: DateRangeType }[] = [
+    { label: "Today", value: "day" },
+    { label: "This week", value: "week" },
+    { label: "This month", value: "month" },
+  ];
+  const [dates, setDates] = useState(filters.dates);
+
+  useEffect(() => {
+    setDates(
+      ["day", "week", "month"].includes(mode)
+        ? (mode as DateRangeType)
+        : "week",
+    );
+  }, [mode]);
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <div className="flex cursor-pointer select-none items-center justify-center rounded-xl border border-gray-300 py-1.5 pl-3 pr-2 shadow-sm ring-0 hover:bg-secondary hover:shadow-inner">
+          <div className="flex items-center gap-2 text-shamiri-text-dark-grey hover:text-black">
+            <span>Filter by</span>
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-shamiri-new-blue text-sm text-white">
+              4
+            </div>
+            <Icons.chevronDown className="h-4 w-4" />
+          </div>
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuPortal>
+        <DropdownMenuContent align={"start"}>
+          <div className="flex gap-8 px-1">
+            <div>
+              <DropdownMenuLabel>
+                <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                  SESSION TYPE
+                </span>
+              </DropdownMenuLabel>
+              {SESSION_TYPES.map((sessionType) => {
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={sessionType.name}
+                    checked={sessionTypes[sessionType.name]}
+                    onCheckedChange={(value) => {
+                      const state = { ...sessionTypes };
+                      state[sessionType.name] = value;
+                      setSessionTypes(state);
+                    }}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                    }}
+                  >
+                    <span className="">{sessionType.description}</span>
+                  </DropdownMenuCheckboxItem>
+                );
+              })}
+            </div>
+            <div>
+              <DropdownMenuLabel>
+                <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                  Status
+                </span>
+              </DropdownMenuLabel>
+              {Object.keys(SessionStatus).map((status) => {
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={status}
+                    checked={statusTypes[status]}
+                    onCheckedChange={(value) => {
+                      const state = { ...statusTypes };
+                      state[status] = value;
+                      setStatusTypes(state);
+                    }}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                    }}
+                  >
+                    <span className="">{status}</span>
+                  </DropdownMenuCheckboxItem>
+                );
+              })}
+            </div>
+            <div>
+              <DropdownMenuLabel>
+                <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                  Date Scheduled
+                </span>
+              </DropdownMenuLabel>
+              {dateFilterOptions.map((date) => {
+                return (
+                  <DropdownMenuCheckboxItem
+                    key={date.value}
+                    checked={dates === date.value}
+                    onCheckedChange={(value) => {
+                      setDates(date.value);
+                    }}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                    }}
+                    disabled={
+                      mode === "day" || mode === "month" || mode === "week"
+                    }
+                  >
+                    <span className="">{date.label}</span>
+                  </DropdownMenuCheckboxItem>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex justify-end p-1">
+            <Button
+              type="button"
+              className="border-0 bg-transparent text-shamiri-new-blue hover:bg-blue-bg hover:text-shamiri-new-blue"
+              variant={"ghost"}
+              onClick={() => {
+                setOpen(false);
+                setFilters({
+                  sessionTypes,
+                  statusTypes,
+                  dates,
+                });
+              }}
+            >
+              Filter
+            </Button>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenuPortal>
+    </DropdownMenu>
   );
 }
