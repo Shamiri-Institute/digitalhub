@@ -14,6 +14,8 @@ Object.keys(SessionStatus).forEach((status) => {
 
 export type DateRangeType = "day" | "week" | "month";
 
+const dates: DateRangeType = "week";
+
 export type Filters = {
   sessionTypes: {
     [p: string]: boolean;
@@ -31,7 +33,7 @@ export const FiltersContext = createContext<{
   filters: {
     sessionTypes: sessionTypeFilterOptions,
     statusTypes: statusFilterOptions,
-    dates: "week",
+    dates,
   },
   setFilters: () => {},
 });
