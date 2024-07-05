@@ -192,8 +192,9 @@
     @apply w-[50px] min-w-[40px] max-w-[50px] !important;
   }
 
-  th#sessionType, th#groupName{
-    @apply w-[80px] min-w-[60px] max-w-[100px]
+  th#sessionType,
+  th#groupName {
+    @apply w-[80px] min-w-[60px] max-w-[100px];
   }
 
   .form-toggle {
