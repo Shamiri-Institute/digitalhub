@@ -44,13 +44,17 @@ export async function fetchDayFellowAttendances({
     },
   );
 
+  const statusTypes = Object.keys(filters.statusTypes).filter((status) => {
+    return filters.statusTypes[status];
+  });
+
   return await db.$queryRaw<FellowAttendancesTableData[]>`
   SELECT
     f.id AS "fellowId", f.fellow_name AS "fellowName", f.cell_number AS "cellNumber", 
     fa.supervisor_id AS "supervisorId",fa.session_id AS "sessionId", sup.supervisor_name AS "supervisorName",
     sch.school_name AS "schoolName",
     fa.attended,
-    ig.group_name AS "groupName", isess.session_type AS "sessionType", isess.occurred,
+    ig.group_name AS "groupName", isess.session_type AS "sessionType", isess.occurred, isess.session_date AS "sessionDate", isess.status AS "sessionStatus",
     (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating))/4 AS "averageRating"
   FROM fellow_attendances fa
   LEFT JOIN intervention_sessions isess ON fa.session_id = isess.id
@@ -63,6 +67,7 @@ export async function fetchDayFellowAttendances({
   AND isess.session_date < ${end} 
   AND f.hub_id = ${hubId}
   AND isess.session_type IN (${Prisma.join(sessionTypes)})
-  GROUP BY fa.id, f.id, ig.id, isess.session_date, sup.supervisor_name, sch.school_name, isess.session_type, isess.occurred
+  AND isess.status::text = ANY (ARRAY[${statusTypes.length > 0 ? Prisma.join(statusTypes) : ""}])
+  GROUP BY fa.id, f.id, ig.id, isess.session_date, sup.supervisor_name, sch.school_name, isess.session_type, isess.occurred, isess.status, isess.session_date
   `;
 }
