@@ -18,7 +18,11 @@ import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
-import { ScheduleNewSession } from "#/app/(platform)/hc/components/schedule-new-session-form";
+import FellowAttendance from "#/app/(platform)/hc/schedule/_components/fellow-attendance";
+import { ScheduleNewSession } from "#/app/(platform)/hc/schedule/_components/schedule-new-session-form";
+import SupervisorAttendance from "#/app/(platform)/hc/schedule/_components/supervisor-attendance";
+import { FellowAttendanceContext } from "#/app/(platform)/hc/schedule/context/fellow-attendance-dialog-context";
+import { SupervisorAttendanceContext } from "#/app/(platform)/hc/schedule/context/supervisor-attendance-dialog-context";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +31,7 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { Prisma } from "@prisma/client";
+import * as React from "react";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { ModeProvider, useMode, type Mode } from "./mode-provider";
@@ -61,6 +66,13 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     createCalendar,
   });
 
+  const listState = useCalendarState({
+    value: today(getLocalTimeZone()),
+    visibleDuration: { weeks: 1 },
+    locale,
+    createCalendar,
+  });
+
   const dayState = useCalendarState({
     value: today(getLocalTimeZone()),
     visibleDuration: { days: 1 },
@@ -68,7 +80,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     createCalendar,
   });
 
-  const tableViewState = useCalendarState({
+  const tableState = useCalendarState({
     value: today(getLocalTimeZone()),
     visibleDuration: { weeks: 1 },
     locale,
@@ -81,7 +93,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   const day = useCalendar(calendarStateProps, dayState);
 
-  const table = useCalendar(calendarStateProps, tableViewState);
+  const list = useCalendar(calendarStateProps, listState);
+
+  const table = useCalendar(calendarStateProps, tableState);
 
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") ?? "month";
@@ -106,9 +120,14 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       nextButtonProps = day.nextButtonProps;
       break;
     case "table":
-      title = month.title;
-      prevButtonProps = month.prevButtonProps;
-      nextButtonProps = month.nextButtonProps;
+      title = table.title;
+      prevButtonProps = table.prevButtonProps;
+      nextButtonProps = table.nextButtonProps;
+      break;
+    case "list":
+      title = week.title;
+      prevButtonProps = list.prevButtonProps;
+      nextButtonProps = list.nextButtonProps;
       break;
     default:
       throw new Error(`Invalid mode: ${mode}`);
@@ -145,8 +164,8 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
               monthProps={{ state: monthState, weekdayStyle: "long" }}
               weekProps={{ state: weekState }}
               dayProps={{ state: dayState }}
-              listProps={{}}
-              tableProps={{ state: tableViewState, hubId }}
+              listProps={{ state: listState, hubId }}
+              tableProps={{ state: tableState, hubId }}
             />
           </div>
         </TitleProvider>
@@ -248,7 +267,10 @@ function CalendarView({
   dayProps: {
     state: CalendarState;
   };
-  listProps: {};
+  listProps: {
+    state: CalendarState;
+    hubId: string;
+  };
   tableProps: {
     state: CalendarState;
     hubId: string;
@@ -256,28 +278,65 @@ function CalendarView({
 }) {
   const { mode } = useMode();
 
-  switch (mode) {
-    case "month":
-      return <MonthView {...monthProps} />;
-    case "week":
-      return weekProps.state.value ? (
-        <WeekView {...weekProps} />
-      ) : (
-        <div>Loading...</div>
-      );
-    case "day":
-      return dayProps.state.value ? (
-        <DayView {...dayProps} />
-      ) : (
-        <div>Loading...</div>
-      );
-    case "list":
-      return <ListView {...listProps} />;
-    case "table":
-      return <TableView {...tableProps} />;
-    default:
-      throw new Error(`Invalid mode: ${mode}`);
-  }
+  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
+    React.useState(false);
+  const [fellowAttendanceDialog, setFellowAttendanceDialog] =
+    React.useState(false);
+  const [session, setSession] =
+    React.useState<Prisma.InterventionSessionGetPayload<{
+      include: { school: true };
+    }> | null>(null);
+
+  const activeMode = () => {
+    switch (mode) {
+      case "month":
+        return <MonthView {...monthProps} />;
+      case "week":
+        return weekProps.state.value ? (
+          <WeekView {...weekProps} />
+        ) : (
+          <div>Loading...</div>
+        );
+      case "day":
+        return dayProps.state.value ? (
+          <DayView {...dayProps} />
+        ) : (
+          <div>Loading...</div>
+        );
+      case "list":
+        return <ListView {...listProps} />;
+      case "table":
+        return <TableView {...tableProps} />;
+      default:
+        throw new Error(`Invalid mode: ${mode}`);
+    }
+  };
+
+  return (
+    <div>
+      <SupervisorAttendanceContext.Provider
+        value={{
+          isOpen: supervisorAttendanceDialog,
+          setIsOpen: setSupervisorAttendanceDialog,
+          session,
+          setSession,
+        }}
+      >
+        <FellowAttendanceContext.Provider
+          value={{
+            isOpen: fellowAttendanceDialog,
+            setIsOpen: setFellowAttendanceDialog,
+            session,
+            setSession,
+          }}
+        >
+          {activeMode()}
+          <FellowAttendance />
+        </FellowAttendanceContext.Provider>
+        <SupervisorAttendance />
+      </SupervisorAttendanceContext.Provider>
+    </div>
+  );
 }
 
 function NavigationButtons({
