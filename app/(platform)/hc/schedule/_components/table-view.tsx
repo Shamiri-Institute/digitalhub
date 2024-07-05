@@ -193,8 +193,8 @@ async function getSupervisorAttendances(
           }),
         },
         status: {
-          in: Object.keys(filters.statusTypes).filter((sessionType) => {
-            return filters.statusTypes[sessionType];
+          in: Object.keys(filters.statusTypes).filter((status) => {
+            return filters.statusTypes[status];
           }) as SessionStatus[],
         },
       },
