@@ -61,7 +61,7 @@ export default function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
+    onRowSelectionChange: handleRowSelectionChange,
     state: { sorting, columnVisibility, rowSelection },
   });
 
@@ -71,6 +71,10 @@ export default function DataTable<TData, TValue>({
       onRowSelectionChange(rows.map((row) => row.original));
     }
   }, [onRowSelectionChange, rowSelection, table]);
+
+  useEffect(() => {
+    table.resetRowSelection();
+  }, [data, table]);
 
   return (
     <div>
@@ -127,7 +131,7 @@ export default function DataTable<TData, TValue>({
                       : "py-2",
                     header.column.columnDef.id === "button" ||
                       header.column.columnDef.id === "checkbox"
-                      ? "w-[50px] min-w-[40px] max-w-[50px]"
+                      ? "action-cell"
                       : null,
                   )}
                 >
@@ -147,7 +151,7 @@ export default function DataTable<TData, TValue>({
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
-                className="text-sm font-medium leading-5 text-shamiri-text-dark-grey"
+                className="text-sm font-medium leading-5 text-shamiri-text-dark-grey data-[state=Selected]:bg-blue-bg"
                 data-state={row.getIsSelected() && "Selected"}
               >
                 {row.getVisibleCells().map((cell) => (
