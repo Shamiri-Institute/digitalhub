@@ -2,6 +2,7 @@
 
 import { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { db } from "#/lib/db";
+import { SessionStatus } from "@prisma/client";
 
 export async function fetchInterventionSessions({
   hubId,
@@ -31,6 +32,13 @@ export async function fetchInterventionSessions({
           Object.keys(filters.sessionTypes).filter((sessionType) => {
             return filters.sessionTypes[sessionType];
           }),
+      },
+      status: {
+        in:
+          filters &&
+          (Object.keys(filters.statusTypes).filter((status) => {
+            return filters.statusTypes[status];
+          }) as SessionStatus[]),
       },
     },
     include: {

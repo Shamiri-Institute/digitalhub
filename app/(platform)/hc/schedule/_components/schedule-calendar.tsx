@@ -74,6 +74,16 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const { hubId, schools, ...calendarStateProps } = props;
   const { locale } = useLocale();
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode") ?? "month";
+
+  const [filters, setFilters] = useState<Filters>({
+    sessionTypes: sessionTypeFilterOptions,
+    statusTypes: statusFilterOptions,
+    dates: ["day", "week", "month"].includes(mode)
+      ? (mode as DateRangeType)
+      : "week",
+  });
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
 
   const monthState = useCalendarState({
@@ -92,7 +102,12 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   const listState = useCalendarState({
     value: today(getLocalTimeZone()),
-    visibleDuration: { weeks: 1 },
+    visibleDuration:
+      filters.dates === "week"
+        ? { weeks: 1 }
+        : filters.dates === "day"
+          ? { days: 1 }
+          : { months: 1 },
     locale,
     createCalendar,
   });
@@ -120,17 +135,6 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const list = useCalendar(calendarStateProps, listState);
 
   const table = useCalendar(calendarStateProps, tableState);
-
-  const searchParams = useSearchParams();
-  const mode = searchParams.get("mode") ?? "month";
-
-  const [filters, setFilters] = useState<Filters>({
-    sessionTypes: sessionTypeFilterOptions,
-    statusTypes: statusFilterOptions,
-    dates: ["day", "week", "month"].includes(mode)
-      ? (mode as DateRangeType)
-      : "week",
-  });
 
   let title = "";
   let prevButtonProps: AriaButtonProps = {};
