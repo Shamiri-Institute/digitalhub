@@ -162,9 +162,17 @@
     @apply table-cell border-t border-grey-border p-0;
   }
 
+  .schedule-table.padded td {
+    @apply px-4 py-3;
+  }
+
   .schedule-table td.time-cell,
   .schedule-table th.time-cell {
     @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
+  }
+
+  .schedule-table tbody:first-child tr:first-child td {
+    @apply border-t-0 !important;
   }
 
   .data-table {
@@ -178,6 +186,10 @@
 
   .data-table tbody tr:hover td {
     @apply bg-gray-100 transition ease-in-out;
+  }
+
+  .action-cell {
+    @apply w-[50px] min-w-[40px] max-w-[50px] !important;
   }
 
   .form-toggle {
