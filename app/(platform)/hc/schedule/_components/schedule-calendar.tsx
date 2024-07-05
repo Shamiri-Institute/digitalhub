@@ -170,7 +170,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   }
 
   return (
-    <SessionsProvider hubId={hubId}>
+    <SessionsProvider hubId={hubId} filters={filters}>
       <ModeProvider defaultMode={mode as Mode}>
         <TitleProvider>
           <div className="flex items-center justify-between">
