@@ -56,7 +56,6 @@ export function ListView({
         state.visibleRange.end.toDate(state.timeZone),
       ),
     );
-    console.log(state);
   }, [
     state.visibleRange.start,
     state.visibleRange.end,
