@@ -96,7 +96,7 @@ function LayoutV2({
   const inactiveColour = "#969696";
 
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <header className="border-b bg-background-secondary">
         <div className="container space-y-4 pt-2">
           <div className="flex items-center justify-between">
@@ -202,22 +202,24 @@ function LayoutV2({
         </div>
       </header>
       <main className="container pt-2">{children}</main>
-      <footer className="border-t bg-background-secondary">
-        <div className="container py-2">
-          <div className="flex items-center justify-between text-sm font-medium text-shamiri-text-grey">
-            <div>
-              <p className="">
-                © Copyright {new Date().getFullYear()} Shamiri Institute Inc.
-              </p>
-            </div>
-            <div className="flex gap-x-6">
-              <span>Terms of Use</span>
-              <span>Privacy Policy</span>
+      <div className="flex flex-1 items-end">
+        <footer className="w-full border-t bg-background-secondary">
+          <div className="container py-2">
+            <div className="flex items-center justify-between text-sm font-medium text-shamiri-text-grey">
+              <div>
+                <p className="">
+                  © Copyright {new Date().getFullYear()} Shamiri Institute Inc.
+                </p>
+              </div>
+              <div className="flex gap-x-6">
+                <span>Terms of Use</span>
+                <span>Privacy Policy</span>
+              </div>
             </div>
           </div>
-        </div>
-      </footer>
-    </>
+        </footer>
+      </div>
+    </div>
   );
 }
 
