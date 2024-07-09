@@ -104,7 +104,7 @@ export function SessionDetail({
   }, [session.sessionDate, session.sessionEndTime]);
 
   const schoolName = session.school.schoolName;
-  const completed = session.sessionDate < new Date();
+  const completed = session.occurred;
   const cancelled = session.status === SessionStatus.Cancelled;
 
   const isCompact = layout === "compact";
