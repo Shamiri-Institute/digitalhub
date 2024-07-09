@@ -53,9 +53,7 @@ export default function CancelSession() {
         <DialogPortal>
           <DialogContent className="w-1/3 max-w-none">
             <DialogHeader>
-              <span className="text-xl font-bold">
-                Mark supervisor attendance
-              </span>
+              <span className="text-xl font-bold">Cancel session</span>
             </DialogHeader>
             {context.session && (
               <SessionDetail

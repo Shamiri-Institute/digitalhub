@@ -24,7 +24,7 @@ import { toast } from "#/components/ui/use-toast";
 import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
 import { cn } from "#/lib/utils";
 import { SessionStatus } from "@prisma/client";
-import { ColumnDef, VisibilityState } from "@tanstack/react-table";
+import { ColumnDef, Row, VisibilityState } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
 import {
   Dispatch,
@@ -104,7 +104,9 @@ export default function SupervisorAttendance() {
           <DialogContent className="w-5/6 max-w-none lg:w-4/5">
             <DialogHeader>
               <span className="text-xl font-bold">
-                Mark supervisor attendance
+                {context.session?.occurred
+                  ? "View supervisor attendance"
+                  : "Mark supervisor attendance"}
               </span>
             </DialogHeader>
             {context.session && (
@@ -120,7 +122,7 @@ export default function SupervisorAttendance() {
               onChangeData={setAttendances}
               closeDialogFn={context.setIsOpen}
               columnVisibility={{
-                checkbox: context.session?.occurred ?? true,
+                checkbox: context.session ? !context.session?.occurred : false,
               }}
             />
           </DialogContent>
@@ -147,6 +149,7 @@ export function SupervisorAttendanceDataTable({
 }) {
   const [selectedRows, setSelectedRows] = useState([]);
   const [loading, setLoading] = useState(false);
+
   async function batchMarkAttendances(attended: boolean | null) {
     setLoading(true);
     try {
@@ -178,17 +181,21 @@ export function SupervisorAttendanceDataTable({
       });
     }
   }
+
   return (
     <div className="space-y-4 pt-2">
       {/* TODO: https://github.com/TanStack/table/issues/4382 --> ColumnDef types gives typescript error */}
       <DataTable
-        columns={columns}
+        columns={columns as ColumnDef<SupervisorAttendanceTableData>[]}
         data={data}
         editColumns={false}
         className={"data-table data-table-action"}
         emptyStateMessage={emptyStateMessage}
         onRowSelectionChange={setSelectedRows as () => {}}
         columnVisibilityState={columnVisibility}
+        enableRowSelection={(row: Row<SupervisorAttendanceTableData>) =>
+          row.original.sessionStatus !== SessionStatus.Cancelled
+        }
       />
       <div className="flex justify-end gap-4">
         {selectedRows.length > 0 ? (
@@ -301,18 +308,23 @@ export const columns = () => {
           }
         />
       ),
-      cell: ({ row }) => (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(val) => row.toggleSelected(!!val)}
-            aria-label="Select row"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
-          />
-        </div>
-      ),
+      cell: ({ row }) => {
+        const sessionOccurredStatus =
+          row.original.sessionStatus === SessionStatus.Cancelled;
+        return (
+          <div className="flex items-center justify-center">
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(val) => row.toggleSelected(!!val)}
+              disabled={sessionOccurredStatus}
+              aria-label="Select row"
+              className={
+                "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+              }
+            />
+          </div>
+        );
+      },
       id: "checkbox",
     }),
     {
@@ -413,6 +425,8 @@ export const columns = () => {
     },
     columnHelper.accessor("attendance", {
       cell: (props) => {
+        const sessionOccurredStatus =
+          props.row.original.sessionStatus === SessionStatus.Cancelled;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -435,8 +449,12 @@ export const columns = () => {
                   </span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Mark delayed attendance</DropdownMenuItem>
-                <DropdownMenuItem>Fellow attendance history</DropdownMenuItem>
+                <DropdownMenuItem disabled={sessionOccurredStatus}>
+                  Mark delayed attendance
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled={sessionOccurredStatus}>
+                  Fellow attendance history
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenuPortal>
           </DropdownMenu>

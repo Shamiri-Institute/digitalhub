@@ -3,7 +3,10 @@ import {
   FellowAttendancesTableData,
   columns as fellowAttendanceColumns,
 } from "#/app/(platform)/hc/schedule/_components/fellow-attendance";
-import { SessionsContext } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
+import {
+  Session,
+  SessionsContext,
+} from "#/app/(platform)/hc/schedule/_components/sessions-provider";
 import {
   SupervisorAttendanceDataTable,
   SupervisorAttendanceTableData,
@@ -19,7 +22,6 @@ import { Icons } from "#/components/icons";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { toast } from "#/components/ui/use-toast";
 import { fetchFellowsWithSupervisor } from "#/lib/actions/fetch-fellows";
-import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
 import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
 import { getCalendarDate } from "#/lib/date-utils";
 import { cn, sessionDisplayName } from "#/lib/utils";
@@ -27,7 +29,7 @@ import { CalendarDate } from "@internationalized/date";
 import { SessionStatus } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
-import { addDays, format, isBefore } from "date-fns";
+import { addDays, format, isBefore, isWithinInterval } from "date-fns";
 import {
   Dispatch,
   SetStateAction,
@@ -57,9 +59,12 @@ function getSupervisorAttendanceColumns() {
       header: "Session",
       cell: (props) => {
         const value = props.getValue();
-        const completed = props.row.original.sessionDate
-          ? props.row.original.sessionDate < new Date()
-          : false;
+        const completed =
+          props.row.original.occurred !== null
+            ? props.row.original.occurred !== undefined
+              ? props.row.original.occurred
+              : false
+            : false;
         const cancelled =
           props.row.original.sessionStatus === SessionStatus.Cancelled;
 
@@ -92,9 +97,12 @@ function getFellowAttendanceColumns() {
       header: "Session",
       cell: (props) => {
         const value = props.getValue();
-        const completed = props.row.original.sessionDate
-          ? props.row.original.sessionDate < new Date()
-          : false;
+        const completed =
+          props.row.original.occurred !== null
+            ? props.row.original.occurred !== undefined
+              ? props.row.original.occurred
+              : false
+            : false;
         const cancelled =
           props.row.original.sessionStatus === SessionStatus.Cancelled;
         return renderSessionTypeAndStatus(completed, cancelled, value);
@@ -225,6 +233,7 @@ async function getSupervisorAttendances(
       sessionType: attendance.session.sessionType,
       sessionDate: attendance.session.sessionDate,
       sessionStatus: attendance.session.status,
+      occurred: attendance.session.occurred,
     };
   });
   setSupervisorAttendances(tableData);
@@ -236,6 +245,7 @@ async function getFellowAttendances(
   state: CalendarState,
   setFellowAttendances: Dispatch<SetStateAction<FellowAttendancesTableData[]>>,
   filters: Filters,
+  sessions: Session[],
 ) {
   const start = selectedDay.toDate(state.timeZone);
   const end = addDays(selectedDay.toDate(state.timeZone), 1);
@@ -250,15 +260,12 @@ async function getFellowAttendances(
       hubId,
     },
   });
-  const sessions = await fetchInterventionSessions({
-    hubId,
-    start,
-    end,
-    filters,
+  const _sessions = sessions.filter((session) => {
+    return isWithinInterval(session.sessionDate, { start, end });
   });
 
   const tableData: FellowAttendancesTableData[] = [];
-  sessions.forEach((session) => {
+  _sessions.forEach((session) => {
     const sessionTypes = Object.keys(filters.sessionTypes).filter((key) => {
       return filters.sessionTypes[key];
     });
@@ -347,6 +354,7 @@ export function TableView({
           state,
           setFellowAttendances,
           filters,
+          sessions,
         );
       }
     } catch (error: unknown) {

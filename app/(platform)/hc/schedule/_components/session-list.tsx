@@ -37,26 +37,26 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
     return session && <SessionDetail session={session} layout="expanded" />;
   }
 
-  const restCount = sessions.length - 2;
+  const moreSessions = sessions.slice(2);
   return (
     <div className="flex flex-col gap-2">
       <SessionDetail session={sessions[0]!} layout="compact" />
       <SessionDetail session={sessions[1]!} layout="compact" />
       <div className="w-full">
-        {restCount > 0 && (
+        {moreSessions.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className="w-full text-sm font-semibold text-grey-c3">
-                + {restCount} more
+                + {moreSessions.length} more
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuPortal>
-              <DropdownMenuContent>
-                {sessions.slice(2, sessions.length).map((session, index) => {
+              <DropdownMenuContent className="flex min-w-52 flex-col gap-2 p-2">
+                {moreSessions.map((session, index) => {
                   return (
                     <SessionDetail
                       key={session.id}
-                      session={sessions[index]!}
+                      session={moreSessions[index]!}
                       layout="compact"
                     />
                   );
@@ -130,7 +130,9 @@ export function SessionDetail({
         )}
       >
         <div
-          className={cn("text-[0.825rem] font-semibold", {
+          className={cn("font-semibold", {
+            "text-[0.825rem]": withDropdown,
+            "text-base": !withDropdown,
             "text-green-base": completed,
             "text-blue-base": !completed,
             "text-red-base": cancelled,
@@ -186,8 +188,8 @@ export function SessionDropDown({
   children,
   session,
 }: {
-  open: boolean;
-  setOpen: Dispatch<SetStateAction<boolean>>;
+  open?: boolean;
+  setOpen?: Dispatch<SetStateAction<boolean>>;
   children: React.ReactNode;
   session: Session;
 }) {
@@ -195,18 +197,24 @@ export function SessionDropDown({
   const fellowAttendanceContext = useContext(FellowAttendanceContext);
   const cancelSessionContext = useContext(CancelSessionContext);
 
-  useEffect(() => {
-    if (open) {
-      supervisorAttendanceContext.setSession(session);
-      fellowAttendanceContext.setSession(session);
-      cancelSessionContext.setSession(session);
-    }
-  }, [open, session]);
-
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger className="w-full">{children}</DropdownMenuTrigger>
-      <DropdownMenuContent>
+    <DropdownMenu
+      open={open}
+      onOpenChange={(open) => {
+        if (setOpen) {
+          setOpen(open);
+        }
+        if (open) {
+          supervisorAttendanceContext.setSession(session);
+          fellowAttendanceContext.setSession(session);
+          cancelSessionContext.setSession(session);
+        }
+      }}
+    >
+      <DropdownMenuTrigger className="w-full" asChild>
+        {children}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align={"end"}>
         <DropdownMenuLabel>
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">
             Actions
