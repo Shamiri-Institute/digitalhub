@@ -1,6 +1,7 @@
 "use client";
 
 import { useTitle } from "#/app/(platform)/hc/schedule/_components/title-provider";
+import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
@@ -14,9 +15,9 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
+import { Prisma, SessionStatus } from "@prisma/client";
 import { addDays, addHours, format, isAfter, isBefore } from "date-fns";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useDateFormatter } from "react-aria";
 import { CalendarState } from "react-stately";
 
@@ -35,13 +36,19 @@ export function ListView({
     }>[]
   >([]);
   const [sessionGroups, setSessionGroups] = useState<string[]>([]);
+
   const today = format(new Date(), "yyyy-MM-dd");
+
   const { setTitle } = useTitle();
+
   const startDate = state.visibleRange.start;
   const dateFormatter = useDateFormatter({
     dateStyle: "long",
     calendar: startDate.calendar.identifier,
   });
+
+  const { filters } = useContext(FiltersContext);
+
   useEffect(() => {
     setTitle(
       dateFormatter.formatRange(
@@ -65,6 +72,7 @@ export function ListView({
         hubId,
         start,
         end,
+        filters,
       });
 
       const groupedSessions: {
@@ -170,6 +178,8 @@ export function ListView({
                   "h:mm a",
                 )}`;
                 const completed = session.occurred;
+                const cancelled = session.status === SessionStatus.Cancelled;
+
                 return (
                   <tr key={session.id}>
                     <td className="action-cell">
@@ -199,10 +209,12 @@ export function ListView({
                             {
                               "border-green-border": completed,
                               "border-blue-border": !completed,
+                              "border-red-border": cancelled,
                             },
                             {
                               "bg-green-bg": completed,
                               "bg-blue-bg": !completed,
+                              "bg-red-bg": cancelled,
                             },
                           )}
                         >
@@ -210,10 +222,11 @@ export function ListView({
                             className={cn("text-[0.825rem] font-semibold", {
                               "text-green-base": completed,
                               "text-blue-base": !completed,
+                              "text-red-base": cancelled,
                             })}
                           >
                             <div className="flex items-center gap-1">
-                              {completed && (
+                              {completed && !cancelled && (
                                 <div className="flex items-center gap-1">
                                   <Icons.checkCircle
                                     className="h-3.5 w-3.5"
@@ -222,13 +235,22 @@ export function ListView({
                                   <span>Attended</span>
                                 </div>
                               )}
-                              {!completed && (
+                              {!completed && !cancelled && (
                                 <div className="flex items-center gap-1">
                                   <Icons.helpCircle
                                     className="h-3.5 w-3.5"
                                     strokeWidth={2.5}
                                   />
                                   <span>Not marked</span>
+                                </div>
+                              )}
+                              {cancelled && (
+                                <div className="flex items-center gap-1">
+                                  <Icons.crossCircleFilled
+                                    className="h-3.5 w-3.5"
+                                    strokeWidth={2.5}
+                                  />
+                                  <span>Cancelled</span>
                                 </div>
                               )}
                             </div>
