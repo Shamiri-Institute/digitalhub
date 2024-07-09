@@ -1,19 +1,11 @@
 "use client";
 
+import { SessionDropDown } from "#/app/(platform)/hc/schedule/_components/session-list";
+import { SessionsContext } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
 import { useTitle } from "#/app/(platform)/hc/schedule/_components/title-provider";
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuPortal,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
-import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { Prisma, SessionStatus } from "@prisma/client";
 import { addDays, addHours, format, isAfter, isBefore } from "date-fns";
@@ -28,13 +20,7 @@ export function ListView({
   state: CalendarState;
   hubId: string;
 }) {
-  const [sessions, setSessions] = useState<
-    Prisma.InterventionSessionGetPayload<{
-      include: {
-        school: true;
-      };
-    }>[]
-  >([]);
+  const { sessions } = useContext(SessionsContext);
   const [sessionGroups, setSessionGroups] = useState<string[]>([]);
 
   const today = format(new Date(), "yyyy-MM-dd");
@@ -68,11 +54,9 @@ export function ListView({
     const fetchSessions = async () => {
       const start = state.visibleRange.start.toDate(state.timeZone);
       const end = addDays(state.visibleRange.end.toDate(state.timeZone), 1);
-      const _sessions = await fetchInterventionSessions({
-        hubId,
-        start,
-        end,
-        filters,
+
+      const _sessions = sessions.filter((session) => {
+        return session.sessionDate > start && session.sessionDate < end;
       });
 
       const groupedSessions: {
@@ -82,6 +66,7 @@ export function ListView({
           };
         }>[];
       } = {};
+
       _sessions.forEach((session) => {
         const date = format(session.sessionDate, "yyyy-MM-dd");
         if (!groupedSessions[date]) {
@@ -89,7 +74,6 @@ export function ListView({
         }
       });
 
-      setSessions(_sessions);
       if (
         !groupedSessions[today] &&
         isAfter(new Date(today), start) &&
@@ -100,7 +84,15 @@ export function ListView({
       setSessionGroups(Object.keys(groupedSessions).sort());
     };
     fetchSessions();
-  }, [hubId, state.timeZone, state.visibleRange.end, state.visibleRange.start]);
+  }, [
+    filters,
+    sessions,
+    hubId,
+    state.timeZone,
+    state.visibleRange.end,
+    state.visibleRange.start,
+    today,
+  ]);
 
   return (
     <table
@@ -259,33 +251,13 @@ export function ListView({
                       </div>
                     </td>
                     <td className="action-cell relative cursor-pointer">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <div className="absolute inset-0 bg-white">
-                            <div className="flex h-full w-full items-center justify-center">
-                              <Icons.moreHorizontal className="h-5 w-5" />
-                            </div>
+                      <SessionDropDown session={session}>
+                        <div className="absolute inset-0 bg-white">
+                          <div className="flex h-full w-full items-center justify-center">
+                            <Icons.moreHorizontal className="h-5 w-5" />
                           </div>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuPortal>
-                          <DropdownMenuContent
-                            align="end"
-                            onCloseAutoFocus={(e) => {
-                              e.preventDefault();
-                            }}
-                          >
-                            <DropdownMenuLabel>
-                              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-                                Actions
-                              </span>
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem>
-                              View supervisor attendance
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenuPortal>
-                      </DropdownMenu>
+                        </div>
+                      </SessionDropDown>
                     </td>
                   </tr>
                 );
