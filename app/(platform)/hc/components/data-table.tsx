@@ -117,10 +117,11 @@ export default function DataTable<TData, TValue>({
       <Table className={className}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
+            <TableRow key={headerGroup.id} id={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <TableHead
                   key={header.id}
+                  id={header.id}
                   className={cn(
                     "rounded bg-background-secondary !px-4 text-sm font-semibold leading-5 text-shamiri-text-grey",
                     ["actions", "select"].includes(
@@ -151,12 +152,14 @@ export default function DataTable<TData, TValue>({
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
+                id={row.id}
                 className="text-sm font-medium leading-5 text-shamiri-text-dark-grey data-[state=Selected]:bg-blue-bg"
                 data-state={row.getIsSelected() && "Selected"}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell
                     key={cell.id}
+                    id={cell.id}
                     className={cn(
                       "border-y border-l",
                       cell.column.columnDef.id === "button" ||

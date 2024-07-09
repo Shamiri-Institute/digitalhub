@@ -12,6 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuPortal,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
@@ -33,11 +34,30 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
     <div className="flex flex-col gap-2">
       <SessionDetail session={sessions[0]!} layout="compact" />
       <SessionDetail session={sessions[1]!} layout="compact" />
-      {restCount > 0 && (
-        <div className="text-sm font-semibold text-grey-c3">
-          + {restCount} more
-        </div>
-      )}
+      <div className="w-full">
+        {restCount > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="w-full text-sm font-semibold text-grey-c3">
+                + {restCount} more
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuContent>
+                {sessions.slice(2, sessions.length).map((session, index) => {
+                  return (
+                    <SessionDetail
+                      key={session.id}
+                      session={sessions[index]!}
+                      layout="compact"
+                    />
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenuPortal>
+          </DropdownMenu>
+        )}
+      </div>
     </div>
   );
 }
@@ -84,7 +104,7 @@ export function SessionDetail({
   }, [session.sessionDate, session.sessionEndTime]);
 
   const schoolName = session.school.schoolName;
-  const completed = session.sessionDate < new Date();
+  const completed = session.occurred;
   const cancelled = session.status === SessionStatus.Cancelled;
 
   const isCompact = layout === "compact";
