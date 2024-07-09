@@ -177,7 +177,7 @@ export function ListView({
                   session.sessionEndTime ?? addHours(session.sessionDate, 1.5),
                   "h:mm a",
                 )}`;
-                const completed = session.sessionDate < new Date();
+                const completed = session.occurred;
                 const cancelled = session.status === SessionStatus.Cancelled;
 
                 return (
