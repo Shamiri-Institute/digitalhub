@@ -25,9 +25,11 @@ import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
+import CancelSession from "#/app/(platform)/hc/schedule/_components/cancel-session";
 import FellowAttendance from "#/app/(platform)/hc/schedule/_components/fellow-attendance";
 import { ScheduleNewSession } from "#/app/(platform)/hc/schedule/_components/schedule-new-session-form";
 import SupervisorAttendance from "#/app/(platform)/hc/schedule/_components/supervisor-attendance";
+import { CancelSessionContext } from "#/app/(platform)/hc/schedule/context/cancel-session-dialog-context";
 import { FellowAttendanceContext } from "#/app/(platform)/hc/schedule/context/fellow-attendance-dialog-context";
 import {
   DateRangeType,
@@ -323,6 +325,8 @@ function CalendarView({
     React.useState(false);
   const [fellowAttendanceDialog, setFellowAttendanceDialog] =
     React.useState(false);
+  const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
+
   const [session, setSession] =
     React.useState<Prisma.InterventionSessionGetPayload<{
       include: { school: true };
@@ -371,7 +375,17 @@ function CalendarView({
             setSession,
           }}
         >
-          {activeMode()}
+          <CancelSessionContext.Provider
+            value={{
+              isOpen: cancelSessionDialog,
+              setIsOpen: setCancelSessionDialog,
+              session,
+              setSession,
+            }}
+          >
+            {activeMode()}
+            <CancelSession />
+          </CancelSessionContext.Provider>
           <FellowAttendance />
         </FellowAttendanceContext.Provider>
         <SupervisorAttendance />
