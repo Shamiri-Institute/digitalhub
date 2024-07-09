@@ -1,10 +1,17 @@
 import { SessionStatus } from "@prisma/client";
 import { addHours, format } from "date-fns";
-import { useContext, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
+import { CancelSessionContext } from "#/app/(platform)/hc/schedule/context/cancel-session-dialog-context";
 import { FellowAttendanceContext } from "#/app/(platform)/hc/schedule/context/fellow-attendance-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/schedule/context/supervisor-attendance-dialog-context";
 import {
@@ -19,6 +26,7 @@ import {
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import type { Session } from "./sessions-provider";
+import Element = React.JSX.Element;
 
 export function SessionList({ sessions }: { sessions: Session[] }) {
   if (sessions.length === 0) {
@@ -80,16 +88,6 @@ export function SessionDetail({
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") ?? undefined;
 
-  const supervisorAttendanceContext = useContext(SupervisorAttendanceContext);
-  const fellowAttendanceContext = useContext(FellowAttendanceContext);
-
-  useEffect(() => {
-    if (open) {
-      supervisorAttendanceContext.setSession(session);
-      fellowAttendanceContext.setSession(session);
-    }
-  }, [open, session]);
-
   useEffect(() => {
     const startTimeLabel = format(session.sessionDate, "h:mma");
     const durationLabel = `${format(session.sessionDate, "h:mm")} - ${format(
@@ -104,7 +102,7 @@ export function SessionDetail({
   }, [session.sessionDate, session.sessionEndTime]);
 
   const schoolName = session.school.schoolName;
-  const completed = session.sessionDate < new Date();
+  const completed = session.occurred;
   const cancelled = session.status === SessionStatus.Cancelled;
 
   const isCompact = layout === "compact";
@@ -114,7 +112,7 @@ export function SessionDetail({
     return (
       <div
         className={cn(
-          "select-none rounded-[0.25rem] border",
+          "w-full select-none rounded-[0.25rem] border",
           {
             "px-2 py-1": withDropdown,
             "px-4 py-2": !withDropdown,
@@ -173,53 +171,87 @@ export function SessionDetail({
 
   return withDropdown ? (
     <div>
-      <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger className="w-full">
-          {renderSessionDetails()}
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuLabel>
-            <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-              Actions
-            </span>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {session.occurred ? (
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                supervisorAttendanceContext.setIsOpen(true);
-              }}
-            >
-              View supervisor attendance
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem
-              className="w-full"
-              onClick={(e) => {
-                e.stopPropagation();
-                supervisorAttendanceContext.setIsOpen(true);
-              }}
-            >
-              Mark supervisor attendance
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              fellowAttendanceContext.setIsOpen(true);
-            }}
-          >
-            View fellow attendance
-          </DropdownMenuItem>
-          <DropdownMenuItem>Weekly session report</DropdownMenuItem>
-          <DropdownMenuItem className="text-shamiri-light-red">
-            Archive
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <SessionDropDown open={open} setOpen={setOpen} session={session}>
+        {renderSessionDetails()}
+      </SessionDropDown>
     </div>
   ) : (
     renderSessionDetails()
+  );
+}
+
+export function SessionDropDown({
+  open,
+  setOpen,
+  children,
+  session,
+}: {
+  open: boolean;
+  setOpen: Dispatch<SetStateAction<boolean>>;
+  children: React.ReactNode;
+  session: Session;
+}) {
+  const supervisorAttendanceContext = useContext(SupervisorAttendanceContext);
+  const fellowAttendanceContext = useContext(FellowAttendanceContext);
+  const cancelSessionContext = useContext(CancelSessionContext);
+
+  useEffect(() => {
+    if (open) {
+      supervisorAttendanceContext.setSession(session);
+      fellowAttendanceContext.setSession(session);
+      cancelSessionContext.setSession(session);
+    }
+  }, [open, session]);
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger className="w-full">{children}</DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuLabel>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+            Actions
+          </span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            supervisorAttendanceContext.setIsOpen(true);
+          }}
+          disabled={session.status === "Cancelled"}
+        >
+          {session.occurred
+            ? "View supervisor attendance"
+            : "Mark supervisor attendance"}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={(e) => {
+            e.stopPropagation();
+            fellowAttendanceContext.setIsOpen(true);
+          }}
+          disabled={session.status === "Cancelled"}
+        >
+          View fellow attendance
+        </DropdownMenuItem>
+        {session.sessionDate > new Date() && (
+          <DropdownMenuItem>Reschedule session</DropdownMenuItem>
+        )}
+        <DropdownMenuItem disabled={session.status === "Cancelled"}>
+          Weekly session report
+        </DropdownMenuItem>
+        {session.sessionDate > new Date() && (
+          <DropdownMenuItem
+            className="text-shamiri-light-red"
+            onClick={(e) => {
+              e.stopPropagation();
+              cancelSessionContext.setIsOpen(true);
+            }}
+            disabled={session.status === "Cancelled"}
+          >
+            Cancel session
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
