@@ -28,7 +28,7 @@ import {
 import { toast } from "#/components/ui/use-toast";
 import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
 import { cn } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
+import { Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
 import {
@@ -264,6 +264,10 @@ export type FellowAttendancesTableData = {
   schoolName?: string | null;
   groupName: string | null;
   averageRating: number | null;
+  sessionType?: string;
+  occurred?: boolean | null;
+  sessionStatus?: SessionStatus | null;
+  sessionDate?: Date;
 };
 
 export const columns = () => {
@@ -364,7 +368,7 @@ export const columns = () => {
     {
       accessorKey: "groupName",
       id: "groupName",
-      header: "Group Name",
+      header: "Group",
     },
   ];
 };

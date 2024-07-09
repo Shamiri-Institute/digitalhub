@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 
+import { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
 import { getCalendarDate } from "#/lib/date-utils";
 
@@ -32,20 +33,25 @@ export type Session = Prisma.InterventionSessionGetPayload<{
 export function SessionsProvider({
   children,
   hubId,
+  filters,
 }: PropsWithChildren<{
   hubId: string;
+  filters: Filters;
 }>) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSessions = async () => {
-      const fetchedSessions = await fetchInterventionSessions({ hubId });
+      const fetchedSessions = await fetchInterventionSessions({
+        hubId,
+        filters,
+      });
       setSessions(fetchedSessions);
       setLoading(false);
     };
     fetchSessions();
-  }, [hubId]);
+  }, [hubId, filters]);
 
   return (
     <SessionsContext.Provider value={{ sessions, loading, setSessions }}>

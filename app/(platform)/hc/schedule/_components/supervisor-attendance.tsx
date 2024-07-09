@@ -23,6 +23,7 @@ import {
 import { toast } from "#/components/ui/use-toast";
 import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
 import { cn } from "#/lib/utils";
+import { SessionStatus } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
 import {
@@ -271,6 +272,10 @@ export type SupervisorAttendanceTableData = {
   phoneNumber: string;
   fellows: string;
   schoolName?: string;
+  sessionType?: string;
+  occurred?: boolean | null;
+  sessionStatus?: SessionStatus | null;
+  sessionDate?: Date;
 };
 
 export const columns = () => {
