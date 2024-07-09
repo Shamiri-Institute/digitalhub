@@ -13,6 +13,7 @@ import {
   HeartPulse,
   HelpCircle,
   Hourglass,
+  Info,
   LayoutDashboard,
   ListTodo,
   LucideProps,
@@ -71,6 +72,7 @@ export const Icons = {
   helpCircle: HelpCircle,
   PencilLine: PencilLineIcon,
   hourglass: Hourglass,
+  info: Info,
 
   // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (

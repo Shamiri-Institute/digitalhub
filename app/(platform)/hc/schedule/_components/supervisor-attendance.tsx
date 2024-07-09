@@ -24,7 +24,7 @@ import { toast } from "#/components/ui/use-toast";
 import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
 import { cn } from "#/lib/utils";
 import { SessionStatus } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
 import {
   Dispatch,
@@ -119,6 +119,9 @@ export default function SupervisorAttendance() {
               data={attendances}
               onChangeData={setAttendances}
               closeDialogFn={context.setIsOpen}
+              columnVisibility={{
+                checkbox: context.session?.occurred ?? true,
+              }}
             />
           </DialogContent>
         </DialogPortal>
@@ -133,12 +136,14 @@ export function SupervisorAttendanceDataTable({
   onChangeData,
   closeDialogFn,
   emptyStateMessage = "No supervisors associated with this session",
+  columnVisibility,
 }: {
   columns: ColumnDef<unknown>[];
   data: SupervisorAttendanceTableData[];
   onChangeData: Dispatch<SetStateAction<SupervisorAttendanceTableData[]>>;
   closeDialogFn?: Dispatch<SetStateAction<boolean>>;
   emptyStateMessage?: string;
+  columnVisibility?: VisibilityState;
 }) {
   const [selectedRows, setSelectedRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -183,6 +188,7 @@ export function SupervisorAttendanceDataTable({
         className={"data-table data-table-action"}
         emptyStateMessage={emptyStateMessage}
         onRowSelectionChange={setSelectedRows as () => {}}
+        columnVisibilityState={columnVisibility}
       />
       <div className="flex justify-end gap-4">
         {selectedRows.length > 0 ? (
