@@ -67,8 +67,15 @@ function getSupervisorAttendanceColumns() {
             : false;
         const cancelled =
           props.row.original.sessionStatus === SessionStatus.Cancelled;
+        const rescheduled =
+          props.row.original.sessionStatus === SessionStatus.Rescheduled;
 
-        return renderSessionTypeAndStatus(completed, cancelled, value);
+        return renderSessionTypeAndStatus(
+          completed,
+          cancelled,
+          rescheduled,
+          value,
+        );
       },
     }),
     supervisorAttendanceColumns().find((column) => column.id === "attendance"),
@@ -105,7 +112,14 @@ function getFellowAttendanceColumns() {
             : false;
         const cancelled =
           props.row.original.sessionStatus === SessionStatus.Cancelled;
-        return renderSessionTypeAndStatus(completed, cancelled, value);
+        const rescheduled =
+          props.row.original.sessionStatus === SessionStatus.Rescheduled;
+        return renderSessionTypeAndStatus(
+          completed,
+          cancelled,
+          rescheduled,
+          value,
+        );
       },
     }),
     fellowAttendanceColumns().find((column) => column.id === "attendance"),
@@ -115,6 +129,7 @@ function getFellowAttendanceColumns() {
 const renderSessionTypeAndStatus = (
   completed: boolean,
   cancelled: boolean,
+  rescheduled: boolean,
   value: string | undefined,
 ) => {
   return (
@@ -126,11 +141,13 @@ const renderSessionTypeAndStatus = (
             "border-green-border": completed,
             "border-blue-border": !completed,
             "border-red-border": cancelled,
+            "border-shamiri-text-dark-grey/30": rescheduled,
           },
           {
             "bg-green-bg": completed,
             "bg-blue-bg": !completed,
             "bg-red-bg": cancelled,
+            "bg-shamiri-light-grey": rescheduled,
           },
         )}
       >
@@ -139,6 +156,7 @@ const renderSessionTypeAndStatus = (
             "text-green-base": completed,
             "text-blue-base": !completed,
             "text-red-base": cancelled,
+            "text-shamiri-text-dark-grey": rescheduled,
           })}
         >
           <div className="flex items-center gap-1">
@@ -150,7 +168,7 @@ const renderSessionTypeAndStatus = (
                 </span>
               </div>
             )}
-            {!completed && !cancelled && (
+            {!completed && !cancelled && !rescheduled && (
               <div className="flex items-center gap-1">
                 <Icons.helpCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
                 <span className="uppercase">
@@ -161,6 +179,17 @@ const renderSessionTypeAndStatus = (
             {cancelled && (
               <div className="flex items-center gap-1">
                 <Icons.crossCircleFilled
+                  className="h-3.5 w-3.5"
+                  strokeWidth={2.5}
+                />
+                <span className="uppercase">
+                  {value && sessionDisplayName(value)}
+                </span>
+              </div>
+            )}
+            {rescheduled && (
+              <div className="flex items-center gap-1">
+                <Icons.calendarCheck2
                   className="h-3.5 w-3.5"
                   strokeWidth={2.5}
                 />
