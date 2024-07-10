@@ -147,7 +147,7 @@ const renderSessionTypeAndStatus = (
             "bg-green-bg": completed,
             "bg-blue-bg": !completed,
             "bg-red-bg": cancelled,
-            "bg-shamiri-light-grey": rescheduled,
+            "bg-shamiri-light-grey/60": rescheduled,
           },
         )}
       >
