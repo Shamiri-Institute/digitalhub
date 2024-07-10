@@ -1,6 +1,9 @@
 "use server";
 
-import { ScheduleNewSessionSchema } from "#/app/(platform)/hc/schemas";
+import {
+  RescheduleSessionSchema,
+  ScheduleNewSessionSchema,
+} from "#/app/(platform)/hc/schemas";
 import { getCurrentUser } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
@@ -111,5 +114,40 @@ export async function cancelSession(id: string) {
   } catch (error: unknown) {
     console.error(error);
     return { error: "Something went wrong while cancelling session" };
+  }
+}
+
+export async function rescheduleSession(
+  id: string,
+  data: z.infer<typeof RescheduleSessionSchema>,
+) {
+  checkAuthorizedUser();
+  try {
+    const parsedData = RescheduleSessionSchema.parse(data);
+    const hours = +(parsedData.sessionDuration.split(":")[0] ?? 0);
+    const minutes = +(parsedData.sessionDuration.split(":")[1] ?? 0);
+    const sessionEndTime = addHours(
+      addMinutes(parsedData.sessionDate, minutes),
+      hours,
+    );
+
+    await db.interventionSession.update({
+      data: {
+        sessionDate: parsedData.sessionDate,
+        sessionEndTime: new Date(sessionEndTime),
+        status: "Rescheduled",
+      },
+      where: {
+        id,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Successfully rescheduled session.",
+    };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong while rescheduling session" };
   }
 }
