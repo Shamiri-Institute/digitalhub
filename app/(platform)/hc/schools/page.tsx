@@ -1,5 +1,5 @@
+import { SearchCommand } from "#/app/(platform)/hc/schools/components/search-command";
 import { currentHubCoordinator } from "#/app/auth";
-import { Command, CommandInput } from "#/components/ui/command";
 import PageHeading from "#/components/ui/page-heading";
 import {
   Select,
@@ -43,24 +43,12 @@ export default async function SchoolsPage() {
   );
 
   return (
-    <>
+    <div className="container w-full space-y-5 py-10">
       <PageHeading title="Schools" />
-      <Separator className="my-5" />
+      <Separator />
       <div className="flex items-center justify-between">
-        <div className="flex gap-3">
-          <Command className="max-w-64 rounded border">
-            <CommandInput placeholder="Search Schools" />
-            {/*
-            <CommandList>
-              <CommandEmpty>No schools found</CommandEmpty>
-              {dummySchools.map(sch => (
-                <CommandItem>
-                  {sch}
-                </CommandItem>
-              ))}
-            </CommandList>
-            */}
-          </Command>
+        <div className="flex w-1/5 gap-3">
+          <SearchCommand data={data} />
           <Select>
             <SelectTrigger>
               <SelectValue placeholder="Filter by" />
@@ -93,8 +81,9 @@ export default async function SchoolsPage() {
           data={data}
           columns={columns}
           emptyStateMessage="No schools found for this hub"
+          className={"data-table mt-4 bg-white"}
         />
       </div>
-    </>
+    </div>
   );
 }
