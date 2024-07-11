@@ -12,7 +12,6 @@ import {
 import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
-import format from "date-fns/format";
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import React from "react";
@@ -95,39 +94,39 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
     accessorKey: "schoolName",
   },
   */
-  {
-    header: "School ID",
-    accessorKey: "id",
-  },
-  {
-    header: "County",
-    accessorKey: "schoolCounty",
-  },
-  {
-    header: "Point Teacher",
-    accessorKey: "pointPersonName",
-  },
-  {
-    header: "Point Teacher Phone Number",
-    accessorKey: "pointPersonPhone",
-  },
+  // {
+  //   header: "School ID",
+  //   accessorKey: "id",
+  // },
+  // {
+  //   header: "County",
+  //   accessorKey: "schoolCounty",
+  // },
+  // {
+  //   header: "Point Teacher",
+  //   accessorKey: "pointPersonName",
+  // },
+  // {
+  //   header: "Point Teacher Phone Number",
+  //   accessorKey: "pointPersonPhone",
+  // },
   {
     header: "Point Supervisor Phone Number",
     accessorFn: (row) => row.assignedSupervisor?.cellNumber,
   },
-  {
-    header: "Point Supervisor Email",
-    accessorFn: (row) => row.assignedSupervisor?.supervisorEmail,
-  },
-  {
-    header: "Date added",
-    // TODO: need to date fns to format this
-    accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
-  },
-  {
-    header: "Type",
-    accessorKey: "schoolType",
-  },
+  // {
+  //   header: "Point Supervisor Email",
+  //   accessorFn: (row) => row.assignedSupervisor?.supervisorEmail,
+  // },
+  // {
+  //   header: "Date added",
+  //   // TODO: need to date fns to format this
+  //   accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
+  // },
+  // {
+  //   header: "Type",
+  //   accessorKey: "schoolType",
+  // },
   {
     id: "actions",
     cell: ({ row }) => (

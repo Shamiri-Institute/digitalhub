@@ -201,7 +201,7 @@ function LayoutV2({
           </div>
         </div>
       </header>
-      <main className="container pt-2">{children}</main>
+      <main className="bg-background-secondary">{children}</main>
       <div className="flex flex-1 items-end">
         <footer className="w-full border-t bg-background-secondary">
           <div className="container py-2">
