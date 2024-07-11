@@ -19,7 +19,7 @@ export default async function HubCoordinatorSchedulePage() {
   }
 
   return (
-    <main className="w-full pb-[24px] pt-[20px]">
+    <div className="container w-full bg-white py-10">
       <ScheduleHeader sessions={20} fellows={14} cases={23} />
       <Separator className="my-5 bg-[#E8E8E8]" />
       <ScheduleCalendar
@@ -27,6 +27,6 @@ export default async function HubCoordinatorSchedulePage() {
         aria-label="Session schedule"
         schools={schools}
       />
-    </main>
+    </div>
   );
 }
