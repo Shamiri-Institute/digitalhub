@@ -219,6 +219,9 @@ const ids = {
                   numbersExpected: 2200,
                   principalName: "L. O. Nyachwera",
                   assignedSupervisorVisibleId: "SPV24_S_03",
+                  droppedOut: false,
+                  dropoutReason: null,
+                  droppedOutAt: null,
 
                   groups: {
                     ANS24_Group_01: {
@@ -357,6 +360,41 @@ const ids = {
                       groupId: "07G2",
                     },
                   },
+
+                  studentAttendances: {
+                    STUDATT_1: {
+                      id: 1,
+                      attended: true,
+                      fellowVisibleId: "TFW24_S_05",
+                      sessionType: "s0",
+                      groupId: "07G1",
+                      studentVisibleId: "ANS24_07_Stu_01",
+                    },
+                    STUDATT_2: {
+                      id: 2,
+                      attended: false,
+                      fellowVisibleId: "TFW24_S_05",
+                      sessionType: "s1",
+                      groupId: "07G1",
+                      studentVisibleId: "ANS24_07_Stu_01",
+                    },
+                    STUDATT_3: {
+                      id: 3,
+                      attended: true,
+                      fellowVisibleId: "TFW24_S_05",
+                      sessionType: "s0",
+                      groupId: "07G1",
+                      studentVisibleId: "ANS24_07_Stu_02",
+                    },
+                    STUDATT_4: {
+                      id: 4,
+                      attended: true,
+                      fellowVisibleId: "TFW24_S_05",
+                      sessionType: "s1",
+                      groupId: "07G1",
+                      studentVisibleId: "ANS24_07_Stu_02",
+                    },
+                  },
                 },
 
                 ANS24_School_09: {
@@ -373,6 +411,9 @@ const ids = {
                   numbersExpected: 1000,
                   principalName: "Emily W. Masele",
                   assignedSupervisorVisibleId: "SPV24_S_02",
+                  droppedOut: false,
+                  dropoutReason: null,
+                  droppedOutAt: null,
 
                   groups: {
                     ANS24_Group_01: {
@@ -418,6 +459,8 @@ const ids = {
                   supervisorAttendances: {},
 
                   fellowAttendances: {},
+
+                  studentAttendances: {},
                 },
 
                 ANS24_School_10: {
@@ -434,6 +477,9 @@ const ids = {
                   numbersExpected: 674,
                   principalName: "Duncan Juma",
                   assignedSupervisorVisibleId: "SPV24_S_03",
+                  droppedOut: false,
+                  dropoutReason: null,
+                  droppedOutAt: null,
 
                   groups: {
                     ANS24_Group_01: {
@@ -484,6 +530,8 @@ const ids = {
                   },
 
                   fellowAttendances: {},
+
+                  studentAttendances: {},
                 },
 
                 ANS24_School_08: {
@@ -500,6 +548,9 @@ const ids = {
                   numbersExpected: 220,
                   principalName: "Amazing principal",
                   assignedSupervisorVisibleId: "SPV24_S_03",
+                  droppedOut: false,
+                  dropoutReason: null,
+                  droppedOutAt: null,
 
                   groups: {
                     ANS24_Group_01: {
@@ -602,6 +653,8 @@ const ids = {
                   supervisorAttendances: {},
 
                   fellowAttendances: {},
+
+                  studentAttendances: {},
                 },
 
                 ANS24_School_11: {
@@ -618,6 +671,9 @@ const ids = {
                   numbersExpected: 220,
                   principalName: "Amazing principal",
                   assignedSupervisorVisibleId: "SPV24_S_02",
+                  droppedOut: true,
+                  dropoutReason: "lack of commitment",
+                  droppedOutAt: new Date(),
 
                   groups: {},
 
@@ -656,6 +712,39 @@ const ids = {
                   supervisorAttendances: {},
 
                   fellowAttendances: {},
+
+                  studentAttendances: {},
+                },
+
+                ANS24_School_12: {
+                  id: objectId("sch"),
+                  visibleId: "ANS24_School_12",
+                  schoolName: "Kenya High School",
+                  schoolType: "National",
+                  schoolEmail: "kenyahigh@example.com",
+                  schoolCounty: "Nairobi",
+                  schoolDemographics: "Girls",
+                  pointPersonId: "746229367",
+                  pointPersonName: "Brian Adams",
+                  pointPersonPhone: "+254 722 266 231",
+                  numbersExpected: 220,
+                  principalName: "Amazing principal",
+                  assignedSupervisorVisibleId: "SPV24_S_04",
+                  droppedOut: true,
+                  dropoutReason: "poor communication",
+                  droppedOutAt: new Date(),
+
+                  groups: {},
+
+                  sessions: {},
+
+                  students: {},
+
+                  supervisorAttendances: {},
+
+                  fellowAttendances: {},
+
+                  studentAttendances: {},
                 },
               },
             },
@@ -823,6 +912,9 @@ async function seedDatabase() {
               assignedSupervisor: {
                 connect: { visibleId: school.assignedSupervisorVisibleId },
               },
+              droppedOut: school.droppedOut,
+              dropoutReason: school.dropoutReason,
+              droppedOutAt: school.droppedOutAt,
             },
           });
 
@@ -945,6 +1037,44 @@ async function seedDatabase() {
                 assignedGroup: {
                   connect: { id: student.assignedGroupId },
                 },
+              },
+            });
+          }
+
+          for (const studentAttendance of Object.values(
+            school.studentAttendances,
+          )) {
+            const fellow = await db.fellow.findUniqueOrThrow({
+              where: {
+                visibleId: studentAttendance.fellowVisibleId,
+              },
+            });
+
+            const student = await db.student.findUniqueOrThrow({
+              where: {
+                visibleId: studentAttendance.studentVisibleId,
+              },
+            });
+
+            const session = await db.interventionSession.findUniqueOrThrow({
+              where: {
+                interventionBySchoolIdAndSessionType: {
+                  schoolId: createdSchool.id,
+                  sessionType: studentAttendance.sessionType,
+                },
+              },
+            });
+
+            await db.studentAttendance.create({
+              data: {
+                id: studentAttendance.id,
+                fellowId: fellow.id,
+                attended: studentAttendance.attended,
+                projectId: createdProject.id,
+                schoolId: createdSchool.id,
+                sessionId: session.id,
+                groupId: studentAttendance.groupId,
+                studentId: student.id,
               },
             });
           }
