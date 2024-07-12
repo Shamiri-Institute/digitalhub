@@ -1,14 +1,7 @@
+import SchoolsFilterToggle from "#/app/(platform)/hc/schools/components/schools-filter-toggle";
 import { SearchCommand } from "#/app/(platform)/hc/schools/components/search-command";
 import { currentHubCoordinator } from "#/app/auth";
 import PageHeading from "#/components/ui/page-heading";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import SchoolsDataTable from "../components/data-table";
 import {
@@ -49,17 +42,7 @@ export default async function SchoolsPage() {
       <div className="flex items-center justify-between">
         <div className="flex w-1/5 gap-3">
           <SearchCommand data={data} />
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="hub">Hub</SelectItem>
-                <SelectItem value="supervisor">Supervisor</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <SchoolsFilterToggle schools={data} />
         </div>
         <div className="flex items-center gap-3">
           <WeeklyHubReportButtonAndForm
