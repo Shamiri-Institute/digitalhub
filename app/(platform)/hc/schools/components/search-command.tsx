@@ -15,9 +15,9 @@ export function SearchCommand({ data }: { data: any[] }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div>
+    <div className="flex-1 shrink-0">
       <div
-        className="flex w-32 cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-1.5 hover:bg-secondary hover:shadow-inner"
+        className="flex w-full cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-1.5 hover:bg-secondary hover:shadow-inner"
         onClick={() => {
           if (!open) {
             setOpen(true);
