@@ -17,7 +17,7 @@ export function SearchCommand({ data }: { data: any[] }) {
   return (
     <div>
       <div
-        className="flex w-32 cursor-pointer items-center gap-2 rounded-lg border bg-white px-4 py-1.5 hover:drop-shadow"
+        className="flex w-32 cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-1.5 hover:bg-secondary hover:shadow-inner"
         onClick={() => {
           if (!open) {
             setOpen(true);

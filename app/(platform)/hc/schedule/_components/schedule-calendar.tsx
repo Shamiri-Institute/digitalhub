@@ -25,6 +25,7 @@ import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
+import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import CancelSession from "#/app/(platform)/hc/schedule/_components/cancel-session";
 import FellowAttendance from "#/app/(platform)/hc/schedule/_components/fellow-attendance";
 import RescheduleSession from "#/app/(platform)/hc/schedule/_components/reschedule-session";
@@ -41,7 +42,6 @@ import {
 } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/schedule/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/schedule/context/supervisor-attendance-dialog-context";
-import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -50,12 +50,8 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import {
-  DropdownMenu,
   DropdownMenuCheckboxItem,
-  DropdownMenuContent,
   DropdownMenuLabel,
-  DropdownMenuPortal,
-  DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
 import { Prisma, SessionStatus } from "@prisma/client";
@@ -190,7 +186,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 <ScheduleModeToggle />
               </div>
               <FiltersContext.Provider value={{ filters, setFilters }}>
-                <FilterToggle />
+                <ScheduleFilterToggle />
               </FiltersContext.Provider>
             </div>
             <SessionsLoader>
@@ -454,7 +450,7 @@ function NavigationButton({
   );
 }
 
-function FilterToggle() {
+function ScheduleFilterToggle() {
   const [open, setOpen] = useState(false);
   const { filters, setFilters } = useContext(FiltersContext);
   const { mode } = useMode();
@@ -503,132 +499,100 @@ function FilterToggle() {
 
   return (
     <div className="flex items-center gap-3">
-      <DropdownMenu open={open} onOpenChange={setOpen}>
-        <DropdownMenuTrigger asChild>
-          <div className="flex cursor-pointer select-none items-center justify-center rounded-xl border border-gray-300 py-1.5 pl-3 pr-2 shadow-sm ring-0 hover:bg-secondary hover:shadow-inner">
-            <div className="flex items-center gap-2 text-shamiri-text-dark-grey hover:text-black">
-              <span>Filter by</span>
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-shamiri-new-blue text-sm text-white">
-                3
-              </div>
-              <Icons.chevronDown className="h-4 w-4" />
-            </div>
+      <FilterToggle
+        filterIsActive={filterIsActive}
+        setDefaultFilters={() => setFilters(defaultFilterSettings)}
+        updateFilters={() => {
+          setOpen(false);
+          setFilters({
+            sessionTypes,
+            statusTypes,
+            dates,
+          });
+        }}
+      >
+        <div className="flex gap-8 px-1">
+          <div>
+            <DropdownMenuLabel>
+              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                SESSION TYPE
+              </span>
+            </DropdownMenuLabel>
+            {SESSION_TYPES.map((sessionType) => {
+              return (
+                <DropdownMenuCheckboxItem
+                  key={sessionType.name}
+                  checked={sessionTypes[sessionType.name]}
+                  onCheckedChange={(value) => {
+                    const state = { ...sessionTypes };
+                    state[sessionType.name] = value;
+                    setSessionTypes(state);
+                  }}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <span className="">{sessionType.description}</span>
+                </DropdownMenuCheckboxItem>
+              );
+            })}
           </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuPortal>
-          <DropdownMenuContent align={"start"}>
-            <div className="flex gap-8 px-1">
-              <div>
-                <DropdownMenuLabel>
-                  <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-                    SESSION TYPE
-                  </span>
-                </DropdownMenuLabel>
-                {SESSION_TYPES.map((sessionType) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={sessionType.name}
-                      checked={sessionTypes[sessionType.name]}
-                      onCheckedChange={(value) => {
-                        const state = { ...sessionTypes };
-                        state[sessionType.name] = value;
-                        setSessionTypes(state);
-                      }}
-                      onSelect={(e) => {
-                        e.preventDefault();
-                      }}
-                    >
-                      <span className="">{sessionType.description}</span>
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-              </div>
-              <div>
-                <DropdownMenuLabel>
-                  <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-                    Status
-                  </span>
-                </DropdownMenuLabel>
-                {Object.keys(SessionStatus).map((status) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={status}
-                      checked={statusTypes[status]}
-                      onCheckedChange={(value) => {
-                        const state = { ...statusTypes };
-                        state[status] = value;
-                        setStatusTypes(state);
-                      }}
-                      onSelect={(e) => {
-                        e.preventDefault();
-                      }}
-                    >
-                      <span className="">{status}</span>
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-              </div>
-              <div>
-                <DropdownMenuLabel>
-                  <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-                    Date Scheduled
-                  </span>
-                </DropdownMenuLabel>
-                {dateFilterOptions.map((date) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={date.value}
-                      checked={dates === date.value}
-                      onCheckedChange={(value) => {
-                        setDates(date.value);
-                      }}
-                      onSelect={(e) => {
-                        e.preventDefault();
-                      }}
-                      disabled={
-                        mode === "day" ||
-                        mode === "month" ||
-                        mode === "week" ||
-                        mode === "table"
-                      }
-                    >
-                      <span className="">{date.label}</span>
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="flex justify-end p-1">
-              <Button
-                type="button"
-                className="border-0 bg-transparent text-shamiri-new-blue hover:bg-blue-bg hover:text-shamiri-new-blue"
-                variant={"ghost"}
-                onClick={() => {
-                  setOpen(false);
-                  setFilters({
-                    sessionTypes,
-                    statusTypes,
-                    dates,
-                  });
-                }}
-              >
-                Filter
-              </Button>
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenuPortal>
-      </DropdownMenu>
-      {filterIsActive && (
-        <Button
-          variant={"ghost"}
-          className="text-shamiri-new-blue hover:bg-blue-bg hover:text-shamiri-new-blue"
-          onClick={() => {
-            setFilters(defaultFilterSettings);
-          }}
-        >
-          Clear all filters
-        </Button>
-      )}
+          <div>
+            <DropdownMenuLabel>
+              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                Status
+              </span>
+            </DropdownMenuLabel>
+            {Object.keys(SessionStatus).map((status) => {
+              return (
+                <DropdownMenuCheckboxItem
+                  key={status}
+                  checked={statusTypes[status]}
+                  onCheckedChange={(value) => {
+                    const state = { ...statusTypes };
+                    state[status] = value;
+                    setStatusTypes(state);
+                  }}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <span className="">{status}</span>
+                </DropdownMenuCheckboxItem>
+              );
+            })}
+          </div>
+          <div>
+            <DropdownMenuLabel>
+              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                Date Scheduled
+              </span>
+            </DropdownMenuLabel>
+            {dateFilterOptions.map((date) => {
+              return (
+                <DropdownMenuCheckboxItem
+                  key={date.value}
+                  checked={dates === date.value}
+                  onCheckedChange={(value) => {
+                    setDates(date.value);
+                  }}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                  }}
+                  disabled={
+                    mode === "day" ||
+                    mode === "month" ||
+                    mode === "week" ||
+                    mode === "table"
+                  }
+                >
+                  <span className="">{date.label}</span>
+                </DropdownMenuCheckboxItem>
+              );
+            })}
+          </div>
+        </div>
+      </FilterToggle>
     </div>
   );
 }
