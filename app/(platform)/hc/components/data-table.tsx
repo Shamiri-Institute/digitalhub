@@ -1,5 +1,5 @@
 "use client";
-import { Button } from "#/components/ui/button";
+import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -27,9 +27,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import Image from "next/image";
 import { useEffect, useState } from "react";
-import SettingsIcon from "../../../../public/icons/settings-icon.svg";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -90,22 +88,12 @@ export default function DataTable<TData, TValue>({
         <div className="flex justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="flex items-center gap-2 bg-white text-sm font-semibold leading-5 text-shamiri-black"
-              >
+              <div className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm font-semibold leading-5 text-shamiri-black hover:bg-background-secondary hover:shadow-inner">
                 Edit Columns
-                <Image
-                  unoptimized
-                  priority
-                  src={SettingsIcon}
-                  alt="Setting Icon"
-                  width={24}
-                  height={24}
-                />
-              </Button>
+                <Icons.settings className="h-4 w-4 text-shamiri-text-dark-grey" />
+              </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent align={"end"}>
               {table
                 .getAllColumns()
                 .filter((col) => col.getCanHide())
@@ -114,6 +102,9 @@ export default function DataTable<TData, TValue>({
                     key={col.id}
                     checked={col.getIsVisible()}
                     onCheckedChange={(val) => col.toggleVisibility(!!val)}
+                    onSelect={(e) => {
+                      e.preventDefault();
+                    }}
                   >
                     {col.id}
                   </DropdownMenuCheckboxItem>
@@ -131,7 +122,8 @@ export default function DataTable<TData, TValue>({
                   key={header.id}
                   id={header.id}
                   className={cn(
-                    "rounded bg-background-secondary !px-4 text-sm font-semibold leading-5 text-shamiri-text-grey",
+                    "rounded bg-background-secondary/50 !px-4 text-sm font-semibold leading-5 text-shamiri-text-grey",
+                    header.column.columnDef.id !== "checkbox" && "truncate",
                     ["actions", "select"].includes(
                       //@ts-ignore
                       header.column.columnDef.header,
@@ -169,7 +161,7 @@ export default function DataTable<TData, TValue>({
                     key={cell.id}
                     id={cell.id}
                     className={cn(
-                      "border-y border-l",
+                      "truncate border-y border-l",
                       cell.column.columnDef.id === "button" ||
                         cell.column.columnDef.id === "checkbox"
                         ? "relative cursor-pointer border-l-0 !p-0"
