@@ -1,3 +1,5 @@
+import EditSchoolDetailsForm from "#/app/(platform)/hc/schools/components/edit-school-details-form";
+import SchoolInfoProvider from "#/app/(platform)/hc/schools/components/school-info-provider";
 import SchoolsFilterToggle from "#/app/(platform)/hc/schools/components/schools-filter-toggle";
 import { SearchCommand } from "#/app/(platform)/hc/schools/components/search-command";
 import { currentHubCoordinator } from "#/app/auth";
@@ -40,7 +42,7 @@ export default async function SchoolsPage() {
       <PageHeading title="Schools" />
       <Separator />
       <div className="flex items-center justify-between">
-        <div className="flex w-1/5 gap-3">
+        <div className="flex w-1/4 gap-3">
           <SearchCommand data={data} />
           <SchoolsFilterToggle schools={data} />
         </div>
@@ -60,12 +62,24 @@ export default async function SchoolsPage() {
       />
       <Separator />
       <div className="pt-5">
-        <SchoolsDataTable
-          data={data}
-          columns={columns}
-          emptyStateMessage="No schools found for this hub"
-          className={"data-table mt-4 bg-white"}
-        />
+        <SchoolInfoProvider>
+          <SchoolsDataTable
+            data={data}
+            columns={columns}
+            emptyStateMessage="No schools found for this hub"
+            className={"data-table mt-4 bg-white"}
+            columnVisibilityState={{
+              "School ID": false,
+              "Sub - county": false,
+              "Point teacher": false,
+              "Point teacher phone no.": false,
+              "Point teacher email": false,
+              "Point supervisor phone no.": false,
+              "Point supervisor email": false,
+            }}
+          />
+          <EditSchoolDetailsForm />
+        </SchoolInfoProvider>
       </div>
     </div>
   );
