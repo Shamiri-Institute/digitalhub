@@ -41,6 +41,7 @@ export default async function StudentsPage({
             hubId={hubCoordinator?.assignedHubId}
             implementerId={hubCoordinator?.implementerId}
             projectId={hubCoordinator?.assignedHub?.projectId}
+            schoolVisibleId={visibleId}
           />
         )}
     </>

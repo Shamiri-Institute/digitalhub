@@ -2,7 +2,17 @@
 import FileUploader from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
 
-export function BatchUploadDownloadSupervisors() {
+export function BatchUploadDownloadSupervisors({
+  hubId,
+  implementerId,
+  projectId,
+  schoolVisibleId,
+}: {
+  hubId: string;
+  implementerId: string;
+  projectId: string;
+  schoolVisibleId: string;
+}) {
   const handleSupervisorCSVDownload = async () => {
     // todo: touch base with Wendy to discuss the columns
   };
@@ -16,7 +26,7 @@ export function BatchUploadDownloadSupervisors() {
       >
         Download supervisor csv template
       </Button>
-      <FileUploader url="/api/csv-uploads/supervisors" type="supervisors" />
+      <FileUploader url="/api/csv-uploads/supervisors" type="supervisors" metadata={{ hubId, implementerId, projectId, schoolVisibleId }} />
     </div>
   );
 }

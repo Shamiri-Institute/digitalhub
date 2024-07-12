@@ -19,10 +19,23 @@ export async function POST(request: NextRequest) {
   try {
     const file = formData.get("file") as File;
 
-    const schoolId = formData.get("schoolId") as string;
+    const schoolVisibleId = formData.get("schoolVisibleId") as string;
     const hubId = formData.get("hubId") as string;
     const implementerId = formData.get("implementerId") as string;
     const projectId = formData.get("projectId") as string;
+
+    const supervisors = await db.supervisor.findMany({
+      where: {
+        hubId: hubId,
+      },
+    });
+
+    if (!supervisors || supervisors.length === 0) {
+      return NextResponse.json(
+        { error: "No supervisors found for this hub, please add supervisors." },
+        { status: 404 },
+      );
+    }
 
     const buffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(buffer);
@@ -64,13 +77,12 @@ export async function POST(request: NextRequest) {
           droppedOutAt: null,
           dropOutReason: null,
         });
-      })
-      .on("error", (err) => {
-        return NextResponse.json({ error: err }, { status: 500 });
-      })
-      .on("end", async () => {
         try {
-          await db.fellow.createMany({ data: rows });
+          // await db.fellow.createMany({ data: rows });
+
+          await db.$transaction(async (prisma) => {
+            await prisma.fellow.createMany({ data: rows });
+          });
 
           return NextResponse.json({
             status: 200,
@@ -78,11 +90,15 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           console.error("Error uploading to database:", error);
+
           return NextResponse.json(
             { error: "Error uploading to database" },
             { status: 500 },
           );
         }
+      })
+      .on("error", (err) => {
+        return NextResponse.json({ error: err }, { status: 500 });
       });
 
     return NextResponse.json({

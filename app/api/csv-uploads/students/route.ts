@@ -7,22 +7,35 @@ import { Readable } from "stream";
 
 const studentsCSVHeaders = [
   "School", // prefer schoolId ?
-  "GroupNumber",
+  "Group number",
   "Hub", //  prefer hubId
-  "StudentName",
-  "AdmissionNumber",
+  "Student name",
+  "Admission number",
   "Form",
   "Stream",
   "Gender",
-  "DateOfBirth", // age on db
-  // any format for visibleId/id using objectId("stud")
+  "Date of Birth", // age on db
 ];
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
 
+  const school = await db.school.findFirst({
+    where: {
+      visibleId: formData.get("schoolVisibleId") as string,
+    },
+  });
+
+  if (!school) {
+    return NextResponse.json({ error: "School not found" }, { status: 404 });
+  }
+
   try {
     const file = formData.get("file") as File;
+    const hubId = formData.get("hubId") as string;
+    const implementerId = formData.get("implementerId") as string;
+    const projectId = formData.get("projectId") as string;
+
     const buffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(buffer);
 
@@ -30,19 +43,45 @@ export async function POST(request: NextRequest) {
 
     await hasRequiredHeaders(csvStream);
 
-    const rows: Prisma.SupervisorGetPayload<{}>[] = [];
+    const rows: Prisma.StudentGetPayload<{
+      select: {
+        id: boolean;
+        createdAt: boolean;
+        updatedAt: boolean;
+        schoolId: boolean;
+        groupName: boolean;
+        studentName: boolean;
+        admissionNumber: boolean;
+        form: boolean;
+        stream: boolean;
+        gender: boolean;
+        visibleId: boolean;
+        yearOfImplementation: boolean;
+        age: boolean;
+      };
+    }>[] = [];
 
     const dataStream = Readable.from([fileBuffer]);
 
     dataStream
       .pipe(fastCsv.parse({ headers: true }))
       .on("data", async (row) => {
+        console.log({ row });
         let studentId = objectId("stu");
         rows.push({
           id: studentId,
-          ...row,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          schoolId: school.id,
+          groupName: row["Group number"],
+          studentName: row["Student name"],
+          admissionNumber: row["Admission number"],
+          form: parseInt(row.Form),
+          stream: row.Stream,
+          gender: row.Gender,
           visibleId: studentId,
-          supervisorEmail: row.shamiriEmail,
+          yearOfImplementation: new Date().getFullYear(),
+          age: null,
         });
       })
       .on("error", (err) => {
@@ -65,10 +104,10 @@ export async function POST(request: NextRequest) {
         }
       });
 
-    // return NextResponse.json({
-    //   status: 200,
-    //   message: "File uploaded successfully.",
-    // });
+    return NextResponse.json({
+      status: 200,
+      message: "File uploaded successfully.",
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error }, { status: 500 });

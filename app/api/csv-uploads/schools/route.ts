@@ -1,25 +1,16 @@
+import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
 import * as fastCsv from "fast-csv";
 import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
 
-const supervisorCSVHeaders = [
-  // "supervisorId",
-  "supervisor_id",
-  // "supervisorName",
-  "supervisor name",
-  // "cellNumber",
-  "cell_number",
-  // hubCoordinator - hubId
-  "hub coordinator",
+const schoolsCSVHeader = [
+  "fellow",
+  "cell_no",
+  "email",
+  "supervisor", // to be supervisorId
   "hub",
-  // "hubId" ,// instead of hub coordinator and hub
-  // "personalEmail",
-  "personal email",
-  // "shamiriEmail", // shamiriEmail - supervisorEmail
-  "shamiri email",
-  // "implementerId", // not in the csv
 ];
 
 export async function POST(request: NextRequest) {
@@ -27,6 +18,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const file = formData.get("file") as File;
+
+    const schoolVisibleId = formData.get("schoolVisibleId") as string;
     const hubId = formData.get("hubId") as string;
     const implementerId = formData.get("implementerId") as string;
     const projectId = formData.get("projectId") as string;
@@ -38,50 +31,38 @@ export async function POST(request: NextRequest) {
 
     await hasRequiredHeaders(csvStream);
 
-    const rows: Prisma.SupervisorGetPayload<{
-      select: {
-        id: boolean;
-        createdAt: boolean;
-        updatedAt: boolean;
-        supervisorName: boolean;
-        cellNumber: boolean;
-        hubId: boolean;
-        personalEmail: boolean;
-        supervisorEmail: boolean;
-        implementerId: boolean;
-        visibleId: boolean;
-      };
-    }>[] = [];
+    const rows: Prisma.FellowGetPayload<{}>[] = [];
 
     const dataStream = Readable.from([fileBuffer]);
 
     dataStream
       .pipe(fastCsv.parse({ headers: true }))
       .on("data", async (row) => {
-        console.log({
-          id: row["supervisor_id"],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          supervisorName: row["supervisor name"],
-          cellNumber: row["cell_number"],
-          hubId,
-          personalEmail: row["personal email"],
-          supervisorEmail: row["shamiri email"],
-          implementerId,
-          visibleId: row["supervisor_id"],
-        });
-
+        let fellowId = objectId("fellow");
         rows.push({
-          id: row["supervisor_id"],
+          visibleId: fellowId,
+          id: fellowId,
           createdAt: new Date(),
           updatedAt: new Date(),
-          supervisorName: row["supervisor name"],
-          cellNumber: row["cell_number"],
+          fellowName: row.fellow,
+          cellNumber: row.cell_no,
+          fellowEmail: row.email,
+          supervisorId: null,
           hubId,
-          personalEmail: row["personal email"],
-          supervisorEmail: row["shamiri email"],
-          implementerId,
-          visibleId: row["supervisor_id"],
+          implementerId: implementerId,
+          yearOfImplementation: new Date().getFullYear(),
+          archivedAt: null,
+          mpesaName: null,
+          mpesaNumber: null,
+          idNumber: null,
+          county: null,
+          subCounty: null,
+          dateOfBirth: null,
+          gender: null,
+          transferred: null,
+          droppedOut: null,
+          droppedOutAt: null,
+          dropOutReason: null,
         });
       })
       .on("error", (err) => {
@@ -89,7 +70,7 @@ export async function POST(request: NextRequest) {
       })
       .on("end", async () => {
         try {
-          await db.supervisor.createMany({ data: rows });
+          await db.fellow.createMany({ data: rows });
 
           return NextResponse.json({
             status: 200,
@@ -104,10 +85,10 @@ export async function POST(request: NextRequest) {
         }
       });
 
-    // return NextResponse.json({
-    //   status: 200,
-    //   message: "File uploaded successfully.",
-    // });
+    return NextResponse.json({
+      status: 200,
+      message: "File uploaded successfully.",
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error }, { status: 500 });
@@ -120,9 +101,8 @@ async function hasRequiredHeaders(csvStream: Readable): Promise<boolean> {
     csvStream
       .pipe(fastCsv.parse({ headers: true }))
       .on("headers", (headers) => {
-        console.log({ headers });
         if (!headersChecked) {
-          const requiredHeaders = supervisorCSVHeaders;
+          const requiredHeaders = schoolsCSVHeader;
           const missingHeaders = requiredHeaders.filter(
             (header) => !headers.includes(header.trim()),
           );

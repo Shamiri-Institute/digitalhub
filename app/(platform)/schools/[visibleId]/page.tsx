@@ -206,42 +206,42 @@ async function FellowCard({
     label: SessionLabel;
     session: Prisma.InterventionSessionGetPayload<{}> | null;
   }[] = [
-    {
-      status: getAttendanceStatus(filteredAttendances, 0),
-      label: "Pre",
-      session:
-        school.interventionSessions.find((ins) => ins.sessionType === "s0") ||
-        null,
-    },
-    {
-      status: getAttendanceStatus(filteredAttendances, 1),
-      label: "S1",
-      session:
-        school.interventionSessions.find((ins) => ins.sessionType === "s1") ||
-        null,
-    },
-    {
-      status: getAttendanceStatus(filteredAttendances, 2),
-      label: "S2",
-      session:
-        school.interventionSessions.find((ins) => ins.sessionType === "s2") ||
-        null,
-    },
-    {
-      status: getAttendanceStatus(filteredAttendances, 3),
-      label: "S3",
-      session:
-        school.interventionSessions.find((ins) => ins.sessionType === "s3") ||
-        null,
-    },
-    {
-      status: getAttendanceStatus(filteredAttendances, 4),
-      label: "S4",
-      session:
-        school.interventionSessions.find((ins) => ins.sessionType === "s4") ||
-        null,
-    },
-  ];
+      {
+        status: getAttendanceStatus(filteredAttendances, 0),
+        label: "Pre",
+        session:
+          school.interventionSessions.find((ins) => ins.sessionType === "s0") ||
+          null,
+      },
+      {
+        status: getAttendanceStatus(filteredAttendances, 1),
+        label: "S1",
+        session:
+          school.interventionSessions.find((ins) => ins.sessionType === "s1") ||
+          null,
+      },
+      {
+        status: getAttendanceStatus(filteredAttendances, 2),
+        label: "S2",
+        session:
+          school.interventionSessions.find((ins) => ins.sessionType === "s2") ||
+          null,
+      },
+      {
+        status: getAttendanceStatus(filteredAttendances, 3),
+        label: "S3",
+        session:
+          school.interventionSessions.find((ins) => ins.sessionType === "s3") ||
+          null,
+      },
+      {
+        status: getAttendanceStatus(filteredAttendances, 4),
+        label: "S4",
+        session:
+          school.interventionSessions.find((ins) => ins.sessionType === "s4") ||
+          null,
+      },
+    ];
 
   const fellowGroup = school.interventionGroups.find(
     (group) => group.leaderId === fellow.id,

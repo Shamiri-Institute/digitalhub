@@ -7,16 +7,16 @@ export async function BatchUploadDownloadStudents({
   hubId,
   implementerId,
   projectId,
+  schoolVisibleId,
 }: {
   hubId: string;
   implementerId: string;
   projectId: string;
+  schoolVisibleId: string;
 }) {
   const handleStudentsCSVDownload = async () => {
     // todo: get functionality from the table filter as well
   };
-
-  const schoolId = window.location.pathname.split("/")[3];
 
   return (
     <div className="flex flex-1 flex-wrap justify-end space-x-2">
@@ -29,7 +29,7 @@ export async function BatchUploadDownloadStudents({
       </Button>
       <FileUploader
         url="/api/csv-uploads/students"
-        metadata={{ hubId, implementerId, projectId, schoolId }}
+        metadata={{ hubId, implementerId, projectId, schoolVisibleId }}
         type="students"
       />
     </div>

@@ -29,7 +29,7 @@ export default function FileUploader({
     hubId: string;
     implementerId: string;
     projectId: string;
-    schoolId?: string;
+    schoolVisibleId?: string;
   };
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
@@ -39,15 +39,20 @@ export default function FileUploader({
 
   const { toast } = useToast();
 
-  function handleFileUpload(event: ChangeEvent<HTMLInputElement>) {
-    if (!event?.target?.files) return;
 
-    const file = event.target.files[0];
-
-    if (file) {
-      setSelectedFile(file);
+  const handleFileUpload = (files: any) => {
+    // check if the file is a docx file using mime type
+    if (
+      files[0].type !== "text/csv"
+      //csv
+    ) {
+      window.alert("Invalid file type. Please upload a csv file");
+      return;
     }
-  }
+
+    setSelectedFile(files[0]);
+  };
+
 
   const handleUpload = async () => {
     setError(false);
@@ -62,8 +67,8 @@ export default function FileUploader({
     const fileContent = await readFileContent(selectedFile);
     formData.append("file", fileContent, selectedFile.name);
 
-    if (metadata && metadata.schoolId) {
-      formData.append("schoolId", metadata.schoolId);
+    if (metadata && metadata.schoolVisibleId) {
+      formData.append("schoolVisibleId", metadata.schoolVisibleId);
       formData.append("hubId", metadata.hubId);
       formData.append("implementerId", metadata.implementerId);
       formData.append("projectId", metadata.projectId);
@@ -87,9 +92,10 @@ export default function FileUploader({
       }
     } catch (error) {
       console.error("Failed to upload file:", error);
+
       toast({
         title:
-          "Failed to upload file, please check the csv file and try again.",
+          `Failed to upload file. Please try again later. ${JSON.stringify(error.message)}`,
         variant: "destructive",
       });
     } finally {
@@ -111,41 +117,12 @@ export default function FileUploader({
         <DialogHeader className="text-xl font-semibold leading-7">
           Upload {type} csv
         </DialogHeader>
-        <div
-          className={clsx(
-            "rounded-lg border border-dotted border-gray-700 p-2",
-            error && "border-2 border-shamiri-light-red",
-          )}
-        >
-          <div className="mb-2 flex items-center justify-start space-x-2">
-            <Input
-              className={clsx(
-                "flex-1 cursor-pointer",
-                error && "border-shamiri-light-red",
-              )}
-              id="csv-file"
-              name="csv-file"
-              type="file"
-              accept=".csv"
-              placeholder="Select Files"
-              onChange={handleFileUpload}
-            />
-
-            <div className="flex flex-1 items-center justify-start text-sm font-semibold leading-5 text-gray-500">
-              <Icons.uploadCloudIcon className="mr-2 h-4 w-4" />
-              Drop files here...
-            </div>
-          </div>
-          <Separator />
-          {selectedFile && (
-            <>
-              <p className="mt-2 text-sm text-gray-500">
-                Selected file: {selectedFile.name}, file size:{" "}
-                {selectedFile.size} bytes
-              </p>
-            </>
-          )}
-        </div>
+        <FileUploaderWithDrop
+          label="Upload csv file"
+          onChange={handleFileUpload}
+          files={selectedFile ? [selectedFile] : []}
+          accept=".csv"
+        />
 
         <Separator />
         <DialogFooter className="flex justify-end">
@@ -169,5 +146,106 @@ export default function FileUploader({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+
+
+// file uploader component
+
+function FileUploaderWithDrop({
+  label,
+  onChange,
+  files,
+  className,
+  accept = "*",
+}: {
+  label?: string;
+  onChange: (e: any) => void;
+  files: any[];
+  className?: string;
+  accept?: string;
+}) {
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleUpload = async (e: any) => {
+    // change to array of files
+    const files = Array.from(e.target.files);
+    if (onChange) onChange(files);
+  };
+
+  const handleDrop = async (e: any) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    // change to array of files
+    let files: any;
+
+    if (e.dataTransfer.items) {
+      files = Array.from(e.dataTransfer.items).map((item: any) =>
+        item.getAsFile(),
+      );
+    } else {
+      files = Array.from(e.dataTransfer.files);
+    }
+
+    // check allowed file types and filter out
+    if (accept && accept !== "*") {
+      const allowedTypes = accept.split(",").map((type) => type.substring(1));
+      files = files.filter((file: any) =>
+        allowedTypes.includes(file.name.split(".").pop()),
+      );
+    }
+
+    if (files?.length) {
+      if (onChange) onChange(files);
+    } else {
+      window.alert(`Invalid file type. Please upload ${accept} file`);
+    }
+  };
+
+  const handleDragOver = (e: any) => {
+    e.preventDefault();
+  };
+
+  return (
+    <div className={clsx(className || "")}>
+      {label ? (
+        <p className="block text-normal font-medium text-gray-700">{label}</p>
+      ) : null}
+      <label
+        id="drop_zone"
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          setIsDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          setIsDragOver(false);
+        }}
+        className={clsx(
+          "mt-1 flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-3",
+          isDragOver ? "border-secondary" : "border-gray-200",
+        )}
+      >
+        {/* {files?.length === 0 && <UploadIcon className="app-icon color-gray" />} */}
+        {files?.length !== 0 && (
+          <div className="flex flex-col items-center space-y-1 text-center text-normal text-gray-700">
+            {files.map((file: any) => (
+              <span key={file.name}>{file.name}</span>
+            ))}
+          </div>
+        )}
+        <span className="mt-2 cursor-pointer text-center text-normal hover:underline">
+          {"Upload File"}
+        </span>
+        <span className="my-2 text-center text-normal text-gray-500">OR</span>
+        <span className="text-center text-normal">
+          Drag and drop your file here
+        </span>
+        <input type="file" accept={accept} hidden onChange={handleUpload} />
+      </label>
+    </div>
   );
 }
