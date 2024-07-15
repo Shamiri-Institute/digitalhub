@@ -1,4 +1,7 @@
 import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
   Backpack,
   Banknote,
   Calendar,
@@ -9,6 +12,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   ClipboardList,
+  Clock,
   GraduationCap,
   GraduationCapIcon,
   HeartPulse,
@@ -75,6 +79,10 @@ export const Icons = {
   hourglass: Hourglass,
   info: Info,
   calendarCheck2: CalendarCheck2,
+  arrowLeft: ArrowLeft,
+  arrowUp: ArrowUp,
+  arrowDown: ArrowDown,
+  clock: Clock,
 
   // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (
