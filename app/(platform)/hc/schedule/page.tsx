@@ -3,6 +3,7 @@ import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role
 import { Separator } from "#/components/ui/separator";
 
 import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
+import PageFooter from "#/components/ui/page-footer";
 import { ScheduleCalendar } from "./_components/schedule-calendar";
 import { ScheduleHeader } from "./_components/schedule-header";
 
@@ -19,14 +20,17 @@ export default async function HubCoordinatorSchedulePage() {
   }
 
   return (
-    <div className="container w-full bg-white py-10">
-      <ScheduleHeader sessions={20} fellows={14} cases={23} />
-      <Separator className="my-5 bg-[#E8E8E8]" />
-      <ScheduleCalendar
-        hubId={coordinator.assignedHubId}
-        aria-label="Session schedule"
-        schools={schools}
-      />
+    <div className="flex h-full w-full flex-col">
+      <div className="container w-full grow bg-white py-10">
+        <ScheduleHeader sessions={20} fellows={14} cases={23} />
+        <Separator className="my-5 bg-[#E8E8E8]" />
+        <ScheduleCalendar
+          hubId={coordinator.assignedHubId}
+          aria-label="Session schedule"
+          schools={schools}
+        />
+      </div>
+      <PageFooter />
     </div>
   );
 }

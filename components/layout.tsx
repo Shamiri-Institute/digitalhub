@@ -31,6 +31,7 @@ import {
 } from "./ui/layout-icons";
 
 import { cn } from "#/lib/utils";
+import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -201,24 +202,9 @@ function LayoutV2({
           </div>
         </div>
       </header>
-      <main className="bg-background-secondary">{children}</main>
-      <div className="flex flex-1 items-end">
-        <footer className="w-full border-t bg-background-secondary">
-          <div className="container py-2">
-            <div className="flex items-center justify-between text-sm font-medium text-shamiri-text-grey">
-              <div>
-                <p className="">
-                  © Copyright {new Date().getFullYear()} Shamiri Institute Inc.
-                </p>
-              </div>
-              <div className="flex gap-x-6">
-                <span>Terms of Use</span>
-                <span>Privacy Policy</span>
-              </div>
-            </div>
-          </div>
-        </footer>
-      </div>
+      <main className="flex grow items-stretch bg-background-secondary">
+        {children}
+      </main>
     </div>
   );
 }
