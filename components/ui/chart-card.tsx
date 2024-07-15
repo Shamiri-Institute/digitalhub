@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./card";
 
 export default function ChartCard({
