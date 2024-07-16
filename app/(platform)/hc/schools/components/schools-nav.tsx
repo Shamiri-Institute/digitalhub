@@ -1,32 +1,52 @@
 "use client";
-import { cn } from "#/lib/utils";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+type TabType = {
+  name: string;
+  href: string;
+};
 
 export default function SchoolsNav({ visibleId }: { visibleId: string }) {
   const pathname = usePathname();
-  const options = [
+  const router = useRouter();
+  const options: TabType[] = [
     { name: "Sessions", href: `/hc/schools/${visibleId}/sessions` },
     { name: "Supervisors", href: `/hc/schools/${visibleId}/supervisors` },
     { name: "Fellows", href: `/hc/schools/${visibleId}/fellows` },
     { name: "Students", href: `/hc/schools/${visibleId}/students` },
   ];
+  const [activeTab, setActiveTab] = useState<TabType>(options[1]!);
+
+  useEffect(() => {
+    router.push(activeTab.href);
+  }, [activeTab, router]);
 
   return (
-    <div className="flex max-w-fit gap-x-2 rounded-lg border border-shamiri-light-grey bg-background-secondary text-base font-semibold leading-6">
-      {options.map((option) => (
-        <Link
-          key={option.name}
-          href={option.href}
-          className={cn(
-            "px-3 py-2",
-            pathname.includes(option.name.toLowerCase()) &&
-              "rounded-[6px] bg-white shadow-[0px_1px_3px_0px_#0000001a,0px_2px_1px_0px_#0000000f,0px_1px_1px_0px_#00000014]",
-          )}
-        >
-          {option.name}
-        </Link>
-      ))}
+    <div className="flex">
+      <ToggleGroup
+        type="single"
+        className="form-toggle"
+        defaultValue={activeTab.name}
+        onValueChange={(value) => {
+          const option = options.find((x) => x.name === value);
+          if (value && option) setActiveTab(option);
+        }}
+      >
+        {options.map((option) => {
+          return (
+            <ToggleGroupItem
+              key={option.name}
+              value={option.name}
+              aria-label={`Select ${option.name}`}
+              className="form-toggle-button"
+            >
+              {option.name}
+            </ToggleGroupItem>
+          );
+        })}
+      </ToggleGroup>
     </div>
   );
 }
