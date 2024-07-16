@@ -13,7 +13,9 @@ export default async function SupervisorsPage({
         some: {
           groups: {
             some: {
-              schoolId: visibleId,
+              school: {
+                visibleId: visibleId,
+              },
             },
           },
         },
@@ -29,6 +31,7 @@ export default async function SupervisorsPage({
     <DataTable
       data={supervisors}
       columns={columns}
+      className={"data-table data-table-action mt-4"}
       emptyStateMessage="No supervisors found for this school"
     />
   );
