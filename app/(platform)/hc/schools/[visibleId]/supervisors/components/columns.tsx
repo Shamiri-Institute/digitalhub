@@ -1,7 +1,7 @@
 "use client";
 
+import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
-import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
   DropdownMenu,
@@ -14,7 +14,6 @@ import {
 import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
 import React from "react";
 
 export type SupervisorsData = Prisma.SupervisorGetPayload<{
@@ -38,7 +37,7 @@ function MenuItem({
 
 export const columns: ColumnDef<SupervisorsData>[] = [
   {
-    id: "select",
+    id: "checkbox",
     header: ({ table }) => (
       <Checkbox
         checked={
@@ -47,15 +46,25 @@ export const columns: ColumnDef<SupervisorsData>[] = [
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
+        className={
+          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+        }
       />
     ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(val) => row.toggleSelected(!!val)}
-        aria-label="Select row"
-      />
-    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(val) => row.toggleSelected(!!val)}
+            aria-label="Select row"
+            className={
+              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+            }
+          />
+        </div>
+      );
+    },
     enableSorting: false,
     enableHiding: false,
   },
@@ -90,13 +99,15 @@ export const columns: ColumnDef<SupervisorsData>[] = [
       ),
   },
   {
-    id: "actions",
+    id: "button",
     cell: ({ row }) => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost">
-            <MoreHorizontal />
-          </Button>
+          <div className="absolute inset-0 border-l bg-white">
+            <div className="flex h-full w-full items-center justify-center">
+              <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
+            </div>
+          </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
@@ -112,5 +123,6 @@ export const columns: ColumnDef<SupervisorsData>[] = [
         </DropdownMenuContent>
       </DropdownMenu>
     ),
+    enableHiding: false,
   },
 ];
