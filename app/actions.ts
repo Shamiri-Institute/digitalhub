@@ -443,6 +443,7 @@ export async function markStudentAttendance({
           schoolId: school.id,
           sessionId: interventionSession.id,
           attended: attendanceBoolean,
+          groupId: groupId,
           fellowId,
         },
       });

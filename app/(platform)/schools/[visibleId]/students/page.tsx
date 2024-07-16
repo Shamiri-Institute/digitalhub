@@ -214,9 +214,10 @@ function getAttendanceStatus(
   }>[],
   sessionNumber: SessionNumber,
 ): AttendanceStatus {
-  const attendance = attendances.find(
+  const studentAttendances = attendances.filter(
     (attendance) => attendance.session.sessionType === `s${sessionNumber}`,
   );
+  const attendance = studentAttendances[studentAttendances.length - 1];
   if (attendance?.attended === true) {
     return "present";
   }
