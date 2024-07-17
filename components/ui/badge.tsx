@@ -10,14 +10,14 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-shamiri-new-blue bg-shamiri-new-light-blue text-shamiri-new-blue",
+          "border-shamiri-new-blue bg-shamiri-new-light-blue border-blue-border",
         secondary:
           "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive:
-          "text-shamiri-light-red bg-shamiri-light-red-background-base/[.1] border-shamiri-light-red",
+          "text-shamiri-light-red bg-shamiri-light-red-background-base/[.1] border-red-border",
         outline: "text-foreground",
         "shamiri-green":
-          "bg-shamiri-light-green border-shamiri-green text-shamiri-green",
+          "bg-shamiri-light-green border-green-border text-shamiri-green",
       },
     },
     defaultVariants: {
