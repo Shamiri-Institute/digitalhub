@@ -85,7 +85,7 @@ export default function SchoolLeftPanel({
       ref={panelRef}
       className="h-screen w-1/4 space-y-6 overflow-y-scroll border-r border-solid border-shamiri-light-grey px-6 py-8"
     >
-      <div className="flex items-start gap-x-4">
+      <div className="flex items-start gap-x-4 2xl:items-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-shamiri-new-light-blue p-[18px] text-xl font-semibold text-shamiri-new-blue">
           {avatarContent}
         </div>
@@ -112,7 +112,7 @@ export default function SchoolLeftPanel({
         >
           <AccordionItem value="contact-information">
             <AccordionTrigger>
-              <div className="flex w-full justify-between gap-2">
+              <div className="flex w-full justify-between gap-2 text-base">
                 <span>Contact details</span>
                 <span className="cursor-pointer text-shamiri-new-blue">
                   Edit
@@ -213,7 +213,7 @@ export default function SchoolLeftPanel({
           </AccordionItem>
           <AccordionItem value="school-information">
             <AccordionTrigger>
-              <div className="flex w-full justify-between gap-2">
+              <div className="flex w-full justify-between gap-2 text-base">
                 <span>Information</span>
                 <span className="cursor-pointer text-shamiri-new-blue">
                   Edit
