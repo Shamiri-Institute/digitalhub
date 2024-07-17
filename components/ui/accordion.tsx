@@ -31,7 +31,7 @@ const AccordionTrigger = React.forwardRef<
       )}
       {...props}
     >
-      <div className="flex w-full gap-2 border-b py-3">
+      <div className="flex w-full items-center gap-2 border-b py-3">
         <ChevronDownIcon
           className={cn(
             "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
