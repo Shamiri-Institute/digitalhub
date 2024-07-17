@@ -279,7 +279,19 @@ const ids = {
                         1.5,
                       ),
                       sessionRating: 5,
-                      supervisorVisibleId: "SPV24_S_01",
+                      supervisorVisibleId: "SPV24_S_02",
+                    },
+                    Session_03: {
+                      id: objectId("sess"),
+                      sessionType: "s2",
+                      sessionName: "Session 01",
+                      sessionDate: setMinutes(addDays(new Date(), 2), 0),
+                      sessionEndTime: addHours(
+                        setMinutes(addDays(new Date(), 2), 0),
+                        1.5,
+                      ),
+                      sessionRating: 3,
+                      supervisorVisibleId: "SPV24_S_03",
                     },
                   },
 
