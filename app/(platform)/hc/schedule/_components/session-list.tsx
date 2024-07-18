@@ -13,6 +13,7 @@ import { cn, sessionDisplayName } from "#/lib/utils";
 
 import { CancelSessionContext } from "#/app/(platform)/hc/schedule/context/cancel-session-dialog-context";
 import { FellowAttendanceContext } from "#/app/(platform)/hc/schedule/context/fellow-attendance-dialog-context";
+import { RescheduleSessionContext } from "#/app/(platform)/hc/schedule/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/schedule/context/supervisor-attendance-dialog-context";
 import {
   DropdownMenu,
@@ -104,6 +105,7 @@ export function SessionDetail({
   const schoolName = session.school.schoolName;
   const completed = session.occurred;
   const cancelled = session.status === SessionStatus.Cancelled;
+  const rescheduled = session.status === SessionStatus.Rescheduled;
 
   const isCompact = layout === "compact";
   const isExpanded = layout === "expanded";
@@ -121,11 +123,13 @@ export function SessionDetail({
             "border-green-border": completed,
             "border-blue-border": !completed,
             "border-red-border": cancelled,
+            "border-shamiri-text-dark-grey/30": rescheduled,
           },
           {
             "bg-green-bg": completed,
             "bg-blue-bg": !completed,
             "bg-red-bg": cancelled,
+            "bg-shamiri-light-grey/60": rescheduled,
           },
         )}
       >
@@ -136,16 +140,20 @@ export function SessionDetail({
             "text-green-base": completed,
             "text-blue-base": !completed,
             "text-red-base": cancelled,
+            "text-shamiri-text-dark-grey": rescheduled,
           })}
         >
           <div className="flex items-center gap-1">
             {completed && !cancelled && (
               <Icons.checkCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
             )}
-            {!completed && !cancelled && (
+            {!completed && !cancelled && !rescheduled && (
               <Icons.helpCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
             )}
             {cancelled && <Icons.crossCircleFilled className="h-3.5 w-3.5" />}
+            {rescheduled && (
+              <Icons.calendarCheck2 className="h-3.5 w-3.5" strokeWidth={2.5} />
+            )}
             {isExpanded && <div>{sessionDisplayName(session.sessionType)}</div>}
             {isCompact && (
               <div className="flex gap-1 truncate">
@@ -164,6 +172,11 @@ export function SessionDetail({
                 {timeLabels.durationLabel}
                 <span className="invisible">t</span>
               </div>
+              {session.status === "Rescheduled" && (
+                <span className="font-medium text-shamiri-light-red">
+                  RESCHEDULED
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -196,6 +209,7 @@ export function SessionDropDown({
   const supervisorAttendanceContext = useContext(SupervisorAttendanceContext);
   const fellowAttendanceContext = useContext(FellowAttendanceContext);
   const cancelSessionContext = useContext(CancelSessionContext);
+  const rescheduleSessionContext = useContext(RescheduleSessionContext);
 
   return (
     <DropdownMenu
@@ -208,6 +222,7 @@ export function SessionDropDown({
           supervisorAttendanceContext.setSession(session);
           fellowAttendanceContext.setSession(session);
           cancelSessionContext.setSession(session);
+          rescheduleSessionContext.setSession(session);
         }
       }}
     >
@@ -242,7 +257,14 @@ export function SessionDropDown({
           View fellow attendance
         </DropdownMenuItem>
         {session.sessionDate > new Date() && (
-          <DropdownMenuItem>Reschedule session</DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              rescheduleSessionContext.setIsOpen(true);
+            }}
+          >
+            Reschedule session
+          </DropdownMenuItem>
         )}
         <DropdownMenuItem disabled={session.status === "Cancelled"}>
           Weekly session report
