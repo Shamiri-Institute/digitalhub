@@ -20,6 +20,10 @@ export default function SessionsOccurredWidget({
           sessions.find((session) => {
             return session.sessionType === sessionType.name;
           })?.status === "Cancelled";
+        const rescheduledStatus =
+          sessions.find((session) => {
+            return session.sessionType === sessionType.name;
+          })?.status === "Rescheduled";
         return (
           <div
             key={sessionType.name}
@@ -29,11 +33,13 @@ export default function SessionsOccurredWidget({
                 "border-green-border": occurredStatus,
                 "border-blue-border": !occurredStatus,
                 "border-red-border": cancelledStatus,
+                "border-shamiri-text-dark-grey/30": rescheduledStatus,
               },
               {
                 "bg-green-bg": occurredStatus,
                 "bg-blue-bg": !occurredStatus,
                 "bg-red-bg": cancelledStatus,
+                "bg-shamiri-light-grey/60": rescheduledStatus,
               },
             )}
           >
@@ -42,6 +48,7 @@ export default function SessionsOccurredWidget({
                 "text-green-base": occurredStatus,
                 "text-blue-base": !occurredStatus,
                 "text-red-base": cancelledStatus,
+                "text-shamiri-text-dark-grey": rescheduledStatus,
               })}
             >
               <div className="flex items-center gap-1">
@@ -51,8 +58,14 @@ export default function SessionsOccurredWidget({
                     strokeWidth={2.5}
                   />
                 )}
-                {!occurredStatus && !cancelledStatus && (
+                {!occurredStatus && !cancelledStatus && !rescheduledStatus && (
                   <Icons.helpCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
+                )}
+                {rescheduledStatus && (
+                  <Icons.calendarCheck2
+                    className="h-3.5 w-3.5"
+                    strokeWidth={2.5}
+                  />
                 )}
                 {cancelledStatus && (
                   <Icons.crossCircleFilled

@@ -11,10 +11,10 @@ import {
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
-import { CancelSessionContext } from "#/app/(platform)/hc/schedule/context/cancel-session-dialog-context";
-import { FellowAttendanceContext } from "#/app/(platform)/hc/schedule/context/fellow-attendance-dialog-context";
-import { RescheduleSessionContext } from "#/app/(platform)/hc/schedule/context/reschedule-session-dialog-context";
-import { SupervisorAttendanceContext } from "#/app/(platform)/hc/schedule/context/supervisor-attendance-dialog-context";
+import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
+import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
+import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
+import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
 import {
   DropdownMenu,
   DropdownMenuContent,

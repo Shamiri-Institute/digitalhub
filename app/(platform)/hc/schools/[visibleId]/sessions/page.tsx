@@ -1,8 +1,25 @@
-export default function SchoolSessionsPage({
+import SessionsDatatable from "#/app/(platform)/hc/schools/[visibleId]/sessions/components/sessions-datatable";
+import { db } from "#/lib/db";
+
+export default async function SchoolSessionsPage({
   params: { visibleId },
 }: {
   params: { visibleId: string };
 }) {
-  console.log("visible id: ", visibleId);
-  return <div>Sessions data will come here</div>;
+  const sessions = await db.interventionSession.findMany({
+    where: {
+      school: {
+        visibleId,
+      },
+    },
+    include: {
+      school: {
+        include: {
+          assignedSupervisor: true,
+        },
+      },
+    },
+  });
+
+  return <SessionsDatatable sessions={sessions} />;
 }
