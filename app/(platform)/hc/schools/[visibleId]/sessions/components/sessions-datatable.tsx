@@ -1,0 +1,137 @@
+"use client";
+
+import CancelSession from "#/app/(platform)/hc/components/cancel-session";
+import DataTable from "#/app/(platform)/hc/components/data-table";
+import FellowAttendance from "#/app/(platform)/hc/components/fellow-attendance";
+import RescheduleSession from "#/app/(platform)/hc/components/reschedule-session";
+import SupervisorAttendance from "#/app/(platform)/hc/components/supervisor-attendance";
+import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
+import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
+import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
+import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
+import {
+  columns,
+  SessionData,
+} from "#/app/(platform)/hc/schools/[visibleId]/sessions/components/columns";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import { Prisma } from "@prisma/client";
+import { addHours, addMinutes } from "date-fns";
+import { usePathname } from "next/navigation";
+import * as React from "react";
+import { useState } from "react";
+
+export default function SessionsDatatable({
+  sessions,
+}: {
+  sessions: SessionData[];
+}) {
+  const pathname = usePathname();
+  const [_sessions, setSessions] = useState(sessions);
+  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
+    React.useState(false);
+  const [fellowAttendanceDialog, setFellowAttendanceDialog] =
+    React.useState(false);
+  const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
+  const [rescheduleSessionDialog, setRescheduleSessionDialog] =
+    React.useState(false);
+  const [session, setSession] =
+    React.useState<Prisma.InterventionSessionGetPayload<{
+      include: { school: true };
+    }> | null>(null);
+
+  function updateRescheduledSessionState(
+    sessionDate: Date,
+    sessionDuration: string,
+  ) {
+    const sessionIndex =
+      session !== null
+        ? sessions.findIndex((_session) => {
+            return _session.id === session.id;
+          })
+        : -1;
+
+    const copiedSessions = [...sessions];
+    if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
+      copiedSessions[sessionIndex]!.sessionDate = sessionDate;
+
+      const hours = +(sessionDuration.split(":")[0] ?? 0);
+      const minutes = +(sessionDuration.split(":")[1] ?? 0);
+      copiedSessions[sessionIndex]!.sessionEndTime = addHours(
+        addMinutes(sessionDate, minutes),
+        hours,
+      );
+      copiedSessions[sessionIndex]!.status = "Rescheduled";
+      setSessions(copiedSessions);
+    }
+
+    return revalidatePageAction(pathname);
+  }
+
+  function updateCancelledSessionState() {
+    const sessionIndex =
+      session !== null
+        ? sessions.findIndex((_session) => {
+            return _session.id === session.id;
+          })
+        : -1;
+
+    const copiedSessions = [...sessions];
+    if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
+      copiedSessions[sessionIndex]!.status = "Cancelled";
+      setSessions(copiedSessions);
+    }
+
+    return revalidatePageAction(pathname);
+  }
+
+  return (
+    <SupervisorAttendanceContext.Provider
+      value={{
+        isOpen: supervisorAttendanceDialog,
+        setIsOpen: setSupervisorAttendanceDialog,
+        session,
+        setSession,
+      }}
+    >
+      <FellowAttendanceContext.Provider
+        value={{
+          isOpen: fellowAttendanceDialog,
+          setIsOpen: setFellowAttendanceDialog,
+          session,
+          setSession,
+        }}
+      >
+        <CancelSessionContext.Provider
+          value={{
+            isOpen: cancelSessionDialog,
+            setIsOpen: setCancelSessionDialog,
+            session,
+            setSession,
+          }}
+        >
+          <RescheduleSessionContext.Provider
+            value={{
+              isOpen: rescheduleSessionDialog,
+              setIsOpen: setRescheduleSessionDialog,
+              session,
+              setSession,
+            }}
+          >
+            <DataTable
+              data={_sessions}
+              columns={columns}
+              className={"data-table data-table-action mt-4"}
+              emptyStateMessage="No sessions found for this school"
+            />
+            <RescheduleSession
+              updateSessionsState={updateRescheduledSessionState}
+            />
+          </RescheduleSessionContext.Provider>
+          <CancelSession updateSessionsState={updateCancelledSessionState} />
+        </CancelSessionContext.Provider>
+        <FellowAttendance />
+      </FellowAttendanceContext.Provider>
+      <SupervisorAttendance />
+    </SupervisorAttendanceContext.Provider>
+  );
+}
