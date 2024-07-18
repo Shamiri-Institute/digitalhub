@@ -18,6 +18,7 @@ import { cn } from "#/lib/utils";
 import {
   ColumnDef,
   OnChangeFn,
+  Row,
   RowSelectionState,
   SortingState,
   VisibilityState,
@@ -36,6 +37,8 @@ interface DataTableProps<TData, TValue> {
   editColumns?: boolean;
   className?: string;
   onRowSelectionChange?: (rows: unknown[]) => void;
+  columnVisibilityState?: VisibilityState;
+  enableRowSelection?: boolean | ((row: Row<TData>) => boolean) | undefined;
 }
 
 export default function DataTable<TData, TValue>({
@@ -45,9 +48,13 @@ export default function DataTable<TData, TValue>({
   className,
   emptyStateMessage,
   onRowSelectionChange,
+  columnVisibilityState = {},
+  enableRowSelection,
 }: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    columnVisibilityState,
+  );
   const [rowSelection, setRowSelection] = useState({});
 
   const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (state) => {
@@ -62,6 +69,7 @@ export default function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: handleRowSelectionChange,
+    enableRowSelection,
     state: { sorting, columnVisibility, rowSelection },
   });
 
