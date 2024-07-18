@@ -214,9 +214,12 @@ function getAttendanceStatus(
   }>[],
   sessionNumber: SessionNumber,
 ): AttendanceStatus {
-  const attendance = attendances.find(
-    (attendance) => attendance.session.sessionType === `s${sessionNumber}`,
-  );
+  const studentAttendances = attendances
+    .filter(
+      (attendance) => attendance.session.sessionType === `s${sessionNumber}`,
+    )
+    .sort((a, b) => a.id - b.id); // sort by id
+  const attendance = studentAttendances[studentAttendances.length - 1]; // pick most recent record -> for duplicate attendances
   if (attendance?.attended === true) {
     return "present";
   }
