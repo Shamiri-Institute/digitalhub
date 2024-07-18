@@ -25,6 +25,10 @@ export async function fetchSchoolData(hubId: string) {
   });
 }
 
+export async function revalidatePageAction(pathname: string) {
+  revalidatePath(pathname);
+}
+
 export async function fetchSessionAttendanceData(hubId: string) {
   const sessionAttendanceData = await db.$queryRaw<
     { session_number: number; count: number }[]

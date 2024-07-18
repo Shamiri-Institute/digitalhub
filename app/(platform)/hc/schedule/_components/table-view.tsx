@@ -2,16 +2,16 @@ import {
   FellowAttendanceDataTable,
   FellowAttendancesTableData,
   columns as fellowAttendanceColumns,
-} from "#/app/(platform)/hc/schedule/_components/fellow-attendance";
-import {
-  Session,
-  SessionsContext,
-} from "#/app/(platform)/hc/schedule/_components/sessions-provider";
+} from "#/app/(platform)/hc/components/fellow-attendance";
 import {
   SupervisorAttendanceDataTable,
   SupervisorAttendanceTableData,
   columns as supervisorAttendanceColumns,
-} from "#/app/(platform)/hc/schedule/_components/supervisor-attendance";
+} from "#/app/(platform)/hc/components/supervisor-attendance";
+import {
+  Session,
+  SessionsContext,
+} from "#/app/(platform)/hc/schedule/_components/sessions-provider";
 import { useTitle } from "#/app/(platform)/hc/schedule/_components/title-provider";
 import { fetchDayFellowAttendances } from "#/app/(platform)/hc/schedule/actions/fellow-attendances";
 import {

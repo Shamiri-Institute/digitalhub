@@ -25,14 +25,16 @@ import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
+import CancelSession from "#/app/(platform)/hc/components/cancel-session";
+import FellowAttendance from "#/app/(platform)/hc/components/fellow-attendance";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
-import CancelSession from "#/app/(platform)/hc/schedule/_components/cancel-session";
-import FellowAttendance from "#/app/(platform)/hc/schedule/_components/fellow-attendance";
-import RescheduleSession from "#/app/(platform)/hc/schedule/_components/reschedule-session";
+import RescheduleSession from "#/app/(platform)/hc/components/reschedule-session";
+import SupervisorAttendance from "#/app/(platform)/hc/components/supervisor-attendance";
+import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
+import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
+import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
+import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
 import { ScheduleNewSession } from "#/app/(platform)/hc/schedule/_components/schedule-new-session-form";
-import SupervisorAttendance from "#/app/(platform)/hc/schedule/_components/supervisor-attendance";
-import { CancelSessionContext } from "#/app/(platform)/hc/schedule/context/cancel-session-dialog-context";
-import { FellowAttendanceContext } from "#/app/(platform)/hc/schedule/context/fellow-attendance-dialog-context";
 import {
   DateRangeType,
   Filters,
@@ -40,8 +42,6 @@ import {
   sessionTypeFilterOptions,
   statusFilterOptions,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
-import { RescheduleSessionContext } from "#/app/(platform)/hc/schedule/context/reschedule-session-dialog-context";
-import { SupervisorAttendanceContext } from "#/app/(platform)/hc/schedule/context/supervisor-attendance-dialog-context";
 import {
   Dialog,
   DialogContent,
@@ -55,13 +55,18 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
 import { Prisma, SessionStatus } from "@prisma/client";
+import { addHours, addMinutes } from "date-fns";
 import * as React from "react";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { ModeProvider, useMode, type Mode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import { SessionsProvider, useSessions } from "./sessions-provider";
+import {
+  SessionsContext,
+  SessionsProvider,
+  useSessions,
+} from "./sessions-provider";
 import { TableView } from "./table-view";
 import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
@@ -318,7 +323,7 @@ function CalendarView({
   };
 }) {
   const { mode } = useMode();
-
+  const { sessions, setSessions } = useContext(SessionsContext);
   const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
     React.useState(false);
   const [fellowAttendanceDialog, setFellowAttendanceDialog] =
@@ -357,6 +362,47 @@ function CalendarView({
     }
   };
 
+  function updateRescheduledSessionState(
+    sessionDate: Date,
+    sessionDuration: string,
+  ) {
+    const sessionIndex =
+      session !== null
+        ? sessions.findIndex((_session) => {
+            return _session.id === session.id;
+          })
+        : -1;
+
+    const copiedSessions = [...sessions];
+    if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
+      copiedSessions[sessionIndex]!.sessionDate = sessionDate;
+
+      const hours = +(sessionDuration.split(":")[0] ?? 0);
+      const minutes = +(sessionDuration.split(":")[1] ?? 0);
+      copiedSessions[sessionIndex]!.sessionEndTime = addHours(
+        addMinutes(sessionDate, minutes),
+        hours,
+      );
+      copiedSessions[sessionIndex]!.status = "Rescheduled";
+      setSessions(copiedSessions);
+    }
+  }
+
+  function updateCancelledSessionState() {
+    const sessionIndex =
+      session !== null
+        ? sessions.findIndex((_session) => {
+            return _session.id === session.id;
+          })
+        : -1;
+
+    const copiedSessions = [...sessions];
+    if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
+      copiedSessions[sessionIndex]!.status = "Cancelled";
+      setSessions(copiedSessions);
+    }
+  }
+
   return (
     <div>
       <SupervisorAttendanceContext.Provider
@@ -392,9 +438,11 @@ function CalendarView({
               }}
             >
               {activeMode()}
-              <RescheduleSession />
+              <RescheduleSession
+                updateSessionsState={updateRescheduledSessionState}
+              />
             </RescheduleSessionContext.Provider>
-            <CancelSession />
+            <CancelSession updateSessionsState={updateCancelledSessionState} />
           </CancelSessionContext.Provider>
           <FellowAttendance />
         </FellowAttendanceContext.Provider>
