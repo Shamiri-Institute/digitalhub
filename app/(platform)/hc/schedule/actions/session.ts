@@ -9,6 +9,12 @@ import { Prisma } from "@prisma/client";
 import { addHours, addMinutes } from "date-fns";
 import { z } from "zod";
 
+function checkAuthorizedUser() {
+  const user = getCurrentUser();
+  if (user === null)
+    return { success: false, message: "Unauthenticated user." };
+}
+
 function generateSupervisorAttendanceVisibleId(
   supervisorId: string,
   schoolId: string,
@@ -21,9 +27,7 @@ function generateSupervisorAttendanceVisibleId(
 export async function createNewSession(
   data: z.infer<typeof ScheduleNewSessionSchema>,
 ) {
-  const user = getCurrentUser();
-  if (user === null)
-    return { success: false, message: "Unauthenticated user." };
+  checkAuthorizedUser();
 
   try {
     const parsedData = ScheduleNewSessionSchema.parse(data);
@@ -85,5 +89,27 @@ export async function createNewSession(
   } catch (error: unknown) {
     console.error(error);
     return { error: "Something went wrong while scheduling a new session" };
+  }
+}
+
+export async function cancelSession(id: string) {
+  checkAuthorizedUser();
+  try {
+    await db.interventionSession.update({
+      data: {
+        status: "Cancelled",
+      },
+      where: {
+        id,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Successfully cancelled session.",
+    };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong while cancelling session" };
   }
 }
