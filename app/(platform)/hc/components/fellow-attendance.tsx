@@ -1,7 +1,7 @@
 import DataTable from "#/app/(platform)/hc/components/data-table";
+import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
 import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
 import { fetchSessionFellowAttendances } from "#/app/(platform)/hc/schedule/actions/fellow-attendances";
-import { FellowAttendanceContext } from "#/app/(platform)/hc/schedule/context/fellow-attendance-dialog-context";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
