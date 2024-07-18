@@ -1,7 +1,6 @@
+import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
 import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
-import { SessionsContext } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
 import { cancelSession } from "#/app/(platform)/hc/schedule/actions/session";
-import { CancelSessionContext } from "#/app/(platform)/hc/schedule/context/cancel-session-dialog-context";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -14,27 +13,21 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { useContext } from "react";
 
-export default function CancelSession() {
+export default function CancelSession({
+  updateSessionsState,
+}: {
+  updateSessionsState: () => void;
+}) {
   const context = useContext(CancelSessionContext);
-  const { sessions, setSessions } = useContext(SessionsContext);
-
   async function cancelSelectedSession() {
     if (context.session) {
       const response = await cancelSession(context.session?.id);
       if (response.success) {
-        const session = sessions.findIndex((session) => {
-          return session.id === context.session?.id;
+        updateSessionsState();
+        context.setIsOpen(false);
+        toast({
+          description: response.message,
         });
-
-        const copiedSessions = [...sessions];
-        if (session !== -1 && copiedSessions[session] !== undefined) {
-          copiedSessions[session]!.status = "Cancelled";
-          setSessions(copiedSessions);
-          context.setIsOpen(false);
-          toast({
-            description: response.message,
-          });
-        }
       } else {
         toast({
           description: response.error,

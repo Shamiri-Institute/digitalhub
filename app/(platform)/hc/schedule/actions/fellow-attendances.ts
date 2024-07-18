@@ -1,6 +1,6 @@
 "use server";
 
-import { FellowAttendancesTableData } from "#/app/(platform)/hc/schedule/_components/fellow-attendance";
+import { FellowAttendancesTableData } from "#/app/(platform)/hc/components/fellow-attendance";
 import { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";

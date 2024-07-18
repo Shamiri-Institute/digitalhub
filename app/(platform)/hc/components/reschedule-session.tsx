@@ -1,7 +1,6 @@
+import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
-import { SessionsContext } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
 import { rescheduleSession } from "#/app/(platform)/hc/schedule/actions/session";
-import { RescheduleSessionContext } from "#/app/(platform)/hc/schedule/context/reschedule-session-dialog-context";
 import { RescheduleSessionSchema } from "#/app/(platform)/hc/schemas";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -34,14 +33,17 @@ import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
-import { addHours, addMinutes, format } from "date-fns";
+import { format } from "date-fns";
 import { useContext } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-export default function RescheduleSession() {
+export default function RescheduleSession({
+  updateSessionsState,
+}: {
+  updateSessionsState: (sessionDate: Date, sessionDuration: string) => void;
+}) {
   const context = useContext(RescheduleSessionContext);
-  const { sessions, setSessions } = useContext(SessionsContext);
 
   const form = useForm<z.infer<typeof RescheduleSessionSchema>>({
     resolver: zodResolver(RescheduleSessionSchema),
@@ -62,27 +64,11 @@ export default function RescheduleSession() {
       if (context.session) {
         const response = await rescheduleSession(context.session?.id, data);
         if (response.success) {
-          const session = sessions.findIndex((session) => {
-            return session.id === context.session?.id;
+          updateSessionsState(data.sessionDate, data.sessionDuration);
+          context.setIsOpen(false);
+          toast({
+            description: response.message,
           });
-
-          const copiedSessions = [...sessions];
-          if (session !== -1 && copiedSessions[session] !== undefined) {
-            copiedSessions[session]!.sessionDate = data.sessionDate;
-
-            const hours = +(data.sessionDuration.split(":")[0] ?? 0);
-            const minutes = +(data.sessionDuration.split(":")[1] ?? 0);
-            copiedSessions[session]!.sessionEndTime = addHours(
-              addMinutes(data.sessionDate, minutes),
-              hours,
-            );
-            copiedSessions[session]!.status = "Rescheduled";
-            setSessions(copiedSessions);
-            context.setIsOpen(false);
-            toast({
-              description: response.message,
-            });
-          }
           form.reset();
           return;
         }
