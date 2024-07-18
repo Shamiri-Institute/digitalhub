@@ -2,6 +2,7 @@ import {
   Backpack,
   Banknote,
   Calendar,
+  CalendarCheck2,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -73,6 +74,7 @@ export const Icons = {
   PencilLine: PencilLineIcon,
   hourglass: Hourglass,
   info: Info,
+  calendarCheck2: CalendarCheck2,
 
   // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (

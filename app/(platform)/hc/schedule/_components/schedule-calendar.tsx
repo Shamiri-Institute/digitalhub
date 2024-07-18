@@ -27,6 +27,7 @@ import { Icons } from "#/components/icons";
 
 import CancelSession from "#/app/(platform)/hc/schedule/_components/cancel-session";
 import FellowAttendance from "#/app/(platform)/hc/schedule/_components/fellow-attendance";
+import RescheduleSession from "#/app/(platform)/hc/schedule/_components/reschedule-session";
 import { ScheduleNewSession } from "#/app/(platform)/hc/schedule/_components/schedule-new-session-form";
 import SupervisorAttendance from "#/app/(platform)/hc/schedule/_components/supervisor-attendance";
 import { CancelSessionContext } from "#/app/(platform)/hc/schedule/context/cancel-session-dialog-context";
@@ -38,6 +39,7 @@ import {
   sessionTypeFilterOptions,
   statusFilterOptions,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
+import { RescheduleSessionContext } from "#/app/(platform)/hc/schedule/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/schedule/context/supervisor-attendance-dialog-context";
 import { Button } from "#/components/ui/button";
 import {
@@ -326,6 +328,8 @@ function CalendarView({
   const [fellowAttendanceDialog, setFellowAttendanceDialog] =
     React.useState(false);
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
+  const [rescheduleSessionDialog, setRescheduleSessionDialog] =
+    React.useState(false);
 
   const [session, setSession] =
     React.useState<Prisma.InterventionSessionGetPayload<{
@@ -383,7 +387,17 @@ function CalendarView({
               setSession,
             }}
           >
-            {activeMode()}
+            <RescheduleSessionContext.Provider
+              value={{
+                isOpen: rescheduleSessionDialog,
+                setIsOpen: setRescheduleSessionDialog,
+                session,
+                setSession,
+              }}
+            >
+              {activeMode()}
+              <RescheduleSession />
+            </RescheduleSessionContext.Provider>
             <CancelSession />
           </CancelSessionContext.Provider>
           <FellowAttendance />
