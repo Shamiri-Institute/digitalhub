@@ -50,9 +50,7 @@
 
     --brand-light-gray: 0 4% 51%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }

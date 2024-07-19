@@ -10,6 +10,7 @@ import {
   AccordionTrigger,
 } from "#/components/ui/accordion";
 import { Separator } from "#/components/ui/separator";
+import { getSchoolInitials } from "#/lib/utils";
 import LocationIcon from "#/public/icons/location-pin-icon.svg";
 import MailIcon from "#/public/icons/mail-icon.svg";
 import PhoneIcon from "#/public/icons/telephone-icon.svg";
@@ -73,13 +74,6 @@ export default function SchoolLeftPanel({
     { scope: panelRef },
   );
 
-  const avatarContent =
-    school?.schoolName
-      .split(" ")
-      .filter((i) => i.toLowerCase() !== "school")
-      .map((i) => i[0]?.toUpperCase())
-      .join("") ?? "N/A";
-
   return (
     <div
       ref={panelRef}
@@ -87,7 +81,7 @@ export default function SchoolLeftPanel({
     >
       <div className="flex items-start gap-x-4 2xl:items-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-shamiri-new-light-blue p-[18px] text-xl font-semibold text-shamiri-new-blue">
-          {avatarContent}
+          {getSchoolInitials(school?.schoolName ?? "")}
         </div>
         <h2 className="text-[28px] font-semibold text-black">
           {school?.schoolName}
