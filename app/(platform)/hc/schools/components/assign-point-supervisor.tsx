@@ -141,7 +141,7 @@ export default function AssignPointSupervisor({
                 )}
               />
             </div>
-            <Separator className="my-6" />
+            <Separator className="my-3" />
             <div className="flex justify-end gap-2">
               <Button
                 variant="ghost"
