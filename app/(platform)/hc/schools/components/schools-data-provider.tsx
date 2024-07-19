@@ -11,6 +11,7 @@ export default function SchoolsDataProvider({
   schools: SchoolsTableData[];
 }) {
   const [filteredSchools, setFilteredSchools] = useState(schools);
+
   return (
     <SchoolsDataContext.Provider
       value={{

@@ -4,6 +4,8 @@ import { createContext, Dispatch, SetStateAction } from "react";
 type SchoolInfoContextData = {
   editDialog: boolean;
   setEditDialog: Dispatch<SetStateAction<boolean>>;
+  pointSupervisorDialog: boolean;
+  setPointSupervisorDialog: Dispatch<SetStateAction<boolean>>;
   school: SchoolsTableData | null;
   setSchool: Dispatch<SetStateAction<SchoolsTableData | null>>;
 };
@@ -11,6 +13,8 @@ type SchoolInfoContextData = {
 export const SchoolInfoContext = createContext<SchoolInfoContextData>({
   editDialog: false,
   setEditDialog: () => {},
+  pointSupervisorDialog: false,
+  setPointSupervisorDialog: () => {},
   school: null,
   setSchool: () => {},
 });

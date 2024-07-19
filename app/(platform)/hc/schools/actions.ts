@@ -2,9 +2,11 @@
 
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
+  AssignPointSupervisorSchema,
   DropoutSchoolSchema,
   EditSchoolSchema,
   WeeklyHubReportSchema,
@@ -267,8 +269,6 @@ export async function editSchoolInformation(
       },
       data: parsedData,
     });
-
-    revalidatePath("/hc/schools");
     return {
       success: true,
       message: `Successfully updated school information for ${schoolName}`,
@@ -279,6 +279,50 @@ export async function editSchoolInformation(
       success: false,
       message:
         (err as Error)?.message ?? "Sorry, could not update the school details",
+    };
+  }
+}
+
+export async function fetchHubSupervisors({
+  where,
+}: {
+  where: Prisma.SupervisorWhereInput;
+}) {
+  return await db.supervisor.findMany({
+    where,
+  });
+}
+
+export async function assignSchoolPointSupervisor(
+  schoolId: string,
+  schoolInfo: z.infer<typeof AssignPointSupervisorSchema>,
+) {
+  try {
+    const authedCoordinator = await currentHubCoordinator();
+
+    if (!authedCoordinator) {
+      throw new Error("User not authorised to perform this function");
+    }
+
+    const parsedData = AssignPointSupervisorSchema.parse(schoolInfo);
+
+    const { schoolName } = await db.school.update({
+      where: {
+        id: schoolId,
+      },
+      data: parsedData,
+    });
+    return {
+      success: true,
+      message: `Successfully updated point supervisor for ${schoolName}`,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ??
+        "Sorry, could not assign the school point supervisor",
     };
   }
 }

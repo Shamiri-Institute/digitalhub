@@ -15,6 +15,16 @@ export function getInitials(name: string): string {
   return firstInitial + lastInitial;
 }
 
+export function getSchoolInitials(name: string): string {
+  return (
+    name
+      .split(" ")
+      .filter((i) => i.toLowerCase() !== "school")
+      .map((i) => i[0]?.toUpperCase())
+      .join("") ?? "N/A"
+  );
+}
+
 export function constructMetadata({
   title = "Shamiri Digital Hub ",
   description = "The Shamiri Digital Hub is a platform for managing the Shamiri Intervention.",
