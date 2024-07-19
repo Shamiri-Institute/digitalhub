@@ -72,6 +72,12 @@ export const EditSchoolSchema = z.object({
     .optional(),
 });
 
+export const AssignPointSupervisorSchema = z.object({
+  assignedSupervisorId: z.string({
+    required_error: "Please pick a supervisor.",
+  }),
+});
+
 export const ScheduleNewSessionSchema = z.object({
   sessionType: stringValidation("Please select a session type"),
   schoolId: stringValidation("Please select a school"),

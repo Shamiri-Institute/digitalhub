@@ -32,6 +32,7 @@ import {
   SCHOOL_DEMOGRAPHICS,
   SCHOOL_TYPES,
 } from "#/lib/app-constants/constants";
+import { getSchoolInitials } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useContext, useEffect } from "react";
@@ -48,7 +49,10 @@ export default function EditSchoolDetailsForm() {
 
   const form = useForm<z.infer<typeof EditSchoolSchema>>({
     resolver: zodResolver(EditSchoolSchema),
-    defaultValues: {
+  });
+
+  useEffect(() => {
+    const defaultValues = {
       numbersExpected: context.school?.numbersExpected ?? undefined,
       schoolEmail: context.school?.schoolEmail ?? "",
       /* TODO:
@@ -70,11 +74,9 @@ export default function EditSchoolDetailsForm() {
       pointPersonPhone: context.school?.pointPersonPhone ?? undefined,
       pointPersonEmail: context.school?.pointPersonEmail ?? undefined,
       pointPersonName: context.school?.pointPersonName ?? undefined,
-    },
-  });
-
-  useEffect(() => {
-    form.reset();
+    };
+    // @ts-ignore
+    form.reset(defaultValues);
   }, [context.editDialog]);
 
   const onSubmit = async (data: z.infer<typeof EditSchoolSchema>) => {
@@ -93,9 +95,7 @@ export default function EditSchoolDetailsForm() {
       }
 
       toast({
-        variant: "default",
-        title: "Success",
-        description: "Successfully submitted weekly evaluation",
+        description: response.message,
       });
 
       form.reset();
@@ -105,186 +105,238 @@ export default function EditSchoolDetailsForm() {
 
   return (
     <Dialog open={context.editDialog} onOpenChange={context.setEditDialog}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-1/2 max-w-none">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <h2>Edit School Information for: {context.school?.schoolName}</h2>
+              <div className="flex items-center gap-3">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-shamiri-new-light-blue p-[18px] text-xl font-semibold text-shamiri-new-blue">
+                  {getSchoolInitials(context.school?.schoolName ?? "")}
+                </div>
+                <div className="flex flex-col">
+                  <h2 className="text-2xl font-semibold text-black">
+                    {context.school?.schoolName}
+                  </h2>
+                  <span className="text-shamiri-text-grey">
+                    Edit school information
+                  </span>
+                </div>
+              </div>
             </DialogHeader>
             <Separator className="my-6" />
             <div className="space-y-6">
-              <FormField
-                control={form.control}
-                name="numbersExpected"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Promised Number of students</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="number" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="schoolEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>School Email</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="email" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="pointPersonName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Point Person Name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="pointPersonEmail"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Point Person Email</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="pointPersonPhone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Point Person Phone Number</FormLabel>
-                    <FormControl>
-                      <Input {...field} type="tel" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="schoolCounty"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>School County</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          {isCountySelectionValid ? (
-                            <SelectValue placeholder="Please select county" />
-                          ) : (
-                            <SelectValue>
-                              {context.school?.schoolCounty}
-                            </SelectValue>
-                          )}
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {KENYAN_COUNTIES.map((county) => (
-                          <SelectItem key={county} value={county}>
-                            {county}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="schoolDemographics"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>School Demographics</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Please select one of the options" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {SCHOOL_DEMOGRAPHICS.map((demographic) => (
-                          <SelectItem key={demographic} value={demographic}>
-                            {demographic}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="boardingDay"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>School Boarding Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Please select the school boarding status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {BOARDING_DAY_TYPES.map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {t}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="schoolType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>School Type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Please select the school type (county, national, etc)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {SCHOOL_TYPES.map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {t}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="flex flex-col">
+                <div className="col-span-2 py-2">
+                  <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                    School Information
+                  </span>
+                  <Separator />
+                </div>
+                <div className="grid grid-cols-6 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="numbersExpected"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>Promised no. of students</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="number" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="schoolEmail"
+                    render={({ field }) => (
+                      <FormItem className="col-span-4">
+                        <FormLabel>School email</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="schoolDemographics"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>School demographics</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Please select one of the options" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {SCHOOL_DEMOGRAPHICS.map((demographic) => (
+                              <SelectItem key={demographic} value={demographic}>
+                                {demographic}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="schoolCounty"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>School county</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              {isCountySelectionValid ? (
+                                <SelectValue placeholder="Select county" />
+                              ) : (
+                                <SelectValue>
+                                  {context.school?.schoolCounty}
+                                </SelectValue>
+                              )}
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {KENYAN_COUNTIES.map((county) => (
+                              <SelectItem key={county} value={county}>
+                                {county}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="boardingDay"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>School boarding status</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Please select the school boarding status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {BOARDING_DAY_TYPES.map((t) => (
+                              <SelectItem key={t} value={t}>
+                                {t}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="schoolType"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>School type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Please select the school type (county, national, etc)" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {SCHOOL_TYPES.map((t) => (
+                              <SelectItem key={t} value={t}>
+                                {t}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col">
+                <div className="col-span-2 py-2">
+                  <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                    Contact Information
+                  </span>
+                  <Separator />
+                </div>
+                <div className="grid grid-cols-6 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="pointPersonName"
+                    render={({ field }) => (
+                      <FormItem className="col-span-3">
+                        <FormLabel>Point person name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="pointPersonEmail"
+                    render={({ field }) => (
+                      <FormItem className="col-span-3">
+                        <FormLabel>Point person email</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="pointPersonPhone"
+                    render={({ field }) => (
+                      <FormItem className="col-span-4">
+                        <FormLabel>Point person phone number</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="tel" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </div>
             <Separator className="my-6" />
-            <DialogFooter className="flex justify-end">
+            <DialogFooter className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                type="button"
+                className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+                onClick={() => {
+                  context.setEditDialog(false);
+                }}
+              >
+                Cancel
+              </Button>
               <Button
                 className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
                 type="submit"
