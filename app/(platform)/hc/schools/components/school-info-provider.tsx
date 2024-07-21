@@ -10,6 +10,7 @@ export default function SchoolInfoProvider({
 }) {
   const [editDialog, setEditDialog] = useState(false);
   const [pointSupervisorDialog, setPointSupervisorDialog] = useState(false);
+  const [schoolDropOutDialog, setSchoolDropOutDialog] = useState(false);
   const [school, setSchool] = useState<SchoolsTableData | null>(null);
   return (
     <SchoolInfoContext.Provider
@@ -20,6 +21,8 @@ export default function SchoolInfoProvider({
         setEditDialog,
         pointSupervisorDialog,
         setPointSupervisorDialog,
+        schoolDropOutDialog,
+        setSchoolDropOutDialog,
       }}
     >
       {children}
