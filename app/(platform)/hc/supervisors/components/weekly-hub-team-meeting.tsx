@@ -35,7 +35,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { WeeklyHubTeamMeetingSchema } from "../../schemas";
-// import { submitWeeklyHubReport } from "../actions";
 
 function generateWeekFieldValues() {
   const numWeeks = 4;
@@ -97,7 +96,7 @@ export default function WeeklyHubReportButtonAndForm({
     toast({
       variant: "default",
       title: "Success",
-      description: "Successfully submitted weekly hub report",
+      description: "Successfully submitted weekly hub team meeting report",
     });
 
     form.reset();
