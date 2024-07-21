@@ -2,9 +2,9 @@
 
 import { AssignPointSupervisorSchema } from "#/app/(platform)/hc/schemas";
 import { assignSchoolPointSupervisor } from "#/app/(platform)/hc/schools/actions";
+import SchoolNameInfoWidget from "#/app/(platform)/hc/schools/components/school-name-info-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
-import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
 import {
@@ -101,13 +101,7 @@ export default function AssignPointSupervisor({
               : "Assign point supervisor"}
           </span>
         </DialogHeader>
-        <div className="flex items-center gap-3 rounded-lg border border-blue-border bg-blue-bg px-4 py-2">
-          <Icons.info className="h-4 w-4 text-shamiri-new-blue" />
-          <span className="text-shamiri-new-blue">
-            {context.school?.schoolName}
-          </span>
-        </div>
-        <Separator />
+        <SchoolNameInfoWidget schoolName={context.school?.schoolName} />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="space-y-6">

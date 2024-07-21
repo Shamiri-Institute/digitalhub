@@ -1,4 +1,3 @@
-import { DropoutSchool } from "#/app/(platform)/hc/components/dropout-school-form";
 import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { Icons } from "#/components/icons";
@@ -66,13 +65,13 @@ export default function SchoolTableDropdown({
             : "Assign point supervisor"}
         </DropdownMenuItem>
         {!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
-          <DropdownMenuItem className="text-shamiri-red">
-            <DropoutSchool
-              schoolId={schoolRow.id}
-              schoolName={schoolRow.schoolName}
-            >
-              <div>Dropout school</div>
-            </DropoutSchool>
+          <DropdownMenuItem
+            className="text-shamiri-red"
+            onClick={() => {
+              context.setSchoolDropOutDialog(true);
+            }}
+          >
+            Dropout school
           </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>

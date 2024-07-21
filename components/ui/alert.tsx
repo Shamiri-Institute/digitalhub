@@ -7,7 +7,7 @@ const alertVariants = cva("w-full text-sm font-medium rounded-xl p-3", {
   variants: {
     variant: {
       primary:
-        "bg-shamiri-new-light-blue border-bg-shamiri-new-lighter-blue text-shamiri-new-blue",
+        "bg-shamiri-new-light-blue border-2 border-blue-border text-shamiri-new-blue",
       default: "bg-background text-foreground rounded-lg border",
       destructive:
         "border-shamiri-light-red text-shamiri-light-red bg-shamiri-light-red-background-base/[.1]",
