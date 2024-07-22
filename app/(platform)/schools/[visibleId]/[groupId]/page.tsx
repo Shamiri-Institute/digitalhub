@@ -13,12 +13,11 @@ import { Prisma } from "@prisma/client";
 const sessionTypeToDisplayName: {
   [key: string]: string;
 } = {
-  // s0: "Pre session",
-  // s1: "Session 01",
-  // s2: "Session 02",
-  // s3: "Session 03",
-  // s4: "Session 04",
-  all: "All Sessions",
+  s0: "Pre session",
+  s1: "Session 01",
+  s2: "Session 02",
+  s3: "Session 03",
+  s4: "Session 04",
 };
 
 export default async function GroupReport({
