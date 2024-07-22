@@ -54,9 +54,17 @@ export default function SchoolTableDropdown({
             context.setEditDialog(true);
           }}
         >
-          Edit School Information
+          Edit school information
         </DropdownMenuItem>
-        <DropdownMenuItem>Assign point supervisor</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            context.setPointSupervisorDialog(true);
+          }}
+        >
+          {context.school?.assignedSupervisorId !== null
+            ? "Change point supervisor"
+            : "Assign point supervisor"}
+        </DropdownMenuItem>
         {!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
           <DropdownMenuItem className="text-shamiri-red">
             <DropoutSchool
