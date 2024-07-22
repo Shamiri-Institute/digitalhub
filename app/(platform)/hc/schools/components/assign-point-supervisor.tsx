@@ -70,7 +70,6 @@ export default function AssignPointSupervisor({
         (_school) => _school.id === context.school?.id,
       );
       if (index !== -1) {
-        console.log(index);
         copiedSchools[index]!.assignedSupervisorId = data.assignedSupervisorId;
         copiedSchools[index]!.assignedSupervisor =
           supervisors.find(
