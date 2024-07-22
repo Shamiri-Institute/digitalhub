@@ -9,6 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "#/components/ui/accordion";
+import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Separator } from "#/components/ui/separator";
 import { getSchoolInitials } from "#/lib/utils";
 import LocationIcon from "#/public/icons/location-pin-icon.svg";
@@ -16,8 +17,10 @@ import MailIcon from "#/public/icons/mail-icon.svg";
 import PhoneIcon from "#/public/icons/telephone-icon.svg";
 import { useGSAP } from "@gsap/react";
 import { Prisma } from "@prisma/client";
+import { format } from "date-fns";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { InfoIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -88,10 +91,29 @@ export default function SchoolLeftPanel({
         </h2>
       </div>
       <Separator />
+      {school?.droppedOut && school?.droppedOutAt !== null && (
+        <div className="space-y-6">
+          <Alert variant="destructive">
+            <AlertTitle className="flex items-start gap-2">
+              <div className="pt-1">
+                <InfoIcon className="h-4 w-4 shrink-0" />
+              </div>
+              <p>
+                <span>Dropped out </span>(
+                {format(new Date(school?.droppedOutAt), "dd-MM-yyyy")})
+                <span>
+                  {school?.dropoutReason && " : " + school?.dropoutReason}
+                </span>
+              </p>
+            </AlertTitle>
+          </Alert>
+          <Separator />
+        </div>
+      )}
       <SessionsOccurredWidget
         sessions={selectedSchool?.interventionSessions ?? []}
       />
-      <div className="flex justify-center">
+      <div className="flex justify-center px-4">
         <CountWidget
           sessions={selectedSchool?._count.interventionSessions}
           fellows={selectedSchool?._count.interventionGroups}
@@ -108,9 +130,11 @@ export default function SchoolLeftPanel({
             <AccordionTrigger>
               <div className="flex w-full justify-between gap-2 text-base">
                 <span>Contact details</span>
-                <span className="cursor-pointer text-shamiri-new-blue">
-                  Edit
-                </span>
+                {!school?.droppedOut && (
+                  <span className="cursor-pointer text-shamiri-new-blue">
+                    Edit
+                  </span>
+                )}
               </div>
             </AccordionTrigger>
             <AccordionContent className="space-y-3">
@@ -209,9 +233,11 @@ export default function SchoolLeftPanel({
             <AccordionTrigger>
               <div className="flex w-full justify-between gap-2 text-base">
                 <span>Information</span>
-                <span className="cursor-pointer text-shamiri-new-blue">
-                  Edit
-                </span>
+                {!school?.droppedOut && (
+                  <span className="cursor-pointer text-shamiri-new-blue">
+                    Edit
+                  </span>
+                )}
               </div>
             </AccordionTrigger>
             <AccordionContent className="space-y-3 text-sm font-medium leading-5">
