@@ -55,17 +55,18 @@ export default async function GroupReport({
   let session: Prisma.InterventionSessionGetPayload<{}> | null = null;
 
   if (sessionType !== "all") {
-    session = await db.interventionSession.findUnique({
-      where: {
-        interventionBySchoolIdAndSessionType: {
-          schoolId: selectedSchool.id,
-          sessionType,
-        },
-      },
-      include: {
-        InterventionGroupReport: true,
-      },
-    });
+    // TODO: To be restored for all sessions filter --@Wendy
+    // session = await db.interventionSession.findUnique({
+    //   where: {
+    //     interventionBySchoolIdAndSessionType: {
+    //       schoolId: selectedSchool.id,
+    //       sessionType,
+    //     },
+    //   },
+    //   include: {
+    //     InterventionGroupReport: true,
+    //   },
+    // });
   } else {
     session = await db.interventionSession.findFirst({
       where: {
@@ -76,6 +77,21 @@ export default async function GroupReport({
       },
     });
   }
+
+  if (sessionType === "default") {
+    return (
+      <div>
+        <GroupReportHeader
+          schoolName={schoolName}
+          sessionName={"Please pick a session"}
+          href={`/schools/${selectedSchool.visibleId}`}
+          schoolVisibleId={selectedSchool.visibleId}
+          groupName={groupId}
+        />
+      </div>
+    );
+  }
+
   const sessionName = sessionTypeToDisplayName[sessionType] ?? "Unknown";
 
   if (!session) {
