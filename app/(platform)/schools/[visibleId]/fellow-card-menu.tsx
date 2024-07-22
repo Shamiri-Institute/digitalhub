@@ -49,9 +49,8 @@ export default function FellowCardMenu({
         </MenuLineItem>
         <DropdownMenuSeparator className="my-2" />
         <MenuLineItem>
-          {/* // todo: make ?type=s0 (after this implementation) */}
           {fellowGroup ? (
-            <Link href={`/schools/${school.visibleId}/${fellowGroup}?type=all`}>
+            <Link href={`/schools/${school.visibleId}/${fellowGroup}?type=s0`}>
               <div className="cursor-pointer">Group Evaluation</div>
             </Link>
           ) : (
