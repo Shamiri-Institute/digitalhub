@@ -9,10 +9,18 @@ export default function SchoolInfoProvider({
   children: React.ReactNode;
 }) {
   const [editDialog, setEditDialog] = useState(false);
+  const [pointSupervisorDialog, setPointSupervisorDialog] = useState(false);
   const [school, setSchool] = useState<SchoolsTableData | null>(null);
   return (
     <SchoolInfoContext.Provider
-      value={{ school, setSchool, editDialog, setEditDialog }}
+      value={{
+        school,
+        setSchool,
+        editDialog,
+        setEditDialog,
+        pointSupervisorDialog,
+        setPointSupervisorDialog,
+      }}
     >
       {children}
     </SchoolInfoContext.Provider>

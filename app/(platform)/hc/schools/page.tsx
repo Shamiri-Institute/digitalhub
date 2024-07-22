@@ -1,3 +1,4 @@
+import AssignPointSupervisor from "#/app/(platform)/hc/schools/components/assign-point-supervisor";
 import EditSchoolDetailsForm from "#/app/(platform)/hc/schools/components/edit-school-details-form";
 import SchoolInfoProvider from "#/app/(platform)/hc/schools/components/school-info-provider";
 import SchoolsDatatable from "#/app/(platform)/hc/schools/components/schools-datatable";
@@ -9,6 +10,7 @@ import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import {
   fetchDropoutReasons,
+  fetchHubSupervisors,
   fetchSchoolAttendances,
   fetchSchoolData,
   fetchSchoolDataCompletenessData,
@@ -36,6 +38,12 @@ export default async function SchoolsPage() {
   const schoolAttendanceData = await fetchSchoolAttendances(
     hubCoordinator?.assignedHubId as string,
   );
+
+  const supervisors = await fetchHubSupervisors({
+    where: {
+      hubId: hubCoordinator?.assignedHubId as string,
+    },
+  });
 
   return (
     <div className="flex h-full flex-col">
@@ -65,6 +73,7 @@ export default async function SchoolsPage() {
         <SchoolInfoProvider>
           <SchoolsDatatable />
           <EditSchoolDetailsForm />
+          <AssignPointSupervisor supervisors={supervisors} />
         </SchoolInfoProvider>
       </div>
       <PageFooter />
