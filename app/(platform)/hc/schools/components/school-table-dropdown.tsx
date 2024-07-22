@@ -48,31 +48,33 @@ export default function SchoolTableDropdown({
         <DropdownMenuItem asChild>
           <Link href={`/hc/schools/${schoolRow.visibleId}`}>View school</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            context.setEditDialog(true);
-          }}
-        >
-          Edit school information
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            context.setPointSupervisorDialog(true);
-          }}
-        >
-          {context.school?.assignedSupervisorId !== null
-            ? "Change point supervisor"
-            : "Assign point supervisor"}
-        </DropdownMenuItem>
         {!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
-          <DropdownMenuItem
-            className="text-shamiri-red"
-            onClick={() => {
-              context.setSchoolDropOutDialog(true);
-            }}
-          >
-            Dropout school
-          </DropdownMenuItem>
+          <div>
+            <DropdownMenuItem
+              onClick={() => {
+                context.setEditDialog(true);
+              }}
+            >
+              Edit school information
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                context.setPointSupervisorDialog(true);
+              }}
+            >
+              {context.school?.assignedSupervisorId !== null
+                ? "Change point supervisor"
+                : "Assign point supervisor"}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-shamiri-red"
+              onClick={() => {
+                context.setSchoolDropOutDialog(true);
+              }}
+            >
+              Dropout school
+            </DropdownMenuItem>
+          </div>
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
