@@ -50,7 +50,9 @@ export default function FellowCardMenu({
         <DropdownMenuSeparator className="my-2" />
         <MenuLineItem>
           {fellowGroup ? (
-            <Link href={`/schools/${school.visibleId}/${fellowGroup}?type=s0`}>
+            <Link
+              href={`/schools/${school.visibleId}/${fellowGroup}?type=default`}
+            >
               <div className="cursor-pointer">Group Evaluation</div>
             </Link>
           ) : (
