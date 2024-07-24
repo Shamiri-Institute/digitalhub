@@ -3,14 +3,19 @@
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import SessionsOccurredWidget from "#/app/(platform)/hc/schools/components/sessions-occurred-widget";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
+import { Icons } from "#/components/icons";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "#/components/ui/accordion";
-import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Separator } from "#/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
 import { getSchoolInitials } from "#/lib/utils";
 import LocationIcon from "#/public/icons/location-pin-icon.svg";
 import MailIcon from "#/public/icons/mail-icon.svg";
@@ -20,7 +25,6 @@ import { Prisma } from "@prisma/client";
 import { format } from "date-fns";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { InfoIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -34,6 +38,11 @@ export default function SchoolLeftPanel({
   selectedSchool: Prisma.SchoolGetPayload<{
     include: {
       interventionSessions: true;
+      schoolDropoutHistory: {
+        include: {
+          user: true;
+        };
+      };
       _count: {
         select: {
           interventionSessions: true;
@@ -91,25 +100,6 @@ export default function SchoolLeftPanel({
         </h2>
       </div>
       <Separator />
-      {school?.droppedOut && school?.droppedOutAt !== null && (
-        <div className="space-y-6">
-          <Alert variant="destructive">
-            <AlertTitle className="flex items-start gap-2">
-              <div className="pt-1">
-                <InfoIcon className="h-4 w-4 shrink-0" />
-              </div>
-              <p>
-                <span>Dropped out </span>(
-                {format(new Date(school?.droppedOutAt), "dd-MM-yyyy")})
-                <span>
-                  {school?.dropoutReason && " : " + school?.dropoutReason}
-                </span>
-              </p>
-            </AlertTitle>
-          </Alert>
-          <Separator />
-        </div>
-      )}
       <SessionsOccurredWidget
         sessions={selectedSchool?.interventionSessions ?? []}
       />
@@ -284,6 +274,79 @@ export default function SchoolLeftPanel({
               </div>
             </AccordionContent>
           </AccordionItem>
+          {selectedSchool?.schoolDropoutHistory &&
+            selectedSchool?.schoolDropoutHistory.length > 0 && (
+              <AccordionItem value="dropout-history">
+                <AccordionTrigger>
+                  <div className="flex w-full justify-between gap-2 text-base">
+                    <span>Dropout History</span>
+                    {selectedSchool?.droppedOut ? (
+                      <span className="cursor-pointer text-shamiri-new-blue">
+                        Undo dropout
+                      </span>
+                    ) : (
+                      <span className="cursor-pointer text-shamiri-new-blue">
+                        Dropout
+                      </span>
+                    )}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="text-sm font-medium leading-5">
+                  {selectedSchool?.schoolDropoutHistory.map((history) => {
+                    return (
+                      <div
+                        key={history.id}
+                        className="flex justify-between py-2.5"
+                      >
+                        <div>
+                          {history.droppedOut ? (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <div className="flex items-start gap-2">
+                                  <Icons.flagTriangleLeft className="h-5 w-5 text-shamiri-red" />
+                                  <div className="text-left">
+                                    <span>Dropped out</span>
+                                    <span className="flex text-sm text-gray-400">
+                                      {history.user.name}
+                                    </span>
+                                  </div>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                align="start"
+                                className="border bg-white text-shamiri-black drop-shadow"
+                              >
+                                {history.dropoutReason && (
+                                  <p className="text-sm">
+                                    <span className="underline">Reason</span>:
+                                    <span className="pl-1">
+                                      {history.dropoutReason}
+                                    </span>
+                                  </p>
+                                )}
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : (
+                            <div className="flex items-start gap-2">
+                              <Icons.flagTriangleRight className="h-5 w-5 text-shamiri-green" />
+                              <div className="flex flex-col">
+                                <p>Dropout undone</p>
+                                <span className="flex items-baseline text-sm text-gray-400">
+                                  {history.user.name}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-gray-400">
+                          {format(history.createdAt, "dd-MM-yyyy")}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </AccordionContent>
+              </AccordionItem>
+            )}
         </Accordion>
       </div>
     </div>
