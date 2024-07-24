@@ -2,6 +2,7 @@
 import { dropoutSchool } from "#/app/(platform)/hc/schools/actions";
 import SchoolNameInfoWidget from "#/app/(platform)/hc/schools/components/school-name-info-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
+import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import {
@@ -38,6 +39,7 @@ import { DropoutSchoolSchema } from "../schemas";
 
 export function DropoutSchool() {
   const context = useContext(SchoolInfoContext);
+  const schoolsContext = useContext(SchoolsDataContext);
   const [formData, setFormData] =
     useState<z.infer<typeof DropoutSchoolSchema>>();
   const [loading, setLoading] = useState(false);
@@ -61,8 +63,18 @@ export function DropoutSchool() {
         return;
       }
 
+      const copiedSchools = [...schoolsContext.schools];
+      const index = copiedSchools.findIndex(
+        (_school) => _school.id === context.school?.id,
+      );
+      if (index !== -1 && formData) {
+        copiedSchools[index]!.dropoutReason = formData?.dropoutReason;
+        copiedSchools[index]!.droppedOutAt = new Date();
+        copiedSchools[index]!.droppedOut = response.data?.droppedOut ?? true;
+        schoolsContext.setSchools(copiedSchools);
+      }
       toast({
-        description: `Successfully dropped out ${context.school?.schoolName}`,
+        description: response.message,
       });
       form.reset();
       setConfirmDialogOpen(false);

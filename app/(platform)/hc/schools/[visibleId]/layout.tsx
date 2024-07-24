@@ -19,6 +19,11 @@ export default async function SchoolViewLayout({
     },
     include: {
       interventionSessions: true,
+      schoolDropoutHistory: {
+        include: {
+          user: true,
+        },
+      },
       _count: {
         select: {
           interventionSessions: true,
