@@ -5,18 +5,22 @@ import { useState } from "react";
 
 export default function SchoolInfoProvider({
   children,
+  school,
 }: {
   children: React.ReactNode;
+  school?: SchoolsTableData;
 }) {
   const [editDialog, setEditDialog] = useState(false);
   const [pointSupervisorDialog, setPointSupervisorDialog] = useState(false);
   const [schoolDropOutDialog, setSchoolDropOutDialog] = useState(false);
   const [undoDropOutDialog, setUndoDropOutDialog] = useState(false);
-  const [school, setSchool] = useState<SchoolsTableData | null>(null);
+  const [_school, setSchool] = useState<SchoolsTableData | null>(
+    school ?? null,
+  );
   return (
     <SchoolInfoContext.Provider
       value={{
-        school,
+        school: _school,
         setSchool,
         editDialog,
         setEditDialog,
