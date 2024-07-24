@@ -17,11 +17,12 @@ model User {
   emailVerified DateTime? @map("email_verified")
   image         String?
 
-  accounts    Account[]
-  sessions    Session[]
-  avatar      UserAvatar?
-  memberships ImplementerMember[]
-  recentOpens UserRecentOpen[]
+  accounts             Account[]
+  sessions             Session[]
+  avatar               UserAvatar?
+  memberships          ImplementerMember[]
+  recentOpens          UserRecentOpen[]
+  schoolDropoutHistory SchoolDropoutHistory[]
 
   @@map("users")
 }
@@ -631,22 +632,38 @@ model School {
   interventionGroups    InterventionGroup[]
   schoolImplementers    SchoolImplementer[]
 
-  preSessionDate              DateTime? @map("pre_session_date") // TODO: remove after data migration
-  session1Date                DateTime? @map("session_1_date") // TODO: remove after data migration
-  session2Date                DateTime? @map("session_2_date") // TODO: remove after data migration
-  session3Date                DateTime? @map("session_3_date") // TODO: remove after data migration
-  session4Date                DateTime? @map("session_4_date") // TODO: remove after data migration
-  clinicalFollowup1Date       DateTime? @map("clinical_followup_1_date") // TODO: remove after data migration
-  clinicalFollowup2Date       DateTime? @map("clinical_followup_2_date") // TODO: remove after data migration
-  clinicalFollowup3Date       DateTime? @map("clinical_followup_3_date") // TODO: remove after data migration
-  clinicalFollowup4Date       DateTime? @map("clinical_followup_4_date") // TODO: remove after data migration
-  clinicalFollowup5Date       DateTime? @map("clinical_followup_5_date") // TODO: remove after data migration
-  clinicalFollowup6Date       DateTime? @map("clinical_followup_6_date") // TODO: remove after data migration
-  clinicalFollowup7Date       DateTime? @map("clinical_followup_7_date") // TODO: remove after data migration
-  clinicalFollowup8Date       DateTime? @map("clinical_followup_8_date") // TODO: remove after data migration
-  dataCollectionFollowup1Date DateTime? @map("data_collection_followup_1_date") // TODO: remove after data migration
+  preSessionDate              DateTime?              @map("pre_session_date") // TODO: remove after data migration
+  session1Date                DateTime?              @map("session_1_date") // TODO: remove after data migration
+  session2Date                DateTime?              @map("session_2_date") // TODO: remove after data migration
+  session3Date                DateTime?              @map("session_3_date") // TODO: remove after data migration
+  session4Date                DateTime?              @map("session_4_date") // TODO: remove after data migration
+  clinicalFollowup1Date       DateTime?              @map("clinical_followup_1_date") // TODO: remove after data migration
+  clinicalFollowup2Date       DateTime?              @map("clinical_followup_2_date") // TODO: remove after data migration
+  clinicalFollowup3Date       DateTime?              @map("clinical_followup_3_date") // TODO: remove after data migration
+  clinicalFollowup4Date       DateTime?              @map("clinical_followup_4_date") // TODO: remove after data migration
+  clinicalFollowup5Date       DateTime?              @map("clinical_followup_5_date") // TODO: remove after data migration
+  clinicalFollowup6Date       DateTime?              @map("clinical_followup_6_date") // TODO: remove after data migration
+  clinicalFollowup7Date       DateTime?              @map("clinical_followup_7_date") // TODO: remove after data migration
+  clinicalFollowup8Date       DateTime?              @map("clinical_followup_8_date") // TODO: remove after data migration
+  dataCollectionFollowup1Date DateTime?              @map("data_collection_followup_1_date") // TODO: remove after data migration
+  schoolDropoutHistory        SchoolDropoutHistory[]
 
   @@map("schools")
+}
+
+/// Records school dropout details
+model SchoolDropoutHistory {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  droppedOut    Boolean  @map("dropped_out")
+  dropoutReason String?  @map("dropout_reason")
+  userId        String   @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
+  schoolId      String   @map("school_id")
+  school        School   @relation(fields: [schoolId], references: [id])
+
+  @@map("school_dropout_history")
 }
 
 /// Join table for schools and implementers

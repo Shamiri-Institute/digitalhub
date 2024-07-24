@@ -8,6 +8,8 @@ type SchoolInfoContextData = {
   setPointSupervisorDialog: Dispatch<SetStateAction<boolean>>;
   schoolDropOutDialog: boolean;
   setSchoolDropOutDialog: Dispatch<SetStateAction<boolean>>;
+  undoDropOutDialog: boolean;
+  setUndoDropOutDialog: Dispatch<SetStateAction<boolean>>;
   school: SchoolsTableData | null;
   setSchool: Dispatch<SetStateAction<SchoolsTableData | null>>;
 };
@@ -19,6 +21,8 @@ export const SchoolInfoContext = createContext<SchoolInfoContextData>({
   setPointSupervisorDialog: () => {},
   schoolDropOutDialog: false,
   setSchoolDropOutDialog: () => {},
+  undoDropOutDialog: false,
+  setUndoDropOutDialog: () => {},
   school: null,
   setSchool: () => {},
 });
