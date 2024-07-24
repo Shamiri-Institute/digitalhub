@@ -75,7 +75,16 @@ export default function SchoolTableDropdown({
               Dropout school
             </DropdownMenuItem>
           </div>
-        ) : null}
+        ) : (
+          <DropdownMenuItem
+            className="text-shamiri-red"
+            onClick={() => {
+              context.setUndoDropOutDialog(true);
+            }}
+          >
+            Undo dropout
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
