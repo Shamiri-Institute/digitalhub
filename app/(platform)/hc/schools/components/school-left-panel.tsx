@@ -2,6 +2,7 @@
 
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import SessionsOccurredWidget from "#/app/(platform)/hc/schools/components/sessions-occurred-widget";
+import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import { Icons } from "#/components/icons";
 import {
@@ -59,6 +60,7 @@ export default function SchoolLeftPanel({
   }> | null;
 }) {
   const context = useContext(SchoolsDataContext);
+  const schoolContext = useContext(SchoolInfoContext);
   const pathname = usePathname();
   const schoolVisibleId = pathname.split("/")[3];
   const _school = context.schools.findIndex((school) => {
@@ -121,7 +123,7 @@ export default function SchoolLeftPanel({
               <div className="flex w-full justify-between gap-2 text-base">
                 <span>Contact details</span>
                 {!school?.droppedOut && (
-                  <span className="cursor-pointer text-shamiri-new-blue">
+                  <span className="cursor-pointer text-sm text-shamiri-new-blue">
                     Edit
                   </span>
                 )}
@@ -224,7 +226,13 @@ export default function SchoolLeftPanel({
               <div className="flex w-full justify-between gap-2 text-base">
                 <span>Information</span>
                 {!school?.droppedOut && (
-                  <span className="cursor-pointer text-shamiri-new-blue">
+                  <span
+                    className="cursor-pointer text-sm text-shamiri-new-blue"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      schoolContext.setEditDialog(true);
+                    }}
+                  >
                     Edit
                   </span>
                 )}
@@ -274,79 +282,97 @@ export default function SchoolLeftPanel({
               </div>
             </AccordionContent>
           </AccordionItem>
-          {selectedSchool?.schoolDropoutHistory &&
-            selectedSchool?.schoolDropoutHistory.length > 0 && (
-              <AccordionItem value="dropout-history">
-                <AccordionTrigger>
-                  <div className="flex w-full justify-between gap-2 text-base">
-                    <span>Dropout History</span>
-                    {selectedSchool?.droppedOut ? (
-                      <span className="cursor-pointer text-shamiri-new-blue">
-                        Undo dropout
-                      </span>
-                    ) : (
-                      <span className="cursor-pointer text-shamiri-new-blue">
-                        Dropout
-                      </span>
-                    )}
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="text-sm font-medium leading-5">
-                  {selectedSchool?.schoolDropoutHistory.map((history) => {
-                    return (
-                      <div
-                        key={history.id}
-                        className="flex justify-between py-2.5"
-                      >
-                        <div>
-                          {history.droppedOut ? (
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <div className="flex items-start gap-2">
-                                  <Icons.flagTriangleLeft className="h-5 w-5 text-shamiri-red" />
-                                  <div className="text-left">
-                                    <span>Dropped out</span>
-                                    <span className="flex text-sm text-gray-400">
-                                      {history.user.name}
-                                    </span>
-                                  </div>
+          <AccordionItem value="dropout-history">
+            <AccordionTrigger>
+              <div className="flex w-full justify-between gap-2 text-base">
+                <span>Dropout History</span>
+                {selectedSchool?.droppedOut ? (
+                  <span
+                    className="cursor-pointer text-sm text-shamiri-new-blue"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      schoolContext.setUndoDropOutDialog(true);
+                    }}
+                  >
+                    Undo dropout
+                  </span>
+                ) : (
+                  <span
+                    className="cursor-pointer text-sm text-shamiri-new-blue"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      schoolContext.setSchoolDropOutDialog(true);
+                    }}
+                  >
+                    Dropout
+                  </span>
+                )}
+              </div>
+            </AccordionTrigger>
+            {selectedSchool?.schoolDropoutHistory &&
+            selectedSchool?.schoolDropoutHistory.length > 0 ? (
+              <AccordionContent className="text-sm font-medium leading-5">
+                {selectedSchool?.schoolDropoutHistory.map((history) => {
+                  return (
+                    <div
+                      key={history.id}
+                      className="flex justify-between py-2.5"
+                    >
+                      <div>
+                        {history.droppedOut ? (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <div className="flex items-start gap-2">
+                                <Icons.flagTriangleLeft className="h-5 w-5 text-shamiri-red" />
+                                <div className="text-left">
+                                  <span>Dropped out</span>
+                                  <span className="flex text-sm text-gray-400">
+                                    {history.user.name}
+                                  </span>
                                 </div>
-                              </TooltipTrigger>
-                              <TooltipContent
-                                align="start"
-                                className="border bg-white text-shamiri-black drop-shadow"
-                              >
-                                {history.dropoutReason && (
-                                  <p className="text-sm">
-                                    <span className="underline">Reason</span>:
-                                    <span className="pl-1">
-                                      {history.dropoutReason}
-                                    </span>
-                                  </p>
-                                )}
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            <div className="flex items-start gap-2">
-                              <Icons.flagTriangleRight className="h-5 w-5 text-shamiri-green" />
-                              <div className="flex flex-col">
-                                <p>Dropout undone</p>
-                                <span className="flex items-baseline text-sm text-gray-400">
-                                  {history.user.name}
-                                </span>
                               </div>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              align="start"
+                              className="border bg-white text-shamiri-black drop-shadow"
+                            >
+                              {history.dropoutReason && (
+                                <p className="text-sm">
+                                  <span className="underline">Reason</span>:
+                                  <span className="pl-1">
+                                    {history.dropoutReason}
+                                  </span>
+                                </p>
+                              )}
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <div className="flex items-start gap-2">
+                            <Icons.flagTriangleRight className="h-5 w-5 text-shamiri-green" />
+                            <div className="flex flex-col">
+                              <p>Dropout undone</p>
+                              <span className="flex items-baseline text-sm text-gray-400">
+                                {history.user.name}
+                              </span>
                             </div>
-                          )}
-                        </div>
-                        <span className="text-gray-400">
-                          {format(history.createdAt, "dd-MM-yyyy")}
-                        </span>
+                          </div>
+                        )}
                       </div>
-                    );
-                  })}
-                </AccordionContent>
-              </AccordionItem>
+                      <span className="text-gray-400">
+                        {format(history.createdAt, "dd-MM-yyyy")}
+                      </span>
+                    </div>
+                  );
+                })}
+              </AccordionContent>
+            ) : (
+              <AccordionContent>
+                <span className="text-gray-400">
+                  No drop out records available
+                </span>
+              </AccordionContent>
             )}
+          </AccordionItem>
         </Accordion>
       </div>
     </div>
