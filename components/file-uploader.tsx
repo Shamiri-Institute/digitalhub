@@ -14,7 +14,7 @@ import { Input } from "#/components/ui/input";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import clsx from "clsx";
-import { Loader2 } from "lucide-react";
+import { Loader2, UploadCloudIcon } from "lucide-react";
 
 import { ChangeEvent, useState } from "react";
 
@@ -149,10 +149,6 @@ export default function FileUploader({
   );
 }
 
-
-
-// file uploader component
-
 function FileUploaderWithDrop({
   label,
   onChange,
@@ -208,10 +204,10 @@ function FileUploaderWithDrop({
   };
 
   return (
-    <div className={clsx(className || "")}>
-      {label ? (
-        <p className="block text-normal font-medium text-gray-700">{label}</p>
-      ) : null}
+    <div
+      // className={clsx(className || "")}
+      className="bg-red-600"
+    >
       <label
         id="drop_zone"
         onDrop={handleDrop}
@@ -229,22 +225,37 @@ function FileUploaderWithDrop({
           isDragOver ? "border-secondary" : "border-gray-200",
         )}
       >
-        {/* {files?.length === 0 && <UploadIcon className="app-icon color-gray" />} */}
-        {files?.length !== 0 && (
-          <div className="flex flex-col items-center space-y-1 text-center text-normal text-gray-700">
-            {files.map((file: any) => (
-              <span key={file.name}>{file.name}</span>
-            ))}
+        <div className=" w-full flex space-x-6 items-center">
+          <div
+            className="border border-gray-200 rounded-lg p-2 cursor-pointer"
+          >
+            <span className="cursor-pointer text-center text-normal">
+              {"Select Files"}
+            </span>
           </div>
-        )}
-        <span className="mt-2 cursor-pointer text-center text-normal hover:underline">
-          {"Upload File"}
-        </span>
-        <span className="my-2 text-center text-normal text-gray-500">OR</span>
-        <span className="text-center text-normal">
-          Drag and drop your file here
-        </span>
-        <input type="file" accept={accept} hidden onChange={handleUpload} />
+
+          <div className="flex space-x-2">
+            {files?.length === 0 && <Icons.uploadCloudIcon className="h-6 w-6" />}
+            <span className="text-center text-normal" >
+              Drop files here...
+            </span>
+            <input type="file" accept={accept} hidden onChange={handleUpload} />
+          </div>
+        </div>
+        <div className="bg-yellow-400 w-full flex border-t mt-2 border-gray-500 ">
+          {files?.length !== 0 && (
+            <div className="flex items-center space-y-1 text-center text-normal text-gray-700">
+              {files.map((file: any, index) => (
+                <div key={file.name} className="flex items-center space-x-2">
+                  <Icons.check className="h-4 w-4" />
+                  <span key={file.name}>
+                    {file.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </label>
     </div>
   );
