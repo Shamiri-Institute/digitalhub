@@ -45,30 +45,6 @@ export default async function Page() {
     },
   });
 
-  const schools = await db.school.findMany({
-    where: {
-      hubId: supervisor?.hubId,
-      hub: { project: { visibleId: CURRENT_PROJECT_ID } },
-    },
-    include: {
-      students: true,
-      interventionGroups: {
-        include: {
-          students: true,
-        },
-      },
-      assignedSupervisor: {
-        include: {
-          fellows: {
-            include: {
-              students: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
   const clinicalCases = await db.clinicalScreeningInfo.findMany({
     where: {
       currentSupervisorId: supervisor?.id,
@@ -228,6 +204,135 @@ export default async function Page() {
       });
     }
   };
+
+  const fetchSchoolForCurrentClinician = async () => {
+    if (supervisor?.id === "COS24P2_002") {
+      // assigned to 24P2_Hub_02 by default but we also need data for 24P2_Hub_06
+      return await db.school.findMany({
+        where: {
+          hub: { id: { in: ["24P2_Hub_02", "24P2_Hub_06"] } },
+        },
+        include: {
+          students: true,
+          interventionGroups: {
+            include: {
+              students: true,
+            },
+          },
+          assignedSupervisor: {
+            include: {
+              fellows: {
+                include: {
+                  students: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } else if (supervisor?.id === "COS24P2_003") {
+      // assigned to 24P2_Hub_03, 24P2_Hub_04
+      return await db.school.findMany({
+        where: {
+          hub: { id: { in: ["24P2_Hub_03", "24P2_Hub_04"] } },
+        },
+        include: {
+          students: true,
+          interventionGroups: {
+            include: {
+              students: true,
+            },
+          },
+          assignedSupervisor: {
+            include: {
+              fellows: {
+                include: {
+                  students: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } else if (supervisor?.id === "COS24P2_001") {
+      // assigned to 24P2_Hub_01, 24P2_Hub_05
+      return await db.school.findMany({
+        where: {
+          hub: { id: { in: ["24P2_Hub_01", "24P2_Hub_05"] } },
+        },
+        include: {
+          students: true,
+          interventionGroups: {
+            include: {
+              students: true,
+            },
+          },
+          assignedSupervisor: {
+            include: {
+              fellows: {
+                include: {
+                  students: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } else if (supervisor?.id === "COS24P2_004") {
+      console.log("4");
+      // assigned to 24P2_Hub_10, 24P2_Hub_13
+      return await db.school.findMany({
+        where: {
+          hub: {
+            id: { in: ["24P2_Hub_10", "24P2_Hub_13"] },
+          },
+        },
+        include: {
+          students: true,
+          interventionGroups: {
+            include: {
+              students: true,
+            },
+          },
+          assignedSupervisor: {
+            include: {
+              fellows: {
+                include: {
+                  students: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } else {
+      return await db.school.findMany({
+        where: {
+          hubId: supervisor?.hubId,
+          hub: { project: { visibleId: CURRENT_PROJECT_ID } },
+        },
+        include: {
+          students: true,
+          interventionGroups: {
+            include: {
+              students: true,
+            },
+          },
+          assignedSupervisor: {
+            include: {
+              fellows: {
+                include: {
+                  students: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+  };
+
+  const schools = (await fetchSchoolForCurrentClinician()) || [];
 
   const allClinicalCases = await fetchCasesForCurrentClinician();
 
