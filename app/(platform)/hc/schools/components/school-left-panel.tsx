@@ -250,13 +250,40 @@ export default function SchoolLeftPanel({
                 </p>
               </div>
               <div>
-                <p className="text-shamiri-black">Point person</p>
+                <p className="text-shamiri-black">Principal</p>
+                <p className="text-shamiri-text-grey">
+                  {school?.principalName}
+                </p>
+              </div>
+              <div>
+                <p className="text-shamiri-black">Principal phone number</p>
+                <div className="flex gap-2">
+                  {school?.principalPhone === null ||
+                  school?.principalPhone === "N/A" ? (
+                    <span className="text-shamiri-text-grey">
+                      Not available
+                    </span>
+                  ) : (
+                    school?.principalPhone.split("/").map((phone) => {
+                      return (
+                        <a href={`tel:${phone}`} key={phone} className="flex">
+                          <div className="rounded-full border px-1.5 py-0.5 text-shamiri-new-blue">
+                            {phone}
+                          </div>
+                        </a>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+              <div>
+                <p className="text-shamiri-black">Point teacher</p>
                 <p className="text-shamiri-text-grey">
                   {school?.pointPersonName}
                 </p>
               </div>
               <div>
-                <p className="text-shamiri-black">Point person phone number</p>
+                <p className="text-shamiri-black">Point teacher phone number</p>
                 <div className="flex gap-2">
                   {school?.pointPersonPhone === null ||
                   school?.pointPersonPhone === "N/A" ? (
@@ -275,10 +302,6 @@ export default function SchoolLeftPanel({
                     })
                   )}
                 </div>
-              </div>
-              <div>
-                <p className="text-shamiri-black">Description</p>
-                <p className="text-shamiri-text-grey">N/A</p>
               </div>
             </AccordionContent>
           </AccordionItem>

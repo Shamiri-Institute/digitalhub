@@ -1,6 +1,9 @@
 "use client";
 
+import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns";
+import SchoolNameInfoWidget from "#/app/(platform)/hc/schools/components/school-name-info-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
+import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -32,20 +35,31 @@ import {
   SCHOOL_DEMOGRAPHICS,
   SCHOOL_TYPES,
 } from "#/lib/app-constants/constants";
-import { getSchoolInitials } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { EditSchoolSchema } from "../../schemas";
-import { editSchoolInformation } from "../actions";
+import { editSchoolInformation, revalidatePageAction } from "../actions";
 
 export default function EditSchoolDetailsForm() {
   const context = useContext(SchoolInfoContext);
+  const schoolsContext = useContext(SchoolsDataContext);
+  const pathname = usePathname();
   const isCountySelectionValid = KENYAN_COUNTIES.some(
-    (county) => county === context.school?.schoolCounty,
+    (county) => county.name === context.school?.schoolCounty,
   );
+
+  const isSubCountyValid = () => {
+    const subCounties: string[] = Array.from(
+      KENYAN_COUNTIES.find(
+        (county) => county.name === form.getValues("schoolCounty"),
+      )!.sub_counties,
+    );
+    return subCounties.includes(form.getValues("schoolSubCounty")!);
+  };
 
   const form = useForm<z.infer<typeof EditSchoolSchema>>({
     resolver: zodResolver(EditSchoolSchema),
@@ -68,12 +82,18 @@ export default function EditSchoolDetailsForm() {
       // @ts-ignore
       schoolCounty: context.school?.schoolCounty,
       // @ts-ignore
+      schoolSubCounty: context.school?.schoolSubCounty,
+      // @ts-ignore
+      schoolName: context.school?.schoolName,
+      // @ts-ignore
       boardingDay: context.school?.boardingDay,
       // @ts-ignore
       schoolType: context.school?.schoolType,
       pointPersonPhone: context.school?.pointPersonPhone ?? undefined,
       pointPersonEmail: context.school?.pointPersonEmail ?? undefined,
       pointPersonName: context.school?.pointPersonName ?? undefined,
+      principalName: context.school?.principalName ?? undefined,
+      principalPhone: context.school?.principalPhone ?? undefined,
     };
     // @ts-ignore
     form.reset(defaultValues);
@@ -94,6 +114,20 @@ export default function EditSchoolDetailsForm() {
         return;
       }
 
+      const copiedSchools = [...schoolsContext.schools];
+      const index = copiedSchools.findIndex(
+        (_school) => _school.id === context.school?.id,
+      );
+      if (index !== -1) {
+        copiedSchools[index] = {
+          ...copiedSchools[index],
+          ...(data as SchoolsTableData),
+        };
+        context.setSchool(copiedSchools[index]!);
+        schoolsContext.setSchools(copiedSchools);
+        await revalidatePageAction(pathname, "layout");
+      }
+
       toast({
         description: response.message,
       });
@@ -109,21 +143,14 @@ export default function EditSchoolDetailsForm() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <div className="flex items-center gap-3">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-shamiri-new-light-blue p-[18px] text-xl font-semibold text-shamiri-new-blue">
-                  {getSchoolInitials(context.school?.schoolName ?? "")}
-                </div>
-                <div className="flex flex-col">
-                  <h2 className="text-2xl font-semibold text-black">
-                    {context.school?.schoolName}
-                  </h2>
-                  <span className="text-shamiri-text-grey">
-                    Edit school information
-                  </span>
-                </div>
-              </div>
+              <span className="text-xl">Edit school information</span>
             </DialogHeader>
-            <Separator className="my-6" />
+            <div className="pb-2 pt-4">
+              <SchoolNameInfoWidget
+                schoolName={context.school?.schoolName}
+                separator={false}
+              />
+            </div>
             <div className="space-y-6">
               <div className="flex flex-col">
                 <div className="col-span-2 py-2">
@@ -132,13 +159,26 @@ export default function EditSchoolDetailsForm() {
                   </span>
                   <Separator />
                 </div>
-                <div className="grid grid-cols-6 gap-4">
+                <div className="grid grid-cols-6 gap-5">
+                  <FormField
+                    control={form.control}
+                    name="schoolName"
+                    render={({ field }) => (
+                      <FormItem className="col-span-4">
+                        <FormLabel>School name</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="text" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="numbersExpected"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
-                        <FormLabel>Promised no. of students</FormLabel>
+                        <FormLabel>No. of students</FormLabel>
                         <FormControl>
                           <Input {...field} type="number" />
                         </FormControl>
@@ -190,7 +230,7 @@ export default function EditSchoolDetailsForm() {
                     control={form.control}
                     name="schoolCounty"
                     render={({ field }) => (
-                      <FormItem className="col-span-2">
+                      <FormItem className="col-span-3">
                         <FormLabel>School county</FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -207,12 +247,59 @@ export default function EditSchoolDetailsForm() {
                               )}
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            {KENYAN_COUNTIES.map((county) => (
-                              <SelectItem key={county} value={county}>
-                                {county}
+                          <SelectContent className="max-h-[200px]">
+                            {KENYAN_COUNTIES.map((x) => x.name).map(
+                              (county) => (
+                                <SelectItem key={county} value={county}>
+                                  {county}
+                                </SelectItem>
+                              ),
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="schoolSubCounty"
+                    render={({ field }) => (
+                      <FormItem className="col-span-3">
+                        <FormLabel>School sub-county</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              {isSubCountyValid() ? (
+                                <SelectValue placeholder="Select sub-county" />
+                              ) : (
+                                <SelectValue>
+                                  {form.getValues("schoolSubCounty")}
+                                </SelectValue>
+                              )}
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-[200px]">
+                            {form.getValues("schoolCounty") ? (
+                              KENYAN_COUNTIES.find(
+                                (county) =>
+                                  county.name ===
+                                  form.getValues("schoolCounty"),
+                              )?.sub_counties.map((subCounty) => {
+                                return (
+                                  <SelectItem key={subCounty} value={subCounty}>
+                                    {subCounty}
+                                  </SelectItem>
+                                );
+                              })
+                            ) : (
+                              <SelectItem value={""}>
+                                Please pick a county first
                               </SelectItem>
-                            ))}
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -285,10 +372,36 @@ export default function EditSchoolDetailsForm() {
                 <div className="grid grid-cols-6 gap-4">
                   <FormField
                     control={form.control}
+                    name="principalName"
+                    render={({ field }) => (
+                      <FormItem className="col-span-3">
+                        <FormLabel>Principal name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="principalPhone"
+                    render={({ field }) => (
+                      <FormItem className="col-span-3">
+                        <FormLabel>Principal phone number</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="tel" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="pointPersonName"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>Point person name</FormLabel>
+                        <FormLabel>Point teacher name</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -314,7 +427,7 @@ export default function EditSchoolDetailsForm() {
                     name="pointPersonPhone"
                     render={({ field }) => (
                       <FormItem className="col-span-4">
-                        <FormLabel>Point person phone number</FormLabel>
+                        <FormLabel>Point teacher phone number</FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
                         </FormControl>
