@@ -56,17 +56,17 @@ export default async function GroupReport({
 
   if (sessionType !== "all") {
     // TODO: To be restored for all sessions filter --@Wendy
-    // session = await db.interventionSession.findUnique({
-    //   where: {
-    //     interventionBySchoolIdAndSessionType: {
-    //       schoolId: selectedSchool.id,
-    //       sessionType,
-    //     },
-    //   },
-    //   include: {
-    //     InterventionGroupReport: true,
-    //   },
-    // });
+    session = await db.interventionSession.findUnique({
+      where: {
+        interventionBySchoolIdAndSessionType: {
+          schoolId: selectedSchool.id,
+          sessionType,
+        },
+      },
+      include: {
+        InterventionGroupReport: true,
+      },
+    });
   } else {
     session = await db.interventionSession.findFirst({
       where: {
