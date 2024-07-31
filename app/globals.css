@@ -210,4 +210,8 @@
   .arrow-button {
     @apply flex cursor-pointer items-center justify-center border px-3 py-1.5 text-shamiri-text-dark-grey hover:text-shamiri-new-blue hover:drop-shadow active:scale-95;
   }
+
+  .accordion-button {
+    @apply cursor-pointer rounded-md px-3 py-1.5 text-sm text-shamiri-new-blue hover:bg-accent active:scale-95;
+  }
 }

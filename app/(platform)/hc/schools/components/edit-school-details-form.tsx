@@ -36,6 +36,7 @@ import {
   SCHOOL_TYPES,
 } from "#/lib/app-constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { Loader2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useContext, useEffect } from "react";
@@ -135,6 +136,20 @@ export default function EditSchoolDetailsForm() {
       form.reset();
       context.setEditDialog(false);
     }
+  };
+
+  const validateMultiplePhoneNumbers = (list: string[]) => {
+    console.log(list);
+    list.forEach((phoneNumber) => {
+      const check = isValidPhoneNumber(phoneNumber);
+      if (!check) {
+        form.setError("pointPersonPhone", {
+          message: phoneNumber + " is not a valid kenyan phone number",
+        });
+      } else {
+        // form.trigger("pointPersonPhone");
+      }
+    });
   };
 
   return (
@@ -426,10 +441,43 @@ export default function EditSchoolDetailsForm() {
                     control={form.control}
                     name="pointPersonPhone"
                     render={({ field }) => (
-                      <FormItem className="col-span-4">
+                      <FormItem className="col-span-3">
                         <FormLabel>Point teacher phone number</FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" />
+                          <div className="flex flex-col gap-3">
+                            {field.value &&
+                              field.value.split("/").map((number, index) => {
+                                return (
+                                  <Input
+                                    key={index}
+                                    defaultValue={number}
+                                    type="tel"
+                                    onBlur={(e) => {
+                                      const list =
+                                        field.value && field.value?.split("/");
+                                      if (list) {
+                                        list[index] = e.target.value;
+                                        validateMultiplePhoneNumbers(list);
+                                      }
+                                    }}
+                                  />
+                                );
+                              })}
+                            <div className="flex gap-2">
+                              <Input
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                type="tel"
+                              />
+                              <Button
+                                variant="ghost"
+                                className="flex items-center text-shamiri-new-blue"
+                              >
+                                <span>Add</span>
+                              </Button>
+                            </div>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
