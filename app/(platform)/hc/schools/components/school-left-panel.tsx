@@ -3,7 +3,6 @@
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import SessionsOccurredWidget from "#/app/(platform)/hc/schools/components/sessions-occurred-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
-import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import { Icons } from "#/components/icons";
 import {
   Accordion,
@@ -28,8 +27,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useContext, useRef, useState } from "react";
+import { useContext, useRef } from "react";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -59,14 +57,15 @@ export default function SchoolLeftPanel({
     };
   }> | null;
 }) {
-  const context = useContext(SchoolsDataContext);
+  // const context = useContext(SchoolsDataContext);
   const schoolContext = useContext(SchoolInfoContext);
-  const pathname = usePathname();
-  const schoolVisibleId = pathname.split("/")[3];
-  const _school = context.schools.findIndex((school) => {
-    return school.visibleId === schoolVisibleId;
-  });
-  const [school, setSchool] = useState(context.schools[_school]);
+  const { school } = schoolContext;
+  // const pathname = usePathname();
+  // const schoolVisibleId = pathname.split("/")[3];
+  // const _school = context.schools.findIndex((school) => {
+  //   return school.visibleId === schoolVisibleId;
+  // });
+  // const [school, setSchool] = useState(context.schools[_school]);
   const panelRef: any = useRef(null);
 
   useGSAP(
@@ -123,7 +122,13 @@ export default function SchoolLeftPanel({
               <div className="flex w-full justify-between gap-2 text-base">
                 <span>Contact details</span>
                 {!school?.droppedOut && (
-                  <span className="cursor-pointer text-sm text-shamiri-new-blue">
+                  <span
+                    className="accordion-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      schoolContext.setEditDialog(true);
+                    }}
+                  >
                     Edit
                   </span>
                 )}
@@ -201,7 +206,7 @@ export default function SchoolLeftPanel({
                 </div>
                 <p className="text-shamiri-text-grey">
                   {school?.schoolSubCounty !== null
-                    ? school?.schoolSubCounty + ","
+                    ? school?.schoolSubCounty?.trim() + ","
                     : ""}{" "}
                   {school?.schoolCounty}
                 </p>
@@ -227,7 +232,7 @@ export default function SchoolLeftPanel({
                 <span>Information</span>
                 {!school?.droppedOut && (
                   <span
-                    className="cursor-pointer text-sm text-shamiri-new-blue"
+                    className="accordion-button"
                     onClick={(e) => {
                       e.stopPropagation();
                       schoolContext.setEditDialog(true);
@@ -259,6 +264,7 @@ export default function SchoolLeftPanel({
                 <p className="text-shamiri-black">Principal phone number</p>
                 <div className="flex gap-2">
                   {school?.principalPhone === null ||
+                  school?.principalPhone === undefined ||
                   school?.principalPhone === "N/A" ? (
                     <span className="text-shamiri-text-grey">
                       Not available
@@ -311,7 +317,7 @@ export default function SchoolLeftPanel({
                 <span>Dropout History</span>
                 {selectedSchool?.droppedOut ? (
                   <span
-                    className="cursor-pointer text-sm text-shamiri-new-blue"
+                    className="accordion-button"
                     onClick={(e) => {
                       e.stopPropagation();
                       schoolContext.setUndoDropOutDialog(true);
@@ -321,7 +327,7 @@ export default function SchoolLeftPanel({
                   </span>
                 ) : (
                   <span
-                    className="cursor-pointer text-sm text-shamiri-new-blue"
+                    className="accordion-button"
                     onClick={(e) => {
                       e.stopPropagation();
                       schoolContext.setSchoolDropOutDialog(true);
