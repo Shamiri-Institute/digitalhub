@@ -19,15 +19,15 @@ import { Separator } from "#/components/ui/separator";
 import React from "react";
 
 export function GroupContentCoverage({
-  sessionName = "Session 01",
   revalidatePath: path,
   groupName,
   ratings,
+  sessionId,
   id: evaluationId,
 }: {
-  sessionName: string;
   revalidatePath: string;
   groupName: string;
+  sessionId?: string;
   ratings: Prisma.InterventionGroupReportGetPayload<{}> | null;
   id?: string;
 }) {
@@ -37,12 +37,12 @@ export function GroupContentCoverage({
     async (key: "content" | "contentComment", rating: number | string) => {
       const { success } = await rateGroup({
         rating,
-        //todo: fix in future - rn its undefined cause we dont want to associate it with a session since there is no session for 'all sessions'
         groupId: groupName,
         key,
         id: evaluationId,
         path,
         isAllSessionsEvaluation: true,
+        sessionId,
       });
 
       if (success) {
