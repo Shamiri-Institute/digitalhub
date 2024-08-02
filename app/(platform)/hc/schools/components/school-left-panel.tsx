@@ -58,17 +58,9 @@ export default function SchoolLeftPanel({
     };
   }> | null;
 }) {
-  // const context = useContext(SchoolsDataContext);
   const schoolContext = useContext(SchoolInfoContext);
   const { school } = schoolContext;
-  // const pathname = usePathname();
-  // const schoolVisibleId = pathname.split("/")[3];
-  // const _school = context.schools.findIndex((school) => {
-  //   return school.visibleId === schoolVisibleId;
-  // });
-  // const [school, setSchool] = useState(context.schools[_school]);
   const panelRef: any = useRef(null);
-  console.log(school);
 
   useGSAP(
     () => {
