@@ -19,15 +19,15 @@ import { Separator } from "#/components/ui/separator";
 import React from "react";
 
 export function GroupDisciplineRater({
-  sessionName = "Session 01",
   revalidatePath: path,
   groupName,
   ratings,
   id: evaluationId,
+  sessionId,
 }: {
-  sessionName: string;
   revalidatePath: string;
   groupName: string;
+  sessionId?: string;
   ratings: Prisma.InterventionGroupReportGetPayload<{}> | null;
   id: string | undefined;
 }) {
@@ -50,6 +50,7 @@ export function GroupDisciplineRater({
         id: evaluationId,
         path,
         isAllSessionsEvaluation: true,
+        sessionId,
       });
 
       if (success) {
