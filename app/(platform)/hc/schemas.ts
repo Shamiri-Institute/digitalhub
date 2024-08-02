@@ -92,19 +92,22 @@ export const EditSchoolSchema = z.object({
     .string({
       required_error: "Please enter the point person's phone number",
     })
-      .nullable()
-    .refine((val) => {
-      if(val !== null) {
-        val.split('/').forEach((phone: string) => {
-          if(!isValidPhoneNumber(phone, "KE")){
-            return false
-          }
-        })
-      }
-      return true
-    }, {
-      message: "Please enter a valid kenyan phone number",
-    })
+    .nullable()
+    .refine(
+      (val) => {
+        if (val !== null) {
+          val.split("/").forEach((phone: string) => {
+            if (!isValidPhoneNumber(phone, "KE")) {
+              return false;
+            }
+          });
+        }
+        return true;
+      },
+      {
+        message: "Please enter a valid kenyan phone number",
+      },
+    )
     .optional(),
   schoolName: z
     .string({ required_error: "Please enter the school's name" })

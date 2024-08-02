@@ -25,6 +25,7 @@ import {
   ListTodo,
   LucideProps,
   Mail,
+  MinusCircle,
   Moon,
   MoreHorizontal,
   MoreVertical,
@@ -40,7 +41,7 @@ import {
   Users2,
   XIcon,
   // StarIcon,
-  type LucideIcon, MinusCircle,
+  type LucideIcon,
 } from "lucide-react";
 import * as React from "react";
 
@@ -51,7 +52,7 @@ export type Icon = LucideIcon | React.FC<LucideProps>;
 export const Icons = {
   sun: SunMedium,
   moon: Moon,
-  minusCircle:MinusCircle,
+  minusCircle: MinusCircle,
   calendar: Calendar,
   check: Check,
   chevronsUpDown: ChevronsUpDown,

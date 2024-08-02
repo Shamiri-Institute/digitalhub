@@ -4,6 +4,7 @@ import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns
 import SchoolNameInfoWidget from "#/app/(platform)/hc/schools/components/school-name-info-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
+import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -35,17 +36,16 @@ import {
   SCHOOL_DEMOGRAPHICS,
   SCHOOL_TYPES,
 } from "#/lib/app-constants/constants";
+import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { Loader2 } from "lucide-react";
 import { usePathname } from "next/navigation";
-import {useContext, useEffect, useState} from "react";
+import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { EditSchoolSchema } from "../../schemas";
 import { editSchoolInformation, revalidatePageAction } from "../actions";
-import {Icons} from "#/components/icons";
-import {cn} from "#/lib/utils";
 
 export default function EditSchoolDetailsForm() {
   const context = useContext(SchoolInfoContext);
@@ -54,7 +54,7 @@ export default function EditSchoolDetailsForm() {
   const isCountySelectionValid = KENYAN_COUNTIES.some(
     (county) => county.name === context.school?.schoolCounty,
   );
-  const [pointPersonPhone, setPointPersonPhone] = useState<string>('')
+  const [pointPersonPhone, setPointPersonPhone] = useState<string>("");
 
   const isSubCountyValid = () => {
     const subCounties: string[] = Array.from(
@@ -69,7 +69,7 @@ export default function EditSchoolDetailsForm() {
     resolver: zodResolver(EditSchoolSchema),
   });
 
-  const pointPersonPhoneWatcher = form.watch("pointPersonPhone")
+  const pointPersonPhoneWatcher = form.watch("pointPersonPhone");
 
   useEffect(() => {
     const defaultValues = {
@@ -107,9 +107,14 @@ export default function EditSchoolDetailsForm() {
 
   const onSubmit = async (data: z.infer<typeof EditSchoolSchema>) => {
     if (context.school) {
-        // remove empty strings (removed phone numbers)
-      const pointPersonPhoneNumbers = data.pointPersonPhone?.split('/').filter((phone) => phone !== ' ');
-      data.pointPersonPhone = pointPersonPhoneNumbers && pointPersonPhoneNumbers.length > 0 ? pointPersonPhoneNumbers.join('/') : null;
+      // remove empty strings (removed phone numbers)
+      const pointPersonPhoneNumbers = data.pointPersonPhone
+        ?.split("/")
+        .filter((phone) => phone !== " ");
+      data.pointPersonPhone =
+        pointPersonPhoneNumbers && pointPersonPhoneNumbers.length > 0
+          ? pointPersonPhoneNumbers.join("/")
+          : null;
       console.log(data.pointPersonPhone);
       const response = await editSchoolInformation(context.school?.id, data);
 
@@ -161,13 +166,16 @@ export default function EditSchoolDetailsForm() {
     });
   };
 
-  const validatePhoneNumber = (field: keyof typeof form.formState.defaultValues, value: string) => {
-      if(!isValidPhoneNumber(value, "KE") && value !== "") {
-          form.setError(field, {
-              message: value + " is not a valid kenyan number"
-          })
-      }
-  }
+  const validatePhoneNumber = (
+    field: keyof typeof form.formState.defaultValues,
+    value: string,
+  ) => {
+    if (!isValidPhoneNumber(value, "KE") && value !== "") {
+      form.setError(field, {
+        message: value + " is not a valid kenyan number",
+      });
+    }
+  };
 
   return (
     <Dialog open={context.editDialog} onOpenChange={context.setEditDialog}>
@@ -464,47 +472,66 @@ export default function EditSchoolDetailsForm() {
                           <div className="flex flex-col gap-3">
                             {field.value &&
                               field.value.split("/").map((number, index) => {
-                                  return (
+                                return (
                                   <div
-                                      key={index}
-                                      className={cn("flex gap-2", pointPersonPhoneWatcher?.split("/")[index] === ' ' ? "hidden": "")
-                                  }>
-                                      <Input
-                                          defaultValue={number}
-                                          disabled={pointPersonPhoneWatcher?.split("/")[index] === ' '}
-                                          type="tel"
-                                          onBlur={(e) => {
-                                              const list = pointPersonPhoneWatcher?.split("/");
-                                              if (list) {
-                                                  list[index] = e.target.value;
-                                                  validateMultiplePhoneNumbers(list);
-                                              }
-                                          }}
-                                      />
-                                      <Button
-                                          variant="ghost"
-                                          type="button"
-                                          className="flex items-center text-shamiri-light-red hover:bg-red-bg"
-                                          onClick={() => {
-                                              const newValue = field.value?.split('/')
-                                              newValue?.splice(index, 1, ' ')
-                                              form.setValue("pointPersonPhone", newValue?.join('/') ?? '');
-                                          }}
-                                      >
-                                          <Icons.minusCircle className="h-4 w-4"/>
-                                      </Button>
+                                    key={index}
+                                    className={cn(
+                                      "flex gap-2",
+                                      pointPersonPhoneWatcher?.split("/")[
+                                        index
+                                      ] === " "
+                                        ? "hidden"
+                                        : "",
+                                    )}
+                                  >
+                                    <Input
+                                      defaultValue={number}
+                                      disabled={
+                                        pointPersonPhoneWatcher?.split("/")[
+                                          index
+                                        ] === " "
+                                      }
+                                      type="tel"
+                                      onBlur={(e) => {
+                                        const list =
+                                          pointPersonPhoneWatcher?.split("/");
+                                        if (list) {
+                                          list[index] = e.target.value;
+                                          validateMultiplePhoneNumbers(list);
+                                        }
+                                      }}
+                                    />
+                                    <Button
+                                      variant="ghost"
+                                      type="button"
+                                      className="flex items-center text-shamiri-light-red hover:bg-red-bg"
+                                      onClick={() => {
+                                        const newValue =
+                                          field.value?.split("/");
+                                        newValue?.splice(index, 1, " ");
+                                        form.setValue(
+                                          "pointPersonPhone",
+                                          newValue?.join("/") ?? "",
+                                        );
+                                      }}
+                                    >
+                                      <Icons.minusCircle className="h-4 w-4" />
+                                    </Button>
                                   </div>
                                 );
                               })}
                             <div className="flex gap-2">
                               <Input
                                 onChange={(e) => {
-                                    setPointPersonPhone(e.target.value)
-                                    form.trigger("pointPersonPhone")
+                                  setPointPersonPhone(e.target.value);
+                                  form.trigger("pointPersonPhone");
                                 }}
                                 onBlur={(e) => {
-                                    console.log(pointPersonPhoneWatcher);
-                                    validatePhoneNumber("pointPersonPhone" as keyof typeof form.formState.defaultValues, e.target.value)
+                                  console.log(pointPersonPhoneWatcher);
+                                  validatePhoneNumber(
+                                    "pointPersonPhone" as keyof typeof form.formState.defaultValues,
+                                    e.target.value,
+                                  );
                                 }}
                                 value={pointPersonPhone}
                                 name={field.name}
@@ -515,19 +542,27 @@ export default function EditSchoolDetailsForm() {
                                 type="button"
                                 className="flex items-center text-shamiri-new-blue"
                                 onClick={() => {
-                                    if(isValidPhoneNumber(pointPersonPhone, "KE")) {
-                                        const newValue = field.value + "/" + pointPersonPhone
-                                        form.setValue("pointPersonPhone", field.value !== undefined ? newValue : pointPersonPhone);
-                                        setPointPersonPhone('')
-                                    } else {
-                                        form.setError("pointPersonPhone", {
-                                            message: "Please enter a valid kenyan number"
-                                        })
-                                    }
-
+                                  if (
+                                    isValidPhoneNumber(pointPersonPhone, "KE")
+                                  ) {
+                                    const newValue =
+                                      field.value + "/" + pointPersonPhone;
+                                    form.setValue(
+                                      "pointPersonPhone",
+                                      field.value !== undefined
+                                        ? newValue
+                                        : pointPersonPhone,
+                                    );
+                                    setPointPersonPhone("");
+                                  } else {
+                                    form.setError("pointPersonPhone", {
+                                      message:
+                                        "Please enter a valid kenyan number",
+                                    });
+                                  }
                                 }}
                               >
-                                  <Icons.plusCircle className="h-4 w-4"/>
+                                <Icons.plusCircle className="h-4 w-4" />
                               </Button>
                             </div>
                           </div>
