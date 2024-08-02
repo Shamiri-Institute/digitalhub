@@ -40,7 +40,7 @@ import {
   Users2,
   XIcon,
   // StarIcon,
-  type LucideIcon,
+  type LucideIcon, MinusCircle,
 } from "lucide-react";
 import * as React from "react";
 
@@ -51,6 +51,7 @@ export type Icon = LucideIcon | React.FC<LucideProps>;
 export const Icons = {
   sun: SunMedium,
   moon: Moon,
+  minusCircle:MinusCircle,
   calendar: Calendar,
   check: Check,
   chevronsUpDown: ChevronsUpDown,
