@@ -28,6 +28,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import Link from "next/link";
 import { useContext, useRef } from "react";
+import {parsePhoneNumber} from "libphonenumber-js";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -67,6 +68,8 @@ export default function SchoolLeftPanel({
   // });
   // const [school, setSchool] = useState(context.schools[_school]);
   const panelRef: any = useRef(null);
+  console.log(school);
+
 
   useGSAP(
     () => {
@@ -86,6 +89,22 @@ export default function SchoolLeftPanel({
     },
     { scope: panelRef },
   );
+
+  function renderPhoneNumbers(phone:string){
+    try {
+      const phoneNumber = parsePhoneNumber(phone, "KE")
+      return (
+          <a href={phoneNumber.getURI()} key={phone} className="flex">
+            <div className="rounded-full border px-1.5 py-0.5 text-shamiri-new-blue">
+              {phoneNumber.formatNational()}
+            </div>
+          </a>
+      );
+    } catch(error) {
+      console.error(error)
+      return
+    }
+  }
 
   return (
     <div
@@ -148,21 +167,16 @@ export default function SchoolLeftPanel({
                   {/*TODO: inter */}
                   <p className="text-shamiri-black">Phone Number</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {school?.pointPersonPhone === null ||
                   school?.pointPersonPhone === "N/A" ? (
                     <span className="text-shamiri-text-grey">
+
                       Not available
                     </span>
                   ) : (
                     school?.pointPersonPhone.split("/").map((phone) => {
-                      return (
-                        <a href={`tel:${phone}`} key={phone} className="flex">
-                          <div className="rounded-full border px-1.5 py-0.5 text-shamiri-new-blue">
-                            {phone}
-                          </div>
-                        </a>
-                      );
+                      return renderPhoneNumbers(phone)
                     })
                   )}
                 </div>
@@ -290,7 +304,7 @@ export default function SchoolLeftPanel({
               </div>
               <div>
                 <p className="text-shamiri-black">Point teacher phone number</p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {school?.pointPersonPhone === null ||
                   school?.pointPersonPhone === "N/A" ? (
                     <span className="text-shamiri-text-grey">
@@ -298,13 +312,7 @@ export default function SchoolLeftPanel({
                     </span>
                   ) : (
                     school?.pointPersonPhone.split("/").map((phone) => {
-                      return (
-                        <a href={`tel:${phone}`} key={phone} className="flex">
-                          <div className="rounded-full border px-1.5 py-0.5 text-shamiri-new-blue">
-                            {phone}
-                          </div>
-                        </a>
-                      );
+                      return renderPhoneNumbers(phone)
                     })
                   )}
                 </div>
