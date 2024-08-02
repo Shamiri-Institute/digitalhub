@@ -19,15 +19,15 @@ import { Separator } from "#/components/ui/separator";
 import React from "react";
 
 export function GroupEngagementRater({
-  sessionName = "Session 01",
   revalidatePath: path,
   groupName,
   ratings,
   id: evaluationId,
+  sessionId,
 }: {
-  sessionName: string;
   revalidatePath: string;
   groupName: string;
+  sessionId?: string;
   ratings: Prisma.InterventionGroupReportGetPayload<{}> | null;
   id: string | undefined;
 }) {
@@ -40,12 +40,12 @@ export function GroupEngagementRater({
     ) => {
       const { success } = await rateGroup({
         rating,
-        //todo: fix in future - rn its sessionId undefined since its not being passed cause we dont want to associate it with a session since there is no session for 'all sessions'
         groupId: groupName,
         key,
         id: evaluationId,
         path,
         isAllSessionsEvaluation: true,
+        sessionId,
       });
 
       if (success) {
