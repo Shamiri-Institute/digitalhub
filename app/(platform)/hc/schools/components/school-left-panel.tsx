@@ -25,10 +25,10 @@ import { Prisma } from "@prisma/client";
 import { format } from "date-fns";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { parsePhoneNumber } from "libphonenumber-js";
 import Image from "next/image";
 import Link from "next/link";
 import { useContext, useRef } from "react";
-import {parsePhoneNumber} from "libphonenumber-js";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -70,7 +70,6 @@ export default function SchoolLeftPanel({
   const panelRef: any = useRef(null);
   console.log(school);
 
-
   useGSAP(
     () => {
       if (panelRef !== null) {
@@ -90,19 +89,19 @@ export default function SchoolLeftPanel({
     { scope: panelRef },
   );
 
-  function renderPhoneNumbers(phone:string){
+  function renderPhoneNumbers(phone: string) {
     try {
-      const phoneNumber = parsePhoneNumber(phone, "KE")
+      const phoneNumber = parsePhoneNumber(phone, "KE");
       return (
-          <a href={phoneNumber.getURI()} key={phone} className="flex">
-            <div className="rounded-full border px-1.5 py-0.5 text-shamiri-new-blue">
-              {phoneNumber.formatNational()}
-            </div>
-          </a>
+        <a href={phoneNumber.getURI()} key={phone} className="flex">
+          <div className="rounded-full border px-1.5 py-0.5 text-shamiri-new-blue">
+            {phoneNumber.formatNational()}
+          </div>
+        </a>
       );
-    } catch(error) {
-      console.error(error)
-      return
+    } catch (error) {
+      console.error(error);
+      return;
     }
   }
 
@@ -171,12 +170,11 @@ export default function SchoolLeftPanel({
                   {school?.pointPersonPhone === null ||
                   school?.pointPersonPhone === "N/A" ? (
                     <span className="text-shamiri-text-grey">
-
                       Not available
                     </span>
                   ) : (
                     school?.pointPersonPhone.split("/").map((phone) => {
-                      return renderPhoneNumbers(phone)
+                      return renderPhoneNumbers(phone);
                     })
                   )}
                 </div>
@@ -312,7 +310,7 @@ export default function SchoolLeftPanel({
                     </span>
                   ) : (
                     school?.pointPersonPhone.split("/").map((phone) => {
-                      return renderPhoneNumbers(phone)
+                      return renderPhoneNumbers(phone);
                     })
                   )}
                 </div>
