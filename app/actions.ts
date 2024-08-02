@@ -1714,16 +1714,16 @@ export async function rateGroup(payload: {
   id: string | undefined;
   path: string;
   isAllSessionsEvaluation?: boolean;
+  sessionId?: string;
 }) {
   try {
-    // todo: to be updated once the all session eveluation is done
     if (!payload.id) {
       await db.interventionGroupReport.create({
         data: {
           id: objectId("ige"),
           groupId: payload.groupId,
           [payload.key]: payload.rating,
-          isAllReport: payload.isAllSessionsEvaluation,
+          sessionId: payload.sessionId,
         },
       });
     } else {
