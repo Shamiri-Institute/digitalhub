@@ -55,7 +55,6 @@ export default async function GroupReport({
   let session: Prisma.InterventionSessionGetPayload<{}> | null = null;
 
   if (sessionType !== "all") {
-    // TODO: To be restored for all sessions filter --@Wendy
     session = await db.interventionSession.findUnique({
       where: {
         interventionBySchoolIdAndSessionType: {
@@ -111,13 +110,21 @@ export default async function GroupReport({
     );
   }
 
-  const groupEvaluation = await db.interventionGroupReport.findFirst({
+  const revalidatePath = `/schools/${selectedSchool.visibleId}/${groupId}/?type=${sessionType}`;
+
+  const currentSession = await db.interventionSession.findFirst({
     where: {
-      groupId: groupId,
+      sessionType: sessionType,
+      schoolId: selectedSchool.id,
     },
   });
 
-  const revalidatePath = `/schools/${selectedSchool.visibleId}/${groupId}/?type=${sessionType}`;
+  const groupEvaluation = await db.interventionGroupReport.findFirst({
+    where: {
+      groupId: groupId,
+      sessionId: currentSession?.id ?? null,
+    },
+  });
 
   return (
     <div>
@@ -131,26 +138,26 @@ export default async function GroupReport({
 
       <GroupEngagementRater
         revalidatePath={revalidatePath}
-        sessionName={session.sessionName}
         groupName={groupId}
         id={groupEvaluation?.id}
         ratings={groupEvaluation}
+        sessionId={currentSession?.id}
       />
 
       <GroupDisciplineRater
         revalidatePath={revalidatePath}
-        sessionName={session.sessionName}
         groupName={groupId}
         id={groupEvaluation?.id}
         ratings={groupEvaluation}
+        sessionId={currentSession?.id}
       />
 
       <GroupContentCoverage
         revalidatePath={revalidatePath}
-        sessionName={session.sessionName}
         groupName={groupId}
         id={groupEvaluation?.id}
         ratings={groupEvaluation}
+        sessionId={currentSession?.id}
       />
     </div>
   );
