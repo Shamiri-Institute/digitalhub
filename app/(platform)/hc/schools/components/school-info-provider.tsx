@@ -8,16 +8,16 @@ export default function SchoolInfoProvider({
   school,
 }: {
   children: React.ReactNode;
-  school: SchoolsTableData | null;
+  school?: SchoolsTableData | null;
 }) {
   const [editDialog, setEditDialog] = useState(false);
   const [pointSupervisorDialog, setPointSupervisorDialog] = useState(false);
   const [schoolDropOutDialog, setSchoolDropOutDialog] = useState(false);
   const [undoDropOutDialog, setUndoDropOutDialog] = useState(false);
-  const [_school, setSchool] = useState(school);
+  const [_school, setSchool] = useState(school ?? null);
 
   useEffect(() => {
-    setSchool(school);
+    setSchool(school ?? null);
   }, [school]);
 
   return (
