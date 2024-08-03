@@ -16,6 +16,9 @@ export default async function SupervisorsPage({
       assignedSchools: true,
       fellows: true,
     },
+    orderBy: {
+      supervisorName: "asc",
+    },
   });
 
   return <SupervisorsDataTable supervisors={supervisors} />;

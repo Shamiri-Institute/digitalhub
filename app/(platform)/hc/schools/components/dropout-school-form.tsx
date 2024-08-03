@@ -1,6 +1,6 @@
 "use client";
 import { dropoutSchool } from "#/app/(platform)/hc/schools/actions";
-import SchoolNameInfoWidget from "#/app/(platform)/hc/schools/components/school-name-info-widget";
+import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import { Alert, AlertTitle } from "#/components/ui/alert";
@@ -35,7 +35,7 @@ import { InfoIcon } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { DropoutSchoolSchema } from "../schemas";
+import { DropoutSchoolSchema } from "../../schemas";
 
 export function DropoutSchool() {
   const context = useContext(SchoolInfoContext);
@@ -110,7 +110,7 @@ export function DropoutSchool() {
           <DialogHeader>
             <h2>Drop out school</h2>
           </DialogHeader>
-          <SchoolNameInfoWidget schoolName={context.school?.schoolName} />
+          <DialogAlertWidget label={context.school?.schoolName} />
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
@@ -182,7 +182,7 @@ export function DropoutSchool() {
         <DialogContent className="p-5">
           <DialogHeader>
             <h2>Confirm drop out</h2>
-            <SchoolNameInfoWidget schoolName={context.school?.schoolName} />
+            <DialogAlertWidget label={context.school?.schoolName} />
           </DialogHeader>
           <div className="space-y-4">
             <h3>Are you sure?</h3>

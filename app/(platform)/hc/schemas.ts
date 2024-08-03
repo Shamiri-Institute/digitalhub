@@ -20,6 +20,18 @@ export const DropoutSchoolSchema = z.object({
   }),
 });
 
+export const DropoutSupervisorSchema = z.object({
+  supervisorId: stringValidation("Missing supervisor ID"),
+  // TODO: Replace dropout reasons with supervisor specific options
+  // @ts-ignore
+  dropoutReason: z.enum(SCHOOL_DROPOUT_REASONS, {
+    errorMap: (_issue, _ctx) => ({
+      message:
+        "Please select one of the supplied supervisor dropout reason options",
+    }),
+  }),
+});
+
 export const WeeklyHubReportSchema = z.object({
   hubId: stringValidation("Missing hub ID"),
   submittedBy: stringValidation("Missing hub coordinator ID"),

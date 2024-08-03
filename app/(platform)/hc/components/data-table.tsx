@@ -1,5 +1,6 @@
 "use client";
 import { Icons } from "#/components/icons";
+import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -27,7 +28,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -37,6 +38,7 @@ interface DataTableProps<TData, TValue> {
   onRowSelectionChange?: (rows: unknown[]) => void;
   columnVisibilityState?: VisibilityState;
   enableRowSelection?: boolean | ((row: Row<TData>) => boolean) | undefined;
+  renderTableActions?: ReactNode;
 }
 
 export default function DataTable<TData, TValue>({
@@ -48,6 +50,7 @@ export default function DataTable<TData, TValue>({
   onRowSelectionChange,
   columnVisibilityState = {},
   enableRowSelection,
+  renderTableActions,
 }: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -84,14 +87,15 @@ export default function DataTable<TData, TValue>({
 
   return (
     <div>
-      {editColumns && (
-        <div className="flex justify-end">
+      <div className="flex justify-end gap-3">
+        {renderTableActions}
+        {editColumns && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm font-semibold leading-5 text-shamiri-black hover:bg-background-secondary hover:shadow-inner">
-                Edit Columns
-                <Icons.settings className="h-4 w-4 text-shamiri-text-dark-grey" />
-              </div>
+              <Button variant="outline" className="flex gap-1">
+                <Icons.settings className="h-4 w-4 text-shamiri-text-grey" />
+                Edit columns
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align={"end"}>
               {table
@@ -111,8 +115,8 @@ export default function DataTable<TData, TValue>({
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      )}
+        )}
+      </div>
       <Table className={className}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

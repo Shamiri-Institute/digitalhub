@@ -1,21 +1,17 @@
 "use client";
 
-import { Icons } from "#/components/icons";
+import { SupervisorsDataTableMenu } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuPortal,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
-import React from "react";
+import { parsePhoneNumber } from "libphonenumber-js";
 
 export type SupervisorsData = Prisma.SupervisorGetPayload<{
   include: {
@@ -23,18 +19,6 @@ export type SupervisorsData = Prisma.SupervisorGetPayload<{
     fellows: true;
   };
 }>;
-
-function MenuItem({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className: string;
-}) {
-  return (
-    <div className={cn("cursor-pointer px-3 py-2", className)}>{children}</div>
-  );
-}
 
 export const columns: ColumnDef<SupervisorsData>[] = [
   {
@@ -94,7 +78,12 @@ export const columns: ColumnDef<SupervisorsData>[] = [
   },
   {
     header: "Phone Number",
-    accessorFn: (row) => row.cellNumber,
+    accessorFn: (row) => {
+      return (
+        row.cellNumber &&
+        parsePhoneNumber(row.cellNumber, "KE").formatNational()
+      );
+    },
   },
   {
     header: "Gender",
@@ -140,29 +129,7 @@ export const columns: ColumnDef<SupervisorsData>[] = [
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <div className="absolute inset-0 border-l bg-white">
-            <div className="flex h-full w-full items-center justify-center">
-              <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-            </div>
-          </div>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>Edit Supervisor Information</DropdownMenuItem>
-          <DropdownMenuItem>Mark Attendance</DropdownMenuItem>
-          <DropdownMenuItem>Monthly supervisor evaluation</DropdownMenuItem>
-          <DropdownMenuItem>Submit complaint</DropdownMenuItem>
-          <DropdownMenuItem>Overall supervisor evaluation</DropdownMenuItem>
-          <DropdownMenuItem>
-            <div className="text-shamiri-red">Drop-out supervisor</div>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    cell: ({ row }) => <SupervisorsDataTableMenu supervisor={row.original} />,
     enableHiding: false,
   },
 ];
