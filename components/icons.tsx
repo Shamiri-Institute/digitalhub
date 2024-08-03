@@ -13,6 +13,8 @@ import {
   ChevronsUpDown,
   ClipboardList,
   Clock,
+  FileDown,
+  FileUp,
   FlagTriangleLeft,
   FlagTriangleRight,
   GraduationCap,
@@ -23,6 +25,7 @@ import {
   Info,
   LayoutDashboard,
   ListTodo,
+  Loader2,
   LucideProps,
   Mail,
   MinusCircle,
@@ -89,6 +92,9 @@ export const Icons = {
   clock: Clock,
   flagTriangleLeft: FlagTriangleLeft,
   flagTriangleRight: FlagTriangleRight,
+  loaderCircle: Loader2,
+  fileDown: FileDown,
+  fileUp: FileUp,
 
   // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (
