@@ -17,7 +17,10 @@ export default function SchoolsNav({ visibleId }: { visibleId: string }) {
     { name: "Fellows", href: `/hc/schools/${visibleId}/fellows` },
     { name: "Students", href: `/hc/schools/${visibleId}/students` },
   ];
-  const [activeTab, setActiveTab] = useState<TabType>(options[1]!);
+  const initialTab = options.find((tab: TabType) => tab.href === pathname);
+  const [activeTab, setActiveTab] = useState<TabType>(
+    initialTab ?? options[1]!,
+  );
 
   useEffect(() => {
     router.push(activeTab.href);
