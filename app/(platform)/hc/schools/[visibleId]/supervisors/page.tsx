@@ -15,11 +15,23 @@ export default async function SupervisorsPage({
     include: {
       assignedSchools: true,
       fellows: true,
+      supervisorAttendances: {
+        include: {
+          session: true,
+        },
+        where: {
+          school: {
+            visibleId,
+          },
+        },
+      },
     },
     orderBy: {
       supervisorName: "asc",
     },
   });
 
-  return <SupervisorsDataTable supervisors={supervisors} />;
+  return (
+    <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} />
+  );
 }

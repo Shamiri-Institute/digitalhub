@@ -601,10 +601,11 @@ export const KENYAN_COUNTIES = [
   },
 ] as const;
 
+// TODO: Refactor to string array with s0, s1, etc. values
 export const SESSION_TYPES: { name: string; description: string }[] = [
   {
     name: "s0",
-    description: "PRE",
+    description: "Pre",
   },
   {
     name: "s1",
@@ -623,3 +624,9 @@ export const SESSION_TYPES: { name: string; description: string }[] = [
     description: "S4",
   },
 ];
+
+const sessionTypes = {};
+SESSION_TYPES.forEach((type) => {
+  sessionTypes[type.name] = type.description;
+});
+export type InterventionSessionType = keyof typeof sessionTypeKeys;
