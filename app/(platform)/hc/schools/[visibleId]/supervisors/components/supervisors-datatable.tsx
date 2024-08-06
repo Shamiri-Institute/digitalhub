@@ -6,6 +6,7 @@ import {
   SupervisorsData,
 } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/columns";
 import { DropoutSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/dropout-supervisor-form";
+import { MarkAttendance } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/mark-attendance-form";
 import { SupervisorInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/context/supervisor-info-context";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { Icons } from "#/components/icons";
@@ -24,16 +25,24 @@ import { useContext, useState } from "react";
 
 export default function SupervisorsDataTable({
   supervisors,
+  visibleId,
 }: {
   supervisors: Prisma.SupervisorGetPayload<{
     include: {
       assignedSchools: true;
       fellows: true;
+      supervisorAttendances: {
+        include: {
+          session: true;
+        };
+      };
     };
   }>[];
+  visibleId: string;
 }) {
   const schoolContext = useContext(SchoolInfoContext);
   const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
+  const [attendanceDialog, setAttendanceDialog] = useState<boolean>(false);
   const [supervisor, setSupervisor] = useState<SupervisorsData | null>(null);
 
   // TODO: Move these actions to main supervisors page
@@ -74,7 +83,14 @@ export default function SupervisorsDataTable({
 
   return (
     <SupervisorInfoContext.Provider
-      value={{ dropoutDialog, setDropoutDialog, supervisor, setSupervisor }}
+      value={{
+        dropoutDialog,
+        setDropoutDialog,
+        attendanceDialog,
+        setAttendanceDialog,
+        supervisor,
+        setSupervisor,
+      }}
     >
       <DataTable
         data={supervisors}
@@ -83,6 +99,8 @@ export default function SupervisorsDataTable({
         emptyStateMessage="No supervisors found for this hub"
         columnVisibilityState={{
           Gender: false,
+          "Phone number": false,
+          Status: false,
           checkbox: !schoolContext.school?.droppedOut ?? null,
           button: !schoolContext.school?.droppedOut ?? null,
         }}
@@ -92,6 +110,7 @@ export default function SupervisorsDataTable({
         }
       />
       <DropoutSupervisor />
+      <MarkAttendance schoolVisibleId={visibleId} />
     </SupervisorInfoContext.Provider>
   );
 }
@@ -122,25 +141,38 @@ export function SupervisorsDataTableMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {!supervisor.droppedOut ? (
-          <div>
-            <DropdownMenuItem>Edit supervisor information</DropdownMenuItem>
-            <DropdownMenuItem>Mark attendance</DropdownMenuItem>
-            <DropdownMenuItem>Monthly supervisor evaluation</DropdownMenuItem>
-            <DropdownMenuItem>Submit complaint</DropdownMenuItem>
-          </div>
-        ) : null}
+        <DropdownMenuItem
+          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+        >
+          Edit supervisor information
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+          onClick={() => {
+            context.setDropoutDialog(true);
+          }}
+        >
+          Mark attendance
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+        >
+          Monthly supervisor evaluation
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+        >
+          Submit complaint
+        </DropdownMenuItem>
         <DropdownMenuItem>Overall supervisor evaluation</DropdownMenuItem>
-        {!supervisor.droppedOut ? (
-          <DropdownMenuItem
-            onClick={() => {
-              context.setDropoutDialog(true);
-            }}
-          >
-            <div className="text-shamiri-red">Drop-out supervisor</div>
-          </DropdownMenuItem>
-        ) : // TODO: Confirm if supervisor will have un drop feature
-        null}
+        <DropdownMenuItem
+          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+          onClick={() => {
+            context.setDropoutDialog(true);
+          }}
+        >
+          <div className="text-shamiri-red">Drop out supervisor</div>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

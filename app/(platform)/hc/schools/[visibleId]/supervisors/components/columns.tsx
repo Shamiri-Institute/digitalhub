@@ -1,5 +1,6 @@
 "use client";
 
+import SessionHistoryWidget from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/sessions-history-widget";
 import { SupervisorsDataTableMenu } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -9,6 +10,7 @@ import {
   DropdownMenuPortal,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { InterventionSessionType } from "#/lib/app-constants/constants";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
@@ -17,6 +19,11 @@ export type SupervisorsData = Prisma.SupervisorGetPayload<{
   include: {
     assignedSchools: true;
     fellows: true;
+    supervisorAttendances: {
+      include: {
+        session: true;
+      };
+    };
   };
 }>;
 
@@ -58,40 +65,9 @@ export const columns: ColumnDef<SupervisorsData>[] = [
     header: "Name",
     id: "Name",
   },
+
   {
-    header: "Active",
-    cell: ({ row }) =>
-      row.original.archivedAt || row.original.droppedOut ? (
-        <Badge variant="destructive">Inactive</Badge>
-      ) : (
-        <Badge variant="shamiri-green">Active</Badge>
-      ),
-  },
-  {
-    header: "No. of fellows",
-    cell: ({ row }) => {
-      const activeFellows = row.original.fellows.filter(
-        (fellow) => !fellow.droppedOut,
-      );
-      return activeFellows.length + "/" + row.original.fellows.length;
-    },
-  },
-  {
-    header: "Phone Number",
-    accessorFn: (row) => {
-      return (
-        row.cellNumber &&
-        parsePhoneNumber(row.cellNumber, "KE").formatNational()
-      );
-    },
-  },
-  {
-    header: "Gender",
-    id: "Gender",
-    accessorKey: "gender",
-  },
-  {
-    header: "Assigned School",
+    header: "Assigned school",
     cell: ({ row }) => {
       const schools = row.original.assignedSchools;
 
@@ -126,6 +102,54 @@ export const columns: ColumnDef<SupervisorsData>[] = [
       }
       return <span>{schools[0]?.schoolName}</span>;
     },
+  },
+  {
+    header: "Attendance history",
+    cell: ({ row }) => {
+      const attendedSessions: {
+        [key in InterventionSessionType]: boolean | null;
+      } = {};
+      row.original.supervisorAttendances.forEach((attendance) => {
+        attendedSessions[
+          attendance.session.sessionType as keyof typeof attendedSessions
+        ] = attendance.attended;
+      });
+      return <SessionHistoryWidget attendedSessions={attendedSessions} />;
+    },
+  },
+  {
+    header: "Status",
+    cell: ({ row }) =>
+      row.original.archivedAt || row.original.droppedOut ? (
+        <Badge variant="destructive">Inactive</Badge>
+      ) : (
+        <Badge variant="shamiri-green">Active</Badge>
+      ),
+  },
+  {
+    header: "No. of fellows",
+    id: "No. of fellows",
+    cell: ({ row }) => {
+      const activeFellows = row.original.fellows.filter(
+        (fellow) => !fellow.droppedOut,
+      );
+      return activeFellows.length + "/" + row.original.fellows.length;
+    },
+  },
+  {
+    header: "Phone Number",
+    id: "Phone number",
+    accessorFn: (row) => {
+      return (
+        row.cellNumber &&
+        parsePhoneNumber(row.cellNumber, "KE").formatNational()
+      );
+    },
+  },
+  {
+    header: "Gender",
+    id: "Gender",
+    accessorKey: "gender",
   },
   {
     id: "button",

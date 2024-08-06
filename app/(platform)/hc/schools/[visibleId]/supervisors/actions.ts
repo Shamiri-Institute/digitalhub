@@ -46,3 +46,40 @@ export async function dropoutSupervisor(
     };
   }
 }
+
+export async function getSessionAndSupervisorAttendances({
+  projectId,
+  supervisorId,
+  schoolVisibleId,
+}: {
+  projectId: string;
+  supervisorId: string;
+  schoolVisibleId: string;
+}) {
+  try {
+    const data = await db.interventionSession.findMany({
+      where: {
+        school: {
+          visibleId: schoolVisibleId,
+        },
+        projectId,
+        occurred: true,
+      },
+      include: {
+        supervisorAttendances: true,
+      },
+      orderBy: {
+        sessionDate: "asc",
+      },
+    });
+    console.log(data);
+    return {
+      success: true,
+      message: "Successfully fetched supervisor attendances.",
+      data,
+    };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong while scheduling a new session" };
+  }
+}
