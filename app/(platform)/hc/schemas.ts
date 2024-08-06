@@ -161,10 +161,8 @@ export const RescheduleSessionSchema = z.object({
 });
 
 export const MarkSupervisorAttendanceSchema = z.object({
-  projectId: z.string(),
-  schoolId: z.string(),
   supervisorId: z.string(),
   attended: z.boolean().optional(),
   sessionId: z.string(),
-  sessionType: z.string(),
+  absenceReason: z.string().optional(),
 });
