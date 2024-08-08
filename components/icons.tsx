@@ -13,6 +13,8 @@ import {
   ChevronsUpDown,
   ClipboardList,
   Clock,
+  FlagTriangleLeft,
+  FlagTriangleRight,
   GraduationCap,
   GraduationCapIcon,
   HeartPulse,
@@ -83,6 +85,8 @@ export const Icons = {
   arrowUp: ArrowUp,
   arrowDown: ArrowDown,
   clock: Clock,
+  flagTriangleLeft: FlagTriangleLeft,
+  flagTriangleRight: FlagTriangleRight,
 
   // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (

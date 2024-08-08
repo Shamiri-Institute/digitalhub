@@ -1,3 +1,5 @@
+import { DropoutSchool } from "#/app/(platform)/hc/components/dropout-school-form";
+import { UndoDropoutSchool } from "#/app/(platform)/hc/components/undo-dropout-school-form";
 import AssignPointSupervisor from "#/app/(platform)/hc/schools/components/assign-point-supervisor";
 import EditSchoolDetailsForm from "#/app/(platform)/hc/schools/components/edit-school-details-form";
 import SchoolInfoProvider from "#/app/(platform)/hc/schools/components/school-info-provider";
@@ -74,6 +76,8 @@ export default async function SchoolsPage() {
           <SchoolsDatatable />
           <EditSchoolDetailsForm />
           <AssignPointSupervisor supervisors={supervisors} />
+          <DropoutSchool />
+          <UndoDropoutSchool />
         </SchoolInfoProvider>
       </div>
       <PageFooter />

@@ -1,5 +1,13 @@
+import { DropoutSchool } from "#/app/(platform)/hc/components/dropout-school-form";
+import { UndoDropoutSchool } from "#/app/(platform)/hc/components/undo-dropout-school-form";
+import { fetchHubSupervisors } from "#/app/(platform)/hc/schools/actions";
+import AssignPointSupervisor from "#/app/(platform)/hc/schools/components/assign-point-supervisor";
+import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns";
+import EditSchoolDetailsForm from "#/app/(platform)/hc/schools/components/edit-school-details-form";
+import SchoolInfoProvider from "#/app/(platform)/hc/schools/components/school-info-provider";
 import SchoolLeftPanel from "#/app/(platform)/hc/schools/components/school-left-panel";
 import SchoolsBreadcrumb from "#/app/(platform)/hc/schools/components/schools-breadcrumb";
+import { currentHubCoordinator } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
@@ -19,6 +27,11 @@ export default async function SchoolViewLayout({
     },
     include: {
       interventionSessions: true,
+      schoolDropoutHistory: {
+        include: {
+          user: true,
+        },
+      },
       _count: {
         select: {
           interventionSessions: true,
@@ -34,18 +47,31 @@ export default async function SchoolViewLayout({
     },
   });
 
+  const hubCoordinator = await currentHubCoordinator();
+  const supervisors = await fetchHubSupervisors({
+    where: {
+      hubId: hubCoordinator?.assignedHubId as string,
+    },
+  });
+
   return (
-    <div className="flex h-full bg-white">
-      <SchoolLeftPanel selectedSchool={school} />
-      <div className="flex flex-1 flex-col">
-        <div className="container w-full grow space-y-5 pb-6 pl-6 pr-8 pt-5">
-          <SchoolsBreadcrumb />
-          <SchoolsNav visibleId={visibleId} />
-          <Separator />
-          {children}
+    <SchoolInfoProvider school={school as unknown as SchoolsTableData}>
+      <div className="flex h-full bg-white">
+        <SchoolLeftPanel selectedSchool={school} />
+        <div className="flex flex-1 flex-col">
+          <div className="container w-full grow space-y-5 pb-6 pl-6 pr-8 pt-5">
+            <SchoolsBreadcrumb />
+            <SchoolsNav visibleId={visibleId} />
+            <Separator />
+            {children}
+          </div>
+          <PageFooter />
         </div>
-        <PageFooter />
       </div>
-    </div>
+      <EditSchoolDetailsForm />
+      <AssignPointSupervisor supervisors={supervisors} />
+      <DropoutSchool />
+      <UndoDropoutSchool />
+    </SchoolInfoProvider>
   );
 }
