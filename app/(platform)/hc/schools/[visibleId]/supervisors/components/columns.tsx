@@ -107,12 +107,18 @@ export const columns: ColumnDef<SupervisorsData>[] = [
     header: "Attendance history",
     cell: ({ row }) => {
       const attendedSessions: {
-        [key in InterventionSessionType]: boolean | null;
+        [key in InterventionSessionType]: Prisma.SupervisorAttendanceGetPayload<{
+          include: {
+            session: true;
+          };
+        }>;
       } = {};
       row.original.supervisorAttendances.forEach((attendance) => {
-        attendedSessions[
-          attendance.session.sessionType as keyof typeof attendedSessions
-        ] = attendance.attended;
+        if (attendance.session.occurred) {
+          attendedSessions[
+            attendance.session.sessionType as keyof typeof attendedSessions
+          ] = attendance;
+        }
       });
       return <SessionHistoryWidget attendedSessions={attendedSessions} />;
     },

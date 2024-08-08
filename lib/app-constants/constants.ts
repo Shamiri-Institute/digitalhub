@@ -23,6 +23,8 @@ export const SCHOOL_DEMOGRAPHICS = ["Girls", "Boys", "Mixed"] as const;
 
 export const BOARDING_DAY_TYPES = ["Day", "Boarding", "Mixed"] as const;
 
+export const ATTENDANCE_STATUS = ["attended", "missed", "unmarked"] as const;
+
 export const SCHOOL_TYPES = [
   "County",
   "Sub-county",
