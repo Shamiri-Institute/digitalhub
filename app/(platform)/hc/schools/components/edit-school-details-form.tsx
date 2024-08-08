@@ -115,7 +115,6 @@ export default function EditSchoolDetailsForm() {
         pointPersonPhoneNumbers && pointPersonPhoneNumbers.length > 0
           ? pointPersonPhoneNumbers.join("/")
           : null;
-      console.log(data.pointPersonPhone);
       const response = await editSchoolInformation(context.school?.id, data);
 
       if (!response.success) {

@@ -1,8 +1,12 @@
 "use server";
 
-import { DropoutSupervisorSchema } from "#/app/(platform)/hc/schemas";
+import {
+  DropoutSupervisorSchema,
+  MarkSupervisorAttendanceSchema,
+} from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
+import { z } from "zod";
 
 export async function dropoutSupervisor(
   supervisorId: string,
@@ -50,29 +54,30 @@ export async function dropoutSupervisor(
 export async function getSessionAndSupervisorAttendances({
   projectId,
   supervisorId,
-  schoolVisibleId,
+  schoolId,
 }: {
   projectId: string;
   supervisorId: string;
-  schoolVisibleId: string;
+  schoolId: string;
 }) {
   try {
     const data = await db.interventionSession.findMany({
       where: {
-        school: {
-          visibleId: schoolVisibleId,
-        },
+        schoolId,
         projectId,
         occurred: true,
       },
       include: {
-        supervisorAttendances: true,
+        supervisorAttendances: {
+          where: {
+            supervisorId,
+          },
+        },
       },
       orderBy: {
         sessionDate: "asc",
       },
     });
-    console.log(data);
     return {
       success: true,
       message: "Successfully fetched supervisor attendances.",
@@ -81,5 +86,54 @@ export async function getSessionAndSupervisorAttendances({
   } catch (error: unknown) {
     console.error(error);
     return { error: "Something went wrong while scheduling a new session" };
+  }
+}
+
+export async function markSupervisorAttendance(
+  id: string,
+  data: z.infer<typeof MarkSupervisorAttendanceSchema>,
+) {
+  const user = getCurrentUser();
+  if (user === null)
+    return { success: false, message: "Unauthenticated user." };
+
+  const parsedData = MarkSupervisorAttendanceSchema.parse(data);
+  const attended =
+    parsedData.attended === "attended"
+      ? true
+      : data.attended === "missed"
+        ? false
+        : null;
+  try {
+    const attendance = await db.supervisorAttendance.findFirst({
+      where: { id },
+    });
+
+    if (attendance !== null) {
+      await db.supervisorAttendance.update({
+        where: {
+          id: attendance.id,
+        },
+        data: {
+          attended,
+          absenceReason: !attended ? parsedData.absenceReason : null,
+          absenceComments: !attended ? parsedData.comments : null,
+        },
+      });
+      return {
+        success: true,
+        message: "Successfully marked supervisor attendance.",
+        data: attendance,
+      };
+    } else {
+      return {
+        error: "Something went wrong while updating supervisor attendance",
+      };
+    }
+  } catch (error: unknown) {
+    console.error(error);
+    return {
+      error: "Something went wrong while updating supervisor attendance",
+    };
   }
 }
