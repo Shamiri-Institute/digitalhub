@@ -149,7 +149,7 @@ export function SupervisorsDataTableMenu({
         <DropdownMenuItem
           disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
           onClick={() => {
-            context.setDropoutDialog(true);
+            context.setAttendanceDialog(true);
           }}
         >
           Mark attendance
