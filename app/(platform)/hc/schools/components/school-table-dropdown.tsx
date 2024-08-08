@@ -1,4 +1,3 @@
-import { DropoutSchool } from "#/app/(platform)/hc/components/dropout-school-form";
 import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { Icons } from "#/components/icons";
@@ -49,32 +48,43 @@ export default function SchoolTableDropdown({
         <DropdownMenuItem asChild>
           <Link href={`/hc/schools/${schoolRow.visibleId}`}>View school</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            context.setEditDialog(true);
-          }}
-        >
-          Edit school information
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            context.setPointSupervisorDialog(true);
-          }}
-        >
-          {context.school?.assignedSupervisorId !== null
-            ? "Change point supervisor"
-            : "Assign point supervisor"}
-        </DropdownMenuItem>
         {!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
-          <DropdownMenuItem className="text-shamiri-red">
-            <DropoutSchool
-              schoolId={schoolRow.id}
-              schoolName={schoolRow.schoolName}
+          <div>
+            <DropdownMenuItem
+              onClick={() => {
+                context.setEditDialog(true);
+              }}
             >
-              <div>Dropout school</div>
-            </DropoutSchool>
+              Edit school information
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                context.setPointSupervisorDialog(true);
+              }}
+            >
+              {context.school?.assignedSupervisorId !== null
+                ? "Change point supervisor"
+                : "Assign point supervisor"}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-shamiri-red"
+              onClick={() => {
+                context.setSchoolDropOutDialog(true);
+              }}
+            >
+              Dropout school
+            </DropdownMenuItem>
+          </div>
+        ) : (
+          <DropdownMenuItem
+            className="text-shamiri-red"
+            onClick={() => {
+              context.setUndoDropOutDialog(true);
+            }}
+          >
+            Undo dropout
           </DropdownMenuItem>
-        ) : null}
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
