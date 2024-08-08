@@ -1,6 +1,7 @@
 "use client";
 
 import SchoolTableDropdown from "#/app/(platform)/hc/schools/components/school-table-dropdown";
+import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
@@ -127,6 +128,15 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
     header: "Type",
     id: "Type",
     accessorKey: "schoolType",
+  },
+  {
+    header: "Active status",
+    cell: ({ row }) =>
+      row.original.archivedAt || row.original.droppedOut ? (
+        <Badge variant="destructive">Inactive</Badge>
+      ) : (
+        <Badge variant="shamiri-green">Active</Badge>
+      ),
   },
   {
     id: "button",
