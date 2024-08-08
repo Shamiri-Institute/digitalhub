@@ -407,6 +407,7 @@ export function MarkAttendance({
                 onClick={() => {
                   context.setAttendanceDialog(false);
                 }}
+                type="button"
               >
                 Cancel
               </Button>
