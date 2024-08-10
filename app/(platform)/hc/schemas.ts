@@ -161,25 +161,27 @@ export const RescheduleSessionSchema = z.object({
   sessionDuration: stringValidation("Please select the session's duration"),
 });
 
-export const MarkSupervisorAttendanceSchema = z
-  .object({
-    supervisorId: z.string(),
-    attended: z.enum(ATTENDANCE_STATUS, {
+export const MarkSupervisorAttendanceSchema = z.object({
+  supervisorId: z.string(),
+  attended: z
+    .enum(ATTENDANCE_STATUS, {
       invalid_type_error: "Please select attendance.",
-    }),
-    sessionId: z.string(),
-    absenceReason: z.string().optional(),
-    comments: z.string().optional(),
-  })
-  .superRefine((val, ctx) => {
-    if (val.attended === "missed" && val.absenceReason === undefined) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please add a reason for absence",
-        fatal: true,
-        path: ["absenceReason"],
-      });
-
-      return z.NEVER;
-    }
-  });
+    })
+    .optional(),
+  sessionId: z.string(),
+  absenceReason: z.string().optional(),
+  comments: z.string().optional(),
+});
+// TODO: Confirm if validation is required
+// .superRefine((val, ctx) => {
+//   if (val.attended === "missed" && val.absenceReason === undefined) {
+//     ctx.addIssue({
+//       code: z.ZodIssueCode.custom,
+//       message: "Please add a reason for absence",
+//       fatal: true,
+//       path: ["absenceReason"],
+//     });
+//
+//     return z.NEVER;
+//   }
+// });
