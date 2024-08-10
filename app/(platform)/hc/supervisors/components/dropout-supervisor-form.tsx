@@ -1,9 +1,6 @@
-"use client";
 import { DropoutSupervisorSchema } from "#/app/(platform)/hc/schemas";
 import { dropoutSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/actions";
-import { SupervisorInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/context/supervisor-info-context";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import {
@@ -32,19 +29,27 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { parsePhoneNumber } from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-export function DropoutSupervisor() {
+export default function DropoutSupervisor({
+  supervisorId,
+  children,
+  dropoutDialog,
+  setDropoutDialog,
+}: {
+  supervisorId?: string;
+  children: React.ReactNode;
+  dropoutDialog: boolean;
+  setDropoutDialog: Dispatch<SetStateAction<boolean>>;
+}) {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] =
     useState<z.infer<typeof DropoutSupervisorSchema>>();
-  const context = useContext(SupervisorInfoContext);
   const pathname = usePathname();
 
   const form = useForm<z.infer<typeof DropoutSupervisorSchema>>({
@@ -77,48 +82,25 @@ export function DropoutSupervisor() {
   }
 
   const onSubmit = (data: z.infer<typeof DropoutSupervisorSchema>) => {
-    if (!context.supervisor) {
-      return;
-    }
     setFormData(data);
-    context.setDropoutDialog(false);
+    setDropoutDialog(false);
     setConfirmDialogOpen(true);
   };
 
   useEffect(() => {
     form.reset({
-      supervisorId: context.supervisor?.id,
+      supervisorId,
     });
-  }, [context.supervisor?.id, context.dropoutDialog, form]);
+  }, [supervisorId, dropoutDialog]);
 
-  const renderAlertWidget = () => {
-    return (
-      <DialogAlertWidget>
-        <div className="flex items-center gap-2">
-          <span>{context.supervisor?.supervisorName}</span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
-          <span>
-            {context.supervisor?.cellNumber &&
-              parsePhoneNumber(
-                context.supervisor?.cellNumber,
-                "KE",
-              ).formatNational()}
-          </span>
-        </div>
-      </DialogAlertWidget>
-    );
-  };
   return (
     <Form {...form}>
-      <Dialog
-        open={context.dropoutDialog}
-        onOpenChange={context.setDropoutDialog}
-      >
+      <Dialog open={dropoutDialog} onOpenChange={setDropoutDialog}>
         <DialogContent className="p-5 text-base font-medium leading-6">
           <DialogHeader>
             <h2 className="text-lg font-bold">Drop out supervisor</h2>
           </DialogHeader>
-          {renderAlertWidget()}
+          {children}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
@@ -167,8 +149,9 @@ export function DropoutSupervisor() {
               <Button
                 className="text-shamiri-light-red hover:bg-red-bg"
                 variant="ghost"
+                type="button"
                 onClick={() => {
-                  context.setDropoutDialog(false);
+                  setDropoutDialog(false);
                 }}
               >
                 Cancel
@@ -191,7 +174,7 @@ export function DropoutSupervisor() {
           <DialogHeader>
             <h2 className="text-lg font-bold">Confirm drop out</h2>
           </DialogHeader>
-          {renderAlertWidget()}
+          {children}
           <div className="space-y-4">
             <h3>Are you sure?</h3>
             <Alert variant="destructive">
@@ -210,7 +193,6 @@ export function DropoutSupervisor() {
               variant="ghost"
               onClick={() => {
                 setConfirmDialogOpen(false);
-                // context.setSchoolDropOutDialog(true);
               }}
             >
               Cancel

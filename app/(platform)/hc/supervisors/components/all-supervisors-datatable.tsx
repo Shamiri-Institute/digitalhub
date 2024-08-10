@@ -1,16 +1,14 @@
 "use client";
 
 import DataTable from "#/app/(platform)/hc/components/data-table";
+import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import {
   columns,
   SupervisorsData,
-} from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/columns";
-import { MarkAttendance } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/mark-attendance-form";
-import { SupervisorInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/context/supervisor-info-context";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
-import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
+} from "#/app/(platform)/hc/supervisors/components/columns";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
+import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -24,54 +22,35 @@ import {
 import { Prisma } from "@prisma/client";
 import { Row } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 
-export default function SupervisorsDataTable({
+export default function AllSupervisorsDataTable({
   supervisors,
-  visibleId,
 }: {
   supervisors: Prisma.SupervisorGetPayload<{
     include: {
       assignedSchools: true;
       fellows: true;
-      supervisorAttendances: {
-        include: {
-          session: true;
-        };
-      };
     };
   }>[];
-  visibleId: string;
 }) {
-  const schoolContext = useContext(SchoolInfoContext);
-  const [batchMode, setBatchMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<SupervisorsData[]>([]);
-  const context = useContext(SupervisorInfoContext);
-
-  useEffect(() => {
-    if (!context.attendanceDialog) {
-      setBatchMode(false);
-    }
-  }, [context.attendanceDialog]);
+  const context = useContext(SupervisorContext);
 
   const renderTableActions = () => {
     return (
       <div className="flex gap-3">
-        <Button
-          variant="outline"
-          className="flex gap-1"
-          disabled={
-            (schoolContext.school?.droppedOut !== null &&
-              schoolContext.school?.droppedOut) ||
-            selectedRows.length === 0
-          }
-          onClick={() => {
-            setBatchMode(true);
-            context.setAttendanceDialog(true);
-          }}
-        >
+        <Button variant="outline" className="flex gap-1 bg-white">
           <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
-          <span>Mark supervisor attendance</span>
+          <span>Download supervisors CSV template</span>
+        </Button>
+        <Button variant="outline" className="flex gap-1 bg-white">
+          <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
+          <span>Upload supervisors CSV</span>
+        </Button>
+        <Button variant="outline" className="flex gap-1 bg-white">
+          <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
+          <span>Upload fellow monthly feedback CSV</span>
         </Button>
       </div>
     );
@@ -82,15 +61,14 @@ export default function SupervisorsDataTable({
       <DataTable
         data={supervisors}
         columns={columns}
-        className={"data-table data-table-action mt-4"}
+        className={"data-table data-table-action mt-4 bg-white"}
         emptyStateMessage="No supervisors found for this hub"
-        columnVisibilityState={{
-          Gender: false,
-          "Phone number": false,
-          Status: false,
-          checkbox: !schoolContext.school?.droppedOut ?? null,
-          button: !schoolContext.school?.droppedOut ?? null,
-        }}
+        columnVisibilityState={
+          {
+            // checkbox: !schoolContext.school?.droppedOut ?? null,
+            // button: !schoolContext.school?.droppedOut ?? null,
+          }
+        }
         renderTableActions={renderTableActions()}
         enableRowSelection={(row: Row<SupervisorsData>) =>
           row.original.droppedOut === null || !row.original.droppedOut
@@ -98,29 +76,29 @@ export default function SupervisorsDataTable({
         rowSelectionDescription={"supervisors"}
         onRowSelectionChange={setSelectedRows as () => {}}
       />
-      {context.supervisor && (
-        <DropoutSupervisor
-          supervisorId={context.supervisor.id}
-          setDropoutDialog={context.setDropoutDialog}
-          dropoutDialog={context.dropoutDialog}
-        >
-          <DialogAlertWidget>
-            <div className="flex items-center gap-2">
-              <span>{context.supervisor?.supervisorName}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
-              <span>
-                {context.supervisor?.cellNumber &&
-                  parsePhoneNumber(
-                    context.supervisor?.cellNumber,
-                    "KE",
-                  ).formatNational()}
-              </span>
-            </div>
-          </DialogAlertWidget>
-        </DropoutSupervisor>
-      )}
+      <DropoutSupervisor
+        supervisorId={
+          context.supervisor !== null ? context.supervisor.id : undefined
+        }
+        setDropoutDialog={context.setDropoutDialog}
+        dropoutDialog={context.dropoutDialog}
+      >
+        <DialogAlertWidget>
+          <div className="flex items-center gap-2">
+            <span>{context.supervisor?.supervisorName}</span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+              {""}
+            </span>
+            <span>
+              {context.supervisor?.cellNumber &&
+                parsePhoneNumber(
+                  context.supervisor?.cellNumber,
+                  "KE",
+                ).formatNational()}
+            </span>
+          </div>
+        </DialogAlertWidget>
+      </DropoutSupervisor>
       <UndropSupervisor
         supervisorId={
           context.supervisor !== null ? context.supervisor.id : undefined
@@ -144,25 +122,22 @@ export default function SupervisorsDataTable({
           </div>
         </DialogAlertWidget>
       </UndropSupervisor>
-      <MarkAttendance
-        schoolVisibleId={visibleId}
-        batchMode={batchMode}
-        selectedSupervisors={selectedRows}
-      />
     </div>
   );
 }
 
-export function SupervisorsDataTableMenu({
+export function AllSupervisorsDataTableMenu({
   supervisor,
 }: {
   supervisor: SupervisorsData;
 }) {
-  const context = useContext(SupervisorInfoContext);
+  const context = useContext(SupervisorContext);
   return (
     <DropdownMenu
-      onOpenChange={() => {
-        context.setSupervisor(supervisor);
+      onOpenChange={(value) => {
+        if (value) {
+          context.setSupervisor(supervisor);
+        }
       }}
     >
       <DropdownMenuTrigger asChild>
@@ -183,14 +158,6 @@ export function SupervisorsDataTableMenu({
           disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
         >
           Edit supervisor information
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-          onClick={() => {
-            context.setAttendanceDialog && context.setAttendanceDialog(true);
-          }}
-        >
-          Mark attendance
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
