@@ -113,7 +113,7 @@ export default function DataTable<TData, TValue>({
           {editColumns && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex gap-1">
+                <Button variant="outline" className="flex gap-1 bg-white">
                   <Icons.settings className="h-4 w-4 text-shamiri-text-grey" />
                   Edit columns
                 </Button>
