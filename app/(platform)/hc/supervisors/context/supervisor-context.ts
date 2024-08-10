@@ -1,24 +1,20 @@
-import { SupervisorsData } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/columns";
+import { SupervisorsData } from "#/app/(platform)/hc/supervisors/components/columns";
 import { createContext, Dispatch, SetStateAction } from "react";
 
-type SupervisorInfoContextData = {
+type SupervisorContextData = {
   dropoutDialog: boolean;
   setDropoutDialog: Dispatch<SetStateAction<boolean>>;
   undropDialog: boolean;
   setUndropDialog: Dispatch<SetStateAction<boolean>>;
-  attendanceDialog: boolean;
-  setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   supervisor: SupervisorsData | null;
   setSupervisor: Dispatch<SetStateAction<SupervisorsData | null>>;
 };
 
-export const SupervisorInfoContext = createContext<SupervisorInfoContextData>({
+export const SupervisorContext = createContext<SupervisorContextData>({
   dropoutDialog: false,
   setDropoutDialog: () => {},
   undropDialog: false,
   setUndropDialog: () => {},
-  attendanceDialog: false,
-  setAttendanceDialog: () => {},
   supervisor: null,
   setSupervisor: () => {},
 });

@@ -8,17 +8,21 @@ import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
 import { z } from "zod";
 
+async function checkAuth() {
+  const hubCoordinator = await currentHubCoordinator();
+  const user = await getCurrentUser();
+
+  if (!hubCoordinator || !user) {
+    throw new Error("The session has not been authenticated");
+  }
+}
+
 export async function dropoutSupervisor(
   supervisorId: string,
   dropoutReason: string,
 ) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
-    const user = await getCurrentUser();
-
-    if (!hubCoordinator || !user) {
-      throw new Error("The session has not been authenticated");
-    }
+    await checkAuth();
 
     const data = DropoutSupervisorSchema.parse({ supervisorId, dropoutReason });
     const result = await db.supervisor.update({
@@ -31,15 +35,40 @@ export async function dropoutSupervisor(
       where: {
         id: data.supervisorId,
       },
-      include: {
-        assignedSchools: true,
-        fellows: true,
-      },
     });
 
     return {
       success: true,
       message: result.supervisorName + " successfully dropped out.",
+      data: result,
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      success: false,
+      message: "Something went wrong while trying to drop out the school",
+    };
+  }
+}
+
+export async function undropSupervisor(supervisorId: string) {
+  try {
+    await checkAuth();
+    const result = await db.supervisor.update({
+      data: {
+        // TODO: add columns for drop-out details. Confirm with @Wendy
+        // dropoutReason: null,
+        // droppedOutAt: null,
+        droppedOut: false,
+      },
+      where: {
+        id: supervisorId,
+      },
+    });
+
+    return {
+      success: true,
+      message: result.supervisorName + " successfully un-dropped.",
       data: result,
     };
   } catch (e) {
