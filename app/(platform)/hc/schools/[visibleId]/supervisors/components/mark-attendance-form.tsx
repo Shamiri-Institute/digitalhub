@@ -2,8 +2,10 @@
 import { MarkSupervisorAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import {
   getSessionAndSupervisorAttendances,
+  markBatchSupervisorAttendance,
   markSupervisorAttendance,
 } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/actions";
+import { SupervisorsData } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/columns";
 import { SupervisorInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/context/supervisor-info-context";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
@@ -47,8 +49,12 @@ import { z } from "zod";
 
 export function MarkAttendance({
   schoolVisibleId,
+  batchMode,
+  selectedSupervisors,
 }: {
   schoolVisibleId: string;
+  batchMode: boolean;
+  selectedSupervisors: SupervisorsData[];
 }) {
   const context = useContext(SupervisorInfoContext);
   const schoolContext = useContext(SchoolInfoContext);
@@ -66,6 +72,7 @@ export function MarkAttendance({
       };
     }>
   >();
+  const [loading, setLoading] = useState(false);
   const pathname = usePathname();
 
   const form = useForm<z.infer<typeof MarkSupervisorAttendanceSchema>>({
@@ -75,14 +82,39 @@ export function MarkAttendance({
   const onSubmit = async (
     data: z.infer<typeof MarkSupervisorAttendanceSchema>,
   ) => {
-    if (!context.supervisor) {
-      return;
-    }
-    const attendance = activeSession?.supervisorAttendances.find(
-      (attendance) => attendance.supervisorId === context.supervisor?.id,
-    );
-    if (attendance) {
-      const response = await markSupervisorAttendance(attendance.id, data);
+    if (!batchMode) {
+      if (!context.supervisor) {
+        return;
+      }
+      const attendance = activeSession?.supervisorAttendances.find(
+        (attendance) => attendance.supervisorId === context.supervisor?.id,
+      );
+      if (attendance) {
+        const response = await markSupervisorAttendance(attendance.id, data);
+        if (!response.success) {
+          toast({
+            description:
+              response.message ??
+              "Something went wrong during submission, please try again",
+          });
+          return;
+        }
+        toast({
+          description: response.message,
+        });
+      }
+    } else {
+      const attended =
+        data.attended === "attended"
+          ? true
+          : data.attended === "missed"
+            ? false
+            : null;
+      const response = await markBatchSupervisorAttendance(
+        data.sessionId,
+        selectedSupervisors.map((supervisor) => supervisor.id),
+        attended,
+      );
       if (!response.success) {
         toast({
           description:
@@ -94,9 +126,10 @@ export function MarkAttendance({
       toast({
         description: response.message,
       });
-      await revalidatePageAction(pathname);
-      context.setAttendanceDialog(false);
     }
+
+    await revalidatePageAction(pathname);
+    context.setAttendanceDialog(false);
   };
 
   function getAttendanceStatus(
@@ -122,68 +155,86 @@ export function MarkAttendance({
   }
 
   useEffect(() => {
-    const attendance = sessions[
-      sessions.length - 1
-    ]?.supervisorAttendances.find(
-      (attendance) => attendance.supervisorId === context.supervisor?.id,
-    );
-
-    if (attendance) {
-      let status = getAttendanceStatus(attendance);
-
+    if (batchMode && schoolContext.school !== null) {
+      const ids = selectedSupervisors
+        .map((supervisor) => supervisor.id)
+        .join(",");
+      const _sessions = schoolContext.school.interventionSessions.filter(
+        (session) => session.occurred,
+      );
       form.reset({
-        supervisorId: context.supervisor?.id,
-        sessionId: sessions[sessions.length - 1]?.id,
-        attended: status,
-        absenceReason:
-          attendance.absenceReason !== null
-            ? attendance.absenceReason
-            : undefined,
-        comments:
-          attendance.absenceComments !== null
-            ? attendance.absenceComments
-            : undefined,
+        supervisorId: ids,
+        sessionId: _sessions[_sessions.length - 1]?.id,
       });
-    }
-  }, [context.supervisor, context.attendanceDialog, sessions]);
+    } else {
+      const attendance = sessions[
+        sessions.length - 1
+      ]?.supervisorAttendances.find(
+        (attendance) => attendance.supervisorId === context.supervisor?.id,
+      );
 
-  useEffect(() => {
-    updateActiveSession(sessions[sessions.length - 1]?.id);
-  }, [sessions]);
+      if (attendance) {
+        let status = getAttendanceStatus(attendance);
 
-  useEffect(() => {
-    const attendance = activeSession?.supervisorAttendances.find(
-      (attendance) => attendance.supervisorId === context.supervisor?.id,
-    );
-    if (attendance) {
-      const status = getAttendanceStatus(attendance);
-      form.setValue("attended", status);
-    }
-  }, [activeSession]);
-
-  useEffect(() => {
-    const fetchAttendances = async () => {
-      if (
-        context.supervisor !== null &&
-        context.supervisor?.hubId &&
-        schoolContext.school
-      ) {
-        const result = await getSessionAndSupervisorAttendances({
-          projectId: CURRENT_PROJECT_ID,
-          supervisorId: context.supervisor.id,
-          schoolId: schoolContext.school?.id,
+        form.reset({
+          supervisorId: context.supervisor?.id,
+          sessionId: sessions[sessions.length - 1]?.id,
+          attended: status,
+          absenceReason:
+            attendance.absenceReason !== null
+              ? attendance.absenceReason
+              : undefined,
+          comments:
+            attendance.absenceComments !== null
+              ? attendance.absenceComments
+              : undefined,
         });
-        if (result.success) {
-          setSessions(result.data);
-        } else {
-          toast({ description: result.message });
-        }
       }
-    };
-    fetchAttendances();
-  }, [context.supervisor, schoolVisibleId]);
+    }
+  }, [context.attendanceDialog, sessions, schoolContext.school]);
 
-  const attendanceStatusWatcher = form.watch("attended");
+  useEffect(() => {
+    !batchMode && updateActiveSession(sessions[sessions.length - 1]?.id);
+  }, [batchMode, sessions]);
+
+  useEffect(() => {
+    if (!batchMode) {
+      const attendance = activeSession?.supervisorAttendances.find(
+        (attendance) => attendance.supervisorId === context.supervisor?.id,
+      );
+      if (attendance) {
+        const status = getAttendanceStatus(attendance);
+        form.setValue("attended", status);
+      }
+    }
+  }, [activeSession, context.supervisor?.id, form]);
+
+  useEffect(() => {
+    if (!batchMode && context.attendanceDialog) {
+      const fetchAttendances = async () => {
+        setLoading(true);
+        if (
+          context.supervisor !== null &&
+          context.supervisor?.hubId &&
+          schoolContext.school
+        ) {
+          const result = await getSessionAndSupervisorAttendances({
+            projectId: CURRENT_PROJECT_ID,
+            supervisorId: context.supervisor.id,
+            schoolId: schoolContext.school?.id,
+          });
+          if (result.success) {
+            setSessions(result.data);
+          } else {
+            toast({ description: result.message });
+          }
+          setLoading(false);
+        }
+      };
+      fetchAttendances();
+    }
+  }, [context.attendanceDialog, batchMode]);
+
   return (
     <Form {...form}>
       <Dialog
@@ -192,31 +243,38 @@ export function MarkAttendance({
       >
         <DialogContent className="w-2/5 max-w-none">
           <DialogHeader>
-            <h2 className="text-lg font-bold">Mark supervisor attendance</h2>
+            <h2 className="text-lg font-bold">
+              Mark supervisor attendance {batchMode && "in bulk"}
+            </h2>
           </DialogHeader>
           <DialogAlertWidget>
-            <div className="flex items-center gap-2">
-              <span>
-                {activeSession &&
-                  sessionDisplayName(activeSession?.sessionType)}
-              </span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
-              <span>{context.supervisor?.supervisorName}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
-              <span>
-                {activeSession &&
-                  format(new Date(activeSession?.sessionDate), "dd MMM yyyy")}
-              </span>
-            </div>
+            {batchMode ? (
+              <span>{selectedSupervisors.length} supervisors selected</span>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span>
+                  {activeSession &&
+                    sessionDisplayName(activeSession?.sessionType)}
+                </span>
+                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+                  {""}
+                </span>
+                <span>{context.supervisor?.supervisorName}</span>
+                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+                  {""}
+                </span>
+                <span>
+                  {activeSession &&
+                    format(new Date(activeSession?.sessionDate), "dd MMM yyyy")}
+                </span>
+              </div>
+            )}
           </DialogAlertWidget>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
               name="sessionId"
+              disabled={loading}
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel>Select session</FormLabel>
@@ -233,7 +291,12 @@ export function MarkAttendance({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {sessions.map((session) => {
+                      {(batchMode && schoolContext.school !== null
+                        ? schoolContext.school.interventionSessions.filter(
+                            (session) => session.occurred,
+                          )
+                        : sessions
+                      ).map((session) => {
                         const time = `${format(session.sessionDate, "h:mm")} - ${format(
                           session.sessionEndTime ??
                             addHours(session.sessionDate, 1.5),
@@ -267,6 +330,7 @@ export function MarkAttendance({
             <FormField
               control={form.control}
               name="attended"
+              disabled={loading}
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel>Select attendance</FormLabel>
@@ -328,11 +392,14 @@ export function MarkAttendance({
             <FormField
               control={form.control}
               name="absenceReason"
+              disabled={loading}
               render={({ field }) => (
                 <FormItem
                   className={cn(
                     "space-y-2",
-                    form.getValues("attended") !== "missed" && "hidden",
+                    form.getValues("attended") !== "missed" || batchMode
+                      ? "hidden"
+                      : "",
                   )}
                 >
                   <FormLabel>Select reason for above</FormLabel>
@@ -365,11 +432,14 @@ export function MarkAttendance({
             <FormField
               control={form.control}
               name="comments"
+              disabled={loading}
               render={({ field }) => (
                 <FormItem
                   className={cn(
                     "space-y-2",
-                    form.getValues("attended") !== "missed" && "hidden",
+                    form.getValues("attended") !== "missed" || batchMode
+                      ? "hidden"
+                      : "",
                   )}
                 >
                   <FormLabel>Additional comments</FormLabel>
