@@ -21,7 +21,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { Prisma } from "@prisma/client";
 import { Row } from "@tanstack/react-table";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 export default function SupervisorsDataTable({
   supervisors,
@@ -43,7 +43,9 @@ export default function SupervisorsDataTable({
   const schoolContext = useContext(SchoolInfoContext);
   const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
   const [attendanceDialog, setAttendanceDialog] = useState<boolean>(false);
+  const [batchMode, setBatchMode] = useState<boolean>(false);
   const [supervisor, setSupervisor] = useState<SupervisorsData | null>(null);
+  const [selectedRows, setSelectedRows] = useState<SupervisorsData[]>([]);
 
   // TODO: Move these actions to main supervisors page
   // const renderTableActions = () => {
@@ -63,6 +65,12 @@ export default function SupervisorsDataTable({
   //     </div>
   // }
 
+  useEffect(() => {
+    if (!attendanceDialog) {
+      setBatchMode(false);
+    }
+  }, [attendanceDialog]);
+
   const renderTableActions = () => {
     return (
       <div className="flex gap-3">
@@ -70,9 +78,14 @@ export default function SupervisorsDataTable({
           variant="outline"
           className="flex gap-1"
           disabled={
-            schoolContext.school?.droppedOut !== null &&
-            schoolContext.school?.droppedOut
+            (schoolContext.school?.droppedOut !== null &&
+              schoolContext.school?.droppedOut) ||
+            selectedRows.length === 0
           }
+          onClick={() => {
+            setBatchMode(true);
+            setAttendanceDialog(true);
+          }}
         >
           <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
           <span>Mark supervisor attendance</span>
@@ -108,9 +121,15 @@ export default function SupervisorsDataTable({
         enableRowSelection={(row: Row<SupervisorsData>) =>
           row.original.droppedOut === null || !row.original.droppedOut
         }
+        rowSelectionDescription={"supervisors"}
+        onRowSelectionChange={setSelectedRows as () => {}}
       />
       <DropoutSupervisor />
-      <MarkAttendance schoolVisibleId={visibleId} />
+      <MarkAttendance
+        schoolVisibleId={visibleId}
+        batchMode={batchMode}
+        selectedSupervisors={selectedRows}
+      />
     </SupervisorInfoContext.Provider>
   );
 }

@@ -101,7 +101,7 @@ export async function markSupervisorAttendance(
   const attended =
     parsedData.attended === "attended"
       ? true
-      : data.attended === "missed"
+      : parsedData.attended === "missed"
         ? false
         : null;
   try {
@@ -130,6 +130,39 @@ export async function markSupervisorAttendance(
         error: "Something went wrong while updating supervisor attendance",
       };
     }
+  } catch (error: unknown) {
+    console.error(error);
+    return {
+      error: "Something went wrong while updating supervisor attendance",
+    };
+  }
+}
+
+export async function markBatchSupervisorAttendance(
+  sessionId: string,
+  supervisors: string[],
+  attended: boolean | null,
+) {
+  const user = getCurrentUser();
+  if (user === null)
+    return { success: false, message: "Unauthenticated user." };
+  try {
+    await db.supervisorAttendance.updateMany({
+      where: {
+        sessionId,
+        supervisorId: {
+          in: supervisors,
+        },
+      },
+      data: {
+        attended,
+      },
+    });
+    return {
+      success: true,
+      message: "Successfully marked supervisor attendance.",
+      // data: attendance,
+    };
   } catch (error: unknown) {
     console.error(error);
     return {
