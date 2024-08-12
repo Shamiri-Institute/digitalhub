@@ -1,10 +1,12 @@
 "use server";
 
-import { currentHubCoordinator } from "#/app/auth";
+import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
+  AssignPointSupervisorSchema,
   DropoutSchoolSchema,
   EditSchoolSchema,
   WeeklyHubReportSchema,
@@ -23,6 +25,10 @@ export async function fetchSchoolData(hubId: string) {
       assignedSupervisor: true,
     },
   });
+}
+
+export async function revalidatePageAction(pathname: string) {
+  revalidatePath(pathname);
 }
 
 export async function fetchSessionAttendanceData(hubId: string) {
@@ -107,20 +113,33 @@ export async function fetchDropoutReasons(hubId: string) {
 export async function dropoutSchool(schoolId: string, dropoutReason: string) {
   try {
     const hubCoordinator = await currentHubCoordinator();
+    const user = await getCurrentUser();
 
-    if (!hubCoordinator) {
+    if (!hubCoordinator || !user) {
       throw new Error("The session has not been authenticated");
     }
 
     const data = DropoutSchoolSchema.parse({ schoolId, dropoutReason });
-    await db.school.update({
+    const result = await db.school.update({
       data: {
         dropoutReason: data.dropoutReason,
         droppedOut: true,
         droppedOutAt: new Date(),
+        schoolDropoutHistory: {
+          create: [
+            {
+              dropoutReason: data.dropoutReason,
+              droppedOut: true,
+              userId: user.user.id,
+            },
+          ],
+        },
       },
       where: {
         id: data.schoolId,
+      },
+      include: {
+        schoolDropoutHistory: true,
       },
     });
 
@@ -128,13 +147,63 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
 
     return {
       success: true,
-      message: "Successfully dropped out school",
+      message: result.schoolName + " successfully dropped out.",
+      data: result,
     };
   } catch (e) {
     console.error(e);
     return {
       success: false,
       message: "Something went wrong while trying to drop out the school",
+    };
+  }
+}
+
+export async function undoDropoutSchool(schoolId: string) {
+  try {
+    const hubCoordinator = await currentHubCoordinator();
+    const user = await getCurrentUser();
+
+    if (!hubCoordinator || !user) {
+      throw new Error("The session has not been authenticated");
+    }
+
+    const result = await db.school.update({
+      data: {
+        dropoutReason: null,
+        droppedOut: false,
+        droppedOutAt: null,
+        schoolDropoutHistory: {
+          create: [
+            {
+              dropoutReason: null,
+              droppedOut: false,
+              userId: user.user.id,
+            },
+          ],
+        },
+      },
+      where: {
+        id: schoolId,
+      },
+      include: {
+        schoolDropoutHistory: true,
+      },
+    });
+
+    revalidatePath("/hc/schools");
+
+    return {
+      success: true,
+      message: result.schoolName + " status set to active",
+      data: result,
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      success: false,
+      message:
+        "Something went wrong while trying to update school drop out status",
     };
   }
 }
@@ -263,8 +332,6 @@ export async function editSchoolInformation(
       },
       data: parsedData,
     });
-
-    revalidatePath("/hc/schools");
     return {
       success: true,
       message: `Successfully updated school information for ${schoolName}`,
@@ -275,6 +342,50 @@ export async function editSchoolInformation(
       success: false,
       message:
         (err as Error)?.message ?? "Sorry, could not update the school details",
+    };
+  }
+}
+
+export async function fetchHubSupervisors({
+  where,
+}: {
+  where: Prisma.SupervisorWhereInput;
+}) {
+  return await db.supervisor.findMany({
+    where,
+  });
+}
+
+export async function assignSchoolPointSupervisor(
+  schoolId: string,
+  schoolInfo: z.infer<typeof AssignPointSupervisorSchema>,
+) {
+  try {
+    const authedCoordinator = await currentHubCoordinator();
+
+    if (!authedCoordinator) {
+      throw new Error("User not authorised to perform this function");
+    }
+
+    const parsedData = AssignPointSupervisorSchema.parse(schoolInfo);
+
+    const { schoolName } = await db.school.update({
+      where: {
+        id: schoolId,
+      },
+      data: parsedData,
+    });
+    return {
+      success: true,
+      message: `Successfully updated point supervisor for ${schoolName}`,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ??
+        "Sorry, could not assign the school point supervisor",
     };
   }
 }

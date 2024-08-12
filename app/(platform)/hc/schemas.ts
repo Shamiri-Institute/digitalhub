@@ -72,6 +72,12 @@ export const EditSchoolSchema = z.object({
     .optional(),
 });
 
+export const AssignPointSupervisorSchema = z.object({
+  assignedSupervisorId: z.string({
+    required_error: "Please pick a supervisor.",
+  }),
+});
+
 export const ScheduleNewSessionSchema = z.object({
   sessionType: stringValidation("Please select a session type"),
   schoolId: stringValidation("Please select a school"),
@@ -81,4 +87,34 @@ export const ScheduleNewSessionSchema = z.object({
   projectId: z.string().optional(),
   // notifications: stringValidation(),
   // sendReminders: stringValidation("Please select a send reminder option"),
+});
+
+export const RescheduleSessionSchema = z.object({
+  sessionDate: z.coerce.date({ required_error: "Please select a date" }),
+  sessionStartTime: stringValidation("Please select a start time"),
+  sessionDuration: stringValidation("Please select the session's duration"),
+});
+
+export const MarkSupervisorAttendanceSchema = z.object({
+  projectId: z.string(),
+  schoolId: z.string(),
+  supervisorId: z.string(),
+  attended: z.boolean().optional(),
+  sessionId: z.string(),
+  sessionType: z.string(),
+});
+
+export const WeeklyHubTeamMeetingSchema = z.object({
+  hubId: stringValidation("Missing hub ID"),
+  submittedBy: stringValidation("Missing hub coordinator ID"),
+  week: z.coerce.date({ required_error: "Please select a week" }),
+  logisticsRelatedIssues: stringValidation(),
+  logisticsRelatedIssuesRating: z.number().lte(5),
+  relationshipManagement: stringValidation(),
+  relationshipManagementRating: z.number().lte(5),
+  digitalHubIssues: stringValidation(),
+  digitalHubIssuesRating: z.number().lte(5),
+  anyOtherChallenges: stringValidation(),
+  anyOtherChallengesRating: z.number().lte(5),
+  recommendations: stringValidation("Please input recommendations"),
 });

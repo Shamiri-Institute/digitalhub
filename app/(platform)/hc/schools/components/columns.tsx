@@ -1,23 +1,11 @@
 "use client";
 
-import { Button } from "#/components/ui/button";
+import SchoolTableDropdown from "#/app/(platform)/hc/schools/components/school-table-dropdown";
+import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
-import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
-import format from "date-fns/format";
-import { MoreHorizontal } from "lucide-react";
-import Link from "next/link";
-import React from "react";
-import { DropoutSchool } from "../../components/dropout-school-form";
-import EditSchoolDetailsForm from "./edit-school-details-form";
+import { format } from "date-fns";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {
@@ -25,23 +13,9 @@ export type SchoolsTableData = Prisma.SchoolGetPayload<{
   };
 }>;
 
-function MenuItem({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn("cursor-pointer px-3 py-2 text-sm", className)}>
-      {children}
-    </div>
-  );
-}
-
 export const columns: ColumnDef<SchoolsTableData>[] = [
   {
-    id: "select",
+    id: "checkbox",
     header: ({ table }) => (
       <Checkbox
         checked={
@@ -50,37 +24,88 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
+        className={
+          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+        }
       />
     ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(val) => row.toggleSelected(!!val)}
-        aria-label="Select row"
-      />
-    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(val) => row.toggleSelected(!!val)}
+            aria-label="Select row"
+            className={
+              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+            }
+          />
+        </div>
+      );
+    },
     enableSorting: false,
     enableHiding: false,
   },
   {
     accessorKey: "schoolName",
-    header: "School Name",
+    header: "School name",
+    id: "School name",
   },
-  /**
-   * TODO: uncomment this once we support the subcounty column in the SDH database
-   * {
-   *    accessorKey: 'schoolSubCounty',
-   *    header: 'Sub - County'
-   *  },
-   */
+  {
+    header: "School ID",
+    id: "School ID",
+    accessorKey: "visibleId",
+  },
+  // TODO: computed school ranking
+  // {
+  //   accessorKey: "schoolRating",
+  //   header: "School rating",
+  // },
+  {
+    accessorKey: "schoolCounty",
+    header: "County",
+    id: "County",
+  },
+  {
+    accessorKey: "schoolSubCounty",
+    header: "Sub - county",
+    id: "Sub - county",
+  },
+  // {
+  //   // TODO: fetch and display clinical cases
+  //   accessorKey: "clinicalCases",
+  //   header: "Clinical cases",
+  // },
+  {
+    header: "Point teacher",
+    accessorKey: "pointPersonName",
+    id: "Point teacher",
+  },
+  {
+    header: "Point teacher phone no.",
+    id: "Point teacher phone no.",
+    accessorKey: "pointPersonPhone",
+  },
   {
     // TODO: this computation should be done during the fetch and possible user an accessor Function
     accessorKey: "numbersExpected",
-    header: "Students",
+    header: "No. of students",
+    id: "No. of students",
   },
   {
     accessorFn: (row) => row.assignedSupervisor?.supervisorName,
-    header: "Point Supervisor",
+    header: "Point supervisor",
+    id: "Point supervisor",
+  },
+  {
+    header: "Point supervisor phone no.",
+    id: "Point supervisor phone no.",
+    accessorFn: (row) => row.assignedSupervisor?.cellNumber,
+  },
+  {
+    header: "Point supervisor email",
+    id: "Point supervisor email",
+    accessorFn: (row) => row.assignedSupervisor?.supervisorEmail,
   },
   // TODO: find a way to find the upcoming session
   /*
@@ -89,80 +114,33 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
     accessorKey: 
   },
   */
-  /*
-  {
-    header: "Report submission FIXME",
-    accessorKey: "schoolName",
-  },
-  */
-  {
-    header: "School ID",
-    accessorKey: "id",
-  },
-  {
-    header: "County",
-    accessorKey: "schoolCounty",
-  },
-  {
-    header: "Point Teacher",
-    accessorKey: "pointPersonName",
-  },
-  {
-    header: "Point Teacher Phone Number",
-    accessorKey: "pointPersonPhone",
-  },
-  {
-    header: "Point Supervisor Phone Number",
-    accessorFn: (row) => row.assignedSupervisor?.cellNumber,
-  },
-  {
-    header: "Point Supervisor Email",
-    accessorFn: (row) => row.assignedSupervisor?.supervisorEmail,
-  },
+  // {
+  //   // TODO: Get report submission status
+  //   header: "Report submission",
+  //   accessorKey: "schoolName",
+  // },
   {
     header: "Date added",
-    // TODO: need to date fns to format this
+    id: "Date added",
     accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
   },
   {
     header: "Type",
+    id: "Type",
     accessorKey: "schoolType",
   },
   {
-    id: "actions",
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost">
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <MenuItem>
-            <Link href={`/hc/schools/${row.original.visibleId}`}>
-              View school
-            </Link>
-          </MenuItem>
-          <MenuItem>
-            <EditSchoolDetailsForm schoolInfo={row.original}>
-              <div>Edit School Information</div>
-            </EditSchoolDetailsForm>
-          </MenuItem>
-          <MenuItem>Assign point supervisor</MenuItem>
-          {!row.original.droppedOut || !row.original.droppedOutAt ? (
-            <MenuItem className="text-shamiri-red">
-              <DropoutSchool
-                schoolId={row.original.id}
-                schoolName={row.original.schoolName}
-              >
-                <div>Dropout school</div>
-              </DropoutSchool>
-            </MenuItem>
-          ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    header: "Active status",
+    cell: ({ row }) =>
+      row.original.archivedAt || row.original.droppedOut ? (
+        <Badge variant="destructive">Inactive</Badge>
+      ) : (
+        <Badge variant="shamiri-green">Active</Badge>
+      ),
+  },
+  {
+    id: "button",
+    cell: ({ row }) => <SchoolTableDropdown schoolRow={row.original} />,
+    enableHiding: false,
   },
 ];

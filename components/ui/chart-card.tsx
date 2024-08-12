@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./card";
 
 export default function ChartCard({
@@ -11,15 +12,21 @@ export default function ChartCard({
 }) {
   return (
     <Card>
-      <CardHeader className="px-4 py-[14px]">
-        <CardTitle className="text-sm font-semibold leading-6 text-shamiri-black">
+      <CardHeader className="border-b border-dashed px-4 py-[14px] text-lg">
+        <CardTitle className="font-semibold leading-6 text-shamiri-black">
           {title}
         </CardTitle>
       </CardHeader>
-      <CardContent className="h-[307px]">
-        {!!children ? children : "No data available"}
+      <CardContent className="h-[275px] pt-6">
+        {!!children ? (
+          children
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            No data available
+          </div>
+        )}
       </CardContent>
-      <CardFooter className="px-4 py-[14px]">
+      <CardFooter className="border-t border-dashed px-4 py-[14px]">
         {/* TODO: the change the font type to user Inter in this section */}
         {/* TODO: also change to a link */}
         <p className="font-medium leading-5 text-shamiri-new-blue">

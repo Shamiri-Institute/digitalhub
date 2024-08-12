@@ -45,7 +45,6 @@ export function ScheduleModeToggle() {
       <ToggleGroupItem
         value="list"
         aria-label="Select list view"
-        disabled
         className="rounded-none border-0 text-base"
       >
         List

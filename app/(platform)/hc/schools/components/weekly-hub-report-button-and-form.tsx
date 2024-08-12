@@ -116,8 +116,8 @@ export default function WeeklyHubReportButtonAndForm({
             priority
             src={AddCircleOutlined}
             alt="Add icon circle outlined"
-            width={24}
-            height={24}
+            width={20}
+            height={20}
           />
           Weekly Hub Report
         </Button>

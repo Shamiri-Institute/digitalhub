@@ -43,7 +43,7 @@ export default function ChartArea({
 }) {
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
-      <ChartCard title="Attendance">
+      <ChartCard title="Session progress">
         {schoolAttendances?.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart width={307} height={307} data={schoolAttendances}>
@@ -73,8 +73,10 @@ export default function ChartArea({
                 data={dropoutData}
                 dataKey="value"
                 nameKey="name"
-                outerRadius={80}
-                innerRadius={50}
+                startAngle={90}
+                endAngle={450}
+                outerRadius={100}
+                innerRadius={70}
                 fill="#8884d8"
               >
                 <Label
@@ -100,19 +102,20 @@ export default function ChartArea({
       <ChartCard title="School information completion">
         {schoolDataCompletenessData.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart width={307} height={307}>
+            <PieChart width={250} height={250}>
               <Pie
                 data={schoolDataCompletenessData}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
                 endAngle={450}
-                outerRadius={80}
-                innerRadius={50}
+                outerRadius={100}
+                innerRadius={70}
               >
                 <Label
                   position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                  className="text text-2xl font-semibold leading-8"
+                  fill="#fffff"
                 >
                   {schoolDataCompletenessData.find((d) => (d.name = "actual"))
                     ?.value + "%"}

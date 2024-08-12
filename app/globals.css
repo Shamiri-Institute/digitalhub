@@ -26,7 +26,7 @@
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 240 4.8% 95.9%;
+    --accent: 208, 100%, 95%, 1;
     --accent-foreground: 240 5.9% 10%;
 
     --destructive: 354 66% 62%;
@@ -50,9 +50,7 @@
 
     --brand-light-gray: 0 4% 51%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
@@ -146,14 +144,6 @@
     @apply text-shamiri-new-blue;
   }
 
-  .popover-links span {
-    @apply cursor-pointer px-3 py-1.5;
-  }
-
-  .popover-links span:hover {
-    @apply bg-shamiri-new-blue/[0.1];
-  }
-
   .schedule-table {
     @apply w-full table-fixed border-separate overflow-hidden border border-grey-border bg-white [border-spacing:0];
   }
@@ -170,22 +160,21 @@
     @apply table-cell border-t border-grey-border p-0;
   }
 
+  .schedule-table.padded td {
+    @apply px-4 py-3;
+  }
+
   .schedule-table td.time-cell,
   .schedule-table th.time-cell {
     @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
   }
 
+  .schedule-table tbody:first-child tr:first-child td {
+    @apply border-t-0 !important;
+  }
+
   .data-table {
-    @apply table-fixed rounded-lg border border-grey-border;
-  }
-
-  .data-table tr td:last-child,
-  .data-table thead th:last-child {
-    @apply w-[50px] min-w-[40px] max-w-[50px] cursor-pointer;
-  }
-
-  .data-table thead th:last-child {
-    @apply border-l;
+    @apply table-fixed border-separate border-spacing-0 rounded border border-grey-border;
   }
 
   .data-table tbody tr,
@@ -197,8 +186,13 @@
     @apply bg-gray-100 transition ease-in-out;
   }
 
-  .data-table tbody tr:hover td:last-child {
-    @apply bg-transparent;
+  .action-cell {
+    @apply w-[50px] min-w-[40px] max-w-[50px] !important;
+  }
+
+  th#sessionType,
+  th#groupName {
+    @apply w-[80px] min-w-[60px] max-w-[100px];
   }
 
   .form-toggle {
@@ -211,5 +205,9 @@
 
   .form-toggle .form-toggle-button[data-state="on"] {
     @apply border bg-white text-black drop-shadow-xl;
+  }
+
+  .arrow-button {
+    @apply flex cursor-pointer items-center justify-center border px-3 py-1.5 text-shamiri-text-dark-grey hover:text-shamiri-new-blue hover:drop-shadow active:scale-95;
   }
 }

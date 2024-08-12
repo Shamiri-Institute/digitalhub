@@ -13,12 +13,11 @@ import { Prisma } from "@prisma/client";
 const sessionTypeToDisplayName: {
   [key: string]: string;
 } = {
-  // s0: "Pre session",
-  // s1: "Session 01",
-  // s2: "Session 02",
-  // s3: "Session 03",
-  // s4: "Session 04",
-  all: "All Sessions",
+  s0: "Pre session",
+  s1: "Session 01",
+  s2: "Session 02",
+  s3: "Session 03",
+  s4: "Session 04",
 };
 
 export default async function GroupReport({
@@ -77,6 +76,21 @@ export default async function GroupReport({
       },
     });
   }
+
+  if (sessionType === "default") {
+    return (
+      <div>
+        <GroupReportHeader
+          schoolName={schoolName}
+          sessionName={"Please pick a session"}
+          href={`/schools/${selectedSchool.visibleId}`}
+          schoolVisibleId={selectedSchool.visibleId}
+          groupName={groupId}
+        />
+      </div>
+    );
+  }
+
   const sessionName = sessionTypeToDisplayName[sessionType] ?? "Unknown";
 
   if (!session) {
@@ -96,13 +110,21 @@ export default async function GroupReport({
     );
   }
 
-  const groupEvaluation = await db.interventionGroupReport.findFirst({
+  const revalidatePath = `/schools/${selectedSchool.visibleId}/${groupId}/?type=${sessionType}`;
+
+  const currentSession = await db.interventionSession.findFirst({
     where: {
-      groupId: groupId,
+      sessionType: sessionType,
+      schoolId: selectedSchool.id,
     },
   });
 
-  const revalidatePath = `/schools/${selectedSchool.visibleId}/${groupId}/?type=${sessionType}`;
+  const groupEvaluation = await db.interventionGroupReport.findFirst({
+    where: {
+      groupId: groupId,
+      sessionId: currentSession?.id ?? null,
+    },
+  });
 
   return (
     <div>
@@ -116,26 +138,26 @@ export default async function GroupReport({
 
       <GroupEngagementRater
         revalidatePath={revalidatePath}
-        sessionName={session.sessionName}
         groupName={groupId}
         id={groupEvaluation?.id}
         ratings={groupEvaluation}
+        sessionId={currentSession?.id}
       />
 
       <GroupDisciplineRater
         revalidatePath={revalidatePath}
-        sessionName={session.sessionName}
         groupName={groupId}
         id={groupEvaluation?.id}
         ratings={groupEvaluation}
+        sessionId={currentSession?.id}
       />
 
       <GroupContentCoverage
         revalidatePath={revalidatePath}
-        sessionName={session.sessionName}
         groupName={groupId}
         id={groupEvaluation?.id}
         ratings={groupEvaluation}
+        sessionId={currentSession?.id}
       />
     </div>
   );

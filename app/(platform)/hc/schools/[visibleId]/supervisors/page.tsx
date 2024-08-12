@@ -9,19 +9,13 @@ export default async function SupervisorsPage({
 }: {
   params: { visibleId: string };
 }) {
-  const hubCoordinator = await currentHubCoordinator();
+
+
+  const coordinator = await currentHubCoordinator();
 
   const supervisors = await db.supervisor.findMany({
     where: {
-      fellows: {
-        some: {
-          groups: {
-            some: {
-              schoolId: visibleId,
-            },
-          },
-        },
-      },
+      hubId: coordinator?.assignedHubId,
     },
     include: {
       assignedSchools: true,
@@ -31,18 +25,22 @@ export default async function SupervisorsPage({
 
   return (
     <>
-      <DataTable
-        data={supervisors}
-        columns={columns}
-        emptyStateMessage="No supervisors found for this school"
-      />
-      {hubCoordinator?.assignedHubId &&
-        hubCoordinator.implementerId &&
-        hubCoordinator.assignedHub?.projectId && (
+     <DataTable
+      data={supervisors}
+      columns={columns}
+      className={"data-table data-table-action mt-4"}
+      emptyStateMessage="No supervisors found for this hub"
+      columnVisibilityState={{
+        Gender: false,
+      }}
+    />
+      {coordinator?.assignedHubId &&
+        coordinator.implementerId &&
+        coordinator.assignedHub?.projectId && (
           <BatchUploadDownloadSupervisors
-            hubId={hubCoordinator?.assignedHubId}
-            implementerId={hubCoordinator?.implementerId}
-            projectId={hubCoordinator?.assignedHub?.projectId}
+            hubId={coordinator?.assignedHubId}
+            implementerId={coordinator?.implementerId}
+            projectId={coordinator?.assignedHub?.projectId}
             schoolVisibleId={visibleId}
           />
         )}

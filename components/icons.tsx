@@ -1,18 +1,26 @@
 import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
   Backpack,
   Banknote,
   Calendar,
+  CalendarCheck2,
   Check,
-  CheckCircle,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
   ClipboardList,
+  Clock,
+  FlagTriangleLeft,
+  FlagTriangleRight,
   GraduationCap,
   GraduationCapIcon,
   HeartPulse,
   HelpCircle,
+  Hourglass,
+  Info,
   LayoutDashboard,
   ListTodo,
   LucideProps,
@@ -47,7 +55,6 @@ export const Icons = {
   moon: Moon,
   calendar: Calendar,
   check: Check,
-  checkCircle: CheckCircle,
   chevronsUpDown: ChevronsUpDown,
   chevronLeft: ChevronLeft,
   graduationCap: GraduationCap,
@@ -74,6 +81,15 @@ export const Icons = {
   helpCircle: HelpCircle,
   uploadCloudIcon: UploadCloudIcon,
   PencilLine: PencilLineIcon,
+  hourglass: Hourglass,
+  info: Info,
+  calendarCheck2: CalendarCheck2,
+  arrowLeft: ArrowLeft,
+  arrowUp: ArrowUp,
+  arrowDown: ArrowDown,
+  clock: Clock,
+  flagTriangleLeft: FlagTriangleLeft,
+  flagTriangleRight: FlagTriangleRight,
 
   // star: StarIcon,
   logo: ({ className, ...props }: LucideProps) => (
@@ -710,6 +726,21 @@ export const Icons = {
       />
     </svg>
   ),
+  starRating: ({ className, ...props }: LucideProps) => (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      {...props}
+      className={className}
+    >
+      <path
+        fillRule="evenodd"
+        d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434 2.082-5.005Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  ),
   vshapedHumberger: ({ className, ...props }: LucideProps) => (
     <svg
       {...props}
@@ -785,10 +816,10 @@ export const Icons = {
   ),
   crossCircleFilled: ({ className, ...props }: LucideProps) => (
     <svg
-      width={13}
-      height={12}
-      viewBox="0 0 13 12"
-      fill="none"
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      fill="currentColor"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       {...props}
@@ -796,7 +827,25 @@ export const Icons = {
       <path
         fillRule="evenodd"
         clipRule="evenodd"
-        d="M6.85742 1C4.09242 1 1.85742 3.235 1.85742 6C1.85742 8.765 4.09242 11 6.85742 11C9.62242 11 11.8574 8.765 11.8574 6C11.8574 3.235 9.62242 1 6.85742 1ZM9.00742 8.15C8.81242 8.345 8.49742 8.345 8.30242 8.15L6.85742 6.705L5.41242 8.15C5.21742 8.345 4.90242 8.345 4.70742 8.15C4.51242 7.955 4.51242 7.64 4.70742 7.445L6.15242 6L4.70742 4.555C4.51242 4.36 4.51242 4.045 4.70742 3.85C4.90242 3.655 5.21742 3.655 5.41242 3.85L6.85742 5.295L8.30242 3.85C8.49742 3.655 8.81242 3.655 9.00742 3.85C9.20242 4.045 9.20242 4.36 9.00742 4.555L7.56242 6L9.00742 7.445C9.19742 7.635 9.19742 7.955 9.00742 8.15Z"
+        d="M9.00033 0.666992C4.39199 0.666992 0.666992 4.39199 0.666992 9.00033C0.666992 13.6087 4.39199 17.3337 9.00033 17.3337C13.6087 17.3337 17.3337 13.6087 17.3337 9.00033C17.3337 4.39199 13.6087 0.666992 9.00033 0.666992ZM12.5837 12.5837C12.2587 12.9087 11.7337 12.9087 11.4087 12.5837L9.00033 10.1753L6.59199 12.5837C6.26699 12.9087 5.74199 12.9087 5.41699 12.5837C5.09199 12.2587 5.09199 11.7337 5.41699 11.4087L7.82533 9.00033L5.41699 6.59199C5.09199 6.26699 5.09199 5.74199 5.41699 5.41699C5.74199 5.09199 6.26699 5.09199 6.59199 5.41699L9.00033 7.82533L11.4087 5.41699C11.7337 5.09199 12.2587 5.09199 12.5837 5.41699C12.9087 5.74199 12.9087 6.26699 12.5837 6.59199L10.1753 9.00033L12.5837 11.4087C12.9003 11.7253 12.9003 12.2587 12.5837 12.5837Z"
+        fill="currentColor"
+      />
+    </svg>
+  ),
+  checkCircle: ({ className, ...props }: LucideProps) => (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
+    >
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M10.0003 1.66699C5.40033 1.66699 1.66699 5.40033 1.66699 10.0003C1.66699 14.6003 5.40033 18.3337 10.0003 18.3337C14.6003 18.3337 18.3337 14.6003 18.3337 10.0003C18.3337 5.40033 14.6003 1.66699 10.0003 1.66699ZM10.0003 16.667C6.32533 16.667 3.33366 13.6753 3.33366 10.0003C3.33366 6.32533 6.32533 3.33366 10.0003 3.33366C13.6753 3.33366 16.667 6.32533 16.667 10.0003C16.667 13.6753 13.6753 16.667 10.0003 16.667ZM13.2337 6.90866L8.33366 11.8087L6.76699 10.242C6.44199 9.91699 5.91699 9.91699 5.59199 10.242C5.26699 10.567 5.26699 11.092 5.59199 11.417L7.75033 13.5753C8.07533 13.9003 8.60033 13.9003 8.92533 13.5753L14.417 8.08366C14.742 7.75866 14.742 7.23366 14.417 6.90866C14.092 6.58366 13.5587 6.58366 13.2337 6.90866Z"
         fill="currentColor"
       />
     </svg>

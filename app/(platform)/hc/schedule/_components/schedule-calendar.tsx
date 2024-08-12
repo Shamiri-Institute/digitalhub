@@ -11,14 +11,37 @@ import { useButton } from "@react-aria/button";
 import { useFocusRing } from "@react-aria/focus";
 import { mergeProps } from "@react-aria/utils";
 import { useSearchParams } from "next/navigation";
-import { Dispatch, SetStateAction, useRef, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
-import { ScheduleNewSession } from "#/app/(platform)/hc/components/schedule-new-session-form";
+import CancelSession from "#/app/(platform)/hc/components/cancel-session";
+import FellowAttendance from "#/app/(platform)/hc/components/fellow-attendance";
+import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
+import RescheduleSession from "#/app/(platform)/hc/components/reschedule-session";
+import SupervisorAttendance from "#/app/(platform)/hc/components/supervisor-attendance";
+import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
+import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
+import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
+import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
+import { ScheduleNewSession } from "#/app/(platform)/hc/schedule/_components/schedule-new-session-form";
+import {
+  DateRangeType,
+  Filters,
+  FiltersContext,
+  sessionTypeFilterOptions,
+  statusFilterOptions,
+} from "#/app/(platform)/hc/schedule/context/filters-context";
 import {
   Dialog,
   DialogContent,
@@ -26,13 +49,24 @@ import {
   DialogPortal,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { Prisma } from "@prisma/client";
+import {
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+} from "#/components/ui/dropdown-menu";
+import { SESSION_TYPES } from "#/lib/app-constants/constants";
+import { Prisma, SessionStatus } from "@prisma/client";
+import { addHours, addMinutes } from "date-fns";
+import * as React from "react";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { ModeProvider, useMode, type Mode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import { SessionsProvider, useSessions } from "./sessions-provider";
+import {
+  SessionsContext,
+  SessionsProvider,
+  useSessions,
+} from "./sessions-provider";
 import { TableView } from "./table-view";
 import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
@@ -45,6 +79,16 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const { hubId, schools, ...calendarStateProps } = props;
   const { locale } = useLocale();
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode") ?? "month";
+
+  const [filters, setFilters] = useState<Filters>({
+    sessionTypes: sessionTypeFilterOptions,
+    statusTypes: statusFilterOptions,
+    dates: ["day", "week", "month"].includes(mode)
+      ? (mode as DateRangeType)
+      : "week",
+  });
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
 
   const monthState = useCalendarState({
@@ -61,6 +105,18 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     createCalendar,
   });
 
+  const listState = useCalendarState({
+    value: today(getLocalTimeZone()),
+    visibleDuration:
+      filters.dates === "week"
+        ? { weeks: 1 }
+        : filters.dates === "day"
+          ? { days: 1 }
+          : { months: 1 },
+    locale,
+    createCalendar,
+  });
+
   const dayState = useCalendarState({
     value: today(getLocalTimeZone()),
     visibleDuration: { days: 1 },
@@ -68,7 +124,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     createCalendar,
   });
 
-  const tableViewState = useCalendarState({
+  const tableState = useCalendarState({
     value: today(getLocalTimeZone()),
     visibleDuration: { weeks: 1 },
     locale,
@@ -81,10 +137,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 
   const day = useCalendar(calendarStateProps, dayState);
 
-  const table = useCalendar(calendarStateProps, tableViewState);
+  const list = useCalendar(calendarStateProps, listState);
 
-  const searchParams = useSearchParams();
-  const mode = searchParams.get("mode") ?? "month";
+  const table = useCalendar(calendarStateProps, tableState);
 
   let title = "";
   let prevButtonProps: AriaButtonProps = {};
@@ -106,16 +161,21 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
       nextButtonProps = day.nextButtonProps;
       break;
     case "table":
-      title = month.title;
-      prevButtonProps = month.prevButtonProps;
-      nextButtonProps = month.nextButtonProps;
+      title = table.title;
+      prevButtonProps = table.prevButtonProps;
+      nextButtonProps = table.nextButtonProps;
+      break;
+    case "list":
+      title = week.title;
+      prevButtonProps = list.prevButtonProps;
+      nextButtonProps = list.nextButtonProps;
       break;
     default:
       throw new Error(`Invalid mode: ${mode}`);
   }
 
   return (
-    <SessionsProvider hubId={hubId}>
+    <SessionsProvider hubId={hubId} filters={filters}>
       <ModeProvider defaultMode={mode as Mode}>
         <TitleProvider>
           <div className="flex items-center justify-between">
@@ -130,6 +190,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
               <div className="mx-2">
                 <ScheduleModeToggle />
               </div>
+              <FiltersContext.Provider value={{ filters, setFilters }}>
+                <ScheduleFilterToggle />
+              </FiltersContext.Provider>
             </div>
             <SessionsLoader>
               <CreateSessionButton
@@ -141,13 +204,15 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
             </SessionsLoader>
           </div>
           <div className="mt-4 w-full">
-            <CalendarView
-              monthProps={{ state: monthState, weekdayStyle: "long" }}
-              weekProps={{ state: weekState }}
-              dayProps={{ state: dayState }}
-              listProps={{}}
-              tableProps={{ state: tableViewState, hubId }}
-            />
+            <FiltersContext.Provider value={{ filters, setFilters }}>
+              <CalendarView
+                monthProps={{ state: monthState, weekdayStyle: "long" }}
+                weekProps={{ state: weekState }}
+                dayProps={{ state: dayState }}
+                listProps={{ state: listState, hubId }}
+                tableProps={{ state: tableState, hubId }}
+              />
+            </FiltersContext.Provider>
           </div>
         </TitleProvider>
       </ModeProvider>
@@ -169,10 +234,10 @@ function CreateSessionButton({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger>
-        <button className="hover:bg-blue-dark flex items-center gap-2 rounded-md bg-blue-base px-3 py-2 text-white">
+        <div className="hover:bg-blue-dark flex items-center gap-2 rounded-md bg-blue-base px-3 py-2 text-white">
           <Icons.plusCircle className="h-5 w-5" />
           <span className="text-white">Schedule a session</span>
-        </button>
+        </div>
       </DialogTrigger>
       <DialogPortal>
         <DialogContent>
@@ -248,36 +313,143 @@ function CalendarView({
   dayProps: {
     state: CalendarState;
   };
-  listProps: {};
+  listProps: {
+    state: CalendarState;
+    hubId: string;
+  };
   tableProps: {
     state: CalendarState;
     hubId: string;
   };
 }) {
   const { mode } = useMode();
+  const { sessions, setSessions } = useContext(SessionsContext);
+  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
+    React.useState(false);
+  const [fellowAttendanceDialog, setFellowAttendanceDialog] =
+    React.useState(false);
+  const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
+  const [rescheduleSessionDialog, setRescheduleSessionDialog] =
+    React.useState(false);
 
-  switch (mode) {
-    case "month":
-      return <MonthView {...monthProps} />;
-    case "week":
-      return weekProps.state.value ? (
-        <WeekView {...weekProps} />
-      ) : (
-        <div>Loading...</div>
+  const [session, setSession] =
+    React.useState<Prisma.InterventionSessionGetPayload<{
+      include: { school: true };
+    }> | null>(null);
+
+  const activeMode = () => {
+    switch (mode) {
+      case "month":
+        return <MonthView {...monthProps} />;
+      case "week":
+        return weekProps.state.value ? (
+          <WeekView {...weekProps} />
+        ) : (
+          <div>Loading...</div>
+        );
+      case "day":
+        return dayProps.state.value ? (
+          <DayView {...dayProps} />
+        ) : (
+          <div>Loading...</div>
+        );
+      case "list":
+        return <ListView {...listProps} />;
+      case "table":
+        return <TableView {...tableProps} />;
+      default:
+        throw new Error(`Invalid mode: ${mode}`);
+    }
+  };
+
+  function updateRescheduledSessionState(
+    sessionDate: Date,
+    sessionDuration: string,
+  ) {
+    const sessionIndex =
+      session !== null
+        ? sessions.findIndex((_session) => {
+            return _session.id === session.id;
+          })
+        : -1;
+
+    const copiedSessions = [...sessions];
+    if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
+      copiedSessions[sessionIndex]!.sessionDate = sessionDate;
+
+      const hours = +(sessionDuration.split(":")[0] ?? 0);
+      const minutes = +(sessionDuration.split(":")[1] ?? 0);
+      copiedSessions[sessionIndex]!.sessionEndTime = addHours(
+        addMinutes(sessionDate, minutes),
+        hours,
       );
-    case "day":
-      return dayProps.state.value ? (
-        <DayView {...dayProps} />
-      ) : (
-        <div>Loading...</div>
-      );
-    case "list":
-      return <ListView {...listProps} />;
-    case "table":
-      return <TableView {...tableProps} />;
-    default:
-      throw new Error(`Invalid mode: ${mode}`);
+      copiedSessions[sessionIndex]!.status = "Rescheduled";
+      setSessions(copiedSessions);
+    }
   }
+
+  function updateCancelledSessionState() {
+    const sessionIndex =
+      session !== null
+        ? sessions.findIndex((_session) => {
+            return _session.id === session.id;
+          })
+        : -1;
+
+    const copiedSessions = [...sessions];
+    if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
+      copiedSessions[sessionIndex]!.status = "Cancelled";
+      setSessions(copiedSessions);
+    }
+  }
+
+  return (
+    <div>
+      <SupervisorAttendanceContext.Provider
+        value={{
+          isOpen: supervisorAttendanceDialog,
+          setIsOpen: setSupervisorAttendanceDialog,
+          session,
+          setSession,
+        }}
+      >
+        <FellowAttendanceContext.Provider
+          value={{
+            isOpen: fellowAttendanceDialog,
+            setIsOpen: setFellowAttendanceDialog,
+            session,
+            setSession,
+          }}
+        >
+          <CancelSessionContext.Provider
+            value={{
+              isOpen: cancelSessionDialog,
+              setIsOpen: setCancelSessionDialog,
+              session,
+              setSession,
+            }}
+          >
+            <RescheduleSessionContext.Provider
+              value={{
+                isOpen: rescheduleSessionDialog,
+                setIsOpen: setRescheduleSessionDialog,
+                session,
+                setSession,
+              }}
+            >
+              {activeMode()}
+              <RescheduleSession
+                updateSessionsState={updateRescheduledSessionState}
+              />
+            </RescheduleSessionContext.Provider>
+            <CancelSession updateSessionsState={updateCancelledSessionState} />
+          </CancelSessionContext.Provider>
+          <FellowAttendance />
+        </FellowAttendanceContext.Provider>
+        <SupervisorAttendance />
+      </SupervisorAttendanceContext.Provider>
+    </div>
+  );
 }
 
 function NavigationButtons({
@@ -323,5 +495,152 @@ function NavigationButton({
     >
       {children}
     </button>
+  );
+}
+
+function ScheduleFilterToggle() {
+  const [open, setOpen] = useState(false);
+  const { filters, setFilters } = useContext(FiltersContext);
+  const { mode } = useMode();
+  const defaultFilterSettings = {
+    sessionTypes: sessionTypeFilterOptions,
+    statusTypes: statusFilterOptions,
+    dates: ["day", "week", "month"].includes(mode)
+      ? (mode as DateRangeType)
+      : "week",
+  };
+
+  const [sessionTypes, setSessionTypes] = useState(filters.sessionTypes);
+  const [statusTypes, setStatusTypes] = useState(filters.statusTypes);
+  const [filterIsActive, setFilterIsActive] = useState(false);
+
+  const dateFilterOptions: { label: string; value: DateRangeType }[] = [
+    { label: "Today", value: "day" },
+    { label: "This week", value: "week" },
+    { label: "This month", value: "month" },
+  ];
+  const [dates, setDates] = useState(filters.dates);
+  useEffect(() => {
+    setDates(
+      ["day", "week", "month"].includes(mode)
+        ? (mode as DateRangeType)
+        : "week",
+    );
+  }, [mode]);
+
+  useEffect(() => {
+    const sessionTypes = Object.keys(filters.sessionTypes).filter(
+      (key) => !filters.sessionTypes[key],
+    );
+    const statusTypes = Object.keys(filters.statusTypes).filter(
+      (key) => !filters.statusTypes[key],
+    );
+
+    if (sessionTypes.length > 0 || statusTypes.length > 0) {
+      setFilterIsActive(true);
+    } else {
+      setFilterIsActive(false);
+      setSessionTypes(sessionTypeFilterOptions);
+      setStatusTypes(statusFilterOptions);
+    }
+  }, [filters]);
+
+  return (
+    <div className="flex items-center gap-3">
+      <FilterToggle
+        filterIsActive={filterIsActive}
+        setDefaultFilters={() => setFilters(defaultFilterSettings)}
+        updateFilters={() => {
+          setOpen(false);
+          setFilters({
+            sessionTypes,
+            statusTypes,
+            dates,
+          });
+        }}
+      >
+        <div className="flex gap-8 px-1">
+          <div>
+            <DropdownMenuLabel>
+              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                SESSION TYPE
+              </span>
+            </DropdownMenuLabel>
+            {SESSION_TYPES.map((sessionType) => {
+              return (
+                <DropdownMenuCheckboxItem
+                  key={sessionType.name}
+                  checked={sessionTypes[sessionType.name]}
+                  onCheckedChange={(value) => {
+                    const state = { ...sessionTypes };
+                    state[sessionType.name] = value;
+                    setSessionTypes(state);
+                  }}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <span className="">{sessionType.description}</span>
+                </DropdownMenuCheckboxItem>
+              );
+            })}
+          </div>
+          <div>
+            <DropdownMenuLabel>
+              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                Status
+              </span>
+            </DropdownMenuLabel>
+            {Object.keys(SessionStatus).map((status) => {
+              return (
+                <DropdownMenuCheckboxItem
+                  key={status}
+                  checked={statusTypes[status]}
+                  onCheckedChange={(value) => {
+                    const state = { ...statusTypes };
+                    state[status] = value;
+                    setStatusTypes(state);
+                  }}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <span className="">{status}</span>
+                </DropdownMenuCheckboxItem>
+              );
+            })}
+          </div>
+          <div>
+            <DropdownMenuLabel>
+              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                Date Scheduled
+              </span>
+            </DropdownMenuLabel>
+            {dateFilterOptions.map((date) => {
+              return (
+                <DropdownMenuCheckboxItem
+                  key={date.value}
+                  checked={dates === date.value}
+                  onCheckedChange={(value) => {
+                    setDates(date.value);
+                  }}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                  }}
+                  disabled={
+                    mode === "day" ||
+                    mode === "month" ||
+                    mode === "week" ||
+                    mode === "table"
+                  }
+                >
+                  <span className="">{date.label}</span>
+                </DropdownMenuCheckboxItem>
+              );
+            })}
+          </div>
+        </div>
+      </FilterToggle>
+    </div>
   );
 }

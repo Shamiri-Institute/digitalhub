@@ -24,19 +24,23 @@ export async function fetchSupervisors({
 export async function fetchSupervisorAttendances({
   where,
 }: {
-  where: Prisma.SupervisorWhereInput;
+  where: Prisma.SupervisorAttendanceWhereInput;
 }) {
-  return await db.supervisor.findMany({
+  return await db.supervisorAttendance.findMany({
     where,
     include: {
-      fellows: {
+      school: true,
+      session: true,
+      supervisor: {
         include: {
-          students: true,
-          fellowAttendances: true,
+          fellows: {
+            include: {
+              fellowAttendances: true,
+            },
+          },
+          assignedSchools: true,
         },
       },
-      supervisorAttendances: true,
-      assignedSchools: true,
     },
   });
 }
