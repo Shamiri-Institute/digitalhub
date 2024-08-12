@@ -5,21 +5,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
 
 const supervisorCSVHeaders = [
-  // "supervisorId",
-  "supervisor_id",
-  // "supervisorName",
-  "supervisor name",
-  // "cellNumber",
-  "cell_number",
-  // hubCoordinator - hubId
-  "hub coordinator",
+  "supervisorId",
+  "supervisorName",
+  "cellNumber",
+  "hubCoordinator",
   "hub",
-  // "hubId" ,// instead of hub coordinator and hub
-  // "personalEmail",
-  "personal email",
-  // "shamiriEmail", // shamiriEmail - supervisorEmail
-  "shamiri email",
-  // "implementerId", // not in the csv
+  "personalEmail",
+  "shamiriEmail",
 ];
 
 export async function POST(request: NextRequest) {
@@ -58,30 +50,17 @@ export async function POST(request: NextRequest) {
     dataStream
       .pipe(fastCsv.parse({ headers: true }))
       .on("data", async (row) => {
-        console.log({
-          id: row["supervisor_id"],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          supervisorName: row["supervisor name"],
-          cellNumber: row["cell_number"],
-          hubId,
-          personalEmail: row["personal email"],
-          supervisorEmail: row["shamiri email"],
-          implementerId,
-          visibleId: row["supervisor_id"],
-        });
-
         rows.push({
-          id: row["supervisor_id"],
+          id: row.supervisorId,
           createdAt: new Date(),
           updatedAt: new Date(),
-          supervisorName: row["supervisor name"],
-          cellNumber: row["cell_number"],
+          supervisorName: row.supervisorName,
+          cellNumber: row.cellNumber,
           hubId,
-          personalEmail: row["personal email"],
-          supervisorEmail: row["shamiri email"],
+          personalEmail: row.personalEmail,
+          supervisorEmail: row.shamiriEmail,
           implementerId,
-          visibleId: row["supervisor_id"],
+          visibleId: row.supervisorId,
         });
       })
       .on("error", (err) => {
@@ -104,10 +83,10 @@ export async function POST(request: NextRequest) {
         }
       });
 
-    // return NextResponse.json({
-    //   status: 200,
-    //   message: "File uploaded successfully.",
-    // });
+    return NextResponse.json({
+      status: 200,
+      message: "File uploaded successfully.",
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error }, { status: 500 });
@@ -120,11 +99,10 @@ async function hasRequiredHeaders(csvStream: Readable): Promise<boolean> {
     csvStream
       .pipe(fastCsv.parse({ headers: true }))
       .on("headers", (headers) => {
-        console.log({ headers });
         if (!headersChecked) {
           const requiredHeaders = supervisorCSVHeaders;
           const missingHeaders = requiredHeaders.filter(
-            (header) => !headers.includes(header.trim()),
+            (header) => !headers.includes(header?.trim()),
           );
           if (missingHeaders.length === 0) {
             headersChecked = true;

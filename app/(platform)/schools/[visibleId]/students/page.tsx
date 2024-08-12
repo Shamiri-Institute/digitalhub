@@ -57,7 +57,7 @@ export default async function SchoolStudentsPage({
   );
 
   const students = await db.student.findMany({
-    where: { schoolId: school.id, },
+    where: { schoolId: school.id },
     include: {
       school: true,
       fellow: {

@@ -78,8 +78,6 @@ export async function POST(request: NextRequest) {
           dropOutReason: null,
         });
         try {
-          // await db.fellow.createMany({ data: rows });
-
           await db.$transaction(async (prisma) => {
             await prisma.fellow.createMany({ data: rows });
           });

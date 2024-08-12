@@ -7,14 +7,14 @@ import { Readable } from "stream";
 
 const studentsCSVHeaders = [
   "School", // prefer schoolId ?
-  "Group number",
+  "GroupNumber",
   "Hub", //  prefer hubId
-  "Student name",
-  "Admission number",
+  "StudentName",
+  "AdmissionNumber",
   "Form",
   "Stream",
   "Gender",
-  "Date of Birth", // age on db
+  "DateOfBirth", // age on db
 ];
 
 export async function POST(request: NextRequest) {
@@ -66,16 +66,15 @@ export async function POST(request: NextRequest) {
     dataStream
       .pipe(fastCsv.parse({ headers: true }))
       .on("data", async (row) => {
-        console.log({ row });
         let studentId = objectId("stu");
         rows.push({
           id: studentId,
           createdAt: new Date(),
           updatedAt: new Date(),
           schoolId: school.id,
-          groupName: row["Group number"],
-          studentName: row["Student name"],
-          admissionNumber: row["Admission number"],
+          groupName: row.GroupNumber,
+          studentName: row.StudentName,
+          admissionNumber: row.AdmissionNumber,
           form: parseInt(row.Form),
           stream: row.Stream,
           gender: row.Gender,

@@ -111,8 +111,6 @@ export function StudentAttendanceDot({
 
   return (
     <div className="flex flex-col items-center gap-1.5">
-
-      <div className="text-sm text-muted-foreground">{JSON.stringify(session)}</div>
       <div className="text-sm text-muted-foreground">{session.label}</div>
       <button
         onClick={onDotClick}

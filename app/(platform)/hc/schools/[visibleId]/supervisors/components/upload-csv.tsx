@@ -26,7 +26,11 @@ export function BatchUploadDownloadSupervisors({
       >
         Download supervisor csv template
       </Button>
-      <FileUploader url="/api/csv-uploads/supervisors" type="supervisors" metadata={{ hubId, implementerId, projectId, schoolVisibleId }} />
+      <FileUploader
+        url="/api/csv-uploads/supervisors"
+        type="supervisors"
+        metadata={{ hubId, implementerId, projectId, schoolVisibleId }}
+      />
     </div>
   );
 }

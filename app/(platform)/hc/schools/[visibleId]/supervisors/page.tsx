@@ -38,15 +38,14 @@ export default async function SupervisorsPage({
       />
       {hubCoordinator?.assignedHubId &&
         hubCoordinator.implementerId &&
-        hubCoordinator.assignedHub?.projectId &&
-        <BatchUploadDownloadSupervisors
-
-          hubId={hubCoordinator?.assignedHubId}
-          implementerId={hubCoordinator?.implementerId}
-          projectId={hubCoordinator?.assignedHub?.projectId}
-          schoolVisibleId={visibleId}
-        />
-      }
+        hubCoordinator.assignedHub?.projectId && (
+          <BatchUploadDownloadSupervisors
+            hubId={hubCoordinator?.assignedHubId}
+            implementerId={hubCoordinator?.implementerId}
+            projectId={hubCoordinator?.assignedHub?.projectId}
+            schoolVisibleId={visibleId}
+          />
+        )}
     </>
   );
 }
