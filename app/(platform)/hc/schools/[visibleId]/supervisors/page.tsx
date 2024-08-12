@@ -9,8 +9,6 @@ export default async function SupervisorsPage({
 }: {
   params: { visibleId: string };
 }) {
-
-
   const coordinator = await currentHubCoordinator();
 
   const supervisors = await db.supervisor.findMany({
@@ -25,15 +23,15 @@ export default async function SupervisorsPage({
 
   return (
     <>
-     <DataTable
-      data={supervisors}
-      columns={columns}
-      className={"data-table data-table-action mt-4"}
-      emptyStateMessage="No supervisors found for this hub"
-      columnVisibilityState={{
-        Gender: false,
-      }}
-    />
+      <DataTable
+        data={supervisors}
+        columns={columns}
+        className={"data-table data-table-action mt-4"}
+        emptyStateMessage="No supervisors found for this hub"
+        columnVisibilityState={{
+          Gender: false,
+        }}
+      />
       {coordinator?.assignedHubId &&
         coordinator.implementerId &&
         coordinator.assignedHub?.projectId && (
