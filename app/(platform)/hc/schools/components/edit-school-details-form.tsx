@@ -104,8 +104,10 @@ export default function EditSchoolDetailsForm() {
       principalName: context.school?.principalName ?? undefined,
       principalPhone: context.school?.principalPhone ?? undefined,
     };
-    // @ts-ignore
-    form.reset(defaultValues);
+    if (context.editDialog) {
+      // @ts-ignore
+      form.reset(defaultValues);
+    }
   }, [context.editDialog]);
 
   const onSubmit = async (data: z.infer<typeof EditSchoolSchema>) => {
@@ -152,20 +154,6 @@ export default function EditSchoolDetailsForm() {
       form.reset();
       context.setEditDialog(false);
     }
-  };
-
-  const validateMultiplePhoneNumbers = (list: string[]) => {
-    console.log(list);
-    list.forEach((phoneNumber) => {
-      const check = isValidPhoneNumber(phoneNumber);
-      if (!check) {
-        form.setError("pointPersonPhone", {
-          message: phoneNumber + " is not a valid kenyan phone number",
-        });
-      } else {
-        form.trigger("pointPersonPhone");
-      }
-    });
   };
 
   const validatePhoneNumber = (
@@ -494,6 +482,19 @@ export default function EditSchoolDetailsForm() {
                                           ] === " "
                                         }
                                         type="tel"
+                                        onChange={(e) => {
+                                          const newValue =
+                                            field.value!.split("/");
+                                          newValue.splice(
+                                            index,
+                                            1,
+                                            e.target.value,
+                                          );
+                                          form.setValue(
+                                            "pointPersonPhone",
+                                            newValue.join("/"),
+                                          );
+                                        }}
                                         onBlur={(e) => {
                                           if (
                                             !isValidPhoneNumber(
@@ -602,7 +603,7 @@ export default function EditSchoolDetailsForm() {
                             </div>
                           </div>
                         </FormControl>
-                        <FormMessage />
+                        {pointPersonPhone !== "" && <FormMessage />}
                       </FormItem>
                     )}
                   />
