@@ -55,6 +55,9 @@ export default function EditSchoolDetailsForm() {
     (county) => county.name === context.school?.schoolCounty,
   );
   const [pointPersonPhone, setPointPersonPhone] = useState<string>("");
+  const [pointPersonPhoneErrors, setPointPersonPhoneErrors] = useState<
+    number[]
+  >([]);
 
   const isSubCountyValid = () => {
     const subCounties: string[] = Array.from(
@@ -115,7 +118,6 @@ export default function EditSchoolDetailsForm() {
         pointPersonPhoneNumbers && pointPersonPhoneNumbers.length > 0
           ? pointPersonPhoneNumbers.join("/")
           : null;
-      console.log(data.pointPersonPhone);
       const response = await editSchoolInformation(context.school?.id, data);
 
       if (!response.success) {
@@ -161,7 +163,7 @@ export default function EditSchoolDetailsForm() {
           message: phoneNumber + " is not a valid kenyan phone number",
         });
       } else {
-        // form.trigger("pointPersonPhone");
+        form.trigger("pointPersonPhone");
       }
     });
   };
@@ -473,50 +475,84 @@ export default function EditSchoolDetailsForm() {
                             {field.value &&
                               field.value.split("/").map((number, index) => {
                                 return (
-                                  <div
-                                    key={index}
-                                    className={cn(
-                                      "flex gap-2",
-                                      pointPersonPhoneWatcher?.split("/")[
-                                        index
-                                      ] === " "
-                                        ? "hidden"
-                                        : "",
-                                    )}
-                                  >
-                                    <Input
-                                      defaultValue={number}
-                                      disabled={
+                                  <div key={index}>
+                                    <div
+                                      className={cn(
+                                        "flex gap-2",
                                         pointPersonPhoneWatcher?.split("/")[
                                           index
                                         ] === " "
-                                      }
-                                      type="tel"
-                                      onBlur={(e) => {
-                                        const list =
-                                          pointPersonPhoneWatcher?.split("/");
-                                        if (list) {
-                                          list[index] = e.target.value;
-                                          validateMultiplePhoneNumbers(list);
-                                        }
-                                      }}
-                                    />
-                                    <Button
-                                      variant="ghost"
-                                      type="button"
-                                      className="flex items-center text-shamiri-light-red hover:bg-red-bg"
-                                      onClick={() => {
-                                        const newValue =
-                                          field.value?.split("/");
-                                        newValue?.splice(index, 1, " ");
-                                        form.setValue(
-                                          "pointPersonPhone",
-                                          newValue?.join("/") ?? "",
-                                        );
-                                      }}
+                                          ? "hidden"
+                                          : "",
+                                      )}
                                     >
-                                      <Icons.minusCircle className="h-4 w-4" />
-                                    </Button>
+                                      <Input
+                                        defaultValue={number}
+                                        disabled={
+                                          pointPersonPhoneWatcher?.split("/")[
+                                            index
+                                          ] === " "
+                                        }
+                                        type="tel"
+                                        onBlur={(e) => {
+                                          if (
+                                            !isValidPhoneNumber(
+                                              e.target.value,
+                                              "KE",
+                                            ) &&
+                                            e.target.value !== ""
+                                          ) {
+                                            const errors = [
+                                              ...pointPersonPhoneErrors,
+                                            ];
+                                            errors.push(index);
+                                            setPointPersonPhoneErrors(errors);
+                                          }
+
+                                          if (
+                                            isValidPhoneNumber(
+                                              e.target.value,
+                                              "KE",
+                                            )
+                                          ) {
+                                            const matchIndex =
+                                              pointPersonPhoneErrors.findIndex(
+                                                (error) => error === index,
+                                              );
+                                            if (matchIndex !== -1) {
+                                              const errors = [
+                                                ...pointPersonPhoneErrors,
+                                              ];
+                                              errors.splice(matchIndex, 1);
+                                              setPointPersonPhoneErrors(errors);
+                                            }
+                                          }
+                                        }}
+                                      />
+                                      <Button
+                                        variant="ghost"
+                                        type="button"
+                                        className="flex items-center text-shamiri-light-red hover:bg-red-bg"
+                                        onClick={() => {
+                                          const newValue =
+                                            field.value?.split("/");
+                                          newValue?.splice(index, 1, " ");
+                                          form.setValue(
+                                            "pointPersonPhone",
+                                            newValue?.join("/") ?? "",
+                                          );
+                                        }}
+                                      >
+                                        <Icons.minusCircle className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                    {pointPersonPhoneErrors.includes(index) ? (
+                                      <div className="py-1">
+                                        <FormMessage>
+                                          Please enter a valid kenyan number
+                                        </FormMessage>
+                                      </div>
+                                    ) : null}
                                   </div>
                                 );
                               })}
@@ -527,7 +563,6 @@ export default function EditSchoolDetailsForm() {
                                   form.trigger("pointPersonPhone");
                                 }}
                                 onBlur={(e) => {
-                                  console.log(pointPersonPhoneWatcher);
                                   validatePhoneNumber(
                                     "pointPersonPhone" as keyof typeof form.formState.defaultValues,
                                     e.target.value,
