@@ -7,6 +7,7 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import WeeklyHubTeamMeetingForm from "#/app/(platform)/hc/supervisors/components/weekly-hub-team-meeting";
 
 export default async function SupervisorsPage() {
   const coordinator = await currentHubCoordinator();
@@ -36,6 +37,17 @@ export default async function SupervisorsPage() {
       <div className="container w-full grow space-y-3 py-10">
         <PageHeading title="Supervisors" />
         <Separator />
+          <div className="flex items-center justify-between">
+              <div className="flex gap-3">{/* search filters go here */}</div>
+              <div className="flex items-center gap-3">
+                  <WeeklyHubTeamMeetingForm
+                      hubCoordinatorId={coordinator?.id}
+                      hubId={coordinator?.assignedHubId}
+                  />
+                  {/* dispaly options button */}
+              </div>
+          </div>
+          {/* charts goes here */}
         <SupervisorProvider>
           <AllSupervisorsDataTable supervisors={supervisors} />
         </SupervisorProvider>

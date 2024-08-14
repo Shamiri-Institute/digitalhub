@@ -250,3 +250,18 @@ export const MarkSupervisorAttendanceSchema = z.object({
 //     return z.NEVER;
 //   }
 // });
+
+export const WeeklyHubTeamMeetingSchema = z.object({
+  hubId: stringValidation("Missing hub ID"),
+  submittedBy: stringValidation("Missing hub coordinator ID"),
+  week: z.coerce.date({ required_error: "Please select a week" }),
+  logisticsRelatedIssues: stringValidation(),
+  logisticsRelatedIssuesRating: z.number().lte(5),
+  relationshipManagement: stringValidation(),
+  relationshipManagementRating: z.number().lte(5),
+  digitalHubIssues: stringValidation(),
+  digitalHubIssuesRating: z.number().lte(5),
+  anyOtherChallenges: stringValidation(),
+  anyOtherChallengesRating: z.number().lte(5),
+  recommendations: stringValidation("Please input recommendations"),
+});
