@@ -25,6 +25,7 @@ import {
   ListTodo,
   LucideProps,
   Mail,
+  MinusCircle,
   Moon,
   MoreHorizontal,
   MoreVertical,
@@ -53,6 +54,7 @@ export type Icon = LucideIcon | React.FC<LucideProps>;
 export const Icons = {
   sun: SunMedium,
   moon: Moon,
+  minusCircle: MinusCircle,
   calendar: Calendar,
   check: Check,
   chevronsUpDown: ChevronsUpDown,

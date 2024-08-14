@@ -37,6 +37,8 @@ export const WeeklyHubReportSchema = z.object({
   challenges: stringValidation(),
 });
 
+const counties = KENYAN_COUNTIES.map((county) => county.name);
+
 export const EditSchoolSchema = z.object({
   numbersExpected: z.coerce
     .number({
@@ -48,26 +50,76 @@ export const EditSchoolSchema = z.object({
       required_error: "Please enter the school's email.",
     })
     .optional(),
-  schoolCounty: z.enum(KENYAN_COUNTIES).optional(),
+  schoolCounty: z
+    .enum([counties[0]!, ...counties.slice(1)], {
+      invalid_type_error: "Please pick a valid option",
+    })
+    .optional(),
+  schoolSubCounty: z
+    .string({
+      invalid_type_error: "Please pick a valid sub county.",
+      description: "Pick a county first",
+    })
+    .optional(),
   schoolContact: z
     .string({
       required_error: "Please enter the school's contact number.",
     })
     .optional(),
-  schoolDemographics: z.enum(SCHOOL_DEMOGRAPHICS).optional(),
-  boardingDay: z.enum(BOARDING_DAY_TYPES).optional(),
-  schoolType: z.enum(SCHOOL_TYPES).optional(),
+  schoolDemographics: z
+    .enum(SCHOOL_DEMOGRAPHICS, {
+      invalid_type_error: "Please pick a valid option",
+    })
+    .optional(),
+  boardingDay: z
+    .enum(BOARDING_DAY_TYPES, {
+      invalid_type_error: "Please pick a valid option",
+    })
+    .optional(),
+  schoolType: z
+    .enum(SCHOOL_TYPES, {
+      invalid_type_error: "Please pick a valid option",
+    })
+    .optional(),
   pointPersonName: z
-    .string({ required_error: "Please enter the Point Person's Name" })
+    .string({ required_error: "Please enter the point person's name" })
     .optional(),
   pointPersonEmail: z
-    .string({ required_error: "Please enter the Point Peron's Email" })
+    .string({ required_error: "Please enter the point person's email" })
     .email()
     .optional(),
   pointPersonPhone: z
-    .string({ required_error: "Please enter the Point Person's phone number" })
+    .string({
+      required_error: "Please enter the point person's phone number",
+    })
+    .nullable()
+    .superRefine((val, ctx) => {
+      console.log(val);
+      if (val !== null) {
+        val.split("/").forEach((phone: string) => {
+          if (!isValidPhoneNumber(phone, "KE") && phone !== " ") {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: phone + " is not a valid kenyan number",
+              fatal: true,
+            });
+          }
+        });
+      }
+    })
+    .optional(),
+  schoolName: z
+    .string({ required_error: "Please enter the school's name" })
+    .optional(),
+  principalName: z
+    .string({ required_error: "Please enter the principal's name" })
+    .optional(),
+  principalPhone: z
+    .string({
+      required_error: "Please enter the principal's phone number",
+    })
     .refine((val) => isValidPhoneNumber(val, "KE"), {
-      message: "Please enter a valid Kenyan Phone Number",
+      message: "Please enter a valid kenyan phone number",
     })
     .optional(),
 });

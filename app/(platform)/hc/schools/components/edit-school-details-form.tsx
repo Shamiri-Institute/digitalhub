@@ -1,6 +1,10 @@
 "use client";
 
+import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns";
+import SchoolNameInfoWidget from "#/app/(platform)/hc/schools/components/school-name-info-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
+import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
+import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -32,24 +36,43 @@ import {
   SCHOOL_DEMOGRAPHICS,
   SCHOOL_TYPES,
 } from "#/lib/app-constants/constants";
-import { getSchoolInitials } from "#/lib/utils";
+import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { Loader2 } from "lucide-react";
-import { useContext, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { EditSchoolSchema } from "../../schemas";
-import { editSchoolInformation } from "../actions";
+import { editSchoolInformation, revalidatePageAction } from "../actions";
 
 export default function EditSchoolDetailsForm() {
   const context = useContext(SchoolInfoContext);
+  const schoolsContext = useContext(SchoolsDataContext);
+  const pathname = usePathname();
   const isCountySelectionValid = KENYAN_COUNTIES.some(
-    (county) => county === context.school?.schoolCounty,
+    (county) => county.name === context.school?.schoolCounty,
   );
+  const [pointPersonPhone, setPointPersonPhone] = useState<string>("");
+  const [pointPersonPhoneErrors, setPointPersonPhoneErrors] = useState<
+    number[]
+  >([]);
+
+  const isSubCountyValid = () => {
+    const subCounties: string[] = Array.from(
+      KENYAN_COUNTIES.find(
+        (county) => county.name === form.getValues("schoolCounty"),
+      )!.sub_counties,
+    );
+    return subCounties.includes(form.getValues("schoolSubCounty")!);
+  };
 
   const form = useForm<z.infer<typeof EditSchoolSchema>>({
     resolver: zodResolver(EditSchoolSchema),
   });
+
+  const pointPersonPhoneWatcher = form.watch("pointPersonPhone");
 
   useEffect(() => {
     const defaultValues = {
@@ -68,19 +91,35 @@ export default function EditSchoolDetailsForm() {
       // @ts-ignore
       schoolCounty: context.school?.schoolCounty,
       // @ts-ignore
+      schoolSubCounty: context.school?.schoolSubCounty,
+      // @ts-ignore
+      schoolName: context.school?.schoolName,
+      // @ts-ignore
       boardingDay: context.school?.boardingDay,
       // @ts-ignore
       schoolType: context.school?.schoolType,
       pointPersonPhone: context.school?.pointPersonPhone ?? undefined,
       pointPersonEmail: context.school?.pointPersonEmail ?? undefined,
       pointPersonName: context.school?.pointPersonName ?? undefined,
+      principalName: context.school?.principalName ?? undefined,
+      principalPhone: context.school?.principalPhone ?? undefined,
     };
-    // @ts-ignore
-    form.reset(defaultValues);
+    if (context.editDialog) {
+      // @ts-ignore
+      form.reset(defaultValues);
+    }
   }, [context.editDialog]);
 
   const onSubmit = async (data: z.infer<typeof EditSchoolSchema>) => {
     if (context.school) {
+      // remove empty strings (removed phone numbers)
+      const pointPersonPhoneNumbers = data.pointPersonPhone
+        ?.split("/")
+        .filter((phone) => phone !== " ");
+      data.pointPersonPhone =
+        pointPersonPhoneNumbers && pointPersonPhoneNumbers.length > 0
+          ? pointPersonPhoneNumbers.join("/")
+          : null;
       const response = await editSchoolInformation(context.school?.id, data);
 
       if (!response.success) {
@@ -94,6 +133,20 @@ export default function EditSchoolDetailsForm() {
         return;
       }
 
+      const copiedSchools = [...schoolsContext.schools];
+      const index = copiedSchools.findIndex(
+        (_school) => _school.id === context.school?.id,
+      );
+      if (index !== -1) {
+        copiedSchools[index] = {
+          ...copiedSchools[index],
+          ...(data as SchoolsTableData),
+        };
+        context.setSchool(copiedSchools[index]!);
+        schoolsContext.setSchools(copiedSchools);
+        await revalidatePageAction(pathname, "layout");
+      }
+
       toast({
         description: response.message,
       });
@@ -103,27 +156,31 @@ export default function EditSchoolDetailsForm() {
     }
   };
 
+  const validatePhoneNumber = (
+    field: keyof typeof form.formState.defaultValues,
+    value: string,
+  ) => {
+    if (!isValidPhoneNumber(value, "KE") && value !== "") {
+      form.setError(field, {
+        message: value + " is not a valid kenyan number",
+      });
+    }
+  };
+
   return (
     <Dialog open={context.editDialog} onOpenChange={context.setEditDialog}>
       <DialogContent className="w-1/2 max-w-none">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <div className="flex items-center gap-3">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-shamiri-new-light-blue p-[18px] text-xl font-semibold text-shamiri-new-blue">
-                  {getSchoolInitials(context.school?.schoolName ?? "")}
-                </div>
-                <div className="flex flex-col">
-                  <h2 className="text-2xl font-semibold text-black">
-                    {context.school?.schoolName}
-                  </h2>
-                  <span className="text-shamiri-text-grey">
-                    Edit school information
-                  </span>
-                </div>
-              </div>
+              <span className="text-xl">Edit school information</span>
             </DialogHeader>
-            <Separator className="my-6" />
+            <div className="pb-2 pt-4">
+              <SchoolNameInfoWidget
+                schoolName={context.school?.schoolName}
+                separator={false}
+              />
+            </div>
             <div className="space-y-6">
               <div className="flex flex-col">
                 <div className="col-span-2 py-2">
@@ -132,13 +189,26 @@ export default function EditSchoolDetailsForm() {
                   </span>
                   <Separator />
                 </div>
-                <div className="grid grid-cols-6 gap-4">
+                <div className="grid grid-cols-6 gap-5">
+                  <FormField
+                    control={form.control}
+                    name="schoolName"
+                    render={({ field }) => (
+                      <FormItem className="col-span-4">
+                        <FormLabel>School name</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="text" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="numbersExpected"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
-                        <FormLabel>Promised no. of students</FormLabel>
+                        <FormLabel>No. of students</FormLabel>
                         <FormControl>
                           <Input {...field} type="number" />
                         </FormControl>
@@ -190,7 +260,7 @@ export default function EditSchoolDetailsForm() {
                     control={form.control}
                     name="schoolCounty"
                     render={({ field }) => (
-                      <FormItem className="col-span-2">
+                      <FormItem className="col-span-3">
                         <FormLabel>School county</FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -207,12 +277,59 @@ export default function EditSchoolDetailsForm() {
                               )}
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            {KENYAN_COUNTIES.map((county) => (
-                              <SelectItem key={county} value={county}>
-                                {county}
+                          <SelectContent className="max-h-[200px]">
+                            {KENYAN_COUNTIES.map((x) => x.name).map(
+                              (county) => (
+                                <SelectItem key={county} value={county}>
+                                  {county}
+                                </SelectItem>
+                              ),
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="schoolSubCounty"
+                    render={({ field }) => (
+                      <FormItem className="col-span-3">
+                        <FormLabel>School sub-county</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              {isSubCountyValid() ? (
+                                <SelectValue placeholder="Select sub-county" />
+                              ) : (
+                                <SelectValue>
+                                  {form.getValues("schoolSubCounty")}
+                                </SelectValue>
+                              )}
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="max-h-[200px]">
+                            {form.getValues("schoolCounty") ? (
+                              KENYAN_COUNTIES.find(
+                                (county) =>
+                                  county.name ===
+                                  form.getValues("schoolCounty"),
+                              )?.sub_counties.map((subCounty) => {
+                                return (
+                                  <SelectItem key={subCounty} value={subCounty}>
+                                    {subCounty}
+                                  </SelectItem>
+                                );
+                              })
+                            ) : (
+                              <SelectItem value={""}>
+                                Please pick a county first
                               </SelectItem>
-                            ))}
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -285,10 +402,36 @@ export default function EditSchoolDetailsForm() {
                 <div className="grid grid-cols-6 gap-4">
                   <FormField
                     control={form.control}
+                    name="principalName"
+                    render={({ field }) => (
+                      <FormItem className="col-span-3">
+                        <FormLabel>Principal name</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="principalPhone"
+                    render={({ field }) => (
+                      <FormItem className="col-span-3">
+                        <FormLabel>Principal phone number</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="tel" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="pointPersonName"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>Point person name</FormLabel>
+                        <FormLabel>Point teacher name</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -313,12 +456,154 @@ export default function EditSchoolDetailsForm() {
                     control={form.control}
                     name="pointPersonPhone"
                     render={({ field }) => (
-                      <FormItem className="col-span-4">
-                        <FormLabel>Point person phone number</FormLabel>
+                      <FormItem className="col-span-3">
+                        <FormLabel>Point teacher phone number</FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" />
+                          <div className="flex flex-col gap-3">
+                            {field.value &&
+                              field.value.split("/").map((number, index) => {
+                                return (
+                                  <div key={index}>
+                                    <div
+                                      className={cn(
+                                        "flex gap-2",
+                                        pointPersonPhoneWatcher?.split("/")[
+                                          index
+                                        ] === " "
+                                          ? "hidden"
+                                          : "",
+                                      )}
+                                    >
+                                      <Input
+                                        defaultValue={number}
+                                        disabled={
+                                          pointPersonPhoneWatcher?.split("/")[
+                                            index
+                                          ] === " "
+                                        }
+                                        type="tel"
+                                        onChange={(e) => {
+                                          const newValue =
+                                            field.value!.split("/");
+                                          newValue.splice(
+                                            index,
+                                            1,
+                                            e.target.value,
+                                          );
+                                          form.setValue(
+                                            "pointPersonPhone",
+                                            newValue.join("/"),
+                                          );
+                                        }}
+                                        onBlur={(e) => {
+                                          if (
+                                            !isValidPhoneNumber(
+                                              e.target.value,
+                                              "KE",
+                                            ) &&
+                                            e.target.value !== ""
+                                          ) {
+                                            const errors = [
+                                              ...pointPersonPhoneErrors,
+                                            ];
+                                            errors.push(index);
+                                            setPointPersonPhoneErrors(errors);
+                                          }
+
+                                          if (
+                                            isValidPhoneNumber(
+                                              e.target.value,
+                                              "KE",
+                                            )
+                                          ) {
+                                            const matchIndex =
+                                              pointPersonPhoneErrors.findIndex(
+                                                (error) => error === index,
+                                              );
+                                            if (matchIndex !== -1) {
+                                              const errors = [
+                                                ...pointPersonPhoneErrors,
+                                              ];
+                                              errors.splice(matchIndex, 1);
+                                              setPointPersonPhoneErrors(errors);
+                                            }
+                                          }
+                                        }}
+                                      />
+                                      <Button
+                                        variant="ghost"
+                                        type="button"
+                                        className="flex items-center text-shamiri-light-red hover:bg-red-bg"
+                                        onClick={() => {
+                                          const newValue =
+                                            field.value?.split("/");
+                                          newValue?.splice(index, 1, " ");
+                                          form.setValue(
+                                            "pointPersonPhone",
+                                            newValue?.join("/") ?? "",
+                                          );
+                                        }}
+                                      >
+                                        <Icons.minusCircle className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                    {pointPersonPhoneErrors.includes(index) ? (
+                                      <div className="py-1">
+                                        <FormMessage>
+                                          Please enter a valid kenyan number
+                                        </FormMessage>
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                );
+                              })}
+                            <div className="flex gap-2">
+                              <Input
+                                onChange={(e) => {
+                                  setPointPersonPhone(e.target.value);
+                                  form.trigger("pointPersonPhone");
+                                }}
+                                onBlur={(e) => {
+                                  validatePhoneNumber(
+                                    "pointPersonPhone" as keyof typeof form.formState.defaultValues,
+                                    e.target.value,
+                                  );
+                                }}
+                                value={pointPersonPhone}
+                                name={field.name}
+                                type="tel"
+                              />
+                              <Button
+                                variant="ghost"
+                                type="button"
+                                className="flex items-center text-shamiri-new-blue"
+                                onClick={() => {
+                                  if (
+                                    isValidPhoneNumber(pointPersonPhone, "KE")
+                                  ) {
+                                    const newValue =
+                                      field.value + "/" + pointPersonPhone;
+                                    form.setValue(
+                                      "pointPersonPhone",
+                                      field.value !== undefined
+                                        ? newValue
+                                        : pointPersonPhone,
+                                    );
+                                    setPointPersonPhone("");
+                                  } else {
+                                    form.setError("pointPersonPhone", {
+                                      message:
+                                        "Please enter a valid kenyan number",
+                                    });
+                                  }
+                                }}
+                              >
+                                <Icons.plusCircle className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
                         </FormControl>
-                        <FormMessage />
+                        {pointPersonPhone !== "" && <FormMessage />}
                       </FormItem>
                     )}
                   />
