@@ -1,5 +1,5 @@
-import { BatchUploadDownloadSupervisors } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/upload-csv";
 import SupervisorsDataTable from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
+import { BatchUploadDownloadSupervisors } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/upload-csv";
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 
@@ -22,7 +22,7 @@ export default async function SupervisorsPage({
 
   return (
     <>
-     <SupervisorsDataTable supervisors={supervisors} />
+      <SupervisorsDataTable supervisors={supervisors} />
 
       {coordinator?.assignedHubId &&
         coordinator.implementerId &&
@@ -36,5 +36,4 @@ export default async function SupervisorsPage({
         )}
     </>
   );
-
 }
