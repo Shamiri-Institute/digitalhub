@@ -27,8 +27,11 @@ export async function fetchSchoolData(hubId: string) {
   });
 }
 
-export async function revalidatePageAction(pathname: string) {
-  revalidatePath(pathname);
+export async function revalidatePageAction(
+  pathname: string,
+  mode?: "layout" | "page",
+) {
+  revalidatePath(pathname, mode);
 }
 
 export async function fetchSessionAttendanceData(hubId: string) {
