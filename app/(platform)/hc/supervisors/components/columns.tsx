@@ -58,7 +58,6 @@ export const columns: ColumnDef<SupervisorsData>[] = [
     header: "Name",
     id: "Name",
   },
-
   {
     header: "Assigned school",
     cell: ({ row }) => {
@@ -129,6 +128,16 @@ export const columns: ColumnDef<SupervisorsData>[] = [
     header: "Gender",
     id: "Gender",
     accessorKey: "gender",
+  },
+  {
+    header: "County",
+    id: "county",
+    accessorKey: "county",
+  },
+  {
+    header: "Sub-county",
+    id: "subCounty",
+    accessorKey: "subCounty",
   },
   {
     id: "button",
