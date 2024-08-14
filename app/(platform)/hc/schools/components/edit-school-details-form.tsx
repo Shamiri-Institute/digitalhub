@@ -152,7 +152,6 @@ export default function EditSchoolDetailsForm() {
   };
 
   const validateMultiplePhoneNumbers = (list: string[]) => {
-    console.log(list);
     list.forEach((phoneNumber) => {
       const check = isValidPhoneNumber(phoneNumber);
       if (!check) {
@@ -526,7 +525,6 @@ export default function EditSchoolDetailsForm() {
                                   form.trigger("pointPersonPhone");
                                 }}
                                 onBlur={(e) => {
-                                  console.log(pointPersonPhoneWatcher);
                                   validatePhoneNumber(
                                     "pointPersonPhone" as keyof typeof form.formState.defaultValues,
                                     e.target.value,

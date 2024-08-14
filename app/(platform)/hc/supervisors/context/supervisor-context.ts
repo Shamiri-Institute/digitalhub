@@ -2,6 +2,8 @@ import { SupervisorsData } from "#/app/(platform)/hc/supervisors/components/colu
 import { createContext, Dispatch, SetStateAction } from "react";
 
 type SupervisorContextData = {
+  editDialog: boolean;
+  setEditDialog: Dispatch<SetStateAction<boolean>>;
   dropoutDialog: boolean;
   setDropoutDialog: Dispatch<SetStateAction<boolean>>;
   undropDialog: boolean;
@@ -11,6 +13,8 @@ type SupervisorContextData = {
 };
 
 export const SupervisorContext = createContext<SupervisorContextData>({
+  editDialog: false,
+  setEditDialog: () => {},
   dropoutDialog: false,
   setDropoutDialog: () => {},
   undropDialog: false,
