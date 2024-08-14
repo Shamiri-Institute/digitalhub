@@ -62,6 +62,9 @@ export const EditSchoolSchema = z.object({
     .string({
       required_error: "Please enter the school's email.",
     })
+    .email({
+      message: "Please enter a valid email.",
+    })
     .optional(),
   schoolCounty: z
     .enum([counties[0]!, ...counties.slice(1)], {
@@ -99,7 +102,9 @@ export const EditSchoolSchema = z.object({
     .optional(),
   pointPersonEmail: z
     .string({ required_error: "Please enter the point person's email" })
-    .email()
+    .email({
+      message: "Please enter a valid email.",
+    })
     .optional(),
   pointPersonPhone: z
     .string({
@@ -134,6 +139,66 @@ export const EditSchoolSchema = z.object({
     })
     .refine((val) => isValidPhoneNumber(val, "KE"), {
       message: "Please enter a valid kenyan phone number",
+    })
+    .optional(),
+});
+
+export const EditSupervisorSchema = z.object({
+  supervisorName: z
+    .string({ required_error: "Please enter the supervisor's name" })
+    .optional(),
+  supervisorId: stringValidation("SupervisorId is required"),
+  idNumber: z
+    .string({ required_error: "Please enter the supervisor's ID number" })
+    .optional(),
+  cellNumber: z
+    .string({ required_error: "Please enter the supervisor's phone number" })
+    .refine((val) => isValidPhoneNumber(val, "KE"), {
+      message: "Please enter a valid kenyan phone number",
+    })
+    .optional(),
+  mpesaNumber: z
+    .string({ required_error: "Please enter the supervisor's m-pesa number" })
+    .refine((val) => isValidPhoneNumber(val, "KE"), {
+      message: "Please enter a valid kenyan phone number",
+    })
+    .optional(),
+  supervisorEmail: z
+    .string({
+      required_error: "Please enter the school's email.",
+    })
+    .email({
+      message: "Please enter a valid email.",
+    })
+    .optional(),
+  personalEmail: z
+    .string({
+      required_error: "Please enter the school's email.",
+    })
+    .email({
+      message: "Please enter a valid email.",
+    })
+    .optional(),
+  county: z
+    .enum([counties[0]!, ...counties.slice(1)], {
+      errorMap: (issue, ctx) => ({ message: "Please pick a valid option" }),
+    })
+    .optional(),
+  subCounty: z
+    .string({
+      invalid_type_error: "Please pick a valid sub county.",
+      description: "Pick a county first",
+    })
+    .optional(),
+  gender: z
+    .string({ required_error: "Please enter the supervisor's gender" })
+    .optional(),
+  mpesaName: z
+    .string({ required_error: "Please enter the supervisor's m-pesa number" })
+    .optional(),
+  dateOfBirth: z.coerce
+    .date({
+      required_error: "Please select a date of birth",
     })
     .optional(),
 });

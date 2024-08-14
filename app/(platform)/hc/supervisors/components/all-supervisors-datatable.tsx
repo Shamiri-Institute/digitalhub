@@ -7,6 +7,10 @@ import {
   SupervisorsData,
 } from "#/app/(platform)/hc/supervisors/components/columns";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
+import {
+  default as EditSupervisorDetails,
+  default as EditSupervisorDetailsForm,
+} from "#/app/(platform)/hc/supervisors/components/edit-supervisor-details-form";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
 import { Icons } from "#/components/icons";
@@ -76,6 +80,7 @@ export default function AllSupervisorsDataTable({
         rowSelectionDescription={"supervisors"}
         onRowSelectionChange={setSelectedRows as () => {}}
       />
+      <EditSupervisorDetails />
       <DropoutSupervisor
         supervisorId={
           context.supervisor !== null ? context.supervisor.id : undefined
@@ -122,6 +127,7 @@ export default function AllSupervisorsDataTable({
           </div>
         </DialogAlertWidget>
       </UndropSupervisor>
+      <EditSupervisorDetailsForm />
     </div>
   );
 }
@@ -156,6 +162,9 @@ export function AllSupervisorsDataTableMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+          onClick={() => {
+            context.setEditDialog(true);
+          }}
         >
           Edit supervisor information
         </DropdownMenuItem>
