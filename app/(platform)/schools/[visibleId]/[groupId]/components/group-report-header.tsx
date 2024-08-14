@@ -25,13 +25,11 @@ export const GroupReportHeader = ({
   groupName: string;
 }) => {
   const sessionRatingOptions = [
-    { sessionLabel: "All Sessions", sessionType: "all" },
-    // todo: uncomment this for other sessions - rn we only show all sessions rating cc @WendyMbone
-    // { sessionLabel: "Pre session", sessionType: "s0" },
-    // { sessionLabel: "Session 01", sessionType: "s1" },
-    // { sessionLabel: "Session 02", sessionType: "s2" },
-    // { sessionLabel: "Session 03", sessionType: "s3" },
-    // { sessionLabel: "Session 04", sessionType: "s4" },
+    { sessionLabel: "Pre session", sessionType: "s0" },
+    { sessionLabel: "Session 01", sessionType: "s1" },
+    { sessionLabel: "Session 02", sessionType: "s2" },
+    { sessionLabel: "Session 03", sessionType: "s3" },
+    { sessionLabel: "Session 04", sessionType: "s4" },
   ];
 
   return (
