@@ -1,7 +1,7 @@
 "use server";
 
 import {
-  DropoutSupervisorSchema,
+  EditSupervisorSchema,
   MarkSupervisorAttendanceSchema,
 } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
@@ -24,7 +24,7 @@ export async function dropoutSupervisor(
   try {
     await checkAuth();
 
-    const data = DropoutSupervisorSchema.parse({ supervisorId, dropoutReason });
+    const data = EditSupervisorSchema.parse({ supervisorId, dropoutReason });
     const result = await db.supervisor.update({
       data: {
         // TODO: add columns for drop-out details. Confirm with @Wendy
@@ -196,6 +196,60 @@ export async function markBatchSupervisorAttendance(
     console.error(error);
     return {
       error: "Something went wrong while updating supervisor attendance",
+    };
+  }
+}
+
+export async function updateSupervisorDetails(
+  data: z.infer<typeof EditSupervisorSchema>,
+) {
+  try {
+    const authedCoordinator = await currentHubCoordinator();
+
+    if (!authedCoordinator) {
+      throw new Error("User not authorised to perform this function");
+    }
+
+    const {
+      supervisorId,
+      supervisorEmail,
+      supervisorName,
+      county,
+      subCounty,
+      cellNumber,
+      mpesaName,
+      mpesaNumber,
+      gender,
+      idNumber,
+    } = EditSupervisorSchema.parse(data);
+
+    await db.supervisor.update({
+      where: {
+        id: supervisorId,
+      },
+      data: {
+        supervisorName,
+        supervisorEmail,
+        county,
+        subCounty,
+        cellNumber,
+        mpesaName,
+        mpesaNumber,
+        gender,
+        idNumber,
+      },
+    });
+    return {
+      success: true,
+      message: `Successfully updated details for ${supervisorName}`,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ??
+        "Sorry, could not update supervisor details.",
     };
   }
 }

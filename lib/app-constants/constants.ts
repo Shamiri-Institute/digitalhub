@@ -151,11 +151,11 @@ export const KENYAN_COUNTIES = [
     name: "Kajiado",
     code: 34,
     sub_counties: [
-      "Isinya.",
-      "Kajiado Central.",
-      "Kajiado North.",
-      "Loitokitok.",
-      "Mashuuru.",
+      "Isinya",
+      "Kajiado Central",
+      "Kajiado North",
+      "Loitokitok",
+      "Mashuuru",
     ],
   },
   {

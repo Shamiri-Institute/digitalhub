@@ -1,5 +1,5 @@
-import { undropSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import { undropSupervisor } from "#/app/(platform)/hc/supervisors/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,

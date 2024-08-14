@@ -1,6 +1,6 @@
 import { DropoutSupervisorSchema } from "#/app/(platform)/hc/schemas";
-import { dropoutSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import { dropoutSupervisor } from "#/app/(platform)/hc/supervisors/actions";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import {
