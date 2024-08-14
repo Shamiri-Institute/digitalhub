@@ -1,3 +1,5 @@
+"use client";
+
 import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns";
 import { createContext, Dispatch, SetStateAction } from "react";
 

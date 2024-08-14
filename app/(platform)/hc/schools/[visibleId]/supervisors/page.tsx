@@ -1,7 +1,6 @@
+import SupervisorsDataTable from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
-import DataTable from "../../../components/data-table";
-import { columns } from "./components/columns";
 
 export default async function SupervisorsPage({
   params: { visibleId },
@@ -19,15 +18,5 @@ export default async function SupervisorsPage({
     },
   });
 
-  return (
-    <DataTable
-      data={supervisors}
-      columns={columns}
-      className={"data-table data-table-action mt-4"}
-      emptyStateMessage="No supervisors found for this hub"
-      columnVisibilityState={{
-        Gender: false,
-      }}
-    />
-  );
+  return <SupervisorsDataTable supervisors={supervisors} />;
 }

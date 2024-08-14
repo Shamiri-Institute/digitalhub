@@ -1,22 +1,25 @@
 "use client";
 import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function SchoolInfoProvider({
   children,
   school,
 }: {
   children: React.ReactNode;
-  school?: SchoolsTableData;
+  school?: SchoolsTableData | null;
 }) {
   const [editDialog, setEditDialog] = useState(false);
   const [pointSupervisorDialog, setPointSupervisorDialog] = useState(false);
   const [schoolDropOutDialog, setSchoolDropOutDialog] = useState(false);
   const [undoDropOutDialog, setUndoDropOutDialog] = useState(false);
-  const [_school, setSchool] = useState<SchoolsTableData | null>(
-    school ?? null,
-  );
+  const [_school, setSchool] = useState(school ?? null);
+
+  useEffect(() => {
+    setSchool(school ?? null);
+  }, [school]);
+
   return (
     <SchoolInfoContext.Provider
       value={{
