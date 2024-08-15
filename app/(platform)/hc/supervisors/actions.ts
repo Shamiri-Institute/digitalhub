@@ -1,6 +1,7 @@
 "use server";
 
 import {
+  AddNewSupervisorSchema,
   EditSupervisorSchema,
   MarkSupervisorAttendanceSchema,
   WeeklyHubTeamMeetingSchema,
@@ -8,7 +9,30 @@ import {
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
 
+import { objectId } from "#/lib/crypto";
 import { z } from "zod";
+
+async function generateSupervisorVisibleId() {
+  const hc = await currentHubCoordinator();
+
+  if (!hc) {
+    throw new Error("The session has not been authenticated");
+  }
+
+  if (!hc.assignedHub) {
+    throw new Error("Hub coordinator has no assigned hub");
+  }
+
+  const supervisorCount = await db.supervisor.count({
+    where: {
+      hubId: hc.assignedHubId,
+    },
+  });
+
+  const hubPrefix = hc.assignedHub.visibleId.split("_")[0];
+  const supervisorIndex: number = supervisorCount + 1;
+  return "SPV" + hubPrefix + supervisorIndex;
+}
 
 export async function submitWeeklyTeamMeeting(
   data: z.infer<typeof WeeklyHubTeamMeetingSchema>,
@@ -147,9 +171,7 @@ export async function markSupervisorAttendance(
   id: string,
   data: z.infer<typeof MarkSupervisorAttendanceSchema>,
 ) {
-  const user = getCurrentUser();
-  if (user === null)
-    return { success: false, message: "Unauthenticated user." };
+  await checkAuth();
 
   const parsedData = MarkSupervisorAttendanceSchema.parse(data);
   const attended =
@@ -197,9 +219,8 @@ export async function markBatchSupervisorAttendance(
   supervisors: string[],
   attended: boolean | null,
 ) {
-  const user = getCurrentUser();
-  if (user === null)
-    return { success: false, message: "Unauthenticated user." };
+  await checkAuth();
+
   try {
     await db.supervisorAttendance.updateMany({
       where: {
@@ -229,11 +250,7 @@ export async function updateSupervisorDetails(
   data: z.infer<typeof EditSupervisorSchema>,
 ) {
   try {
-    const authedCoordinator = await currentHubCoordinator();
-
-    if (!authedCoordinator) {
-      throw new Error("User not authorised to perform this function");
-    }
+    await checkAuth();
 
     const {
       supervisorId,
@@ -275,6 +292,46 @@ export async function updateSupervisorDetails(
       message:
         (err as Error)?.message ??
         "Sorry, could not update supervisor details.",
+    };
+  }
+}
+
+export async function createNewSupervisor(
+  data: z.infer<typeof AddNewSupervisorSchema>,
+) {
+  try {
+    const hc = await currentHubCoordinator();
+    const user = await getCurrentUser();
+
+    if (!hc || !user) {
+      throw new Error("The session has not been authenticated");
+    }
+
+    if (!hc.assignedHub) {
+      throw new Error("Hub coordinator has no assigned hub");
+    }
+
+    const parsedData = AddNewSupervisorSchema.parse(data);
+
+    const result = await db.supervisor.create({
+      data: {
+        ...parsedData,
+        id: objectId("sup"),
+        visibleId: await generateSupervisorVisibleId(),
+        implementerId: hc.assignedHub.implementerId,
+        hubId: hc.assignedHub.id,
+      },
+    });
+    return {
+      success: true,
+      message: `Successfully added ${result.supervisorName}`,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ?? "Sorry, could add new supervisor details.",
     };
   }
 }

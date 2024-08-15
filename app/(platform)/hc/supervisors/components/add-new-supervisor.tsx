@@ -1,9 +1,7 @@
 "use client";
 
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
-import { updateSupervisorDetails } from "#/app/(platform)/hc/supervisors/actions";
-import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
+import { createNewSupervisor } from "#/app/(platform)/hc/supervisors/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -12,6 +10,7 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogTrigger,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -37,71 +36,49 @@ import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
-import { isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { usePathname } from "next/navigation";
-import { useContext, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { EditSupervisorSchema } from "../../schemas";
+import { AddNewSupervisorSchema } from "../../schemas";
 
-export default function EditSupervisorDetails() {
-  const context = useContext(SupervisorContext);
+export default function AddNewSupervisor() {
   const counties = KENYAN_COUNTIES.map((county) => county.name);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   const pathname = usePathname();
-  const form = useForm<z.infer<typeof EditSupervisorSchema>>({
-    resolver: zodResolver(EditSupervisorSchema),
+
+  const form = useForm<z.infer<typeof AddNewSupervisorSchema>>({
+    resolver: zodResolver(AddNewSupervisorSchema),
   });
 
   const countyWatcher = form.watch("county");
 
   useEffect(() => {
-    if (form.formState.dirtyFields.county) {
-      form.setValue("subCounty", "");
-    }
-  }, [countyWatcher, form]);
+    form.setValue("subCounty", "");
+  }, [countyWatcher]);
 
   useEffect(() => {
-    if (context.editDialog) {
-      const defaultValues = {
-        supervisorId: context.supervisor?.id ?? undefined,
-        supervisorName: context.supervisor?.supervisorName ?? undefined,
-        personalEmail: context.supervisor?.personalEmail ?? undefined,
-        cellNumber: context.supervisor?.cellNumber ?? undefined,
-        county: context.supervisor?.county ?? undefined,
-        subCounty: context.supervisor?.subCounty ?? undefined,
-        idNumber: context.supervisor?.idNumber ?? undefined,
-        gender: context.supervisor?.gender ?? undefined,
-        dateOfBirth: context.supervisor?.dateOfBirth ?? undefined,
-        mpesaNumber: context.supervisor?.mpesaNumber ?? undefined,
-        mpesaName: context.supervisor?.mpesaName ?? undefined,
-      };
+    form.reset();
+  }, [isOpen]);
 
-      // TODO: fix TS issue with assigning string to enum type
-      // @ts-ignore
-      form.reset(defaultValues);
-    }
-  }, [context.editDialog, context.supervisor, form]);
-
-  const onSubmit = async (data: z.infer<typeof EditSupervisorSchema>) => {
-    if (context.supervisor) {
-      const response = await updateSupervisorDetails(data);
-      if (!response.success) {
-        toast({
-          variant: "destructive",
-          title: "Submission error",
-          description:
-            response.message ??
-            "Something went wrong during submission, please try again",
-        });
-        return;
-      }
-
-      revalidatePageAction(pathname);
+  const onSubmit = async (data: z.infer<typeof AddNewSupervisorSchema>) => {
+    const response = await createNewSupervisor(data);
+    if (!response.success) {
       toast({
-        description: response.message,
+        description:
+          response.message ??
+          "Something went wrong during submission, please try again",
       });
-      context.setEditDialog(false);
+      return;
     }
+
+    revalidatePageAction(pathname);
+    toast({
+      description: response.message,
+    });
+    form.reset();
+    setIsOpen(false);
   };
 
   const validatePhoneNumber = (
@@ -118,28 +95,25 @@ export default function EditSupervisorDetails() {
   };
 
   return (
-    <Dialog open={context.editDialog} onOpenChange={context.setEditDialog}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="brand"
+          onClick={() => {
+            setIsOpen(true);
+          }}
+          className="flex gap-2"
+        >
+          <Icons.plusCircle className="h-4 w-4" />
+          Add New Supervisor
+        </Button>
+      </DialogTrigger>
       <DialogContent className="w-2/5 max-w-none">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <span className="text-xl">Edit supervisor information</span>
+              <span className="text-xl">Add new supervisor</span>
             </DialogHeader>
-            <div className="pb-2 pt-4">
-              <DialogAlertWidget separator={true}>
-                <div className="flex items-center gap-2">
-                  <span>{context.supervisor?.supervisorName}</span>
-                  <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
-                  <span>
-                    {context.supervisor?.cellNumber &&
-                      parsePhoneNumber(
-                        context.supervisor?.cellNumber,
-                        "KE",
-                      ).formatNational()}
-                  </span>
-                </div>
-              </DialogAlertWidget>
-            </div>
             <div className="space-y-6">
               <div className="flex flex-col">
                 <div className="col-span-2 py-2">
@@ -420,21 +394,6 @@ export default function EditSupervisorDetails() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="supervisorId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <Input
-                          id="supervisorId"
-                          name="supervisorId"
-                          type="hidden"
-                          value={field.value}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
               </div>
             </div>
@@ -445,7 +404,7 @@ export default function EditSupervisorDetails() {
                 type="button"
                 className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
                 onClick={() => {
-                  context.setEditDialog(false);
+                  setIsOpen(false);
                 }}
               >
                 Cancel
@@ -456,7 +415,7 @@ export default function EditSupervisorDetails() {
                 disabled={form.formState.isSubmitting}
                 loading={form.formState.isSubmitting}
               >
-                Update & Save
+                Save
               </Button>
             </DialogFooter>
           </form>
