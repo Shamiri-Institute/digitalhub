@@ -144,63 +144,48 @@ export const EditSchoolSchema = z.object({
 });
 
 export const EditSupervisorSchema = z.object({
-  supervisorName: z
-    .string({ required_error: "Please enter the supervisor's name" })
-    .optional(),
+  supervisorName: z.string({
+    required_error: "Please enter the supervisor's name",
+  }),
   supervisorId: stringValidation("SupervisorId is required"),
-  idNumber: z
-    .string({ required_error: "Please enter the supervisor's ID number" })
-    .optional(),
+  idNumber: z.string({
+    required_error: "Please enter the supervisor's ID number",
+  }),
   cellNumber: z
     .string({ required_error: "Please enter the supervisor's phone number" })
     .refine((val) => isValidPhoneNumber(val, "KE"), {
       message: "Please enter a valid kenyan phone number",
-    })
-    .optional(),
+    }),
   mpesaNumber: z
     .string({ required_error: "Please enter the supervisor's m-pesa number" })
     .refine((val) => isValidPhoneNumber(val, "KE"), {
       message: "Please enter a valid kenyan phone number",
-    })
-    .optional(),
-  supervisorEmail: z
-    .string({
-      required_error: "Please enter the school's email.",
-    })
-    .email({
-      message: "Please enter a valid email.",
-    })
-    .optional(),
+    }),
   personalEmail: z
     .string({
-      required_error: "Please enter the school's email.",
+      required_error: "Please enter the supervisor's email.",
     })
     .email({
       message: "Please enter a valid email.",
-    })
-    .optional(),
-  county: z
-    .enum([counties[0]!, ...counties.slice(1)], {
-      errorMap: (issue, ctx) => ({ message: "Please pick a valid option" }),
-    })
-    .optional(),
+    }),
+  county: z.enum([counties[0]!, ...counties.slice(1)], {
+    errorMap: (issue, ctx) => ({ message: "Please pick a valid option" }),
+  }),
   subCounty: z
     .string({
       invalid_type_error: "Please pick a valid sub county.",
-      description: "Pick a county first",
+      required_error: "Please pick a sub-county",
     })
-    .optional(),
-  gender: z
-    .string({ required_error: "Please enter the supervisor's gender" })
-    .optional(),
-  mpesaName: z
-    .string({ required_error: "Please enter the supervisor's m-pesa number" })
-    .optional(),
-  dateOfBirth: z.coerce
-    .date({
-      required_error: "Please select a date of birth",
-    })
-    .optional(),
+    .refine((val) => val !== "", {
+      message: "Please pick a sub-county",
+    }),
+  gender: z.string({ required_error: "Please enter the supervisor's gender" }),
+  mpesaName: z.string({
+    required_error: "Please enter the supervisor's m-pesa number",
+  }),
+  dateOfBirth: z.coerce.date({
+    required_error: "Please select a date of birth",
+  }),
 });
 
 export const AssignPointSupervisorSchema = z.object({
