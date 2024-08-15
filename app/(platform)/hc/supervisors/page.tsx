@@ -1,5 +1,6 @@
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 
+import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";
 import MainSupervisorsDataTable from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
 import SupervisorProvider from "#/app/(platform)/hc/supervisors/components/supervisor-provider";
 import WeeklyHubTeamMeetingForm from "#/app/(platform)/hc/supervisors/components/weekly-hub-team-meeting";
@@ -40,11 +41,11 @@ export default async function SupervisorsPage() {
         <div className="flex items-center justify-between">
           <div className="flex gap-3">{/* search filters go here */}</div>
           <div className="flex items-center gap-3">
+            <AddNewSupervisor />
             <WeeklyHubTeamMeetingForm
               hubCoordinatorId={coordinator?.id}
               hubId={coordinator?.assignedHubId}
             />
-            {/* dispaly options button */}
           </div>
         </div>
         {/* charts goes here */}

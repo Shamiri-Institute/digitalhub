@@ -106,10 +106,10 @@ export default function WeeklyHubReportButtonAndForm({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <DialogTrigger>
-          <div className="hover:bg-blue-dark flex items-center gap-2 rounded-md bg-blue-base px-3 py-2 text-white">
+        <DialogTrigger asChild>
+          <Button variant="brand" className="">
             <span className="text-white">Weekly team meeting</span>
-          </div>
+          </Button>
         </DialogTrigger>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
