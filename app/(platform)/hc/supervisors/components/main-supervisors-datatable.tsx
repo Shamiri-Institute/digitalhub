@@ -28,7 +28,7 @@ import { Row } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
 import { useContext, useState } from "react";
 
-export default function AllSupervisorsDataTable({
+export default function MainSupervisorsDataTable({
   supervisors,
 }: {
   supervisors: Prisma.SupervisorGetPayload<{
