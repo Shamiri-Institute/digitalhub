@@ -1,6 +1,6 @@
 "use client";
 
-import { AllSupervisorsDataTableMenu } from "#/app/(platform)/hc/supervisors/components/all-supervisors-datatable";
+import { AllSupervisorsDataTableMenu } from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import {

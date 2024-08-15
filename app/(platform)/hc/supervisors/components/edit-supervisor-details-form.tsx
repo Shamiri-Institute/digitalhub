@@ -55,7 +55,7 @@ export default function EditSupervisorDetails() {
   const countyWatcher = form.watch("county");
 
   useEffect(() => {
-    form.setValue("subCounty", undefined);
+    form.setValue("subCounty", "");
   }, [countyWatcher]);
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function EditSupervisorDetails() {
       const defaultValues = {
         supervisorId: context.supervisor?.id ?? undefined,
         supervisorName: context.supervisor?.supervisorName ?? undefined,
-        supervisorEmail: context.supervisor?.supervisorEmail ?? undefined,
+        personalEmail: context.supervisor?.personalEmail ?? undefined,
         cellNumber: context.supervisor?.cellNumber ?? undefined,
         county: context.supervisor?.county ?? undefined,
         subCounty: context.supervisor?.subCounty ?? undefined,
@@ -152,7 +152,10 @@ export default function EditSupervisorDetails() {
                     name="supervisorName"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
-                        <FormLabel>Full name</FormLabel>
+                        <FormLabel>
+                          Full name{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -165,7 +168,10 @@ export default function EditSupervisorDetails() {
                     name="cellNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone number</FormLabel>
+                        <FormLabel>
+                          Phone number{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
@@ -184,10 +190,13 @@ export default function EditSupervisorDetails() {
                   />
                   <FormField
                     control={form.control}
-                    name="supervisorEmail"
+                    name="personalEmail"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email address</FormLabel>
+                        <FormLabel>
+                          Email address{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
                         </FormControl>
@@ -200,7 +209,10 @@ export default function EditSupervisorDetails() {
                     name="idNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>National ID</FormLabel>
+                        <FormLabel>
+                          National ID{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
                         </FormControl>
@@ -213,7 +225,10 @@ export default function EditSupervisorDetails() {
                     name="gender"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Gender</FormLabel>
+                        <FormLabel>
+                          Gender{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -241,7 +256,10 @@ export default function EditSupervisorDetails() {
                     name="dateOfBirth"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Date of birth</FormLabel>
+                        <FormLabel>
+                          Date of birth{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
@@ -277,7 +295,10 @@ export default function EditSupervisorDetails() {
                     name="county"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>County</FormLabel>
+                        <FormLabel>
+                          County{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -309,7 +330,10 @@ export default function EditSupervisorDetails() {
                     name="subCounty"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Sub-county</FormLabel>
+                        <FormLabel>
+                          Sub-county{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -358,7 +382,10 @@ export default function EditSupervisorDetails() {
                     name="mpesaName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full name</FormLabel>
+                        <FormLabel>
+                          Full name{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
                         </FormControl>
@@ -371,7 +398,10 @@ export default function EditSupervisorDetails() {
                     name="mpesaNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>M-Pesa number</FormLabel>
+                        <FormLabel>
+                          M-Pesa number{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
