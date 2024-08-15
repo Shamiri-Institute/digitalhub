@@ -143,11 +143,78 @@ export const EditSchoolSchema = z.object({
     .optional(),
 });
 
-export const EditSupervisorSchema = z.object({
+export const EditSupervisorSchema = z
+  .object({
+    supervisorName: z.string({
+      required_error: "Please enter the supervisor's name",
+    }),
+    supervisorId: stringValidation("SupervisorId is required"),
+    idNumber: z.string({
+      required_error: "Please enter the supervisor's ID number",
+    }),
+    cellNumber: z
+      .string({ required_error: "Please enter the supervisor's phone number" })
+      .refine((val) => isValidPhoneNumber(val, "KE"), {
+        message: "Please enter a valid kenyan phone number",
+      }),
+    mpesaNumber: z
+      .string({ required_error: "Please enter the supervisor's m-pesa number" })
+      .refine((val) => isValidPhoneNumber(val, "KE"), {
+        message: "Please enter a valid kenyan phone number",
+      }),
+    personalEmail: z
+      .string({
+        required_error: "Please enter the supervisor's email.",
+      })
+      .email({
+        message: "Please enter a valid email.",
+      }),
+    county: z.enum([counties[0]!, ...counties.slice(1)], {
+      errorMap: (issue, ctx) => ({ message: "Please pick a valid option" }),
+    }),
+    subCounty: z
+      .string({
+        invalid_type_error: "Please pick a valid sub county.",
+        required_error: "Please pick a sub-county",
+      })
+      .refine((val) => val !== "", {
+        message: "Please pick a sub-county",
+      }),
+    gender: z.string({
+      required_error: "Please enter the supervisor's gender",
+    }),
+    mpesaName: z.string({
+      required_error: "Please enter the supervisor's m-pesa number",
+    }),
+    dateOfBirth: z.coerce.date({
+      required_error: "Please select a date of birth",
+    }),
+  })
+  .superRefine((val, ctx) => {
+    const selectedCounty = KENYAN_COUNTIES.find(
+      (county) => county.name === val.county,
+    );
+    if (
+      selectedCounty &&
+      !Array.from(selectedCounty.sub_counties).includes(
+        val.subCounty as keyof (typeof selectedCounty.sub_counties)[0],
+      )
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${val.subCounty} is not a valid option.`,
+        fatal: true,
+        path: ["subCounty"],
+      });
+
+      return z.NEVER;
+    }
+  });
+
+export const AddNewSupervisorSchema = z.object({
   supervisorName: z.string({
     required_error: "Please enter the supervisor's name",
   }),
-  supervisorId: stringValidation("SupervisorId is required"),
   idNumber: z.string({
     required_error: "Please enter the supervisor's ID number",
   }),
