@@ -57,7 +57,7 @@ export default async function SchoolStudentsPage({
   );
 
   const students = await db.student.findMany({
-    where: { schoolId: school.id, fellowId: fellow.id },
+    where: { schoolId: school.id },
     include: {
       school: true,
       fellow: {
@@ -74,6 +74,8 @@ export default async function SchoolStudentsPage({
     },
     orderBy: { visibleId: "asc" },
   });
+
+  console.log({ students });
 
   const fellowGroupInfo = fellowGroup
     ? { groupId: fellowGroup.id, groupName: fellowGroup.groupName }
