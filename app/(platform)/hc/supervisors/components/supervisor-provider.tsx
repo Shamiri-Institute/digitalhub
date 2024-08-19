@@ -11,6 +11,7 @@ export default function SupervisorProvider({
   const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
   const [editDialog, setEditDialog] = useState<boolean>(false);
   const [undropDialog, setUndropDialog] = useState<boolean>(false);
+  const [complaintDialog, setComplaintDialog] = useState<boolean>(false);
   const [supervisor, setSupervisor] = useState<SupervisorsData | null>(null);
 
   return (
@@ -18,6 +19,8 @@ export default function SupervisorProvider({
       value={{
         editDialog,
         setEditDialog,
+        complaintDialog,
+        setComplaintDialog,
         dropoutDialog,
         setDropoutDialog,
         undropDialog,
