@@ -11,6 +11,7 @@ import {
   default as EditSupervisorDetails,
   default as EditSupervisorDetailsForm,
 } from "#/app/(platform)/hc/supervisors/components/edit-supervisor-details-form";
+import SubmitComplaint from "#/app/(platform)/hc/supervisors/components/submit-complaint";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
 import { Icons } from "#/components/icons";
@@ -40,6 +41,24 @@ export default function MainSupervisorsDataTable({
 }) {
   const [selectedRows, setSelectedRows] = useState<SupervisorsData[]>([]);
   const context = useContext(SupervisorContext);
+
+  const renderDialogAlert = () => {
+    return (
+      <DialogAlertWidget>
+        <div className="flex items-center gap-2">
+          <span>{context.supervisor?.supervisorName}</span>
+          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+          <span>
+            {context.supervisor?.cellNumber &&
+              parsePhoneNumber(
+                context.supervisor?.cellNumber,
+                "KE",
+              ).formatNational()}
+          </span>
+        </div>
+      </DialogAlertWidget>
+    );
+  };
 
   const renderTableActions = () => {
     return (
@@ -88,21 +107,7 @@ export default function MainSupervisorsDataTable({
         setDropoutDialog={context.setDropoutDialog}
         dropoutDialog={context.dropoutDialog}
       >
-        <DialogAlertWidget>
-          <div className="flex items-center gap-2">
-            <span>{context.supervisor?.supervisorName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
-            <span>
-              {context.supervisor?.cellNumber &&
-                parsePhoneNumber(
-                  context.supervisor?.cellNumber,
-                  "KE",
-                ).formatNational()}
-            </span>
-          </div>
-        </DialogAlertWidget>
+        {renderDialogAlert()}
       </DropoutSupervisor>
       <UndropSupervisor
         supervisorId={
@@ -111,22 +116,17 @@ export default function MainSupervisorsDataTable({
         setUndropDialog={context.setUndropDialog}
         undropDialog={context.undropDialog}
       >
-        <DialogAlertWidget>
-          <div className="flex items-center gap-2">
-            <span>{context.supervisor?.supervisorName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
-            <span>
-              {context.supervisor?.cellNumber &&
-                parsePhoneNumber(
-                  context.supervisor?.cellNumber,
-                  "KE",
-                ).formatNational()}
-            </span>
-          </div>
-        </DialogAlertWidget>
+        {renderDialogAlert()}
       </UndropSupervisor>
+      <SubmitComplaint
+        supervisorId={
+          context.supervisor !== null ? context.supervisor.id : undefined
+        }
+        setIsOpen={context.setComplaintDialog}
+        isOpen={context.complaintDialog}
+      >
+        {renderDialogAlert()}
+      </SubmitComplaint>
       <EditSupervisorDetailsForm />
     </div>
   );
@@ -175,6 +175,9 @@ export function AllSupervisorsDataTableMenu({
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+          onClick={() => {
+            context.setComplaintDialog(true);
+          }}
         >
           Submit complaint
         </DropdownMenuItem>

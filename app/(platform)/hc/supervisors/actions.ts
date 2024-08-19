@@ -2,13 +2,16 @@
 
 import {
   AddNewSupervisorSchema,
+  DropoutSupervisorSchema,
   EditSupervisorSchema,
   MarkSupervisorAttendanceSchema,
+  SubmitComplaintSchema,
   WeeklyHubTeamMeetingSchema,
 } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
 
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { z } from "zod";
 
@@ -73,7 +76,7 @@ export async function dropoutSupervisor(
   try {
     await checkAuth();
 
-    const data = EditSupervisorSchema.parse({ supervisorId, dropoutReason });
+    const data = DropoutSupervisorSchema.parse({ supervisorId, dropoutReason });
     const result = await db.supervisor.update({
       data: {
         // TODO: add columns for drop-out details. Confirm with @Wendy
@@ -95,7 +98,7 @@ export async function dropoutSupervisor(
     console.error(e);
     return {
       success: false,
-      message: "Something went wrong while trying to drop out the school",
+      message: "Something went wrong while trying to drop out the supervisor",
     };
   }
 }
@@ -125,6 +128,43 @@ export async function undropSupervisor(supervisorId: string) {
     return {
       success: false,
       message: "Something went wrong while trying to drop out the school",
+    };
+  }
+}
+
+export async function submitSupervisorComplaint(
+  data: z.infer<typeof SubmitComplaintSchema>,
+) {
+  try {
+    const hubCoordinator = await currentHubCoordinator();
+    const user = await getCurrentUser();
+
+    if (!hubCoordinator || !user) {
+      throw new Error("The session has not been authenticated");
+    }
+
+    const parsedData = SubmitComplaintSchema.parse(data);
+    console.log(parsedData);
+    const result = await db.supervisorComplaints.create({
+      data: {
+        supervisorId: parsedData.supervisorId,
+        complaint: parsedData.complaint,
+        comments: parsedData.comments,
+        hubCoordinatorId: hubCoordinator.id,
+        projectId: CURRENT_PROJECT_ID,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Complaint submitted successfully.",
+      data: result,
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      success: false,
+      message: "Something went wrong while trying to submit a complaint",
     };
   }
 }
@@ -231,12 +271,13 @@ export async function markBatchSupervisorAttendance(
       },
       data: {
         attended,
+        absenceReason: null,
+        absenceComments: null,
       },
     });
     return {
       success: true,
       message: "Successfully marked supervisor attendance.",
-      // data: attendance,
     };
   } catch (error: unknown) {
     console.error(error);
