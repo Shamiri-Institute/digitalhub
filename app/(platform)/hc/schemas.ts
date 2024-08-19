@@ -12,25 +12,43 @@ import { z } from "zod";
 
 export const DropoutSchoolSchema = z.object({
   schoolId: stringValidation("Missing school ID"),
-  // @ts-ignore
-  dropoutReason: z.enum(SCHOOL_DROPOUT_REASONS, {
-    errorMap: (_issue, _ctx) => ({
-      message:
-        "Please select one of the supplied school dropout reason options",
-    }),
-  }),
+  dropoutReason: z.enum(
+    [SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)],
+    {
+      errorMap: (_issue, _ctx) => ({
+        message:
+          "Please select one of the supplied school dropout reason options",
+      }),
+    },
+  ),
 });
 
 export const DropoutSupervisorSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
   // TODO: Replace dropout reasons with supervisor specific options
-  // @ts-ignore
-  dropoutReason: z.enum(SCHOOL_DROPOUT_REASONS, {
-    errorMap: (_issue, _ctx) => ({
-      message:
-        "Please select one of the supplied supervisor dropout reason options",
-    }),
-  }),
+  dropoutReason: z.enum(
+    [SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)],
+    {
+      errorMap: (_issue, _ctx) => ({
+        message:
+          "Please select one of the supplied supervisor dropout reason options",
+      }),
+    },
+  ),
+});
+
+export const SubmitComplaintSchema = z.object({
+  supervisorId: stringValidation("Missing supervisor ID"),
+  comments: stringValidation().optional(),
+  // TODO: Replace with complaint types array
+  complaint: z.enum(
+    [SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)],
+    {
+      errorMap: (_issue, _ctx) => ({
+        message: "Please select a complaint",
+      }),
+    },
+  ),
 });
 
 export const WeeklyHubReportSchema = z.object({
@@ -277,30 +295,36 @@ export const RescheduleSessionSchema = z.object({
   sessionDuration: stringValidation("Please select the session's duration"),
 });
 
-export const MarkSupervisorAttendanceSchema = z.object({
-  supervisorId: z.string(),
-  attended: z
-    .enum(ATTENDANCE_STATUS, {
-      invalid_type_error: "Please select attendance.",
-    })
-    .optional(),
-  sessionId: z.string(),
-  absenceReason: z.string().optional(),
-  comments: z.string().optional(),
-});
-// TODO: Confirm if validation is required
-// .superRefine((val, ctx) => {
-//   if (val.attended === "missed" && val.absenceReason === undefined) {
-//     ctx.addIssue({
-//       code: z.ZodIssueCode.custom,
-//       message: "Please add a reason for absence",
-//       fatal: true,
-//       path: ["absenceReason"],
-//     });
-//
-//     return z.NEVER;
-//   }
-// });
+export const MarkSupervisorAttendanceSchema = z
+  .object({
+    supervisorId: z.string(),
+    attended: z
+      .enum(ATTENDANCE_STATUS, {
+        invalid_type_error: "Please select attendance.",
+      })
+      .optional(),
+    sessionId: z.string(),
+    absenceReason: z.string().optional(),
+    comments: z.string().optional(),
+  })
+  // TODO: Confirm if validation is required
+  .superRefine((val, ctx) => {
+    const ids = val.supervisorId.split(",");
+    if (
+      val.attended === "missed" &&
+      val.absenceReason === undefined &&
+      ids.length === 1
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please add a reason for absence",
+        fatal: true,
+        path: ["absenceReason"],
+      });
+
+      return z.NEVER;
+    }
+  });
 
 export const WeeklyHubTeamMeetingSchema = z.object({
   hubId: stringValidation("Missing hub ID"),
