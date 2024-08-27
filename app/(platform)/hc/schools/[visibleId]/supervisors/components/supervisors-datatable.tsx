@@ -181,28 +181,13 @@ export function SupervisorsDataTableMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-        >
-          Edit supervisor information
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
           onClick={() => {
             context.setAttendanceDialog && context.setAttendanceDialog(true);
           }}
         >
           Mark attendance
         </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-        >
-          Monthly supervisor evaluation
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-        >
-          Submit complaint
-        </DropdownMenuItem>
-        <DropdownMenuItem>Overall supervisor evaluation</DropdownMenuItem>
+        {/* TODO: Remove drop out option and refactor context*/}
         {supervisor.droppedOut === null || !supervisor.droppedOut ? (
           <DropdownMenuItem
             onClick={() => {

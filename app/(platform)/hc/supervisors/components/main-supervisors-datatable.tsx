@@ -7,10 +7,7 @@ import {
   SupervisorsData,
 } from "#/app/(platform)/hc/supervisors/components/columns";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
-import {
-  default as EditSupervisorDetails,
-  default as EditSupervisorDetailsForm,
-} from "#/app/(platform)/hc/supervisors/components/edit-supervisor-details-form";
+import { default as EditSupervisorDetails } from "#/app/(platform)/hc/supervisors/components/edit-supervisor-details-form";
 import MonthlySupervisorEvaluation from "#/app/(platform)/hc/supervisors/components/monthly-supervisor-evaluation";
 import SubmitComplaint from "#/app/(platform)/hc/supervisors/components/submit-complaint";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
@@ -147,7 +144,7 @@ export default function MainSupervisorsDataTable({
       >
         {renderDialogAlert()}
       </MonthlySupervisorEvaluation>
-      <EditSupervisorDetailsForm />
+      <EditSupervisorDetails />
     </div>
   );
 }
