@@ -11,6 +11,7 @@ import {
   default as EditSupervisorDetails,
   default as EditSupervisorDetailsForm,
 } from "#/app/(platform)/hc/supervisors/components/edit-supervisor-details-form";
+import MonthlySupervisorEvaluation from "#/app/(platform)/hc/supervisors/components/monthly-supervisor-evaluation";
 import SubmitComplaint from "#/app/(platform)/hc/supervisors/components/submit-complaint";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
@@ -36,6 +37,12 @@ export default function MainSupervisorsDataTable({
     include: {
       assignedSchools: true;
       fellows: true;
+      hub: {
+        include: {
+          project: true;
+        };
+      };
+      monthlySupervisorEvaluation: true;
     };
   }>[];
 }) {
@@ -86,12 +93,14 @@ export default function MainSupervisorsDataTable({
         columns={columns}
         className={"data-table data-table-action mt-4 bg-white"}
         emptyStateMessage="No supervisors found for this hub"
-        columnVisibilityState={
-          {
-            // checkbox: !schoolContext.school?.droppedOut ?? null,
-            // button: !schoolContext.school?.droppedOut ?? null,
-          }
-        }
+        columnVisibilityState={{
+          // checkbox: !schoolContext.school?.droppedOut ?? null,
+          // button: !schoolContext.school?.droppedOut ?? null,
+          Gender: false,
+          Status: false,
+          county: false,
+          subCounty: false,
+        }}
         renderTableActions={renderTableActions()}
         enableRowSelection={(row: Row<SupervisorsData>) =>
           row.original.droppedOut === null || !row.original.droppedOut
@@ -127,6 +136,17 @@ export default function MainSupervisorsDataTable({
       >
         {renderDialogAlert()}
       </SubmitComplaint>
+      <MonthlySupervisorEvaluation
+        supervisorId={
+          context.supervisor !== null ? context.supervisor.id : undefined
+        }
+        setIsOpen={context.setEvaluationDialog}
+        isOpen={context.evaluationDialog}
+        project={context.supervisor?.hub?.project ?? null}
+        evaluations={context.supervisor?.monthlySupervisorEvaluation ?? []}
+      >
+        {renderDialogAlert()}
+      </MonthlySupervisorEvaluation>
       <EditSupervisorDetailsForm />
     </div>
   );
@@ -170,6 +190,9 @@ export function AllSupervisorsDataTableMenu({
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+          onClick={() => {
+            context.setEvaluationDialog(true);
+          }}
         >
           Monthly supervisor evaluation
         </DropdownMenuItem>

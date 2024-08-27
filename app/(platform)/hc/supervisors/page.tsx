@@ -19,6 +19,12 @@ export default async function SupervisorsPage() {
     include: {
       assignedSchools: true,
       fellows: true,
+      hub: {
+        include: {
+          project: true,
+        },
+      },
+      monthlySupervisorEvaluation: true,
     },
     orderBy: {
       supervisorName: "asc",

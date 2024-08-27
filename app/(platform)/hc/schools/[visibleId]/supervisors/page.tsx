@@ -26,6 +26,7 @@ export default async function SupervisorsPage({
           },
         },
       },
+      monthlySupervisorEvaluation: true,
     },
     orderBy: {
       supervisorName: "asc",
