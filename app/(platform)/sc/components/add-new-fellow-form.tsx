@@ -1,5 +1,6 @@
 "use client";
 import { Button } from "#/components/ui/button";
+import { Calendar } from "#/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -17,22 +18,23 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
+import { CalendarIcon } from "#/components/ui/layout-icons";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "#/components/ui/popover";
+import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const FormSchema = z.object({
-  hubVisibleId: z.string(), // TODO: infer the hub and supervisor visible ids from the logged in user
-  supervisorVisibleId: z.string(),
-  implementerVisibleId: z.string(),
-  schoolVisibleId: z.string(),
   fellowName: z.string({
     required_error: "Please enter the fellow's name.",
-  }),
-  yearOfImplementation: z.number({
-    required_error: "Please enter the year of implementation.",
   }),
   fellowEmail: z.string({
     required_error: "Please enter the fellow's email.",
@@ -46,13 +48,12 @@ const FormSchema = z.object({
   mpesaNumber: z.string({
     required_error: "Please enter the fellow's MPESA number.",
   }),
-  county: z.string().optional(), // TODO: make required in term 2
-  subCounty: z.string().optional(), // TODO: make required in term 2
+  county: z.string().optional(),
+  subCounty: z.string().optional(),
   dateOfBirth: z.date().optional(),
   gender: z.string({
     required_error: "Please enter the fellow's gender.",
   }),
-  dropOutReason: z.string().optional(),
   idNumber: z.string().optional(),
 });
 
@@ -64,12 +65,6 @@ export default function AddNewFellowForm({
   const [open, setOpen] = React.useState(false);
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: {
-      hubVisibleId: "",
-      supervisorVisibleId: "",
-      implementerVisibleId: "",
-      schoolVisibleId: "",
-    },
   });
 
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
@@ -85,7 +80,7 @@ export default function AddNewFellowForm({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div>
+            <div className="space-y-4">
               <FormField
                 control={form.control}
                 name="fellowName"
@@ -99,16 +94,44 @@ export default function AddNewFellowForm({
                   </FormItem>
                 )}
               />
-              <div className="flex gap-4">
+              <div className="flex w-full gap-4">
                 <FormField
                   control={form.control}
                   name="dateOfBirth"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex-1">
                       <FormLabel>Date of birth</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="w-full" />
-                      </FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "flex h-10 w-full items-center justify-start px-3 py-2 text-left font-normal",
+                                !field.value && "text-muted-foreground",
+                              )}
+                            >
+                              <CalendarIcon className="h-4 w-4 opacity-50" />
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -117,23 +140,23 @@ export default function AddNewFellowForm({
                   control={form.control}
                   name="gender"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex-1">
                       <FormLabel>Gender</FormLabel>
                       <FormControl>
-                        <Input {...field} className="w-full" />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-              <div>
+              <div className="flex gap-4">
                 <FormField
                   control={form.control}
                   name="cellNumber"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cell no</FormLabel>
+                    <FormItem className="flex-1">
+                      <FormLabel>Cell No.</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -145,8 +168,8 @@ export default function AddNewFellowForm({
                   control={form.control}
                   name="idNumber"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>ID/ PASSPORT #</FormLabel>
+                    <FormItem className="flex-1">
+                      <FormLabel>National I.D</FormLabel>
                       <FormControl>
                         <Input {...field} className="w-full" />
                       </FormControl>
@@ -168,12 +191,12 @@ export default function AddNewFellowForm({
                   </FormItem>
                 )}
               />
-              <div className="flex gap-4">
+              <div className="flex w-full gap-4">
                 <FormField
                   control={form.control}
                   name="mpesaName"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex-1">
                       <FormLabel>MPESA NAME</FormLabel>
                       <FormControl>
                         <Input {...field} />
@@ -186,7 +209,7 @@ export default function AddNewFellowForm({
                   control={form.control}
                   name="mpesaNumber"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex-1">
                       <FormLabel>MPESA NUMBER</FormLabel>
                       <FormControl>
                         <Input {...field} />
@@ -196,12 +219,12 @@ export default function AddNewFellowForm({
                   )}
                 />
               </div>
-              <div className="flex gap-4">
+              <div className="flex w-full gap-4">
                 <FormField
                   control={form.control}
                   name="county"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex-1">
                       <FormLabel>County</FormLabel>
                       <FormControl>
                         <Input {...field} />
@@ -214,7 +237,7 @@ export default function AddNewFellowForm({
                   control={form.control}
                   name="subCounty"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex-1">
                       <FormLabel>Sub County</FormLabel>
                       <FormControl>
                         <Input {...field} />
@@ -225,7 +248,7 @@ export default function AddNewFellowForm({
                 />
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="pt-4">
               <Button
                 variant="ghost"
                 className="text-base font-semibold leading-6 text-shamiri-new-blue"
