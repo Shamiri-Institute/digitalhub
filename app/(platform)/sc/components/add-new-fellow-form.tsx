@@ -111,6 +111,7 @@ export default function AddNewFellowForm({
                                 !field.value && "text-muted-foreground",
                               )}
                             >
+                              {/*@ts-ignore */}
                               <CalendarIcon className="h-4 w-4 opacity-50" />
                               {field.value ? (
                                 format(field.value, "PPP")
