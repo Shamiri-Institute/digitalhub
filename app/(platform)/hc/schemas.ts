@@ -68,6 +68,59 @@ export const WeeklyHubReportSchema = z.object({
   challenges: stringValidation(),
 });
 
+export const MonthlySupervisorEvaluationSchema = z.object({
+  supervisorId: stringValidation("Missing supervisor ID"),
+  month: z.coerce.date({ required_error: "Please select a month" }),
+  respectfulness: z.number({
+    required_error: "Please provide a rating",
+  }),
+  attitude: z.number({
+    required_error: "Please provide a rating",
+  }),
+  collaboration: z.number({
+    required_error: "Please provide a rating",
+  }),
+  reliability: z.number({
+    required_error: "Please provide a rating",
+  }),
+  identificationOfIssues: z.number({
+    required_error: "Please provide a rating",
+  }),
+  leadership: z.number({
+    required_error: "Please provide a rating",
+  }),
+  communicationStyle: z.number({
+    required_error: "Please provide a rating",
+  }),
+  conflictResolution: z.number({
+    required_error: "Please provide a rating",
+  }),
+  adaptability: z.number({
+    required_error: "Please provide a rating",
+  }),
+  recognitionAndFeedback: z.number({
+    required_error: "Please provide a rating",
+  }),
+  decisionMaking: z.number({
+    required_error: "Please provide a rating",
+  }),
+  fellowRecruitmentEffectiveness: z.number({
+    required_error: "Please provide a rating",
+  }),
+  fellowTrainingEffectiveness: z.number({
+    required_error: "Please provide a rating",
+  }),
+  programLogisticsCoordination: z.number({
+    required_error: "Please provide a rating",
+  }),
+  programSessionAttendance: z.number({
+    required_error: "Please provide a rating",
+  }),
+  workplaceDemeanorComments: z.string().optional(),
+  managementStyleComments: z.string().optional(),
+  programExecutionComments: z.string().optional(),
+});
+
 const counties = KENYAN_COUNTIES.map((county) => county.name);
 
 export const EditSchoolSchema = z.object({
