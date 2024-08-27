@@ -1,7 +1,7 @@
 "use client";
 
-import SessionHistoryWidget from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/sessions-history-widget";
-import { SupervisorsDataTableMenu } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
+import { AllSupervisorsDataTableMenu } from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
+import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
@@ -10,7 +10,6 @@ import {
   DropdownMenuPortal,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { InterventionSessionType } from "#/lib/app-constants/constants";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
@@ -19,11 +18,12 @@ export type SupervisorsData = Prisma.SupervisorGetPayload<{
   include: {
     assignedSchools: true;
     fellows: true;
-    supervisorAttendances: {
+    hub: {
       include: {
-        session: true;
+        project: true;
       };
     };
+    monthlySupervisorEvaluation: true;
   };
 }>;
 
@@ -65,7 +65,6 @@ export const columns: ColumnDef<SupervisorsData>[] = [
     header: "Name",
     id: "Name",
   },
-
   {
     header: "Assigned school",
     cell: ({ row }) => {
@@ -104,26 +103,6 @@ export const columns: ColumnDef<SupervisorsData>[] = [
     },
   },
   {
-    header: "Attendance history",
-    cell: ({ row }) => {
-      const attendedSessions: {
-        [key in InterventionSessionType]: Prisma.SupervisorAttendanceGetPayload<{
-          include: {
-            session: true;
-          };
-        }>;
-      } = {};
-      row.original.supervisorAttendances.forEach((attendance) => {
-        if (attendance.session.occurred) {
-          attendedSessions[
-            attendance.session.sessionType as keyof typeof attendedSessions
-          ] = attendance;
-        }
-      });
-      return <SessionHistoryWidget attendedSessions={attendedSessions} />;
-    },
-  },
-  {
     header: "Status",
     cell: ({ row }) =>
       row.original.archivedAt || row.original.droppedOut ? (
@@ -131,6 +110,90 @@ export const columns: ColumnDef<SupervisorsData>[] = [
       ) : (
         <Badge variant="shamiri-green">Active</Badge>
       ),
+  },
+  {
+    header: "Average Rating",
+    cell: ({ row }) => {
+      const evaluations = row.original.monthlySupervisorEvaluation;
+      const rating =
+        evaluations
+          .map((evaluation) => {
+            const {
+              respectfulness,
+              attitude,
+              collaboration,
+              identificationOfIssues,
+              reliability,
+              adaptability,
+              communicationStyle,
+              decisionMaking,
+              conflictResolution,
+              leadership,
+              recognitionAndFeedback,
+              fellowRecruitmentEffectiveness,
+              fellowTrainingEffectiveness,
+              programLogisticsCoordination,
+              programSessionAttendance,
+            } = evaluation;
+
+            return (
+              (respectfulness +
+                attitude +
+                collaboration +
+                identificationOfIssues +
+                reliability +
+                adaptability +
+                communicationStyle +
+                decisionMaking +
+                conflictResolution +
+                leadership +
+                recognitionAndFeedback +
+                fellowRecruitmentEffectiveness +
+                fellowTrainingEffectiveness +
+                programLogisticsCoordination +
+                programSessionAttendance) /
+              15
+            );
+          })
+          .reduce((a, b) => a + b, 0) / evaluations.length;
+      const remainder = rating - Math.floor(rating);
+      const rounded = Number(rating).toFixed(1);
+      return (
+        <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-1">
+            {Array.from(Array(5).keys()).map((index) => {
+              return (
+                <div key={index.toString()} className="relative h-5 w-5 shrink">
+                  <Icons.starRating className="h-full w-full text-shamiri-light-grey" />
+                </div>
+              );
+            })}
+            {!isNaN(rating) && (
+              <div className="absolute inset-0 flex items-center gap-1 text-shamiri-light-orange">
+                {Array.from(Array(Math.floor(rating)).keys()).map((index) => {
+                  return <Icons.starRating key={index} className="h-5 w-5" />;
+                })}
+                {remainder > 0 ? (
+                  <div className="relative h-5 w-5 shrink">
+                    <Icons.starRating className="h-full w-full text-transparent" />
+                    <div
+                      className="absolute inset-y-0 left-0 overflow-hidden"
+                      style={{ width: remainder * 100 + "%" }}
+                    >
+                      <Icons.starRating className="h-5 w-5" />
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+          <div className="text-shamiri-text-grey">
+            {isNaN(rating) ? "0.0" : rounded}
+          </div>
+        </div>
+      );
+    },
+    id: "Average Rating",
   },
   {
     header: "No. of fellows",
@@ -158,8 +221,20 @@ export const columns: ColumnDef<SupervisorsData>[] = [
     accessorKey: "gender",
   },
   {
+    header: "County",
+    id: "county",
+    accessorKey: "county",
+  },
+  {
+    header: "Sub-county",
+    id: "subCounty",
+    accessorKey: "subCounty",
+  },
+  {
     id: "button",
-    cell: ({ row }) => <SupervisorsDataTableMenu supervisor={row.original} />,
+    cell: ({ row }) => (
+      <AllSupervisorsDataTableMenu supervisor={row.original} />
+    ),
     enableHiding: false,
   },
 ];

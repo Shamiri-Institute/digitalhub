@@ -23,6 +23,8 @@ export const SCHOOL_DEMOGRAPHICS = ["Girls", "Boys", "Mixed"] as const;
 
 export const BOARDING_DAY_TYPES = ["Day", "Boarding", "Mixed"] as const;
 
+export const ATTENDANCE_STATUS = ["attended", "missed", "unmarked"] as const;
+
 export const SCHOOL_TYPES = [
   "County",
   "Sub-county",
@@ -149,11 +151,11 @@ export const KENYAN_COUNTIES = [
     name: "Kajiado",
     code: 34,
     sub_counties: [
-      "Isinya.",
-      "Kajiado Central.",
-      "Kajiado North.",
-      "Loitokitok.",
-      "Mashuuru.",
+      "Isinya",
+      "Kajiado Central",
+      "Kajiado North",
+      "Loitokitok",
+      "Mashuuru",
     ],
   },
   {
@@ -601,10 +603,11 @@ export const KENYAN_COUNTIES = [
   },
 ] as const;
 
+// TODO: Refactor to string array with s0, s1, etc. values
 export const SESSION_TYPES: { name: string; description: string }[] = [
   {
     name: "s0",
-    description: "PRE",
+    description: "Pre",
   },
   {
     name: "s1",
@@ -623,3 +626,9 @@ export const SESSION_TYPES: { name: string; description: string }[] = [
     description: "S4",
   },
 ];
+
+const sessionTypes = {};
+SESSION_TYPES.forEach((type) => {
+  sessionTypes[type.name] = type.description;
+});
+export type InterventionSessionType = keyof typeof sessionTypeKeys;

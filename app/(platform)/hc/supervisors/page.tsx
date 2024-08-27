@@ -1,32 +1,65 @@
+import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
+
+import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";
+import MainSupervisorsDataTable from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
+import SupervisorProvider from "#/app/(platform)/hc/supervisors/components/supervisor-provider";
 import WeeklyHubTeamMeetingForm from "#/app/(platform)/hc/supervisors/components/weekly-hub-team-meeting";
 import { currentHubCoordinator } from "#/app/auth";
+import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
+import { db } from "#/lib/db";
 
 export default async function SupervisorsPage() {
-  const hubCoordinator = await currentHubCoordinator();
+  const coordinator = await currentHubCoordinator();
+  const supervisors = await db.supervisor.findMany({
+    where: {
+      hubId: coordinator?.assignedHubId,
+    },
+    include: {
+      assignedSchools: true,
+      fellows: true,
+      hub: {
+        include: {
+          project: true,
+        },
+      },
+      monthlySupervisorEvaluation: true,
+    },
+    orderBy: {
+      supervisorName: "asc",
+    },
+  });
 
-  if (!hubCoordinator?.assignedHubId) {
+  if (!coordinator) {
+    return <InvalidPersonnelRole role="hub-coordinator" />;
+  }
+
+  if (!coordinator.assignedHubId) {
     return <div>Hub coordinator has no assigned hub</div>;
   }
 
   return (
-    <main className="w-full pb-[24px] pt-[20px]">
-      <PageHeading title="Supervisors" />
-      <Separator className="my-5" />
-
-      <div className="flex items-center justify-between">
-        <div className="flex gap-3">{/* search filters go here */}</div>
-        <div className="flex items-center gap-3">
-          <WeeklyHubTeamMeetingForm
-            hubCoordinatorId={hubCoordinator?.id}
-            hubId={hubCoordinator?.assignedHubId}
-          />
-          {/* dispaly options button */}
+    <div className="flex h-full flex-col">
+      <div className="container w-full grow space-y-3 py-10">
+        <PageHeading title="Supervisors" />
+        <Separator />
+        <div className="flex items-center justify-between">
+          <div className="flex gap-3">{/* search filters go here */}</div>
+          <div className="flex items-center gap-3">
+            <AddNewSupervisor />
+            <WeeklyHubTeamMeetingForm
+              hubCoordinatorId={coordinator?.id}
+              hubId={coordinator?.assignedHubId}
+            />
+          </div>
         </div>
+        {/* charts goes here */}
+        <SupervisorProvider>
+          <MainSupervisorsDataTable supervisors={supervisors} />
+        </SupervisorProvider>
       </div>
-      {/* charts goes here */}
-      {/* data dable goes here  */}
-    </main>
+      <PageFooter />
+    </div>
   );
 }
