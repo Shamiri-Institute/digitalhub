@@ -1,6 +1,6 @@
 "use client";
 import { undoDropoutSchool } from "#/app/(platform)/hc/schools/actions";
-import SchoolNameInfoWidget from "#/app/(platform)/hc/schools/components/school-name-info-widget";
+import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import { Button } from "#/components/ui/button";
@@ -58,7 +58,7 @@ export function UndoDropoutSchool() {
         <DialogHeader>
           <h2>Undo school dropout?</h2>
         </DialogHeader>
-        <SchoolNameInfoWidget schoolName={context.school?.schoolName} />
+        <DialogAlertWidget label={context.school?.schoolName} />
         <DialogFooter className="flex justify-end">
           <Button
             variant="ghost"
