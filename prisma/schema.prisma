@@ -610,72 +610,37 @@ model SupervisorComplaints {
 }
 
 model MonthlySupervisorEvaluation {
-  id                       String                     @id @default(cuid())
-  createdAt                DateTime                   @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt                DateTime                   @updatedAt @map("updated_at") @db.Timestamptz()
-  projectId                String                     @map("project_id")
-  project                  Project                    @relation(fields: [projectId], references: [id])
-  supervisorId             String                     @map("supervisor_id") @db.VarChar(255)
-  supervisor               Supervisor                 @relation(fields: [supervisorId], references: [id])
-  hubCoordinatorId         String                     @map("hub_coordinator_id") @db.VarChar(255)
-  hubCoordinator           HubCoordinator             @relation(fields: [hubCoordinatorId], references: [id])
-  month                    DateTime                   @db.Date // stores the month of the evaluation
-  workplaceDemeanorRatings WorkplaceDemeanorRatings[]
-  managementStyleRatings   ManagementStyleRatings[]
-  ProgramExecutionRatings  ProgramExecutionRatings[]
+  id                             String         @id @default(cuid())
+  createdAt                      DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                      DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
+  projectId                      String         @map("project_id")
+  project                        Project        @relation(fields: [projectId], references: [id])
+  supervisorId                   String         @map("supervisor_id") @db.VarChar(255)
+  supervisor                     Supervisor     @relation(fields: [supervisorId], references: [id])
+  hubCoordinatorId               String         @map("hub_coordinator_id") @db.VarChar(255)
+  hubCoordinator                 HubCoordinator @relation(fields: [hubCoordinatorId], references: [id])
+  month                          DateTime       @db.Date // stores the month of the evaluation
+  respectfulness                 Int            @map("respectfulness")
+  attitude                       Int            @map("attitude")
+  collaboration                  Int            @map("collaboration")
+  reliability                    Int            @map("reliability")
+  identificationOfIssues         Int            @map("identification_of_issues")
+  leadership                     Int            @map("leadership")
+  communicationStyle             Int            @map("communication_style")
+  conflictResolution             Int            @map("conflict_resolution")
+  adaptability                   Int            @map("adaptability")
+  recognitionAndFeedback         Int            @map("recognition_and_feedback")
+  decisionMaking                 Int            @map("decision_making")
+  fellowRecruitmentEffectiveness Int            @map("fellow_recruitment_effectiveness")
+  fellowTrainingEffectiveness    Int            @map("fellow_training_effectiveness")
+  programLogisticsCoordination   Int            @map("program_logistics_coordination")
+  programSessionAttendance       Int            @map("program_session_attendace")
+  managementStyleComments        String?        @map("management_style_comments") @db.Text()
+  workplaceDemeanorComments      String?        @map("workplace_demeanor_comments") @db.Text()
+  programExecutionComments       String?        @map("program_execution_comments") @db.Text()
 
+  @@unique([projectId, month, supervisorId], name: "monthlyEvaluationBy_ProjectID_Month_Supervisor")
   @@map("monthly_supervisor_evaluation")
-}
-
-// stores workplace demeanor ratings related to a monthly supervisor evaluation
-model WorkplaceDemeanorRatings {
-  id                            String                      @id @default(cuid())
-  createdAt                     DateTime                    @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt                     DateTime                    @updatedAt @map("updated_at") @db.Timestamptz()
-  monthlySupervisorEvaluationId String                      @map("monthly_supervisor_evaluation_id")
-  monthlySupervisorEvaluation   MonthlySupervisorEvaluation @relation(fields: [monthlySupervisorEvaluationId], references: [id])
-  additionalComments            String                      @map("additional_comments") @db.Text()
-  respectfulness                Int                         @map("respectfulness")
-  attitude                      Int                         @map("attitude")
-  collaboration                 Int                         @map("collaboration")
-  reliability                   Int                         @map("reliability")
-  identificationOfIssues        Int                         @map("identification_of_issues")
-
-  @@map("workplace_demeanor_ratings")
-}
-
-// stores management style ratings related to a monthly supervisor evaluation
-model ManagementStyleRatings {
-  id                            String                      @id @default(cuid())
-  createdAt                     DateTime                    @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt                     DateTime                    @updatedAt @map("updated_at") @db.Timestamptz()
-  monthlySupervisorEvaluationId String                      @map("monthly_supervisor_evaluation_id")
-  monthlySupervisorEvaluation   MonthlySupervisorEvaluation @relation(fields: [monthlySupervisorEvaluationId], references: [id])
-  additionalComments            String                      @map("additional_comments") @db.Text()
-  leadership                    Int                         @map("leadership")
-  communicationStyle            Int                         @map("communication_style")
-  conflictResolution            Int                         @map("conflict_resolution")
-  adaptability                  Int                         @map("adaptability")
-  recognitionAndFeedback        Int                         @map("recognition_and_feedback")
-  decisionMaking                Int                         @map("decision_making")
-
-  @@map("management_style_ratings")
-}
-
-// stores program execution ratings related to a monthly supervisor evaluation
-model ProgramExecutionRatings {
-  id                             String                      @id @default(cuid())
-  createdAt                      DateTime                    @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt                      DateTime                    @updatedAt @map("updated_at") @db.Timestamptz()
-  monthlySupervisorEvaluationId  String                      @map("monthly_supervisor_evaluation_id")
-  monthlySupervisorEvaluation    MonthlySupervisorEvaluation @relation(fields: [monthlySupervisorEvaluationId], references: [id])
-  additionalComments             String                      @map("additional_comments") @db.Text()
-  fellowRecruitmentEffectiveness Int                         @map("fellow_recruitment_effectiveness")
-  fellowTrainingEffectiveness    Int                         @map("fellow_training_effectiveness")
-  programLogisticsCoordination   Int                         @map("program_logistics_coordination")
-  programSessionAttendance       Int                         @map("program_session_attendace")
-
-  @@map("program_execution_ratings")
 }
 
 /// Schools should not be duped across projects to ensure accurate reach tabulation
