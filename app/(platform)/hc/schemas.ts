@@ -1,4 +1,5 @@
 import {
+  ATTENDANCE_STATUS,
   BOARDING_DAY_TYPES,
   KENYAN_COUNTIES,
   SCHOOL_DEMOGRAPHICS,
@@ -11,13 +12,43 @@ import { z } from "zod";
 
 export const DropoutSchoolSchema = z.object({
   schoolId: stringValidation("Missing school ID"),
-  // @ts-ignore
-  dropoutReason: z.enum(SCHOOL_DROPOUT_REASONS, {
-    errorMap: (_issue, _ctx) => ({
-      message:
-        "Please select one of the supplied school dropout reason options",
-    }),
-  }),
+  dropoutReason: z.enum(
+    [SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)],
+    {
+      errorMap: (_issue, _ctx) => ({
+        message:
+          "Please select one of the supplied school dropout reason options",
+      }),
+    },
+  ),
+});
+
+export const DropoutSupervisorSchema = z.object({
+  supervisorId: stringValidation("Missing supervisor ID"),
+  // TODO: Replace dropout reasons with supervisor specific options
+  dropoutReason: z.enum(
+    [SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)],
+    {
+      errorMap: (_issue, _ctx) => ({
+        message:
+          "Please select one of the supplied supervisor dropout reason options",
+      }),
+    },
+  ),
+});
+
+export const SubmitComplaintSchema = z.object({
+  supervisorId: stringValidation("Missing supervisor ID"),
+  comments: stringValidation().optional(),
+  // TODO: Replace with complaint types array
+  complaint: z.enum(
+    [SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)],
+    {
+      errorMap: (_issue, _ctx) => ({
+        message: "Please select a complaint",
+      }),
+    },
+  ),
 });
 
 export const WeeklyHubReportSchema = z.object({
@@ -37,6 +68,59 @@ export const WeeklyHubReportSchema = z.object({
   challenges: stringValidation(),
 });
 
+export const MonthlySupervisorEvaluationSchema = z.object({
+  supervisorId: stringValidation("Missing supervisor ID"),
+  month: z.coerce.date({ required_error: "Please select a month" }),
+  respectfulness: z.number({
+    required_error: "Please provide a rating",
+  }),
+  attitude: z.number({
+    required_error: "Please provide a rating",
+  }),
+  collaboration: z.number({
+    required_error: "Please provide a rating",
+  }),
+  reliability: z.number({
+    required_error: "Please provide a rating",
+  }),
+  identificationOfIssues: z.number({
+    required_error: "Please provide a rating",
+  }),
+  leadership: z.number({
+    required_error: "Please provide a rating",
+  }),
+  communicationStyle: z.number({
+    required_error: "Please provide a rating",
+  }),
+  conflictResolution: z.number({
+    required_error: "Please provide a rating",
+  }),
+  adaptability: z.number({
+    required_error: "Please provide a rating",
+  }),
+  recognitionAndFeedback: z.number({
+    required_error: "Please provide a rating",
+  }),
+  decisionMaking: z.number({
+    required_error: "Please provide a rating",
+  }),
+  fellowRecruitmentEffectiveness: z.number({
+    required_error: "Please provide a rating",
+  }),
+  fellowTrainingEffectiveness: z.number({
+    required_error: "Please provide a rating",
+  }),
+  programLogisticsCoordination: z.number({
+    required_error: "Please provide a rating",
+  }),
+  programSessionAttendance: z.number({
+    required_error: "Please provide a rating",
+  }),
+  workplaceDemeanorComments: z.string().optional(),
+  managementStyleComments: z.string().optional(),
+  programExecutionComments: z.string().optional(),
+});
+
 const counties = KENYAN_COUNTIES.map((county) => county.name);
 
 export const EditSchoolSchema = z.object({
@@ -48,6 +132,9 @@ export const EditSchoolSchema = z.object({
   schoolEmail: z
     .string({
       required_error: "Please enter the school's email.",
+    })
+    .email({
+      message: "Please enter a valid email.",
     })
     .optional(),
   schoolCounty: z
@@ -86,7 +173,9 @@ export const EditSchoolSchema = z.object({
     .optional(),
   pointPersonEmail: z
     .string({ required_error: "Please enter the point person's email" })
-    .email()
+    .email({
+      message: "Please enter a valid email.",
+    })
     .optional(),
   pointPersonPhone: z
     .string({
@@ -124,6 +213,118 @@ export const EditSchoolSchema = z.object({
     .optional(),
 });
 
+export const EditSupervisorSchema = z
+  .object({
+    supervisorName: z.string({
+      required_error: "Please enter the supervisor's name",
+    }),
+    supervisorId: stringValidation("SupervisorId is required"),
+    idNumber: z.string({
+      required_error: "Please enter the supervisor's ID number",
+    }),
+    cellNumber: z
+      .string({ required_error: "Please enter the supervisor's phone number" })
+      .refine((val) => isValidPhoneNumber(val, "KE"), {
+        message: "Please enter a valid kenyan phone number",
+      }),
+    mpesaNumber: z
+      .string({ required_error: "Please enter the supervisor's m-pesa number" })
+      .refine((val) => isValidPhoneNumber(val, "KE"), {
+        message: "Please enter a valid kenyan phone number",
+      }),
+    personalEmail: z
+      .string({
+        required_error: "Please enter the supervisor's email.",
+      })
+      .email({
+        message: "Please enter a valid email.",
+      }),
+    county: z.enum([counties[0]!, ...counties.slice(1)], {
+      errorMap: (issue, ctx) => ({ message: "Please pick a valid option" }),
+    }),
+    subCounty: z
+      .string({
+        invalid_type_error: "Please pick a valid sub county.",
+        required_error: "Please pick a sub-county",
+      })
+      .refine((val) => val !== "", {
+        message: "Please pick a sub-county",
+      }),
+    gender: z.string({
+      required_error: "Please enter the supervisor's gender",
+    }),
+    mpesaName: z.string({
+      required_error: "Please enter the supervisor's m-pesa number",
+    }),
+    dateOfBirth: z.coerce.date({
+      required_error: "Please select a date of birth",
+    }),
+  })
+  .superRefine((val, ctx) => {
+    const selectedCounty = KENYAN_COUNTIES.find(
+      (county) => county.name === val.county,
+    );
+    if (
+      selectedCounty &&
+      !Array.from(selectedCounty.sub_counties).includes(
+        val.subCounty as keyof (typeof selectedCounty.sub_counties)[0],
+      )
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${val.subCounty} is not a valid option.`,
+        fatal: true,
+        path: ["subCounty"],
+      });
+
+      return z.NEVER;
+    }
+  });
+
+export const AddNewSupervisorSchema = z.object({
+  supervisorName: z.string({
+    required_error: "Please enter the supervisor's name",
+  }),
+  idNumber: z.string({
+    required_error: "Please enter the supervisor's ID number",
+  }),
+  cellNumber: z
+    .string({ required_error: "Please enter the supervisor's phone number" })
+    .refine((val) => isValidPhoneNumber(val, "KE"), {
+      message: "Please enter a valid kenyan phone number",
+    }),
+  mpesaNumber: z
+    .string({ required_error: "Please enter the supervisor's m-pesa number" })
+    .refine((val) => isValidPhoneNumber(val, "KE"), {
+      message: "Please enter a valid kenyan phone number",
+    }),
+  personalEmail: z
+    .string({
+      required_error: "Please enter the supervisor's email.",
+    })
+    .email({
+      message: "Please enter a valid email.",
+    }),
+  county: z.enum([counties[0]!, ...counties.slice(1)], {
+    errorMap: (issue, ctx) => ({ message: "Please pick a valid option" }),
+  }),
+  subCounty: z
+    .string({
+      invalid_type_error: "Please pick a valid sub county.",
+      required_error: "Please pick a sub-county",
+    })
+    .refine((val) => val !== "", {
+      message: "Please pick a sub-county",
+    }),
+  gender: z.string({ required_error: "Please enter the supervisor's gender" }),
+  mpesaName: z.string({
+    required_error: "Please enter the supervisor's m-pesa number",
+  }),
+  dateOfBirth: z.coerce.date({
+    required_error: "Please select a date of birth",
+  }),
+});
+
 export const AssignPointSupervisorSchema = z.object({
   assignedSupervisorId: z.string({
     required_error: "Please pick a supervisor.",
@@ -147,14 +348,36 @@ export const RescheduleSessionSchema = z.object({
   sessionDuration: stringValidation("Please select the session's duration"),
 });
 
-export const MarkSupervisorAttendanceSchema = z.object({
-  projectId: z.string(),
-  schoolId: z.string(),
-  supervisorId: z.string(),
-  attended: z.boolean().optional(),
-  sessionId: z.string(),
-  sessionType: z.string(),
-});
+export const MarkSupervisorAttendanceSchema = z
+  .object({
+    supervisorId: z.string(),
+    attended: z
+      .enum(ATTENDANCE_STATUS, {
+        invalid_type_error: "Please select attendance.",
+      })
+      .optional(),
+    sessionId: z.string(),
+    absenceReason: z.string().optional(),
+    comments: z.string().optional(),
+  })
+  // TODO: Confirm if validation is required
+  .superRefine((val, ctx) => {
+    const ids = val.supervisorId.split(",");
+    if (
+      val.attended === "missed" &&
+      val.absenceReason === undefined &&
+      ids.length === 1
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please add a reason for absence",
+        fatal: true,
+        path: ["absenceReason"],
+      });
+
+      return z.NEVER;
+    }
+  });
 
 export const WeeklyHubTeamMeetingSchema = z.object({
   hubId: stringValidation("Missing hub ID"),

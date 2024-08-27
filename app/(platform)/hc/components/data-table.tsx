@@ -1,5 +1,6 @@
 "use client";
 import { Icons } from "#/components/icons";
+import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -27,7 +28,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -35,8 +36,10 @@ interface DataTableProps<TData, TValue> {
   editColumns?: boolean;
   className?: string;
   onRowSelectionChange?: (rows: unknown[]) => void;
+  rowSelectionDescription?: string;
   columnVisibilityState?: VisibilityState;
   enableRowSelection?: boolean | ((row: Row<TData>) => boolean) | undefined;
+  renderTableActions?: ReactNode;
 }
 
 export default function DataTable<TData, TValue>({
@@ -48,6 +51,8 @@ export default function DataTable<TData, TValue>({
   onRowSelectionChange,
   columnVisibilityState = {},
   enableRowSelection,
+  renderTableActions,
+  rowSelectionDescription = "rows",
 }: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -84,35 +89,56 @@ export default function DataTable<TData, TValue>({
 
   return (
     <div>
-      {editColumns && (
-        <div className="flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-1.5 text-sm font-semibold leading-5 text-shamiri-black hover:bg-background-secondary hover:shadow-inner">
-                Edit Columns
-                <Icons.settings className="h-4 w-4 text-shamiri-text-dark-grey" />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align={"end"}>
-              {table
-                .getAllColumns()
-                .filter((col) => col.getCanHide())
-                .map((col) => (
-                  <DropdownMenuCheckboxItem
-                    key={col.id}
-                    checked={col.getIsVisible()}
-                    onCheckedChange={(val) => col.toggleVisibility(!!val)}
-                    onSelect={(e) => {
-                      e.preventDefault();
-                    }}
-                  >
-                    {col.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+      <div className="flex items-center justify-between">
+        <div>
+          {table.getSelectedRowModel().rows.length > 0 && (
+            <div className="flex items-center gap-4">
+              <span className="text-sm">
+                {table.getSelectedRowModel().rows.length}{" "}
+                {rowSelectionDescription} selected
+              </span>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  table.resetRowSelection();
+                }}
+              >
+                Clear selection
+              </Button>
+            </div>
+          )}
         </div>
-      )}
+        <div className="flex justify-end gap-3">
+          {renderTableActions}
+          {editColumns && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex gap-1 bg-white">
+                  <Icons.settings className="h-4 w-4 text-shamiri-text-grey" />
+                  Edit columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align={"end"}>
+                {table
+                  .getAllColumns()
+                  .filter((col) => col.getCanHide())
+                  .map((col) => (
+                    <DropdownMenuCheckboxItem
+                      key={col.id}
+                      checked={col.getIsVisible()}
+                      onCheckedChange={(val) => col.toggleVisibility(!!val)}
+                      onSelect={(e) => {
+                        e.preventDefault();
+                      }}
+                    >
+                      {col.id}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+      </div>
       <Table className={className}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
