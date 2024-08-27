@@ -219,7 +219,6 @@ export function FellowUndropoutDialog({
   children: React.ReactNode;
 }) {
   const handleUndropout = async () => {
-    console.log("undropout", fellow, revalidationPath);
     const response = await undropoutFellow(fellow.visibleId, revalidationPath);
     if (response.error) {
       toast({

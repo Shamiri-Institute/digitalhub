@@ -1,7 +1,7 @@
 "use client";
 
 import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns";
-import SchoolNameInfoWidget from "#/app/(platform)/hc/schools/components/school-name-info-widget";
+import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import { Icons } from "#/components/icons";
@@ -176,8 +176,8 @@ export default function EditSchoolDetailsForm() {
               <span className="text-xl">Edit school information</span>
             </DialogHeader>
             <div className="pb-2 pt-4">
-              <SchoolNameInfoWidget
-                schoolName={context.school?.schoolName}
+              <DialogAlertWidget
+                label={context.school?.schoolName}
                 separator={false}
               />
             </div>

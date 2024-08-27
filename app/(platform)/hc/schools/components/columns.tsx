@@ -10,6 +10,7 @@ import { format } from "date-fns";
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {
     assignedSupervisor: true;
+    interventionSessions: true;
   };
 }>;
 

@@ -1,3 +1,4 @@
+import SupervisorInfoProvider from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisor-info-provider";
 import SupervisorsDataTable from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
 import { BatchUploadDownloadSupervisors } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/upload-csv";
 import { currentHubCoordinator } from "#/app/auth";
@@ -9,7 +10,6 @@ export default async function SupervisorsPage({
   params: { visibleId: string };
 }) {
   const coordinator = await currentHubCoordinator();
-
   const supervisors = await db.supervisor.findMany({
     where: {
       hubId: coordinator?.assignedHubId,
@@ -17,23 +17,41 @@ export default async function SupervisorsPage({
     include: {
       assignedSchools: true,
       fellows: true,
+      supervisorAttendances: {
+        include: {
+          session: true,
+        },
+        where: {
+          school: {
+            visibleId,
+          },
+        },
+      },
+      monthlySupervisorEvaluation: true,
+    },
+    orderBy: {
+      supervisorName: "asc",
     },
   });
 
   return (
     <>
-      <SupervisorsDataTable supervisors={supervisors} />
-
-      {coordinator?.assignedHubId &&
-        coordinator.implementerId &&
-        coordinator.assignedHub?.projectId && (
-          <BatchUploadDownloadSupervisors
-            hubId={coordinator?.assignedHubId}
-            implementerId={coordinator?.implementerId}
-            projectId={coordinator?.assignedHub?.projectId}
-            schoolVisibleId={visibleId}
-          />
-        )}
+      <SupervisorInfoProvider>
+        <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} />
+      </SupervisorInfoProvider>
+      {
+        // TODO: Move to hc/supervisors page @Benny
+        coordinator?.assignedHubId &&
+          coordinator.implementerId &&
+          coordinator.assignedHub?.projectId && (
+            <BatchUploadDownloadSupervisors
+              hubId={coordinator?.assignedHubId}
+              implementerId={coordinator?.implementerId}
+              projectId={coordinator?.assignedHub?.projectId}
+              schoolVisibleId={visibleId}
+            />
+          )
+      }
     </>
   );
 }

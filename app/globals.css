@@ -60,7 +60,7 @@
   }
 
   label {
-    @apply text-gray-600;
+    @apply text-gray-800;
   }
 }
 
@@ -213,5 +213,17 @@
 
   .accordion-button {
     @apply cursor-pointer rounded-md px-3 py-1.5 text-sm text-shamiri-new-blue hover:bg-accent active:scale-95;
+  }
+
+  .custom-radio {
+    @apply flex items-center rounded-lg border-[2px] bg-background-secondary py-4 hover:shadow active:scale-[98%];
+  }
+
+  .custom-radio .radio {
+    @apply border-[2px] border-gray-300 data-[state=checked]:border-[5px];
+  }
+
+  .custom-radio svg {
+    @apply hidden;
   }
 }
