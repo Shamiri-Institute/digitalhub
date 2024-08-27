@@ -40,7 +40,7 @@ export default async function SupervisorsPage({
         <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} />
       </SupervisorInfoProvider>
       {
-        // TODO: Move to main supervisors page
+        // TODO: Move to hc/supervisors page @Benny
         coordinator?.assignedHubId &&
           coordinator.implementerId &&
           coordinator.assignedHub?.projectId && (
