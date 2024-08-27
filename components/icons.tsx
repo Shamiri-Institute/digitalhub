@@ -41,8 +41,10 @@ import {
   Smile,
   Star,
   SunMedium,
+  UploadCloudIcon,
   Users2,
   XIcon,
+
   // StarIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -82,6 +84,7 @@ export const Icons = {
   starOutline: Star,
   heartPulse: HeartPulse,
   helpCircle: HelpCircle,
+  uploadCloudIcon: UploadCloudIcon,
   PencilLine: PencilLineIcon,
   hourglass: Hourglass,
   info: Info,
