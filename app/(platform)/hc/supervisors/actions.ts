@@ -5,6 +5,7 @@ import {
   DropoutSupervisorSchema,
   EditSupervisorSchema,
   MarkSupervisorAttendanceSchema,
+  MonthlySupervisorEvaluationSchema,
   SubmitComplaintSchema,
   WeeklyHubTeamMeetingSchema,
 } from "#/app/(platform)/hc/schemas";
@@ -373,6 +374,120 @@ export async function createNewSupervisor(
       success: false,
       message:
         (err as Error)?.message ?? "Sorry, could add new supervisor details.",
+    };
+  }
+}
+
+export async function submitMonthlySupervisorEvaluation(
+  data: z.infer<typeof MonthlySupervisorEvaluationSchema>,
+) {
+  try {
+    const hc = await currentHubCoordinator();
+    const user = await getCurrentUser();
+
+    if (!hc || !user) {
+      throw new Error("The session has not been authenticated");
+    }
+
+    const {
+      respectfulness,
+      attitude,
+      collaboration,
+      reliability,
+      identificationOfIssues,
+      leadership,
+      communicationStyle,
+      conflictResolution,
+      adaptability,
+      recognitionAndFeedback,
+      decisionMaking,
+      fellowRecruitmentEffectiveness,
+      fellowTrainingEffectiveness,
+      programLogisticsCoordination,
+      programSessionAttendance,
+      workplaceDemeanorComments,
+      managementStyleComments,
+      programExecutionComments,
+      supervisorId,
+      month,
+    } = MonthlySupervisorEvaluationSchema.parse(data);
+
+    const match = await db.monthlySupervisorEvaluation.findFirst({
+      where: {
+        month,
+        supervisorId,
+        projectId: CURRENT_PROJECT_ID,
+      },
+    });
+    if (match === null) {
+      await db.monthlySupervisorEvaluation.create({
+        data: {
+          supervisorId,
+          hubCoordinatorId: hc.id,
+          projectId: CURRENT_PROJECT_ID,
+          month,
+          respectfulness,
+          attitude,
+          collaboration,
+          reliability,
+          identificationOfIssues,
+          workplaceDemeanorComments,
+          leadership,
+          communicationStyle,
+          conflictResolution,
+          adaptability,
+          recognitionAndFeedback,
+          decisionMaking,
+          managementStyleComments,
+          fellowRecruitmentEffectiveness,
+          fellowTrainingEffectiveness,
+          programLogisticsCoordination,
+          programSessionAttendance,
+          programExecutionComments,
+        },
+      });
+      return {
+        success: true,
+        message: `Successfully submitted monthly evaluation.`,
+      };
+    } else {
+      await db.monthlySupervisorEvaluation.update({
+        where: {
+          id: match.id,
+        },
+        data: {
+          respectfulness,
+          attitude,
+          collaboration,
+          reliability,
+          identificationOfIssues,
+          workplaceDemeanorComments,
+          leadership,
+          communicationStyle,
+          conflictResolution,
+          adaptability,
+          recognitionAndFeedback,
+          decisionMaking,
+          managementStyleComments,
+          fellowRecruitmentEffectiveness,
+          fellowTrainingEffectiveness,
+          programLogisticsCoordination,
+          programSessionAttendance,
+          programExecutionComments,
+        },
+      });
+      return {
+        success: true,
+        message: `Successfully updated monthly evaluation.`,
+      };
+    }
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ??
+        "Sorry, could not submit supervisor evaluation.",
     };
   }
 }

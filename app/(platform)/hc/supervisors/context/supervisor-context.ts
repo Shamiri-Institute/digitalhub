@@ -4,6 +4,8 @@ import { createContext, Dispatch, SetStateAction } from "react";
 type SupervisorContextData = {
   editDialog: boolean;
   setEditDialog: Dispatch<SetStateAction<boolean>>;
+  evaluationDialog: boolean;
+  setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
   complaintDialog: boolean;
   setComplaintDialog: Dispatch<SetStateAction<boolean>>;
   dropoutDialog: boolean;
@@ -19,6 +21,8 @@ export const SupervisorContext = createContext<SupervisorContextData>({
   setEditDialog: () => {},
   complaintDialog: false,
   setComplaintDialog: () => {},
+  evaluationDialog: false,
+  setEvaluationDialog: () => {},
   dropoutDialog: false,
   setDropoutDialog: () => {},
   undropDialog: false,
