@@ -35,21 +35,23 @@ export default async function SupervisorsPage({
   });
 
   return (
-      <>
-          <SupervisorInfoProvider>
-              <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} />
-          </SupervisorInfoProvider>
-          {coordinator?.assignedHubId &&
-              coordinator.implementerId &&
-              coordinator.assignedHub?.projectId && (
-                  <BatchUploadDownloadSupervisors
-                      hubId={coordinator?.assignedHubId}
-                      implementerId={coordinator?.implementerId}
-                      projectId={coordinator?.assignedHub?.projectId}
-                      schoolVisibleId={visibleId}
-                  />
-              )}
-      </>
-
+    <>
+      <SupervisorInfoProvider>
+        <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} />
+      </SupervisorInfoProvider>
+      {
+        // TODO: Move to main supervisors page
+        coordinator?.assignedHubId &&
+          coordinator.implementerId &&
+          coordinator.assignedHub?.projectId && (
+            <BatchUploadDownloadSupervisors
+              hubId={coordinator?.assignedHubId}
+              implementerId={coordinator?.implementerId}
+              projectId={coordinator?.assignedHub?.projectId}
+              schoolVisibleId={visibleId}
+            />
+          )
+      }
+    </>
   );
 }
