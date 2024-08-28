@@ -1,5 +1,7 @@
 import { fetchFellowsWithRatings } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
+import FellowInfoContextProvider from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellow-info-context-provider";
 import FellowsDatatable from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
+import StudentsInGroup from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/students-in-group";
 import { fetchHubSupervisors } from "#/app/(platform)/hc/schools/actions";
 import { currentHubCoordinator } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
@@ -21,8 +23,9 @@ export default async function FellowsPage({
   });
 
   return (
-    <>
+    <FellowInfoContextProvider>
       <FellowsDatatable fellows={fellows} supervisors={supervisors} />
-    </>
+      <StudentsInGroup />
+    </FellowInfoContextProvider>
   );
 }
