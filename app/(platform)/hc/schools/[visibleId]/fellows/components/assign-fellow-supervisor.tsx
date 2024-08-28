@@ -38,10 +38,14 @@ export default function AssignFellowSupervisor({
             supervisorId: selectedSupervisor,
           });
           if (result.success) {
+            toast({ description: result.message });
             revalidatePageAction(pathname);
+          } else {
+            toast({ description: result.error });
           }
-          toast({ description: result.message });
-          setLoading(false);
+          setTimeout(() => {
+            setLoading(false);
+          }, 1500);
         }
       };
       assignSupervisor();
