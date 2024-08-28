@@ -190,11 +190,6 @@
     @apply w-[50px] min-w-[40px] max-w-[50px] !important;
   }
 
-  th#sessionType,
-  th#groupName {
-    @apply w-[80px] min-w-[60px] max-w-[100px];
-  }
-
   .form-toggle {
     @apply mt-1.5 justify-start rounded-md border bg-background-secondary text-shamiri-text-dark-grey;
   }
