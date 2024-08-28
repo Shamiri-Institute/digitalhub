@@ -26,6 +26,7 @@ export default async function SchoolViewLayout({
       visibleId,
     },
     include: {
+      students: true,
       interventionSessions: true,
       schoolDropoutHistory: {
         include: {
