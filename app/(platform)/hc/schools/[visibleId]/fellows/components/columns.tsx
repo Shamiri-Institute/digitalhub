@@ -1,125 +1,112 @@
 "use client";
 
+import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
+import AssignFellowSupervisor from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/assign-fellow-supervisor";
+import { FellowsDatatableMenu } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
 import { Badge } from "#/components/ui/badge";
-import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
-import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
-import { MoreHorizontal } from "lucide-react";
-import React from "react";
+import { parsePhoneNumber } from "libphonenumber-js";
 
-export type SchoolFellowTableData = Prisma.FellowGetPayload<{
-  include: {
-    groups: true;
-    supervisor: {
-      include: {
-        fellows: true;
-      };
-    };
-    weeklyFellowRatings: true;
-  };
-}>;
+export type SchoolFellowTableData = {
+  id: string;
+  fellowName: string;
+  cellNumber: string;
+  supervisorId: string;
+  supervisorName: string;
+  droppedOut: boolean | null;
+  groupName: string;
+  averageRating: number | null;
+};
 
-function MenuItem({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className: string;
-}) {
-  return (
-    <div className={cn("cursor-pointer px-3 py-2", className)}>{children}</div>
-  );
-}
-
-export const columns: ColumnDef<SchoolFellowTableData>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(val) => row.toggleSelected(!!val)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "fellowName",
-    header: "Name",
-  },
-  // TODO: add average rating column
-  {
-    // TODO: add correct display component
-    cell: ({ row }) =>
-      row.original.droppedOutAt || row.original.droppedOut ? (
-        <Badge variant="destructive">Inactive</Badge>
-      ) : (
-        <Badge variant="shamiri-green">Active</Badge>
+export const columns = (
+  supervisors: Prisma.SupervisorGetPayload<{}>[],
+): ColumnDef<SchoolFellowTableData>[] => {
+  return [
+    {
+      id: "checkbox",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
+          aria-label="Select all"
+          className={
+            "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+          }
+        />
       ),
-    header: "Active Status",
-  },
-  // TODO:: confirm if we are showing groups the fellow is handling in the school
-  {
-    accessorFn: (row) => row.groups.length,
-    header: "No. of groups",
-  },
-  {
-    header: "Phone Number",
-    accessorKey: "phoneNumber",
-  },
-  {
-    // TODO: add component for displaying this
-    header: "Supervisor",
-    cell: ({ row }) => (
-      <Badge variant="default">{row.original.supervisor?.supervisorName}</Badge>
-    ),
-  },
-  // TODO: confirm what will be showed for number of schools
-  {
-    id: "actions",
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost">
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>View Fellow information</DropdownMenuItem>
-          <DropdownMenuItem>Assign supervisor</DropdownMenuItem>
-          <DropdownMenuItem>View students in group</DropdownMenuItem>
-          <DropdownMenuItem>Session attendance history</DropdownMenuItem>
-          <DropdownMenuItem>View student group evaluation</DropdownMenuItem>
-          <DropdownMenuItem>View weekly fellow evaluation</DropdownMenuItem>
-          <DropdownMenuItem>View complaints</DropdownMenuItem>
-          <DropdownMenuItem>
-            <div className="text-shamiri-red">Drop-out fellow</div>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
-];
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center justify-center">
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(val) => row.toggleSelected(!!val)}
+              aria-label="Select row"
+              className={
+                "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+              }
+            />
+          </div>
+        );
+      },
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "fellowName",
+      header: "Name",
+    },
+    {
+      header: "Average Rating",
+      cell: ({ row }) => {
+        const rating = row.original.averageRating ?? 0;
+        return <DataTableRatingStars rating={rating} />;
+      },
+      id: "Average Rating",
+    },
+    {
+      cell: ({ row }) =>
+        row.original.droppedOut ? (
+          <Badge variant="destructive">Inactive</Badge>
+        ) : (
+          <Badge variant="shamiri-green">Active</Badge>
+        ),
+      header: "Active Status",
+    },
+    {
+      accessorKey: "groupName",
+      header: "Group Name",
+    },
+    {
+      header: "Phone Number",
+      accessorFn: (row) => {
+        return (
+          row.cellNumber &&
+          parsePhoneNumber(row.cellNumber, "KE").formatNational()
+        );
+      },
+    },
+    {
+      header: "Supervisor",
+      cell: ({ row }) => (
+        <div className="flex">
+          <AssignFellowSupervisor
+            fellowId={row.original.id}
+            supervisorId={row.original.supervisorId}
+            supervisors={supervisors}
+          />
+        </div>
+      ),
+    },
+    // TODO: confirm what will be showed for number of schools
+    {
+      id: "button",
+      cell: ({ row }) => <FellowsDatatableMenu fellow={row.original} />,
+      enableHiding: false,
+    },
+  ];
+};
