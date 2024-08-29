@@ -56,6 +56,7 @@ export default function AddNewFellowForm({
       toast({
         title: "Failed to create a new fellow",
         variant: "destructive",
+        description: response.message ?? null,
       });
     }
   }
