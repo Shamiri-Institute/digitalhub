@@ -24,38 +24,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "#/components/ui/popover";
+import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-
-const FormSchema = z.object({
-  fellowName: z.string({
-    required_error: "Please enter the fellow's name.",
-  }),
-  fellowEmail: z.string({
-    required_error: "Please enter the fellow's email.",
-  }),
-  cellNumber: z.string({
-    required_error: "Please enter the fellow's cell phone number.",
-  }),
-  mpesaName: z.string({
-    required_error: "Please enter the fellow's MPESA name.",
-  }),
-  mpesaNumber: z.string({
-    required_error: "Please enter the fellow's MPESA number.",
-  }),
-  county: z.string().optional(),
-  subCounty: z.string().optional(),
-  dateOfBirth: z.date().optional(),
-  gender: z.string({
-    required_error: "Please enter the fellow's gender.",
-  }),
-  idNumber: z.string().optional(),
-});
+import { addNewFellow } from "../actions";
+import { FellowSchema } from "../schemas";
 
 export default function AddNewFellowForm({
   children,
@@ -63,13 +40,25 @@ export default function AddNewFellowForm({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = React.useState(false);
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+  const form = useForm<FellowSchema>({
+    resolver: zodResolver(FellowSchema),
   });
 
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    console.log(data);
-  };
+  async function onSubmit(data: FellowSchema) {
+    const response = await addNewFellow(data);
+    if (response.success) {
+      toast({
+        title: "Success",
+        variant: "default",
+        description: "Successfully added new fellow",
+      });
+    } else {
+      toast({
+        title: "Failed to create a new fellow",
+        variant: "destructive",
+      });
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -198,7 +187,7 @@ export default function AddNewFellowForm({
                   name="mpesaName"
                   render={({ field }) => (
                     <FormItem className="flex-1">
-                      <FormLabel>MPESA NAME</FormLabel>
+                      <FormLabel>M-PESA name</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -211,7 +200,7 @@ export default function AddNewFellowForm({
                   name="mpesaNumber"
                   render={({ field }) => (
                     <FormItem className="flex-1">
-                      <FormLabel>MPESA NUMBER</FormLabel>
+                      <FormLabel>M-PESA number</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -256,7 +245,11 @@ export default function AddNewFellowForm({
               >
                 Cancel
               </Button>
-              <Button className="bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                className="bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
+              >
                 {form.formState.isSubmitting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
