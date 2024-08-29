@@ -52,6 +52,8 @@ export default function AddNewFellowForm({
         variant: "default",
         description: "Successfully added new fellow",
       });
+      form.reset();
+      setOpen(false);
     } else {
       toast({
         title: "Failed to create a new fellow",
@@ -243,6 +245,10 @@ export default function AddNewFellowForm({
               <Button
                 variant="ghost"
                 className="text-base font-semibold leading-6 text-shamiri-new-blue"
+                onClick={() => {
+                  form.reset();
+                  setOpen(false);
+                }}
               >
                 Cancel
               </Button>
