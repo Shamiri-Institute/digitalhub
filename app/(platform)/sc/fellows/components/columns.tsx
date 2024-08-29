@@ -1,29 +1,31 @@
+'use client'
 import { Checkbox } from "#/components/ui/checkbox";
+import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 
-export type FellowsData = {
-  id: string;
-  fellowName: string;
-  sessionsAttended: number;
-  mpesaNumber: string;
-  county: string;
-  numClinicalCases?: number;
-  nextSession?: number; // TODO: confirm this
-  groupRating: number;
-  fellowRating: number;
-  createdAt: number;
-  phoneNumber: string;
-  upcomingSessions?: {
-    schoolName: string;
-    sessionType: string;
-    groupNumber: string;
-    numStudents: string;
-  }[];
-};
+// export type FellowsData = {
+//   id: string;
+//   fellowName: string;
+//   sessionsAttended: number;
+//   mpesaNumber: string;
+//   county: string;
+//   numClinicalCases?: number;
+//   nextSession?: number; // TODO: confirm this
+//   groupRating: number;
+//   fellowRating: number;
+//   createdAt: number;
+//   phoneNumber: string;
+//   upcomingSessions?: {
+//     schoolName: string;
+//     sessionType: string;
+//     groupNumber: string;
+//     numStudents: string;
+//   }[];
+// };
 
-export const columns = (
-  fellowData: FellowsData[],
-): ColumnDef<FellowsData>[] => [
+export type FellowsData = Prisma.FellowGetPayload<{}>;
+
+export const columns: ColumnDef<FellowsData>[] = [
   {
     id: "checkbox",
     header: ({ table }) => (

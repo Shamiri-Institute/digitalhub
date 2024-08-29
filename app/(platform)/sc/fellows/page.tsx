@@ -2,6 +2,7 @@ import AddNewFellowForm from "#/app/(platform)/sc/components/add-new-fellow-form
 import { Button } from "#/components/ui/button";
 import { Suspense } from "react";
 import FellowsDataTable from "./components/fellows-data-table";
+import TableSkeleton from "#/components/table-skeleton";
 
 export default function FellowsPage() {
   return (
@@ -19,7 +20,7 @@ export default function FellowsPage() {
           <div>Toggle view goes here</div>
         </div>
       </div>
-      <Suspense fallback={<div>Loading fellows data</div>}>
+      <Suspense fallback={<TableSkeleton numRows={10} />}>
         <FellowsDataTable />
       </Suspense>
     </div>

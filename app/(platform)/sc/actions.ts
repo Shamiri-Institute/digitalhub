@@ -45,3 +45,19 @@ export async function addNewFellow(fellowData: FellowSchema) {
     return { success: false };
   }
 }
+
+export async function loadFellowsData() {
+  const supervisor = await currentSupervisor();
+
+  if (!supervisor) {
+    throw new Error('Unauthorised user')
+  }
+
+  const fellows = await db.fellow.findMany({
+    where: {
+      supervisorId: supervisor.id
+    }
+  })
+
+  return fellows;
+}
