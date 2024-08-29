@@ -130,3 +130,26 @@ export function sessionDisplayName(sessionType: string) {
       return sessionType;
   }
 }
+
+export function generateFellowVisibleID(lastNumber: number): string {
+  // Get current year
+  const currentYear: number = new Date().getFullYear();
+
+  // Extract last two digits of the current year
+  let yearDigits: string = String(currentYear).slice(-2);
+
+  // First part
+  let part1: string = `TFW${yearDigits}`;
+
+  // Second part
+  let part2: string = "S";
+
+  // Third part
+  const newNumber = lastNumber + 1;
+  let part3: string = newNumber.toString().padStart(3, "0");
+  if (newNumber >= 1000) {
+    part3 = newNumber.toString().padStart(4, "0");
+  }
+
+  return `${part1}_${part2}_${part3}`;
+}

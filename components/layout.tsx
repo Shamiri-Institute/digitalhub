@@ -38,7 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const session = useSession();
 
-  if (pathname.startsWith("/hc")) {
+  if (pathname.startsWith("/hc") || pathname.startsWith("/sc")) {
     return (
       <LayoutV2
         userName={session.data?.user.name ?? "N/A"}
@@ -85,7 +85,7 @@ function LayoutV2({
   avatarUrl?: string | null;
   pathname: string;
 }) {
-  const [, subRoute] = pathname.slice(1).split("/"); // get the path under the 'hc' route. fix this when we add other roles
+  const [mainRoute, subRoute] = pathname.slice(1).split("/"); // get the path under the 'hc' route. fix this when we add other roles
   const schoolsActive = subRoute?.includes("schools");
   const scheduleActive = subRoute?.includes("schedule");
   const supervisorsActive = subRoute?.includes("supervisor");
@@ -171,27 +171,29 @@ function LayoutV2({
             {/*TODO: the items in this list should depend on the user's role */}
             <div className={`tab-link ${cn(scheduleActive && "active")}`}>
               <CalendarIcon />
-              <Link href="/hc/schedule">Schedule</Link>
+              <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
             </div>
             <div className={`tab-link ${cn(schoolsActive && "active")}`}>
               <SchoolIcon />
-              <Link href="/hc/schools">Schools</Link>
+              <Link href={`/${mainRoute}/schools`}>Schools</Link>
             </div>
-            <div className={`tab-link ${cn(supervisorsActive && "active")}`}>
-              <PeopleIcon />
-              <Link href="/hc/supervisors">Supervisors</Link>
-            </div>
+            {mainRoute === "hc" ? (
+              <div className={`tab-link ${cn(supervisorsActive && "active")}`}>
+                <PeopleIcon />
+                <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
+              </div>
+            ) : null}
             <div className={`tab-link ${cn(fellowsActive && "active")}`}>
               <PeopleIconAlternate />
-              <Link href="/hc/fellows">Fellows</Link>
+              <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
             </div>
             <div className={`tab-link ${cn(studentsActive && "active")}`}>
               <GraduationCapIcon />
-              <Link href="/hc/students">Students</Link>
+              <Link href={`/${mainRoute}/students`}>Students</Link>
             </div>
             <div className={`tab-link ${cn(reportingActive && "active")}`}>
               <BarChartIcon />
-              <Link href="/hc/reporting">Reporting</Link>
+              <Link href={`/${mainRoute}/reporting`}>Reporting</Link>
               <Image
                 unoptimized
                 priority
