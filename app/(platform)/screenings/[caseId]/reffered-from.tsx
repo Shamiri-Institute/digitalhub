@@ -118,7 +118,7 @@ export function ReferralFrom({
           currentcase?.currentSupervisor?.supervisorName || "Supervisor", // since its the logged in supervisor
         referredToSpecified: data.other
           ? data.other
-          : (currentcase?.currentSupervisor?.supervisorName ?? ""),
+          : currentcase?.currentSupervisor?.supervisorName ?? "",
         supervisorId: currentSupId ?? "",
         initialCaseId: currentcase.initialCaseHistoryId ?? "",
       });
