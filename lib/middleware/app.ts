@@ -28,6 +28,7 @@ export default async function AppMiddleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/", req.url));
     }
 
+    // TODO: update this to also check for supervisor role once we have finished the sc flows
     if (ifHcUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/hc", req.url));
     } else if (ifSupervisorAndHcRoute(session, path)) {
