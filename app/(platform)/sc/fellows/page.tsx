@@ -1,5 +1,7 @@
 import AddNewFellowForm from "#/app/(platform)/sc/components/add-new-fellow-form";
 import { Button } from "#/components/ui/button";
+import { Suspense } from "react";
+import FellowsDataTable from "./components/fellows-data-table";
 
 export default function FellowsPage() {
   return (
@@ -17,7 +19,9 @@ export default function FellowsPage() {
           <div>Toggle view goes here</div>
         </div>
       </div>
-      <div>Table goes here</div>
+      <Suspense fallback={<div>Loading fellows data</div>}>
+        <FellowsDataTable />
+      </Suspense>
     </div>
   );
 }
