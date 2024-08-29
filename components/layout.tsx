@@ -177,10 +177,12 @@ function LayoutV2({
               <SchoolIcon />
               <Link href={`/${mainRoute}/schools`}>Schools</Link>
             </div>
-            <div className={`tab-link ${cn(supervisorsActive && "active")}`}>
-              <PeopleIcon />
-              <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
-            </div>
+            {mainRoute === "hc" ? (
+              <div className={`tab-link ${cn(supervisorsActive && "active")}`}>
+                <PeopleIcon />
+                <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
+              </div>
+            ) : null}
             <div className={`tab-link ${cn(fellowsActive && "active")}`}>
               <PeopleIconAlternate />
               <Link href={`/${mainRoute}/fellows`}>Fellows</Link>

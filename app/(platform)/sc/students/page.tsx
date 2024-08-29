@@ -1,3 +1,3 @@
 export default function SupervisorSchoolsPage() {
-  return <div>Schools Page coming soon!</div>
+  return <div>Schools Page coming soon!</div>;
 }

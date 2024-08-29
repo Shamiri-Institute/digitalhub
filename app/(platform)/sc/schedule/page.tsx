@@ -1,3 +1,3 @@
 export default function SupervisorSchedulePage() {
-  return <div>Schedule Page coming soon!</div>
+  return <div>Schedule Page coming soon!</div>;
 }
