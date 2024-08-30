@@ -325,6 +325,23 @@ export const AddNewSupervisorSchema = z.object({
   }),
 });
 
+export const AddNewStudentSchema = z.object({
+  studentName: z.string({
+    required_error: "Please enter the student's name",
+  }),
+  schoolId: stringValidation("School ID required"),
+  assignedGroupId: stringValidation("Group ID required"),
+  form: stringValidation("Please enter the student's class"),
+  stream: stringValidation("Please enter the student's stream"),
+  gender: stringValidation("Please select the student's gender"),
+  admissionNumber: stringValidation(
+    "Please enter the student's admission number",
+  ),
+  yearOfBirth: z.coerce.number({
+    required_error: "Please enter year of birth",
+  }),
+});
+
 export const AssignPointSupervisorSchema = z.object({
   assignedSupervisorId: z.string({
     required_error: "Please pick a supervisor.",

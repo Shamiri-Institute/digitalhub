@@ -1,4 +1,5 @@
 import { fetchFellowsWithRatings } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
+import AddStudentToGroup from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/add-student-to-group";
 import FellowInfoContextProvider from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellow-info-context-provider";
 import FellowsDatatable from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
 import StudentsInGroup from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/students-in-group";
@@ -26,6 +27,7 @@ export default async function FellowsPage({
     <FellowInfoContextProvider>
       <FellowsDatatable fellows={fellows} supervisors={supervisors} />
       <StudentsInGroup />
+      <AddStudentToGroup />
     </FellowInfoContextProvider>
   );
 }
