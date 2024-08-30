@@ -6,6 +6,8 @@ import { createContext, Dispatch, SetStateAction } from "react";
 type FellowInfoContextData = {
   groupDialog: boolean;
   setGroupDialog: Dispatch<SetStateAction<boolean>>;
+  addStudentDialog: boolean;
+  setAddStudentDialog: Dispatch<SetStateAction<boolean>>;
   fellow: SchoolFellowTableData | null;
   setFellow: Dispatch<SetStateAction<SchoolFellowTableData | null>>;
 };
@@ -13,6 +15,8 @@ type FellowInfoContextData = {
 export const FellowInfoContext = createContext<FellowInfoContextData>({
   groupDialog: false,
   setGroupDialog: () => {},
+  addStudentDialog: false,
+  setAddStudentDialog: () => {},
   fellow: null,
   setFellow: () => {},
 });

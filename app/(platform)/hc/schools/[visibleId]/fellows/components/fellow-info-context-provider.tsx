@@ -9,6 +9,7 @@ export default function FellowInfoContextProvider({
   children: React.ReactNode;
 }) {
   const [groupDialog, setGroupDialog] = useState(false);
+  const [addStudentDialog, setAddStudentDialog] = useState(false);
   const [fellow, setFellow] = useState<SchoolFellowTableData | null>(null);
 
   return (
@@ -16,6 +17,8 @@ export default function FellowInfoContextProvider({
       value={{
         groupDialog,
         setGroupDialog,
+        addStudentDialog,
+        setAddStudentDialog,
         fellow,
         setFellow,
       }}
