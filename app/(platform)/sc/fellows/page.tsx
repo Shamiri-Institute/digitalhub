@@ -1,8 +1,8 @@
 import AddNewFellowForm from "#/app/(platform)/sc/components/add-new-fellow-form";
+import TableSkeleton from "#/components/table-skeleton";
 import { Button } from "#/components/ui/button";
 import { Suspense } from "react";
 import FellowsDataTable from "./components/fellows-data-table";
-import TableSkeleton from "#/components/table-skeleton";
 
 export default function FellowsPage() {
   return (

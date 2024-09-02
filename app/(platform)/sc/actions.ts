@@ -50,14 +50,14 @@ export async function loadFellowsData() {
   const supervisor = await currentSupervisor();
 
   if (!supervisor) {
-    throw new Error('Unauthorised user')
+    throw new Error("Unauthorised user");
   }
 
   const fellows = await db.fellow.findMany({
     where: {
-      supervisorId: supervisor.id
-    }
-  })
+      supervisorId: supervisor.id,
+    },
+  });
 
   return fellows;
 }

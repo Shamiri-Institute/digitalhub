@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
@@ -61,5 +61,17 @@ export const columns: ColumnDef<FellowsData>[] = [
   {
     accessorKey: "fellowName",
     header: "Name",
+  },
+  {
+    accessorKey: "mpesaNumber",
+    header: "MPESA Number",
+  },
+  {
+    accessorKey: "county",
+    header: "County",
+  },
+  {
+    accessorKey: "subCounty",
+    header: "Sub County",
   },
 ];
