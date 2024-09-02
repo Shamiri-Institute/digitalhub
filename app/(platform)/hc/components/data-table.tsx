@@ -40,6 +40,8 @@ interface DataTableProps<TData, TValue> {
   columnVisibilityState?: VisibilityState;
   enableRowSelection?: boolean | ((row: Row<TData>) => boolean) | undefined;
   renderTableActions?: ReactNode;
+  renderSubComponent?: (props: { row: Row<TData> }) => React.ReactElement;
+  getRowCanExpand?: (row: Row<TData>) => boolean;
 }
 
 export default function DataTable<TData, TValue>({
@@ -53,6 +55,8 @@ export default function DataTable<TData, TValue>({
   enableRowSelection,
   renderTableActions,
   rowSelectionDescription = "rows",
+  renderSubComponent,
+  getRowCanExpand,
 }: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
