@@ -24,7 +24,16 @@ export async function fetchSchoolData(hubId: string) {
     include: {
       assignedSupervisor: true,
       interventionSessions: true,
-      students: true,
+      students: {
+        include: {
+          assignedGroup: true,
+          _count: {
+            select: {
+              clinicalCases: true,
+            },
+          },
+        },
+      },
     },
   });
 }
