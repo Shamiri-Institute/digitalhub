@@ -16,6 +16,9 @@ ALTER TABLE "intervention_groups" DROP CONSTRAINT "intervention_groups_school_id
 ALTER TABLE "intervention_groups" ALTER COLUMN "leader_id" SET NOT NULL,
 ALTER COLUMN "school_id" SET NOT NULL;
 
+-- AlterTable
+ALTER TABLE "students" ADD COLUMN     "year_of_birth" INTEGER;
+
 -- CreateIndex
 CREATE UNIQUE INDEX "intervention_groups_leader_id_school_id_key" ON "intervention_groups"("leader_id", "school_id");
 
