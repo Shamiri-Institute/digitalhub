@@ -40,7 +40,6 @@ interface DataTableProps<TData, TValue> {
   columnVisibilityState?: VisibilityState;
   enableRowSelection?: boolean | ((row: Row<TData>) => boolean) | undefined;
   renderTableActions?: ReactNode;
-  renderSubComponent?: (props: { row: Row<TData> }) => React.ReactElement;
   getRowCanExpand?: (row: Row<TData>) => boolean;
 }
 
@@ -55,8 +54,7 @@ export default function DataTable<TData, TValue>({
   enableRowSelection,
   renderTableActions,
   rowSelectionDescription = "rows",
-  renderSubComponent,
-  getRowCanExpand,
+  getRowCanExpand = () => true,
 }: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -71,6 +69,7 @@ export default function DataTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
+    getRowCanExpand,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
@@ -206,22 +205,24 @@ export default function DataTable<TData, TValue>({
                     </TableCell>
                   ))}
                 </TableRow>
-                <TableRow>
-                  <TableCell colSpan={columns.length}>
-                    <Table>
-                      <TableHeader>
-                        <TableHead>test</TableHead>
-                        <TableHead>test again</TableHead>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell>data data</TableCell>
-                          <TableCell>data data</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </TableCell>
-                </TableRow>
+                {row.getIsExpanded() ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length}>
+                      <Table>
+                        <TableHeader>
+                          <TableHead>test</TableHead>
+                          <TableHead>test again</TableHead>
+                        </TableHeader>
+                        <TableBody>
+                          <TableRow>
+                            <TableCell>data data</TableCell>
+                            <TableCell>data data</TableCell>
+                          </TableRow>
+                        </TableBody>
+                      </Table>
+                    </TableCell>
+                  </TableRow>
+                ) : null}
               </>
             ))
           ) : (

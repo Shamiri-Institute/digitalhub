@@ -1,5 +1,4 @@
 "use client";
-import { Checkbox } from "#/components/ui/checkbox";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -31,32 +30,15 @@ export type FellowsData = Prisma.FellowGetPayload<{
 
 export const columns: ColumnDef<FellowsData>[] = [
   {
-    id: "checkbox",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
-        aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
-      />
-    ),
+    id: "button",
     cell: ({ row }) => {
       return (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(val) => row.toggleSelected(!!val)}
-            aria-label="Select row"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
-          />
-        </div>
+        <button
+          onClick={row.getToggleExpandedHandler()}
+          className="cursor-pointer"
+        >
+          {row.getIsExpanded() ? "▼" : "▶"}
+        </button>
       );
     },
     enableSorting: false,
