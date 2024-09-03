@@ -180,28 +180,49 @@ export default function DataTable<TData, TValue>({
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                id={row.id}
-                className="text-sm font-medium leading-5 text-shamiri-text-dark-grey data-[state=Selected]:bg-blue-bg"
-                data-state={row.getIsSelected() && "Selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    id={cell.id}
-                    className={cn(
-                      "truncate border-y border-l",
-                      cell.column.columnDef.id === "button" ||
-                        cell.column.columnDef.id === "checkbox"
-                        ? "relative cursor-pointer border-l-0 !p-0"
-                        : "!px-4 py-2",
-                    )}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              <>
+                <TableRow
+                  key={row.id}
+                  id={row.id}
+                  className="text-sm font-medium leading-5 text-shamiri-text-dark-grey data-[state=Selected]:bg-blue-bg"
+                  data-state={row.getIsSelected() && "Selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      id={cell.id}
+                      className={cn(
+                        "truncate border-y border-l",
+                        cell.column.columnDef.id === "button" ||
+                          cell.column.columnDef.id === "checkbox"
+                          ? "relative cursor-pointer border-l-0 !p-0"
+                          : "!px-4 py-2",
+                      )}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                <TableRow>
+                  <TableCell colSpan={columns.length}>
+                    <Table>
+                      <TableHeader>
+                        <TableHead>test</TableHead>
+                        <TableHead>test again</TableHead>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>data data</TableCell>
+                          <TableCell>data data</TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
                   </TableCell>
-                ))}
-              </TableRow>
+                </TableRow>
+              </>
             ))
           ) : (
             <TableRow>
