@@ -23,7 +23,11 @@ import { ColumnDef } from "@tanstack/react-table";
 //   }[];
 // };
 
-export type FellowsData = Prisma.FellowGetPayload<{}>;
+export type FellowsData = Prisma.FellowGetPayload<{
+  include: {
+    fellowAttendances: true;
+  };
+}>;
 
 export const columns: ColumnDef<FellowsData>[] = [
   {
