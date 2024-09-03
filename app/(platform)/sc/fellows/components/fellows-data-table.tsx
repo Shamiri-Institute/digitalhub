@@ -1,11 +1,11 @@
 "use client";
 import DataTable from "#/app/(platform)/hc/components/data-table";
-import { columns, FellowAttendanceData, subColumns } from "./columns";
+import { columns, subColumns, FellowsData } from "./columns";
 
 export default function FellowsDataTable({
   fellows,
 }: {
-  fellows: FellowAttendanceData[];
+  fellows: FellowsData[];
 }) {
   return (
     <DataTable
@@ -14,6 +14,7 @@ export default function FellowsDataTable({
       renderSubComponent={({ row }) => (
         <DataTable
           data={row.original.fellowAttendances}
+          editColumns={false}
           columns={subColumns}
           emptyStateMessage="No upcoming fellow attendances for this fellow"
         />
