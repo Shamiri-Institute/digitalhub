@@ -57,6 +57,9 @@ export async function loadFellowsData() {
     where: {
       supervisorId: supervisor.id,
     },
+    include: {
+      fellowAttendances: true,
+    },
   });
 
   return fellows;
