@@ -116,3 +116,17 @@ export async function addNewStudentToGroup(
     return { error: "Something went wrong assigning a supervisor" };
   }
 }
+
+export async function fetchSchoolFellowAttendances(visibleId: string) {
+  return await db.fellowAttendance.findMany({
+    where: {
+      school: {
+        visibleId,
+      },
+    },
+    include: {
+      session: true,
+      group: true,
+    },
+  });
+}

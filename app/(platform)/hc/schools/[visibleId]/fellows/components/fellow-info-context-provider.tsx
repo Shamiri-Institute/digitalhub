@@ -10,6 +10,7 @@ export default function FellowInfoContextProvider({
 }) {
   const [groupDialog, setGroupDialog] = useState(false);
   const [addStudentDialog, setAddStudentDialog] = useState(false);
+  const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
   const [fellow, setFellow] = useState<SchoolFellowTableData | null>(null);
 
   return (
@@ -19,6 +20,8 @@ export default function FellowInfoContextProvider({
         setGroupDialog,
         addStudentDialog,
         setAddStudentDialog,
+        attendanceHistoryDialog,
+        setAttendanceHistoryDialog,
         fellow,
         setFellow,
       }}
