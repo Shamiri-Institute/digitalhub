@@ -3,6 +3,7 @@ import {
   fetchSchoolFellowAttendances,
 } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
 import AddStudentToGroup from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/add-student-to-group";
+import AssignFellowSupervisorDialog from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/assign-fellow-supervisor-dialog";
 import AttendanceHistory from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/attendance-history";
 import FellowInfoContextProvider from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellow-info-context-provider";
 import FellowsDatatable from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
@@ -34,6 +35,7 @@ export default async function FellowsPage({
       <StudentsInGroup />
       <AddStudentToGroup />
       <AttendanceHistory attendances={attendances} />
+      <AssignFellowSupervisorDialog supervisors={supervisors} />
     </FellowInfoContextProvider>
   );
 }
