@@ -3,7 +3,7 @@
 import DataTable from "#/app/(platform)/hc/components/data-table";
 import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
-import { Icons } from "#/components/icons";
+import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -34,7 +34,7 @@ export default function AttendanceHistory({
       open={context.attendanceHistoryDialog}
       onOpenChange={context.setAttendanceHistoryDialog}
     >
-      <DialogContent className="w-3/4 max-w-none">
+      <DialogContent className="w-3/5 max-w-none">
         <DialogHeader>
           <h2 className="text-xl font-bold">Session attendance history</h2>
         </DialogHeader>
@@ -56,24 +56,13 @@ export default function AttendanceHistory({
         </div>
         <DialogFooter className="flex justify-end gap-2">
           <Button
-            variant="ghost"
-            type="button"
-            className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
-            onClick={() => {
-              context.setGroupDialog(false);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
             variant="brand"
             onClick={() => {
-              context.setAddStudentDialog(true);
+              context.setAttendanceHistoryDialog(false);
             }}
             className="flex items-center gap-2"
           >
-            <Icons.plusCircle className="h-4 w-4" />
-            Add Student
+            Done
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -113,8 +102,8 @@ const columns: ColumnDef<
   {
     header: "Status",
     id: "status",
-    accessorFn: (row) => {
-      return "";
+    cell: ({ row }) => {
+      return <Badge variant="shamiri-green">Payment initiated</Badge>;
     },
   },
 ];
