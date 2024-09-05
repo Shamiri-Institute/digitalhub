@@ -1,6 +1,6 @@
 "use client";
 import DataTable from "#/app/(platform)/hc/components/data-table";
-import { columns, subColumns, FellowsData } from "./columns";
+import { columns, FellowsData, subColumns } from "./columns";
 
 export default function FellowsDataTable({
   fellows,

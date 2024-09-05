@@ -28,7 +28,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ReactNode, useEffect, useState } from "react";
+import { Fragment, ReactNode, useEffect, useState } from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -181,9 +181,8 @@ export default function DataTable<TData, TValue>({
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
-              <>
+              <Fragment key={row.id}>
                 <TableRow
-                  key={row.id}
                   id={row.id}
                   className="text-sm font-medium leading-5 text-shamiri-text-dark-grey data-[state=Selected]:bg-blue-bg"
                   data-state={row.getIsSelected() && "Selected"}
@@ -211,24 +210,10 @@ export default function DataTable<TData, TValue>({
                   <TableRow>
                     <TableCell colSpan={columns.length}>
                       {renderSubComponent({ row })}
-                      {/*
-                      <Table>
-                        <TableHeader>
-                          <TableHead>test</TableHead>
-                          <TableHead>test again</TableHead>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow>
-                            <TableCell>data data</TableCell>
-                            <TableCell>data data</TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                      */}
                     </TableCell>
                   </TableRow>
                 ) : null}
-              </>
+              </Fragment>
             ))
           ) : (
             <TableRow>
