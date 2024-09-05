@@ -67,15 +67,9 @@ export async function loadFellowsData() {
           school: {
             include: {
               interventionSessions: {
-                where: {
-                  sessionDate: {
-                    gte: new Date(),
-                  },
-                },
                 orderBy: {
                   sessionDate: "asc",
                 },
-                take: 1,
               },
             },
           },
@@ -95,13 +89,16 @@ export async function loadFellowsData() {
     droppedOut: fellow.droppedOut,
     droppedOutAt: fellow.droppedOutAt,
     id: fellow.id,
-    sessions: fellow.groups
-      .filter((group) => group.school?.interventionSessions.length)
-      .map((group) => ({
-        schoolName: group.school?.schoolName,
-        sessionType: group.school?.interventionSessions[0]?.sessionType,
-        groupName: group.groupName,
-        numberOfStudents: group.students.length,
-      })),
+    sessions: fellow.groups.map((group) => ({
+      schoolName: group.school?.schoolName,
+      sessionType:
+        group.school?.interventionSessions[0]?.sessionDate &&
+        group.school?.interventionSessions[0]?.sessionDate > new Date()
+          ? group.school?.interventionSessions[0]?.sessionType
+          : "No upcoming session",
+      groupName: group.groupName,
+      numberOfStudents: group.students.length,
+      students: group.students,
+    })),
   }));
 }

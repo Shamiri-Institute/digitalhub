@@ -14,7 +14,7 @@ export default async function FellowsDataTable() {
           data={row.original.sessions}
           editColumns={false}
           columns={subColumns}
-          emptyStateMessage="No upcoming sessions for this fellow"
+          emptyStateMessage="No groups assigned to this fellow"
         />
       )}
       emptyStateMessage="No Fellows Assigned to you"

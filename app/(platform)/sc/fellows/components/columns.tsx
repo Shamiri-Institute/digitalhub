@@ -5,6 +5,7 @@ import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
+import FellowsSessionsTableDropdownMenu from "./fellows-sessions-table-dropdown-menu";
 import FellowsTableDropdown from "./fellows-table-dropdown-menu";
 
 export const columns: ColumnDef<FellowsData>[] = [
@@ -112,5 +113,12 @@ export const subColumns: ColumnDef<FellowsData["sessions"][number]>[] = [
   {
     accessorKey: "numberOfStudents",
     header: "Number of Students",
+  },
+  {
+    id: "button",
+    cell: ({ row }) => (
+      <FellowsSessionsTableDropdownMenu sessionRow={row.original} />
+    ),
+    enableHiding: false,
   },
 ];
