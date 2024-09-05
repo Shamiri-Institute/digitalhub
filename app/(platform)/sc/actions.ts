@@ -46,6 +46,8 @@ export async function addNewFellow(fellowData: FellowSchema) {
   }
 }
 
+export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
+
 export async function loadFellowsData() {
   const supervisor = await currentSupervisor();
 
@@ -59,8 +61,47 @@ export async function loadFellowsData() {
     },
     include: {
       fellowAttendances: true,
+      groups: {
+        include: {
+          students: true,
+          school: {
+            include: {
+              interventionSessions: {
+                where: {
+                  sessionDate: {
+                    gte: new Date(),
+                  },
+                },
+                orderBy: {
+                  sessionDate: "asc",
+                },
+                take: 1,
+              },
+            },
+          },
+        },
+      },
     },
   });
 
-  return fellows;
+  return fellows.map((fellow) => ({
+    county: fellow.county,
+    subCounty: fellow.subCounty,
+    fellowName: fellow.fellowName,
+    fellowEmail: fellow.fellowEmail,
+    mpesaNumber: fellow.mpesaNumber,
+    mpesaName: fellow.mpesaName,
+    createdAt: fellow.createdAt,
+    droppedOut: fellow.droppedOut,
+    droppedOutAt: fellow.droppedOutAt,
+    id: fellow.id,
+    sessions: fellow.groups
+      .filter((group) => group.school?.interventionSessions.length)
+      .map((group) => ({
+        schoolName: group.school?.schoolName,
+        sessionType: group.school?.interventionSessions[0]?.sessionType,
+        groupName: group.groupName,
+        numberOfStudents: group.students.length,
+      })),
+  }));
 }

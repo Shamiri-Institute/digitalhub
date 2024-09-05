@@ -1,35 +1,11 @@
 "use client";
+import type { FellowsData } from "#/app/(platform)/sc/actions";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Prisma } from "@prisma/client";
+import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
+import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
-
-// export type FellowsData = {
-//   id: string;
-//   fellowName: string;
-//   sessionsAttended: number;
-//   mpesaNumber: string;
-//   county: string;
-//   numClinicalCases?: number;
-//   nextSession?: number; // TODO: confirm this
-//   groupRating: number;
-//   fellowRating: number;
-//   createdAt: number;
-//   phoneNumber: string;
-//   upcomingSessions?: {
-//     schoolName: string;
-//     sessionType: string;
-//     groupNumber: string;
-//     numStudents: string;
-//   }[];
-// };
-
-export type FellowsData = Prisma.FellowGetPayload<{
-  include: {
-    fellowAttendances: true;
-  };
-}>;
-
-export type FellowAttendanceData = Prisma.FellowAttendanceGetPayload<{}>;
+import Image from "next/image";
+import FellowsTableDropdown from "./fellows-table-dropdown-menu";
 
 export const columns: ColumnDef<FellowsData>[] = [
   {
@@ -38,9 +14,27 @@ export const columns: ColumnDef<FellowsData>[] = [
       return (
         <button
           onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer"
+          className="cursor-pointer px-4 py-2"
         >
-          {row.getIsExpanded() ? "▼" : "▶"}
+          {row.getIsExpanded() ? (
+            <Image
+              unoptimized
+              priority
+              src={ArrowUpIcon}
+              alt="Telephone Icon"
+              width={16}
+              height={16}
+            />
+          ) : (
+            <Image
+              unoptimized
+              priority
+              src={ArrowDownIcon}
+              alt="Arrow Down Icon"
+              width={16}
+              height={16}
+            />
+          )}
         </button>
       );
     },
@@ -63,9 +57,14 @@ export const columns: ColumnDef<FellowsData>[] = [
     accessorKey: "subCounty",
     header: "Sub County",
   },
+  {
+    id: "button",
+    cell: ({ row }) => <FellowsTableDropdown fellowRow={row.original} />,
+    enableHiding: false,
+  },
 ];
 
-export const subColumns: ColumnDef<FellowAttendanceData>[] = [
+export const subColumns: ColumnDef<FellowsData["sessions"][number]>[] = [
   {
     id: "checkbox",
     header: ({ table }) => (
@@ -99,11 +98,19 @@ export const subColumns: ColumnDef<FellowAttendanceData>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "sessionNumber",
-    header: "Session Number",
+    accessorKey: "schoolName",
+    header: "School Name",
   },
   {
-    accessorKey: "attended",
-    header: "Attended",
+    accessorKey: "sessionType",
+    header: "Session Type",
+  },
+  {
+    accessorKey: "groupName",
+    header: "Group Name",
+  },
+  {
+    accessorKey: "numberOfStudents",
+    header: "Number of Students",
   },
 ];

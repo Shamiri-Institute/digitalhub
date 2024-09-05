@@ -1,22 +1,20 @@
 "use client";
 import DataTable from "#/app/(platform)/hc/components/data-table";
-import { columns, FellowsData, subColumns } from "./columns";
+import { loadFellowsData } from "../../actions";
+import { columns, subColumns } from "./columns";
 
-export default function FellowsDataTable({
-  fellows,
-}: {
-  fellows: FellowsData[];
-}) {
+export default async function FellowsDataTable() {
+  const fellows = await loadFellowsData();
   return (
     <DataTable
       data={fellows}
       columns={columns}
       renderSubComponent={({ row }) => (
         <DataTable
-          data={row.original.fellowAttendances}
+          data={row.original.sessions}
           editColumns={false}
           columns={subColumns}
-          emptyStateMessage="No upcoming fellow attendances for this fellow"
+          emptyStateMessage="No upcoming sessions for this fellow"
         />
       )}
       emptyStateMessage="No Fellows Assigned to you"
