@@ -28,7 +28,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ReactNode, useEffect, useState } from "react";
+import { Fragment, ReactNode, useEffect, useState } from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -40,6 +40,8 @@ interface DataTableProps<TData, TValue> {
   columnVisibilityState?: VisibilityState;
   enableRowSelection?: boolean | ((row: Row<TData>) => boolean) | undefined;
   renderTableActions?: ReactNode;
+  getRowCanExpand?: (row: Row<TData>) => boolean;
+  renderSubComponent?: (props: { row: Row<TData> }) => ReactNode;
 }
 
 export default function DataTable<TData, TValue>({
@@ -53,6 +55,8 @@ export default function DataTable<TData, TValue>({
   enableRowSelection,
   renderTableActions,
   rowSelectionDescription = "rows",
+  getRowCanExpand = () => true,
+  renderSubComponent,
 }: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -67,6 +71,7 @@ export default function DataTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
+    getRowCanExpand,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
@@ -176,32 +181,43 @@ export default function DataTable<TData, TValue>({
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                id={row.id}
-                className="text-sm font-medium leading-5 text-shamiri-text-dark-grey data-[state=Selected]:bg-blue-bg"
-                data-state={row.getIsSelected() && "Selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    id={cell.id}
-                    className={cn(
-                      "truncate border-y border-l",
-                      cell.column.columnDef.id === "button" ||
-                        cell.column.columnDef.id === "checkbox"
-                        ? "relative cursor-pointer border-l-0 !p-0"
-                        : "!px-4 py-2",
-                    )}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
+              <Fragment key={row.id}>
+                <TableRow
+                  id={row.id}
+                  className="text-sm font-medium leading-5 text-shamiri-text-dark-grey data-[state=Selected]:bg-blue-bg"
+                  data-state={row.getIsSelected() && "Selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      id={cell.id}
+                      className={cn(
+                        "truncate border-y border-l",
+                        cell.column.columnDef.id === "button" ||
+                          cell.column.columnDef.id === "checkbox"
+                          ? "relative cursor-pointer border-l-0 !p-0"
+                          : "!px-4 py-2",
+                      )}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+                {row.getIsExpanded() && renderSubComponent ? (
+                  <TableRow>
+                    <TableCell colSpan={columns.length}>
+                      {renderSubComponent({ row })}
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </Fragment>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length}>
+              <TableCell colSpan={columns.length} className="text-center">
                 {emptyStateMessage}
               </TableCell>
             </TableRow>

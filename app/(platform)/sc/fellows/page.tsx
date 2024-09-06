@@ -1,7 +1,10 @@
 import AddNewFellowForm from "#/app/(platform)/sc/components/add-new-fellow-form";
+import TableSkeleton from "#/components/table-skeleton";
 import { Button } from "#/components/ui/button";
+import { Suspense } from "react";
+import FellowsDataTable from "./components/fellows-data-table";
 
-export default function FellowsPage() {
+export default async function FellowsPage() {
   return (
     <div className="px-6 py-5">
       <div className="flex items-center justify-between py-5">
@@ -17,7 +20,9 @@ export default function FellowsPage() {
           <div>Toggle view goes here</div>
         </div>
       </div>
-      <div>Table goes here</div>
+      <Suspense fallback={<TableSkeleton numRows={10} />}>
+        <FellowsDataTable />
+      </Suspense>
     </div>
   );
 }
