@@ -37,6 +37,7 @@ export default function AssignFellowSupervisorSelect({
             fellowId,
             supervisorId: selectedSupervisor,
           });
+
           if (result.success) {
             toast({ description: result.message });
             revalidatePageAction(pathname);
