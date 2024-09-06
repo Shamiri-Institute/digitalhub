@@ -45,3 +45,60 @@ export async function addNewFellow(fellowData: FellowSchema) {
     return { success: false };
   }
 }
+
+export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
+
+export async function loadFellowsData() {
+  const supervisor = await currentSupervisor();
+
+  if (!supervisor) {
+    throw new Error("Unauthorised user");
+  }
+
+  const fellows = await db.fellow.findMany({
+    where: {
+      supervisorId: supervisor.id,
+    },
+    include: {
+      fellowAttendances: true,
+      groups: {
+        include: {
+          students: true,
+          school: {
+            include: {
+              interventionSessions: {
+                orderBy: {
+                  sessionDate: "asc",
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return fellows.map((fellow) => ({
+    county: fellow.county,
+    subCounty: fellow.subCounty,
+    fellowName: fellow.fellowName,
+    fellowEmail: fellow.fellowEmail,
+    mpesaNumber: fellow.mpesaNumber,
+    mpesaName: fellow.mpesaName,
+    createdAt: fellow.createdAt,
+    droppedOut: fellow.droppedOut,
+    droppedOutAt: fellow.droppedOutAt,
+    id: fellow.id,
+    sessions: fellow.groups.map((group) => ({
+      schoolName: group.school?.schoolName,
+      sessionType:
+        group.school?.interventionSessions[0]?.sessionDate &&
+        group.school?.interventionSessions[0]?.sessionDate > new Date()
+          ? group.school?.interventionSessions[0]?.sessionType
+          : "No upcoming session",
+      groupName: group.groupName,
+      numberOfStudents: group.students.length,
+      students: group.students,
+    })),
+  }));
+}
