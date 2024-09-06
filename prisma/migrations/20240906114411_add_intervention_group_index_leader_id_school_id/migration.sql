@@ -27,3 +27,4 @@ ALTER TABLE "intervention_groups" ADD CONSTRAINT "intervention_groups_leader_id_
 
 -- AddForeignKey
 ALTER TABLE "intervention_groups" ADD CONSTRAINT "intervention_groups_school_id_fkey" FOREIGN KEY ("school_id") REFERENCES "schools"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
