@@ -5,6 +5,7 @@ import { SchoolFellowTableData } from "#/app/(platform)/hc/schools/[visibleId]/f
 import { currentHubCoordinator } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { generateStudentVisibleID } from "#/lib/utils";
 import { z } from "zod";
 
 async function checkAuth() {
@@ -72,10 +73,6 @@ export async function assignFellowSupervisor({
     console.error(error);
     return { error: "Something went wrong assigning a supervisor" };
   }
-}
-
-function generateStudentVisibleID(groupName: string, lastNumber: number) {
-  return `${groupName}_${lastNumber}`;
 }
 
 export async function addNewStudentToGroup(
