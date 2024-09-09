@@ -16,6 +16,7 @@ export type SchoolFellowTableData = {
   supervisorId: string;
   supervisorName: string;
   droppedOut: boolean | null;
+  groupId: string;
   groupName: string;
   averageRating: number | null;
 };
@@ -58,6 +59,7 @@ export const columns = (
     },
     {
       accessorKey: "fellowName",
+      id: "Name",
       header: "Name",
     },
     {
@@ -76,10 +78,12 @@ export const columns = (
           <Badge variant="shamiri-green">Active</Badge>
         ),
       header: "Active Status",
+      id: "Active Status",
     },
     {
       accessorKey: "groupName",
       header: "Group Name",
+      id: "Group Name",
     },
     {
       header: "Phone Number",
