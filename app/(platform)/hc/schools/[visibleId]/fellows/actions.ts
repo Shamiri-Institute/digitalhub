@@ -98,7 +98,7 @@ export async function addNewStudentToGroup(
         admissionNumber: data.admissionNumber,
         yearOfBirth: data.yearOfBirth,
         gender: data.gender,
-        form: parseInt(data.form),
+        form: parseInt(data.form, 10),
         stream: data.stream,
         assignedGroupId: data.assignedGroupId,
       },
