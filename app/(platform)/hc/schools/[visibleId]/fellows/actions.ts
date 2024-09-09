@@ -110,7 +110,7 @@ export async function addNewStudentToGroup(
       data: student,
     };
   } catch (error: unknown) {
-    return { error: "Something went wrong assigning a supervisor" };
+    return { error: "Something went wrong while adding the new student" };
   }
 }
 
