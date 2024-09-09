@@ -5,5 +5,5 @@ export default async function SupervisorLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="w-full self-stretch">{children}</div>;
+  return <div className="w-full self-stretch bg-white">{children}</div>;
 }
