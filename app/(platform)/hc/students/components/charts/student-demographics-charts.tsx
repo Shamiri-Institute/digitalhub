@@ -1,0 +1,164 @@
+"use client";
+
+import ChartCard from "#/components/ui/chart-card";
+import { Prisma } from "@prisma/client";
+import {
+  Cell,
+  Label,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
+
+export default function HubStudentDemographicsCharts({
+  studentsGroupedByAge,
+  studentsGroupedByGender,
+  studentsGroupedByForm,
+}: {
+  studentsGroupedByAge: (Prisma.PickEnumerable<
+    Prisma.StudentGroupByOutputType,
+    "age"[]
+  > & {
+    _count: {
+      age: number;
+    };
+  })[];
+  studentsGroupedByGender: (Prisma.PickEnumerable<
+    Prisma.StudentGroupByOutputType,
+    "gender"[]
+  > & {
+    _count: {
+      gender: number;
+    };
+  })[];
+  studentsGroupedByForm: (Prisma.PickEnumerable<
+    Prisma.StudentGroupByOutputType,
+    "form"[]
+  > & {
+    _count: {
+      form: number;
+    };
+  })[];
+}) {
+  const formatedStudentsGroupedByAge = studentsGroupedByAge.map((student) => ({
+    age: student?.age?.toString(),
+    value: student._count.age,
+  }));
+
+  const formatedStudentsGroupedByGender = studentsGroupedByGender.map(
+    (student) => ({
+      gender: student.gender,
+      value: student._count.gender,
+    }),
+  );
+
+  const formatedStudentsGroupedByForm = studentsGroupedByForm.map(
+    (student) => ({
+      form: student.form,
+      value: student._count.form,
+    }),
+  );
+
+  return (
+    <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-3">
+      <ChartCard title="Students grouped by form" showCardFooter={false}>
+        {formatedStudentsGroupedByForm.length ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart width={307} height={307}>
+              <Pie
+                data={formatedStudentsGroupedByForm}
+                dataKey="value"
+                nameKey="form"
+                startAngle={90}
+                endAngle={450}
+                outerRadius={100}
+                innerRadius={70}
+                fill="#8884d8"
+              >
+                <Label
+                  position="center"
+                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                >
+                  {formatedStudentsGroupedByForm.reduce(
+                    (acc, val) => acc + val.value,
+                    0,
+                  )}
+                </Label>
+                {formatedStudentsGroupedByForm.map((val, index) => (
+                  <Cell key={index} fill="#8884d8" />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : null}
+      </ChartCard>
+      <ChartCard title="Students grouped by age" showCardFooter={false}>
+        {formatedStudentsGroupedByAge.length ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart width={307} height={307}>
+              <Pie
+                data={formatedStudentsGroupedByAge}
+                dataKey="value"
+                nameKey="age"
+                startAngle={90}
+                endAngle={450}
+                outerRadius={100}
+                innerRadius={70}
+                fill="#8884d8"
+              >
+                <Label
+                  position="center"
+                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                >
+                  {formatedStudentsGroupedByAge.reduce(
+                    (acc, val) => acc + val.value,
+                    0,
+                  )}
+                </Label>
+                {formatedStudentsGroupedByAge.map((val, index) => (
+                  <Cell key={index} fill="#8884d8" />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : null}
+      </ChartCard>
+
+      <ChartCard title="Students grouped by gender" showCardFooter={false}>
+        {formatedStudentsGroupedByGender.length ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart width={307} height={307}>
+              <Pie
+                data={formatedStudentsGroupedByGender}
+                dataKey="value"
+                nameKey="gender"
+                startAngle={90}
+                endAngle={450}
+                outerRadius={100}
+                innerRadius={70}
+                fill="#8884d8"
+              >
+                <Label
+                  position="center"
+                  className="text-2xl font-semibold leading-8 text-shamiri-black"
+                >
+                  {formatedStudentsGroupedByGender.reduce(
+                    (acc, val) => acc + val.value,
+                    0,
+                  )}
+                </Label>
+                {formatedStudentsGroupedByGender.map((val, index) => (
+                  <Cell key={index} fill="#8884d8" />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        ) : null}
+      </ChartCard>
+    </div>
+  );
+}

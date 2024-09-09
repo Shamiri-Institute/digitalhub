@@ -75,7 +75,7 @@ export default function HubStudentClinicalDataCharts({
     return a + b.value;
   }, 0);
 
-  const filteredSessions = possibleSessions.map((session) => {
+  const filteredFormatedSessions = possibleSessions.map((session) => {
     const found = hubClinicalSessionsBySession.find(
       (item) => item.session === session,
     );
@@ -135,7 +135,7 @@ export default function HubStudentClinicalDataCharts({
         showCardFooter={false}
       >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart width={307} height={307} data={filteredSessions}>
+          <BarChart width={307} height={307} data={filteredFormatedSessions}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="session" />
             <YAxis dataKey="count" />
