@@ -1,10 +1,8 @@
 import HubStudentClinicalDataCharts from "#/app/(platform)/hc/students/components/charts/student-clinical-charts";
 import HubStudentDemographicsCharts from "#/app/(platform)/hc/students/components/charts/student-demographics-charts";
 import HubStudentsDetailsCharts from "#/app/(platform)/hc/students/components/charts/students-charts";
-import InfoCard from "#/app/(platform)/hc/students/components/info-card";
-import { StudentSearchCommand } from "#/app/(platform)/hc/students/components/search-command";
-import StudentsFilterToggle from "#/app/(platform)/hc/students/components/students-filter-toggle";
-import WeeklyHubStudentsReportForm from "#/app/(platform)/hc/students/components/weekly-report-form";
+import StudentsFilterTab from "#/app/(platform)/hc/students/components/students-filter-tab";
+import StudentsStats from "#/app/(platform)/hc/students/components/students-stats";
 import { currentHubCoordinator } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
@@ -13,6 +11,14 @@ import { db } from "#/lib/db";
 
 export default async function StudentsPage() {
   const hubCoordinator = await currentHubCoordinator();
+
+  if (!hubCoordinator) {
+    return (
+      <div className="container w-full grow py-10">
+        <p>Hub coordinator not found</p>
+      </div>
+    );
+  }
 
   const totalNumberOfStudentsInHub = await db.student.count({
     where: {
@@ -116,8 +122,6 @@ export default async function StudentsPage() {
       },
     });
 
-  //----
-
   const studentsGroupedByAge = await db.student.groupBy({
     by: ["age"],
     where: {
@@ -179,59 +183,24 @@ export default async function StudentsPage() {
     },
   });
 
-  const studentsInHub = await db.student.findMany({
-    where: {
-      school: {
-        hubId: hubCoordinator?.assignedHubId,
-      },
-    },
-  });
-
-  // const studentsGroupRatingsGroupedByRating = await db.interventionSessionRating.groupBy({
-  //   by: ["sessionId"],
-  //   where: {
-  //     supervisorId: {
-  //       hubId: hubCoordinator?.assignedHubId,
-  //     },
-  //   },
-  //   _count: {
-  //     sessionId: true,
-  //   }
-  // });
+  /**
+   * Non-blocking - To sync with @WendyMbone on two graphs - student info completion and student group ratings.
+   */
 
   return (
     <div className="container w-full grow space-y-3 py-10">
       <PageHeading title="Students" />
+
       <Separator />
 
-      <div className="flex items-center justify-between">
-        <div className="flex w-1/4 gap-3">
-          <StudentSearchCommand data={studentsInHub} />
-          <StudentsFilterToggle students={studentsInHub} />
-        </div>
-        <div className="flex items-center gap-3">
-          <WeeklyHubStudentsReportForm />
-        </div>
-      </div>
+      <StudentsFilterTab hubCoordinatorId={hubCoordinator.id} />
 
-      <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
-        <InfoCard
-          title="Total no. of students"
-          content={totalNumberOfStudentsInHub}
-        />
-        <InfoCard
-          title="Count of group sessions"
-          content={totalGroupSessions}
-        />
-        <InfoCard
-          title="No. of clinical cases"
-          content={hubClinicalCases?.length ?? 0}
-        />
-        <InfoCard
-          title="No. of clinical sessions"
-          content={hubClinicalSessions?.length ?? 0}
-        />
-      </div>
+      <StudentsStats
+        totalNumberOfStudentsInHub={totalNumberOfStudentsInHub}
+        totalGroupSessions={totalGroupSessions}
+        hubClinicalCases={hubClinicalCases}
+        hubClinicalSessions={hubClinicalSessions}
+      />
 
       <HubStudentsDetailsCharts
         studentsAttendanceGroupedBySession={studentsAttendanceGroupedBySession}
