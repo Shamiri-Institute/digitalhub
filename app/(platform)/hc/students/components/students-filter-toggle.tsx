@@ -32,12 +32,10 @@ export default function StudentsFilterToggle({
       updateFilters={() => {
         setOpen(false);
       }}
-      setDefaultFilters={() => { }}
+      setDefaultFilters={() => {}}
     >
       <div className="flex flex-col gap-y-2 p-1">
-        <Select
-          onValueChange={(value) => { }}
-        >
+        <Select onValueChange={(value) => {}}>
           <SelectTrigger className="text-sm">
             <SelectValue placeholder="Pick school" />
           </SelectTrigger>
