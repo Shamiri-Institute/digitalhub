@@ -10,6 +10,8 @@ type FellowInfoContextData = {
   setAddStudentDialog: Dispatch<SetStateAction<boolean>>;
   attendanceHistoryDialog: boolean;
   setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
+  assignSupervisor: boolean;
+  setAssignSupervisor: Dispatch<SetStateAction<boolean>>;
   fellow: SchoolFellowTableData | null;
   setFellow: Dispatch<SetStateAction<SchoolFellowTableData | null>>;
 };
@@ -23,4 +25,6 @@ export const FellowInfoContext = createContext<FellowInfoContextData>({
   setAttendanceHistoryDialog: () => {},
   fellow: null,
   setFellow: () => {},
+  assignSupervisor: false,
+  setAssignSupervisor: () => {},
 });
