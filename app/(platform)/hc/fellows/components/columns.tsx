@@ -1,28 +1,30 @@
 "use client";
 
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { FellowsDatatableMenu } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
+import AssignFellowSupervisorSelect from "#/app/(platform)/hc/fellows/components/assign-fellow-supervisor-select";
+import MainFellowsDatatableMenu from "#/app/(platform)/hc/fellows/components/main-fellows-datatable-menu";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
+import { Dispatch, SetStateAction } from "react";
 
-export type SchoolFellowTableData = {
+export type MainFellowTableData = {
   id: string;
   fellowName: string;
   cellNumber: string;
   supervisorId: string;
   supervisorName: string;
   droppedOut: boolean | null;
-  groupId: string;
-  groupName: string;
+  groupCount: number;
   averageRating: number | null;
 };
 
 export const columns = (
   supervisors: Prisma.SupervisorGetPayload<{}>[],
-): ColumnDef<SchoolFellowTableData>[] => {
+  setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>,
+): ColumnDef<MainFellowTableData>[] => {
   return [
     {
       id: "checkbox",
@@ -80,9 +82,9 @@ export const columns = (
       id: "Active Status",
     },
     {
-      accessorKey: "groupName",
-      header: "Group Name",
-      id: "Group Name",
+      accessorKey: "groupCount",
+      header: "No. of groups",
+      id: "No. of groups",
     },
     {
       header: "Phone Number",
@@ -94,8 +96,22 @@ export const columns = (
       },
     },
     {
+      header: "Supervisor",
+      cell: ({ row }) => (
+        <div className="flex">
+          <AssignFellowSupervisorSelect
+            fellowId={row.original.id}
+            supervisorId={row.original.supervisorId}
+            supervisors={supervisors}
+          />
+        </div>
+      ),
+    },
+    {
       id: "button",
-      cell: ({ row }) => <FellowsDatatableMenu fellow={row.original} />,
+      cell: ({ row }) => (
+        <MainFellowsDatatableMenu fellow={row.original} setFellow={setFellow} />
+      ),
       enableHiding: false,
     },
   ];

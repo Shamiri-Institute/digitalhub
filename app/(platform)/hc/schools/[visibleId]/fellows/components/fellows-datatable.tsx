@@ -27,7 +27,6 @@ export default function FellowsDatatable({
   supervisors: Prisma.SupervisorGetPayload<{}>[];
 }) {
   const renderTableActions = () => {
-    // TODO: Move to main fellows page @Benny
     return <BatchUploadDownloadFellow />;
   };
 
