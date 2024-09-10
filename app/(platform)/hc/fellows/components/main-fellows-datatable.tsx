@@ -7,7 +7,7 @@ import {
 } from "#/app/(platform)/hc/fellows/components/columns";
 import { BatchUploadDownloadFellow } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/upload-csv";
 import { Prisma } from "@prisma/client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function MainFellowsDatatable({
   fellows,
@@ -25,10 +25,6 @@ export default function MainFellowsDatatable({
       </div>
     );
   };
-
-  useEffect(() => {
-    console.log(fellow);
-  }, [fellow]);
 
   return (
     <div>
