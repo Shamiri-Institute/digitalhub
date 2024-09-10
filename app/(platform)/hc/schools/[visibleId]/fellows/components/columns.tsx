@@ -1,7 +1,7 @@
 "use client";
 
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import AssignFellowSupervisor from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/assign-fellow-supervisor";
+import AssignFellowSupervisorSelect from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/assign-fellow-supervisor-select";
 import { FellowsDatatableMenu } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -98,7 +98,7 @@ export const columns = (
       header: "Supervisor",
       cell: ({ row }) => (
         <div className="flex">
-          <AssignFellowSupervisor
+          <AssignFellowSupervisorSelect
             fellowId={row.original.id}
             supervisorId={row.original.supervisorId}
             supervisors={supervisors}

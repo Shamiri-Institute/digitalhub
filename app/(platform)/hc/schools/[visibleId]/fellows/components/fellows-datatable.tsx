@@ -69,7 +69,13 @@ export function FellowsDatatableMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem>View Fellow information</DropdownMenuItem>
-        <DropdownMenuItem>Assign supervisor</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            context.setAssignSupervisor(true);
+          }}
+        >
+          Assign supervisor
+        </DropdownMenuItem>
         <DropdownMenuItem
           disabled={context.fellow?.groupId === null}
           onClick={() => {

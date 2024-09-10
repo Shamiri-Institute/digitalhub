@@ -11,11 +11,14 @@ export default function FellowInfoContextProvider({
   const [groupDialog, setGroupDialog] = useState(false);
   const [addStudentDialog, setAddStudentDialog] = useState(false);
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
+  const [assignSupervisor, setAssignSupervisor] = useState(false);
   const [fellow, setFellow] = useState<SchoolFellowTableData | null>(null);
 
   return (
     <FellowInfoContext.Provider
       value={{
+        assignSupervisor,
+        setAssignSupervisor,
         groupDialog,
         setGroupDialog,
         addStudentDialog,
