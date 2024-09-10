@@ -1,6 +1,9 @@
 "use client";
 
-import { possibleInterventionSessions } from "#/app/(platform)/hc/students/components/charts/constants";
+import {
+  generateRandomColor,
+  possibleInterventionSessions,
+} from "#/app/(platform)/hc/students/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 import { Prisma } from "@prisma/client";
 import {
@@ -74,6 +77,10 @@ export default function HubStudentsDetailsCharts({
     [] as { name: string; value: number }[],
   );
 
+  const randomColors = formatedStudentsDropOutReasons.map(() =>
+    generateRandomColor(),
+  );
+
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
       <ChartCard title="Attendance" showCardFooter={false}>
@@ -113,8 +120,8 @@ export default function HubStudentsDetailsCharts({
                     0,
                   )}
                 </Label>
-                {formatedStudentsDropOutReasons.map((reason) => (
-                  <Cell key={reason?.name ?? ""} fill="#8884d8" />
+                {formatedStudentsDropOutReasons.map((reason, index) => (
+                  <Cell key={index} fill={randomColors[index]} />
                 ))}
               </Pie>
               <Tooltip />

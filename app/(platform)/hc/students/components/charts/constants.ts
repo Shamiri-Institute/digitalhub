@@ -23,3 +23,19 @@ export const clinicaldataValue = [
 ];
 
 export const clinicalCasesColors = ["#7EA16B", "#FABC2A", "#B0D5EA"];
+
+export const studentsGroupByColors = [
+  "#FACC15",
+  "#585757",
+  "#8B2CE9",
+  "#0085FF",
+];
+
+export const generateRandomColor = () => {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+};

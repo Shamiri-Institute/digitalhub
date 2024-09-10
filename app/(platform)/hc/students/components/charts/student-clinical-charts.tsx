@@ -154,8 +154,8 @@ export default function HubStudentClinicalDataCharts({
             <YAxis dataKey="count" />
             <Tooltip />
             <Legend />
-            <Bar dataKey="count" stackId="a" fill="#0085FF" />
-            <Bar dataKey="supervisorName" stackId="a" fill="#CCE7FF" />
+            <Bar dataKey="count" stackId="a" fill="#E92C9D" />
+            <Bar dataKey="supervisorName" stackId="a" fill="#ffdfea" />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>

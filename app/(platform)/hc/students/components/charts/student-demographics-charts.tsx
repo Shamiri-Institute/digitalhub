@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  generateRandomColor,
+  studentsGroupByColors,
+} from "#/app/(platform)/hc/students/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 import { Prisma } from "@prisma/client";
 import {
@@ -60,6 +64,10 @@ export default function HubStudentDemographicsCharts({
     }),
   );
 
+  const randomColors = formatedStudentsGroupedByAge.map(() =>
+    generateRandomColor(),
+  );
+
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-3">
       <ChartCard title="Students grouped by form" showCardFooter={false}>
@@ -86,7 +94,14 @@ export default function HubStudentDemographicsCharts({
                   )}
                 </Label>
                 {formatedStudentsGroupedByForm.map((val, index) => (
-                  <Cell key={index} fill="#8884d8" />
+                  <Cell
+                    key={index}
+                    fill={
+                      studentsGroupByColors[
+                        index % studentsGroupByColors.length
+                      ]
+                    }
+                  />
                 ))}
               </Pie>
               <Tooltip />
@@ -108,17 +123,8 @@ export default function HubStudentDemographicsCharts({
                 innerRadius={70}
                 fill="#8884d8"
               >
-                <Label
-                  position="center"
-                  className="text-2xl font-semibold leading-8 text-shamiri-black"
-                >
-                  {formatedStudentsGroupedByAge.reduce(
-                    (acc, val) => acc + val.value,
-                    0,
-                  )}
-                </Label>
                 {formatedStudentsGroupedByAge.map((val, index) => (
-                  <Cell key={index} fill="#8884d8" />
+                  <Cell key={index} fill={randomColors[index]} />
                 ))}
               </Pie>
               <Tooltip />
@@ -150,8 +156,15 @@ export default function HubStudentDemographicsCharts({
                     0,
                   )}
                 </Label>
-                {formatedStudentsGroupedByGender.map((val, index) => (
-                  <Cell key={index} fill="#8884d8" />
+                {formatedStudentsGroupedByAge.map((val, index) => (
+                  <Cell
+                    key={index}
+                    fill={
+                      studentsGroupByColors[
+                        index % studentsGroupByColors.length
+                      ]
+                    }
+                  />
                 ))}
               </Pie>
               <Tooltip />
