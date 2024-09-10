@@ -15,7 +15,7 @@ import { Prisma } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function AssignFellowSupervisor({
+export default function AssignFellowSupervisorSelect({
   fellowId,
   supervisorId,
   supervisors,
