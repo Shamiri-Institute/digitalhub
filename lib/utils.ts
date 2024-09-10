@@ -153,3 +153,10 @@ export function generateFellowVisibleID(lastNumber: number): string {
 
   return `${part1}_${part2}_${part3}`;
 }
+
+export function generateStudentVisibleID(
+  groupName: string,
+  lastNumber: number,
+) {
+  return `${groupName}_${lastNumber}`;
+}

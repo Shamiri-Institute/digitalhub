@@ -11,6 +11,16 @@ export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {
     assignedSupervisor: true;
     interventionSessions: true;
+    students: {
+      include: {
+        assignedGroup: true;
+        _count: {
+          select: {
+            clinicalCases: true;
+          };
+        };
+      };
+    };
   };
 }>;
 

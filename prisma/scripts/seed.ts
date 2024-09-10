@@ -232,27 +232,27 @@ const ids = {
                     ANS24_Group_02: {
                       id: "07G2",
                       groupName: "G2",
-                      groupFellowVisibleId: "TFW24_S_01",
+                      groupFellowVisibleId: "TFW24_S_02",
                     },
                     ANS24_Group_03: {
                       id: "07G3",
                       groupName: "G3",
-                      groupFellowVisibleId: "TFW24_S_01",
+                      groupFellowVisibleId: "TFW24_S_03",
                     },
                     ANS24_Group_04: {
                       id: "07G4",
                       groupName: "G4",
-                      groupFellowVisibleId: "TFW24_S_01",
+                      groupFellowVisibleId: "TFW24_S_04",
                     },
                     ANS24_Group_05: {
                       id: "07G5",
                       groupName: "G5",
-                      groupFellowVisibleId: "TFW24_S_01",
+                      groupFellowVisibleId: "TFW24_S_05",
                     },
                     ANS24_Group_06: {
                       id: "07G6",
                       groupName: "G6",
-                      groupFellowVisibleId: "TFW24_S_01",
+                      groupFellowVisibleId: "TFW24_S_06",
                     },
                   },
 
@@ -568,7 +568,7 @@ const ids = {
                     ANS24_Group_01: {
                       id: "G11",
                       groupName: "G1",
-                      groupFellowVisibleId: "TFW24_S_02",
+                      groupFellowVisibleId: "TFW24_S_01",
                     },
                     ANS24_Group_02: {
                       id: "G12",
@@ -578,22 +578,22 @@ const ids = {
                     ANS24_Group_03: {
                       id: "G13",
                       groupName: "G3",
-                      groupFellowVisibleId: "TFW24_S_02",
+                      groupFellowVisibleId: "TFW24_S_03",
                     },
                     ANS24_Group_04: {
                       id: "G14",
                       groupName: "G4",
-                      groupFellowVisibleId: "TFW24_S_02",
+                      groupFellowVisibleId: "TFW24_S_04",
                     },
                     ANS24_Group_05: {
                       id: "G15",
                       groupName: "G5",
-                      groupFellowVisibleId: "TFW24_S_02",
+                      groupFellowVisibleId: "TFW24_S_05",
                     },
                     ANS24_Group_06: {
                       id: "G16",
                       groupName: "G6",
-                      groupFellowVisibleId: "TFW24_S_02",
+                      groupFellowVisibleId: "TFW24_S_06",
                     },
                   },
 
