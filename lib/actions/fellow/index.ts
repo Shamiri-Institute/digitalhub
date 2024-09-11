@@ -1,3 +1,5 @@
+"use server";
+
 import { EditFellowSchema } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
