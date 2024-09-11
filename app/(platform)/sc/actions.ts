@@ -3,7 +3,7 @@ import { currentSupervisor } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
-import { FellowSchema } from "./schemas";
+import { FellowSchema, WeeklyFellowRatingSchema } from "./schemas";
 
 export async function addNewFellow(fellowData: FellowSchema) {
   try {
@@ -101,4 +101,25 @@ export async function loadFellowsData() {
       students: group.students,
     })),
   }));
+}
+
+export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
+  try {
+    const parsedData = WeeklyFellowRatingSchema.parse(data);
+
+    await db.weeklyFellowRatings.create({
+      data: {
+        ...parsedData,
+      },
+    });
+
+    // revalidatePath("/profile");
+    return {
+      success: true,
+      message: "successfully recorded fellow's weekly rating",
+    };
+  } catch (e) {
+    console.error(e);
+    return { success: false, message: "something went wrong" };
+  }
 }

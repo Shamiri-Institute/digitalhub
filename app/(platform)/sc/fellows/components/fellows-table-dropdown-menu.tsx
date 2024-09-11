@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import type { FellowsData } from "../../actions";
+import SubmitWeeklyFellowEvaluationForm from "./add-weekly-fellow-evaluations-form";
 
 export default function FellowsTableDropdownMenu({
   fellowRow,
@@ -38,7 +39,9 @@ export default function FellowsTableDropdownMenu({
         <DropdownMenuItem>Edit fellow information</DropdownMenuItem>
         <DropdownMenuItem>Session Attendance History</DropdownMenuItem>
         <DropdownMenuItem>Request repayment</DropdownMenuItem>
-        <DropdownMenuItem>Weekly Fellow Evaluation</DropdownMenuItem>
+        <SubmitWeeklyFellowEvaluationForm>
+          <div>Weekly Fellow Evaluation</div>
+        </SubmitWeeklyFellowEvaluationForm>
         <DropdownMenuItem>Submit Complaint</DropdownMenuItem>
         {!fellowRow.droppedOut || !fellowRow.droppedOutAt ? (
           <DropdownMenuItem className="text-shamiri-red">
