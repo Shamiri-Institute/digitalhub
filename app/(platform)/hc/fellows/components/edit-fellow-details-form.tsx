@@ -1,4 +1,3 @@
-import { updateFellowDetails } from "#/app/(platform)/hc/fellows/actions";
 import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
@@ -30,6 +29,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
+import { updateFellowDetails } from "#/lib/actions/fellow";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
