@@ -50,8 +50,8 @@ export default function FellowDetailsForm({
   children,
 }: {
   fellow?: MainFellowTableData;
-  open?: boolean;
-  onOpenChange?: Dispatch<SetStateAction<boolean>>;
+  open: boolean;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
   mode: "edit" | "add";
   children?: React.ReactNode;
 }) {
@@ -115,7 +115,7 @@ export default function FellowDetailsForm({
       toast({
         description: response.message,
       });
-      onOpenChange && onOpenChange(false);
+      onOpenChange(false);
     });
   };
 
@@ -449,7 +449,7 @@ export default function FellowDetailsForm({
                 type="button"
                 className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
                 onClick={() => {
-                  onOpenChange && onOpenChange(false);
+                  onOpenChange(false);
                 }}
               >
                 Cancel

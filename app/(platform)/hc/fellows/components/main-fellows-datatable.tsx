@@ -21,12 +21,17 @@ export default function MainFellowsDatatable({
 }) {
   const [fellow, setFellow] = useState<MainFellowTableData | null>(null);
   const [editDialog, setEditDialog] = useState<boolean>(false);
+  const [addDialog, setAddDialog] = useState<boolean>(false);
 
   const renderTableActions = () => {
     return (
       <div className="flex items-center gap-3">
         <BatchUploadDownloadFellow />
-        <FellowDetailsForm mode={"add"}>
+        <FellowDetailsForm
+          open={addDialog}
+          onOpenChange={setAddDialog}
+          mode={"add"}
+        >
           <DialogTrigger asChild={true}>
             <Button variant={"outline"} className={"bg-white"}>
               Add new fellow
