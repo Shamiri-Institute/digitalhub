@@ -1,4 +1,5 @@
 import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
+import { FellowDetailsSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { Icons } from "#/components/icons";
@@ -29,7 +30,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { updateFellowDetails } from "#/lib/actions/fellow";
+import { submitFellowDetails } from "#/lib/actions/fellow";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,24 +38,27 @@ import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import React, { Dispatch, SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { EditFellowSchema } from "../../schemas";
 
-export default function EditFellowDetails({
+export default function FellowDetailsForm({
   fellow,
   open,
   onOpenChange,
+  mode,
+  children,
 }: {
-  fellow: MainFellowTableData;
-  open: boolean;
-  onOpenChange: Dispatch<SetStateAction<boolean>>;
+  fellow?: MainFellowTableData;
+  open?: boolean;
+  onOpenChange?: Dispatch<SetStateAction<boolean>>;
+  mode: "edit" | "add";
+  children?: React.ReactNode;
 }) {
   const counties = KENYAN_COUNTIES.map((county) => county.name);
   const pathname = usePathname();
-  const form = useForm<z.infer<typeof EditFellowSchema>>({
-    resolver: zodResolver(EditFellowSchema),
+  const form = useForm<z.infer<typeof FellowDetailsSchema>>({
+    resolver: zodResolver(FellowDetailsSchema),
   });
 
   const countyWatcher = form.watch("county");
@@ -67,28 +71,35 @@ export default function EditFellowDetails({
 
   useEffect(() => {
     if (open) {
-      const defaultValues = {
-        id: fellow.id,
-        fellowName: fellow.fellowName ?? undefined,
-        fellowEmail: fellow.fellowEmail ?? undefined,
-        cellNumber: fellow.cellNumber ?? undefined,
-        idNumber: fellow.idNumber ?? undefined,
-        gender: fellow.gender ?? undefined,
-        dateOfBirth: fellow.dateOfBirth ?? undefined,
-        county: fellow.county ?? undefined,
-        subCounty: fellow.subCounty ?? undefined,
-        mpesaName: fellow.mpesaName ?? undefined,
-        mpesaNumber: fellow.mpesaNumber ?? undefined,
-      };
-
+      let defaultValues = {};
+      if (mode !== "add" && fellow) {
+        defaultValues = {
+          mode,
+          id: fellow.id,
+          fellowName: fellow.fellowName ?? undefined,
+          fellowEmail: fellow.fellowEmail ?? undefined,
+          cellNumber: fellow.cellNumber ?? undefined,
+          idNumber: fellow.idNumber ?? undefined,
+          gender: fellow.gender ?? undefined,
+          dateOfBirth: fellow.dateOfBirth ?? undefined,
+          county: fellow.county ?? undefined,
+          subCounty: fellow.subCounty ?? undefined,
+          mpesaName: fellow.mpesaName ?? undefined,
+          mpesaNumber: fellow.mpesaNumber ?? undefined,
+        };
+      } else {
+        defaultValues = {
+          mode,
+        };
+      }
       // TODO: fix TS issue with assigning string to enum type
       // @ts-ignore
       form.reset(defaultValues);
     }
-  }, [open, fellow, form]);
+  }, [open, fellow, form, mode]);
 
-  const onSubmit = async (data: z.infer<typeof EditFellowSchema>) => {
-    const response = await updateFellowDetails(data);
+  const onSubmit = async (data: z.infer<typeof FellowDetailsSchema>) => {
+    const response = await submitFellowDetails(data);
     if (!response.success) {
       toast({
         variant: "destructive",
@@ -104,7 +115,7 @@ export default function EditFellowDetails({
       toast({
         description: response.message,
       });
-      onOpenChange(false);
+      onOpenChange && onOpenChange(false);
     });
   };
 
@@ -123,27 +134,32 @@ export default function EditFellowDetails({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      {children}
       <DialogContent className="w-2/5 max-w-none">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <span className="text-xl">Edit fellow information</span>
+              <span className="text-xl">
+                {mode === "edit" ? "Edit fellow information" : "Add new fellow"}
+              </span>
             </DialogHeader>
-            <div className="pb-2 pt-4">
-              <DialogAlertWidget separator={true}>
-                <div className="flex items-center gap-2">
-                  <span>{fellow.fellowName}</span>
-                  <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
-                  <span>
-                    {fellow.cellNumber &&
-                      parsePhoneNumber(
-                        fellow.cellNumber,
-                        "KE",
-                      ).formatNational()}
-                  </span>
-                </div>
-              </DialogAlertWidget>
-            </div>
+            {mode !== "add" && fellow && (
+              <div className="pb-2 pt-4">
+                <DialogAlertWidget separator={true}>
+                  <div className="flex items-center gap-2">
+                    <span>{fellow.fellowName}</span>
+                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+                    <span>
+                      {fellow.cellNumber &&
+                        parsePhoneNumber(
+                          fellow.cellNumber,
+                          "KE",
+                        ).formatNational()}
+                    </span>
+                  </div>
+                </DialogAlertWidget>
+              </div>
+            )}
             <div className="space-y-6">
               <div className="flex flex-col">
                 <div className="col-span-2 py-2">
@@ -430,8 +446,23 @@ export default function EditFellowDetails({
                     render={({ field }) => (
                       <FormItem>
                         <Input
-                          id="supervisorId"
-                          name="supervisorId"
+                          id="id"
+                          name="id"
+                          type="hidden"
+                          value={field.value}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="mode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Input
+                          id="mode"
+                          name="mode"
                           type="hidden"
                           value={field.value}
                         />
@@ -449,7 +480,7 @@ export default function EditFellowDetails({
                 type="button"
                 className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
                 onClick={() => {
-                  onOpenChange(false);
+                  onOpenChange && onOpenChange(false);
                 }}
               >
                 Cancel
@@ -460,7 +491,7 @@ export default function EditFellowDetails({
                 disabled={form.formState.isSubmitting}
                 loading={form.formState.isSubmitting}
               >
-                Update & Save
+                {mode === "add" ? "Add" : "Update & Save"}
               </Button>
             </DialogFooter>
           </form>

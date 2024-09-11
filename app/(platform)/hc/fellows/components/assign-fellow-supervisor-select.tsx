@@ -67,9 +67,12 @@ export default function AssignFellowSupervisorSelect({
         <SelectTrigger
           className={cn(
             "h-auto gap-1 px-2 py-0.5",
+            supervisorId !== null
+              ? "border-shamiri-light-blue bg-blue-bg text-shamiri-new-blue"
+              : "border-shamiri-red bg-red-bg text-shamiri-light-red",
             loading
               ? "pointer-events-none border-shamiri-light-grey bg-background-secondary text-shamiri-text-dark-grey focus:ring-shamiri-light-grey"
-              : "pointer-events-auto border-shamiri-light-blue bg-blue-bg text-shamiri-new-blue",
+              : "pointer-events-auto",
           )}
         >
           <SelectValue placeholder="Select a supervisor" />

@@ -411,12 +411,13 @@ export const WeeklyHubTeamMeetingSchema = z.object({
   recommendations: stringValidation("Please input recommendations"),
 });
 
-export const EditFellowSchema = z
+export const FellowDetailsSchema = z
   .object({
+    mode: z.enum(["add", "edit"]),
     fellowName: z.string({
-      required_error: "Please enter the supervisor's name",
+      required_error: "Please enter the fellow's name",
     }),
-    id: stringValidation("fellowId is required"),
+    id: z.string().optional(),
     idNumber: z.string({
       required_error: "Please enter the fellow's ID number",
     }),
@@ -473,6 +474,17 @@ export const EditFellowSchema = z
         message: `${val.subCounty} is not a valid option.`,
         fatal: true,
         path: ["subCounty"],
+      });
+
+      return z.NEVER;
+    }
+
+    if (val.mode === "edit" && val.id === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Fellow Id is required.`,
+        fatal: true,
+        path: ["id"],
       });
 
       return z.NEVER;

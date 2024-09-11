@@ -5,8 +5,10 @@ import {
   columns,
   MainFellowTableData,
 } from "#/app/(platform)/hc/fellows/components/columns";
-import EditFellowDetails from "#/app/(platform)/hc/fellows/components/edit-fellow-details-form";
 import { BatchUploadDownloadFellow } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/upload-csv";
+import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
+import { Button } from "#/components/ui/button";
+import { DialogTrigger } from "#/components/ui/dialog";
 import { Prisma } from "@prisma/client";
 import { useState } from "react";
 
@@ -24,6 +26,13 @@ export default function MainFellowsDatatable({
     return (
       <div className="flex items-center gap-3">
         <BatchUploadDownloadFellow />
+        <FellowDetailsForm mode={"add"}>
+          <DialogTrigger asChild={true}>
+            <Button variant={"outline"} className={"bg-white"}>
+              Add new fellow
+            </Button>
+          </DialogTrigger>
+        </FellowDetailsForm>
       </div>
     );
   };
@@ -44,10 +53,11 @@ export default function MainFellowsDatatable({
         }}
       />
       {fellow && (
-        <EditFellowDetails
+        <FellowDetailsForm
           fellow={fellow}
           open={editDialog}
           onOpenChange={setEditDialog}
+          mode={"edit"}
         />
       )}
     </div>
