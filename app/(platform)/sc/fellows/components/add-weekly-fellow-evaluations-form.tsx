@@ -63,7 +63,7 @@ export default function SubmitWeeklyFellowEvaluationForm({
       });
     }
   }
-  console.log({ open })
+  console.log({ open });
 
   return (
     <Dialog>
