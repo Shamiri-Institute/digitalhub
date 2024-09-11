@@ -36,7 +36,7 @@ import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
-import { isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js";
+import { parsePhoneNumber } from "libphonenumber-js";
 import { usePathname } from "next/navigation";
 import React, { Dispatch, SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -119,19 +119,6 @@ export default function FellowDetailsForm({
     });
   };
 
-  const validatePhoneNumber = (
-    field: keyof typeof form.formState.defaultValues,
-    value: string,
-  ) => {
-    if (!isValidPhoneNumber(value, "KE") && value !== "") {
-      form.setError(field, {
-        message: value + " is not a valid kenyan number",
-      });
-    } else {
-      form.trigger(field);
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {children}
@@ -195,16 +182,7 @@ export default function FellowDetailsForm({
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            onBlur={(e) => {
-                              validatePhoneNumber(
-                                "cellNumber" as keyof typeof form.formState.defaultValues,
-                                e.target.value,
-                              );
-                            }}
-                            type="tel"
-                          />
+                          <Input {...field} type="tel" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -425,16 +403,7 @@ export default function FellowDetailsForm({
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            onBlur={(e) => {
-                              validatePhoneNumber(
-                                "mpesaNumber" as keyof typeof form.formState.defaultValues,
-                                e.target.value,
-                              );
-                            }}
-                            type="tel"
-                          />
+                          <Input {...field} type="tel" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
