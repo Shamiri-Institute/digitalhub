@@ -36,7 +36,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { WeeklyFellowRatings } from "@prisma/client";
-import { format, startOfWeek, subWeeks } from "date-fns";
+import { endOfWeek, format, startOfWeek, subWeeks } from "date-fns";
 import { Loader2 } from "lucide-react";
 import React from "react";
 import { useForm } from "react-hook-form";
@@ -53,9 +53,11 @@ function generateWeekFieldValues() {
   for (let i = numWeeks; i >= 0; i--) {
     const date = subWeeks(today, i);
     const week = startOfWeek(date, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
     selectValues.push(
       <SelectItem value={format(week, "yyyy-MM-dd")}>
-        Week {numWeeks - i + 1} - {format(week, "dd/MM/yyyy")}
+        Week {numWeeks - i + 1} - {format(week, "dd MMM yyyy")} to{" "}
+        {format(weekEnd, "dd MMM yyyy")}
       </SelectItem>,
     );
   }
@@ -174,136 +176,128 @@ export default function WeeklyEvaluationForm({
                 />
               </div>
 
-              <div className="px-6">
-                <div className="flex items-center justify-between">
-                  <FormLabel>Fellow Behaviour</FormLabel>
-                  <FormField
-                    control={form.control}
-                    name="behaviourRating"
-                    render={({ field: { value, onChange } }) => (
-                      <FormItem>
-                        <RatingStars
-                          onSelect={(rating) => onChange(rating)}
-                          rating={value}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="behaviourNotes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Textarea className="resize-none" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+              <div className="space-y-4 px-6">
+                <FormLabel>
+                  Fellow Behaviour (1-unacceptable to 5-outstanding)
+                </FormLabel>
+                <FormField
+                  control={form.control}
+                  name="behaviourRating"
+                  render={({ field: { value, onChange } }) => (
+                    <FormItem>
+                      <RatingStars
+                        onSelect={(rating) => onChange(rating)}
+                        rating={value}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="behaviourNotes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea className="resize-none" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
-              <div className="px-6">
-                <div className="flex items-center justify-between">
-                  <FormLabel>Program Delivery</FormLabel>
-                  <FormField
-                    control={form.control}
-                    name="programDeliveryRating"
-                    render={({ field: { value, onChange } }) => (
-                      <FormItem>
-                        <RatingStars
-                          onSelect={(rating) => onChange(rating)}
-                          rating={value}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="programDeliveryNotes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Textarea className="resize-none" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+              <div className="space-y-4 px-6">
+                <FormLabel>
+                  Program Delivery (1-unacceptable to 5-outstanding)
+                </FormLabel>
+                <FormField
+                  control={form.control}
+                  name="programDeliveryRating"
+                  render={({ field: { value, onChange } }) => (
+                    <FormItem>
+                      <RatingStars
+                        onSelect={(rating) => onChange(rating)}
+                        rating={value}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="programDeliveryNotes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea className="resize-none" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
-              <div className="px-6">
-                <div className="flex items-center justify-between">
-                  <FormLabel>Dressing and Grooming</FormLabel>
-                  <FormField
-                    control={form.control}
-                    name="dressingAndGroomingRating"
-                    render={({ field: { value, onChange } }) => (
-                      <FormItem>
-                        <RatingStars
-                          onSelect={(rating) => onChange(rating)}
-                          rating={value}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div>
-                  <FormField
-                    control={form.control}
-                    name="dressingAndGroomingNotes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Textarea className="resize-none" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+              <div className="space-y-4 px-6">
+                <FormLabel>
+                  Dressing and Grooming (1-unacceptable to 5-outstanding)
+                </FormLabel>
+                <FormField
+                  control={form.control}
+                  name="dressingAndGroomingRating"
+                  render={({ field: { value, onChange } }) => (
+                    <FormItem>
+                      <RatingStars
+                        onSelect={(rating) => onChange(rating)}
+                        rating={value}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="dressingAndGroomingNotes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea className="resize-none" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
-              <div className="px-6">
-                <div className="flex items-center justify-between">
-                  <FormLabel>Punctuality</FormLabel>
-                  <FormField
-                    control={form.control}
-                    name="punctualityRating"
-                    render={({ field: { value, onChange } }) => (
-                      <FormItem>
-                        <RatingStars
-                          onSelect={(rating) => onChange(rating)}
-                          rating={value}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <div>
-                  <FormField
-                    control={form.control}
-                    // todo: update this name on the schema as well
-                    name="punctualityNotes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Textarea className="resize-none" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+              <div className="space-y-4 px-6">
+                <FormLabel>
+                  Punctuality (1-unacceptable to 5-outstanding)
+                </FormLabel>
+                <FormField
+                  control={form.control}
+                  name="punctualityRating"
+                  render={({ field: { value, onChange } }) => (
+                    <FormItem>
+                      <RatingStars
+                        onSelect={(rating) => onChange(rating)}
+                        rating={value}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  // todo: update this name on the schema as well
+                  name="punctualityNotes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea className="resize-none" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
             <div className="flex justify-end px-6 py-6">
@@ -348,14 +342,14 @@ function RatingStars({
   onSelect: (rating: number) => void;
 }) {
   return (
-    <div className="flex flex-1 justify-end">
+    <div className="flex">
       {[1, 2, 3, 4, 5].map((i) => {
         if (i <= rating) {
           return (
             <button type="button" key={i} onClick={() => onSelect(i)}>
               <Icons.star
                 key={i}
-                className="ml-4 h-6 w-6 align-baseline text-muted-yellow xl:h-7 xl:w-7"
+                className="h-6 w-6 align-baseline text-muted-yellow"
               />
             </button>
           );
@@ -365,7 +359,7 @@ function RatingStars({
           <button type="button" key={i} onClick={() => onSelect(i)}>
             <Icons.starOutline
               key={i}
-              className="ml-4 h-6 w-6 align-baseline text-muted-foreground xl:h-7 xl:w-7"
+              className="h-6 w-6 align-baseline text-muted-foreground"
             />
           </button>
         );
