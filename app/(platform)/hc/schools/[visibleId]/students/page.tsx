@@ -1,8 +1,6 @@
-import { BatchUploadDownloadStudents } from "#/app/(platform)/hc/schools/[visibleId]/students/components/upload-csv";
+import StudentsDatatable from "#/app/(platform)/hc/schools/[visibleId]/students/components/students-datatable";
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
-import DataTable from "../../../components/data-table";
-import { columns } from "./components/columns";
 
 export default async function StudentsPage({
   params: { visibleId },
@@ -29,21 +27,11 @@ export default async function StudentsPage({
 
   return (
     <>
-      <DataTable
+      <StudentsDatatable
         data={students}
-        columns={columns}
-        emptyStateMessage="No students found"
+        hubCoordinator={hubCoordinator}
+        visibleId={visibleId}
       />
-      {hubCoordinator?.assignedHubId &&
-        hubCoordinator.implementerId &&
-        hubCoordinator.assignedHub?.projectId && (
-          <BatchUploadDownloadStudents
-            hubId={hubCoordinator?.assignedHubId}
-            implementerId={hubCoordinator?.implementerId}
-            projectId={hubCoordinator?.assignedHub?.projectId}
-            schoolVisibleId={visibleId}
-          />
-        )}
     </>
   );
 }
