@@ -1,4 +1,5 @@
 "use client";
+import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { Icons } from "#/components/icons";
 import {
   Accordion,
@@ -29,7 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { Separator } from "#/components/ui/separator";
 import { Table, TableBody, TableCell, TableRow } from "#/components/ui/table";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
@@ -83,10 +83,14 @@ export default function WeeklyEvaluationForm({
   children,
   previousRatings = [],
   fellowId,
+  fellowName,
+  fellowPhoneNumber,
 }: {
   children: React.ReactNode;
   previousRatings: WeeklyFellowRatings[];
   fellowId: string;
+  fellowName: string;
+  fellowPhoneNumber: string;
 }) {
   const [open, setDialogOpen] = React.useState<boolean>(false);
 
@@ -142,18 +146,22 @@ export default function WeeklyEvaluationForm({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-0">
+      <DialogContent className="max-h-[90vh] gap-0 overflow-y-auto p-5">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
             className="overflow-hidden text-ellipsis"
           >
-            <DialogHeader className="space-y-0 px-6 py-4">
-              <h2>Submit Weekly fellow evaluation</h2>
+            <DialogHeader>
+              <h2 className="text-xl">Submit Weekly fellow evaluation</h2>
             </DialogHeader>
-            <Separator />
-            <div className="my-6 space-y-6">
-              <div className="px-6">
+            <div className="pt-2">
+              <DialogAlertWidget
+                label={`${fellowName} • ${fellowPhoneNumber}`}
+              />
+            </div>
+            <div className="space-y-6 pt-4">
+              <div className="space-y-4">
                 <FormField
                   control={form.control}
                   name="week"
@@ -181,7 +189,7 @@ export default function WeeklyEvaluationForm({
                 />
               </div>
 
-              <div className="space-y-4 px-6">
+              <div className="space-y-4">
                 <FormLabel>
                   Fellow Behaviour (1-unacceptable to 5-outstanding)
                 </FormLabel>
@@ -211,7 +219,7 @@ export default function WeeklyEvaluationForm({
                   )}
                 />
               </div>
-              <div className="space-y-4 px-6">
+              <div className="space-y-4">
                 <FormLabel>
                   Program Delivery (1-unacceptable to 5-outstanding)
                 </FormLabel>
@@ -242,7 +250,7 @@ export default function WeeklyEvaluationForm({
                 />
               </div>
 
-              <div className="space-y-4 px-6">
+              <div className="space-y-4">
                 <FormLabel>
                   Dressing and Grooming (1-unacceptable to 5-outstanding)
                 </FormLabel>
@@ -273,7 +281,7 @@ export default function WeeklyEvaluationForm({
                 />
               </div>
 
-              <div className="space-y-4 px-6">
+              <div className="space-y-4">
                 <FormLabel>
                   Punctuality (1-unacceptable to 5-outstanding)
                 </FormLabel>
@@ -305,7 +313,7 @@ export default function WeeklyEvaluationForm({
                 />
               </div>
             </div>
-            <div className="flex justify-end px-6 py-6">
+            <div className="pt-4">
               <Button
                 disabled={form.formState.isSubmitting}
                 variant="brand"

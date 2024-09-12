@@ -43,6 +43,8 @@ export default function FellowsTableDropdownMenu({
         <SubmitWeeklyFellowEvaluationForm
           previousRatings={fellowRow.weeklyFellowRatings}
           fellowId={fellowRow.id}
+          fellowName={fellowRow.fellowName ?? "N/A"}
+          fellowPhoneNumber={fellowRow.mpesaNumber ?? "N/A"}
         >
           {/* TODO: find a solution to allow easy interop with the DropdownMenuItemComponent */}
           <div className={cn("cursor-pointer px-2 py-1.5 text-sm")}>
