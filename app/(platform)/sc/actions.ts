@@ -65,6 +65,7 @@ export async function loadFellowsData() {
       supervisorId: supervisor.id,
     },
     include: {
+      fellowComplaints: true,
       fellowAttendances: true,
       weeklyFellowRatings: true,
       groups: {
@@ -96,11 +97,12 @@ export async function loadFellowsData() {
     droppedOutAt: fellow.droppedOutAt,
     id: fellow.id,
     weeklyFellowRatings: fellow.weeklyFellowRatings,
+    fellowComplaints: fellow.fellowComplaints,
     sessions: fellow.groups.map((group) => ({
       schoolName: group.school?.schoolName,
       sessionType:
         group.school?.interventionSessions[0]?.sessionDate &&
-        group.school?.interventionSessions[0]?.sessionDate > new Date()
+          group.school?.interventionSessions[0]?.sessionDate > new Date()
           ? group.school?.interventionSessions[0]?.sessionType
           : "No upcoming session",
       groupName: group.groupName,
@@ -193,6 +195,7 @@ export async function submitFellowComplaint(
 
     const data = SubmitComplaintSchema.parse(complaintData);
 
+    // migration required here
     await db.fellowComplaints.create({
       data: {
         ...data,

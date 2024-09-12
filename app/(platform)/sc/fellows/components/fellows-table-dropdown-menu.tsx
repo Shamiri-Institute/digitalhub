@@ -56,6 +56,7 @@ export default function FellowsTableDropdownMenu({
           fellowPhoneNumber={fellowRow.mpesaNumber ?? "N/A"}
           fellowId={fellowRow.id}
           fellowName={fellowRow.fellowName ?? "N/A"}
+          pastComplaints={fellowRow.fellowComplaints}
         >
           <div className={cn("cursor-pointer px-2 py-1.5 text-sm")}>
             Submit Complaint

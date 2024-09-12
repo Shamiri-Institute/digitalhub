@@ -24,6 +24,7 @@ import {
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { FellowComplaints } from "@prisma/client";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -39,11 +40,13 @@ export default function SubmitFellowComplaintForm({
   fellowName,
   fellowId,
   fellowPhoneNumber,
+  pastComplaints,
 }: {
   children: React.ReactNode;
   fellowName: string;
   fellowId: string;
   fellowPhoneNumber: string;
+  pastComplaints: FellowComplaints[];
 }) {
   const [open, setDialogOpen] = React.useState<boolean>(false);
 
