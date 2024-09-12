@@ -13,9 +13,11 @@ import { Dispatch, SetStateAction } from "react";
 export default function MainFellowsDatatableMenu({
   fellow,
   setFellow,
+  setEditDialog,
 }: {
   fellow: MainFellowTableData;
   setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>;
+  setEditDialog: Dispatch<SetStateAction<boolean>>;
 }) {
   return (
     <DropdownMenu>
@@ -37,6 +39,7 @@ export default function MainFellowsDatatableMenu({
           onSelect={(e) => {
             e.preventDefault();
             setFellow(fellow);
+            setEditDialog(true);
           }}
         >
           Edit fellow information
