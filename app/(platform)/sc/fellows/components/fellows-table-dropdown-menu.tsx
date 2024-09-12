@@ -9,7 +9,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 import type { FellowsData } from "../../actions";
-import SubmitWeeklyFellowEvaluationForm from "./add-weekly-fellow-evaluations-form";
+import SubmitWeeklyFellowEvaluationForm from "./weekly-fellow-evaluations-form";
 
 export default function FellowsTableDropdownMenu({
   fellowRow,
