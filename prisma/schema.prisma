@@ -1117,14 +1117,15 @@ model ClinicalSessionAttendance {
 }
 
 model FellowComplaints {
-  id           String     @id @default(cuid())
-  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt    DateTime   @updatedAt @map("updated_at")
-  complaint    String     @db.Text()
-  supervisorId String     @map("supervisor_id") @db.VarChar(255)
-  supervisor   Supervisor @relation(fields: [supervisorId], references: [id])
-  fellowId     String     @map("fellow_id") @db.VarChar(255)
-  fellow       Fellow     @relation(fields: [fellowId], references: [id])
+  id            String     @id @default(cuid())
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+  complaint     String     @db.Text()
+  complaintType String?    @map("complaint_type") @db.Text()
+  supervisorId  String     @map("supervisor_id") @db.VarChar(255)
+  supervisor    Supervisor @relation(fields: [supervisorId], references: [id])
+  fellowId      String     @map("fellow_id") @db.VarChar(255)
+  fellow        Fellow     @relation(fields: [fellowId], references: [id])
 
   @@map("fellow_complaints")
 }
