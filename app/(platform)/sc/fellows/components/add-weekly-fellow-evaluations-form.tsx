@@ -81,12 +81,10 @@ export default function WeeklyEvaluationForm({
   children,
   previousRatings = [],
   fellowId,
-  supervisorId,
 }: {
   children: React.ReactNode;
   previousRatings: WeeklyFellowRatings[];
   fellowId: string;
-  supervisorId: string;
 }) {
   const [open, setDialogOpen] = React.useState<boolean>(false);
 
@@ -108,7 +106,6 @@ export default function WeeklyEvaluationForm({
     const weeklyRatingBody = {
       ...data,
       fellowId,
-      supervisorId,
     };
 
     const response = await submitWeeklyFellowRating(weeklyRatingBody);

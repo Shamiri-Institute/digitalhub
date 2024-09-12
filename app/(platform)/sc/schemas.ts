@@ -29,7 +29,6 @@ export const WeeklyFellowRatingSchema = z.object({
   ),
   punctualityNotes: stringValidation("Please input punctuality notes"),
   fellowId: z.string(),
-  supervisorId: z.string(),
   behaviourRating: z.number().min(1, { message: "Please input a rating " }),
   programDeliveryRating: z
     .number()

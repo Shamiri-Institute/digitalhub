@@ -61,6 +61,7 @@ export async function loadFellowsData() {
     },
     include: {
       fellowAttendances: true,
+      weeklyFellowRatings: true,
       groups: {
         include: {
           students: true,
@@ -89,6 +90,7 @@ export async function loadFellowsData() {
     droppedOut: fellow.droppedOut,
     droppedOutAt: fellow.droppedOutAt,
     id: fellow.id,
+    weeklyFellowRatings: fellow.weeklyFellowRatings,
     sessions: fellow.groups.map((group) => ({
       schoolName: group.school?.schoolName,
       sessionType:
@@ -105,11 +107,20 @@ export async function loadFellowsData() {
 
 export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
   try {
+    const supervisor = await currentSupervisor();
+
+    if (!supervisor) {
+      return {
+        success: false,
+        message: "User is not authorised",
+      };
+    }
     const parsedData = WeeklyFellowRatingSchema.parse(data);
 
     await db.weeklyFellowRatings.create({
       data: {
         ...parsedData,
+        supervisorId: supervisor.id,
       },
     });
 

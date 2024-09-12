@@ -39,7 +39,10 @@ export default function FellowsTableDropdownMenu({
         <DropdownMenuItem>Edit fellow information</DropdownMenuItem>
         <DropdownMenuItem>Session Attendance History</DropdownMenuItem>
         <DropdownMenuItem>Request repayment</DropdownMenuItem>
-        <SubmitWeeklyFellowEvaluationForm>
+        <SubmitWeeklyFellowEvaluationForm
+          previousRatings={fellowRow.weeklyFellowRatings}
+          fellowId={fellowRow.id}
+        >
           <div>Weekly Fellow Evaluation</div>
         </SubmitWeeklyFellowEvaluationForm>
         <DropdownMenuItem>Submit Complaint</DropdownMenuItem>
