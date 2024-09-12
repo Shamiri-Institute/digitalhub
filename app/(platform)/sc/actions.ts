@@ -135,3 +135,40 @@ export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
     return { success: false, message: "something went wrong" };
   }
 }
+
+export async function editWeeklyFellowRating(
+  data: WeeklyFellowRatingSchema & { id: string },
+) {
+  try {
+    const supervisor = await currentSupervisor();
+
+    if (!supervisor) {
+      return {
+        success: false,
+        message: "User is not authorised",
+      };
+    }
+    const result = await db.weeklyFellowRatings.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        behaviourNotes: data.behaviourNotes,
+        punctualityNotes: data.punctualityNotes,
+        dressingAndGroomingNotes: data.dressingAndGroomingNotes,
+        programDeliveryNotes: data.programDeliveryNotes,
+        behaviourRating: data.behaviourRating,
+        dressingAndGroomingRating: data.dressingAndGroomingRating,
+        programDeliveryRating: data.programDeliveryRating,
+        punctualityRating: data.punctualityRating,
+      },
+    });
+    revalidatePath("/sc/fellows");
+    return { success: true, data: result };
+  } catch (e) {
+    console.error(e);
+    return {
+      error: "Something went wrong during submission, please try again.",
+    };
+  }
+}
