@@ -1,6 +1,6 @@
 "use client";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
-import { Icons } from "#/components/icons";
+import RatingStars from "#/components/rating-stars";
 import {
   Accordion,
   AccordionContent,
@@ -45,7 +45,6 @@ import {
   submitWeeklyFellowRating,
 } from "../../actions";
 import { WeeklyFellowRatingSchema } from "../../schemas";
-import RatingStars from "#/components/rating-stars";
 
 function generateWeekFieldValues() {
   const numWeeks = 4;
