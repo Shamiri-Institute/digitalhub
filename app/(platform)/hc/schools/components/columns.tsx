@@ -5,7 +5,7 @@ import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
+import { format, isAfter } from "date-fns";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {
@@ -119,12 +119,31 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
     accessorFn: (row) => row.assignedSupervisor?.supervisorEmail,
   },
   // TODO: find a way to find the upcoming session
-  /*
   {
-    header: 'Upcoming Session',
-    accessorKey: 
+    header: "Upcoming session",
+    id: "Upcoming session",
+    accessorFn: (row) => {
+      const upcomingSessions: Prisma.InterventionSessionGetPayload<{}>[] =
+        row.interventionSessions
+          .filter((session) => {
+            return isAfter(session.sessionDate, new Date());
+          })
+          .sort((a, b) => {
+            return a.sessionDate.getTime() - b.sessionDate.getTime();
+          });
+
+      if (upcomingSessions.length > 0) {
+        return (
+          // TODO: Refactor string after adding session_names table
+          upcomingSessions[0]!.sessionType.toUpperCase() +
+          " - " +
+          format(upcomingSessions[0]!.sessionDate, "dd MMM yyyy")
+        );
+      } else {
+        return null;
+      }
+    },
   },
-  */
   // {
   //   // TODO: Get report submission status
   //   header: "Report submission",
