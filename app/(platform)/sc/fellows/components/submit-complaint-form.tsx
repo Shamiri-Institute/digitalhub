@@ -1,13 +1,4 @@
 "use client";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
-import RatingStars from "#/components/rating-stars";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "#/components/ui/accordion";
-import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -30,22 +21,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { Table, TableBody, TableCell, TableRow } from "#/components/ui/table";
-import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { WeeklyFellowRatings } from "@prisma/client";
-import { Loader2 } from "lucide-react";
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { SubmitComplaintSchema } from "../../schemas";
 
 const InputSchema = SubmitComplaintSchema.omit({
-  fellowId: true
-})
+  fellowId: true,
+});
 
-export default function SubmitFellowComplaintForm({ children }: { children: React.ReactNode }) {
+export default function SubmitFellowComplaintForm({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [open, setDialogOpen] = React.useState<boolean>(false);
 
   const form = useForm<z.infer<typeof InputSchema>>({
@@ -53,11 +43,11 @@ export default function SubmitFellowComplaintForm({ children }: { children: Reac
     defaultValues: {
       complaintType: "",
       comments: "",
-    }
-  })
+    },
+  });
 
   function onSubmit(data: z.infer<typeof InputSchema>) {
-    console.log(data)
+    console.log(data);
   }
 
   return (
@@ -76,16 +66,25 @@ export default function SubmitFellowComplaintForm({ children }: { children: Reac
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Select complaint</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="m@example.com">m@example.com</SelectItem>
-                        <SelectItem value="m@google.com">m@google.com</SelectItem>
-                        <SelectItem value="m@support.com">m@support.com</SelectItem>
+                        <SelectItem value="m@example.com">
+                          m@example.com
+                        </SelectItem>
+                        <SelectItem value="m@google.com">
+                          m@google.com
+                        </SelectItem>
+                        <SelectItem value="m@support.com">
+                          m@support.com
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -110,5 +109,5 @@ export default function SubmitFellowComplaintForm({ children }: { children: Reac
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

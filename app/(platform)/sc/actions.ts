@@ -4,7 +4,11 @@ import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
 import { revalidatePath } from "next/cache";
-import { FellowSchema, WeeklyFellowRatingSchema } from "./schemas";
+import {
+  FellowSchema,
+  SubmitComplaintSchema,
+  WeeklyFellowRatingSchema,
+} from "./schemas";
 
 export async function addNewFellow(fellowData: FellowSchema) {
   try {
@@ -170,6 +174,41 @@ export async function editWeeklyFellowRating(
     console.error(e);
     return {
       error: "Something went wrong during submission, please try again.",
+    };
+  }
+}
+
+export async function submitFellowComplaint(
+  complaintData: SubmitComplaintSchema,
+) {
+  try {
+    const supervisor = await currentSupervisor();
+
+    if (!supervisor) {
+      return {
+        success: false,
+        message: "User is not authorised",
+      };
+    }
+
+    const data = SubmitComplaintSchema.parse(complaintData);
+
+    await db.fellowComplaints.create({
+      data: {
+        ...data,
+        supervisorId: supervisor.id,
+      },
+    });
+    revalidatePath("/sc/fellows");
+    return {
+      success: true,
+      message: "Successfully submitted fellow complaint",
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      success: false,
+      message: "Could not submit the fellow complaint",
     };
   }
 }
