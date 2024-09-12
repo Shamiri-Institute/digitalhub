@@ -328,8 +328,8 @@ export default function WeeklyEvaluationForm({
             </div>
           </form>
         </Form>
-        <div className="p-6">
-          <h2 className="font-medium text-shamiri-dark-blue">
+        <div className="pt-6">
+          <h2 className="text-xl font-medium text-shamiri-dark-blue">
             Past Weekly Evaluations
           </h2>
           {previousRatings?.length ? (
@@ -339,7 +339,7 @@ export default function WeeklyEvaluationForm({
               ))}
             </Accordion>
           ) : (
-            <div>No Weekly Evaluations Done</div>
+            <p>No Weekly Evaluations Done</p>
           )}
         </div>
       </DialogContent>
@@ -441,33 +441,31 @@ function RenderPastWeeklyEvaluations({
         Week of {evaluationData.week.toLocaleDateString()}
       </AccordionTrigger>
       <AccordionContent>
-        <Table>
+        <Table className="table-fixed">
           <TableBody>
             <TableRow>
-              <TableCell className="font-bold">
-                <div className="flex items-center">
-                  Behaviour Notes -
-                  <Input
-                    type="number"
-                    max={5}
-                    min={1}
-                    className="ml-2 w-14"
-                    value={String(evaluationData.behaviourRating)}
-                    onChange={(e) => {
-                      let value = e.target.valueAsNumber;
-                      if (value > 5) {
-                        value = 5;
-                      }
-                      if (value < 1) {
-                        value = 1;
-                      }
-                      setEvaluationData({
-                        ...evaluationData,
-                        behaviourRating: value,
-                      });
-                    }}
-                  />
-                </div>
+              <TableCell className="font-bold">Behaviour</TableCell>
+              <TableCell>
+                <Input
+                  type="number"
+                  max={5}
+                  min={1}
+                  className="ml-2 w-14"
+                  value={String(evaluationData.behaviourRating)}
+                  onChange={(e) => {
+                    let value = e.target.valueAsNumber;
+                    if (value > 5) {
+                      value = 5;
+                    }
+                    if (value < 1) {
+                      value = 1;
+                    }
+                    setEvaluationData({
+                      ...evaluationData,
+                      behaviourRating: value,
+                    });
+                  }}
+                />
               </TableCell>
               <TableCell>
                 <Textarea
@@ -482,30 +480,28 @@ function RenderPastWeeklyEvaluations({
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-bold">
-                <div className="flex items-center">
-                  Program Delivery Notes -
-                  <Input
-                    type="number"
-                    max={5}
-                    min={1}
-                    className="ml-2 w-14"
-                    value={String(evaluationData.programDeliveryRating)}
-                    onChange={(e) => {
-                      let value = e.target.valueAsNumber;
-                      if (value > 5) {
-                        value = 5;
-                      }
-                      if (value < 1) {
-                        value = 1;
-                      }
-                      setEvaluationData({
-                        ...evaluationData,
-                        programDeliveryRating: value,
-                      });
-                    }}
-                  />
-                </div>
+              <TableCell className="font-bold">Program Delivery</TableCell>
+              <TableCell>
+                <Input
+                  type="number"
+                  max={5}
+                  min={1}
+                  className="ml-2 w-14"
+                  value={String(evaluationData.programDeliveryRating)}
+                  onChange={(e) => {
+                    let value = e.target.valueAsNumber;
+                    if (value > 5) {
+                      value = 5;
+                    }
+                    if (value < 1) {
+                      value = 1;
+                    }
+                    setEvaluationData({
+                      ...evaluationData,
+                      programDeliveryRating: value,
+                    });
+                  }}
+                />
               </TableCell>
               <TableCell>
                 <Textarea
@@ -520,30 +516,28 @@ function RenderPastWeeklyEvaluations({
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-bold">
-                <div className="flex items-center">
-                  Dressing & Grooming -
-                  <Input
-                    type="number"
-                    max={5}
-                    min={1}
-                    className="ml-2 w-14"
-                    value={String(evaluationData.dressingAndGroomingRating)}
-                    onChange={(e) => {
-                      let value = e.target.valueAsNumber;
-                      if (value > 5) {
-                        value = 5;
-                      }
-                      if (value < 1) {
-                        value = 1;
-                      }
-                      setEvaluationData({
-                        ...evaluationData,
-                        dressingAndGroomingRating: value,
-                      });
-                    }}
-                  />
-                </div>
+              <TableCell className="font-bold">Dressing and Grooming</TableCell>
+              <TableCell>
+                <Input
+                  type="number"
+                  max={5}
+                  min={1}
+                  className="ml-2 w-14"
+                  value={String(evaluationData.dressingAndGroomingRating)}
+                  onChange={(e) => {
+                    let value = e.target.valueAsNumber;
+                    if (value > 5) {
+                      value = 5;
+                    }
+                    if (value < 1) {
+                      value = 1;
+                    }
+                    setEvaluationData({
+                      ...evaluationData,
+                      dressingAndGroomingRating: value,
+                    });
+                  }}
+                />
               </TableCell>
               <TableCell>
                 <Textarea
@@ -558,30 +552,28 @@ function RenderPastWeeklyEvaluations({
               </TableCell>
             </TableRow>
             <TableRow>
-              <TableCell className="font-bold">
-                <div className="flex items-center">
-                  Punctuality Notes -
-                  <Input
-                    type="number"
-                    max={5}
-                    min={1}
-                    className="ml-2 w-14"
-                    value={String(evaluationData.punctualityRating)}
-                    onChange={(e) => {
-                      let value = e.target.valueAsNumber;
-                      if (value > 5) {
-                        value = 5;
-                      }
-                      if (value < 1) {
-                        value = 1;
-                      }
-                      setEvaluationData({
-                        ...evaluationData,
-                        punctualityRating: value,
-                      });
-                    }}
-                  />
-                </div>
+              <TableCell className="font-bold">Punctuality</TableCell>
+              <TableCell>
+                <Input
+                  type="number"
+                  max={5}
+                  min={1}
+                  className="ml-2 w-14"
+                  value={String(evaluationData.punctualityRating)}
+                  onChange={(e) => {
+                    let value = e.target.valueAsNumber;
+                    if (value > 5) {
+                      value = 5;
+                    }
+                    if (value < 1) {
+                      value = 1;
+                    }
+                    setEvaluationData({
+                      ...evaluationData,
+                      punctualityRating: value,
+                    });
+                  }}
+                />
               </TableCell>
               <TableCell>
                 <Textarea
