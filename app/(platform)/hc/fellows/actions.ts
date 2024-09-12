@@ -1,12 +1,11 @@
 "use server";
 
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 
 async function checkAuth() {
   const hubCoordinator = await currentHubCoordinator();
-  const user = await getCurrentUser();
 
-  if (!hubCoordinator || !user) {
+  if (!hubCoordinator) {
     throw new Error("The session has not been authenticated");
   }
 }
