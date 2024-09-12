@@ -3,6 +3,7 @@ import { currentSupervisor } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
+import { revalidatePath } from "next/cache";
 import { FellowSchema, WeeklyFellowRatingSchema } from "./schemas";
 
 export async function addNewFellow(fellowData: FellowSchema) {
@@ -124,7 +125,7 @@ export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
       },
     });
 
-    // revalidatePath("/profile");
+    revalidatePath("/sc/fellows");
     return {
       success: true,
       message: "successfully recorded fellow's weekly rating",

@@ -104,9 +104,9 @@ export default function WeeklyEvaluationForm({
 
   useEffect(() => {
     if (!open) {
-      form.reset()
+      form.reset();
     }
-  }, [open])
+  }, [open]);
 
   async function onSubmit(data: z.infer<typeof InputSchema>) {
     const weeklyRatingBody = {
