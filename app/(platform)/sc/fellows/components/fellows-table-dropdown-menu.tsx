@@ -9,6 +9,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 import type { FellowsData } from "../../actions";
+import SubmitFellowComplaintForm from "./submit-complaint-form";
 import SubmitWeeklyFellowEvaluationForm from "./weekly-fellow-evaluations-form";
 
 export default function FellowsTableDropdownMenu({
@@ -51,7 +52,15 @@ export default function FellowsTableDropdownMenu({
             Weekly Fellow Evaluation
           </div>
         </SubmitWeeklyFellowEvaluationForm>
-        <DropdownMenuItem>Submit Complaint</DropdownMenuItem>
+        <SubmitFellowComplaintForm
+          fellowPhoneNumber={fellowRow.mpesaNumber ?? "N/A"}
+          fellowId={fellowRow.id}
+          fellowName={fellowRow.fellowName ?? "N/A"}
+        >
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm")}>
+            Submit Complaint
+          </div>
+        </SubmitFellowComplaintForm>
         {!fellowRow.droppedOut || !fellowRow.droppedOutAt ? (
           <DropdownMenuItem className="text-shamiri-red">
             Drop out fellow

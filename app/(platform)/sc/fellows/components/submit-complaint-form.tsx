@@ -1,4 +1,5 @@
 "use client";
+import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import {
   Dialog,
   DialogContent,
@@ -21,10 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
+import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { submitFellowComplaint } from "../../actions";
 import { SubmitComplaintSchema } from "../../schemas";
 
 const InputSchema = SubmitComplaintSchema.omit({
@@ -33,8 +36,14 @@ const InputSchema = SubmitComplaintSchema.omit({
 
 export default function SubmitFellowComplaintForm({
   children,
+  fellowName,
+  fellowId,
+  fellowPhoneNumber,
 }: {
   children: React.ReactNode;
+  fellowName: string;
+  fellowId: string;
+  fellowPhoneNumber: string;
 }) {
   const [open, setDialogOpen] = React.useState<boolean>(false);
 
@@ -46,19 +55,48 @@ export default function SubmitFellowComplaintForm({
     },
   });
 
-  function onSubmit(data: z.infer<typeof InputSchema>) {
-    console.log(data);
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open, form]);
+
+  async function onSubmit(data: z.infer<typeof InputSchema>) {
+    const complaintData = { ...data, fellowId };
+
+    const response = await submitFellowComplaint(complaintData);
+
+    if (!response.success) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description:
+          response.message ??
+          "Something went wrong during submission, please try again",
+      });
+      return;
+    }
+
+    toast({
+      variant: "default",
+      title: "Success",
+      description: "Successfully submitted weekly evaluation",
+    });
+
+    form.reset();
+    setDialogOpen(false);
   }
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent>
+      <DialogContent className="p-5">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
               <h2 className="text-xl">Submit Complaint</h2>
             </DialogHeader>
+            <DialogAlertWidget label={`${fellowName} • ${fellowPhoneNumber}`} />
             <div>
               <FormField
                 control={form.control}
