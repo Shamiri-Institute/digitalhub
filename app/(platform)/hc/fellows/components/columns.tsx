@@ -12,10 +12,18 @@ import { Dispatch, SetStateAction } from "react";
 
 export type MainFellowTableData = {
   id: string;
-  fellowName: string;
-  cellNumber: string;
-  supervisorId: string;
-  supervisorName: string;
+  fellowName: string | null;
+  fellowEmail: string | null;
+  cellNumber: string | null;
+  idNumber: string | null;
+  gender: string | null;
+  dateOfBirth: string | null;
+  county: string | null;
+  subCounty: string | null;
+  mpesaName: string | null;
+  mpesaNumber: string | null;
+  supervisorId: string | null;
+  supervisorName: string | null;
   droppedOut: boolean | null;
   groupCount: number;
   averageRating: number | null;
@@ -24,6 +32,7 @@ export type MainFellowTableData = {
 export const columns = (
   supervisors: Prisma.SupervisorGetPayload<{}>[],
   setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>,
+  setEditDialog: Dispatch<SetStateAction<boolean>>,
 ): ColumnDef<MainFellowTableData>[] => {
   return [
     {
@@ -78,8 +87,8 @@ export const columns = (
         ) : (
           <Badge variant="shamiri-green">Active</Badge>
         ),
-      header: "Active Status",
-      id: "Active Status",
+      header: "Status",
+      id: "Status",
     },
     {
       accessorKey: "groupCount",
@@ -108,9 +117,33 @@ export const columns = (
       ),
     },
     {
+      accessorKey: "fellowEmail",
+      id: "Email",
+      header: "Email",
+    },
+    {
+      accessorKey: "gender",
+      id: "Gender",
+      header: "Gender",
+    },
+    {
+      accessorKey: "county",
+      id: "County",
+      header: "County",
+    },
+    {
+      accessorKey: "subCounty",
+      id: "Sub-county",
+      header: "Sub-county",
+    },
+    {
       id: "button",
       cell: ({ row }) => (
-        <MainFellowsDatatableMenu fellow={row.original} setFellow={setFellow} />
+        <MainFellowsDatatableMenu
+          fellow={row.original}
+          setFellow={setFellow}
+          setEditDialog={setEditDialog}
+        />
       ),
       enableHiding: false,
     },
