@@ -137,7 +137,7 @@ export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
 }
 
 export async function editWeeklyFellowRating(
-  data: WeeklyFellowRatingSchema & { id: string },
+  data: Omit<WeeklyFellowRatingSchema, "week"> & { id: string },
 ) {
   try {
     const supervisor = await currentSupervisor();
@@ -151,6 +151,7 @@ export async function editWeeklyFellowRating(
     const result = await db.weeklyFellowRatings.update({
       where: {
         id: data.id,
+        fellowId: data.fellowId,
       },
       data: {
         behaviourNotes: data.behaviourNotes,

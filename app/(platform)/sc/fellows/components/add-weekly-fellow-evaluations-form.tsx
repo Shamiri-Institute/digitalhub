@@ -392,23 +392,22 @@ function RenderPastWeeklyEvaluations({
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
 
   const handleEdit = async () => {
-    let weeeklyEvaluation: Omit<
-      WeeklyFellowRatings,
-      "createdAt" | "updatedAt" | "fellowId" | "supervisorId" | "week"
-    > = {
+    const weeklyEvaluation = {
       behaviourNotes: evaluationData.behaviourNotes,
       dressingAndGroomingNotes: evaluationData.dressingAndGroomingNotes,
       programDeliveryNotes: evaluationData.programDeliveryNotes,
       punctualityNotes: evaluationData.punctualityNotes,
       id: evaluationData.id,
-      behaviourRating: evaluationData.behaviourRating,
-      dressingAndGroomingRating: evaluationData.dressingAndGroomingRating,
-      programDeliveryRating: evaluationData.programDeliveryRating,
-      punctualityRating: evaluationData.punctualityRating,
+      behaviourRating: evaluationData.behaviourRating as number,
+      dressingAndGroomingRating:
+        evaluationData.dressingAndGroomingRating as number,
+      programDeliveryRating: evaluationData.programDeliveryRating as number,
+      punctualityRating: evaluationData.punctualityRating as number,
+      fellowId: evaluationData.fellowId,
     };
     try {
       setIsSubmitting(true);
-      const response = await editWeeklyFellowRating(weeeklyEvaluation);
+      const response = await editWeeklyFellowRating(weeklyEvaluation);
       if (!response.success) {
         toast({
           variant: "destructive",
