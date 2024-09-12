@@ -112,7 +112,7 @@ export default function WeeklyEvaluationForm({
     if (!open) {
       form.reset();
     }
-  }, [open]);
+  }, [open, form]);
 
   async function onSubmit(data: z.infer<typeof InputSchema>) {
     const weeklyRatingBody = {
