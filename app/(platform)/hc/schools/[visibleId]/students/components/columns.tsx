@@ -1,20 +1,11 @@
 "use client";
 
-import { Button } from "#/components/ui/button";
+import StudentsDataTableMenu from "#/app/(platform)/hc/schools/[visibleId]/students/components/students-datatable-menu";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import format from "date-fns/format";
-import { MoreHorizontal } from "lucide-react";
 import React from "react";
 
 export type SchoolStudentTableData = Prisma.StudentGetPayload<{
@@ -42,7 +33,7 @@ function MenuItem({
 
 export const columns: ColumnDef<SchoolStudentTableData>[] = [
   {
-    id: "select",
+    id: "checkbox",
     header: ({ table }) => (
       <Checkbox
         checked={
@@ -51,87 +42,88 @@ export const columns: ColumnDef<SchoolStudentTableData>[] = [
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
+        className={
+          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+        }
       />
     ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(val) => row.toggleSelected(!!val)}
-        aria-label="Select row"
-      />
-    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(val) => row.toggleSelected(!!val)}
+            aria-label="Select row"
+            className={
+              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+            }
+          />
+        </div>
+      );
+    },
     enableSorting: false,
     enableHiding: false,
   },
   {
     accessorKey: "studentName",
     header: "Student Name",
+    id: "Student Name",
   },
   {
     // TODO: this computation should be done during the fetch and possible user an accessor Function
     accessorKey: "assignedGroupId",
     header: "Group No.",
+    id: "Group No.",
+  },
+  {
+    header: "Shamiri ID",
+    id: "Shamiri ID",
+    accessorKey: "visibleId",
   },
   {
     accessorFn: (row) => (row.age || row.age === 0 ? `${row.age} yrs` : "N/A"),
     header: "Age",
-  },
-  {
-    header: "Shamiri ID",
-    accessorKey: "id",
+    id: "Age",
   },
   {
     header: "Clinical Sessions",
+    id: "Clinical Sessions",
     accessorFn: (row) =>
       row.clinicalCases?.reduce((acc, val) => acc + val.sessions.length, 0),
   },
   {
     header: "Gender",
+    id: "Gender",
     accessorKey: "gender",
   },
   {
-    header: "Contact No.",
+    header: "Contact no.",
+    id: "Contact no.",
     accessorKey: "phoneNumber",
   },
   {
-    header: "Admission Number",
+    header: "Admission number",
+    id: "Admission number",
     accessorKey: "admissionNumber",
   },
   {
     header: "Stream",
+    id: "Stream",
     accessorKey: "stream",
   },
   {
     header: "Class/Form",
+    id: "Class/Form",
     accessorKey: "form",
   },
   {
     header: "Date added",
+    id: "Date added",
     accessorFn: (row) => format(row.createdAt, "dd/MM/yyyy"),
   },
   {
-    id: "actions",
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost">
-            <MoreHorizontal />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>Edit Information</DropdownMenuItem>
-          <DropdownMenuItem>Mark Student Attendance</DropdownMenuItem>
-          <DropdownMenuItem>View group transfer history</DropdownMenuItem>
-          <DropdownMenuItem>View attendance history</DropdownMenuItem>
-          <DropdownMenuItem>Add clinical case</DropdownMenuItem>
-          <DropdownMenuItem>Reporting notes</DropdownMenuItem>
-          <DropdownMenuItem>
-            <div className="text-shamiri-red">Drop-out student</div>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    id: "button",
+    cell: ({ row }) => <StudentsDataTableMenu student={row.original} />,
+    enableHiding: false,
   },
 ];
