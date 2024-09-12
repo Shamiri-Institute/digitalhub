@@ -40,3 +40,11 @@ export const WeeklyFellowRatingSchema = z.object({
 });
 
 export type WeeklyFellowRatingSchema = z.infer<typeof WeeklyFellowRatingSchema>;
+
+export const SubmitComplaintSchema = z.object({
+  complaintType: stringValidation("Please select a complaint type"),
+  comments: z.string().optional(),
+  fellowId: stringValidation("Fellow id is required"),
+})
+
+export type SubmitComplaintSchema = z.infer<typeof SubmitComplaintSchema>;
