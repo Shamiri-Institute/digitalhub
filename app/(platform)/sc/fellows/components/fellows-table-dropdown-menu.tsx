@@ -7,6 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { cn } from "#/lib/utils";
 import type { FellowsData } from "../../actions";
 import SubmitWeeklyFellowEvaluationForm from "./add-weekly-fellow-evaluations-form";
 
@@ -43,7 +44,10 @@ export default function FellowsTableDropdownMenu({
           previousRatings={fellowRow.weeklyFellowRatings}
           fellowId={fellowRow.id}
         >
-          <div>Weekly Fellow Evaluation</div>
+          {/* TODO: find a solution to allow easy interop with the DropdownMenuItemComponent */}
+          <div className={cn("cursor-pointer px-3 py-2")}>
+            Weekly Fellow Evaluation
+          </div>
         </SubmitWeeklyFellowEvaluationForm>
         <DropdownMenuItem>Submit Complaint</DropdownMenuItem>
         {!fellowRow.droppedOut || !fellowRow.droppedOutAt ? (

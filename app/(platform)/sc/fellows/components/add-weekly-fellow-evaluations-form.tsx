@@ -38,7 +38,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { WeeklyFellowRatings } from "@prisma/client";
 import { endOfWeek, format, startOfWeek, subWeeks } from "date-fns";
 import { Loader2 } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { submitWeeklyFellowRating } from "../../actions";
@@ -101,6 +101,12 @@ export default function WeeklyEvaluationForm({
       punctualityRating: 0,
     },
   });
+
+  useEffect(() => {
+    if (!open) {
+      form.reset()
+    }
+  }, [open])
 
   async function onSubmit(data: z.infer<typeof InputSchema>) {
     const weeklyRatingBody = {
