@@ -1,12 +1,12 @@
 "use client";
 
-import DataTable from "#/app/(platform)/hc/components/data-table";
 import {
   columns,
   MainFellowTableData,
 } from "#/app/(platform)/hc/fellows/components/columns";
 import { BatchUploadDownloadFellow } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/upload-csv";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
+import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { Prisma } from "@prisma/client";
