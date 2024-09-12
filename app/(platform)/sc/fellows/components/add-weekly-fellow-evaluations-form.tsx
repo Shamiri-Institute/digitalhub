@@ -45,6 +45,7 @@ import {
   submitWeeklyFellowRating,
 } from "../../actions";
 import { WeeklyFellowRatingSchema } from "../../schemas";
+import RatingStars from "#/components/rating-stars";
 
 function generateWeekFieldValues() {
   const numWeeks = 4;
@@ -344,40 +345,6 @@ export default function WeeklyEvaluationForm({
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function RatingStars({
-  rating,
-  onSelect,
-}: {
-  rating: number;
-  onSelect: (rating: number) => void;
-}) {
-  return (
-    <div className="flex">
-      {[1, 2, 3, 4, 5].map((i) => {
-        if (i <= rating) {
-          return (
-            <button type="button" key={i} onClick={() => onSelect(i)}>
-              <Icons.star
-                key={i}
-                className="h-6 w-6 align-baseline text-muted-yellow"
-              />
-            </button>
-          );
-        }
-
-        return (
-          <button type="button" key={i} onClick={() => onSelect(i)}>
-            <Icons.starOutline
-              key={i}
-              className="h-6 w-6 align-baseline text-muted-foreground"
-            />
-          </button>
-        );
-      })}
-    </div>
   );
 }
 
