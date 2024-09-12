@@ -305,6 +305,7 @@ export async function updateSupervisorDetails(
       mpesaNumber,
       gender,
       idNumber,
+      dateOfBirth,
     } = EditSupervisorSchema.parse(data);
 
     await db.supervisor.update({
@@ -321,6 +322,7 @@ export async function updateSupervisorDetails(
         mpesaNumber,
         gender,
         idNumber,
+        dateOfBirth,
       },
     });
     return {

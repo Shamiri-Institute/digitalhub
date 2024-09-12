@@ -410,3 +410,83 @@ export const WeeklyHubTeamMeetingSchema = z.object({
   anyOtherChallengesRating: z.number().lte(5),
   recommendations: stringValidation("Please input recommendations"),
 });
+
+export const FellowDetailsSchema = z
+  .object({
+    mode: z.enum(["add", "edit"]),
+    fellowName: z.string({
+      required_error: "Please enter the fellow's name",
+    }),
+    id: z.string().optional(),
+    idNumber: z.string({
+      required_error: "Please enter the fellow's ID number",
+    }),
+    cellNumber: z
+      .string({ required_error: "Please enter the fellow's phone number" })
+      .refine((val) => isValidPhoneNumber(val, "KE"), {
+        message: "Please enter a valid kenyan phone number",
+      }),
+    mpesaNumber: z
+      .string({ required_error: "Please enter the fellow's m-pesa number" })
+      .refine((val) => isValidPhoneNumber(val, "KE"), {
+        message: "Please enter a valid kenyan phone number",
+      }),
+    fellowEmail: z
+      .string({
+        required_error: "Please enter the fellow's email.",
+      })
+      .email({
+        message: "Please enter a valid email.",
+      }),
+    county: z.enum([counties[0]!, ...counties.slice(1)], {
+      errorMap: (issue, ctx) => ({ message: "Please pick a valid option" }),
+    }),
+    subCounty: z
+      .string({
+        invalid_type_error: "Please pick a valid sub county.",
+        required_error: "Please pick a sub-county",
+      })
+      .refine((val) => val !== "", {
+        message: "Please pick a sub-county",
+      }),
+    gender: z.string({
+      required_error: "Please enter the fellow's gender",
+    }),
+    mpesaName: z.string({
+      required_error: "Please enter the fellow's m-pesa number",
+    }),
+    dateOfBirth: z.coerce.date({
+      required_error: "Please select a date of birth",
+    }),
+  })
+  .superRefine((val, ctx) => {
+    const selectedCounty = KENYAN_COUNTIES.find(
+      (county) => county.name === val.county,
+    );
+    if (
+      selectedCounty &&
+      !Array.from(selectedCounty.sub_counties).includes(
+        val.subCounty as keyof (typeof selectedCounty.sub_counties)[0],
+      )
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${val.subCounty} is not a valid option.`,
+        fatal: true,
+        path: ["subCounty"],
+      });
+
+      return z.NEVER;
+    }
+
+    if (val.mode === "edit" && val.id === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Fellow Id is required.`,
+        fatal: true,
+        path: ["id"],
+      });
+
+      return z.NEVER;
+    }
+  });
