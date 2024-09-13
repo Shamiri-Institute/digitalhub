@@ -1,5 +1,5 @@
 "use client";
-import DataTable from "#/app/(platform)/hc/components/data-table";
+import DataTable from "#/components/data-table";
 import { loadFellowsData } from "../../actions";
 import { columns, subColumns } from "./columns";
 

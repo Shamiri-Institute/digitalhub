@@ -1,7 +1,6 @@
 "use client";
 
 import CancelSession from "#/app/(platform)/hc/components/cancel-session";
-import DataTable from "#/app/(platform)/hc/components/data-table";
 import FellowAttendance from "#/app/(platform)/hc/components/fellow-attendance";
 import RescheduleSession from "#/app/(platform)/hc/components/reschedule-session";
 import SupervisorAttendance from "#/app/(platform)/hc/components/supervisor-attendance";
@@ -14,6 +13,7 @@ import {
   SessionData,
 } from "#/app/(platform)/hc/schools/[visibleId]/sessions/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import DataTable from "#/components/data-table";
 import { Prisma } from "@prisma/client";
 import { addHours, addMinutes } from "date-fns";
 import { usePathname } from "next/navigation";

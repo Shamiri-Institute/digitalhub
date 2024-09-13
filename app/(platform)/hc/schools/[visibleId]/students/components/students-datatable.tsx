@@ -1,11 +1,11 @@
 "use client";
 
-import DataTable from "#/app/(platform)/hc/components/data-table";
 import {
   columns,
   SchoolStudentTableData,
 } from "#/app/(platform)/hc/schools/[visibleId]/students/components/columns";
 import { BatchUploadDownloadStudents } from "#/app/(platform)/hc/schools/[visibleId]/students/components/upload-csv";
+import DataTable from "#/components/data-table";
 import { Prisma } from "@prisma/client";
 
 export default function StudentsDatatable({
