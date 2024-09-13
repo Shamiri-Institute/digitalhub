@@ -1120,7 +1120,7 @@ model FellowComplaints {
   id                 String     @id @default(cuid())
   createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt          DateTime   @updatedAt @map("updated_at")
-  complaint          String     @db.Text()
+  complaint          String?    @db.Text()
   complaintType      String?    @map("complaint_type") @db.Text()
   additionalComments String?    @map("additional_comments") @db.Text() // TODO: run migration to move complaint into additionalComments
   supervisorId       String     @map("supervisor_id") @db.VarChar(255)

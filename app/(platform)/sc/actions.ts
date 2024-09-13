@@ -200,6 +200,7 @@ export async function submitFellowComplaint(
       data: {
         ...data,
         supervisorId: supervisor.id,
+        complaint: data.additionalComments ?? "",
       },
     });
     revalidatePath("/sc/fellows");

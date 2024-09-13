@@ -54,7 +54,7 @@ export default function SubmitFellowComplaintForm({
     resolver: zodResolver(InputSchema),
     defaultValues: {
       complaintType: "",
-      comments: "",
+      additionalComments: "",
     },
   });
 
@@ -134,7 +134,7 @@ export default function SubmitFellowComplaintForm({
               />
               <FormField
                 control={form.control}
-                name="comments"
+                name="additionalComments"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Additional comments</FormLabel>
