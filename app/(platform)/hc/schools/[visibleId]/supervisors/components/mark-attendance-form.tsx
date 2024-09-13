@@ -254,7 +254,7 @@ export function MarkAttendance({
               <div className="flex items-center gap-2">
                 <span>
                   {activeSession &&
-                    sessionDisplayName(activeSession?.sessionType)}
+                    sessionDisplayName(activeSession?.sessionType!)}
                 </span>
                 <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
                   {""}
@@ -306,7 +306,7 @@ export function MarkAttendance({
                           <SelectItem key={session.id} value={session.id}>
                             <div className="flex items-center gap-2">
                               <span>
-                                {sessionDisplayName(session.sessionType)}
+                                {sessionDisplayName(session.sessionType!)}
                               </span>
                               <span>-</span>
                               <span>

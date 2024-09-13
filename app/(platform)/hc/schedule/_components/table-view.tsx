@@ -237,6 +237,7 @@ async function getSupervisorAttendances(
       },
     },
   });
+
   const tableData = attendances.map((attendance) => {
     const totalAttendedFellows = attendance.supervisor.fellows.filter(
       (fellow) => {
@@ -259,7 +260,7 @@ async function getSupervisorAttendances(
         totalAttendedFellows.length +
         "/" +
         attendance.supervisor.fellows.length,
-      sessionType: attendance.session.sessionType,
+      sessionType: attendance.session.sessionType!,
       sessionDate: attendance.session.sessionDate,
       sessionStatus: attendance.session.status,
       occurred: attendance.session.occurred,
@@ -304,7 +305,7 @@ async function getFellowAttendances(
     if (
       session.status !== null &&
       statusTypes.includes(session.status) &&
-      sessionTypes.includes(session.sessionType)
+      sessionTypes.includes(session.sessionType!)
     ) {
       fellows.forEach((fellow) => {
         const matchingAttendance = attendances.find((attendance) => {
@@ -327,7 +328,7 @@ async function getFellowAttendances(
             supervisorId: fellow.supervisorId,
             supervisorName: fellow.supervisor?.supervisorName,
             cellNumber: fellow.cellNumber,
-            sessionType: session.sessionType,
+            sessionType: session.sessionType!,
             occurred: session.occurred,
             sessionStatus: session.status,
             sessionDate: session.sessionDate,

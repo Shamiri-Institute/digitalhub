@@ -199,6 +199,7 @@ function generateFellowAttendanceDotProps({
         schoolId: "sch_01hmttqzhgerar24yk4gdj90mn",
         projectId: "proj_0123456789",
         occurred: true,
+        sessionId: null,
         yearOfImplementation: 2023,
       },
     },
