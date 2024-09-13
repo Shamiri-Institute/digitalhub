@@ -1,7 +1,6 @@
 "use client";
 
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import AssignFellowSupervisor from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/assign-fellow-supervisor";
 import { FellowsDatatableMenu } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -16,6 +15,7 @@ export type SchoolFellowTableData = {
   supervisorId: string;
   supervisorName: string;
   droppedOut: boolean | null;
+  groupId: string;
   groupName: string;
   averageRating: number | null;
 };
@@ -58,6 +58,7 @@ export const columns = (
     },
     {
       accessorKey: "fellowName",
+      id: "Name",
       header: "Name",
     },
     {
@@ -76,10 +77,12 @@ export const columns = (
           <Badge variant="shamiri-green">Active</Badge>
         ),
       header: "Active Status",
+      id: "Active Status",
     },
     {
       accessorKey: "groupName",
       header: "Group Name",
+      id: "Group Name",
     },
     {
       header: "Phone Number",
@@ -90,19 +93,6 @@ export const columns = (
         );
       },
     },
-    {
-      header: "Supervisor",
-      cell: ({ row }) => (
-        <div className="flex">
-          <AssignFellowSupervisor
-            fellowId={row.original.id}
-            supervisorId={row.original.supervisorId}
-            supervisors={supervisors}
-          />
-        </div>
-      ),
-    },
-    // TODO: confirm what will be showed for number of schools
     {
       id: "button",
       cell: ({ row }) => <FellowsDatatableMenu fellow={row.original} />,

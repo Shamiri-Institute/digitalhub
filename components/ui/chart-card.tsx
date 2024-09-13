@@ -6,9 +6,11 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./card";
 export default function ChartCard({
   children,
   title,
+  showCardFooter = true,
 }: {
   children?: React.ReactNode;
   title: string;
+  showCardFooter?: boolean;
 }) {
   return (
     <Card>
@@ -26,13 +28,15 @@ export default function ChartCard({
           </div>
         )}
       </CardContent>
-      <CardFooter className="border-t border-dashed px-4 py-[14px]">
-        {/* TODO: the change the font type to user Inter in this section */}
-        {/* TODO: also change to a link */}
-        <p className="font-medium leading-5 text-shamiri-new-blue">
-          View Summary
-        </p>
-      </CardFooter>
+      {showCardFooter && (
+        <CardFooter className="border-t border-dashed px-4 py-[14px]">
+          {/* TODO: the change the font type to user Inter in this section */}
+          {/* TODO: also change to a link */}
+          <p className="font-medium leading-5 text-shamiri-new-blue">
+            View Summary
+          </p>
+        </CardFooter>
+      )}
     </Card>
   );
 }

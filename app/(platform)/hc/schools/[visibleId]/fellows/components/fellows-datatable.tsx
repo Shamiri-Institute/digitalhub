@@ -1,11 +1,12 @@
 "use client";
 
-import DataTable from "#/app/(platform)/hc/components/data-table";
 import {
   columns,
   SchoolFellowTableData,
 } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/columns";
 import { BatchUploadDownloadFellow } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/upload-csv";
+import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
+import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -16,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { Prisma } from "@prisma/client";
+import { useContext } from "react";
 
 export default function FellowsDatatable({
   fellows,
@@ -25,9 +27,9 @@ export default function FellowsDatatable({
   supervisors: Prisma.SupervisorGetPayload<{}>[];
 }) {
   const renderTableActions = () => {
-    // TODO: Move to main fellows page @Benny
     return <BatchUploadDownloadFellow />;
   };
+
   return (
     <DataTable
       columns={columns(supervisors)}
@@ -44,8 +46,13 @@ export function FellowsDatatableMenu({
 }: {
   fellow: SchoolFellowTableData;
 }) {
+  const context = useContext(FellowInfoContext);
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      onOpenChange={() => {
+        context.setFellow(fellow);
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <div className="absolute inset-0 border-l bg-white">
           <div className="flex h-full w-full items-center justify-center">
@@ -61,9 +68,28 @@ export function FellowsDatatableMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem>View Fellow information</DropdownMenuItem>
-        <DropdownMenuItem>Assign supervisor</DropdownMenuItem>
-        <DropdownMenuItem>View students in group</DropdownMenuItem>
-        <DropdownMenuItem>Session attendance history</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            context.setAssignSupervisor(true);
+          }}
+        >
+          Assign supervisor
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={context.fellow?.groupId === null}
+          onClick={() => {
+            context.setGroupDialog(true);
+          }}
+        >
+          View students in group
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            context.setAttendanceHistoryDialog(true);
+          }}
+        >
+          Session attendance history
+        </DropdownMenuItem>
         <DropdownMenuItem>View student group evaluation</DropdownMenuItem>
         <DropdownMenuItem>View weekly fellow evaluation</DropdownMenuItem>
         <DropdownMenuItem>View complaints</DropdownMenuItem>

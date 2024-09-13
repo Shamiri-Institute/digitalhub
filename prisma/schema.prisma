@@ -199,6 +199,7 @@ model Student {
   admissionNumber           String?                     @map("admission_number") @db.VarChar(255)
   // We should move away from this. SI is collecting age at year of implementation
   age                       Int?
+  yearOfBirth               Int?                        @map("year_of_birth") // depreciates 'age' column
   gender                    String?                     @db.VarChar(10)
   form                      Int?
   stream                    String?                     @db.VarChar(255)
@@ -872,10 +873,10 @@ model InterventionGroup {
   updatedAt                DateTime                  @updatedAt @map("updated_at")
   archivedAt               DateTime?                 @map("archived_at")
   groupName                String                    @map("group_name") @db.VarChar(100)
-  leaderId                 String?                   @map("leader_id") @db.VarChar(255)
-  leader                   Fellow?                   @relation(fields: [leaderId], references: [id])
-  schoolId                 String?                   @map("school_id") // make this mandatory later on
-  school                   School?                   @relation(fields: [schoolId], references: [id])
+  leaderId                 String                    @map("leader_id") @db.VarChar(255)
+  leader                   Fellow                    @relation(fields: [leaderId], references: [id])
+  schoolId                 String                    @map("school_id")
+  school                   School                    @relation(fields: [schoolId], references: [id])
   projectId                String                    @map("project_id") @db.VarChar(100)
   project                  Project                   @relation(fields: [projectId], references: [id])
   students                 Student[]
@@ -883,6 +884,7 @@ model InterventionGroup {
   studentAttendances       StudentAttendance[]
   interventionGroupReports InterventionGroupReport[]
 
+  @@unique([leaderId, schoolId], name: "interventionGroupByLeaderIdAndSchoolId")
   @@map("intervention_groups")
 }
 

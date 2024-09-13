@@ -1,7 +1,7 @@
-import DataTable from "#/app/(platform)/hc/components/data-table";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
 import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
 import { markManySupervisorAttendance } from "#/app/(platform)/hc/schedule/actions/supervisor-attendance";
+import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
