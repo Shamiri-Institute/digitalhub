@@ -61,7 +61,7 @@ export const processAttendances = (
         isPreSession ? payout.preSessionCount++ : payout.mainSessionCount++;
 
         let sessionDetail = `${session.school.schoolName.trim()}-${sessionDisplayName(
-          session.sessionType,
+          session.sessionType!,
         )}`;
         if (attendance.delayedPaymentRequests?.length > 0) {
           sessionDetail += "(Delayed)";

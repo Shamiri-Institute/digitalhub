@@ -11,8 +11,8 @@ import { SchoolReportCard } from "./school-report-card";
 
 export interface SessionItem {
   id: string;
-  sessionName: string;
-  sessionType: string;
+  sessionName: string | null;
+  sessionType: string | null;
   sessionDate: Date;
 }
 
@@ -132,7 +132,7 @@ export default async function SchoolReport({
       const interventionSession = await db.interventionSession.findUnique({
         where: {
           interventionBySchoolIdAndSessionType: {
-            sessionType: sessionItem.sessionType,
+            sessionType: sessionItem.sessionType!,
             schoolId: assignedSchool.id,
           },
         },
@@ -172,18 +172,18 @@ export default async function SchoolReport({
       {interventionSessions.map(({ session, defaultSessionValues }) => (
         <SchoolReportCard
           key={session?.sessionName ?? defaultSessionValues.sessionName}
-          name={session?.sessionName ?? defaultSessionValues.sessionName}
+          name={session?.sessionName! ?? defaultSessionValues.sessionName}
           saved={session !== null}
           occurring={session?.occurred || false}
           savedSession={session}
           payload={{
             occurred: !(session?.occurred || false),
             sessionName:
-              session?.sessionName ?? defaultSessionValues.sessionName,
+              session?.sessionName! ?? defaultSessionValues.sessionName,
             sessionDate:
               session?.sessionDate ?? defaultSessionValues.sessionDate,
             sessionType:
-              session?.sessionType ?? defaultSessionValues.sessionType,
+              session?.sessionType! ?? defaultSessionValues.sessionType,
             yearOfImplementation:
               session?.sessionDate.getFullYear() || new Date().getFullYear(),
             schoolId: assignedSchool.id,
