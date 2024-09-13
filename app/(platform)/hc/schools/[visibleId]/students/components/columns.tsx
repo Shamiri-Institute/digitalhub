@@ -2,11 +2,10 @@
 
 import StudentsDataTableMenu from "#/app/(platform)/hc/schools/[visibleId]/students/components/students-datatable-menu";
 import { Checkbox } from "#/components/ui/checkbox";
-import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import format from "date-fns/format";
-import React from "react";
+import { Dispatch, SetStateAction } from "react";
 
 export type SchoolStudentTableData = Prisma.StudentGetPayload<{
   include: {
@@ -19,19 +18,10 @@ export type SchoolStudentTableData = Prisma.StudentGetPayload<{
   };
 }>;
 
-function MenuItem({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className: string;
-}) {
-  return (
-    <div className={cn("cursor-pointer px-3 py-2", className)}>{children}</div>
-  );
-}
-
-export const columns: ColumnDef<SchoolStudentTableData>[] = [
+export const columns = (state: {
+  setEditDialog: Dispatch<SetStateAction<boolean>>;
+  setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
+}): ColumnDef<SchoolStudentTableData>[] => [
   {
     id: "checkbox",
     header: ({ table }) => (
@@ -123,7 +113,9 @@ export const columns: ColumnDef<SchoolStudentTableData>[] = [
   },
   {
     id: "button",
-    cell: ({ row }) => <StudentsDataTableMenu student={row.original} />,
+    cell: ({ row }) => (
+      <StudentsDataTableMenu student={row.original} state={state} />
+    ),
     enableHiding: false,
   },
 ];

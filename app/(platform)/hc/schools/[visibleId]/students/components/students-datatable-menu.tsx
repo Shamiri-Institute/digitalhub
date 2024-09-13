@@ -8,10 +8,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { Dispatch, SetStateAction } from "react";
 
 export default function StudentsDataTableMenu({
+  state,
   student,
 }: {
+  state: {
+    setEditDialog: Dispatch<SetStateAction<boolean>>;
+    setStudent: Dispatch<SetStateAction<SchoolStudentTableData>>;
+  };
   student: SchoolStudentTableData;
 }) {
   return (
@@ -30,7 +36,14 @@ export default function StudentsDataTableMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Edit information</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            state.setStudent(student);
+            state.setEditDialog(true);
+          }}
+        >
+          Edit information
+        </DropdownMenuItem>
         <DropdownMenuItem>Mark student attendance</DropdownMenuItem>
         <DropdownMenuItem>View group transfer history</DropdownMenuItem>
         <DropdownMenuItem>View attendance history</DropdownMenuItem>
