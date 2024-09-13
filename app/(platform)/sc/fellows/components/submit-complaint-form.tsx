@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
+import { COMPLAINT_TYPES } from "#/lib/app-constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FellowComplaints } from "@prisma/client";
 import React, { useEffect } from "react";
@@ -117,15 +118,11 @@ export default function SubmitFellowComplaintForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="m@example.com">
-                          m@example.com
-                        </SelectItem>
-                        <SelectItem value="m@google.com">
-                          m@google.com
-                        </SelectItem>
-                        <SelectItem value="m@support.com">
-                          m@support.com
-                        </SelectItem>
+                        {COMPLAINT_TYPES.map((complaintType) => (
+                          <SelectItem key={complaintType} value={complaintType}>
+                            {complaintType}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

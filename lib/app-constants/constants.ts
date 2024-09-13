@@ -10,6 +10,14 @@ export const SCHOOL_DROPOUT_REASONS_MAPPING = {
     config.theme?.extend?.colors["shamiri-graph-green"],
 } as const;
 
+export const COMPLAINT_TYPES = [
+  "Dress Code",
+  "Program Delivery",
+  "Behavior",
+  "Punctuality and Attendance",
+  "Other",
+] as const;
+
 export const SCHOOL_DROPOUT_REASONS = Object.keys(
   SCHOOL_DROPOUT_REASONS_MAPPING,
 ) as string[];
