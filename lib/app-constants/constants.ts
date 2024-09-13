@@ -25,6 +25,35 @@ export const BOARDING_DAY_TYPES = ["Day", "Boarding", "Mixed"] as const;
 
 export const ATTENDANCE_STATUS = ["attended", "missed", "unmarked"] as const;
 
+export type INTERVENTION_SESSION_TYPES = "s0" | "s1" | "s2" | "s3" | "s4";
+export type SUPERVISION_SESSION_TYPES = "sv1" | "sv2" | "sv3" | "sv4" | "sv5";
+export type TRAINING_SESSION_TYPES = "t1" | "t2" | "t3" | "t4" | "t5";
+export type CLINICAL_SESSION_TYPES =
+  | "cl1"
+  | "cl2"
+  | "cl3"
+  | "cl4"
+  | "cl5"
+  | "cl6"
+  | "cl7"
+  | "cl8";
+export type DATA_FOLLOWUP_SESSION_TYPES =
+  | "dfu1"
+  | "dfu2"
+  | "dfu3"
+  | "dfu4"
+  | "dfu5"
+  | "dfu6";
+
+type AllSessionTypes =
+  | INTERVENTION_SESSION_TYPES
+  | SUPERVISION_SESSION_TYPES
+  | TRAINING_SESSION_TYPES
+  | CLINICAL_SESSION_TYPES
+  | DATA_FOLLOWUP_SESSION_TYPES;
+
+export type SPECIAL_SESSION_TYPES = `special_${AllSessionTypes}`;
+
 export const SCHOOL_TYPES = [
   "County",
   "Sub-county",

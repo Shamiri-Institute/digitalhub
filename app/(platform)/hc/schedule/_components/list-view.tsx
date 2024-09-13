@@ -190,7 +190,7 @@ export function ListView({
                       <div className="flex items-center gap-5">
                         <span className="opacity-70">{time}</span>
                         <span className="">
-                          {sessionDisplayName(session.sessionType)}
+                          {sessionDisplayName(session.sessionType!)}
                         </span>
                         <span className="opacity-50">
                           {session.school.schoolName}
