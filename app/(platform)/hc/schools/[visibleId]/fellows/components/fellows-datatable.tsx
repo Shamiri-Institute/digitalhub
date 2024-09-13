@@ -1,12 +1,12 @@
 "use client";
 
-import DataTable from "#/app/(platform)/hc/components/data-table";
 import {
   columns,
   SchoolFellowTableData,
 } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/columns";
 import { BatchUploadDownloadFellow } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/upload-csv";
 import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
+import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,

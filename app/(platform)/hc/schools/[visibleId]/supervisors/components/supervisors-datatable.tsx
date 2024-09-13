@@ -1,6 +1,5 @@
 "use client";
 
-import DataTable from "#/app/(platform)/hc/components/data-table";
 import {
   columns,
   SupervisorsData,
@@ -11,6 +10,7 @@ import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-ale
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
+import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
