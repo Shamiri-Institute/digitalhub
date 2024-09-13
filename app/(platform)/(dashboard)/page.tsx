@@ -39,7 +39,7 @@ async function SupervisorView() {
       )
       .map((session) => ({
         title: `${session.schoolName}, ${sessionDisplayName(
-          session.sessionType,
+          session.sessionType!,
         )}`,
         date: session.sessionDate,
         duration: 1,

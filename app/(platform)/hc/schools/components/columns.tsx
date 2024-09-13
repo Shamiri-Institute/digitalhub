@@ -135,7 +135,7 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
       if (upcomingSessions.length > 0) {
         return (
           // TODO: Refactor string after adding session_names table
-          upcomingSessions[0]!.sessionType.toUpperCase() +
+          upcomingSessions[0]!.sessionType!.toUpperCase() +
           " - " +
           format(upcomingSessions[0]!.sessionDate, "dd MMM yyyy")
         );
