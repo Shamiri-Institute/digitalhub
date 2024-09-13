@@ -44,7 +44,7 @@ export type DATA_FOLLOWUP_SESSION_TYPES =
   | "dfu4"
   | "dfu5"
   | "dfu6";
-// test comment
+
 type AllSessionTypes =
   | INTERVENTION_SESSION_TYPES
   | SUPERVISION_SESSION_TYPES
