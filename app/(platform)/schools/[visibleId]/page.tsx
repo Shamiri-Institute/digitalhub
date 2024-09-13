@@ -62,8 +62,8 @@ export default async function SchoolDetailPage({
         sessionType: ins.sessionType,
       };
     })
-    .filter((ins) => ["s0", "s1", "s2", "s3", "s4"].includes(ins.sessionType))
-    .sort((a, b) => a.sessionType.localeCompare(b.sessionType));
+    .filter((ins) => ["s0", "s1", "s2", "s3", "s4"].includes(ins.sessionType!))
+    .sort((a, b) => a.sessionType!.localeCompare(b.sessionType!));
 
   return (
     <main className="pt-2">
