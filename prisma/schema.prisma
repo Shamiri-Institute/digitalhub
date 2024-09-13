@@ -807,11 +807,11 @@ model InterventionSession {
   scheduleHistory         Json?                       @map("schedule_history") // e.g. [ { startTime, endTime, userId } ]
   status                  SessionStatus?              @default(Scheduled)
   // LEGACY: sessionName is now a relation to sessionName
-  sessionName             String                      @map("session_name") @db.VarChar(255)
-  sessionType             String                      @map("session_type") @db.VarChar(255) // e.g. s0, s1, s2, s3, s4, fu1, fu2, ..., fu8,
+  sessionName             String?                     @map("session_name") @db.VarChar(255)
+  sessionType             String?                     @map("session_type") @db.VarChar(255) // e.g. s0, s1, s2, s3, s4, fu1, fu2, ..., fu8,
   // New sessionName relation
-  sessionId               String                      @map("session_id") @db.VarChar(255)
-  session                 SessionName                 @relation(fields: [sessionId], references: [id])
+  sessionId               String?                     @map("session_id") @db.VarChar(255)
+  session                 SessionName?                @relation(fields: [sessionId], references: [id])
   // TODO: consider adding column for sessionIndex Int, while sessionType tracks, intervention, dataCollation, followUp
   schoolId                String                      @map("school_id") @db.VarChar(255)
   school                  School                      @relation(fields: [schoolId], references: [id])
@@ -829,6 +829,7 @@ model InterventionSession {
   InterventionGroupReport InterventionGroupReport[]
 
   @@unique([schoolId, sessionType], name: "interventionBySchoolIdAndSessionType")
+  @@unique([schoolId, sessionId], name: "interventionBySchoolIdAndSessionId")
   @@map("intervention_sessions")
 }
 
@@ -1300,4 +1301,7 @@ model SessionName {
   hubId               String                @map("hub_id") @db.VarChar(255)
   hub                 Hub                   @relation(fields: [hubId], references: [id])
   InterventionSession InterventionSession[]
+  sessionLabel        String                @map("session_label") @db.VarChar(255)
+
+  @@map("session_names")
 }
