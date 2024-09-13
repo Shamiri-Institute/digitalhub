@@ -1,8 +1,8 @@
 "use client";
 
-import SchoolsDataTable from "#/app/(platform)/hc/components/data-table";
 import { columns } from "#/app/(platform)/hc/schools/components/columns";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
+import SchoolsDataTable from "#/components/data-table";
 import { useContext } from "react";
 
 export default function SchoolsDatatable() {

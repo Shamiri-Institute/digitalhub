@@ -1,6 +1,5 @@
 "use client";
 
-import DataTable from "#/app/(platform)/hc/components/data-table";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import {
   columns,
@@ -12,6 +11,7 @@ import MonthlySupervisorEvaluation from "#/app/(platform)/hc/supervisors/compone
 import SubmitComplaint from "#/app/(platform)/hc/supervisors/components/submit-complaint";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
+import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
