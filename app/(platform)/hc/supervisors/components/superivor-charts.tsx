@@ -1,6 +1,5 @@
 "use client";
 
-import { fetchSupervisorDataCompletenessData, SupervisorDropoutReasonsGraphData } from "#/app/(platform)/hc/supervisors/actions";
 import ChartCard from "#/components/ui/chart-card";
 import {
   SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
