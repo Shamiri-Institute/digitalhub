@@ -3,9 +3,9 @@ import { currentSupervisor } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
+import { Fellow } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { FellowSchema, WeeklyFellowRatingSchema } from "./schemas";
-import { Fellow } from "@prisma/client";
 
 export async function addNewFellow(fellowData: FellowSchema) {
   try {
@@ -97,7 +97,7 @@ export async function loadFellowsData() {
       schoolName: group.school?.schoolName,
       sessionType:
         group.school?.interventionSessions[0]?.sessionDate &&
-          group.school?.interventionSessions[0]?.sessionDate > new Date()
+        group.school?.interventionSessions[0]?.sessionDate > new Date()
           ? group.school?.interventionSessions[0]?.sessionType
           : "No upcoming session",
       groupName: group.groupName,
@@ -176,8 +176,8 @@ export async function editWeeklyFellowRating(
 }
 
 export async function dropoutFellowWithReason(
-  fellowId: Fellow['id'],
-  dropoutReason: Fellow['dropOutReason'],
+  fellowId: Fellow["id"],
+  dropoutReason: Fellow["dropOutReason"],
   revalidationPath: string,
 ) {
   try {
@@ -199,7 +199,11 @@ export async function dropoutFellowWithReason(
     });
 
     revalidatePath(revalidationPath);
-    return { success: true, message: 'Successfully dropped out the fellow', fellow };
+    return {
+      success: true,
+      message: "Successfully dropped out the fellow",
+      fellow,
+    };
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.error(error.message);
