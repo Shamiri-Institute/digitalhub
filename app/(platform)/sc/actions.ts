@@ -81,6 +81,15 @@ export async function loadFellowsData() {
     },
   });
 
+  const supervisors = await db.supervisor.findMany({
+    where: {
+      hubId: supervisor.hubId,
+    },
+    include: {
+      fellows: true,
+    },
+  });
+
   return fellows.map((fellow) => ({
     county: fellow.county,
     subCounty: fellow.subCounty,
@@ -93,6 +102,7 @@ export async function loadFellowsData() {
     droppedOutAt: fellow.droppedOutAt,
     id: fellow.id,
     weeklyFellowRatings: fellow.weeklyFellowRatings,
+    supervisors,
     sessions: fellow.groups.map((group) => ({
       schoolName: group.school?.schoolName,
       sessionType:
@@ -178,6 +188,7 @@ export async function editWeeklyFellowRating(
 export async function dropoutFellowWithReason(
   fellowId: Fellow["id"],
   dropoutReason: Fellow["dropOutReason"],
+  replacementFellowId: Fellow["id"],
   revalidationPath: string,
 ) {
   try {
@@ -195,6 +206,15 @@ export async function dropoutFellowWithReason(
         droppedOut: true, // for consistency w/ old data
         droppedOutAt: new Date(),
         dropOutReason: dropoutReason,
+      },
+    });
+
+    await db.interventionGroup.update({
+      where: {
+        leaderId: fellowId as string,
+      },
+      data: {
+        leaderId: replacementFellowId,
       },
     });
 
