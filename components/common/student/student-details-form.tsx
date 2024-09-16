@@ -61,6 +61,7 @@ export default function StudentDetailsForm({
         yearOfBirth: student.yearOfBirth ?? undefined,
         form: student.form ?? undefined,
         stream: student.stream ?? undefined,
+        phoneNumber: student.phoneNumber ?? undefined,
       });
     }
   }, [open, student, form]);
@@ -256,7 +257,7 @@ export default function StudentDetailsForm({
                 type="button"
                 className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
                 onClick={() => {
-                  // context.setAddStudentDialog(false);
+                  onOpenChange(false);
                 }}
               >
                 Cancel
@@ -270,7 +271,7 @@ export default function StudentDetailsForm({
                   console.log(form.formState.errors);
                 }}
               >
-                Save
+                Update & save
               </Button>
             </DialogFooter>
           </form>
