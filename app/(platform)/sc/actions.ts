@@ -5,6 +5,7 @@ import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
 import { revalidatePath } from "next/cache";
 import { FellowSchema, WeeklyFellowRatingSchema } from "./schemas";
+import { Fellow } from "@prisma/client";
 
 export async function addNewFellow(fellowData: FellowSchema) {
   try {
@@ -96,7 +97,7 @@ export async function loadFellowsData() {
       schoolName: group.school?.schoolName,
       sessionType:
         group.school?.interventionSessions[0]?.sessionDate &&
-        group.school?.interventionSessions[0]?.sessionDate > new Date()
+          group.school?.interventionSessions[0]?.sessionDate > new Date()
           ? group.school?.interventionSessions[0]?.sessionType
           : "No upcoming session",
       groupName: group.groupName,
@@ -171,5 +172,42 @@ export async function editWeeklyFellowRating(
     return {
       error: "Something went wrong during submission, please try again.",
     };
+  }
+}
+
+export async function dropoutFellowWithReason(
+  fellowId: Fellow['id'],
+  dropoutReason: Fellow['dropOutReason'],
+  revalidationPath: string,
+) {
+  try {
+    const supervisor = await currentSupervisor();
+
+    if (!supervisor) {
+      return {
+        success: false,
+        message: "User is not authorised",
+      };
+    }
+    const fellow = await db.fellow.update({
+      where: { id: fellowId },
+      data: {
+        droppedOut: true, // for consistency w/ old data
+        droppedOutAt: new Date(),
+        dropOutReason: dropoutReason,
+      },
+    });
+
+    revalidatePath(revalidationPath);
+    return { success: true, message: 'Successfully dropped out the fellow', fellow };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return { error: "Something went wrong" };
   }
 }
