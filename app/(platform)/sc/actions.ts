@@ -3,7 +3,8 @@ import { currentSupervisor } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
-import { FellowSchema } from "./schemas";
+import { revalidatePath } from "next/cache";
+import { FellowSchema, WeeklyFellowRatingSchema } from "./schemas";
 
 export async function addNewFellow(fellowData: FellowSchema) {
   try {
@@ -61,6 +62,7 @@ export async function loadFellowsData() {
     },
     include: {
       fellowAttendances: true,
+      weeklyFellowRatings: true,
       groups: {
         include: {
           students: true,
@@ -89,6 +91,7 @@ export async function loadFellowsData() {
     droppedOut: fellow.droppedOut,
     droppedOutAt: fellow.droppedOutAt,
     id: fellow.id,
+    weeklyFellowRatings: fellow.weeklyFellowRatings,
     sessions: fellow.groups.map((group) => ({
       schoolName: group.school?.schoolName,
       sessionType:
@@ -101,4 +104,72 @@ export async function loadFellowsData() {
       students: group.students,
     })),
   }));
+}
+
+export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
+  try {
+    const supervisor = await currentSupervisor();
+
+    if (!supervisor) {
+      return {
+        success: false,
+        message: "User is not authorised",
+      };
+    }
+    const parsedData = WeeklyFellowRatingSchema.parse(data);
+
+    await db.weeklyFellowRatings.create({
+      data: {
+        ...parsedData,
+        supervisorId: supervisor.id,
+      },
+    });
+
+    revalidatePath("/sc/fellows");
+    return {
+      success: true,
+      message: "successfully recorded fellow's weekly rating",
+    };
+  } catch (e) {
+    console.error(e);
+    return { success: false, message: "something went wrong" };
+  }
+}
+
+export async function editWeeklyFellowRating(
+  data: Omit<WeeklyFellowRatingSchema, "week"> & { id: string },
+) {
+  try {
+    const supervisor = await currentSupervisor();
+
+    if (!supervisor) {
+      return {
+        success: false,
+        message: "User is not authorised",
+      };
+    }
+    const result = await db.weeklyFellowRatings.update({
+      where: {
+        id: data.id,
+        fellowId: data.fellowId,
+      },
+      data: {
+        behaviourNotes: data.behaviourNotes,
+        punctualityNotes: data.punctualityNotes,
+        dressingAndGroomingNotes: data.dressingAndGroomingNotes,
+        programDeliveryNotes: data.programDeliveryNotes,
+        behaviourRating: data.behaviourRating,
+        dressingAndGroomingRating: data.dressingAndGroomingRating,
+        programDeliveryRating: data.programDeliveryRating,
+        punctualityRating: data.punctualityRating,
+      },
+    });
+    revalidatePath("/sc/fellows");
+    return { success: true, data: result };
+  } catch (e) {
+    console.error(e);
+    return {
+      error: "Something went wrong during submission, please try again.",
+    };
+  }
 }
