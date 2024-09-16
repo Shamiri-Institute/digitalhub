@@ -26,6 +26,7 @@ export default function StudentsDatatable({
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
 
   const renderTableActions = () => {
+    // TODO: Refactor for client component
     // return (
     //   hubCoordinator?.assignedHubId &&
     //   hubCoordinator.implementerId &&
