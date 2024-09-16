@@ -86,7 +86,7 @@ export async function loadFellowsData() {
       hubId: supervisor.hubId,
     },
     include: {
-      fellows: true,
+      fellows: { select: { id: true, fellowName: true } },
     },
   });
 

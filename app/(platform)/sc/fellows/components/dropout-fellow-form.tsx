@@ -1,8 +1,10 @@
 "use client";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
@@ -156,11 +158,60 @@ export default function DropoutFellowForm({
                   </FormItem>
                 )}
               />
+              <DialogFooter>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setDialogOpen(false);
+                    form.reset();
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    setDialogOpen(false);
+                    setConfirmDialogOpen(true);
+                  }}
+                >
+                  Submit
+                </Button>
+              </DialogFooter>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
-      <Dialog open={confirmOpen} onOpenChange={setConfirmDialogOpen}></Dialog>
+      <Dialog open={confirmOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <h2 className="text-xl font-semibold">Confirm drop out</h2>
+          </DialogHeader>
+          <DialogAlertWidget label={`${fellowName} • ${fellowPhoneNumber}`} />
+          <p>Are you sure</p>
+          <DialogAlertWidget
+            label="Once this change has been made it is irreversible and will need you to contact support in order to modify. Please be sure of your action before you confirm."
+            variant="destructive"
+          />
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setDialogOpen(false);
+                form.reset();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => console.log(form.getValues)}
+            >
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
