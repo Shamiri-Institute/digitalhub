@@ -16,7 +16,7 @@ export default function StudentsDataTableMenu({
 }: {
   state: {
     setEditDialog: Dispatch<SetStateAction<boolean>>;
-    setStudent: Dispatch<SetStateAction<SchoolStudentTableData>>;
+    setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
   };
   student: SchoolStudentTableData;
 }) {
