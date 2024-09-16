@@ -5,6 +5,7 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import format from "date-fns/format";
+import { parsePhoneNumber } from "libphonenumber-js";
 import { Dispatch, SetStateAction } from "react";
 
 export type SchoolStudentTableData = Prisma.StudentGetPayload<{
@@ -90,7 +91,9 @@ export const columns = (state: {
   {
     header: "Contact no.",
     id: "Contact no.",
-    accessorKey: "phoneNumber",
+    accessorFn: (row) =>
+      row.phoneNumber &&
+      parsePhoneNumber(row.phoneNumber, "KE").formatNational(),
   },
   {
     header: "Admission number",
