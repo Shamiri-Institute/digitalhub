@@ -71,7 +71,8 @@ export const columns = (state: {
     accessorKey: "visibleId",
   },
   {
-    accessorFn: (row) => (row.age || row.age === 0 ? `${row.age} yrs` : "N/A"),
+    accessorFn: (row) =>
+      row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
     header: "Age",
     id: "Age",
   },

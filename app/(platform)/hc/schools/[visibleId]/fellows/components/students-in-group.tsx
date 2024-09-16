@@ -104,20 +104,12 @@ const columns: ColumnDef<
     id: "Shamiri ID",
     accessorKey: "visibleId",
   },
-  // TODO: Add birthDate column to students table
   {
     header: "Age",
     id: "Age",
-    accessorFn: (row) => {
-      const now = new Date();
-      return row.age
-        ? row.age + " yrs"
-        : row.yearOfBirth
-          ? now.getFullYear() - row.yearOfBirth + " yrs"
-          : null;
-    },
+    accessorFn: (row) =>
+      row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
   },
-  // TODO: Get clinical cases and display number
   {
     header: "Clinical cases",
     id: "Clinical cases",
