@@ -60,12 +60,16 @@ export default function FellowsTableDropdownMenu({
             fellowPhoneNumber={fellowRow.mpesaNumber}
             otherSupervisors={fellowRow.supervisors}
           >
-            <div className={cn("cursor-pointer px-2 py-1.5 text-sm")}>
+            <div
+              className={cn(
+                "cursor-pointer px-2 py-1.5 text-sm text-shamiri-light-red",
+              )}
+            >
               Drop out fellow
             </div>
           </DropoutFellowForm>
         ) : (
-          <DropdownMenuItem className="text-shamiri-red">
+          <DropdownMenuItem className="text-shamiri-light-red">
             Undo dropout
           </DropdownMenuItem>
         )}

@@ -26,9 +26,122 @@ import {
 import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFormContext } from "react-hook-form";
 import { FellowsData } from "../../actions";
 import { DropoutFellowSchema } from "../../schemas";
+
+function Step1({
+  fellowsForSupervisor,
+  otherSupervisors,
+  updateStep,
+}: {
+  fellowsForSupervisor: FellowsData["supervisors"][number]["fellows"];
+  otherSupervisors: FellowsData["supervisors"];
+  updateStep: (num: number) => void;
+}) {
+  const formContext = useFormContext();
+
+  return (
+    <>
+      <FormField
+        control={formContext.control}
+        name="dropoutReason"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Select dropout reason</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {FELLOW_DROP_OUT_REASONS.map((dropoutReason) => (
+                  <SelectItem key={dropoutReason} value={dropoutReason}>
+                    {dropoutReason}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={formContext.control}
+        name="replacementSupervisorId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Select supervisor</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {otherSupervisors.map(({ id, supervisorName }) => (
+                  <SelectItem key={id} value={id}>
+                    {supervisorName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={formContext.control}
+        name="replacementFellowId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Select Fellow</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {fellowsForSupervisor.map(({ id, fellowName }) => (
+                  <SelectItem key={id} value={id}>
+                    {fellowName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <DialogFooter>
+        <Button
+          variant="ghost"
+          className="text-shamiri-light-red"
+          onClick={() => {
+            // should close
+            formContext.reset();
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="destructive"
+          onClick={() =>
+            formContext.trigger().then((isValid) => {
+              if (isValid) {
+                updateStep(2);
+              }
+            })
+          }
+        >
+          Submit
+        </Button>
+      </DialogFooter>
+    </>
+  );
+}
 
 export default function DropoutFellowForm({
   children,
@@ -71,6 +184,9 @@ export default function DropoutFellowForm({
       form.reset();
     }
   }, [open, form]);
+
+  console.log("main form open: ", open);
+  console.log("confirm form open: ", confirmOpen);
 
   return (
     <>
@@ -167,6 +283,7 @@ export default function DropoutFellowForm({
               <DialogFooter>
                 <Button
                   variant="ghost"
+                  className="text-shamiri-light-red"
                   onClick={() => {
                     setDialogOpen(false);
                     form.reset();
@@ -176,10 +293,14 @@ export default function DropoutFellowForm({
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={() => {
-                    setDialogOpen(false);
-                    setConfirmDialogOpen(true);
-                  }}
+                  onClick={() =>
+                    form.trigger().then((isValid) => {
+                      if (isValid) {
+                        setDialogOpen(false);
+                        setConfirmDialogOpen(true);
+                      }
+                    })
+                  }
                 >
                   Submit
                 </Button>
@@ -202,8 +323,9 @@ export default function DropoutFellowForm({
           <DialogFooter>
             <Button
               variant="ghost"
+              className="text-shamiri-light-red"
               onClick={() => {
-                setDialogOpen(false);
+                setConfirmDialogOpen(false);
                 form.reset();
               }}
             >
