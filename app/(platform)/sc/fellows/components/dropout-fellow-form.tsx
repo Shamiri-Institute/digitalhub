@@ -38,9 +38,9 @@ export default function DropoutFellowForm({
   otherSupervisors,
 }: {
   children: React.ReactNode;
-  fellowId: string;
-  fellowPhoneNumber: string;
-  fellowName: string;
+  fellowId: FellowsData["id"];
+  fellowPhoneNumber: FellowsData["mpesaNumber"];
+  fellowName: FellowsData["fellowName"];
   otherSupervisors: FellowsData["supervisors"];
 }) {
   const [open, setDialogOpen] = React.useState<boolean>(false);
@@ -66,9 +66,15 @@ export default function DropoutFellowForm({
     }
   }, [supervisorValue]);
 
+  React.useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open, form]);
+
   return (
     <>
-      <Dialog>
+      <Dialog open={open} onOpenChange={setDialogOpen}>
         <DialogTrigger asChild>{children}</DialogTrigger>
         <DialogContent>
           <DialogHeader>
