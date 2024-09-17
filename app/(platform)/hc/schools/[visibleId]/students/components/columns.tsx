@@ -2,11 +2,11 @@
 
 import StudentsDataTableMenu from "#/app/(platform)/hc/schools/[visibleId]/students/components/students-datatable-menu";
 import { Checkbox } from "#/components/ui/checkbox";
-import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import format from "date-fns/format";
-import React from "react";
+import { parsePhoneNumber } from "libphonenumber-js";
+import { Dispatch, SetStateAction } from "react";
 
 export type SchoolStudentTableData = Prisma.StudentGetPayload<{
   include: {
@@ -19,19 +19,10 @@ export type SchoolStudentTableData = Prisma.StudentGetPayload<{
   };
 }>;
 
-function MenuItem({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className: string;
-}) {
-  return (
-    <div className={cn("cursor-pointer px-3 py-2", className)}>{children}</div>
-  );
-}
-
-export const columns: ColumnDef<SchoolStudentTableData>[] = [
+export const columns = (state: {
+  setEditDialog: Dispatch<SetStateAction<boolean>>;
+  setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
+}): ColumnDef<SchoolStudentTableData>[] => [
   {
     id: "checkbox",
     header: ({ table }) => (
@@ -81,7 +72,8 @@ export const columns: ColumnDef<SchoolStudentTableData>[] = [
     accessorKey: "visibleId",
   },
   {
-    accessorFn: (row) => (row.age || row.age === 0 ? `${row.age} yrs` : "N/A"),
+    accessorFn: (row) =>
+      row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
     header: "Age",
     id: "Age",
   },
@@ -99,7 +91,9 @@ export const columns: ColumnDef<SchoolStudentTableData>[] = [
   {
     header: "Contact no.",
     id: "Contact no.",
-    accessorKey: "phoneNumber",
+    accessorFn: (row) =>
+      row.phoneNumber &&
+      parsePhoneNumber(row.phoneNumber, "KE").formatNational(),
   },
   {
     header: "Admission number",
@@ -123,7 +117,9 @@ export const columns: ColumnDef<SchoolStudentTableData>[] = [
   },
   {
     id: "button",
-    cell: ({ row }) => <StudentsDataTableMenu student={row.original} />,
+    cell: ({ row }) => (
+      <StudentsDataTableMenu student={row.original} state={state} />
+    ),
     enableHiding: false,
   },
 ];
