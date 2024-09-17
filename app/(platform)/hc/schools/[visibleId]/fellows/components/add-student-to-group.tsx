@@ -89,6 +89,10 @@ export default function AddStudentToGroup() {
         <DialogAlertWidget>
           <div className="flex items-center gap-2">
             <span>{context.fellow?.groupName}</span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+              {""}
+            </span>
+            <span>{schoolContext.school?.schoolName}</span>
           </div>
         </DialogAlertWidget>
         <Form {...form}>
@@ -112,22 +116,22 @@ export default function AddStudentToGroup() {
                       </FormItem>
                     )}
                   />
-                  <div>
-                    <FormItem>
-                      <FormLabel>School</FormLabel>
-                      <FormControl>
-                        <Input
-                          value={
-                            schoolContext.school
-                              ? schoolContext.school.schoolName
-                              : ""
-                          }
-                          disabled={true}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="phoneNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Contact number{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input {...field} type="tel" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="gender"
