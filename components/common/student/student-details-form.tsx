@@ -1,11 +1,9 @@
 "use client";
 
-import { AddNewStudentSchema } from "#/app/(platform)/hc/schemas";
-import { addNewStudentToGroup } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
-import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
+import { StudentDetailsSchema } from "#/app/(platform)/hc/schemas";
+import { SchoolStudentTableData } from "#/app/(platform)/hc/schools/[visibleId]/students/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
-import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -31,25 +29,45 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
+import { submitStudentDetails } from "#/lib/actions/student";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
 import { usePathname } from "next/navigation";
-import { useContext, useEffect } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-export default function AddStudentToGroup() {
-  const context = useContext(FellowInfoContext);
-  const schoolContext = useContext(SchoolInfoContext);
+export default function StudentDetailsForm({
+  open,
+  onOpenChange,
+  student,
+}: {
+  open: boolean;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
+  student: SchoolStudentTableData;
+}) {
   const pathname = usePathname();
 
-  const form = useForm<z.infer<typeof AddNewStudentSchema>>({
-    resolver: zodResolver(AddNewStudentSchema),
+  const form = useForm<z.infer<typeof StudentDetailsSchema>>({
+    resolver: zodResolver(StudentDetailsSchema),
   });
 
-  const onSubmit = async (values: z.infer<typeof AddNewStudentSchema>) => {
-    const response = await addNewStudentToGroup(values);
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        id: student.id,
+        studentName: student.studentName ?? undefined,
+        admissionNumber: student.admissionNumber ?? undefined,
+        gender: student.gender ?? undefined,
+        yearOfBirth: student.yearOfBirth ?? undefined,
+        form: student.form ?? undefined,
+        stream: student.stream ?? undefined,
+        phoneNumber: student.phoneNumber ?? undefined,
+      });
+    }
+  }, [open, student, form]);
+
+  const onSubmit = async (values: z.infer<typeof StudentDetailsSchema>) => {
+    const response = await submitStudentDetails(values);
     if (!response.success) {
       toast({
         description:
@@ -64,35 +82,21 @@ export default function AddStudentToGroup() {
         description: response.message,
       });
       form.reset();
-      context.setAddStudentDialog(false);
+      onOpenChange(false);
     });
   };
 
-  useEffect(() => {
-    if (context.fellow && context.fellow.groupId && schoolContext.school) {
-      form.reset({
-        assignedGroupId: context.fellow.groupId,
-        schoolId: schoolContext.school.id,
-      });
-    }
-  }, [context.addStudentDialog, context.fellow]);
-
   return (
-    <Dialog
-      open={context.addStudentDialog}
-      onOpenChange={context.setAddStudentDialog}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <h2 className="text-xl font-bold">Add new student</h2>
+          <h2 className="text-xl font-bold">Edit student information</h2>
         </DialogHeader>
         <DialogAlertWidget>
           <div className="flex items-center gap-2">
-            <span>{context.fellow?.groupName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
-            <span>{schoolContext.school?.schoolName}</span>
+            <span>{student.studentName}</span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+            <span>{student.visibleId}</span>
           </div>
         </DialogAlertWidget>
         <Form {...form}>
@@ -211,7 +215,7 @@ export default function AddStudentToGroup() {
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...field} type="number" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -235,10 +239,10 @@ export default function AddStudentToGroup() {
                   />
                   <FormField
                     control={form.control}
-                    name="assignedGroupId"
+                    name="id"
                     render={({ field }) => (
                       <FormItem>
-                        <Input type="hidden" value={field.value} />
+                        <Input type="hidden" defaultValue={field.value} />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -253,7 +257,7 @@ export default function AddStudentToGroup() {
                 type="button"
                 className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
                 onClick={() => {
-                  context.setAddStudentDialog(false);
+                  onOpenChange(false);
                 }}
               >
                 Cancel
@@ -264,7 +268,7 @@ export default function AddStudentToGroup() {
                 disabled={form.formState.isSubmitting}
                 loading={form.formState.isSubmitting}
               >
-                Save
+                Update & save
               </Button>
             </DialogFooter>
           </form>
@@ -273,48 +277,3 @@ export default function AddStudentToGroup() {
     </Dialog>
   );
 }
-
-const columns: ColumnDef<
-  Prisma.StudentGetPayload<{
-    include: {
-      assignedGroup: true;
-      _count: {
-        select: {
-          clinicalCases: true;
-        };
-      };
-    };
-  }>
->[] = [
-  {
-    accessorKey: "studentName",
-    id: "Student name",
-    header: "Student name",
-  },
-  {
-    header: "Group name",
-    id: "Group name",
-    accessorKey: "assignedGroup.groupName",
-  },
-  {
-    header: "Shamiri ID",
-    id: "Shamiri ID",
-    accessorKey: "visibleId",
-  },
-  // TODO: Add birthDate column to students table
-  {
-    header: "Age",
-    id: "Age",
-    accessorFn: (row) => {
-      return row.age + " yrs";
-    },
-  },
-  // TODO: Get clinical cases and display number
-  {
-    header: "Clinical cases",
-    id: "Clinical cases",
-    accessorFn: (row) => {
-      return row._count.clinicalCases;
-    },
-  },
-];
