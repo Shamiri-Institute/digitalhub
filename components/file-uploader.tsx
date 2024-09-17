@@ -1,5 +1,6 @@
 "use client";
 
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { readFileContent } from "#/app/(platform)/screenings/[caseId]/components/treatment-plan";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -21,6 +22,7 @@ export default function FileUploader({
   url,
   type,
   metadata,
+  uploadVisibleMessage,
 }: {
   url: string;
   type: string;
@@ -29,7 +31,9 @@ export default function FileUploader({
     implementerId: string;
     projectId: string;
     schoolVisibleId?: string;
+    urlPath?: string;
   };
+  uploadVisibleMessage?: string;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -64,11 +68,12 @@ export default function FileUploader({
     const fileContent = await readFileContent(selectedFile);
     formData.append("file", fileContent, selectedFile.name);
 
-    if (metadata && metadata.schoolVisibleId) {
-      formData.append("schoolVisibleId", metadata.schoolVisibleId);
+    if (metadata) {
+      formData.append("schoolVisibleId", metadata?.schoolVisibleId!);
       formData.append("hubId", metadata.hubId);
       formData.append("implementerId", metadata.implementerId);
       formData.append("projectId", metadata.projectId);
+      formData.append("urlPath", metadata.urlPath!);
     }
 
     try {
@@ -83,6 +88,8 @@ export default function FileUploader({
 
       if (resp.ok) {
         toast({ title: "File uploaded successfully", variant: "default" });
+        setDialogOpen(false);
+        revalidatePageAction(metadata?.urlPath!);
       } else {
         setError(true);
         toast({ title: data.error, variant: "destructive" });
@@ -108,7 +115,8 @@ export default function FileUploader({
           variant="outline"
           className="flex items-center gap-2 bg-white text-sm font-semibold leading-5 text-shamiri-black"
         >
-          Upload csv
+          <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
+          {uploadVisibleMessage ? uploadVisibleMessage : `Upload ${type} CSV`}
         </Button>
       </DialogTrigger>
       <DialogContent>

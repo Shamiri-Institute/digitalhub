@@ -12,6 +12,7 @@ import SubmitComplaint from "#/app/(platform)/hc/supervisors/components/submit-c
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
 import DataTable from "#/components/data-table";
+import FileUploader from "#/components/file-uploader";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -29,6 +30,9 @@ import { useContext, useState } from "react";
 
 export default function MainSupervisorsDataTable({
   supervisors,
+  hubId,
+  implementerId,
+  projectId,
 }: {
   supervisors: Prisma.SupervisorGetPayload<{
     include: {
@@ -42,6 +46,9 @@ export default function MainSupervisorsDataTable({
       monthlySupervisorEvaluation: true;
     };
   }>[];
+  hubId: string;
+  implementerId: string;
+  projectId: string;
 }) {
   const [selectedRows, setSelectedRows] = useState<SupervisorsData[]>([]);
   const context = useContext(SupervisorContext);
@@ -71,10 +78,19 @@ export default function MainSupervisorsDataTable({
           <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
           <span>Download supervisors CSV template</span>
         </Button>
-        <Button variant="outline" className="flex gap-1 bg-white">
-          <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
-          <span>Upload supervisors CSV</span>
-        </Button>
+
+        <FileUploader
+          url="/api/csv-uploads/supervisors"
+          type="supervisors"
+          uploadVisibleMessage="Upload supervisors CSV"
+          metadata={{
+            implementerId,
+            hubId,
+            projectId,
+            urlPath: "/hc/supervisors",
+          }}
+        />
+
         <Button variant="outline" className="flex gap-1 bg-white">
           <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
           <span>Upload fellow monthly feedback CSV</span>
