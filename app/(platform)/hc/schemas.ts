@@ -331,7 +331,7 @@ export const AddNewStudentSchema = z.object({
   }),
   schoolId: stringValidation("School ID required"),
   assignedGroupId: stringValidation("Group ID required"),
-  form: stringValidation("Please enter the student's class"),
+  form: stringValidation("Please enter the student's form"),
   stream: stringValidation("Please enter the student's stream"),
   gender: stringValidation("Please select the student's gender"),
   admissionNumber: stringValidation(

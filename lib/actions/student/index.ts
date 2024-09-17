@@ -20,7 +20,7 @@ export async function submitStudentDetails(
   data: z.infer<typeof StudentDetailsSchema>,
 ) {
   try {
-    const { hubCoordinator, supervisor } = await checkAuth();
+    await checkAuth();
 
     const {
       id,

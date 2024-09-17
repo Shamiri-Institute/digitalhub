@@ -267,9 +267,6 @@ export default function StudentDetailsForm({
                 type="submit"
                 disabled={form.formState.isSubmitting}
                 loading={form.formState.isSubmitting}
-                onClick={() => {
-                  console.log(form.formState.errors);
-                }}
               >
                 Update & save
               </Button>
