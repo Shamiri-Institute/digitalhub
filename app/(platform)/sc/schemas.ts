@@ -45,10 +45,10 @@ export type WeeklyFellowRatingSchema = z.infer<typeof WeeklyFellowRatingSchema>;
 export const DropoutFellowSchema = z.object({
   fellowId: stringValidation("Fellow id is required"),
   dropoutReason: z.enum(FELLOW_DROP_OUT_REASONS, {
-    required_error: "Please select a dropoutReason",
+    required_error: "Please select a dropout reason",
   }),
   replacementFellowId: stringValidation("Please select a replacement fellow"),
-  replacementSupervisorId: z.string().optional(),
+  replacementSupervisorId: stringValidation("Please select a supervisor"),
 });
 
 export type DropoutFellowSchema = z.infer<typeof DropoutFellowSchema>;

@@ -11,6 +11,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -202,6 +203,12 @@ export default function DropoutFellowForm({
                         </SelectContent>
                       </Select>
                       <FormMessage />
+                      {!supervisorValue ? (
+                        <FormDescription>
+                          First select a supervisor to see fellows assigned to
+                          that supervisor
+                        </FormDescription>
+                      ) : null}
                     </FormItem>
                   )}
                 />
