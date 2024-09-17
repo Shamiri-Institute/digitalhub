@@ -329,6 +329,11 @@ export const AddNewStudentSchema = z.object({
   studentName: z.string({
     required_error: "Please enter the student's name",
   }),
+  phoneNumber: z
+    .string({ required_error: "Please enter the student's contact number" })
+    .refine((val) => isValidPhoneNumber(val, "KE"), {
+      message: "Please enter a valid kenyan phone number",
+    }),
   schoolId: stringValidation("School ID required"),
   assignedGroupId: stringValidation("Group ID required"),
   form: stringValidation("Please enter the student's class"),
