@@ -56,7 +56,12 @@ export default async function SupervisorsPage() {
         </div>
         {/* charts goes here */}
         <SupervisorProvider>
-          <MainSupervisorsDataTable supervisors={supervisors} />
+          <MainSupervisorsDataTable
+            supervisors={supervisors}
+            hubId={coordinator.assignedHubId}
+            implementerId={coordinator.implementerId}
+            projectId={coordinator.assignedHub?.projectId!}
+          />
         </SupervisorProvider>
       </div>
       <PageFooter />
