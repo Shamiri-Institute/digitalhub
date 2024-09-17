@@ -568,6 +568,7 @@ model Supervisor {
   delayedPaymentRequests      DelayedPaymentRequest[]
   assignedSchools             School[]
   monthlySupervisorEvaluation MonthlySupervisorEvaluation[]
+  dropOutReason               String?                       @map("drop_out_reason")
 
   @@map("supervisors")
 }
