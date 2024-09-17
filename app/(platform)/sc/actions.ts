@@ -5,7 +5,11 @@ import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
 import { Fellow } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { FellowSchema, WeeklyFellowRatingSchema } from "./schemas";
+import {
+  DropoutFellowSchema,
+  FellowSchema,
+  WeeklyFellowRatingSchema,
+} from "./schemas";
 
 export async function addNewFellow(fellowData: FellowSchema) {
   try {
@@ -200,16 +204,22 @@ export async function dropoutFellowWithReason(
         message: "User is not authorised",
       };
     }
+
+    const schema = DropoutFellowSchema.omit({ replacementSupervisorId: true });
+
+    const data = schema.parse({ fellowId, dropoutReason, replacementFellowId });
+
     const fellow = await db.fellow.update({
-      where: { id: fellowId },
+      where: { id: data.fellowId },
       data: {
         droppedOut: true, // for consistency w/ old data
         droppedOutAt: new Date(),
-        dropOutReason: dropoutReason,
+        dropOutReason: data.dropoutReason,
       },
     });
 
     await db.interventionGroup.update({
+      // @ts-ignore ignoring this since prisma expects a school id as well but we can't iterate over each school.
       where: {
         leaderId: fellowId as string,
       },
