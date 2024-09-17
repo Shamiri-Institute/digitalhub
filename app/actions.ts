@@ -1795,6 +1795,7 @@ export async function addNonShamiriStudentViaClinicalScreening(
   }
 }
 
+// DEPRECATED
 export async function editWeeklyFellowRating(
   data: Omit<
     WeeklyFellowRatings,
