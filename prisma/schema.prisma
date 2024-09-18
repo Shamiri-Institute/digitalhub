@@ -153,6 +153,14 @@ enum ImplementerRole {
   @@map("implementer_roles")
 }
 
+enum ApprovalStatus {
+  PENDING
+  REJECTED
+  APPROVED
+
+  @@map("approval_status")
+}
+
 model ImplementerMember {
   id            Int             @id @default(autoincrement())
   implementerId String          @map("implementer_id") @db.VarChar(255)
@@ -483,6 +491,7 @@ model Fellow {
   groups                  InterventionGroup[]
   delayedPaymentRequests  DelayedPaymentRequest[]
   payoutReconciliations   PayoutReconciliation[]
+  PayoutStatements        PayoutStatements[]
 
   @@map("fellows")
 }
@@ -490,31 +499,33 @@ model Fellow {
 /// FellowAttendance is a representation of the attendance of a fellow in a session. It is used to track the attendance of fellows in sessions but also track the session in the future.
 
 model FellowAttendance {
-  id                     Int                     @id @default(autoincrement())
-  visibleId              String                  @unique @map("visible_id") @db.VarChar(100)
-  createdAt              DateTime                @default(now()) @map("created_at")
-  updatedAt              DateTime                @updatedAt @map("updated_at")
-  processedAt            DateTime?               @map("processed_at")
-  projectId              String?                 @map("project_id")
-  project                Project?                @relation(fields: [projectId], references: [id])
-  fellowId               String                  @map("fellow_id") @db.VarChar(255)
-  fellow                 Fellow                  @relation(fields: [fellowId], references: [id])
-  sessionNumber          Int?                    @map("session_number") // TODO: deprecate after data migration
-  sessionDate            DateTime?               @map("session_date") // TODO: deprecate after data migration
-  yearOfImplementation   Int?                    @map("year_of_implementation") // TODO: might not be needed , use projectId
-  schoolId               String                  @map("school_id") @db.VarChar(255)
-  school                 School                  @relation(fields: [schoolId], references: [id])
-  supervisorId           String                  @map("supervisor_id") @db.VarChar(255)
-  supervisor             Supervisor              @relation(fields: [supervisorId], references: [id])
-  attended               Boolean?                @map("attended")
-  absenceReason          String?                 @map("absence_reason")
-  paymentInitiated       Boolean?                @map("payment_initiated") // TODO: figure how this will impact flows, may not be needed
-  sessionId              String?                 @map("session_id") // TODO: make required after schema migration and historial data migration
-  session                InterventionSession?    @relation(fields: [sessionId], references: [id])
-  groupId                String?                 @map("group_id") @db.VarChar(255) // TODO: make required after schema migration and historial data migration
-  group                  InterventionGroup?      @relation(fields: [groupId], references: [id])
-  repaymentRequests      RepaymentRequest[]
-  delayedPaymentRequests DelayedPaymentRequest[]
+  id                      Int                       @id @default(autoincrement())
+  visibleId               String                    @unique @map("visible_id") @db.VarChar(100)
+  createdAt               DateTime                  @default(now()) @map("created_at")
+  updatedAt               DateTime                  @updatedAt @map("updated_at")
+  processedAt             DateTime?                 @map("processed_at")
+  projectId               String?                   @map("project_id")
+  project                 Project?                  @relation(fields: [projectId], references: [id])
+  fellowId                String                    @map("fellow_id") @db.VarChar(255)
+  fellow                  Fellow                    @relation(fields: [fellowId], references: [id])
+  sessionNumber           Int?                      @map("session_number") // TODO: deprecate after data migration
+  sessionDate             DateTime?                 @map("session_date") // TODO: deprecate after data migration
+  yearOfImplementation    Int?                      @map("year_of_implementation") // TODO: might not be needed , use projectId
+  schoolId                String                    @map("school_id") @db.VarChar(255)
+  school                  School                    @relation(fields: [schoolId], references: [id])
+  supervisorId            String                    @map("supervisor_id") @db.VarChar(255)
+  supervisor              Supervisor                @relation(fields: [supervisorId], references: [id])
+  attended                Boolean?                  @map("attended")
+  absenceReason           String?                   @map("absence_reason")
+  paymentInitiated        Boolean?                  @map("payment_initiated") // TODO: figure how this will impact flows, may not be needed
+  sessionId               String?                   @map("session_id") // TODO: make required after schema migration and historial data migration
+  session                 InterventionSession?      @relation(fields: [sessionId], references: [id])
+  groupId                 String?                   @map("group_id") @db.VarChar(255) // TODO: make required after schema migration and historial data migration
+  group                   InterventionGroup?        @relation(fields: [groupId], references: [id])
+  repaymentRequests       RepaymentRequest[]
+  delayedPaymentRequests  DelayedPaymentRequest[]
+  PayoutStatements        PayoutStatements[]
+  SpecialApprovalRequests SpecialApprovalRequests[]
 
   @@map("fellow_attendances")
 }
@@ -568,6 +579,8 @@ model Supervisor {
   delayedPaymentRequests      DelayedPaymentRequest[]
   assignedSchools             School[]
   monthlySupervisorEvaluation MonthlySupervisorEvaluation[]
+  PayoutStatements            PayoutStatements[]
+  SpecialApprovalRequests     SpecialApprovalRequests[]
 
   @@map("supervisors")
 }
@@ -787,6 +800,7 @@ model HubCoordinator {
   WeeklyTeamMeetingReport     WeeklyTeamMeetingReport[]
   supervisorComplaints        SupervisorComplaints[]
   MonthlySupervisorEvaluation MonthlySupervisorEvaluation[]
+  SpecialApprovalRequests     SpecialApprovalRequests[]
 
   @@map("hub_coordinators")
 }
@@ -1306,4 +1320,44 @@ model SessionName {
   sessionLabel        String                @map("session_label") @db.VarChar(255)
 
   @@map("session_names")
+}
+
+model PayoutStatements {
+  id                     String                   @id @default(cuid())
+  createdAt              DateTime                 @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt              DateTime                 @updatedAt @map("updated_at") @db.Timestamptz()
+  fellowAttendanceId     Int                      @map("fellow_attendance_id")
+  fellowAttendance       FellowAttendance         @relation(fields: [fellowAttendanceId], references: [id])
+  fellowId               String                   @map("fellow_id") @db.VarChar(255)
+  fellow                 Fellow                   @relation(fields: [fellowId], references: [id])
+  amount                 Int
+  reason                 String // the intent is to capture the type of payout (timely_attendance, delayed_attendance, reconciliaton, repayment, special_payout?)
+  notes                  String?
+  createdBy              String                   @map("created_by")
+  supervisor             Supervisor               @relation(fields: [createdBy], references: [id])
+  executedAt             DateTime?                @map("executed_at") @db.Timestamptz()
+  mpesaNumber            String?                  @map("mpesa_number")
+  specialPayoutRequestId String?                  @map("special_payout_request_id")
+  specialPayoutRequest   SpecialApprovalRequests? @relation(fields: [specialPayoutRequestId], references: [id])
+
+  @@map("payout_statements")
+}
+
+model SpecialApprovalRequests {
+  id                 String             @id @default(cuid())
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz()
+  approvedBy         String?            @map("approved_by")
+  approvedAt         DateTime?          @map("approved_at") @db.Timestamptz()
+  rejectedAt         DateTime?          @map("rejected_at") @db.Timestamptz()
+  hubCoordinator     HubCoordinator?    @relation(fields: [approvedBy], references: [id])
+  amount             Int
+  createdBy          String             @map("created_by")
+  supervisor         Supervisor         @relation(fields: [createdBy], references: [id])
+  fellowAttendanceId Int                @map("fellow_attendance_id")
+  fellowAttendance   FellowAttendance   @relation(fields: [fellowAttendanceId], references: [id])
+  status             ApprovalStatus     @default(PENDING)
+  PayoutStatements   PayoutStatements[]
+
+  @@map("special_session_approval_requests")
 }
