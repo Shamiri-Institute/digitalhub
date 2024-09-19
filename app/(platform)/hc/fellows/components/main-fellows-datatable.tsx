@@ -4,9 +4,9 @@ import {
   columns,
   MainFellowTableData,
 } from "#/app/(platform)/hc/fellows/components/columns";
-import { BatchUploadDownloadFellow } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/upload-csv";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import DataTable from "#/components/data-table";
+import FileUploader from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { Prisma } from "@prisma/client";
@@ -15,9 +15,15 @@ import { useState } from "react";
 export default function MainFellowsDatatable({
   fellows,
   supervisors,
+  implementerId,
+  hubId,
+  projectId,
 }: {
   fellows: MainFellowTableData[];
   supervisors: Prisma.SupervisorGetPayload<{}>[];
+  implementerId: string;
+  hubId: string;
+  projectId: string;
 }) {
   const [fellow, setFellow] = useState<MainFellowTableData | null>(null);
   const [editDialog, setEditDialog] = useState<boolean>(false);
@@ -26,7 +32,17 @@ export default function MainFellowsDatatable({
   const renderTableActions = () => {
     return (
       <div className="flex items-center gap-3">
-        <BatchUploadDownloadFellow />
+        <FileUploader
+          url="/api/csv-uploads/fellows"
+          type="fellows"
+          uploadVisibleMessage="Upload fellows CSV"
+          metadata={{
+            implementerId,
+            hubId,
+            projectId,
+            urlPath: "/hc/fellows",
+          }}
+        />
         <FellowDetailsForm
           open={addDialog}
           onOpenChange={setAddDialog}
