@@ -1,13 +1,9 @@
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 
-import {
-  fetchSupervisorDataCompletenessData,
-  fetchSupervisorDropoutReasons,
-  fetchSupervisorSessionRatingAverages,
-} from "#/app/(platform)/hc/supervisors/actions";
+import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
 import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";
 import MainSupervisorsDataTable from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
-import SupervisorCharts from "#/app/(platform)/hc/supervisors/components/superivor-charts";
+import SupervisorChartsWrapper from "#/app/(platform)/hc/supervisors/components/supervisor-charts-container";
 import SupervisorProvider from "#/app/(platform)/hc/supervisors/components/supervisor-provider";
 import WeeklyHubTeamMeetingForm from "#/app/(platform)/hc/supervisors/components/weekly-hub-team-meeting";
 import { currentHubCoordinator } from "#/app/auth";
@@ -15,6 +11,7 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import { Suspense } from "react";
 
 export default async function SupervisorsPage() {
   const coordinator = await currentHubCoordinator();
@@ -45,34 +42,6 @@ export default async function SupervisorsPage() {
     return <div>Hub coordinator has no assigned hub</div>;
   }
 
-  const dropoutData = await fetchSupervisorDropoutReasons(
-    coordinator.assignedHubId,
-  );
-
-  const supervisorDataCompletenessPercentage =
-    await fetchSupervisorDataCompletenessData(coordinator?.assignedHubId);
-
-  const supervisorsSessionRatings = await fetchSupervisorSessionRatingAverages(
-    coordinator?.assignedHubId as string,
-  );
-
-  const supervisorAttendanceData = await db.interventionSession.groupBy({
-    by: ["sessionType"],
-    where: {
-      school: {
-        hubId: coordinator?.assignedHubId,
-        supervisorAttendances: {
-          every: {
-            attended: true,
-          },
-        },
-      },
-    },
-    _count: {
-      sessionType: true,
-    },
-  });
-
   return (
     <div className="flex h-full flex-col">
       <div className="container w-full grow space-y-3 py-10">
@@ -89,14 +58,9 @@ export default async function SupervisorsPage() {
           </div>
         </div>
 
-        <SupervisorCharts
-          attendanceData={supervisorAttendanceData}
-          dropoutData={dropoutData}
-          supervisorDataCompletenessPercentage={
-            supervisorDataCompletenessPercentage
-          }
-          supervisorsSessionRatings={supervisorsSessionRatings}
-        />
+        <Suspense fallback={<GraphLoadingIndicator />}>
+          <SupervisorChartsWrapper coordinator={coordinator} />
+        </Suspense>
 
         <Separator />
 
