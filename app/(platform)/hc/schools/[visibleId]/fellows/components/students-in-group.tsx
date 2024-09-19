@@ -1,9 +1,9 @@
 "use client";
 
-import DataTable from "#/app/(platform)/hc/components/data-table";
 import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
+import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -104,20 +104,12 @@ const columns: ColumnDef<
     id: "Shamiri ID",
     accessorKey: "visibleId",
   },
-  // TODO: Add birthDate column to students table
   {
     header: "Age",
     id: "Age",
-    accessorFn: (row) => {
-      const now = new Date();
-      return row.age
-        ? row.age + " yrs"
-        : row.yearOfBirth
-          ? now.getFullYear() - row.yearOfBirth + " yrs"
-          : null;
-    },
+    accessorFn: (row) =>
+      row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
   },
-  // TODO: Get clinical cases and display number
   {
     header: "Clinical cases",
     id: "Clinical cases",

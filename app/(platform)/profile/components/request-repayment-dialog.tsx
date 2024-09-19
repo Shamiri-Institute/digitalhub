@@ -85,7 +85,7 @@ export function RequestRepaymentDialog({
       .map((attendance) => ({
         id: attendance.id,
         name: formatSessionLabel({
-          sessionName: attendance.session?.sessionName,
+          sessionName: attendance.session?.sessionName!,
           sessionDate: attendance.session?.sessionDate,
         }),
       })) || [];

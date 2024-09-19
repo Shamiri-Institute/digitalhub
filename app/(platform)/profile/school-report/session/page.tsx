@@ -113,7 +113,7 @@ export default async function ReportDetails({
     <div>
       <SessionNavigationHeader
         schoolName={schoolName}
-        sessionName={session.sessionName}
+        sessionName={session.sessionName!}
         href="/profile"
         schoolVisibleId={assignedSchool.visibleId}
       />
