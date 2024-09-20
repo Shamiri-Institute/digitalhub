@@ -257,9 +257,15 @@ model StudentAttendance {
   comments      String?             @map("comments")
   sessionId     String              @map("session_id")
   session       InterventionSession @relation(fields: [sessionId], references: [id])
+  groupId       String?             @map("group_id") @db.VarChar(255)
+  group         InterventionGroup?  @relation(fields: [groupId], references: [id])
+  schoolId      String              @map("school_id") @db.VarChar(255)
+  school        School              @relation(fields: [schoolId], references: [id])
+  fellowId      String              @map("fellow_id") @db.VarChar(255)
+  fellow        Fellow              @relation(fields: [fellowId], references: [id])
   // TODO: Set to required after cleaning data
-  markedBy      String?              @map("marked_by")
-  user          User?                @relation(fields: [markedBy], references: [id])
+  markedBy      String?             @map("marked_by")
+  user          User?               @relation(fields: [markedBy], references: [id])
 
   @@unique([studentId, sessionId])
   @@map("student_attendances")
@@ -486,6 +492,7 @@ model Fellow {
   delayedPaymentRequests  DelayedPaymentRequest[]
   payoutReconciliations   PayoutReconciliation[]
   PayoutStatements        PayoutStatements[]
+  studentAttendances       StudentAttendance[]
 
   @@map("fellows")
 }
@@ -706,6 +713,7 @@ model School {
   clinicalFollowup8Date       DateTime?              @map("clinical_followup_8_date") // TODO: remove after data migration
   dataCollectionFollowup1Date DateTime?              @map("data_collection_followup_1_date") // TODO: remove after data migration
   schoolDropoutHistory        SchoolDropoutHistory[]
+  studentAttendances           StudentAttendance[]
 
   @@map("schools")
 }
@@ -889,6 +897,7 @@ model InterventionGroup {
   students                 Student[]
   fellowAttendances        FellowAttendance[]
   interventionGroupReports InterventionGroupReport[]
+  studentAttendances       StudentAttendance[]
 
   @@unique([leaderId, schoolId], name: "interventionGroupByLeaderIdAndSchoolId")
   @@map("intervention_groups")
