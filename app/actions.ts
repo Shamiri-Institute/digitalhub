@@ -398,9 +398,7 @@ export async function markStudentAttendance({
     let attendance = await db.studentAttendance.findFirst({
       where: {
         studentId: student.id,
-        schoolId: school.id,
         sessionId: interventionSession.id,
-        groupId: groupId,
       },
     });
     if (attendance) {
@@ -413,24 +411,19 @@ export async function markStudentAttendance({
         },
       });
     } else {
-      attendance = await db.studentAttendance.create({
-        data: {
-          projectId: CURRENT_PROJECT_ID,
-          studentId: student.id,
-          schoolId: school.id,
-          sessionId: interventionSession.id,
-          attended: attendanceBoolean,
-          groupId: groupId,
-          fellowId,
-        },
-      });
+      const user = await getCurrentUser();
+      if (user !== null) {
+        attendance = await db.studentAttendance.create({
+          data: {
+            projectId: CURRENT_PROJECT_ID,
+            studentId: student.id,
+            sessionId: interventionSession.id,
+            attended: attendanceBoolean,
+            markedBy: user.user.id,
+          },
+        });
+      }
     }
-
-    await legacyUpdateStudentAttendance(
-      sessionNumber,
-      studentVisibleId,
-      attendanceBoolean,
-    );
 
     return { student };
   } catch (error: unknown) {
@@ -444,56 +437,6 @@ export async function markStudentAttendance({
     return {
       error: "Something went wrong",
     };
-  }
-}
-
-// This is the legacy way of updating student attendance and will be deprecated
-async function legacyUpdateStudentAttendance(
-  sessionNumber: number,
-  studentVisibleId: string,
-  attendanceBoolean: boolean | null,
-) {
-  switch (sessionNumber) {
-    case 0:
-      await db.student.update({
-        where: { visibleId: studentVisibleId },
-        data: {
-          attendanceSession0: attendanceBoolean,
-        },
-      });
-      break;
-    case 1:
-      await db.student.update({
-        where: { visibleId: studentVisibleId },
-        data: {
-          attendanceSession1: attendanceBoolean,
-        },
-      });
-      break;
-    case 2:
-      await db.student.update({
-        where: { visibleId: studentVisibleId },
-        data: {
-          attendanceSession2: attendanceBoolean,
-        },
-      });
-      break;
-    case 3:
-      await db.student.update({
-        where: { visibleId: studentVisibleId },
-        data: {
-          attendanceSession3: attendanceBoolean,
-        },
-      });
-      break;
-    case 4:
-      await db.student.update({
-        where: { visibleId: studentVisibleId },
-        data: {
-          attendanceSession3: attendanceBoolean,
-        },
-      });
-      break;
   }
 }
 
