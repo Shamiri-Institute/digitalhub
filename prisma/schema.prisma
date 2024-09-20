@@ -257,8 +257,9 @@ model StudentAttendance {
   comments      String?             @map("comments")
   sessionId     String              @map("session_id")
   session       InterventionSession @relation(fields: [sessionId], references: [id])
-  markedBy      String              @map("marked_by")
-  user          User                @relation(fields: [markedBy], references: [id])
+  // TODO: Set to required after cleaning data
+  markedBy      String?              @map("marked_by")
+  user          User?                @relation(fields: [markedBy], references: [id])
 
   @@unique([studentId, sessionId])
   @@map("student_attendances")
