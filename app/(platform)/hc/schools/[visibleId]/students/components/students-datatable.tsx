@@ -4,25 +4,27 @@ import {
   columns,
   SchoolStudentTableData,
 } from "#/app/(platform)/hc/schools/[visibleId]/students/components/columns";
+import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import { MarkAttendance } from "#/components/common/mark-attendance";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import DataTable from "#/components/data-table";
 import { Prisma } from "@prisma/client";
-import { useState } from "react";
+import { use, useState } from "react";
 
 export default function StudentsDatatable({
   data,
   hubCoordinator,
-  visibleId,
 }: {
-  data: SchoolStudentTableData[];
+  data: Promise<SchoolStudentTableData[]>;
   hubCoordinator: Prisma.HubCoordinatorGetPayload<{
     include: {
       assignedHub: true;
     };
   }> | null;
-  visibleId: string;
 }) {
+  const students = use(data);
   const [editDialog, setEditDialog] = useState<boolean>(false);
+  const [attendanceDialog, setAttendanceDialog] = useState<boolean>(false);
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
 
   const renderTableActions = () => {
@@ -45,8 +47,8 @@ export default function StudentsDatatable({
   return (
     <div>
       <DataTable
-        data={data}
-        columns={columns({ setEditDialog, setStudent })}
+        data={students}
+        columns={columns({ setEditDialog, setStudent, setAttendanceDialog })}
         emptyStateMessage="No students found"
         className="data-table data-table-action mt-4"
         renderTableActions={renderTableActions()}
@@ -61,11 +63,43 @@ export default function StudentsDatatable({
         rowSelectionDescription={"students"}
       />
       {student && (
-        <StudentDetailsForm
-          open={editDialog}
-          onOpenChange={setEditDialog}
-          student={student}
-        />
+        <div>
+          <StudentDetailsForm
+            open={editDialog}
+            onOpenChange={setEditDialog}
+            student={student}
+          />
+          <MarkAttendance
+            title={"Mark student attendance"}
+            sessions={student.school ? student.school.interventionSessions : []}
+            schoolId={student.schoolId}
+            attendances={student.studentAttendances.map((attendance) => {
+              const { id, studentId, attended, absenceReason, sessionId } =
+                attendance;
+              return {
+                attendanceId: id.toString(),
+                id: studentId,
+                attended,
+                absenceReason,
+                sessionId,
+                schoolId: student.schoolId,
+              };
+            })}
+            id={student.id}
+            isOpen={attendanceDialog}
+            setIsOpen={setAttendanceDialog}
+          >
+            <DialogAlertWidget>
+              <div className="flex items-center gap-2">
+                <span>{student.studentName}</span>
+                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+                  {""}
+                </span>
+                <span>{student.assignedGroupId}</span>
+              </div>
+            </DialogAlertWidget>
+          </MarkAttendance>
+        </div>
       )}
     </div>
   );

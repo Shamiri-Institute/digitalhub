@@ -1,6 +1,9 @@
 "use server";
 
-import { StudentDetailsSchema } from "#/app/(platform)/hc/schemas";
+import {
+  MarkAttendanceSchema,
+  StudentDetailsSchema,
+} from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
 import { z } from "zod";
@@ -51,6 +54,78 @@ export async function submitStudentDetails(
       success: true,
       message: `Successfully updated details for ${studentName}`,
     };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ??
+        "Sorry, could not update student information.",
+    };
+  }
+}
+
+export async function markStudentAttendance(
+  data: z.infer<typeof MarkAttendanceSchema>,
+) {
+  try {
+    await checkAuth();
+
+    const { id, sessionId, absenceReason, attended, schoolId } =
+      MarkAttendanceSchema.parse(data);
+    const attendance = await db.studentAttendance.findFirst({
+      where: {
+        studentId: id,
+        sessionId,
+      },
+    });
+
+    if (attendance) {
+      const result = await db.studentAttendance.update({
+        where: {
+          id: attendance.id,
+        },
+        data: {
+          studentId: id,
+          absenceReason,
+          attended:
+            attended === "attended"
+              ? true
+              : attended === "missed"
+                ? false
+                : null,
+        },
+        include: {
+          student: true,
+        },
+      });
+      return {
+        success: true,
+        message: `Successfully marked attendance ${result.student.studentName}`,
+      };
+    } else {
+      const result = await db.studentAttendance.create({
+        data: {
+          studentId: id,
+          schoolId,
+          absenceReason,
+          groupId: null,
+          attended:
+            attended === "attended"
+              ? true
+              : attended === "missed"
+                ? false
+                : null,
+        },
+        include: {
+          student: true,
+        },
+      });
+      return {
+        success: true,
+        message: `Successfully updated details for ${result.student.studentName}`,
+      };
+    }
   } catch (err) {
     console.error(err);
     return {

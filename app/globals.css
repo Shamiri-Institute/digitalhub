@@ -211,14 +211,26 @@
   }
 
   .custom-radio {
-    @apply flex items-center rounded-lg border-[2px] bg-background-secondary py-4 hover:shadow active:scale-[98%];
-  }
-
-  .custom-radio .radio {
-    @apply border-[2px] border-gray-300 data-[state=checked]:border-[5px];
+    @apply transition ease-in h-20 w-full rounded-lg bg-background-secondary data-[state=checked]:border-[2px] data-[state=checked]:bg-white !important;
   }
 
   .custom-radio svg {
     @apply hidden;
+  }
+
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator {
+    @apply border-4;
+  }
+
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator.green {
+    @apply border-shamiri-green;
+  }
+
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator.red {
+    @apply border-shamiri-red;
+  }
+
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator.blue {
+    @apply border-shamiri-new-blue;
   }
 }

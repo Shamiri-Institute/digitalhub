@@ -1,6 +1,8 @@
+import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
 import StudentsDatatable from "#/app/(platform)/hc/schools/[visibleId]/students/components/students-datatable";
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
+import { Suspense } from "react";
 
 export default async function StudentsPage({
   params: { visibleId },
@@ -9,7 +11,7 @@ export default async function StudentsPage({
 }) {
   const hubCoordinator = await currentHubCoordinator();
 
-  const students = await db.student.findMany({
+  const students = db.student.findMany({
     where: {
       school: {
         visibleId,
@@ -21,17 +23,21 @@ export default async function StudentsPage({
           sessions: true,
         },
       },
+      studentAttendances: true,
       assignedGroup: true,
+      school: {
+        include: {
+          interventionSessions: true,
+        },
+      },
     },
+    //TODO: Setup pagination on Datatable
+    take: 10,
   });
 
   return (
-    <>
-      <StudentsDatatable
-        data={students}
-        hubCoordinator={hubCoordinator}
-        visibleId={visibleId}
-      />
-    </>
+    <Suspense fallback={<Loading />}>
+      <StudentsDatatable data={students} hubCoordinator={hubCoordinator} />
+    </Suspense>
   );
 }

@@ -521,3 +521,29 @@ export const FellowDetailsSchema = z
       return z.NEVER;
     }
   });
+
+export const MarkAttendanceSchema = z
+  .object({
+    id: stringValidation("ID is required"),
+    attended: z.enum(ATTENDANCE_STATUS, {
+      errorMap: (issue, _ctx) => ({
+        message: "Please mark attendance",
+      }),
+    }),
+    sessionId: stringValidation("session ID is required"),
+    schoolId: stringValidation("school ID is required"),
+    absenceReason: z.string().optional(),
+    comments: z.string().optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.attended === "missed" && val.absenceReason === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Please select reason for absence.`,
+        fatal: true,
+        path: ["absenceReason"],
+      });
+
+      return z.NEVER;
+    }
+  });
