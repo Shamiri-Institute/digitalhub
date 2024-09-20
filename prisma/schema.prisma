@@ -23,7 +23,7 @@ model User {
   memberships          ImplementerMember[]
   recentOpens          UserRecentOpen[]
   schoolDropoutHistory SchoolDropoutHistory[]
-  StudentAttendance    StudentAttendance[]
+  studentAttendance    StudentAttendance[]
 
   @@map("users")
 }
