@@ -417,9 +417,12 @@ export async function markStudentAttendance({
           data: {
             projectId: CURRENT_PROJECT_ID,
             studentId: student.id,
+            schoolId: school.id,
             sessionId: interventionSession.id,
             attended: attendanceBoolean,
             markedBy: user.user.id,
+            groupId: groupId,
+            fellowId,
           },
         });
       }
