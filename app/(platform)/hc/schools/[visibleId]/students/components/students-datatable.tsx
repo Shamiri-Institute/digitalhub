@@ -8,6 +8,7 @@ import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-ale
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import DataTable from "#/components/data-table";
+import { markStudentAttendance } from "#/lib/actions/student";
 import { Prisma } from "@prisma/client";
 import { use, useState } from "react";
 
@@ -88,6 +89,7 @@ export default function StudentsDatatable({
             id={student.id}
             isOpen={attendanceDialog}
             setIsOpen={setAttendanceDialog}
+            markAttendanceAction={markStudentAttendance}
           >
             <DialogAlertWidget>
               <div className="flex items-center gap-2">

@@ -5,6 +5,7 @@ import {
   StudentDetailsSchema,
 } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import { z } from "zod";
 
@@ -71,68 +72,82 @@ export async function markStudentAttendance(
   try {
     await checkAuth();
 
-    const { id, sessionId, absenceReason, attended, schoolId } =
+    const { id, sessionId, absenceReason, attended } =
       MarkAttendanceSchema.parse(data);
-    const attendance = await db.studentAttendance.findFirst({
+    const student = await db.student.findUniqueOrThrow({
       where: {
-        studentId: id,
-        sessionId,
+        id,
+      },
+      include: {
+        assignedGroup: true,
       },
     });
 
-    if (attendance) {
-      const result = await db.studentAttendance.update({
+    if (student) {
+      const attendance = await db.studentAttendance.findFirst({
         where: {
-          id: attendance.id,
-        },
-        data: {
           studentId: id,
-          absenceReason,
-          attended:
-            attended === "attended"
-              ? true
-              : attended === "missed"
-                ? false
-                : null,
-        },
-        include: {
-          student: true,
+          sessionId,
         },
       });
-      return {
-        success: true,
-        message: `Successfully marked attendance ${result.student.studentName}`,
-      };
-    } else {
-      const result = await db.studentAttendance.create({
-        data: {
-          studentId: id,
-          schoolId,
-          absenceReason,
-          groupId: null,
-          attended:
-            attended === "attended"
-              ? true
-              : attended === "missed"
-                ? false
-                : null,
-        },
-        include: {
-          student: true,
-        },
-      });
-      return {
-        success: true,
-        message: `Successfully updated details for ${result.student.studentName}`,
-      };
+
+      if (attendance) {
+        await db.studentAttendance.update({
+          where: {
+            id: attendance.id,
+          },
+          data: {
+            studentId: id,
+            absenceReason,
+            attended:
+              attended === "attended"
+                ? true
+                : attended === "missed"
+                  ? false
+                  : null,
+          },
+        });
+        return {
+          success: true,
+          message: `Successfully updated attendance for ${student.studentName}`,
+        };
+      } else {
+        if (student.assignedGroup) {
+          await db.studentAttendance.create({
+            data: {
+              studentId: id,
+              schoolId: student.schoolId,
+              projectId: CURRENT_PROJECT_ID,
+              absenceReason,
+              sessionId,
+              groupId: student.assignedGroupId,
+              fellowId: student.assignedGroup.leaderId,
+              attended:
+                attended === "attended"
+                  ? true
+                  : attended === "missed"
+                    ? false
+                    : null,
+            },
+          });
+          return {
+            success: true,
+            message: `Successfully marked attendance for ${student.studentName}`,
+          };
+        } else {
+          return {
+            success: false,
+            message: `${student.studentName} has not been assigned to a group.`,
+          };
+        }
+      }
     }
   } catch (err) {
     console.error(err);
     return {
       success: false,
       message:
-        (err as Error)?.message ??
-        "Sorry, could not update student information.",
+        (err as Error)?.message ?? "Sorry, could not mark student attendance.",
     };
   }
 }

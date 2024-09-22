@@ -531,7 +531,6 @@ export const MarkAttendanceSchema = z
       }),
     }),
     sessionId: stringValidation("session ID is required"),
-    schoolId: stringValidation("school ID is required"),
     absenceReason: z.string().optional(),
     comments: z.string().optional(),
   })

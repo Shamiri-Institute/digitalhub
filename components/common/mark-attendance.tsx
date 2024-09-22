@@ -1,6 +1,7 @@
 "use client";
 
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -27,11 +28,13 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
+import { toast } from "#/components/ui/use-toast";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
 import { addHours, format } from "date-fns";
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import React, { Dispatch, SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -46,7 +49,6 @@ type Attendance = {
 };
 
 export function MarkAttendance({
-  schoolId,
   title,
   children,
   sessions,
@@ -54,8 +56,8 @@ export function MarkAttendance({
   id,
   isOpen,
   setIsOpen,
+  markAttendanceAction,
 }: {
-  schoolId: string | null;
   id: string;
   title: string;
   children: React.ReactNode;
@@ -63,20 +65,27 @@ export function MarkAttendance({
   attendances: Attendance[];
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
+  markAttendanceAction: (
+    data: z.infer<typeof MarkAttendanceSchema>,
+  ) => Promise<{
+    success: boolean;
+    message: string;
+  }>;
 }) {
-  // const [isOpen, setIsOpen] = useState(false);
-  // const [activeSession, setActiveSession] =
-  //   useState<Prisma.InterventionSessionGetPayload<{}>>();
-  const [loading, setLoading] = useState(false);
-  // const pathname = usePathname();
+  const pathname = usePathname();
 
   const form = useForm<z.infer<typeof MarkAttendanceSchema>>({
     resolver: zodResolver(MarkAttendanceSchema),
     defaultValues: getDefaultValues(),
   });
 
-  function getDefaultValues() {
-    const defaultSession = sessions[sessions.length - 1]?.id;
+  const statusWatcher = form.watch("attended");
+  const sessionIdWatcher = form.watch("sessionId");
+
+  function getDefaultValues(sessionId?: string) {
+    const defaultSession = sessionId
+      ? sessionId
+      : sessions[sessions.length - 1]?.id;
     const defaultAttendance = attendances.find((attendance) => {
       return attendance.sessionId === defaultSession;
     });
@@ -87,30 +96,32 @@ export function MarkAttendance({
         ? getAttendanceStatus(defaultAttendance)
         : "unmarked",
       absenceReason: defaultAttendance?.absenceReason ?? undefined,
+      // TODO: Uncomment after adding comments to student_attendances table
       // comments: defaultAttendance.comments,
     };
   }
 
   useEffect(() => {
-    form.reset(getDefaultValues());
-  }, [sessions, id, form, isOpen, attendances]);
-
-  const statusWatcher = form.watch("attended");
+    form.reset(getDefaultValues(sessionIdWatcher));
+  }, [sessions, id, form, isOpen, attendances, sessionIdWatcher]);
 
   const onSubmit = async (data: z.infer<typeof MarkAttendanceSchema>) => {
-    const { id, absenceReason, sessionId } = data;
-    const attendance =
-      data.attended === "attended"
-        ? true
-        : data.attended === "missed"
-          ? false
-          : null;
-    console.log({
-      id,
-      absenceReason,
-      sessionId,
-      attended: attendance,
-    });
+    const response = await markAttendanceAction(data);
+    if (!response.success) {
+      toast({
+        description:
+          response.message ??
+          "Something went wrong during submission, please try again",
+      });
+      return;
+    } else {
+      toast({
+        description: response.message,
+      });
+    }
+
+    await revalidatePageAction(pathname);
+    setIsOpen(false);
   };
 
   function getAttendanceStatus(attendance: Attendance) {
@@ -126,91 +137,6 @@ export function MarkAttendance({
     return status;
   }
 
-  // function updateActiveSession(sessionId?: string) {
-  //   // const activeSession = sessions.find((session) => {
-  //   //   return session.id === sessionId;
-  //   // });
-  //   // setActiveSession(activeSession);
-  //   console.log(sessionId);
-  // }
-
-  // useEffect(() => {
-  //   if (batchMode && schoolContext.school !== null) {
-  //     const ids = selectedSupervisors
-  //       .map((supervisor) => supervisor.id)
-  //       .join(",");
-  //     const _sessions = schoolContext.school.interventionSessions.filter(
-  //       (session) => session.occurred,
-  //     );
-  //     form.reset({
-  //       supervisorId: ids,
-  //       sessionId: _sessions[_sessions.length - 1]?.id,
-  //     });
-  //   } else {
-  //     const attendance = sessions[
-  //       sessions.length - 1
-  //     ]?.supervisorAttendances.find(
-  //       (attendance) => attendance.supervisorId === context.supervisor?.id,
-  //     );
-  //
-  //     if (attendance) {
-  //       let status = getAttendanceStatus(attendance);
-  //
-  //       form.reset({
-  //         supervisorId: context.supervisor?.id,
-  //         sessionId: sessions[sessions.length - 1]?.id,
-  //         attended: status,
-  //         absenceReason:
-  //           attendance.absenceReason !== null
-  //             ? attendance.absenceReason
-  //             : undefined,
-  //         comments:
-  //           attendance.absenceComments !== null
-  //             ? attendance.absenceComments
-  //             : undefined,
-  //       });
-  //     }
-  //   }
-  // }, [context.attendanceDialog, sessions, schoolContext.school]);
-
-  // useEffect(() => {
-  //   if (!batchMode) {
-  //     const attendance = activeSession?.supervisorAttendances.find(
-  //       (attendance) => attendance.supervisorId === context.supervisor?.id,
-  //     );
-  //     if (attendance) {
-  //       const status = getAttendanceStatus(attendance);
-  //       form.setValue("attended", status);
-  //     }
-  //   }
-  // }, [activeSession, context.supervisor?.id, form]);
-
-  // useEffect(() => {
-  //   if (!batchMode && context.attendanceDialog) {
-  //     const fetchAttendances = async () => {
-  //       setLoading(true);
-  //       if (
-  //         context.supervisor !== null &&
-  //         context.supervisor?.hubId &&
-  //         schoolContext.school
-  //       ) {
-  //         const result = await getSessionAndSupervisorAttendances({
-  //           projectId: CURRENT_PROJECT_ID,
-  //           supervisorId: context.supervisor.id,
-  //           schoolId: schoolContext.school?.id,
-  //         });
-  //         if (result.success) {
-  //           setSessions(result.data);
-  //         } else {
-  //           toast({ description: result.message });
-  //         }
-  //         setLoading(false);
-  //       }
-  //     };
-  //     fetchAttendances();
-  //   }
-  // }, [context.attendanceDialog, batchMode]);
-
   return (
     <Form {...form}>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -223,14 +149,12 @@ export function MarkAttendance({
             <FormField
               control={form.control}
               name="sessionId"
-              disabled={loading}
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel>Select session</FormLabel>
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value);
-                      // updateActiveSession(value);
                     }}
                     defaultValue={field.value}
                   >
@@ -274,7 +198,6 @@ export function MarkAttendance({
             <FormField
               control={form.control}
               name="attended"
-              disabled={loading}
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel>Select attendance</FormLabel>
@@ -321,7 +244,6 @@ export function MarkAttendance({
                 <FormField
                   control={form.control}
                   name="absenceReason"
-                  disabled={loading}
                   render={({ field }) => (
                     <FormItem className="space-y-2">
                       <FormLabel>Select reason for above</FormLabel>
@@ -354,7 +276,6 @@ export function MarkAttendance({
                 <FormField
                   control={form.control}
                   name="comments"
-                  disabled={loading}
                   render={({ field }) => (
                     <FormItem className="space-y-2">
                       <FormLabel>Additional comments</FormLabel>
