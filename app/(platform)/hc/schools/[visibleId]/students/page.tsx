@@ -21,7 +21,18 @@ export default async function StudentsPage({
           sessions: true,
         },
       },
+      studentAttendances: {
+        include: {
+          session: true,
+          group: true,
+        },
+      },
       assignedGroup: true,
+      school: {
+        include: {
+          interventionSessions: true,
+        },
+      },
     },
   });
 

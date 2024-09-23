@@ -1,5 +1,6 @@
 "use client";
 
+import AttendanceHistory from "#/app/(platform)/hc/schools/[visibleId]/students/components/attendance-history";
 import {
   columns,
   SchoolStudentTableData,
@@ -23,6 +24,8 @@ export default function StudentsDatatable({
   visibleId: string;
 }) {
   const [editDialog, setEditDialog] = useState<boolean>(false);
+  const [attendanceHistoryDialog, setAttendanceHistoryDialog] =
+    useState<boolean>(false);
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
 
   const renderTableActions = () => {
@@ -46,7 +49,11 @@ export default function StudentsDatatable({
     <div>
       <DataTable
         data={data}
-        columns={columns({ setEditDialog, setStudent })}
+        columns={columns({
+          setEditDialog,
+          setStudent,
+          setAttendanceHistoryDialog,
+        })}
         emptyStateMessage="No students found"
         className="data-table data-table-action mt-4"
         renderTableActions={renderTableActions()}
@@ -61,11 +68,18 @@ export default function StudentsDatatable({
         rowSelectionDescription={"students"}
       />
       {student && (
-        <StudentDetailsForm
-          open={editDialog}
-          onOpenChange={setEditDialog}
-          student={student}
-        />
+        <div>
+          <StudentDetailsForm
+            open={editDialog}
+            onOpenChange={setEditDialog}
+            student={student}
+          />
+          <AttendanceHistory
+            student={student}
+            open={attendanceHistoryDialog}
+            onOpenChange={setAttendanceHistoryDialog}
+          />
+        </div>
       )}
     </div>
   );
