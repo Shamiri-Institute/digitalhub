@@ -4,7 +4,11 @@ import {
   MarkAttendanceSchema,
   StudentDetailsSchema,
 } from "#/app/(platform)/hc/schemas";
-import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
+import {
+  currentHubCoordinator,
+  currentSupervisor,
+  getCurrentUser,
+} from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import { z } from "zod";
@@ -17,7 +21,8 @@ async function checkAuth() {
     throw new Error("The session has not been authenticated");
   }
 
-  return { hubCoordinator, supervisor };
+  const user = await getCurrentUser();
+  return { hubCoordinator, supervisor, user };
 }
 
 export async function submitStudentDetails(
@@ -70,9 +75,9 @@ export async function markStudentAttendance(
   data: z.infer<typeof MarkAttendanceSchema>,
 ) {
   try {
-    await checkAuth();
+    const auth = await checkAuth();
 
-    const { id, sessionId, absenceReason, attended } =
+    const { id, sessionId, absenceReason, attended, comments } =
       MarkAttendanceSchema.parse(data);
     const student = await db.student.findUniqueOrThrow({
       where: {
@@ -97,8 +102,10 @@ export async function markStudentAttendance(
             id: attendance.id,
           },
           data: {
+            markedBy: auth.user!.user.id,
             studentId: id,
             absenceReason,
+            comments,
             attended:
               attended === "attended"
                 ? true
@@ -119,9 +126,11 @@ export async function markStudentAttendance(
               schoolId: student.schoolId,
               projectId: CURRENT_PROJECT_ID,
               absenceReason,
+              comments,
               sessionId,
               groupId: student.assignedGroupId,
               fellowId: student.assignedGroup.leaderId,
+              markedBy: auth.user!.user.id,
               attended:
                 attended === "attended"
                   ? true
@@ -141,6 +150,11 @@ export async function markStudentAttendance(
           };
         }
       }
+    } else {
+      return {
+        success: false,
+        message: `Student details not found.`,
+      };
     }
   } catch (err) {
     console.error(err);

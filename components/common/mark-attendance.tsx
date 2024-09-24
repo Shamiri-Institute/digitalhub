@@ -45,7 +45,7 @@ type Attendance = {
   schoolId: string | null;
   attended: boolean | null;
   absenceReason: string | null;
-  comments?: string; // TODO: Add to all attendances schema
+  comments?: string | null;
 };
 
 export function MarkAttendance({
@@ -96,14 +96,18 @@ export function MarkAttendance({
         ? getAttendanceStatus(defaultAttendance)
         : "unmarked",
       absenceReason: defaultAttendance?.absenceReason ?? undefined,
-      // TODO: Uncomment after adding comments to student_attendances table
-      // comments: defaultAttendance.comments,
+      comments: defaultAttendance?.comments ?? undefined,
     };
   }
 
   useEffect(() => {
     form.reset(getDefaultValues(sessionIdWatcher));
   }, [sessions, id, form, isOpen, attendances, sessionIdWatcher]);
+
+  useEffect(() => {
+    form.setValue("comments", undefined);
+    form.setValue("absenceReason", undefined);
+  }, [statusWatcher]);
 
   const onSubmit = async (data: z.infer<typeof MarkAttendanceSchema>) => {
     const response = await markAttendanceAction(data);

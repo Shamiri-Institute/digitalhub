@@ -73,10 +73,15 @@ export default function StudentsDatatable({
           <MarkAttendance
             title={"Mark student attendance"}
             sessions={student.school ? student.school.interventionSessions : []}
-            schoolId={student.schoolId}
             attendances={student.studentAttendances.map((attendance) => {
-              const { id, studentId, attended, absenceReason, sessionId } =
-                attendance;
+              const {
+                id,
+                studentId,
+                attended,
+                absenceReason,
+                sessionId,
+                comments,
+              } = attendance;
               return {
                 attendanceId: id.toString(),
                 id: studentId,
@@ -84,6 +89,7 @@ export default function StudentsDatatable({
                 absenceReason,
                 sessionId,
                 schoolId: student.schoolId,
+                comments,
               };
             })}
             id={student.id}
