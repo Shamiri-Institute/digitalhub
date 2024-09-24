@@ -45,7 +45,14 @@ export default function StudentsDataTableMenu({
         >
           Edit information
         </DropdownMenuItem>
-        <DropdownMenuItem>Mark student attendance</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            state.setStudent(student);
+            state.setAttendanceDialog(true);
+          }}
+        >
+          Mark student attendance
+        </DropdownMenuItem>
         <DropdownMenuItem>View group transfer history</DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
