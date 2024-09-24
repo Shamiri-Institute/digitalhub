@@ -52,13 +52,7 @@ export default async function FellowPage() {
         <PageHeading title="Fellows" />
         <Separator />
         {/* charts goes here */}
-        <MainFellowsDatatable
-          fellows={fellows}
-          supervisors={supervisors}
-          implementerId={hc?.implementerId}
-          hubId={hc?.assignedHubId!}
-          projectId={hc?.assignedHub?.projectId!}
-        />
+        <MainFellowsDatatable fellows={fellows} supervisors={supervisors} />
       </div>
       <PageFooter />
     </div>

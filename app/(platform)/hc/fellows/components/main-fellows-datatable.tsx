@@ -15,15 +15,9 @@ import { useState } from "react";
 export default function MainFellowsDatatable({
   fellows,
   supervisors,
-  implementerId,
-  hubId,
-  projectId,
 }: {
   fellows: MainFellowTableData[];
   supervisors: Prisma.SupervisorGetPayload<{}>[];
-  implementerId: string;
-  hubId: string;
-  projectId: string;
 }) {
   const [fellow, setFellow] = useState<MainFellowTableData | null>(null);
   const [editDialog, setEditDialog] = useState<boolean>(false);
@@ -37,9 +31,6 @@ export default function MainFellowsDatatable({
           type="fellows"
           uploadVisibleMessage="Upload fellows CSV"
           metadata={{
-            implementerId,
-            hubId,
-            projectId,
             urlPath: "/hc/fellows",
           }}
         />
