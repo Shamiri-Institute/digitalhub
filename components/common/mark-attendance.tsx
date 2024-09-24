@@ -263,8 +263,16 @@ export function MarkAttendance({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {/*TODO: Update absence reasons for supervisors*/}
-                          {["Health issues"].map((reason) => {
+                          {[
+                            "School fees",
+                            "Sickness",
+                            "Suspension",
+                            "School transfer",
+                            "Group transfer",
+                            "Other priorities",
+                            "Mistrust",
+                            "Other reason",
+                          ].map((reason) => {
                             return (
                               <SelectItem key={reason} value={reason}>
                                 {reason}
