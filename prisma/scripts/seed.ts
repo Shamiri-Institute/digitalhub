@@ -1052,44 +1052,6 @@ async function seedDatabase() {
               },
             });
           }
-
-          for (const studentAttendance of Object.values(
-            school.studentAttendances,
-          )) {
-            const fellow = await db.fellow.findUniqueOrThrow({
-              where: {
-                visibleId: studentAttendance.fellowVisibleId,
-              },
-            });
-
-            const student = await db.student.findUniqueOrThrow({
-              where: {
-                visibleId: studentAttendance.studentVisibleId,
-              },
-            });
-
-            const session = await db.interventionSession.findUniqueOrThrow({
-              where: {
-                interventionBySchoolIdAndSessionType: {
-                  schoolId: createdSchool.id,
-                  sessionType: studentAttendance.sessionType,
-                },
-              },
-            });
-
-            await db.studentAttendance.create({
-              data: {
-                id: studentAttendance.id,
-                fellowId: fellow.id,
-                attended: studentAttendance.attended,
-                projectId: createdProject.id,
-                schoolId: createdSchool.id,
-                sessionId: session.id,
-                groupId: studentAttendance.groupId,
-                studentId: student.id,
-              },
-            });
-          }
         }
       }
     }

@@ -23,6 +23,7 @@ model User {
   memberships          ImplementerMember[]
   recentOpens          UserRecentOpen[]
   schoolDropoutHistory SchoolDropoutHistory[]
+  studentAttendance    StudentAttendance[]
 
   @@map("users")
 }
@@ -231,11 +232,6 @@ model Student {
   isClinicalCase            Boolean?                    @map("is_clinical_case")
   phoneNumber               String?                     @map("phone_number") @db.VarChar(255)
   mpesaNumber               String?                     @map("mpesa_number") @db.VarChar(255)
-  attendanceSession0        Boolean?                    @map("attendance_session_0") // TODO: can be removed after data migration
-  attendanceSession1        Boolean?                    @map("attendance_session_1") // TODO: can be removed after data migration
-  attendanceSession2        Boolean?                    @map("attendance_session_2") // TODO: can be removed after data migration
-  attendanceSession3        Boolean?                    @map("attendance_session_3") // TODO: can be removed after data migration
-  attendanceSession4        Boolean?                    @map("attendance_session_4") // TODO: can be removed after data migration
   droppedOut                Boolean?                    @map("dropped_out")
   droppedOutAt              DateTime?                   @map("dropped_out_at") @db.Timestamptz()
   dropOutReason             String?                     @map("drop_out_reason")
@@ -256,17 +252,22 @@ model StudentAttendance {
   project       Project             @relation(fields: [projectId], references: [id])
   studentId     String              @map("student_id") @db.VarChar(255)
   student       Student             @relation(fields: [studentId], references: [id])
-  schoolId      String              @map("school_id") @db.VarChar(255)
-  school        School              @relation(fields: [schoolId], references: [id])
-  fellowId      String              @map("fellow_id") @db.VarChar(255)
-  fellow        Fellow              @relation(fields: [fellowId], references: [id])
   attended      Boolean?            @map("attended")
   absenceReason String?             @map("absence_reason")
+  comments      String?             @map("comments")
   sessionId     String              @map("session_id")
   session       InterventionSession @relation(fields: [sessionId], references: [id])
   groupId       String?             @map("group_id") @db.VarChar(255)
   group         InterventionGroup?  @relation(fields: [groupId], references: [id])
+  schoolId      String?              @map("school_id") @db.VarChar(255)
+  school        School?              @relation(fields: [schoolId], references: [id])
+  fellowId      String?              @map("fellow_id") @db.VarChar(255)
+  fellow        Fellow?              @relation(fields: [fellowId], references: [id])
+  // TODO: Set to required after cleaning data
+  markedBy      String?             @map("marked_by")
+  user          User?               @relation(fields: [markedBy], references: [id])
 
+  @@unique([studentId, sessionId])
   @@map("student_attendances")
 }
 
@@ -481,7 +482,6 @@ model Fellow {
   droppedOutAt            DateTime?                 @map("dropped_out_at") @db.Timestamptz()
   dropOutReason           String?                   @map("drop_out_reason")
   students                Student[]
-  studentAttendances      StudentAttendance[]
   fellowAttendances       FellowAttendance[]
   fellowReportingNotes    FellowReportingNotes[]
   repaymentRequests       RepaymentRequest[]
@@ -492,6 +492,7 @@ model Fellow {
   delayedPaymentRequests  DelayedPaymentRequest[]
   payoutReconciliations   PayoutReconciliation[]
   PayoutStatements        PayoutStatements[]
+  studentAttendances       StudentAttendance[]
 
   @@map("fellows")
 }
@@ -692,7 +693,6 @@ model School {
   assignedSupervisorId  String?                @map("assigned_supervisor_id") @db.VarChar(255)
   assignedSupervisor    Supervisor?            @relation(fields: [assignedSupervisorId], references: [id])
   students              Student[]
-  studentAttendances    StudentAttendance[]
   fellowAttendances     FellowAttendance[]
   supervisorAttendances SupervisorAttendance[]
   interventionSessions  InterventionSession[]
@@ -714,6 +714,7 @@ model School {
   clinicalFollowup8Date       DateTime?              @map("clinical_followup_8_date") // TODO: remove after data migration
   dataCollectionFollowup1Date DateTime?              @map("data_collection_followup_1_date") // TODO: remove after data migration
   schoolDropoutHistory        SchoolDropoutHistory[]
+  studentAttendances           StudentAttendance[]
 
   @@map("schools")
 }
@@ -896,8 +897,8 @@ model InterventionGroup {
   project                  Project                   @relation(fields: [projectId], references: [id])
   students                 Student[]
   fellowAttendances        FellowAttendance[]
-  studentAttendances       StudentAttendance[]
   interventionGroupReports InterventionGroupReport[]
+  studentAttendances       StudentAttendance[]
 
   @@unique([leaderId, schoolId], name: "interventionGroupByLeaderIdAndSchoolId")
   @@map("intervention_groups")
