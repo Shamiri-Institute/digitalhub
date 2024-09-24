@@ -27,9 +27,9 @@ export default function FileUploader({
   url: string;
   type: string;
   metadata?: {
-    hubId: string;
-    implementerId: string;
-    projectId: string;
+    hubId?: string;
+    implementerId?: string;
+    projectId?: string;
     schoolVisibleId?: string;
     urlPath?: string;
   };
@@ -70,9 +70,9 @@ export default function FileUploader({
 
     if (metadata) {
       formData.append("schoolVisibleId", metadata?.schoolVisibleId!);
-      formData.append("hubId", metadata.hubId);
-      formData.append("implementerId", metadata.implementerId);
-      formData.append("projectId", metadata.projectId);
+      formData.append("hubId", metadata.hubId ?? "");
+      formData.append("implementerId", metadata.implementerId ?? "");
+      formData.append("projectId", metadata.projectId ?? "");
       formData.append("urlPath", metadata.urlPath!);
     }
 
