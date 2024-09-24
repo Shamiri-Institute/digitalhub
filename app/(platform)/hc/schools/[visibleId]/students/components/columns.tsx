@@ -15,7 +15,12 @@ export type SchoolStudentTableData = Prisma.StudentGetPayload<{
         sessions: true;
       };
     };
-    studentAttendances: true;
+    studentAttendances: {
+      include: {
+        session: true;
+        group: true;
+      };
+    };
     assignedGroup: true;
     school: {
       include: {
@@ -27,7 +32,8 @@ export type SchoolStudentTableData = Prisma.StudentGetPayload<{
 
 export const columns = (state: {
   setEditDialog: Dispatch<SetStateAction<boolean>>;
-  setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
   setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
 }): ColumnDef<SchoolStudentTableData>[] => [
   {
