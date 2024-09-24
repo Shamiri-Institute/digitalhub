@@ -23,7 +23,12 @@ export default async function StudentsPage({
           sessions: true,
         },
       },
-      studentAttendances: true,
+      studentAttendances: {
+        include: {
+          session: true,
+          group: true,
+        },
+      },
       assignedGroup: true,
       school: {
         include: {
@@ -31,8 +36,6 @@ export default async function StudentsPage({
         },
       },
     },
-    //TODO: Setup pagination on Datatable
-    take: 10,
   });
 
   return (

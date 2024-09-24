@@ -57,6 +57,7 @@ export function MarkAttendance({
   isOpen,
   setIsOpen,
   markAttendanceAction,
+  selectedSessionId,
 }: {
   id: string;
   title: string;
@@ -71,6 +72,7 @@ export function MarkAttendance({
     success: boolean;
     message: string;
   }>;
+  selectedSessionId?: string;
 }) {
   const pathname = usePathname();
 
@@ -103,6 +105,10 @@ export function MarkAttendance({
   useEffect(() => {
     form.reset(getDefaultValues(sessionIdWatcher));
   }, [sessions, id, form, isOpen, attendances, sessionIdWatcher]);
+
+  useEffect(() => {
+    form.reset(getDefaultValues(selectedSessionId));
+  }, [selectedSessionId]);
 
   useEffect(() => {
     form.setValue("comments", undefined);

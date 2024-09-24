@@ -1,5 +1,6 @@
 "use client";
 
+import AttendanceHistory from "#/app/(platform)/hc/schools/[visibleId]/students/components/attendance-history";
 import {
   columns,
   SchoolStudentTableData,
@@ -25,8 +26,12 @@ export default function StudentsDatatable({
 }) {
   const students = use(data);
   const [editDialog, setEditDialog] = useState<boolean>(false);
-  const [attendanceDialog, setAttendanceDialog] = useState<boolean>(false);
+  const [markAttendanceDialog, setMarkAttendanceDialog] =
+    useState<boolean>(false);
+  const [attendanceHistoryDialog, setAttendanceHistoryDialog] =
+    useState<boolean>(false);
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
+  const [selectedSession, setSelectedSession] = useState<string>();
 
   const renderTableActions = () => {
     // TODO: Refactor for client component
@@ -49,7 +54,12 @@ export default function StudentsDatatable({
     <div>
       <DataTable
         data={students}
-        columns={columns({ setEditDialog, setStudent, setAttendanceDialog })}
+        columns={columns({
+          setEditDialog,
+          setStudent,
+          setAttendanceHistoryDialog,
+          setMarkAttendanceDialog,
+        })}
         emptyStateMessage="No students found"
         className="data-table data-table-action mt-4"
         renderTableActions={renderTableActions()}
@@ -73,6 +83,7 @@ export default function StudentsDatatable({
           <MarkAttendance
             title={"Mark student attendance"}
             sessions={student.school ? student.school.interventionSessions : []}
+            selectedSessionId={selectedSession}
             attendances={student.studentAttendances.map((attendance) => {
               const {
                 id,
@@ -93,8 +104,8 @@ export default function StudentsDatatable({
               };
             })}
             id={student.id}
-            isOpen={attendanceDialog}
-            setIsOpen={setAttendanceDialog}
+            isOpen={markAttendanceDialog}
+            setIsOpen={setMarkAttendanceDialog}
             markAttendanceAction={markStudentAttendance}
           >
             <DialogAlertWidget>
@@ -107,6 +118,13 @@ export default function StudentsDatatable({
               </div>
             </DialogAlertWidget>
           </MarkAttendance>
+          <AttendanceHistory
+            student={student}
+            open={attendanceHistoryDialog}
+            onOpenChange={setAttendanceHistoryDialog}
+            markAttendance={setMarkAttendanceDialog}
+            setSelectedSessionId={setSelectedSession}
+          />
         </div>
       )}
     </div>
