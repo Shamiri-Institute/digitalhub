@@ -1,3 +1,4 @@
+import { currentHubCoordinator } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
@@ -19,10 +20,18 @@ export async function POST(request: NextRequest) {
   try {
     const file = formData.get("file") as File;
 
-    const schoolVisibleId = formData.get("schoolVisibleId") as string;
-    const hubId = formData.get("hubId") as string;
-    const implementerId = formData.get("implementerId") as string;
-    const projectId = formData.get("projectId") as string;
+    const hc = await currentHubCoordinator();
+
+    if (!hc) {
+      return NextResponse.json(
+        { error: "Hub coordinator not found." },
+        { status: 404 },
+      );
+    }
+
+    const hubId = hc.assignedHubId ?? (formData.get("hubId") as string);
+    const implementerId =
+      hc.implementerId ?? (formData.get("implementerId") as string);
 
     const supervisors = await db.supervisor.findMany({
       where: {
