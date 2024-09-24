@@ -11,6 +11,14 @@ import {
   DialogFooter,
   DialogHeader,
 } from "#/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
@@ -47,7 +55,7 @@ export default function AttendanceHistory({
             columns={columns}
             editColumns={false}
             data={student.studentAttendances ? student.studentAttendances : []}
-            emptyStateMessage={"No sessions found"}
+            emptyStateMessage={"No attendance records found"}
             className="data-table"
           />
         </div>
@@ -95,7 +103,6 @@ const columns: ColumnDef<
     id: "Group",
     accessorKey: "group.groupName",
   },
-  // TODO: populate after adding relation with payouts
   {
     header: "Attendance",
     id: "attendance",
@@ -142,5 +149,29 @@ const columns: ColumnDef<
         </div>
       );
     },
+  },
+  {
+    id: "button",
+    cell: ({ row }) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild={true}>
+          <div className="absolute inset-0 border-l bg-white">
+            <div className="flex h-full w-full items-center justify-center">
+              <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
+            </div>
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>
+            <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+              Actions
+            </span>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>Mark student attendance</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+    enableHiding: false,
   },
 ];
