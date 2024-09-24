@@ -493,3 +493,94 @@ export async function submitMonthlySupervisorEvaluation(
     };
   }
 }
+
+export type SupervisorDropoutReasonsGraphData = {
+  name: string;
+  value: number;
+};
+
+export async function fetchSupervisorDropoutReasons(hudId: string) {
+  const dropoutData = await db.$queryRaw<SupervisorDropoutReasonsGraphData[]>`
+    SELECT
+      COUNT(*) AS value,
+      drop_out_reason AS name
+    FROM supervisors
+    WHERE
+      drop_out_reason IS NOT NULL
+      AND hub_id = ${hudId}
+    GROUP BY
+      drop_out_reason
+  `;
+
+  dropoutData.forEach((data) => {
+    data.value = Number(data.value);
+  });
+
+  return dropoutData;
+}
+
+export async function fetchSupervisorDataCompletenessData(hubId: string) {
+  const [supervisorData] = await db.$queryRaw<{ percentage: number }[]>`
+    SELECT
+      AVG((
+        (CASE WHEN supervisor_name IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN supervisor_email IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN date_of_birth IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN hub_id IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN id_number IS NOT NULL THEN 1 ELSE 0 END)
+        + (CASE WHEN personal_email IS NOT NULL THEN 1 ELSE 0 END)
+      ) / 6.0 * 100) AS percentage
+    FROM supervisors
+    WHERE hub_id = ${hubId}
+  `;
+
+  if (!supervisorData) {
+    return [];
+  }
+
+  const percentage = +Number(supervisorData.percentage).toFixed(2);
+
+  return [
+    { name: "actual", value: percentage },
+    { name: "difference", value: 100 - percentage },
+  ];
+}
+
+export type SessionRatingAverages = {
+  session_type: "s0" | "s1" | "s2" | "s3" | "s4";
+  student_behaviour: number;
+  admin_support: number;
+  workload: number;
+};
+
+export async function fetchSupervisorSessionRatingAverages(hubId: string) {
+  const ratingAverages = await db.$queryRaw<SessionRatingAverages[]>`
+    SELECT
+      ses.session_type AS session_type,
+      AVG(isr.student_behavior_rating) AS student_behavior,
+      AVG(isr.admin_support_rating) AS admin_support,
+      AVG(isr.workload_rating) AS workload
+    FROM intervention_session_ratings isr
+    INNER JOIN supervisors AS sup ON isr.supervisor_id = sup.id
+    INNER JOIN intervention_sessions AS ses ON isr.session_id = ses.id
+    WHERE
+      sup.hub_id = ${hubId}
+    GROUP BY
+      ses.session_type
+    ORDER BY
+      ses.session_type
+  `;
+
+  if (!ratingAverages.length) {
+    return [];
+  }
+
+  // @ts-ignore
+  ratingAverages.forEach((item) => {
+    item.student_behaviour = Number(item.student_behaviour);
+    item.admin_support = Number(item.admin_support);
+    item.workload = Number(item.workload);
+  });
+
+  return ratingAverages;
+}
