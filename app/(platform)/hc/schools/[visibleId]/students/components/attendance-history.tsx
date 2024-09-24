@@ -168,6 +168,7 @@ const columns: ColumnDef<
             </span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          {/*TODO: Add action to open attendance dialog*/}
           <DropdownMenuItem>Mark student attendance</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
