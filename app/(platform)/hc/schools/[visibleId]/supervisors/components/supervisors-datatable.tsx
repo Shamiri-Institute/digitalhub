@@ -4,7 +4,6 @@ import {
   columns,
   SupervisorsData,
 } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/columns";
-import { MarkAttendance } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/mark-attendance-form";
 import { SupervisorInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/context/supervisor-info-context";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
@@ -144,11 +143,11 @@ export default function SupervisorsDataTable({
           </div>
         </DialogAlertWidget>
       </UndropSupervisor>
-      <MarkAttendance
-        schoolVisibleId={visibleId}
-        batchMode={batchMode}
-        selectedSupervisors={selectedRows}
-      />
+      {/*<MarkAttendance*/}
+      {/*  schoolVisibleId={visibleId}*/}
+      {/*  batchMode={batchMode}*/}
+      {/*  selectedSupervisors={selectedRows}*/}
+      {/*/>*/}
     </div>
   );
 }
