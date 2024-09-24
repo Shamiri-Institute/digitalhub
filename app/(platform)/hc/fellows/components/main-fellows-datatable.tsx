@@ -4,9 +4,9 @@ import {
   columns,
   MainFellowTableData,
 } from "#/app/(platform)/hc/fellows/components/columns";
-import { BatchUploadDownloadFellow } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/upload-csv";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import DataTable from "#/components/data-table";
+import FileUploader from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { Prisma } from "@prisma/client";
@@ -26,7 +26,14 @@ export default function MainFellowsDatatable({
   const renderTableActions = () => {
     return (
       <div className="flex items-center gap-3">
-        <BatchUploadDownloadFellow />
+        <FileUploader
+          url="/api/csv-uploads/fellows"
+          type="fellows"
+          uploadVisibleMessage="Upload fellows CSV"
+          metadata={{
+            urlPath: "/hc/fellows",
+          }}
+        />
         <FellowDetailsForm
           open={addDialog}
           onOpenChange={setAddDialog}
