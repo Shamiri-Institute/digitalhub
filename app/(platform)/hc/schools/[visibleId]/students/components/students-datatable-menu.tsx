@@ -63,7 +63,6 @@ export default function StudentsDataTableMenu({
         >
           View attendance history
         </DropdownMenuItem>
-        <DropdownMenuItem>Add clinical case</DropdownMenuItem>
         <DropdownMenuItem>Reporting notes</DropdownMenuItem>
         <DropdownMenuItem>
           <div className="text-shamiri-red">Drop-out student</div>
