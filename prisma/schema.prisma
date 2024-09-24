@@ -805,6 +805,8 @@ model HubCoordinator {
   supervisorComplaints        SupervisorComplaints[]
   MonthlySupervisorEvaluation MonthlySupervisorEvaluation[]
   SpecialApprovalRequests     SpecialApprovalRequests[]
+  FellowDocuments             FellowDocuments[]
+  SchoolDocuments             SchoolDocuments[]
 
   @@map("hub_coordinators")
 }
@@ -1367,25 +1369,29 @@ model SpecialApprovalRequests {
 }
 
 model SchoolDocuments {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
-  fileName  String   @map("file_name") @db.VarChar(255)
-  type      String   @db.VarChar(255)
-  schoolId  String   @map("school_id") @db.VarChar(255)
-  school    School   @relation(fields: [schoolId], references: [id])
+  id             String         @id @default(cuid())
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
+  fileName       String         @map("file_name") @db.VarChar(255)
+  type           String         @db.VarChar(255)
+  schoolId       String         @map("school_id") @db.VarChar(255)
+  school         School         @relation(fields: [schoolId], references: [id])
+  uploadedBy     String         @map("uploaded_by") @db.VarChar(255)
+  hubCoordinator HubCoordinator @relation(fields: [uploadedBy], references: [id])
 
   @@map("school_documents")
 }
 
 model FellowDocuments {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
-  fileName  String   @map("file_name") @db.VarChar(255)
-  type      String   @db.VarChar(255)
-  fellowId  String   @map("fellow_id") @db.VarChar(255)
-  fellow    Fellow   @relation(fields: [fellowId], references: [id])
+  id             String         @id @default(cuid())
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
+  fileName       String         @map("file_name") @db.VarChar(255)
+  type           String         @db.VarChar(255)
+  fellowId       String         @map("fellow_id") @db.VarChar(255)
+  fellow         Fellow         @relation(fields: [fellowId], references: [id])
+  uploadedBy     String         @map("uploaded_by") @db.VarChar(255)
+  hubCoordinator HubCoordinator @relation(fields: [uploadedBy], references: [id])
 
   @@map("fellow_documents")
 }
