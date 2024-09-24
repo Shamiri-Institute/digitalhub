@@ -23,16 +23,27 @@ import { cn } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
+import { Dispatch, SetStateAction, useEffect } from "react";
 
 export default function AttendanceHistory({
   open,
   onOpenChange,
   student,
+  markAttendance,
+  setSelectedSessionId,
 }: {
   student: SchoolStudentTableData;
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
+  markAttendance: Dispatch<SetStateAction<boolean>>;
+  setSelectedSessionId: Dispatch<SetStateAction<string | undefined>>;
 }) {
+  useEffect(() => {
+    if (!open) {
+      setSelectedSessionId(undefined);
+    }
+  }, [open, setSelectedSessionId]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-3/5 max-w-none">
@@ -52,7 +63,7 @@ export default function AttendanceHistory({
         </DialogAlertWidget>
         <div>
           <DataTable
-            columns={columns}
+            columns={columns(markAttendance, setSelectedSessionId)}
             editColumns={false}
             data={student.studentAttendances ? student.studentAttendances : []}
             emptyStateMessage={"No attendance records found"}
@@ -75,14 +86,17 @@ export default function AttendanceHistory({
   );
 }
 
-const columns: ColumnDef<
+const columns = (
+  markAttendance: Dispatch<SetStateAction<boolean>>,
+  setSelectedSessionId: Dispatch<SetStateAction<string | undefined>>,
+): ColumnDef<
   Prisma.StudentAttendanceGetPayload<{
     include: {
       session: true;
       group: true;
     };
   }>
->[] = [
+>[] => [
   {
     id: "Date of attendance",
     header: "Date of attendance",
@@ -168,8 +182,14 @@ const columns: ColumnDef<
             </span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {/*TODO: Add action to open attendance dialog*/}
-          <DropdownMenuItem>Mark student attendance</DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              setSelectedSessionId(row.original.sessionId);
+              markAttendance(true);
+            }}
+          >
+            Mark student attendance
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     ),

@@ -32,6 +32,7 @@ export type SchoolStudentTableData = Prisma.StudentGetPayload<{
 
 export const columns = (state: {
   setEditDialog: Dispatch<SetStateAction<boolean>>;
+  setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
   setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
 }): ColumnDef<SchoolStudentTableData>[] => [
