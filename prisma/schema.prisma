@@ -17,13 +17,14 @@ model User {
   emailVerified DateTime? @map("email_verified")
   image         String?
 
-  accounts             Account[]
-  sessions             Session[]
-  avatar               UserAvatar?
-  memberships          ImplementerMember[]
-  recentOpens          UserRecentOpen[]
-  schoolDropoutHistory SchoolDropoutHistory[]
-  studentAttendance    StudentAttendance[]
+  accounts              Account[]
+  sessions              Session[]
+  avatar                UserAvatar?
+  memberships           ImplementerMember[]
+  recentOpens           UserRecentOpen[]
+  schoolDropoutHistory  SchoolDropoutHistory[]
+  studentAttendance     StudentAttendance[]
+  studentReportingNotes StudentReportingNotes[]
   SchoolDocuments      SchoolDocuments[]
   FellowDocuments      FellowDocuments[]
 
@@ -238,7 +239,7 @@ model Student {
   droppedOutAt              DateTime?                   @map("dropped_out_at") @db.Timestamptz()
   dropOutReason             String?                     @map("drop_out_reason")
   studentOutcome            StudentOutcome[]
-  studentComplaints         StudentComplaints[]
+  studentReportingNotes     StudentReportingNotes[]
   clinicalCases             ClinicalScreeningInfo[]
   studentAttendances        StudentAttendance[]
   studentGroupTransferTrail StudentGroupTransferTrail[]
@@ -572,7 +573,7 @@ model Supervisor {
   sessionRatings              InterventionSessionRating[]
   sessionNotes                InterventionSessionNote[]
   reimbursementRequests       ReimbursementRequest[]
-  studentComplaints           StudentComplaints[]
+  studentReportingNotes       StudentReportingNotes[]
   fellowReportingNotes        FellowReportingNotes[]
   clinicalScreeningCases      ClinicalScreeningInfo[]
   referredToMeClinicalCases   ClinicalScreeningInfo[]       @relation("referredtocases")
@@ -972,17 +973,19 @@ model RepaymentRequest {
   @@map("repayment_requests")
 }
 
-model StudentComplaints {
-  id           String     @id @default(cuid())
-  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz()
-  supervisorId String     @map("supervisor_id") @db.VarChar(255)
-  supervisor   Supervisor @relation(fields: [supervisorId], references: [id])
-  studentId    String     @map("student_id") @db.VarChar(255)
-  student      Student    @relation(fields: [studentId], references: [id])
-  complaint    String
+model StudentReportingNotes {
+  id           String      @id @default(cuid())
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime    @updatedAt @map("updated_at") @db.Timestamptz()
+  supervisorId String?     @map("supervisor_id") @db.VarChar(255)
+  supervisor   Supervisor? @relation(fields: [supervisorId], references: [id])
+  studentId    String      @map("student_id") @db.VarChar(255)
+  student      Student     @relation(fields: [studentId], references: [id])
+  notes        String
+  addedBy      String?
+  user         User?       @relation(fields: [addedBy], references: [id])
 
-  @@map("student_complaints")
+  @@map("student_reporting_notes")
 }
 
 model FellowReportingNotes {
