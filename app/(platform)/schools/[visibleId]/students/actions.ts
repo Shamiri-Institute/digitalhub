@@ -24,10 +24,10 @@ export async function recordStudentComplaint(
   }
 
   try {
-    await db.studentComplaints.create({
+    await db.studentReportingNotes.create({
       data: {
         supervisorId: signedInSupervisor?.id,
-        complaint: complaint.data.complaint,
+        notes: complaint.data.complaint,
         studentId: complaint.data.studentId,
       },
     });
