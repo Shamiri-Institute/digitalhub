@@ -28,10 +28,10 @@ CREATE TABLE "fellow_documents" (
 ALTER TABLE "school_documents" ADD CONSTRAINT "school_documents_school_id_fkey" FOREIGN KEY ("school_id") REFERENCES "schools"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "school_documents" ADD CONSTRAINT "school_documents_uploaded_by_fkey" FOREIGN KEY ("uploaded_by") REFERENCES "hub_coordinators"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "school_documents" ADD CONSTRAINT "school_documents_uploaded_by_fkey" FOREIGN KEY ("uploaded_by") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "fellow_documents" ADD CONSTRAINT "fellow_documents_fellow_id_fkey" FOREIGN KEY ("fellow_id") REFERENCES "fellows"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "fellow_documents" ADD CONSTRAINT "fellow_documents_uploaded_by_fkey" FOREIGN KEY ("uploaded_by") REFERENCES "hub_coordinators"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "fellow_documents" ADD CONSTRAINT "fellow_documents_uploaded_by_fkey" FOREIGN KEY ("uploaded_by") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
