@@ -68,7 +68,7 @@ export default async function SchoolStudentsPage({
       },
       supervisor: true,
       implementer: true,
-      studentComplaints: true,
+      studentReportingNotes: true,
       studentAttendances: { include: { session: true } },
       studentGroupTransferTrail: true,
     },
@@ -179,7 +179,7 @@ function StudentsList({
       fellow: true;
       supervisor: true;
       implementer: true;
-      studentComplaints: true;
+      studentReportingNotes: true;
       studentAttendances: {
         include: {
           session: true;
@@ -246,7 +246,7 @@ function StudentCard({
       fellow: true;
       supervisor: true;
       implementer: true;
-      studentComplaints: true;
+      studentReportingNotes: true;
       studentAttendances: {
         include: {
           session: true;
@@ -319,7 +319,7 @@ function StudentCard({
                   fellowId={fellow.visibleId}
                   schoolId={school.visibleId}
                   studentId={student.id}
-                  complaints={student.studentComplaints}
+                  complaints={student.studentReportingNotes}
                 >
                   <div className="cursor-pointer">Record complaint</div>
                 </ComplaintDialog>
