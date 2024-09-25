@@ -3,6 +3,7 @@
 import {
   MarkAttendanceSchema,
   StudentDetailsSchema,
+  StudentReportingNotesSchema,
 } from "#/app/(platform)/hc/schemas";
 import {
   currentHubCoordinator,
@@ -162,6 +163,35 @@ export async function markStudentAttendance(
       success: false,
       message:
         (err as Error)?.message ?? "Sorry, could not mark student attendance.",
+    };
+  }
+}
+
+export async function submitStudentReportingNotes(
+  data: z.infer<typeof StudentReportingNotesSchema>,
+) {
+  try {
+    const auth = await checkAuth();
+
+    const { studentId, notes } = StudentReportingNotesSchema.parse(data);
+
+    await db.studentReportingNotes.create({
+      data: {
+        studentId,
+        notes,
+        addedBy: auth.user!.user.id,
+      },
+    });
+    return {
+      success: true,
+      message: `Successfully submitted reporting notes`,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ?? "Sorry, could not submit reporting notes.",
     };
   }
 }
