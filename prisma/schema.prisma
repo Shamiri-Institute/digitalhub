@@ -25,6 +25,8 @@ model User {
   schoolDropoutHistory  SchoolDropoutHistory[]
   studentAttendance     StudentAttendance[]
   studentReportingNotes StudentReportingNotes[]
+  schoolDocuments       SchoolDocuments[]
+  fellowDocuments       FellowDocuments[]
 
   @@map("users")
 }
@@ -494,6 +496,7 @@ model Fellow {
   payoutReconciliations   PayoutReconciliation[]
   PayoutStatements        PayoutStatements[]
   studentAttendances      StudentAttendance[]
+  fellowDocuments         FellowDocuments[]
 
   @@map("fellows")
 }
@@ -716,6 +719,7 @@ model School {
   dataCollectionFollowup1Date DateTime?              @map("data_collection_followup_1_date") // TODO: remove after data migration
   schoolDropoutHistory        SchoolDropoutHistory[]
   studentAttendances          StudentAttendance[]
+  schoolDocuments             SchoolDocuments[]
 
   @@map("schools")
 }
@@ -1365,4 +1369,32 @@ model SpecialApprovalRequests {
   PayoutStatements   PayoutStatements[]
 
   @@map("special_session_approval_requests")
+}
+
+model SchoolDocuments {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  fileName   String   @map("file_name") @db.VarChar(255)
+  type       String   @db.VarChar(255)
+  schoolId   String   @map("school_id") @db.VarChar(255)
+  school     School   @relation(fields: [schoolId], references: [id])
+  uploadedBy String   @map("uploaded_by") @db.VarChar(255)
+  user       User     @relation(fields: [uploadedBy], references: [id])
+
+  @@map("school_documents")
+}
+
+model FellowDocuments {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  fileName   String   @map("file_name") @db.VarChar(255)
+  type       String   @db.VarChar(255)
+  fellowId   String   @map("fellow_id") @db.VarChar(255)
+  fellow     Fellow   @relation(fields: [fellowId], references: [id])
+  uploadedBy String   @map("uploaded_by") @db.VarChar(255)
+  user       User     @relation(fields: [uploadedBy], references: [id])
+
+  @@map("fellow_documents")
 }
