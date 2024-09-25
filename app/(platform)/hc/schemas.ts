@@ -546,3 +546,8 @@ export const MarkAttendanceSchema = z
       return z.NEVER;
     }
   });
+
+export const StudentReportingNotesSchema = z.object({
+  studentId: stringValidation("Student ID is required"),
+  notes: stringValidation("Please add your note"),
+});
