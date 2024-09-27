@@ -8,6 +8,7 @@ import {
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
+import StudentDropoutForm from "#/components/common/student/student-dropout-form";
 import DataTable from "#/components/data-table";
 import { markStudentAttendance } from "#/lib/actions/student";
 import { Prisma } from "@prisma/client";
@@ -30,6 +31,7 @@ export default function StudentsDatatable({
     useState<boolean>(false);
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] =
     useState<boolean>(false);
+  const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
   const [selectedSession, setSelectedSession] = useState<string>();
 
@@ -59,6 +61,7 @@ export default function StudentsDatatable({
           setStudent,
           setAttendanceHistoryDialog,
           setMarkAttendanceDialog,
+          setDropoutDialog,
         })}
         emptyStateMessage="No students found"
         className="data-table data-table-action mt-4"
@@ -124,6 +127,11 @@ export default function StudentsDatatable({
             onOpenChange={setAttendanceHistoryDialog}
             markAttendance={setMarkAttendanceDialog}
             setSelectedSessionId={setSelectedSession}
+          />
+          <StudentDropoutForm
+            student={student}
+            isOpen={dropoutDialog}
+            setIsOpen={setDropoutDialog}
           />
         </div>
       )}

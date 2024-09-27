@@ -1,6 +1,7 @@
 "use server";
 
 import {
+  DropoutStudentSchema,
   MarkAttendanceSchema,
   StudentDetailsSchema,
 } from "#/app/(platform)/hc/schemas";
@@ -162,6 +163,40 @@ export async function markStudentAttendance(
       success: false,
       message:
         (err as Error)?.message ?? "Sorry, could not mark student attendance.",
+    };
+  }
+}
+
+export async function dropoutStudent(
+  data: z.infer<typeof DropoutStudentSchema>,
+) {
+  try {
+    await checkAuth();
+
+    const { studentId, mode, dropoutReason } = DropoutStudentSchema.parse(data);
+    const result = await db.student.update({
+      data: {
+        droppedOut: mode === "dropout",
+        dropOutReason: mode === "dropout" ? dropoutReason : null,
+        droppedOutAt: mode === "dropout" ? new Date() : null,
+      },
+      where: {
+        id: studentId,
+      },
+    });
+
+    return {
+      success: true,
+      message:
+        mode === "dropout"
+          ? `${result.studentName} successfully dropped out.`
+          : `${result.studentName} successfully un-dropped.`,
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      success: false,
+      message: `Something went wrong while trying to ${data.mode === "dropout" ? "drop out student" : "undo drop out"}`,
     };
   }
 }

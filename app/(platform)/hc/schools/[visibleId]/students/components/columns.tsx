@@ -1,6 +1,7 @@
 "use client";
 
 import StudentsDataTableMenu from "#/app/(platform)/hc/schools/[visibleId]/students/components/students-datatable-menu";
+import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
@@ -34,6 +35,7 @@ export const columns = (state: {
   setEditDialog: Dispatch<SetStateAction<boolean>>;
   setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
+  setDropoutDialog: Dispatch<SetStateAction<boolean>>;
   setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
 }): ColumnDef<SchoolStudentTableData>[] => [
   {
@@ -122,6 +124,16 @@ export const columns = (state: {
     header: "Class/Form",
     id: "Class/Form",
     accessorKey: "form",
+  },
+  {
+    header: "Status",
+    id: "Status",
+    cell: ({ row }) =>
+      row.original.archivedAt || row.original.droppedOut ? (
+        <Badge variant="destructive">Inactive</Badge>
+      ) : (
+        <Badge variant="shamiri-green">Active</Badge>
+      ),
   },
   {
     header: "Date added",

@@ -5,6 +5,7 @@ import {
   SCHOOL_DEMOGRAPHICS,
   SCHOOL_DROPOUT_REASONS,
   SCHOOL_TYPES,
+  STUDENT_DROPOUT_REASONS,
 } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
 import { isValidPhoneNumber } from "libphonenumber-js";
@@ -36,6 +37,36 @@ export const DropoutSupervisorSchema = z.object({
     },
   ),
 });
+
+export const DropoutStudentSchema = z
+  .object({
+    studentId: stringValidation("Missing supervisor ID"),
+    mode: z.enum(["dropout", "undo"]),
+    // TODO: Replace dropout reasons with student specific options
+    dropoutReason: z
+      .enum(
+        [STUDENT_DROPOUT_REASONS[0]!, ...STUDENT_DROPOUT_REASONS.slice(1)],
+        {
+          errorMap: (_issue, _ctx) => ({
+            message:
+              "Please select one of the supplied supervisor dropout reason options",
+          }),
+        },
+      )
+      .optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.dropoutReason === undefined && val.mode === "dropout") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Please select reason for drop out.`,
+        fatal: true,
+        path: ["dropoutReason"],
+      });
+
+      return z.NEVER;
+    }
+  });
 
 export const SubmitComplaintSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
