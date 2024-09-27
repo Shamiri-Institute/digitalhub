@@ -42,7 +42,6 @@ export const DropoutStudentSchema = z
   .object({
     studentId: stringValidation("Missing supervisor ID"),
     mode: z.enum(["dropout", "undo"]),
-    // TODO: Replace dropout reasons with student specific options
     dropoutReason: z
       .enum(
         [STUDENT_DROPOUT_REASONS[0]!, ...STUDENT_DROPOUT_REASONS.slice(1)],
