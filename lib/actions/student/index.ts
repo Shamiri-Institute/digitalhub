@@ -4,6 +4,7 @@ import {
   DropoutStudentSchema,
   MarkAttendanceSchema,
   StudentDetailsSchema,
+  StudentReportingNotesSchema,
 } from "#/app/(platform)/hc/schemas";
 import {
   currentHubCoordinator,
@@ -197,6 +198,35 @@ export async function dropoutStudent(
     return {
       success: false,
       message: `Something went wrong while trying to ${data.mode === "dropout" ? "drop out student" : "undo drop out"}`,
+    };
+  }
+}
+
+export async function submitStudentReportingNotes(
+  data: z.infer<typeof StudentReportingNotesSchema>,
+) {
+  try {
+    const auth = await checkAuth();
+
+    const { studentId, notes } = StudentReportingNotesSchema.parse(data);
+
+    await db.studentReportingNotes.create({
+      data: {
+        studentId,
+        notes,
+        addedBy: auth.user!.user.id,
+      },
+    });
+    return {
+      success: true,
+      message: `Successfully submitted reporting notes`,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ?? "Sorry, could not submit reporting notes.",
     };
   }
 }

@@ -7,6 +7,7 @@ import {
 } from "#/app/(platform)/hc/schools/[visibleId]/students/components/columns";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
+import { AddReportingNote } from "#/components/common/student/add-reporting-note";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import StudentDropoutForm from "#/components/common/student/student-dropout-form";
 import DataTable from "#/components/data-table";
@@ -30,6 +31,8 @@ export default function StudentsDatatable({
   const [markAttendanceDialog, setMarkAttendanceDialog] =
     useState<boolean>(false);
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] =
+    useState<boolean>(false);
+  const [reportingNotesDialog, setReportingNotesDialog] =
     useState<boolean>(false);
   const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
@@ -61,6 +64,7 @@ export default function StudentsDatatable({
           setStudent,
           setAttendanceHistoryDialog,
           setMarkAttendanceDialog,
+          setReportingNotesDialog,
           setDropoutDialog,
         })}
         emptyStateMessage="No students found"
@@ -127,6 +131,11 @@ export default function StudentsDatatable({
             onOpenChange={setAttendanceHistoryDialog}
             markAttendance={setMarkAttendanceDialog}
             setSelectedSessionId={setSelectedSession}
+          />
+          <AddReportingNote
+            student={student}
+            isOpen={reportingNotesDialog}
+            setIsOpen={setReportingNotesDialog}
           />
           <StudentDropoutForm
             student={student}

@@ -19,6 +19,7 @@ export default function StudentsDataTableMenu({
     setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
     setDropoutDialog: Dispatch<SetStateAction<boolean>>;
+    setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
     setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
   };
   student: SchoolStudentTableData;
@@ -64,8 +65,15 @@ export default function StudentsDataTableMenu({
         >
           View attendance history
         </DropdownMenuItem>
-        <DropdownMenuItem>Reporting notes</DropdownMenuItem>
         <DropdownMenuItem
+          onClick={() => {
+            state.setStudent(student);
+            state.setReportingNotesDialog(true);
+          }}
+        >
+          Reporting notes
+        </DropdownMenuItem>
+          <DropdownMenuItem
           onClick={() => {
             state.setStudent(student);
             state.setDropoutDialog(true);
