@@ -73,7 +73,7 @@ export default function StudentsDataTableMenu({
         >
           Reporting notes
         </DropdownMenuItem>
-          <DropdownMenuItem
+        <DropdownMenuItem
           onClick={() => {
             state.setStudent(student);
             state.setDropoutDialog(true);
