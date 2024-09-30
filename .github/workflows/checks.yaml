@@ -25,3 +25,11 @@ jobs:
 
       - name: Typechecks
         run: npm run typecheck
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: action/checkout@v4
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: "./scripts"
