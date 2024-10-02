@@ -145,7 +145,7 @@ export default function StudentsDatatable({
             student={student}
             open={groupTransferHistory}
             onOpenChange={setGroupTransferHistory}
-            />
+          />
           <StudentDropoutForm
             student={student}
             isOpen={dropoutDialog}
