@@ -21,10 +21,23 @@ export type SchoolStudentTableData = Prisma.StudentGetPayload<{
         group: true;
       };
     };
-    assignedGroup: true;
+    assignedGroup: {
+      include: {
+        leader: true;
+      };
+    };
     school: {
       include: {
         interventionSessions: true;
+      };
+    };
+    studentGroupTransferTrail: {
+      include: {
+        fromGroup: {
+          include: {
+            leader: true;
+          };
+        };
       };
     };
   };
@@ -36,6 +49,7 @@ export const columns = (state: {
   setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
   setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
   setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
+  setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
 }): ColumnDef<SchoolStudentTableData>[] => [
   {
     id: "checkbox",
@@ -76,9 +90,9 @@ export const columns = (state: {
   },
   {
     // TODO: this computation should be done during the fetch and possible user an accessor Function
-    accessorKey: "assignedGroupId",
-    header: "Group No.",
-    id: "Group No.",
+    accessorKey: "assignedGroup.groupName",
+    header: "Group Name",
+    id: "Group Name",
   },
   {
     header: "Shamiri ID",

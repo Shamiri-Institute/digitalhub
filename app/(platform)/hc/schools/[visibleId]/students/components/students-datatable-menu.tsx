@@ -19,6 +19,7 @@ export default function StudentsDataTableMenu({
     setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
     setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
+    setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
     setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
   };
   student: SchoolStudentTableData;
@@ -55,7 +56,14 @@ export default function StudentsDataTableMenu({
         >
           Mark student attendance
         </DropdownMenuItem>
-        <DropdownMenuItem>View group transfer history</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            state.setStudent(student);
+            state.setGroupTransferHistory(true);
+          }}
+        >
+          View group transfer history
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
             state.setStudent(student);

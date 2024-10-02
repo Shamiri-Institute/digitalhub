@@ -29,10 +29,23 @@ export default async function StudentsPage({
           group: true,
         },
       },
-      assignedGroup: true,
+      assignedGroup: {
+        include: {
+          leader: true,
+        },
+      },
       school: {
         include: {
           interventionSessions: true,
+        },
+      },
+      studentGroupTransferTrail: {
+        include: {
+          fromGroup: {
+            include: {
+              leader: true,
+            },
+          },
         },
       },
     },
