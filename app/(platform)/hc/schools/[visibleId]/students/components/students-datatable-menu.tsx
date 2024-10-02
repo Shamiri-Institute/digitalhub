@@ -18,6 +18,7 @@ export default function StudentsDataTableMenu({
     setEditDialog: Dispatch<SetStateAction<boolean>>;
     setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
+    setDropoutDialog: Dispatch<SetStateAction<boolean>>;
     setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
     setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
     setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
@@ -80,8 +81,17 @@ export default function StudentsDataTableMenu({
         >
           Reporting notes
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <div className="text-shamiri-red">Drop-out student</div>
+        <DropdownMenuItem
+          onClick={() => {
+            state.setStudent(student);
+            state.setDropoutDialog(true);
+          }}
+        >
+          {student.droppedOut ? (
+            <div className="text-shamiri-red">Undo drop out</div>
+          ) : (
+            <div className="text-shamiri-red">Drop-out student</div>
+          )}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
