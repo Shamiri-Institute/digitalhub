@@ -16,6 +16,7 @@ export default function SchoolsNav({ visibleId }: { visibleId: string }) {
     { name: "Supervisors", href: `/hc/schools/${visibleId}/supervisors` },
     { name: "Fellows", href: `/hc/schools/${visibleId}/fellows` },
     { name: "Students", href: `/hc/schools/${visibleId}/students` },
+    { name: "Files", href: `/hc/schools/${visibleId}/files` },
   ];
   const initialTab = options.find((tab: TabType) => tab.href === pathname);
   const [activeTab, setActiveTab] = useState<TabType>(
