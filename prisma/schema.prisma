@@ -1381,6 +1381,7 @@ model SchoolDocuments {
   school     School   @relation(fields: [schoolId], references: [id])
   uploadedBy String   @map("uploaded_by") @db.VarChar(255)
   user       User     @relation(fields: [uploadedBy], references: [id])
+  link       String   @db.VarChar(255)
 
   @@map("school_documents")
 }
@@ -1395,6 +1396,7 @@ model FellowDocuments {
   fellow     Fellow   @relation(fields: [fellowId], references: [id])
   uploadedBy String   @map("uploaded_by") @db.VarChar(255)
   user       User     @relation(fields: [uploadedBy], references: [id])
+  link       String   @db.VarChar(255)
 
   @@map("fellow_documents")
 }
