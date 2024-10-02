@@ -47,17 +47,6 @@ export default function GroupTransferHistory({
       ]
     : [];
 
-  // transferHistoryData.map((transfer, index) => {
-  //   console.log(index, transfer.createdAt);
-  //   if (index !== transferHistoryData.length - 1) {
-  //     transfer.createdAt = transferHistoryData[index + 1]!.createdAt;
-  //   } else {
-  //     transfer.createdAt = student.createdAt;
-  //   }
-  //   console.log(index, transfer.createdAt);
-  //   return transfer;
-  // });
-
   function mapTransferHistoryData(
     transferHistoryData: typeof student.studentGroupTransferTrail,
     studentCreatedAt: Date,
