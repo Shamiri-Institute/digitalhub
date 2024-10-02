@@ -661,3 +661,10 @@ SESSION_TYPES.forEach((type) => {
   sessionTypes[type.name] = type.description;
 });
 export type InterventionSessionType = keyof typeof sessionTypeKeys;
+
+export const STUDENT_DROPOUT_REASONS = [
+  "Mistrust/Ethical Concerns",
+  "Other commitments",
+  "Transferred schools",
+  "Other",
+] as const;
