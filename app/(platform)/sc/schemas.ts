@@ -1,3 +1,4 @@
+import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
 
@@ -40,3 +41,14 @@ export const WeeklyFellowRatingSchema = z.object({
 });
 
 export type WeeklyFellowRatingSchema = z.infer<typeof WeeklyFellowRatingSchema>;
+
+export const DropoutFellowSchema = z.object({
+  fellowId: stringValidation("Fellow id is required"),
+  dropoutReason: z.enum(FELLOW_DROP_OUT_REASONS, {
+    required_error: "Please select a dropout reason",
+  }),
+  replacementFellowId: stringValidation("Please select a replacement fellow"),
+  replacementSupervisorId: stringValidation("Please select a supervisor"),
+});
+
+export type DropoutFellowSchema = z.infer<typeof DropoutFellowSchema>;
