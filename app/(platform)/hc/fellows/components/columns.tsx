@@ -33,6 +33,9 @@ export const columns = (
   supervisors: Prisma.SupervisorGetPayload<{}>[],
   setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>,
   setEditDialog: Dispatch<SetStateAction<boolean>>,
+  setUploadContractDialog: Dispatch<SetStateAction<boolean>>,
+  setUploadIdDialog: Dispatch<SetStateAction<boolean>>,
+  setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>,
 ): ColumnDef<MainFellowTableData>[] => {
   return [
     {
@@ -143,6 +146,9 @@ export const columns = (
           fellow={row.original}
           setFellow={setFellow}
           setEditDialog={setEditDialog}
+          setUploadContractDialog={setUploadContractDialog}
+          setUploadIdDialog={setUploadIdDialog}
+          setUploadQualificationDialog={setUploadQualificationDialog}
         />
       ),
       enableHiding: false,
