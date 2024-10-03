@@ -20,29 +20,17 @@ export default function FellowFilesUploader({
   fellow: MainFellowTableData;
   onClose: (val: boolean) => void;
 }) {
-  const [open, setDialogOpen] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState(false);
   const { uploadToS3 } = useS3Upload();
 
   const { toast } = useToast();
 
   const handleFileUpload = (files: any) => {
-    // check if the file is a docx file using mime type
-    if (
-      files[0].type !== "text/csv"
-      //csv
-    ) {
-      window.alert("Invalid file type. Please upload a csv file");
-      return;
-    }
-
     setSelectedFile(files[0]);
   };
 
   const handleUpload = async () => {
-    setError(false);
     if (!selectedFile) {
       toast({ title: "No file selected", variant: "destructive" });
       console.error("No file selected");
@@ -54,9 +42,7 @@ export default function FellowFilesUploader({
 
   const handleFileChange = useCallback(
     async (file: File) => {
-      console.log("Uploading file:---", file);
       try {
-        console.log("dddd file:");
         setUploading(true);
         const { key } = await uploadToS3(file, {
           endpoint: {
@@ -68,9 +54,7 @@ export default function FellowFilesUploader({
           },
         });
 
-        console.log("key:", key);
         if (key) {
-          console.log("File uploaded successfully:", key);
           const response = await addUploadedFellowDocs({
             fileName: file.name,
             link: key.toString(),
@@ -99,7 +83,7 @@ export default function FellowFilesUploader({
         label="Upload csv file"
         onChange={handleFileUpload}
         files={selectedFile ? [selectedFile] : []}
-        accept=".csv"
+        accept="*"
       />
 
       <Separator />
@@ -107,7 +91,7 @@ export default function FellowFilesUploader({
         <Button
           className="text-shamiri-new-blue"
           variant="ghost"
-          onClick={() => setDialogOpen(false)}
+          onClick={() => onClose(false)}
         >
           Cancel
         </Button>
@@ -142,7 +126,6 @@ function FileUploaderWithDrop({
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleUpload = async (e: any) => {
-    // change to array of files
     const files = Array.from(e.target.files);
     if (onChange) onChange(files);
   };
@@ -150,7 +133,7 @@ function FileUploaderWithDrop({
   const handleDrop = async (e: any) => {
     e.preventDefault();
     setIsDragOver(false);
-    // change to array of files
+
     let files: any;
 
     if (e.dataTransfer.items) {
@@ -161,18 +144,10 @@ function FileUploaderWithDrop({
       files = Array.from(e.dataTransfer.files);
     }
 
-    // check allowed file types and filter out
-    if (accept && accept !== "*") {
-      const allowedTypes = accept.split(",").map((type) => type.substring(1));
-      files = files.filter((file: any) =>
-        allowedTypes.includes(file.name.split(".").pop()),
-      );
-    }
-
     if (files?.length) {
       if (onChange) onChange(files);
     } else {
-      window.alert(`Invalid file type. Please upload ${accept} file`);
+      window.alert(`Invalid file type.`);
     }
   };
 

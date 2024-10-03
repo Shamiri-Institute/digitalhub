@@ -18,6 +18,7 @@ export default function UploadFellowContract({
   if (!fellow) {
     return null;
   }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {children}

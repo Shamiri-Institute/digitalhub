@@ -120,7 +120,7 @@ export async function addUploadedFellowDocs(data: {
   }
 
   try {
-    const cdata = await db.fellowDocuments.create({
+    await db.fellowDocuments.create({
       data: {
         fileName: data.fileName,
         link: data.link,
@@ -129,8 +129,6 @@ export async function addUploadedFellowDocs(data: {
         type: data.type,
       },
     });
-
-    console.log(cdata);
 
     return {
       success: true,
