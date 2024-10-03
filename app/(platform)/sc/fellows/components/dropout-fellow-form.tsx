@@ -85,8 +85,8 @@ export default function DropoutFellowForm({
     const response = await dropoutFellowWithReason(
       data.fellowId,
       data.dropoutReason,
-      data.replacementFellowId,
       "sc/fellows",
+      // data.replacementFellowId,
     );
 
     if (!response.success) {

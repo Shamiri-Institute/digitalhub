@@ -58,7 +58,7 @@ export default function FellowsTableDropdownMenu({
             fellowId={fellowRow.id}
             fellowName={fellowRow.fellowName}
             fellowPhoneNumber={fellowRow.mpesaNumber}
-            otherSupervisors={fellowRow.supervisors}
+            // otherSupervisors={fellowRow.supervisors}
           >
             <div
               className={cn(
