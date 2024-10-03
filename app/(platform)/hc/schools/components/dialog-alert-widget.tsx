@@ -17,7 +17,12 @@ export default function DialogAlertWidget({
     <div className="space-y-4">
       <Alert variant={variant}>
         <AlertTitle className="flex items-center gap-3">
-          <Icons.info className="h-4 w-4 shrink-0 text-shamiri-new-blue" />
+          {variant === "primary" ? (
+            <Icons.info className="h-4 w-4 shrink-0 text-shamiri-new-blue" />
+          ) : null}
+          {variant === "destructive" ? (
+            <Icons.info className="h-4 w-4 shrink-0 rounded-full bg-shamiri-light-red text-white" />
+          ) : null}
           <div className="text-base">{label ?? children}</div>
         </AlertTitle>
       </Alert>
