@@ -26,12 +26,12 @@ export default function StudentsInGroupTable({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-h-screen min-w-max overflow-x-auto overflow-y-auto p-5">
-        <DialogHeader>
+      <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
+        <DialogHeader className="sticky top-0 z-10 bg-white">
           <h2>Students in Group</h2>
           <DialogAlertWidget label={groupName} />
         </DialogHeader>
-        <div>
+        <div className="min-w-max overflow-x-auto overflow-y-scroll">
           <DataTable
             columns={studentsTableColumns}
             data={students}
@@ -39,8 +39,10 @@ export default function StudentsInGroupTable({
             editColumns={false}
           />
         </div>
-        <DialogFooter className="flex justify-end">
-          <Button onClick={() => setDialogOpen(false)}>Done</Button>
+        <DialogFooter className="sticky bottom-0 z-10 w-full bg-white">
+          <div className="flex justify-end">
+            <Button onClick={() => setDialogOpen(false)}>Done</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
