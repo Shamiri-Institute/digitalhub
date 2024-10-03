@@ -14,10 +14,16 @@ export default function MainFellowsDatatableMenu({
   fellow,
   setFellow,
   setEditDialog,
+  setUploadContractDialog,
+  setUploadIdDialog,
+  setUploadQualificationDialog,
 }: {
   fellow: MainFellowTableData;
   setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>;
   setEditDialog: Dispatch<SetStateAction<boolean>>;
+  setUploadContractDialog: Dispatch<SetStateAction<boolean>>;
+  setUploadIdDialog: Dispatch<SetStateAction<boolean>>;
+  setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>;
 }) {
   return (
     <DropdownMenu>
@@ -51,6 +57,42 @@ export default function MainFellowsDatatableMenu({
           }}
         >
           Submit complaint
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            setFellow(fellow);
+            setUploadContractDialog(true);
+          }}
+        >
+          <div className="flex w-full items-center justify-between space-x-2">
+            Upload Contract
+            <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            setFellow(fellow);
+            setUploadIdDialog(true);
+          }}
+        >
+          <div className="flex w-full items-center justify-between space-x-2">
+            Upload Identification document
+            <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            setFellow(fellow);
+            setUploadQualificationDialog(true);
+          }}
+        >
+          <div className="flex w-full items-center justify-between space-x-2">
+            Upload qualification document
+            <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
+          </div>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
