@@ -5,6 +5,7 @@ import {
   columns,
   SchoolStudentTableData,
 } from "#/app/(platform)/hc/schools/[visibleId]/students/components/columns";
+import GroupTransferHistory from "#/app/(platform)/hc/schools/[visibleId]/students/components/group-transfer-history";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { AddReportingNote } from "#/components/common/student/add-reporting-note";
@@ -33,6 +34,8 @@ export default function StudentsDatatable({
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] =
     useState<boolean>(false);
   const [reportingNotesDialog, setReportingNotesDialog] =
+    useState<boolean>(false);
+  const [groupTransferHistory, setGroupTransferHistory] =
     useState<boolean>(false);
   const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
@@ -65,6 +68,7 @@ export default function StudentsDatatable({
           setAttendanceHistoryDialog,
           setMarkAttendanceDialog,
           setReportingNotesDialog,
+          setGroupTransferHistory,
           setDropoutDialog,
         })}
         emptyStateMessage="No students found"
@@ -136,6 +140,11 @@ export default function StudentsDatatable({
             student={student}
             isOpen={reportingNotesDialog}
             setIsOpen={setReportingNotesDialog}
+          />
+          <GroupTransferHistory
+            student={student}
+            open={groupTransferHistory}
+            onOpenChange={setGroupTransferHistory}
           />
           <StudentDropoutForm
             student={student}
