@@ -2,7 +2,6 @@ import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/colu
 import FellowFilesUploader from "#/app/(platform)/hc/fellows/components/file-uploader";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
-import { usePathname } from "next/navigation";
 import React, { Dispatch, SetStateAction } from "react";
 
 export default function UploadFellowQualification({
@@ -16,14 +15,10 @@ export default function UploadFellowQualification({
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   children?: React.ReactNode;
 }) {
-  const pathname = usePathname();
+  if (!fellow) {
+    return null;
+  }
 
-  // revalidatePageAction(pathname).then(() => {
-  //   toast({
-  //     description: response.message,
-  //   });
-  //   onOpenChange(false);
-  // });
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {children}
@@ -42,7 +37,7 @@ export default function UploadFellowQualification({
             </DialogAlertWidget>
           </div>
         )}
-        <FellowFilesUploader />
+        <FellowFilesUploader fellow={fellow} onClose={onOpenChange} />
       </DialogContent>
     </Dialog>
   );

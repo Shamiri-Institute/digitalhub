@@ -2,7 +2,6 @@ import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/colu
 import FellowFilesUploader from "#/app/(platform)/hc/fellows/components/file-uploader";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
-import { usePathname } from "next/navigation";
 import React, { Dispatch, SetStateAction } from "react";
 
 export default function UploadFellowContract({
@@ -16,14 +15,9 @@ export default function UploadFellowContract({
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   children?: React.ReactNode;
 }) {
-  const pathname = usePathname();
-
-  // revalidatePageAction(pathname).then(() => {
-  //   toast({
-  //     description: response.message,
-  //   });
-  //   onOpenChange(false);
-  // });
+  if (!fellow) {
+    return null;
+  }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {children}
@@ -40,7 +34,7 @@ export default function UploadFellowContract({
             </DialogAlertWidget>
           </div>
         )}
-        <FellowFilesUploader />
+        <FellowFilesUploader fellow={fellow} onClose={onOpenChange} />
       </DialogContent>
     </Dialog>
   );
