@@ -4,6 +4,9 @@ import {
   columns,
   MainFellowTableData,
 } from "#/app/(platform)/hc/fellows/components/columns";
+import UploadFellowContract from "#/app/(platform)/hc/fellows/components/upload-contract";
+import UploadFellowID from "#/app/(platform)/hc/fellows/components/upload-id";
+import UploadFellowQualification from "#/app/(platform)/hc/fellows/components/upload-qualification";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import DataTable from "#/components/data-table";
 import FileUploader from "#/components/file-uploader";
@@ -22,6 +25,12 @@ export default function MainFellowsDatatable({
   const [fellow, setFellow] = useState<MainFellowTableData | null>(null);
   const [editDialog, setEditDialog] = useState<boolean>(false);
   const [addDialog, setAddDialog] = useState<boolean>(false);
+  const [uploadIdDialog, setUploadIdDialog] = useState<boolean>(false);
+  const [uploadContractDialog, setUploadContractDialog] = useState<boolean>(
+    false
+  );
+  const [uploadQualificationDialog, setUploadQualificationDialog] =
+    useState<boolean>(false);
 
   const renderTableActions = () => {
     return (
@@ -52,7 +61,9 @@ export default function MainFellowsDatatable({
   return (
     <div>
       <DataTable
-        columns={columns(supervisors, setFellow, setEditDialog)}
+        columns={columns(supervisors, setFellow, setEditDialog,
+          setUploadContractDialog, setUploadIdDialog, setUploadQualificationDialog
+        )}
         data={fellows}
         className={"data-table data-table-action mt-4 bg-white"}
         emptyStateMessage="No fellows associated with this hub"
@@ -65,12 +76,29 @@ export default function MainFellowsDatatable({
         }}
       />
       {fellow && (
-        <FellowDetailsForm
-          fellow={fellow}
-          open={editDialog}
-          onOpenChange={setEditDialog}
-          mode={"edit"}
-        />
+        <>
+          <FellowDetailsForm
+            fellow={fellow}
+            open={editDialog}
+            onOpenChange={setEditDialog}
+            mode={"edit"}
+          />
+          <UploadFellowContract
+            fellow={fellow}
+            open={uploadContractDialog}
+            onOpenChange={setUploadContractDialog}
+          />
+          <UploadFellowID
+            fellow={fellow}
+            open={uploadIdDialog}
+            onOpenChange={setUploadIdDialog}
+          />
+          <UploadFellowQualification
+            fellow={fellow}
+            open={uploadQualificationDialog}
+            onOpenChange={setUploadQualificationDialog}
+          />
+        </>
       )}
     </div>
   );
