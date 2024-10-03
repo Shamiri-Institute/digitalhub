@@ -3,8 +3,13 @@ import { currentSupervisor } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
+import { Fellow } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { FellowSchema, WeeklyFellowRatingSchema } from "./schemas";
+import {
+  DropoutFellowSchema,
+  FellowSchema,
+  WeeklyFellowRatingSchema,
+} from "./schemas";
 
 export async function addNewFellow(fellowData: FellowSchema) {
   try {
@@ -80,6 +85,15 @@ export async function loadFellowsData() {
     },
   });
 
+  const supervisors = await db.supervisor.findMany({
+    where: {
+      hubId: supervisor.hubId,
+    },
+    include: {
+      fellows: { select: { id: true, fellowName: true } },
+    },
+  });
+
   return fellows.map((fellow) => ({
     county: fellow.county,
     subCounty: fellow.subCounty,
@@ -92,6 +106,7 @@ export async function loadFellowsData() {
     droppedOutAt: fellow.droppedOutAt,
     id: fellow.id,
     weeklyFellowRatings: fellow.weeklyFellowRatings,
+    supervisors,
     sessions: fellow.groups.map((group) => ({
       schoolName: group.school?.schoolName,
       sessionType:
@@ -171,5 +186,68 @@ export async function editWeeklyFellowRating(
     return {
       error: "Something went wrong during submission, please try again.",
     };
+  }
+}
+
+export async function dropoutFellowWithReason(
+  fellowId: Fellow["id"],
+  dropoutReason: Fellow["dropOutReason"],
+  revalidationPath: string,
+  // replacementFellowId: Fellow["id"],
+) {
+  try {
+    const supervisor = await currentSupervisor();
+
+    if (!supervisor) {
+      return {
+        success: false,
+        message: "User is not authorised",
+      };
+    }
+
+    const schema = DropoutFellowSchema.pick({
+      fellowId: true,
+      dropoutReason: true,
+    });
+
+    const data = schema.parse({
+      fellowId,
+      dropoutReason /*, replacementFellowId*/,
+    });
+
+    const fellow = await db.fellow.update({
+      where: { id: data.fellowId },
+      data: {
+        droppedOut: true, // for consistency w/ old data
+        droppedOutAt: new Date(),
+        dropOutReason: data.dropoutReason,
+      },
+    });
+
+    // await db.interventionGroup.update({
+    //   // @ts-ignore ignoring this since prisma expects a school id as well but we can't iterate over each school.
+    //   where: {
+    //     leaderId: fellowId as string,
+    //   },
+    //   data: {
+    //     leaderId: replacementFellowId,
+    //   },
+    // });
+
+    revalidatePath(revalidationPath);
+    return {
+      success: true,
+      message: "Successfully dropped out the fellow",
+      fellow,
+    };
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error.message);
+      return {
+        error: error.message,
+      };
+    }
+    console.error(error);
+    return { error: "Something went wrong" };
   }
 }
