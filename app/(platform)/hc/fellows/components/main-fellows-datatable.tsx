@@ -26,9 +26,8 @@ export default function MainFellowsDatatable({
   const [editDialog, setEditDialog] = useState<boolean>(false);
   const [addDialog, setAddDialog] = useState<boolean>(false);
   const [uploadIdDialog, setUploadIdDialog] = useState<boolean>(false);
-  const [uploadContractDialog, setUploadContractDialog] = useState<boolean>(
-    false
-  );
+  const [uploadContractDialog, setUploadContractDialog] =
+    useState<boolean>(false);
   const [uploadQualificationDialog, setUploadQualificationDialog] =
     useState<boolean>(false);
 
@@ -61,8 +60,13 @@ export default function MainFellowsDatatable({
   return (
     <div>
       <DataTable
-        columns={columns(supervisors, setFellow, setEditDialog,
-          setUploadContractDialog, setUploadIdDialog, setUploadQualificationDialog
+        columns={columns(
+          supervisors,
+          setFellow,
+          setEditDialog,
+          setUploadContractDialog,
+          setUploadIdDialog,
+          setUploadQualificationDialog,
         )}
         data={fellows}
         className={"data-table data-table-action mt-4 bg-white"}

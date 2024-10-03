@@ -1,7 +1,7 @@
 "use client";
 
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { readFileContent } from "#/app/(platform)/screenings/[caseId]/components/treatment-plan";
+import { addUploadedFellowDocs } from "#/app/(platform)/hc/fellows/actions";
+import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
@@ -9,30 +9,22 @@ import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import clsx from "clsx";
 import { Loader2 } from "lucide-react";
+import { useS3Upload } from "next-s3-upload";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 export default function FellowFilesUploader({
-  url,
-  type,
-  metadata,
-  uploadVisibleMessage,
+  fellow,
+  onClose,
 }: {
-  url: string;
-  type: string;
-  metadata?: {
-    hubId?: string;
-    implementerId?: string;
-    projectId?: string;
-    schoolVisibleId?: string;
-    urlPath?: string;
-  };
-  uploadVisibleMessage?: string;
+  fellow: MainFellowTableData;
+  onClose: (val: boolean) => void;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(false);
+  const { uploadToS3 } = useS3Upload();
 
   const { toast } = useToast();
 
@@ -57,50 +49,49 @@ export default function FellowFilesUploader({
       return;
     }
 
-    const formData = new FormData();
-
-    const fileContent = await readFileContent(selectedFile);
-    formData.append("file", fileContent, selectedFile.name);
-
-    if (metadata) {
-      formData.append("schoolVisibleId", metadata?.schoolVisibleId!);
-      formData.append("hubId", metadata.hubId ?? "");
-      formData.append("implementerId", metadata.implementerId ?? "");
-      formData.append("projectId", metadata.projectId ?? "");
-      formData.append("urlPath", metadata.urlPath!);
-    }
-
-    try {
-      setUploading(true);
-
-      const resp = await fetch(url, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await resp.json();
-
-      if (resp.ok) {
-        toast({ title: "File uploaded successfully", variant: "default" });
-        setDialogOpen(false);
-        revalidatePageAction(metadata?.urlPath!);
-      } else {
-        setError(true);
-        toast({ title: data.error, variant: "destructive" });
-      }
-    } catch (error) {
-      console.error("Failed to upload file:", error);
-
-      toast({
-        title:
-          // @ts-ignore
-          `Failed to upload file. Please try again later. ${JSON.stringify(error?.message)}`,
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-    }
+    handleFileChange(selectedFile);
   };
+
+  const handleFileChange = useCallback(
+    async (file: File) => {
+      console.log("Uploading file:---", file);
+      try {
+        console.log("dddd file:");
+        setUploading(true);
+        const { key } = await uploadToS3(file, {
+          endpoint: {
+            request: {
+              url: "/api/files/upload",
+              body: {},
+              headers: {},
+            },
+          },
+        });
+
+        console.log("key:", key);
+        if (key) {
+          console.log("File uploaded successfully:", key);
+          const response = await addUploadedFellowDocs({
+            fileName: file.name,
+            link: key.toString(),
+            fellowId: fellow.id,
+            type: file.type,
+          });
+          if (response.success) {
+            onClose(false);
+            toast({
+              title: "File uploaded successfully",
+            });
+          }
+        }
+      } catch (error) {
+        console.error("File upload error:", error);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [uploadToS3],
+  );
 
   return (
     <div className="space-y-5">
