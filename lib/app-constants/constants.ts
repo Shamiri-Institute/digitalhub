@@ -19,6 +19,14 @@ export const SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING = {
   difference: "#E5F3FF",
 };
 
+export const FELLOW_DROP_OUT_REASONS = [
+  "Another Job",
+  "Dress Code",
+  "Prolonged Absence",
+  "Program Extension Issue",
+  "Other",
+] as const;
+
 export const SCHOOL_DEMOGRAPHICS = ["Girls", "Boys", "Mixed"] as const;
 
 export const BOARDING_DAY_TYPES = ["Day", "Boarding", "Mixed"] as const;
