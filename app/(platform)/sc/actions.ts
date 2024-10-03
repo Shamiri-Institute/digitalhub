@@ -192,8 +192,8 @@ export async function editWeeklyFellowRating(
 export async function dropoutFellowWithReason(
   fellowId: Fellow["id"],
   dropoutReason: Fellow["dropOutReason"],
-  replacementFellowId: Fellow["id"],
   revalidationPath: string,
+  // replacementFellowId: Fellow["id"],
 ) {
   try {
     const supervisor = await currentSupervisor();
@@ -205,9 +205,15 @@ export async function dropoutFellowWithReason(
       };
     }
 
-    const schema = DropoutFellowSchema.omit({ replacementSupervisorId: true });
+    const schema = DropoutFellowSchema.pick({
+      fellowId: true,
+      dropoutReason: true,
+    });
 
-    const data = schema.parse({ fellowId, dropoutReason, replacementFellowId });
+    const data = schema.parse({
+      fellowId,
+      dropoutReason /*, replacementFellowId*/,
+    });
 
     const fellow = await db.fellow.update({
       where: { id: data.fellowId },
@@ -218,15 +224,15 @@ export async function dropoutFellowWithReason(
       },
     });
 
-    await db.interventionGroup.update({
-      // @ts-ignore ignoring this since prisma expects a school id as well but we can't iterate over each school.
-      where: {
-        leaderId: fellowId as string,
-      },
-      data: {
-        leaderId: replacementFellowId,
-      },
-    });
+    // await db.interventionGroup.update({
+    //   // @ts-ignore ignoring this since prisma expects a school id as well but we can't iterate over each school.
+    //   where: {
+    //     leaderId: fellowId as string,
+    //   },
+    //   data: {
+    //     leaderId: replacementFellowId,
+    //   },
+    // });
 
     revalidatePath(revalidationPath);
     return {

@@ -11,7 +11,7 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
+  // FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -32,42 +32,47 @@ import { useForm } from "react-hook-form";
 import { FellowsData, dropoutFellowWithReason } from "../../actions";
 import { DropoutFellowSchema } from "../../schemas";
 
+const FormSchema = DropoutFellowSchema.pick({
+  fellowId: true,
+  dropoutReason: true,
+});
+
 export default function DropoutFellowForm({
   children,
   fellowId,
   fellowPhoneNumber,
   fellowName,
-  otherSupervisors,
+  // otherSupervisors,
 }: {
   children: React.ReactNode;
   fellowId: FellowsData["id"];
   fellowPhoneNumber: FellowsData["mpesaNumber"];
   fellowName: FellowsData["fellowName"];
-  otherSupervisors: FellowsData["supervisors"];
+  // otherSupervisors: FellowsData["supervisors"];
 }) {
   const [open, setDialogOpen] = React.useState<boolean>(false);
   const [step, setStep] = React.useState<1 | 2>(1);
 
   const form = useForm<DropoutFellowSchema>({
-    resolver: zodResolver(DropoutFellowSchema),
+    resolver: zodResolver(FormSchema),
     defaultValues: {
       fellowId,
-      replacementFellowId: "",
-      replacementSupervisorId: "",
+      // replacementFellowId: "",
+      // replacementSupervisorId: "",
       dropoutReason: undefined,
     },
   });
 
-  const supervisorValue = form.watch("replacementSupervisorId", "");
-  const fellowsForSupervisor =
-    otherSupervisors.find((supervisor) => supervisor.id === supervisorValue)
-      ?.fellows || [];
-
-  React.useEffect(() => {
-    if (!supervisorValue) {
-      form.setValue("replacementFellowId", "");
-    }
-  }, [supervisorValue]);
+  // const supervisorValue = form.watch("replacementSupervisorId", "");
+  // const fellowsForSupervisor =
+  //   otherSupervisors.find((supervisor) => supervisor.id === supervisorValue)
+  //     ?.fellows || [];
+  //
+  // React.useEffect(() => {
+  //   if (!supervisorValue) {
+  //     form.setValue("replacementFellowId", "");
+  //   }
+  // }, [supervisorValue]);
 
   React.useEffect(() => {
     if (!open) {
@@ -152,6 +157,7 @@ export default function DropoutFellowForm({
                     </FormItem>
                   )}
                 />
+                {/*
                 <FormField
                   control={form.control}
                   name="replacementSupervisorId"
@@ -212,6 +218,7 @@ export default function DropoutFellowForm({
                     </FormItem>
                   )}
                 />
+                */}
                 <DialogFooter>
                   <Button
                     variant="ghost"
