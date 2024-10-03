@@ -103,3 +103,27 @@ export async function checkExistingStudents(
     },
   });
 }
+
+export async function transferStudentToGroup(id: string, groupId: string) {
+  try {
+    await checkAuth();
+    const student = await db.student.update({
+      where: {
+        id,
+      },
+      data: {
+        assignedGroupId: groupId,
+      },
+      include: {
+        assignedGroup: true,
+      },
+    });
+
+    return {
+      success: true,
+      message: `Successfully transferred ${student.studentName} to group ${student.assignedGroup?.groupName}`,
+    };
+  } catch (error: unknown) {
+    return { error: "Something went wrong while adding student to the group." };
+  }
+}

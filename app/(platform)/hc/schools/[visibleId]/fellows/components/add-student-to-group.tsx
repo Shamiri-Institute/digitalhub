@@ -4,6 +4,7 @@ import { AddNewStudentSchema } from "#/app/(platform)/hc/schemas";
 import {
   addNewStudentToGroup,
   checkExistingStudents,
+  transferStudentToGroup,
 } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
 import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
@@ -87,12 +88,28 @@ export default function AddStudentToGroup() {
         setTransferDialog(false);
       });
     } else if (transferOption !== undefined && transferOption >= 0) {
-      console.log(matchedStudents[transferOption]);
       const data = matchedStudents[transferOption]!;
-      // await submitStudentDetails({
-      //   id: data.id,
-      //   assignedGroupId: form.getValues("assignedGroupId"),
-      // });
+      const response = await transferStudentToGroup(
+        data.id,
+        form.getValues("assignedGroupId"),
+      );
+      if (!response.success) {
+        toast({
+          description:
+            response.message ??
+            "Something went wrong during submission, please try again",
+        });
+        return;
+      }
+
+      revalidatePageAction(pathname).then(() => {
+        toast({
+          description: response.message,
+        });
+        form.reset();
+        setTransferDialog(false);
+        context.setAddStudentDialog(false);
+      });
     }
     setLoading(false);
     return;
