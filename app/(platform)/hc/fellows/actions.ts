@@ -1,6 +1,6 @@
 "use server";
 
-import { currentHubCoordinator } from "#/app/auth";
+import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
 
 async function checkAuth() {
@@ -105,4 +105,37 @@ export async function fetchFellowSessionRatingAverages(hubId: string) {
   });
 
   return ratingAverages;
+}
+
+export async function addUploadedFellowDocs(data: {
+  fileName: string;
+  link: string;
+  fellowId: string;
+  type: string;
+}) {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    throw new Error("The session has not been authenticated");
+  }
+
+  try {
+    await db.fellowDocuments.create({
+      data: {
+        fileName: data.fileName,
+        link: data.link,
+        fellowId: data.fellowId,
+        uploadedBy: user.user.id,
+        type: data.type,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Successfully uploaded the document.",
+    };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong uploading the document" };
+  }
 }
