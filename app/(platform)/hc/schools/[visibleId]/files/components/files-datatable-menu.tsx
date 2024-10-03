@@ -40,7 +40,9 @@ export default function SchoolFilesDataTableMenu({
         <DropdownMenuItem
           onClick={() => {
             state.setFile(file);
-            // TODO: PREVIEW FILE ON NEW PAGE
+            if (file.link) {
+              window.open(file.link, "_blank", "noopener,noreferrer");
+            }
           }}
         >
           Preview
@@ -56,7 +58,14 @@ export default function SchoolFilesDataTableMenu({
         <DropdownMenuItem
           onClick={() => {
             state.setFile(file);
-            // TODO: TRIGGER DOWNLOAD
+            if (file.link) {
+              const link = document.createElement("a");
+              link.href = file.link;
+              link.download = "";
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }
           }}
         >
           Download file
