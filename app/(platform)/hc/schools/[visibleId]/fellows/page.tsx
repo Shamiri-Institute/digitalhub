@@ -5,9 +5,11 @@ import { SchoolFellowTableData } from "#/app/(platform)/hc/schools/[visibleId]/f
 import FellowInfoContextProvider from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellow-info-context-provider";
 import FellowsDatatable from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
 import StudentsInGroup from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/students-in-group";
+import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
 import { currentHubCoordinator } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
+import { Suspense } from "react";
 
 export default async function FellowsPage({
   params: { visibleId },
@@ -33,7 +35,7 @@ export default async function FellowsPage({
     },
   });
 
-  const fellows = await db.$queryRaw<SchoolFellowTableData[]>`
+  const fellows = db.$queryRaw<SchoolFellowTableData[]>`
       SELECT
         f.id, 
         f.fellow_name as "fellowName", 
@@ -62,7 +64,9 @@ export default async function FellowsPage({
 
   return (
     <FellowInfoContextProvider>
-      <FellowsDatatable fellows={fellows} supervisors={supervisors} />
+      <Suspense fallback={<Loading />}>
+        <FellowsDatatable fellows={fellows} supervisors={supervisors} />
+      </Suspense>
       <StudentsInGroup />
       <AddStudentToGroup />
       <AttendanceHistory attendances={school.fellowAttendances} />

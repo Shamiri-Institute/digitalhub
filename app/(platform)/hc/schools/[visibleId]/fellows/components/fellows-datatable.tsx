@@ -17,23 +17,24 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { Prisma } from "@prisma/client";
-import { useContext } from "react";
+import { use, useContext } from "react";
 
 export default function FellowsDatatable({
   fellows,
   supervisors,
 }: {
-  fellows: SchoolFellowTableData[];
+  fellows: Promise<SchoolFellowTableData[]>;
   supervisors: Prisma.SupervisorGetPayload<{}>[];
 }) {
   const renderTableActions = () => {
     return <BatchUploadDownloadFellow />;
   };
 
+  const data = use(fellows);
   return (
     <DataTable
       columns={columns(supervisors)}
-      data={fellows}
+      data={data}
       className={"data-table data-table-action mt-4"}
       emptyStateMessage="No fellows associated with this school"
       renderTableActions={renderTableActions()}
