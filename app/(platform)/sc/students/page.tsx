@@ -19,7 +19,7 @@ export default async function SupervisorStudentsPage({
   if (!supervisor) {
     return (
       <div className="container w-full grow py-10">
-        <p>Hub coordinator not found</p>
+        <p>User not authorised</p>
       </div>
     );
   }
@@ -126,41 +126,37 @@ export default async function SupervisorStudentsPage({
       },
     });
 
-  const studentsGroupedByAge = await db.student.groupBy({
-    by: ["age"],
+  const studentAggregations = await db.student.groupBy({
+    by: ["age", "gender", "form"],
     where: {
       school: {
         hubId: supervisor.hubId,
       },
     },
     _count: {
-      age: true,
+      id: true,
     },
   });
 
-  const studentsGroupedByGender = await db.student.groupBy({
-    by: ["gender"],
-    where: {
-      school: {
-        hubId: supervisor.hubId,
-      },
-    },
-    _count: {
-      gender: true,
-    },
+  const studentsGroupedByAge: Record<string, number> = {};
+  const studentsGroupedByGender: Record<string, number> = {};
+  const studentsGroupedByForm: Record<string, number> = {};
+
+  studentAggregations.forEach(({ age, gender, form, _count }) => {
+    if (age)
+      studentsGroupedByAge[age] =
+        (_count.id || 0) + (studentsGroupedByAge[age] || 0);
+    if (gender)
+      studentsGroupedByGender[gender] =
+        (_count.id || 0) + (studentsGroupedByGender[gender] || 0);
+    if (form)
+      studentsGroupedByForm[form] =
+        (_count.id || 0) + (studentsGroupedByForm[form] || 0);
   });
 
-  const studentsGroupedByForm = await db.student.groupBy({
-    by: ["form"],
-    where: {
-      school: {
-        hubId: supervisor.hubId,
-      },
-    },
-    _count: {
-      form: true,
-    },
-  });
+  console.log(studentsGroupedByAge);
+  console.log(studentsGroupedByGender);
+  console.log(studentsGroupedByForm);
 
   const studentsAttendanceGroupedBySession =
     await db.interventionSession.groupBy({
@@ -197,7 +193,8 @@ export default async function SupervisorStudentsPage({
 
       <Separator />
 
-      <StudentsFilterTab hubCoordinatorId={hubCoordinator.id} />
+      {/*TODO: what's happening here? */}
+      <StudentsFilterTab hubCoordinatorId={supervisor.id} />
 
       <StudentsStats
         totalNumberOfStudentsInHub={totalNumberOfStudentsInHub}
