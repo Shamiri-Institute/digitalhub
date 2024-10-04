@@ -4,9 +4,9 @@ import EditSchoolDetailsForm from "#/app/(platform)/hc/schools/components/edit-s
 import SchoolInfoProvider from "#/app/(platform)/hc/schools/components/school-info-provider";
 import SchoolsDatatable from "#/app/(platform)/hc/schools/components/schools-datatable";
 import SchoolsFilterToggle from "#/app/(platform)/hc/schools/components/schools-filter-toggle";
-import { SearchCommand } from "#/app/(platform)/hc/schools/components/search-command";
 import { UndoDropoutSchool } from "#/app/(platform)/hc/schools/components/undo-dropout-school-form";
 import { currentHubCoordinator } from "#/app/auth";
+import { SearchCommand } from "#/components/search-command";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";

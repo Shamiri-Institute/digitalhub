@@ -13,7 +13,7 @@ export default function SchoolsDatatable() {
       data={context.schools}
       columns={columns}
       emptyStateMessage="No schools found for this hub"
-      className={"data-table mt-4 bg-white"}
+      className="data-table mt-4 bg-white"
       columnVisibilityState={{
         "School ID": false,
         "Sub - county": false,
