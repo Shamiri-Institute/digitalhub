@@ -31,6 +31,10 @@ export default async function SupervisorStudentsPage({
     hubClinicalSessions,
     hubClinicalSessionsBySession,
     hubClinicalSessionsBySupervisor,
+    hubClinicalSessionsByInitialReferredFrom,
+    studentAggregations,
+    studentsAttendanceGroupedBySession,
+    studentsDropOutReasonsGroupedByReason,
   ] = await Promise.all([
     db.student.count({
       where: {
@@ -88,6 +92,50 @@ export default async function SupervisorStudentsPage({
         currentSupervisorId: true,
       },
     }),
+    db.clinicalScreeningInfo.groupBy({
+      by: ["initialReferredFrom"],
+      where: {
+        currentSupervisor: {
+          hubId: supervisor.hubId,
+        },
+      },
+      _count: {
+        initialReferredFrom: true,
+      },
+    }),
+    db.student.groupBy({
+      by: ["age", "gender", "form"],
+      where: {
+        school: {
+          hubId: supervisor.hubId,
+        },
+      },
+      _count: {
+        id: true,
+      },
+    }),
+    db.interventionSession.groupBy({
+      by: ["sessionType"],
+      where: {
+        school: {
+          hubId: supervisor.hubId,
+        },
+      },
+      _count: {
+        sessionType: true,
+      },
+    }),
+    db.student.groupBy({
+      by: ["dropOutReason"],
+      where: {
+        school: {
+          hubId: supervisor.hubId,
+        },
+      },
+      _count: {
+        dropOutReason: true,
+      },
+    }),
   ]);
 
   const supervisorIds = hubClinicalSessionsBySupervisor.map(
@@ -117,31 +165,6 @@ export default async function SupervisorStudentsPage({
     }),
   );
 
-  const hubClinicalSessionsByInitialReferredFrom =
-    await db.clinicalScreeningInfo.groupBy({
-      by: ["initialReferredFrom"],
-      where: {
-        currentSupervisor: {
-          hubId: supervisor.hubId,
-        },
-      },
-      _count: {
-        initialReferredFrom: true,
-      },
-    });
-
-  const studentAggregations = await db.student.groupBy({
-    by: ["age", "gender", "form"],
-    where: {
-      school: {
-        hubId: supervisor.hubId,
-      },
-    },
-    _count: {
-      id: true,
-    },
-  });
-
   const studentsGroupedByAge: Record<string, number> = {};
   const studentsGroupedByGender: Record<string, number> = {};
   const studentsGroupedByForm: Record<string, number> = {};
@@ -156,31 +179,6 @@ export default async function SupervisorStudentsPage({
     if (form)
       studentsGroupedByForm[form] =
         (_count.id || 0) + (studentsGroupedByForm[form] || 0);
-  });
-
-  const studentsAttendanceGroupedBySession =
-    await db.interventionSession.groupBy({
-      by: ["sessionType"],
-      where: {
-        school: {
-          hubId: supervisor.hubId,
-        },
-      },
-      _count: {
-        sessionType: true,
-      },
-    });
-
-  const studentsDropOutReasonsGroupedByReason = await db.student.groupBy({
-    by: ["dropOutReason"],
-    where: {
-      school: {
-        hubId: supervisor.hubId,
-      },
-    },
-    _count: {
-      dropOutReason: true,
-    },
   });
 
   /**
