@@ -1,13 +1,14 @@
-import HubStudentClinicalDataCharts from "#/app/(platform)/hc/students/components/charts/student-clinical-charts";
-import HubStudentDemographicsCharts from "#/app/(platform)/hc/students/components/charts/student-demographics-charts";
-import HubStudentsDetailsCharts from "#/app/(platform)/hc/students/components/charts/students-charts";
 import StudentsFilterTab from "#/app/(platform)/hc/students/components/students-filter-tab";
 import StudentsStats from "#/app/(platform)/hc/students/components/students-stats";
 import { currentSupervisor } from "#/app/auth";
+import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
+import HubStudentDemographicsCharts from "#/components/charts/student-demographics-charts";
+import HubStudentsDetailsCharts from "#/components/charts/students-charts";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import { redirect } from "next/navigation";
 
 export default async function SupervisorStudentsPage({
   searchParams,
@@ -17,11 +18,7 @@ export default async function SupervisorStudentsPage({
   const supervisor = await currentSupervisor();
 
   if (!supervisor) {
-    return (
-      <div className="container w-full grow py-10">
-        <p>User not authorised</p>
-      </div>
-    );
+    redirect("/login");
   }
 
   const [
@@ -66,7 +63,6 @@ export default async function SupervisorStudentsPage({
         },
       },
     }),
-
     db.clinicalSessionAttendance.groupBy({
       by: ["session"],
       where: {
@@ -80,7 +76,6 @@ export default async function SupervisorStudentsPage({
         session: true,
       },
     }),
-
     db.clinicalScreeningInfo.groupBy({
       by: ["currentSupervisorId"],
       where: {

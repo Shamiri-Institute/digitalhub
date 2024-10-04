@@ -3,7 +3,7 @@
 import {
   generateRandomColor,
   studentsGroupByColors,
-} from "#/app/(platform)/hc/students/components/charts/constants";
+} from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 import {
   Cell,
