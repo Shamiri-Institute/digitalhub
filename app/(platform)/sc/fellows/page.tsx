@@ -1,10 +1,10 @@
 import AddNewFellowForm from "#/app/(platform)/sc/components/add-new-fellow-form";
-import TableSkeleton from "#/components/table-skeleton";
 import { Button } from "#/components/ui/button";
-import { Suspense } from "react";
+import { loadFellowsData } from "../actions";
 import FellowsDataTable from "./components/fellows-data-table";
 
 export default async function FellowsPage() {
+  const fellows = await loadFellowsData();
   return (
     <div className="px-6 py-5">
       <div className="flex items-center justify-between py-5">
@@ -20,9 +20,7 @@ export default async function FellowsPage() {
           <div>Toggle view goes here</div>
         </div>
       </div>
-      <Suspense fallback={<TableSkeleton numRows={10} />}>
-        <FellowsDataTable />
-      </Suspense>
+      <FellowsDataTable fellows={fellows} />
     </div>
   );
 }

@@ -122,3 +122,41 @@ export const subColumns: ColumnDef<FellowsData["sessions"][number]>[] = [
     enableHiding: false,
   },
 ];
+
+export const studentsTableColumns: ColumnDef<
+  FellowsData["sessions"][number]["students"][number]
+>[] = [
+  {
+    id: "checkbox",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
+        aria-label="Select all"
+        className={
+          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+        }
+      />
+    ),
+  },
+  {
+    accessorKey: "studentName",
+    header: "Student Name",
+  },
+  {
+    accessorKey: "visibleId",
+    header: "Shamiri ID",
+  },
+  {
+    accessorKey: "age",
+    header: "Age",
+  },
+  {
+    accessorKey: "numClinicalCases",
+    header: "Clinical Cases",
+  },
+  // TODO: add dropdown
+];
