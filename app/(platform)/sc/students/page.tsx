@@ -5,8 +5,6 @@ import HubStudentsDetailsCharts from "#/components/charts/students-charts";
 import StudentsFilterTab from "#/components/students-filter-tab";
 import StudentsStats from "#/components/students-stats";
 import PageFooter from "#/components/ui/page-footer";
-import PageHeading from "#/components/ui/page-heading";
-import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import { redirect } from "next/navigation";
 
@@ -22,7 +20,7 @@ export default async function SupervisorStudentsPage({
   }
 
   const [
-    schools,
+    schools, // TODO: use this to provide filter options
     totalNumberOfStudentsInHub,
     totalGroupSessions,
     hubClinicalCases,
@@ -182,17 +180,9 @@ export default async function SupervisorStudentsPage({
         (_count.id || 0) + (studentsGroupedByForm[form] || 0);
   });
 
-  /**
-   * Non-blocking - To sync with @WendyMbone on two graphs - student info completion and student group ratings.
-   */
-
   return (
-    <div className="container w-full grow space-y-3 py-10">
-      <PageHeading title="Students" />
-
-      <Separator />
-
-      {/*TODO: what's happening here? */}
+    <>
+      {/* TODO: this should filter by schools and fellow */}
       <StudentsFilterTab hubCoordinatorId={supervisor.id} />
 
       <StudentsStats
@@ -226,6 +216,6 @@ export default async function SupervisorStudentsPage({
       />
 
       <PageFooter />
-    </div>
+    </>
   );
 }
