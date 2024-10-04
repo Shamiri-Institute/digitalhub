@@ -7,7 +7,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { cn } from "#/lib/utils";
 import type { FellowsData } from "../../actions";
+import StudentsInGroupTable from "./students-in-group-table";
 
 type FellowSessionsData = FellowsData["sessions"][number];
 
@@ -37,6 +39,18 @@ export default function FellowsSessionsTableDropdownMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <StudentsInGroupTable
+          students={sessionRow?.students ?? []}
+          groupName={sessionRow?.groupName ?? "N/A"}
+        >
+          <div
+            className={cn(
+              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
+            )}
+          >
+            View Students
+          </div>
+        </StudentsInGroupTable>
         <DropdownMenuItem>Mark attendance</DropdownMenuItem>
         <DropdownMenuItem>Weekly Group Evaluation</DropdownMenuItem>
       </DropdownMenuContent>

@@ -1,10 +1,13 @@
 "use client";
 import DataTable from "#/components/data-table";
-import { loadFellowsData } from "../../actions";
+import { FellowsData } from "../../actions";
 import { columns, subColumns } from "./columns";
 
-export default async function FellowsDataTable() {
-  const fellows = await loadFellowsData();
+export default function FellowsDataTable({
+  fellows,
+}: {
+  fellows: FellowsData[];
+}) {
   return (
     <DataTable
       data={fellows}
