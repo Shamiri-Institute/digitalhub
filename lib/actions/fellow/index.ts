@@ -2,6 +2,7 @@
 
 import { FellowDetailsSchema } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
+import { WeeklyFellowEvaluationSchema } from "#/components/common/fellow/weekly-fellow-evaluation";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
@@ -89,6 +90,87 @@ export async function submitFellowDetails(
           subCounty,
           dateOfBirth,
           gender,
+        },
+      });
+      return {
+        success: true,
+        message: `Successfully added ${fellowName}`,
+      };
+    } else {
+      return {
+        success: false,
+        message:
+          hubCoordinator === null && supervisor === null
+            ? `User is not authorised to perform this action`
+            : "Something went wrong",
+      };
+    }
+  } catch (err) {
+    console.error(err);
+    const { mode } = FellowDetailsSchema.parse(data);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ?? mode === "edit"
+          ? "Sorry, could not update fellow details."
+          : "Sorry, could not add new fellow",
+    };
+  }
+}
+
+export async function submitWeeklyFellowEvaluation(
+  data: z.infer<typeof WeeklyFellowEvaluationSchema>,
+) {
+  try {
+    const { hubCoordinator, supervisor } = await checkAuth();
+
+    const {
+      fellowId,
+      behaviourNotes,
+      behaviourRating,
+      punctualityNotes,
+      punctualityRating,
+      programDeliveryNotes,
+      programDeliveryRating,
+      dressingAndGroomingNotes,
+      dressingAndGroomingRating,
+      mode,
+    } = WeeklyFellowEvaluationSchema.parse(data);
+
+    if (mode === "edit") {
+      // await db.fellow.update({
+      //   where: {
+      //     id,
+      //   },
+      //   data: {
+      //     fellowName,
+      //     fellowEmail,
+      //     county,
+      //     subCounty,
+      //     cellNumber,
+      //     mpesaName,
+      //     mpesaNumber,
+      //     gender,
+      //     idNumber,
+      //     dateOfBirth,
+      //   },
+      // });
+      // return {
+      //   success: true,
+      //   message: `Successfully updated details for ${fellowName}`,
+      // };
+    } else if (mode === "add" && (hubCoordinator || supervisor)) {
+      await db.weeklyFellowRatings.create({
+        data: {
+          fellowId,
+          behaviourNotes,
+          behaviourRating,
+          punctualityNotes,
+          punctualityRating,
+          programDeliveryNotes,
+          programDeliveryRating,
+          dressingAndGroomingNotes,
+          dressingAndGroomingRating,
         },
       });
       return {
