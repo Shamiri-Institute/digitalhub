@@ -70,7 +70,11 @@ export async function loadFellowsData() {
       weeklyFellowRatings: true,
       groups: {
         include: {
-          students: true,
+          students: {
+            include: {
+              clinicalCases: true,
+            },
+          },
           school: {
             include: {
               interventionSessions: {
@@ -116,7 +120,10 @@ export async function loadFellowsData() {
           : "No upcoming session",
       groupName: group.groupName,
       numberOfStudents: group.students.length,
-      students: group.students,
+      students: group.students.map((student) => ({
+        ...student,
+        numClinicalCases: student.clinicalCases.length,
+      })),
     })),
   }));
 }
