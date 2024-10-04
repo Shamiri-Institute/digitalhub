@@ -27,6 +27,7 @@ model User {
   studentReportingNotes StudentReportingNotes[]
   schoolDocuments       SchoolDocuments[]
   fellowDocuments       FellowDocuments[]
+  weeklyFellowRatings   WeeklyFellowRatings[]
 
   @@map("users")
 }
@@ -1168,8 +1169,12 @@ model WeeklyFellowRatings {
   punctualityRating         Int?       @map("punctuality_rating")
   fellowId                  String     @map("fellow_id") @db.VarChar(255)
   fellow                    Fellow     @relation(fields: [fellowId], references: [id])
+  // Depreciate supervisor to 'markedBy'
   supervisorId              String     @map("supervisor_id") @db.Text()
   supervisor                Supervisor @relation(fields: [supervisorId], references: [id])
+  // TODO: Set to required after cleaning data
+  markedBy                  String?    @map("marked_by")
+  user                      User?      @relation(fields: [markedBy], references: [id])
 
   @@map("weekly_fellow_ratings")
 }
