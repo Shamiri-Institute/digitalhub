@@ -1,9 +1,9 @@
-import StudentsFilterTab from "#/app/(platform)/hc/students/components/students-filter-tab";
-import StudentsStats from "#/app/(platform)/hc/students/components/students-stats";
 import { currentSupervisor } from "#/app/auth";
 import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
 import HubStudentDemographicsCharts from "#/components/charts/student-demographics-charts";
 import HubStudentsDetailsCharts from "#/components/charts/students-charts";
+import StudentsFilterTab from "#/components/students-filter-tab";
+import StudentsStats from "#/components/students-stats";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
@@ -22,6 +22,7 @@ export default async function SupervisorStudentsPage({
   }
 
   const [
+    schools,
     totalNumberOfStudentsInHub,
     totalGroupSessions,
     hubClinicalCases,
@@ -33,6 +34,11 @@ export default async function SupervisorStudentsPage({
     studentsAttendanceGroupedBySession,
     studentsDropOutReasonsGroupedByReason,
   ] = await Promise.all([
+    db.school.findMany({
+      where: {
+        hubId: supervisor.hubId,
+      },
+    }),
     db.student.count({
       where: {
         school: {
