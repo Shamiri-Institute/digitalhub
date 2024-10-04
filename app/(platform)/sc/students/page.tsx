@@ -24,42 +24,46 @@ export default async function SupervisorStudentsPage({
     );
   }
 
-  const totalNumberOfStudentsInHub = await db.student.count({
-    where: {
-      school: {
-        hubId: supervisor.hubId,
+  const [
+    totalNumberOfStudentsInHub,
+    totalGroupSessions,
+    hubClinicalCases,
+    hubClinicalSessions,
+    hubClinicalSessionsBySession,
+    hubClinicalSessionsBySupervisor,
+  ] = await Promise.all([
+    db.student.count({
+      where: {
+        school: {
+          hubId: supervisor.hubId,
+        },
       },
-    },
-  });
-
-  const totalGroupSessions = await db.interventionSession.count({
-    where: {
-      school: {
-        hubId: supervisor.hubId,
+    }),
+    db.interventionSession.count({
+      where: {
+        school: {
+          hubId: supervisor.hubId,
+        },
       },
-    },
-  });
-
-  const hubClinicalCases = await db.clinicalScreeningInfo.findMany({
-    where: {
-      currentSupervisor: {
-        hubId: supervisor.hubId,
-      },
-    },
-  });
-
-  const hubClinicalSessions = await db.clinicalSessionAttendance.findMany({
-    where: {
-      case: {
+    }),
+    db.clinicalScreeningInfo.findMany({
+      where: {
         currentSupervisor: {
           hubId: supervisor.hubId,
         },
       },
-    },
-  });
+    }),
+    db.clinicalSessionAttendance.findMany({
+      where: {
+        case: {
+          currentSupervisor: {
+            hubId: supervisor.hubId,
+          },
+        },
+      },
+    }),
 
-  const hubClinicalSessionsBySession =
-    await db.clinicalSessionAttendance.groupBy({
+    db.clinicalSessionAttendance.groupBy({
       by: ["session"],
       where: {
         case: {
@@ -71,10 +75,9 @@ export default async function SupervisorStudentsPage({
       _count: {
         session: true,
       },
-    });
+    }),
 
-  const hubClinicalSessionsBySupervisor =
-    await db.clinicalScreeningInfo.groupBy({
+    db.clinicalScreeningInfo.groupBy({
       by: ["currentSupervisorId"],
       where: {
         currentSupervisor: {
@@ -84,7 +87,8 @@ export default async function SupervisorStudentsPage({
       _count: {
         currentSupervisorId: true,
       },
-    });
+    }),
+  ]);
 
   const supervisorIds = hubClinicalSessionsBySupervisor.map(
     (item) => item.currentSupervisorId,
@@ -153,10 +157,6 @@ export default async function SupervisorStudentsPage({
       studentsGroupedByForm[form] =
         (_count.id || 0) + (studentsGroupedByForm[form] || 0);
   });
-
-  console.log(studentsGroupedByAge);
-  console.log(studentsGroupedByGender);
-  console.log(studentsGroupedByForm);
 
   const studentsAttendanceGroupedBySession =
     await db.interventionSession.groupBy({
