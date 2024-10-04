@@ -1745,7 +1745,12 @@ export async function addNonShamiriStudentViaClinicalScreening(
 export async function editWeeklyFellowRating(
   data: Omit<
     WeeklyFellowRatings,
-    "createdAt" | "updatedAt" | "fellowId" | "supervisorId" | "week"
+    | "createdAt"
+    | "updatedAt"
+    | "fellowId"
+    | "supervisorId"
+    | "week"
+    | "markedBy"
   >,
 ) {
   try {

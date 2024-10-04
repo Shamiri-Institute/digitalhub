@@ -386,7 +386,12 @@ function RenderPastWeeklyEvaluations({
   const handleEdit = async () => {
     let weeeklyEvaluation: Omit<
       WeeklyFellowRatings,
-      "createdAt" | "updatedAt" | "fellowId" | "supervisorId" | "week"
+      | "createdAt"
+      | "updatedAt"
+      | "fellowId"
+      | "supervisorId"
+      | "week"
+      | "markedBy"
     > = {
       behaviourNotes: evaluationData.behaviourNotes,
       dressingAndGroomingNotes: evaluationData.dressingAndGroomingNotes,
