@@ -1,3 +1,5 @@
+import ChartSkeleton from "#/components/charts/chart-skeleton";
+
 export default function SupervisorStudentLoadingPage() {
-  return <div>loading</div>;
+  return <ChartSkeleton />;
 }
