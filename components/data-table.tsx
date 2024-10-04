@@ -144,7 +144,7 @@ export default function DataTable<TData, TValue>({
           )}
         </div>
       </div>
-      <Table className={className}>
+      <Table className={cn("rounded-lg border border-solid", className)}>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id} id={headerGroup.id}>
