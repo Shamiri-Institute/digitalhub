@@ -1,11 +1,11 @@
 "use client";
 
-import { generateRandomColor } from "#/app/(platform)/hc/students/components/charts/constants";
 import {
   fetchSupervisorDataCompletenessData,
   SessionRatingAverages,
   SupervisorDropoutReasonsGraphData,
 } from "#/app/(platform)/hc/supervisors/actions";
+import { generateRandomColor } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 import { SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING } from "#/lib/app-constants/constants";
 import { Prisma } from "@prisma/client";

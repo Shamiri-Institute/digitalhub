@@ -3,9 +3,8 @@
 import {
   generateRandomColor,
   studentsGroupByColors,
-} from "#/app/(platform)/hc/students/components/charts/constants";
+} from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
-import { Prisma } from "@prisma/client";
 import {
   Cell,
   Label,
@@ -20,49 +19,30 @@ export default function HubStudentDemographicsCharts({
   studentsGroupedByGender,
   studentsGroupedByForm,
 }: {
-  studentsGroupedByAge: (Prisma.PickEnumerable<
-    Prisma.StudentGroupByOutputType,
-    "age"[]
-  > & {
-    _count: {
-      age: number;
-    };
-  })[];
-  studentsGroupedByGender: (Prisma.PickEnumerable<
-    Prisma.StudentGroupByOutputType,
-    "gender"[]
-  > & {
-    _count: {
-      gender: number;
-    };
-  })[];
-  studentsGroupedByForm: (Prisma.PickEnumerable<
-    Prisma.StudentGroupByOutputType,
-    "form"[]
-  > & {
-    _count: {
-      form: number;
-    };
-  })[];
+  studentsGroupedByAge: Record<string, number>;
+  studentsGroupedByGender: Record<string, number>;
+  studentsGroupedByForm: Record<string, number>;
 }) {
-  const formatedStudentsGroupedByAge = studentsGroupedByAge.map((student) => ({
-    age: student?.age?.toString(),
-    value: student._count.age,
+  const formatedStudentsGroupedByAge = Object.entries(studentsGroupedByAge).map(
+    ([age, value]) => ({
+      age,
+      value,
+    }),
+  );
+
+  const formatedStudentsGroupedByGender = Object.entries(
+    studentsGroupedByGender,
+  ).map(([gender, value]) => ({
+    gender,
+    value,
   }));
 
-  const formatedStudentsGroupedByGender = studentsGroupedByGender.map(
-    (student) => ({
-      gender: student.gender,
-      value: student._count.gender,
-    }),
-  );
-
-  const formatedStudentsGroupedByForm = studentsGroupedByForm.map(
-    (student) => ({
-      form: student.form,
-      value: student._count.form,
-    }),
-  );
+  const formatedStudentsGroupedByForm = Object.entries(
+    studentsGroupedByForm,
+  ).map(([form, value]) => ({
+    form,
+    value,
+  }));
 
   const randomColors = formatedStudentsGroupedByAge.map(() =>
     generateRandomColor(),

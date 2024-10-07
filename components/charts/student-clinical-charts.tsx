@@ -4,7 +4,7 @@ import {
   clinicalCasesColors,
   clinicaldataValue,
   possibleSessions,
-} from "#/app/(platform)/hc/students/components/charts/constants";
+} from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 import { Prisma } from "@prisma/client";
 import {
