@@ -5,7 +5,7 @@ import {
   FellowSessionRatingAverages,
   fetchFellowDataCompletenessData,
 } from "#/app/(platform)/hc/fellows/actions";
-import { generateRandomColor } from "#/app/(platform)/hc/students/components/charts/constants";
+import { generateRandomColor } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 import { SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING } from "#/lib/app-constants/constants";
 import { Prisma } from "@prisma/client";
