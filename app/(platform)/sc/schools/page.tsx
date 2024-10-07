@@ -9,6 +9,7 @@ import { currentSupervisor } from "#/app/auth";
 import { SearchCommand } from "#/components/search-command";
 import { Separator } from "#/components/ui/separator";
 import { redirect } from "next/navigation";
+import SchoolsDataProvider from "../../hc/schools/components/schools-data-provider";
 import {
   fetchDropoutReasons,
   fetchHubSupervisors,
@@ -34,6 +35,7 @@ export default async function SchoolsPage() {
     sessionRatings,
     schoolAttendanceData,
     supervisors,
+    schoolData,
   ] = await Promise.all([
     fetchSchoolData(supervisor?.hubId as string),
     fetchDropoutReasons(supervisor?.hubId as string),
@@ -45,10 +47,11 @@ export default async function SchoolsPage() {
         hubId: supervisor?.hubId as string,
       },
     }),
+    fetchSchoolData(supervisor.hubId as string),
   ]);
 
   return (
-    <>
+    <SchoolsDataProvider schools={schoolData}>
       <div className="flex items-center justify-between">
         <div className="flex w-1/4 gap-3">
           <SearchCommand data={data} />
@@ -69,6 +72,6 @@ export default async function SchoolsPage() {
         <DropoutSchool />
         <UndoDropoutSchool />
       </SchoolInfoProvider>
-    </>
+    </SchoolsDataProvider>
   );
 }
