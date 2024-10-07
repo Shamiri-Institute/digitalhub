@@ -1,5 +1,9 @@
+"use client";
+
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
+import { WeeklyFellowEvaluationSchema } from "#/app/(platform)/hc/schemas";
 import { SchoolFellowTableData } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/columns";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -26,37 +30,22 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { cn, stringValidation } from "#/lib/utils";
+import { toast } from "#/components/ui/use-toast";
+import { submitWeeklyFellowEvaluation } from "#/lib/actions/fellow";
+import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
-import { addDays, eachWeekOfInterval, format } from "date-fns";
+import {
+  addDays,
+  differenceInSeconds,
+  eachWeekOfInterval,
+  format,
+} from "date-fns";
 import { parsePhoneNumber } from "libphonenumber-js";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
-export const WeeklyFellowEvaluationSchema = z.object({
-  week: z.coerce.date({ required_error: "Please select a week" }),
-  mode: z.enum(["add", "edit"]),
-  fellowId: stringValidation("Fellow ID is required"),
-  behaviourNotes: z.string().optional(),
-  behaviourRating: z
-    .number({ required_error: "Please provide a rating" })
-    .min(1),
-  programDeliveryNotes: z.string().optional(),
-  programDeliveryRating: z
-    .number({ required_error: "Please provide a rating" })
-    .min(1),
-  dressingAndGroomingNotes: z.string().optional(),
-  dressingAndGroomingRating: z
-    .number({ required_error: "Please provide a rating" })
-    .min(1),
-  punctualityNotes: z.string().optional(),
-  punctualityRating: z
-    .number({ required_error: "Please provide a rating" })
-    .min(1),
-});
 
 export default function WeeklyFellowEvaluation({
   fellow,
@@ -64,6 +53,7 @@ export default function WeeklyFellowEvaluation({
   onOpenChange,
   evaluations,
   project,
+  mode = "view",
 }: {
   fellow: SchoolFellowTableData;
   open: boolean;
@@ -74,21 +64,50 @@ export default function WeeklyFellowEvaluation({
     };
   }>[];
   project?: Prisma.ProjectGetPayload<{}>;
+  mode: "view" | "add" | "edit";
 }) {
   const [existingEvaluation, setExistingEvaluation] = useState<
     Prisma.WeeklyFellowRatingsGetPayload<{}> | undefined
-  >();
+  >(evaluations.sort((a, b) => a.week.getTime() - b.week.getTime())[0]);
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
   const pathname = usePathname();
 
   const defaultValues = {
     fellowId: fellow.id,
-    mode: "add",
+    mode,
+    week: existingEvaluation ? existingEvaluation.week : undefined,
+    behaviourNotes: existingEvaluation?.behaviourNotes ?? undefined,
+    behaviourRating: existingEvaluation?.behaviourRating ?? undefined,
+    programDeliveryNotes: existingEvaluation?.programDeliveryNotes ?? undefined,
+    programDeliveryRating:
+      existingEvaluation?.programDeliveryRating ?? undefined,
+    dressingAndGroomingNotes:
+      existingEvaluation?.dressingAndGroomingNotes ?? undefined,
+    dressingAndGroomingRating:
+      existingEvaluation?.dressingAndGroomingRating ?? undefined,
+    punctualityNotes: existingEvaluation?.punctualityNotes ?? undefined,
+    punctualityRating: existingEvaluation?.punctualityRating ?? undefined,
   };
 
   const form = useForm<z.infer<typeof WeeklyFellowEvaluationSchema>>({
     resolver: zodResolver(WeeklyFellowEvaluationSchema),
-    defaultValues,
+    defaultValues: {
+      fellowId: fellow.id,
+      mode,
+      week: existingEvaluation?.week ?? undefined,
+      behaviourNotes: existingEvaluation?.behaviourNotes ?? undefined,
+      behaviourRating: existingEvaluation?.behaviourRating ?? undefined,
+      programDeliveryNotes:
+        existingEvaluation?.programDeliveryNotes ?? undefined,
+      programDeliveryRating:
+        existingEvaluation?.programDeliveryRating ?? undefined,
+      dressingAndGroomingNotes:
+        existingEvaluation?.dressingAndGroomingNotes ?? undefined,
+      dressingAndGroomingRating:
+        existingEvaluation?.dressingAndGroomingRating ?? undefined,
+      punctualityNotes: existingEvaluation?.punctualityNotes ?? undefined,
+      punctualityRating: existingEvaluation?.punctualityRating ?? undefined,
+    },
   });
 
   const weeks =
@@ -102,20 +121,20 @@ export default function WeeklyFellowEvaluation({
   const onSubmit = async (
     data: z.infer<typeof WeeklyFellowEvaluationSchema>,
   ) => {
-    // const response = await submitMonthlySupervisorEvaluation(data);
-    // if (!response.success) {
-    //   toast({
-    //     description:
-    //       response.message ?? "Something went wrong, please try again",
-    //   });
-    //   return;
-    // }
-    // toast({
-    //   description: response.message,
-    // });
-    // revalidatePageAction(pathname).then(() => {
-    //   onOpenChange(false);
-    // });
+    const response = await submitWeeklyFellowEvaluation(data);
+    if (!response.success) {
+      toast({
+        description:
+          response.message ?? "Something went wrong, please try again",
+      });
+      return;
+    }
+    toast({
+      description: response.message,
+    });
+    revalidatePageAction(pathname).then(() => {
+      onOpenChange(false);
+    });
   };
 
   useEffect(() => {
@@ -125,16 +144,16 @@ export default function WeeklyFellowEvaluation({
     }
   }, [fellow.id, open]);
 
-  // useEffect(() => {
-  //   if (existingEvaluation) {
-  //     setUpdateWindowDuration(
-  //       differenceInSeconds(
-  //         addDays(existingEvaluation.createdAt, 14),
-  //         new Date(),
-  //       ),
-  //     );
-  //   }
-  // }, [existingEvaluation]);
+  useEffect(() => {
+    if (existingEvaluation) {
+      setUpdateWindowDuration(
+        differenceInSeconds(
+          addDays(existingEvaluation.createdAt, 14),
+          new Date(),
+        ),
+      );
+    }
+  }, [existingEvaluation]);
 
   // const updateFormValues = (value: string) => {
   //   const match = evaluations.find((evaluation) =>
@@ -183,6 +202,7 @@ export default function WeeklyFellowEvaluation({
                     <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <Select
+                    defaultValue={format(field.value, "yyyy-MM-dd")}
                     onValueChange={(value) => {
                       field.onChange(new Date(value));
                       // updateFormValues(value);
@@ -211,7 +231,9 @@ export default function WeeklyFellowEvaluation({
                 </FormItem>
               )}
             />
-            {existingEvaluation && updateWindowDuration >= 0 ? (
+            {mode !== "view" &&
+            existingEvaluation &&
+            updateWindowDuration > 0 ? (
               <DialogAlertWidget separator={false}>
                 <div className="flex items-center gap-2">
                   <span>
@@ -227,7 +249,7 @@ export default function WeeklyFellowEvaluation({
               </DialogAlertWidget>
             ) : null}
             <Separator />
-            <div className="flex flex-col space-y-4 text-sm">
+            <div className="flex flex-col space-y-3 text-sm">
               <FormField
                 control={form.control}
                 name="behaviourRating"
@@ -243,34 +265,41 @@ export default function WeeklyFellowEvaluation({
                       value={field.value}
                       onChange={field.onChange}
                       disabled={
-                        existingEvaluation && updateWindowDuration === 0
+                        mode === "view" ||
+                        (existingEvaluation && updateWindowDuration === 0)
                       }
                     />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="behaviourNotes"
-                disabled={existingEvaluation && updateWindowDuration <= 0}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        className="resize-none"
-                        {...field}
-                        rows={4}
-                        placeholder={
-                          existingEvaluation && updateWindowDuration <= 0
-                            ? ""
-                            : "pertains to evaluating the fellow's demeanor, covering approachability, respectfulness, attitude, collaboration, communication style."
-                        }
-                      ></Textarea>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {mode !== "view" ? (
+                <FormField
+                  control={form.control}
+                  name="behaviourNotes"
+                  disabled={existingEvaluation && updateWindowDuration <= 0}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea
+                          className="resize-none"
+                          {...field}
+                          rows={4}
+                          placeholder={
+                            existingEvaluation && updateWindowDuration <= 0
+                              ? ""
+                              : "pertains to evaluating the fellow's demeanor, covering approachability, respectfulness, attitude, collaboration, communication style."
+                          }
+                        ></Textarea>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <div className="rounded border bg-background-secondary px-4 py-2">
+                  {existingEvaluation?.behaviourNotes}
+                </div>
+              )}
               <FormField
                 control={form.control}
                 name="programDeliveryRating"
@@ -292,28 +321,34 @@ export default function WeeklyFellowEvaluation({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="programDeliveryNotes"
-                disabled={existingEvaluation && updateWindowDuration <= 0}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        className="resize-none"
-                        {...field}
-                        rows={4}
-                        placeholder={
-                          existingEvaluation && updateWindowDuration <= 0
-                            ? ""
-                            : "assesses adherence to protocols, ethical standards, confidentiality, cultural competence"
-                        }
-                      ></Textarea>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {mode !== "view" ? (
+                <FormField
+                  control={form.control}
+                  name="programDeliveryNotes"
+                  disabled={existingEvaluation && updateWindowDuration <= 0}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea
+                          className="resize-none"
+                          {...field}
+                          rows={4}
+                          placeholder={
+                            existingEvaluation && updateWindowDuration <= 0
+                              ? ""
+                              : "assesses adherence to protocols, ethical standards, confidentiality, cultural competence"
+                          }
+                        ></Textarea>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <div className="rounded border bg-background-secondary px-4 py-2">
+                  {existingEvaluation?.programDeliveryNotes}
+                </div>
+              )}
               <FormField
                 control={form.control}
                 name="dressingAndGroomingRating"
@@ -329,34 +364,42 @@ export default function WeeklyFellowEvaluation({
                       value={field.value}
                       onChange={field.onChange}
                       disabled={
-                        existingEvaluation && updateWindowDuration === 0
+                        mode === "view" &&
+                        existingEvaluation &&
+                        updateWindowDuration === 0
                       }
                     />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="dressingAndGroomingNotes"
-                disabled={existingEvaluation && updateWindowDuration <= 0}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        className="resize-none"
-                        {...field}
-                        rows={4}
-                        placeholder={
-                          existingEvaluation && updateWindowDuration <= 0
-                            ? ""
-                            : "assesses the personal presentation of fellows considering appropriate attire and grooming standards in compliance with specific school administration requirements."
-                        }
-                      ></Textarea>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {mode !== "view" ? (
+                <FormField
+                  control={form.control}
+                  name="dressingAndGroomingNotes"
+                  disabled={existingEvaluation && updateWindowDuration <= 0}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea
+                          className="resize-none"
+                          {...field}
+                          rows={4}
+                          placeholder={
+                            existingEvaluation && updateWindowDuration <= 0
+                              ? ""
+                              : "assesses the personal presentation of fellows considering appropriate attire and grooming standards in compliance with specific school administration requirements."
+                          }
+                        ></Textarea>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <div className="rounded border bg-background-secondary px-4 py-2">
+                  {existingEvaluation?.dressingAndGroomingNotes}
+                </div>
+              )}
               <FormField
                 control={form.control}
                 name="punctualityRating"
@@ -373,39 +416,46 @@ export default function WeeklyFellowEvaluation({
                       value={field.value}
                       onChange={field.onChange}
                       disabled={
-                        existingEvaluation && updateWindowDuration === 0
+                        mode !== "view" ||
+                        (existingEvaluation && updateWindowDuration === 0)
                       }
                     />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="punctualityNotes"
-                disabled={existingEvaluation && updateWindowDuration <= 0}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        className="resize-none"
-                        {...field}
-                        rows={4}
-                        placeholder={
-                          existingEvaluation && updateWindowDuration <= 0
-                            ? ""
-                            : "assesses the timely arrival and adherence to scheduled program sessions, including supervision and school sessions"
-                        }
-                      ></Textarea>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {mode !== "view" ? (
+                <FormField
+                  control={form.control}
+                  name="punctualityNotes"
+                  disabled={existingEvaluation && updateWindowDuration <= 0}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea
+                          className="resize-none"
+                          {...field}
+                          rows={4}
+                          placeholder={
+                            existingEvaluation && updateWindowDuration <= 0
+                              ? ""
+                              : "assesses the timely arrival and adherence to scheduled program sessions, including supervision and school sessions"
+                          }
+                        ></Textarea>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <div className="rounded border bg-background-secondary px-4 py-2">
+                  {existingEvaluation?.punctualityNotes}
+                </div>
+              )}
             </div>
-            {(existingEvaluation === undefined ||
-              (existingEvaluation && updateWindowDuration >= 0)) && (
+            <Separator />
+            {existingEvaluation === undefined ||
+            (existingEvaluation && updateWindowDuration > 0) ? (
               <div className="space-y-5">
-                <Separator />
                 <DialogFooter className="flex justify-end">
                   <Button
                     className=""
@@ -430,6 +480,19 @@ export default function WeeklyFellowEvaluation({
                   </Button>
                 </DialogFooter>
               </div>
+            ) : (
+              <DialogFooter className="flex justify-end">
+                <Button
+                  className=""
+                  variant="brand"
+                  type="button"
+                  onClick={() => {
+                    onOpenChange(false);
+                  }}
+                >
+                  Done
+                </Button>
+              </DialogFooter>
             )}
           </form>
         </DialogContent>

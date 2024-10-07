@@ -1,8 +1,10 @@
 "use server";
 
-import { FellowDetailsSchema } from "#/app/(platform)/hc/schemas";
+import {
+  FellowDetailsSchema,
+  WeeklyFellowEvaluationSchema,
+} from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
-import { WeeklyFellowEvaluationSchema } from "#/components/common/fellow/weekly-fellow-evaluation";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
@@ -135,7 +137,9 @@ export async function submitWeeklyFellowEvaluation(
       dressingAndGroomingNotes,
       dressingAndGroomingRating,
       mode,
+      week,
     } = WeeklyFellowEvaluationSchema.parse(data);
+    console.log(data);
 
     if (mode === "edit") {
       // await db.fellow.update({
@@ -155,13 +159,15 @@ export async function submitWeeklyFellowEvaluation(
       //     dateOfBirth,
       //   },
       // });
-      // return {
-      //   success: true,
-      //   message: `Successfully updated details for ${fellowName}`,
-      // };
+      return {
+        success: true,
+        message: "Edited message",
+      };
     } else if (mode === "add" && (hubCoordinator || supervisor)) {
+      console.log("hello");
       await db.weeklyFellowRatings.create({
         data: {
+          week,
           fellowId,
           behaviourNotes,
           behaviourRating,
@@ -171,11 +177,12 @@ export async function submitWeeklyFellowEvaluation(
           programDeliveryRating,
           dressingAndGroomingNotes,
           dressingAndGroomingRating,
+          supervisorId: "sup_01j9bnn46vfqqr7ebwqpnddhw2",
         },
       });
       return {
         success: true,
-        message: `Successfully added ${fellowName}`,
+        message: `Successfully submitted weekly evaluation`,
       };
     } else {
       return {

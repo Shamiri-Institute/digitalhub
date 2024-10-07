@@ -28,11 +28,7 @@ export default function FellowsDatatable({
 }: {
   fellows: Promise<SchoolFellowTableData[]>;
   supervisors: Prisma.SupervisorGetPayload<{}>[];
-  weeklyEvaluations: Prisma.WeeklyFellowRatingsGetPayload<{
-    include: {
-      fellow: true;
-    };
-  }>[];
+  weeklyEvaluations: Prisma.WeeklyFellowRatingsGetPayload<{}>[];
   project?: Prisma.ProjectGetPayload<{}>;
 }) {
   const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
@@ -57,7 +53,9 @@ export default function FellowsDatatable({
           fellow={fellow}
           open={weeklyEvaluationDialog}
           onOpenChange={setWeeklyEvaluationDialog}
-          evaluations={weeklyEvaluations}
+          evaluations={weeklyEvaluations.filter(
+            (evaluation) => evaluation.fellowId === fellow.id,
+          )}
           project={project}
         />
       )}
