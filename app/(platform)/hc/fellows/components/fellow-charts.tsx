@@ -51,8 +51,6 @@ export default function FellowsCharts({
     count: session._count.sessionType,
   }));
 
-  console.log({ fellowsSessionRatings }, "here");
-
   const randomColors = dropoutData.map(() => generateRandomColor());
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
