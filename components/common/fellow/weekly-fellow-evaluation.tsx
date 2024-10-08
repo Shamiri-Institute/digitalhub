@@ -40,6 +40,7 @@ import {
   differenceInSeconds,
   eachWeekOfInterval,
   format,
+  isEqual,
 } from "date-fns";
 import { parsePhoneNumber } from "libphonenumber-js";
 import { usePathname } from "next/navigation";
@@ -72,23 +73,6 @@ export default function WeeklyFellowEvaluation({
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
   const pathname = usePathname();
 
-  const defaultValues = {
-    fellowId: fellow.id,
-    mode,
-    week: existingEvaluation ? existingEvaluation.week : undefined,
-    behaviourNotes: existingEvaluation?.behaviourNotes ?? undefined,
-    behaviourRating: existingEvaluation?.behaviourRating ?? undefined,
-    programDeliveryNotes: existingEvaluation?.programDeliveryNotes ?? undefined,
-    programDeliveryRating:
-      existingEvaluation?.programDeliveryRating ?? undefined,
-    dressingAndGroomingNotes:
-      existingEvaluation?.dressingAndGroomingNotes ?? undefined,
-    dressingAndGroomingRating:
-      existingEvaluation?.dressingAndGroomingRating ?? undefined,
-    punctualityNotes: existingEvaluation?.punctualityNotes ?? undefined,
-    punctualityRating: existingEvaluation?.punctualityRating ?? undefined,
-  };
-
   const form = useForm<z.infer<typeof WeeklyFellowEvaluationSchema>>({
     resolver: zodResolver(WeeklyFellowEvaluationSchema),
     defaultValues: {
@@ -111,12 +95,14 @@ export default function WeeklyFellowEvaluation({
   });
 
   const weeks =
-    project && project.actualStartDate !== null
-      ? eachWeekOfInterval({
-          start: project.actualStartDate,
-          end: project.actualEndDate ?? new Date(),
-        })
-      : [];
+    mode === "view"
+      ? evaluations.map((x) => x.week)
+      : project && project.actualStartDate !== null
+        ? eachWeekOfInterval({
+            start: project.actualStartDate,
+            end: project.actualEndDate ?? new Date(),
+          })
+        : [];
 
   const onSubmit = async (
     data: z.infer<typeof WeeklyFellowEvaluationSchema>,
@@ -138,11 +124,30 @@ export default function WeeklyFellowEvaluation({
   };
 
   useEffect(() => {
-    if (!open) {
-      setExistingEvaluation(undefined);
+    if (open) {
+      const evaluation = evaluations.sort(
+        (a, b) => a.week.getTime() - b.week.getTime(),
+      )[0];
+      setExistingEvaluation(evaluation);
+      const defaultValues = {
+        fellowId: fellow.id,
+        mode,
+        week: evaluation?.week ?? undefined,
+        behaviourNotes: evaluation?.behaviourNotes ?? undefined,
+        behaviourRating: evaluation?.behaviourRating ?? undefined,
+        programDeliveryNotes: evaluation?.programDeliveryNotes ?? undefined,
+        programDeliveryRating: evaluation?.programDeliveryRating ?? undefined,
+        dressingAndGroomingNotes:
+          evaluation?.dressingAndGroomingNotes ?? undefined,
+        dressingAndGroomingRating:
+          evaluation?.dressingAndGroomingRating ?? undefined,
+        punctualityNotes: evaluation?.punctualityNotes ?? undefined,
+        punctualityRating: evaluation?.punctualityRating ?? undefined,
+      };
+
       form.reset(defaultValues);
     }
-  }, [fellow.id, open]);
+  }, [fellow, open]);
 
   useEffect(() => {
     if (existingEvaluation) {
@@ -155,22 +160,29 @@ export default function WeeklyFellowEvaluation({
     }
   }, [existingEvaluation]);
 
-  // const updateFormValues = (value: string) => {
-  //   const match = evaluations.find((evaluation) =>
-  //     isEqual(new Date(evaluation.week), new Date(value)),
-  //   );
-  //
-  //   if (match) {
-  //     setExistingEvaluation(match);
-  //     const { week } = match;
-  //     form.reset({
-  //       week,
-  //     });
-  //   } else {
-  //     form.reset({ week: new Date(value), ...defaultValues });
-  //     setExistingEvaluation(undefined);
-  //   }
-  // };
+  const updateFormValues = (value: string) => {
+    const match = evaluations.find((evaluation) =>
+      isEqual(new Date(evaluation.week), new Date(value)),
+    );
+
+    if (match) {
+      setExistingEvaluation(match);
+      const { week } = match;
+      form.reset({
+        week,
+        fellowId: fellow.id,
+        mode,
+        behaviourNotes: match.behaviourNotes ?? undefined,
+        behaviourRating: match.behaviourRating ?? undefined,
+        programDeliveryNotes: match.programDeliveryNotes ?? undefined,
+        programDeliveryRating: match.programDeliveryRating ?? undefined,
+        dressingAndGroomingNotes: match.dressingAndGroomingNotes ?? undefined,
+        dressingAndGroomingRating: match.dressingAndGroomingRating ?? undefined,
+        punctualityNotes: match.punctualityNotes ?? undefined,
+        punctualityRating: match.punctualityRating ?? undefined,
+      });
+    }
+  };
 
   return (
     <Form {...form}>
@@ -205,7 +217,7 @@ export default function WeeklyFellowEvaluation({
                     defaultValue={format(field.value, "yyyy-MM-dd")}
                     onValueChange={(value) => {
                       field.onChange(new Date(value));
-                      // updateFormValues(value);
+                      updateFormValues(value);
                     }}
                   >
                     <FormControl>
@@ -315,7 +327,8 @@ export default function WeeklyFellowEvaluation({
                       value={field.value}
                       onChange={field.onChange}
                       disabled={
-                        existingEvaluation && updateWindowDuration === 0
+                        mode === "view" ||
+                        (existingEvaluation && updateWindowDuration === 0)
                       }
                     />
                   </FormItem>
@@ -364,9 +377,8 @@ export default function WeeklyFellowEvaluation({
                       value={field.value}
                       onChange={field.onChange}
                       disabled={
-                        mode === "view" &&
-                        existingEvaluation &&
-                        updateWindowDuration === 0
+                        mode === "view" ||
+                        (existingEvaluation && updateWindowDuration === 0)
                       }
                     />
                   </FormItem>
@@ -416,7 +428,7 @@ export default function WeeklyFellowEvaluation({
                       value={field.value}
                       onChange={field.onChange}
                       disabled={
-                        mode !== "view" ||
+                        mode === "view" ||
                         (existingEvaluation && updateWindowDuration === 0)
                       }
                     />
