@@ -67,26 +67,10 @@ export default async function FellowsPage({
     },
   });
 
-  const weeklyFellowEvaluations = await db.weeklyFellowRatings.findMany({
-    where: {
-      fellow: {
-        hubId: hc?.assignedHubId as string,
-      },
-    },
-    include: {
-      fellow: true,
-    },
-  });
-
   return (
     <FellowInfoContextProvider>
       <Suspense fallback={<Loading />}>
-        <FellowsDatatable
-          fellows={fellows}
-          supervisors={supervisors}
-          weeklyEvaluations={weeklyFellowEvaluations}
-          project={school.hub?.project ?? undefined}
-        />
+        <FellowsDatatable fellows={fellows} />
       </Suspense>
       <StudentsInGroup />
       <AddStudentToGroup />

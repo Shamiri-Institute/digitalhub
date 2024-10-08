@@ -2,7 +2,6 @@
 
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
 import { WeeklyFellowEvaluationSchema } from "#/app/(platform)/hc/schemas";
-import { SchoolFellowTableData } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { Icons } from "#/components/icons";
@@ -42,30 +41,27 @@ import {
   format,
   isEqual,
 } from "date-fns";
-import { parsePhoneNumber } from "libphonenumber-js";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 export default function WeeklyFellowEvaluation({
-  fellow,
+  fellowId,
   open,
   onOpenChange,
   evaluations,
   project,
-  mode = "view",
+  mode,
+  children,
 }: {
-  fellow: SchoolFellowTableData;
+  fellowId: string;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  evaluations: Prisma.WeeklyFellowRatingsGetPayload<{
-    include: {
-      fellow: true;
-    };
-  }>[];
+  evaluations: Prisma.WeeklyFellowRatingsGetPayload<{}>[];
   project?: Prisma.ProjectGetPayload<{}>;
   mode: "view" | "add" | "edit";
+  children: React.ReactNode;
 }) {
   const [existingEvaluation, setExistingEvaluation] = useState<
     Prisma.WeeklyFellowRatingsGetPayload<{}> | undefined
@@ -76,7 +72,7 @@ export default function WeeklyFellowEvaluation({
   const form = useForm<z.infer<typeof WeeklyFellowEvaluationSchema>>({
     resolver: zodResolver(WeeklyFellowEvaluationSchema),
     defaultValues: {
-      fellowId: fellow.id,
+      fellowId,
       mode,
       week: existingEvaluation?.week ?? undefined,
       behaviourNotes: existingEvaluation?.behaviourNotes ?? undefined,
@@ -130,7 +126,7 @@ export default function WeeklyFellowEvaluation({
       )[0];
       setExistingEvaluation(evaluation);
       const defaultValues = {
-        fellowId: fellow.id,
+        fellowId: fellowId,
         mode,
         week: evaluation?.week ?? undefined,
         behaviourNotes: evaluation?.behaviourNotes ?? undefined,
@@ -147,7 +143,7 @@ export default function WeeklyFellowEvaluation({
 
       form.reset(defaultValues);
     }
-  }, [fellow, open]);
+  }, [fellowId, open]);
 
   useEffect(() => {
     if (existingEvaluation) {
@@ -170,7 +166,7 @@ export default function WeeklyFellowEvaluation({
       const { week } = match;
       form.reset({
         week,
-        fellowId: fellow.id,
+        fellowId,
         mode,
         behaviourNotes: match.behaviourNotes ?? undefined,
         behaviourRating: match.behaviourRating ?? undefined,
@@ -191,18 +187,7 @@ export default function WeeklyFellowEvaluation({
           <DialogHeader>
             <h2 className="text-lg font-bold">Weekly fellow evaluation</h2>
           </DialogHeader>
-          <DialogAlertWidget>
-            <div className="flex items-center gap-2">
-              <span>{fellow.fellowName}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
-              <span>
-                {fellow.cellNumber &&
-                  parsePhoneNumber(fellow.cellNumber, "KE").formatNational()}
-              </span>
-            </div>
-          </DialogAlertWidget>
+          {children}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
@@ -214,7 +199,11 @@ export default function WeeklyFellowEvaluation({
                     <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <Select
-                    defaultValue={format(field.value, "yyyy-MM-dd")}
+                    defaultValue={
+                      weeks.length > 0
+                        ? format(field.value, "yyyy-MM-dd")
+                        : undefined
+                    }
                     onValueChange={(value) => {
                       field.onChange(new Date(value));
                       updateFormValues(value);
@@ -237,6 +226,11 @@ export default function WeeklyFellowEvaluation({
                           </SelectItem>
                         );
                       })}
+                      {weeks.length === 0 ? (
+                        <SelectItem value={" "}>
+                          No evaluations found
+                        </SelectItem>
+                      ) : null}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -465,8 +459,9 @@ export default function WeeklyFellowEvaluation({
               )}
             </div>
             <Separator />
-            {existingEvaluation === undefined ||
-            (existingEvaluation && updateWindowDuration > 0) ? (
+            {mode !== "view" &&
+            (existingEvaluation === undefined ||
+              (existingEvaluation && updateWindowDuration > 0)) ? (
               <div className="space-y-5">
                 <DialogFooter className="flex justify-end">
                   <Button

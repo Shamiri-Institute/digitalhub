@@ -22,7 +22,6 @@ export type SchoolFellowTableData = {
 
 export const columns = (state: {
   setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
-  setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
 }): ColumnDef<SchoolFellowTableData>[] => {
   return [
     {
