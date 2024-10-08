@@ -21,12 +21,10 @@ import { useState } from "react";
 export default function MainFellowsDatatable({
   fellows,
   supervisors,
-  project,
   weeklyEvaluations,
 }: {
   fellows: MainFellowTableData[];
   supervisors: Prisma.SupervisorGetPayload<{}>[];
-  project?: Prisma.ProjectGetPayload<{}>;
   weeklyEvaluations: Prisma.WeeklyFellowRatingsGetPayload<{}>[];
 }) {
   const [fellow, setFellow] = useState<MainFellowTableData | null>(null);
@@ -97,7 +95,6 @@ export default function MainFellowsDatatable({
             evaluations={weeklyEvaluations.filter(
               (evaluation) => evaluation.fellowId === fellow.id,
             )}
-            project={project}
             mode={"view"}
           >
             <DialogAlertWidget>

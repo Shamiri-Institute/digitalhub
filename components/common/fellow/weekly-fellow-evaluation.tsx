@@ -60,7 +60,7 @@ export default function WeeklyFellowEvaluation({
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   evaluations: Prisma.WeeklyFellowRatingsGetPayload<{}>[];
   project?: Prisma.ProjectGetPayload<{}>;
-  mode: "view" | "add" | "edit";
+  mode: "view" | "add";
   children: React.ReactNode;
 }) {
   const [existingEvaluation, setExistingEvaluation] = useState<
@@ -200,7 +200,7 @@ export default function WeeklyFellowEvaluation({
                   </FormLabel>
                   <Select
                     defaultValue={
-                      weeks.length > 0
+                      weeks.length > 0 && field.value !== undefined
                         ? format(field.value, "yyyy-MM-dd")
                         : undefined
                     }

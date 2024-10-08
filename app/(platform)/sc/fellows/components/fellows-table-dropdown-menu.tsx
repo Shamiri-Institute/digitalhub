@@ -8,14 +8,20 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
+import { Dispatch, SetStateAction } from "react";
 import type { FellowsData } from "../../actions";
 import DropoutFellowForm from "./dropout-fellow-form";
 import SubmitWeeklyFellowEvaluationForm from "./weekly-fellow-evaluations-form";
 
 export default function FellowsTableDropdownMenu({
   fellowRow,
+  state,
 }: {
   fellowRow: FellowsData;
+  state: {
+    setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+    setFellow: Dispatch<SetStateAction<FellowsData | null>>;
+  };
 }) {
   return (
     <DropdownMenu>
@@ -41,6 +47,14 @@ export default function FellowsTableDropdownMenu({
         <DropdownMenuItem>Edit fellow information</DropdownMenuItem>
         <DropdownMenuItem>Session Attendance History</DropdownMenuItem>
         <DropdownMenuItem>Request repayment</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            state.setFellow(fellowRow);
+            state.setWeeklyEvaluationDialog(true);
+          }}
+        >
+          Submit weekly fellow evaluation
+        </DropdownMenuItem>
         <SubmitWeeklyFellowEvaluationForm
           previousRatings={fellowRow.weeklyFellowRatings}
           fellowId={fellowRow.id}
