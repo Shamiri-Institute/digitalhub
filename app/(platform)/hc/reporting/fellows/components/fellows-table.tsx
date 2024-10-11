@@ -13,13 +13,13 @@ export default function HCFellowsDataTable({
     <DataTable
       data={fellowAttendanceExpenses}
       columns={columns}
-      className={"data-table data-table-action mt-4 bg-white"}
+      className="data-table data-table-action mt-4 bg-white"
       renderSubComponent={({ row }) => (
         <DataTable
           data={row.original?.attendances}
           editColumns={false}
           columns={subColumns}
-          className={"data-table data-table-action border-0 bg-white"}
+          className="data-table data-table-action border-0 bg-white"
           emptyStateMessage="No expenses found for this fellow"
         />
       )}
