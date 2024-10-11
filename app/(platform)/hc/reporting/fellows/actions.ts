@@ -48,45 +48,52 @@ export async function loadHubFellowAttendance() {
     },
   });
 
-  return fellows.map((fellow) => ({
-    fellowName: fellow.fellowName,
-    hub: fellow?.hub?.hubName,
-    supervisorName: fellow.supervisor?.supervisorName,
-    specialSession: specialSessionCount(fellow.fellowAttendances),
-    preVsMain: calculatePreVsMain(fellow.fellowAttendances),
-    trainingSupervision: calculateTrainingSupervision(fellow.fellowAttendances),
-    paidAmount: calculatePaidAmount(fellow.fellowAttendances),
-    totalAmount: calculateTotalAmount(fellow.fellowAttendances),
-    attendances: fellow.fellowAttendances.map((attendance) => ({
-      id: attendance.id,
+  return fellows.map((fellow) => {
+    const { totalAmount, totalPaidAmount } = calculateAmounts(
+      fellow.fellowAttendances,
+    );
+
+    const { preCount, mainCount, supervisionCount, trainingCount } =
+      calculateSessionCounts(fellow.fellowAttendances);
+
+    return {
       fellowName: fellow.fellowName,
-      session: attendance?.session?.session?.sessionName,
-      mpesaNo: fellow.mpesaNumber,
-      schoolVenue: attendance.school?.schoolName, // School or venue,defaulting to venue, we were to track the venue of the session
-      dateOfAttendance: attendance?.session?.sessionDate,
-      dateMarked: attendance?.updatedAt, // ? should this be tracked?
-      group: attendance.group?.groupName,
-      amount: attendance?.session?.session?.amount || 0,
-      status: attendance.attended ? "Attended" : "Absent",
-    })),
-  }));
+      hub: fellow?.hub?.hubName,
+      supervisorName: fellow.supervisor?.supervisorName,
+      specialSession: specialSessionCount(fellow.fellowAttendances),
+      preVsMain: `${preCount} - pre | ${mainCount} - main`,
+      trainingSupervision: `${trainingCount} - T | ${supervisionCount} - SV`,
+      paidAmount: totalPaidAmount,
+      totalAmount: totalAmount,
+      attendances: fellow.fellowAttendances.map((attendance) => ({
+        id: attendance.id,
+        fellowName: fellow.fellowName,
+        session: attendance?.session?.session?.sessionName,
+        mpesaNo: fellow.mpesaNumber,
+        schoolVenue: attendance.school?.schoolName,
+        dateOfAttendance: attendance?.session?.sessionDate,
+        dateMarked: attendance?.updatedAt,
+        group: attendance.group?.groupName,
+        amount: attendance?.session?.session?.amount || 0,
+        status: attendance.attended ? "Attended" : "Absent",
+      })),
+    };
+  });
 }
 
-function calculatePaidAmount(attendances: FellowAttendance[]) {
-  // this should have paymentInitiated as true
-  return attendances
-    .filter((a) => a?.paymentInitiated)
-    .reduce((total, a) => total + (a?.session?.session?.amount || 0), 0);
-}
+function calculateAmounts(attendances: FellowAttendance[]) {
+  let totalAmount = 0;
+  let totalPaidAmount = 0;
 
-function calculateTotalAmount(attendances: FellowAttendance[]) {
-  // total amount
-  return (
-    attendances.reduce(
-      (total, a) => total + (a.session?.session?.amount || 0),
-      0,
-    ) || 0
-  );
+  attendances?.forEach((a) => {
+    const sessionAmount = a?.session?.session?.amount || 0;
+    totalAmount += sessionAmount;
+    if (a?.paymentInitiated) {
+      totalPaidAmount += sessionAmount;
+    }
+  });
+
+  return { totalAmount, totalPaidAmount };
 }
 
 function specialSessionCount(attendances: FellowAttendance[]) {
@@ -97,28 +104,33 @@ function specialSessionCount(attendances: FellowAttendance[]) {
   );
 }
 
-function calculatePreVsMain(fellowAttendances: FellowAttendance[]) {
-  const preCount = fellowAttendances.filter(
-    (attendance) => attendance.session?.session?.sessionLabel === "s0", //pre
-  ).length;
-  const mainCount = fellowAttendances.filter((attendance: FellowAttendance) =>
-    ["s1", "s2", "s3", "s4"].includes(
-      attendance?.session?.session?.sessionLabel ?? "",
-    ),
-  ).length;
+function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
+  const { preCount, mainCount, supervisionCount, trainingCount } =
+    fellowAttendances.reduce(
+      (counts, attendance) => {
+        const sessionLabel = attendance.session?.session?.sessionLabel;
+        const sessionType = attendance.session?.session?.sessionType;
 
-  return `${preCount} - pre | ${mainCount} - main`;
-}
+        // For pre and main session counts
+        if (sessionLabel === "s0") {
+          counts.preCount += 1;
+        } else if (["s1", "s2", "s3", "s4"].includes(sessionLabel ?? "")) {
+          counts.mainCount += 1;
+        }
 
-function calculateTrainingSupervision(fellowAttendances: FellowAttendance[]) {
-  const supervisionCount = fellowAttendances.filter(
-    (attendance) => attendance.session?.session?.sessionType === "SUPERVISION",
-  ).length;
-  const trainingCount = fellowAttendances.filter(
-    (attendance) => attendance.session?.session?.sessionType === "TRAINING",
-  ).length;
+        // For training and supervision session counts
+        if (sessionType === "SUPERVISION") {
+          counts.supervisionCount += 1;
+        } else if (sessionType === "TRAINING") {
+          counts.trainingCount += 1;
+        }
 
-  return `${trainingCount} - T | ${supervisionCount} - SV`;
+        return counts;
+      },
+      { preCount: 0, mainCount: 0, supervisionCount: 0, trainingCount: 0 },
+    );
+
+  return { preCount, mainCount, supervisionCount, trainingCount };
 }
 
 type FellowAttendance = Prisma.FellowAttendanceGetPayload<{
