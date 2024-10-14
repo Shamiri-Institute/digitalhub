@@ -50,27 +50,28 @@ export async function addNewStudentToGroup(
 ) {
   try {
     await checkAuth();
+    const parsedData = AddNewStudentSchema.parse(data);
     const group = await db.interventionGroup.findFirst({
       where: {
-        id: data.assignedGroupId,
+        id: parsedData.assignedGroupId,
       },
     });
     const studentCount = await db.student.count();
     const student = await db.student.create({
       data: {
         id: objectId("stu"),
-        studentName: data.studentName,
+        studentName: parsedData.studentName,
         visibleId: generateStudentVisibleID(
           group?.groupName ?? "NA",
           studentCount,
         ),
-        schoolId: data.schoolId,
-        admissionNumber: data.admissionNumber,
-        yearOfBirth: data.yearOfBirth,
-        gender: data.gender,
-        form: parseInt(data.form, 10),
-        stream: data.stream,
-        assignedGroupId: data.assignedGroupId,
+        schoolId: parsedData.schoolId,
+        admissionNumber: parsedData.admissionNumber,
+        yearOfBirth: parsedData.yearOfBirth,
+        gender: parsedData.gender,
+        form: parseInt(parsedData.form, 10),
+        stream: parsedData.stream,
+        assignedGroupId: parsedData.assignedGroupId,
       },
     });
 
@@ -81,5 +82,48 @@ export async function addNewStudentToGroup(
     };
   } catch (error: unknown) {
     return { error: "Something went wrong while adding the new student" };
+  }
+}
+
+export async function checkExistingStudents(
+  data: z.infer<typeof AddNewStudentSchema>,
+) {
+  await checkAuth();
+  return await db.student.findMany({
+    where: {
+      admissionNumber: data.admissionNumber,
+      schoolId: data.schoolId,
+    },
+    include: {
+      assignedGroup: {
+        include: {
+          leader: true,
+        },
+      },
+    },
+  });
+}
+
+export async function transferStudentToGroup(id: string, groupId: string) {
+  try {
+    await checkAuth();
+    const student = await db.student.update({
+      where: {
+        id,
+      },
+      data: {
+        assignedGroupId: groupId,
+      },
+      include: {
+        assignedGroup: true,
+      },
+    });
+
+    return {
+      success: true,
+      message: `Successfully transferred ${student.studentName} to group ${student.assignedGroup?.groupName}`,
+    };
+  } catch (error: unknown) {
+    return { error: "Something went wrong while adding student to the group." };
   }
 }
