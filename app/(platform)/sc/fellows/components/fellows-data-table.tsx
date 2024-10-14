@@ -1,14 +1,30 @@
 "use client";
 import DataTable from "#/components/data-table";
-import { loadFellowsData } from "../../actions";
+import { Button } from "#/components/ui/button";
+import { FellowsData } from "../../actions";
+import AddNewFellowForm from "../../components/add-new-fellow-form";
 import { columns, subColumns } from "./columns";
 
-export default async function FellowsDataTable() {
-  const fellows = await loadFellowsData();
+function renderTableActions() {
+  return (
+    <div>
+      <AddNewFellowForm>
+        <Button>New Fellow</Button>
+      </AddNewFellowForm>
+    </div>
+  );
+}
+
+export default function FellowsDataTable({
+  fellows,
+}: {
+  fellows: FellowsData[];
+}) {
   return (
     <DataTable
       data={fellows}
       columns={columns}
+      renderTableActions={renderTableActions()}
       renderSubComponent={({ row }) => (
         <DataTable
           data={row.original.sessions}

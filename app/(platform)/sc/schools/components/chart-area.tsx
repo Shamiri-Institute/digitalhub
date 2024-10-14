@@ -1,14 +1,10 @@
 "use client";
 
-import {
-  fetchSupervisorDataCompletenessData,
-  SessionRatingAverages,
-  SupervisorDropoutReasonsGraphData,
-} from "#/app/(platform)/hc/supervisors/actions";
-import { generateRandomColor } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
-import { SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING } from "#/lib/app-constants/constants";
-import { Prisma } from "@prisma/client";
+import {
+  SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
+  SCHOOL_DROPOUT_REASONS_MAPPING,
+} from "#/lib/app-constants/constants";
 import {
   Bar,
   BarChart,
@@ -25,50 +21,51 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  DropoutReasonsGraphData,
+  SchoolAttendances,
+  SessionRatingAverages,
+  fetchSchoolDataCompletenessData,
+} from "../actions";
 
-export default function SupervisorCharts({
-  attendanceData,
+export default function ChartArea({
   dropoutData,
-  supervisorDataCompletenessPercentage,
-  supervisorsSessionRatings,
+  schoolDataCompletenessData,
+  sessionRatingsData,
+  schoolAttendances,
 }: {
-  attendanceData: (Prisma.PickEnumerable<
-    Prisma.InterventionSessionGroupByOutputType,
-    "sessionType"[]
-  > & {
-    _count: {
-      sessionType: number;
-    };
-  })[];
-  dropoutData: SupervisorDropoutReasonsGraphData[];
-  supervisorDataCompletenessPercentage: Awaited<
-    ReturnType<typeof fetchSupervisorDataCompletenessData>
+  dropoutData: DropoutReasonsGraphData[];
+  schoolDataCompletenessData: Awaited<
+    ReturnType<typeof fetchSchoolDataCompletenessData>
   >;
-  supervisorsSessionRatings: SessionRatingAverages[];
+  schoolAttendances: SchoolAttendances[];
+  sessionRatingsData: SessionRatingAverages[];
 }) {
-  const formattedAttendanceData = attendanceData.map((session) => ({
-    sessionType: session.sessionType,
-    count: session._count.sessionType,
-  }));
-
-  const randomColors = dropoutData.map(() => generateRandomColor());
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
-      <ChartCard title="Attendances" showCardFooter={false}>
-        {formattedAttendanceData?.length ? (
+      <ChartCard title="Session progress">
+        {schoolAttendances?.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart width={307} height={307} data={formattedAttendanceData}>
+            <BarChart width={307} height={307} data={schoolAttendances}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="sessionType" />
-              <YAxis dataKey="count" />
+              <XAxis dataKey="session_type" />
+              <YAxis />
               <Tooltip />
-              <Bar dataKey="count" stackId="a" fill="#0085FF" />
-              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" />
+              <Bar
+                dataKey="count_attendance_marked"
+                stackId="a"
+                fill="#0085FF"
+              />
+              <Bar
+                dataKey="count_attendance_unmarked"
+                stackId="a"
+                fill="#CCE7FF"
+              />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="Drop out reasons" showCardFooter={false}>
+      <ChartCard title="Drop out reasons">
         {dropoutData.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
@@ -88,8 +85,13 @@ export default function SupervisorCharts({
                 >
                   {dropoutData.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
-                {dropoutData.map((reason, index) => (
-                  <Cell key={index} fill={randomColors[index]} />
+                {dropoutData.map((reason) => (
+                  <Cell
+                    key={reason.name}
+                    // FIXME: remove this ts-ignore to be consistent across the app
+                    // @ts-ignore
+                    fill={SCHOOL_DROPOUT_REASONS_MAPPING[reason.name]}
+                  />
                 ))}
               </Pie>
               <Tooltip />
@@ -97,15 +99,12 @@ export default function SupervisorCharts({
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard
-        title="Supervisor information completion"
-        showCardFooter={false}
-      >
-        {supervisorDataCompletenessPercentage.length ? (
+      <ChartCard title="School information completion">
+        {schoolDataCompletenessData.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250}>
               <Pie
-                data={supervisorDataCompletenessPercentage}
+                data={schoolDataCompletenessData}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -118,13 +117,13 @@ export default function SupervisorCharts({
                   className="text text-2xl font-semibold leading-8"
                   fill="#fffff"
                 >
-                  {supervisorDataCompletenessPercentage.find(
-                    (d) => (d.name = "actual"),
-                  )?.value + "%"}
+                  {schoolDataCompletenessData.find((d) => (d.name = "actual"))
+                    ?.value + "%"}
                 </Label>
-                {supervisorDataCompletenessPercentage.map(({ name }) => (
+                {schoolDataCompletenessData.map(({ name }) => (
                   <Cell
                     key={name}
+                    // FIXME: remove this ts-ignore to be consistent across the app
                     // @ts-ignore
                     fill={SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING[name]}
                   />
@@ -134,14 +133,10 @@ export default function SupervisorCharts({
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="Ratings" showCardFooter={false}>
-        {supervisorsSessionRatings?.length ? (
+      <ChartCard title="Ratings">
+        {sessionRatingsData?.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              width={307}
-              height={307}
-              data={supervisorsSessionRatings}
-            >
+            <LineChart width={307} height={307} data={sessionRatingsData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="session_type" />
               <YAxis />
