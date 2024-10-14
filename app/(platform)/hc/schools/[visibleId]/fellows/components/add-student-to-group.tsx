@@ -149,7 +149,7 @@ export default function AddStudentToGroup() {
   }, [transferDialog]);
 
   return (
-    <div>
+    <>
       <Dialog
         open={context.addStudentDialog}
         onOpenChange={context.setAddStudentDialog}
@@ -468,7 +468,7 @@ export default function AddStudentToGroup() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
 
