@@ -1,6 +1,5 @@
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
 import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
-import FellowsChartsWrapper from "#/app/(platform)/hc/fellows/components/fellows-charts-wrapper";
 import MainFellowsDatatable from "#/app/(platform)/hc/fellows/components/main-fellows-datatable";
 import { currentHubCoordinator } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
@@ -65,7 +64,7 @@ export default async function FellowPage() {
         <Separator />
 
         <Suspense fallback={<GraphLoadingIndicator />}>
-          <FellowsChartsWrapper coordinator={hc} />
+          {/*<FellowsChartsWrapper coordinator={hc} />*/}
         </Suspense>
         <MainFellowsDatatable
           fellows={fellows}

@@ -584,7 +584,7 @@ export const StudentReportingNotesSchema = z.object({
 
 export const WeeklyFellowEvaluationSchema = z.object({
   week: z.coerce.date({ required_error: "Please select a week" }),
-  mode: z.enum(["add", "edit", "view"]),
+  mode: z.enum(["add", "view"]),
   fellowId: stringValidation("Fellow ID is required"),
   behaviourNotes: stringValidation("Please give a reason for your rating"),
   behaviourRating: z

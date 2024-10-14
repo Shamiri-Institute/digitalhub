@@ -28,11 +28,13 @@ export default function FellowsDataTable({
           setFellow,
           setWeeklyEvaluationDialog,
         })}
+        className={"data-table data-table-action mt-4 bg-white"}
         renderSubComponent={({ row }) => (
           <DataTable
             data={row.original.sessions}
             editColumns={false}
             columns={subColumns}
+            className={"data-table data-table-action border-0 bg-white"}
             emptyStateMessage="No groups assigned to this fellow"
           />
         )}

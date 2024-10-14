@@ -124,7 +124,7 @@ export async function submitWeeklyFellowEvaluation(
   data: z.infer<typeof WeeklyFellowEvaluationSchema>,
 ) {
   try {
-    const { hubCoordinator, supervisor } = await checkAuth();
+    const { supervisor } = await checkAuth();
 
     const {
       fellowId,
@@ -139,69 +139,88 @@ export async function submitWeeklyFellowEvaluation(
       mode,
       week,
     } = WeeklyFellowEvaluationSchema.parse(data);
-    console.log(data);
+    console.log(week);
 
-    if (mode === "edit") {
-      // await db.fellow.update({
-      //   where: {
-      //     id,
-      //   },
-      //   data: {
-      //     fellowName,
-      //     fellowEmail,
-      //     county,
-      //     subCounty,
-      //     cellNumber,
-      //     mpesaName,
-      //     mpesaNumber,
-      //     gender,
-      //     idNumber,
-      //     dateOfBirth,
-      //   },
-      // });
-      return {
-        success: true,
-        message: "Edited message",
-      };
-    } else if (mode === "add" && (hubCoordinator || supervisor)) {
-      console.log("hello");
-      await db.weeklyFellowRatings.create({
-        data: {
-          week,
-          fellowId,
-          behaviourNotes,
-          behaviourRating,
-          punctualityNotes,
-          punctualityRating,
-          programDeliveryNotes,
-          programDeliveryRating,
-          dressingAndGroomingNotes,
-          dressingAndGroomingRating,
-          supervisorId: "sup_01j9bnn46vfqqr7ebwqpnddhw2",
+    if (mode === "add" && supervisor) {
+      const fellow = await db.fellow.findUniqueOrThrow({
+        where: {
+          id: fellowId,
         },
       });
-      return {
-        success: true,
-        message: `Successfully submitted weekly evaluation`,
-      };
+
+      if (fellow.supervisorId === supervisor.id) {
+        const previousEvaluation = await db.weeklyFellowRatings.findFirst({
+          where: {
+            fellowId,
+            supervisorId: supervisor.id,
+            week: new Date(week),
+          },
+        });
+
+        if (previousEvaluation === null) {
+          await db.weeklyFellowRatings.create({
+            data: {
+              week,
+              fellowId,
+              behaviourNotes,
+              behaviourRating,
+              punctualityNotes,
+              punctualityRating,
+              programDeliveryNotes,
+              programDeliveryRating,
+              dressingAndGroomingNotes,
+              dressingAndGroomingRating,
+              supervisorId: supervisor.id,
+            },
+          });
+          return {
+            success: true,
+            message: `Successfully submitted weekly evaluation`,
+          };
+        } else {
+          await db.weeklyFellowRatings.update({
+            where: {
+              id: previousEvaluation.id,
+            },
+            data: {
+              behaviourNotes,
+              behaviourRating,
+              punctualityNotes,
+              punctualityRating,
+              programDeliveryNotes,
+              programDeliveryRating,
+              dressingAndGroomingNotes,
+              dressingAndGroomingRating,
+            },
+          });
+          return {
+            success: true,
+            message: `Successfully updated fellow's weekly evaluation`,
+          };
+        }
+      } else {
+        return {
+          success: false,
+          message:
+            "Submission failed. Fellow is assigned to a different supervisor.",
+        };
+      }
     } else {
       return {
         success: false,
         message:
-          hubCoordinator === null && supervisor === null
+          supervisor === null
             ? `User is not authorised to perform this action`
             : "Something went wrong",
       };
     }
   } catch (err) {
     console.error(err);
-    const { mode } = FellowDetailsSchema.parse(data);
     return {
       success: false,
       message:
-        (err as Error)?.message ?? mode === "edit"
-          ? "Sorry, could not update fellow details."
-          : "Sorry, could not add new fellow",
+        (err as Error)?.message ??
+        "Sorry, could not submit fellow's evaluation.",
     };
   }
 }

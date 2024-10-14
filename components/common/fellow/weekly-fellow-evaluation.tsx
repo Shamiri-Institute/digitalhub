@@ -63,42 +63,82 @@ export default function WeeklyFellowEvaluation({
   mode: "view" | "add";
   children: React.ReactNode;
 }) {
+  const _evaluation = evaluations.sort(
+    (a, b) => b.week.getTime() - a.week.getTime(),
+  )[0];
   const [existingEvaluation, setExistingEvaluation] = useState<
     Prisma.WeeklyFellowRatingsGetPayload<{}> | undefined
-  >(evaluations.sort((a, b) => a.week.getTime() - b.week.getTime())[0]);
+  >(_evaluation);
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
   const pathname = usePathname();
 
-  const form = useForm<z.infer<typeof WeeklyFellowEvaluationSchema>>({
-    resolver: zodResolver(WeeklyFellowEvaluationSchema),
-    defaultValues: {
-      fellowId,
-      mode,
-      week: existingEvaluation?.week ?? undefined,
-      behaviourNotes: existingEvaluation?.behaviourNotes ?? undefined,
-      behaviourRating: existingEvaluation?.behaviourRating ?? undefined,
-      programDeliveryNotes:
-        existingEvaluation?.programDeliveryNotes ?? undefined,
-      programDeliveryRating:
-        existingEvaluation?.programDeliveryRating ?? undefined,
-      dressingAndGroomingNotes:
-        existingEvaluation?.dressingAndGroomingNotes ?? undefined,
-      dressingAndGroomingRating:
-        existingEvaluation?.dressingAndGroomingRating ?? undefined,
-      punctualityNotes: existingEvaluation?.punctualityNotes ?? undefined,
-      punctualityRating: existingEvaluation?.punctualityRating ?? undefined,
-    },
-  });
-
   const weeks =
     mode === "view"
-      ? evaluations.map((x) => x.week)
+      ? evaluations.map((x) => x.week).sort((a, b) => a.getTime() - b.getTime())
       : project && project.actualStartDate !== null
         ? eachWeekOfInterval({
             start: project.actualStartDate,
             end: project.actualEndDate ?? new Date(),
           })
         : [];
+
+  const form = useForm<z.infer<typeof WeeklyFellowEvaluationSchema>>({
+    resolver: zodResolver(WeeklyFellowEvaluationSchema),
+    defaultValues: {
+      fellowId,
+      mode,
+      week: existingEvaluation?.week,
+      behaviourNotes: existingEvaluation?.behaviourNotes ?? "",
+      behaviourRating: existingEvaluation?.behaviourRating ?? 0,
+      programDeliveryNotes: existingEvaluation?.programDeliveryNotes ?? "",
+      programDeliveryRating: existingEvaluation?.programDeliveryRating ?? 0,
+      dressingAndGroomingNotes:
+        existingEvaluation?.dressingAndGroomingNotes ?? "",
+      dressingAndGroomingRating:
+        existingEvaluation?.dressingAndGroomingRating ?? 0,
+      punctualityNotes: existingEvaluation?.punctualityNotes ?? "",
+      punctualityRating: existingEvaluation?.punctualityRating ?? 0,
+    },
+  });
+
+  useEffect(() => {
+    if (!open) {
+      setExistingEvaluation(undefined);
+    } else {
+      setExistingEvaluation(_evaluation);
+    }
+  }, [fellowId, open]);
+
+  useEffect(() => {
+    const values = {
+      fellowId,
+      mode,
+      week:
+        mode === "add" && existingEvaluation === undefined
+          ? form.getValues("week")
+          : existingEvaluation?.week,
+      behaviourNotes: existingEvaluation?.behaviourNotes ?? "",
+      behaviourRating: existingEvaluation?.behaviourRating ?? 0,
+      programDeliveryNotes: existingEvaluation?.programDeliveryNotes ?? "",
+      programDeliveryRating: existingEvaluation?.programDeliveryRating ?? 0,
+      dressingAndGroomingNotes:
+        existingEvaluation?.dressingAndGroomingNotes ?? "",
+      dressingAndGroomingRating:
+        existingEvaluation?.dressingAndGroomingRating ?? 0,
+      punctualityNotes: existingEvaluation?.punctualityNotes ?? "",
+      punctualityRating: existingEvaluation?.punctualityRating ?? 0,
+    };
+    form.reset(values);
+
+    if (existingEvaluation) {
+      setUpdateWindowDuration(
+        differenceInSeconds(
+          addDays(existingEvaluation.createdAt, 14),
+          new Date(),
+        ),
+      );
+    }
+  }, [existingEvaluation]);
 
   const onSubmit = async (
     data: z.infer<typeof WeeklyFellowEvaluationSchema>,
@@ -119,67 +159,6 @@ export default function WeeklyFellowEvaluation({
     });
   };
 
-  useEffect(() => {
-    if (open) {
-      const evaluation = evaluations.sort(
-        (a, b) => a.week.getTime() - b.week.getTime(),
-      )[0];
-      setExistingEvaluation(evaluation);
-      const defaultValues = {
-        fellowId: fellowId,
-        mode,
-        week: evaluation?.week ?? undefined,
-        behaviourNotes: evaluation?.behaviourNotes ?? undefined,
-        behaviourRating: evaluation?.behaviourRating ?? undefined,
-        programDeliveryNotes: evaluation?.programDeliveryNotes ?? undefined,
-        programDeliveryRating: evaluation?.programDeliveryRating ?? undefined,
-        dressingAndGroomingNotes:
-          evaluation?.dressingAndGroomingNotes ?? undefined,
-        dressingAndGroomingRating:
-          evaluation?.dressingAndGroomingRating ?? undefined,
-        punctualityNotes: evaluation?.punctualityNotes ?? undefined,
-        punctualityRating: evaluation?.punctualityRating ?? undefined,
-      };
-
-      form.reset(defaultValues);
-    }
-  }, [fellowId, open]);
-
-  useEffect(() => {
-    if (existingEvaluation) {
-      setUpdateWindowDuration(
-        differenceInSeconds(
-          addDays(existingEvaluation.createdAt, 14),
-          new Date(),
-        ),
-      );
-    }
-  }, [existingEvaluation]);
-
-  const updateFormValues = (value: string) => {
-    const match = evaluations.find((evaluation) =>
-      isEqual(new Date(evaluation.week), new Date(value)),
-    );
-
-    if (match) {
-      setExistingEvaluation(match);
-      const { week } = match;
-      form.reset({
-        week,
-        fellowId,
-        mode,
-        behaviourNotes: match.behaviourNotes ?? undefined,
-        behaviourRating: match.behaviourRating ?? undefined,
-        programDeliveryNotes: match.programDeliveryNotes ?? undefined,
-        programDeliveryRating: match.programDeliveryRating ?? undefined,
-        dressingAndGroomingNotes: match.dressingAndGroomingNotes ?? undefined,
-        dressingAndGroomingRating: match.dressingAndGroomingRating ?? undefined,
-        punctualityNotes: match.punctualityNotes ?? undefined,
-        punctualityRating: match.punctualityRating ?? undefined,
-      });
-    }
-  };
-
   return (
     <Form {...form}>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,306 +167,12 @@ export default function WeeklyFellowEvaluation({
             <h2 className="text-lg font-bold">Weekly fellow evaluation</h2>
           </DialogHeader>
           {children}
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            <FormField
-              control={form.control}
-              name="week"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>
-                    Select week{" "}
-                    <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
-                  <Select
-                    defaultValue={
-                      weeks.length > 0 && field.value !== undefined
-                        ? format(field.value, "yyyy-MM-dd")
-                        : undefined
-                    }
-                    onValueChange={(value) => {
-                      field.onChange(new Date(value));
-                      updateFormValues(value);
-                    }}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a week" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="max-h-[200px]">
-                      {weeks.map((week, index) => {
-                        return (
-                          <SelectItem
-                            key={index.toString()}
-                            value={format(week, "yyyy-MM-dd")}
-                          >
-                            Week {index + 1} - {format(week, "dd MMM yyyy")} to{" "}
-                            {format(addDays(week, 6), "dd MMM yyyy")}
-                          </SelectItem>
-                        );
-                      })}
-                      {weeks.length === 0 ? (
-                        <SelectItem value={" "}>
-                          No evaluations found
-                        </SelectItem>
-                      ) : null}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {mode !== "view" &&
-            existingEvaluation &&
-            updateWindowDuration > 0 ? (
-              <DialogAlertWidget separator={false}>
-                <div className="flex items-center gap-2">
-                  <span>
-                    Update ratings by{" "}
-                    {format(
-                      addDays(existingEvaluation.createdAt, 14),
-                      "dd-MM-yyyy",
-                    )}{" "}
-                    (
-                    <CountdownTimer duration={updateWindowDuration} />)
-                  </span>
-                </div>
-              </DialogAlertWidget>
-            ) : null}
-            <Separator />
-            <div className="flex flex-col space-y-3 text-sm">
-              <FormField
-                control={form.control}
-                name="behaviourRating"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col space-y-2">
-                    <FormLabel>
-                      <span>
-                        Rate behaviour (1-unacceptable to 5-outstanding)
-                      </span>{" "}
-                      <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
-                    <RatingStarsInput
-                      value={field.value}
-                      onChange={field.onChange}
-                      disabled={
-                        mode === "view" ||
-                        (existingEvaluation && updateWindowDuration === 0)
-                      }
-                    />
-                  </FormItem>
-                )}
-              />
-              {mode !== "view" ? (
-                <FormField
-                  control={form.control}
-                  name="behaviourNotes"
-                  disabled={existingEvaluation && updateWindowDuration <= 0}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Textarea
-                          className="resize-none"
-                          {...field}
-                          rows={4}
-                          placeholder={
-                            existingEvaluation && updateWindowDuration <= 0
-                              ? ""
-                              : "pertains to evaluating the fellow's demeanor, covering approachability, respectfulness, attitude, collaboration, communication style."
-                          }
-                        ></Textarea>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : (
-                <div className="rounded border bg-background-secondary px-4 py-2">
-                  {existingEvaluation?.behaviourNotes}
-                </div>
-              )}
-              <FormField
-                control={form.control}
-                name="programDeliveryRating"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col space-y-2">
-                    <FormLabel>
-                      <span>
-                        Rate program delivery (1-unacceptable to 5-outstanding)
-                      </span>{" "}
-                      <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
-                    <RatingStarsInput
-                      value={field.value}
-                      onChange={field.onChange}
-                      disabled={
-                        mode === "view" ||
-                        (existingEvaluation && updateWindowDuration === 0)
-                      }
-                    />
-                  </FormItem>
-                )}
-              />
-              {mode !== "view" ? (
-                <FormField
-                  control={form.control}
-                  name="programDeliveryNotes"
-                  disabled={existingEvaluation && updateWindowDuration <= 0}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Textarea
-                          className="resize-none"
-                          {...field}
-                          rows={4}
-                          placeholder={
-                            existingEvaluation && updateWindowDuration <= 0
-                              ? ""
-                              : "assesses adherence to protocols, ethical standards, confidentiality, cultural competence"
-                          }
-                        ></Textarea>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : (
-                <div className="rounded border bg-background-secondary px-4 py-2">
-                  {existingEvaluation?.programDeliveryNotes}
-                </div>
-              )}
-              <FormField
-                control={form.control}
-                name="dressingAndGroomingRating"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col space-y-2">
-                    <FormLabel>
-                      <span>
-                        Rate dressing and grooming (1-very bad to 5-very good)
-                      </span>{" "}
-                      <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
-                    <RatingStarsInput
-                      value={field.value}
-                      onChange={field.onChange}
-                      disabled={
-                        mode === "view" ||
-                        (existingEvaluation && updateWindowDuration === 0)
-                      }
-                    />
-                  </FormItem>
-                )}
-              />
-              {mode !== "view" ? (
-                <FormField
-                  control={form.control}
-                  name="dressingAndGroomingNotes"
-                  disabled={existingEvaluation && updateWindowDuration <= 0}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Textarea
-                          className="resize-none"
-                          {...field}
-                          rows={4}
-                          placeholder={
-                            existingEvaluation && updateWindowDuration <= 0
-                              ? ""
-                              : "assesses the personal presentation of fellows considering appropriate attire and grooming standards in compliance with specific school administration requirements."
-                          }
-                        ></Textarea>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : (
-                <div className="rounded border bg-background-secondary px-4 py-2">
-                  {existingEvaluation?.dressingAndGroomingNotes}
-                </div>
-              )}
-              <FormField
-                control={form.control}
-                name="punctualityRating"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col space-y-2">
-                    <FormLabel>
-                      <span>
-                        Rate session attendance and punctuality (1-very bad to
-                        5-very good)
-                      </span>{" "}
-                      <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
-                    <RatingStarsInput
-                      value={field.value}
-                      onChange={field.onChange}
-                      disabled={
-                        mode === "view" ||
-                        (existingEvaluation && updateWindowDuration === 0)
-                      }
-                    />
-                  </FormItem>
-                )}
-              />
-              {mode !== "view" ? (
-                <FormField
-                  control={form.control}
-                  name="punctualityNotes"
-                  disabled={existingEvaluation && updateWindowDuration <= 0}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Textarea
-                          className="resize-none"
-                          {...field}
-                          rows={4}
-                          placeholder={
-                            existingEvaluation && updateWindowDuration <= 0
-                              ? ""
-                              : "assesses the timely arrival and adherence to scheduled program sessions, including supervision and school sessions"
-                          }
-                        ></Textarea>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : (
-                <div className="rounded border bg-background-secondary px-4 py-2">
-                  {existingEvaluation?.punctualityNotes}
-                </div>
-              )}
-            </div>
-            <Separator />
-            {mode !== "view" &&
-            (existingEvaluation === undefined ||
-              (existingEvaluation && updateWindowDuration > 0)) ? (
-              <div className="space-y-5">
-                <DialogFooter className="flex justify-end">
-                  <Button
-                    className=""
-                    variant="ghost"
-                    type="button"
-                    onClick={() => {
-                      onOpenChange(false);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="brand"
-                    type="submit"
-                    disabled={
-                      form.formState.isSubmitting ||
-                      (existingEvaluation && updateWindowDuration < 0)
-                    }
-                    loading={form.formState.isSubmitting}
-                  >
-                    {existingEvaluation ? "Update & save" : "Submit"}
-                  </Button>
-                </DialogFooter>
+          {mode === "view" && evaluations.length === 0 ? (
+            <div className="space-y-3">
+              <div className="rounded border bg-background-secondary px-4 py-2">
+                No evaluations found.
               </div>
-            ) : (
+              <Separator />
               <DialogFooter className="flex justify-end">
                 <Button
                   className=""
@@ -500,8 +185,327 @@ export default function WeeklyFellowEvaluation({
                   Done
                 </Button>
               </DialogFooter>
-            )}
-          </form>
+            </div>
+          ) : (
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <FormField
+                control={form.control}
+                name="week"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel>
+                      Select week{" "}
+                      <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>{" "}
+                    <Select
+                      key={new Date().toISOString()}
+                      defaultValue={
+                        field.value ? format(field.value, "yyyy-MM-dd") : " "
+                      }
+                      onValueChange={(value) => {
+                        field.onChange(new Date(value));
+                        const match = evaluations.find((evaluation) =>
+                          isEqual(new Date(evaluation.week), new Date(value)),
+                        );
+
+                        setExistingEvaluation(match);
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a week" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-[200px]">
+                        {weeks.map((week, index) => {
+                          return (
+                            <SelectItem
+                              key={index.toString()}
+                              value={format(week, "yyyy-MM-dd")}
+                            >
+                              Week {index + 1} - {format(week, "dd MMM yyyy")}{" "}
+                              to {format(addDays(week, 6), "dd MMM yyyy")}
+                            </SelectItem>
+                          );
+                        })}
+                        {weeks.length === 0 ? (
+                          <SelectItem value={" "} disabled={true}>
+                            Missing project dates.
+                          </SelectItem>
+                        ) : null}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {mode !== "view" &&
+              existingEvaluation &&
+              updateWindowDuration > 0 ? (
+                <DialogAlertWidget separator={false}>
+                  <div className="flex items-center gap-2">
+                    <span>
+                      Update ratings by{" "}
+                      {format(
+                        addDays(existingEvaluation.createdAt, 14),
+                        "dd-MM-yyyy",
+                      )}{" "}
+                      (
+                      <CountdownTimer duration={updateWindowDuration} />)
+                    </span>
+                  </div>
+                </DialogAlertWidget>
+              ) : null}
+              <Separator />
+              <div className="flex flex-col space-y-3 text-sm">
+                <FormField
+                  control={form.control}
+                  name="behaviourRating"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col space-y-2">
+                      <FormLabel>
+                        <span>
+                          Rate behaviour (1-unacceptable to 5-outstanding)
+                        </span>{" "}
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <RatingStarsInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={
+                          mode === "view" ||
+                          (existingEvaluation && updateWindowDuration === 0)
+                        }
+                      />
+                    </FormItem>
+                  )}
+                />
+                {mode !== "view" ? (
+                  <FormField
+                    control={form.control}
+                    name="behaviourNotes"
+                    disabled={existingEvaluation && updateWindowDuration <= 0}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            className="resize-none"
+                            {...field}
+                            rows={4}
+                            placeholder={
+                              existingEvaluation && updateWindowDuration <= 0
+                                ? ""
+                                : "pertains to evaluating the fellow's demeanor, covering approachability, respectfulness, attitude, collaboration, communication style."
+                            }
+                          ></Textarea>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                  <div className="rounded border bg-background-secondary px-4 py-2">
+                    {existingEvaluation?.behaviourNotes}
+                  </div>
+                )}
+                <FormField
+                  control={form.control}
+                  name="programDeliveryRating"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col space-y-2">
+                      <FormLabel>
+                        <span>
+                          Rate program delivery (1-unacceptable to
+                          5-outstanding)
+                        </span>{" "}
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <RatingStarsInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={
+                          mode === "view" ||
+                          (existingEvaluation && updateWindowDuration === 0)
+                        }
+                      />
+                    </FormItem>
+                  )}
+                />
+                {mode !== "view" ? (
+                  <FormField
+                    control={form.control}
+                    name="programDeliveryNotes"
+                    disabled={existingEvaluation && updateWindowDuration <= 0}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            className="resize-none"
+                            {...field}
+                            rows={4}
+                            placeholder={
+                              existingEvaluation && updateWindowDuration <= 0
+                                ? ""
+                                : "assesses adherence to protocols, ethical standards, confidentiality, cultural competence"
+                            }
+                          ></Textarea>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                  <div className="rounded border bg-background-secondary px-4 py-2">
+                    {existingEvaluation?.programDeliveryNotes}
+                  </div>
+                )}
+                <FormField
+                  control={form.control}
+                  name="dressingAndGroomingRating"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col space-y-2">
+                      <FormLabel>
+                        <span>
+                          Rate dressing and grooming (1-very bad to 5-very good)
+                        </span>{" "}
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <RatingStarsInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={
+                          mode === "view" ||
+                          (existingEvaluation && updateWindowDuration === 0)
+                        }
+                      />
+                    </FormItem>
+                  )}
+                />
+                {mode !== "view" ? (
+                  <FormField
+                    control={form.control}
+                    name="dressingAndGroomingNotes"
+                    disabled={existingEvaluation && updateWindowDuration <= 0}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            className="resize-none"
+                            {...field}
+                            rows={4}
+                            placeholder={
+                              existingEvaluation && updateWindowDuration <= 0
+                                ? ""
+                                : "assesses the personal presentation of fellows considering appropriate attire and grooming standards in compliance with specific school administration requirements."
+                            }
+                          ></Textarea>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                  <div className="rounded border bg-background-secondary px-4 py-2">
+                    {existingEvaluation?.dressingAndGroomingNotes}
+                  </div>
+                )}
+                <FormField
+                  control={form.control}
+                  name="punctualityRating"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col space-y-2">
+                      <FormLabel>
+                        <span>
+                          Rate session attendance and punctuality (1-very bad to
+                          5-very good)
+                        </span>{" "}
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <RatingStarsInput
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={
+                          mode === "view" ||
+                          (existingEvaluation && updateWindowDuration === 0)
+                        }
+                      />
+                    </FormItem>
+                  )}
+                />
+                {mode !== "view" ? (
+                  <FormField
+                    control={form.control}
+                    name="punctualityNotes"
+                    disabled={existingEvaluation && updateWindowDuration <= 0}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            className="resize-none"
+                            {...field}
+                            rows={4}
+                            placeholder={
+                              existingEvaluation && updateWindowDuration <= 0
+                                ? ""
+                                : "assesses the timely arrival and adherence to scheduled program sessions, including supervision and school sessions"
+                            }
+                          ></Textarea>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                  <div className="rounded border bg-background-secondary px-4 py-2">
+                    {existingEvaluation?.punctualityNotes}
+                  </div>
+                )}
+              </div>
+              <Separator />
+              {mode !== "view" &&
+              (existingEvaluation === undefined ||
+                (existingEvaluation && updateWindowDuration > 0)) ? (
+                <div className="space-y-5">
+                  <DialogFooter className="flex justify-end">
+                    <Button
+                      className=""
+                      variant="ghost"
+                      type="button"
+                      onClick={() => {
+                        onOpenChange(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="brand"
+                      type="submit"
+                      disabled={
+                        form.formState.isSubmitting ||
+                        (existingEvaluation && updateWindowDuration < 0)
+                      }
+                      loading={form.formState.isSubmitting}
+                    >
+                      {existingEvaluation ? "Update & save" : "Submit"}
+                    </Button>
+                  </DialogFooter>
+                </div>
+              ) : (
+                <DialogFooter className="flex justify-end">
+                  <Button
+                    className=""
+                    variant="brand"
+                    type="button"
+                    onClick={() => {
+                      onOpenChange(false);
+                    }}
+                  >
+                    Done
+                  </Button>
+                </DialogFooter>
+              )}
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </Form>
