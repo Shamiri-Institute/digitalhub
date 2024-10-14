@@ -1,7 +1,5 @@
-import AddNewFellowForm from "#/app/(platform)/sc/components/add-new-fellow-form";
 import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
-import { Button } from "#/components/ui/button";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import { loadFellowsData } from "../actions";
@@ -31,8 +29,11 @@ export default async function FellowsPage() {
 
   return (
     <div className="px-6 py-5">
-      <FellowsDataTable fellows={fellows} weeklyEvaluations={weeklyFellowEvaluations}
-                        project={project ?? undefined} />
+      <FellowsDataTable
+        fellows={fellows}
+        weeklyEvaluations={weeklyFellowEvaluations}
+        project={project ?? undefined}
+      />
     </div>
   );
 }
