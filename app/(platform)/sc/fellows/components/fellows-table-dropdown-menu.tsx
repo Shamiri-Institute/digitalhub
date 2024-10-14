@@ -11,7 +11,6 @@ import { cn } from "#/lib/utils";
 import { Dispatch, SetStateAction } from "react";
 import type { FellowsData } from "../../actions";
 import DropoutFellowForm from "./dropout-fellow-form";
-import SubmitWeeklyFellowEvaluationForm from "./weekly-fellow-evaluations-form";
 
 export default function FellowsTableDropdownMenu({
   fellowRow,
@@ -55,17 +54,6 @@ export default function FellowsTableDropdownMenu({
         >
           Submit weekly fellow evaluation
         </DropdownMenuItem>
-        <SubmitWeeklyFellowEvaluationForm
-          previousRatings={fellowRow.weeklyFellowRatings}
-          fellowId={fellowRow.id}
-          fellowName={fellowRow.fellowName ?? "N/A"}
-          fellowPhoneNumber={fellowRow.mpesaNumber ?? "N/A"}
-        >
-          {/* TODO: find a solution to allow easy interop with the DropdownMenuItemComponent */}
-          <div className={cn("cursor-pointer px-2 py-1.5 text-sm")}>
-            Weekly Fellow Evaluation
-          </div>
-        </SubmitWeeklyFellowEvaluationForm>
         <DropdownMenuItem>Submit Complaint</DropdownMenuItem>
         {!fellowRow.droppedOut || !fellowRow.droppedOutAt ? (
           <DropoutFellowForm
