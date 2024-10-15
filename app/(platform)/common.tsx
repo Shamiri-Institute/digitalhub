@@ -15,7 +15,7 @@ export function Header({
     <header className="mb-4">
       <div className="flex items-center">
         <h1 className="pr-3 text-2xl font-semibold text-brand">
-          Hello, {personnelName}
+          Hi, {personnelName}
         </h1>
         <Icons.smileyface className="h-6 w-6 text-brand" />
       </div>
