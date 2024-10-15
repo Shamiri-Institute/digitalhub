@@ -3,6 +3,7 @@ import {
   approveSupervisorExpense,
   HubSupervisorExpensesType,
 } from "#/app/(platform)/hc/reporting/supervisors/actions";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import {
@@ -50,9 +51,17 @@ export default function HCApproveSupervisorExpense({
   });
 
   const onSubmit = async (data: z.infer<typeof ConfirmReversalSchema>) => {
+    if (data.amount !== expense.amount) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description: "Amount entered does not match the expense amount",
+      });
+      return;
+    }
+
     const response = await approveSupervisorExpense({
       id: expense?.id,
-      amount: data.amount,
     });
     if (!response.success) {
       toast({
@@ -65,6 +74,7 @@ export default function HCApproveSupervisorExpense({
       return;
     }
 
+    revalidatePageAction("/hc/reporting/supervisors");
     toast({
       variant: "default",
       title: "Success",

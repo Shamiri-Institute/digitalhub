@@ -1,5 +1,9 @@
 "use client";
-import { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/supervisors/actions";
+import {
+  deleteSupervisorExpenseRequest,
+  HubSupervisorExpensesType,
+} from "#/app/(platform)/hc/reporting/supervisors/actions";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import {
@@ -18,6 +22,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
+import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -46,7 +51,27 @@ export default function HCDeleteExpenseRequest({
   });
 
   const onSubmit = async (data: z.infer<typeof DeleteExpenseRequestSchema>) => {
-    // todo: add action to approve special session
+    const response = await deleteSupervisorExpenseRequest({
+      id: expense?.id,
+      name: data.name,
+      actualName: expense?.hubCoordinatorName,
+    });
+    if (!response.success) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description: response.message ?? "An error occurred",
+      });
+      return;
+    }
+
+    revalidatePageAction("/hc/reporting/supervisors");
+
+    toast({
+      variant: "default",
+      title: "Expense request deleted successfully",
+    });
+
     form.reset();
     setDialogOpen(false);
   };

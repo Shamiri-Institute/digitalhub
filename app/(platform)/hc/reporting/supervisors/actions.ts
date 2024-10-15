@@ -47,29 +47,63 @@ export async function loadHubSupervisorExpenses() {
       destination: "N/A",
       amount: expense.amount,
       status: expense.status,
+      hubCoordinatorName: hubCoordinator.coordinatorName,
     };
   });
 }
 
-export async function approveSupervisorExpense({
+export async function deleteSupervisorExpenseRequest({
   id,
-  amount,
+  name,
+  actualName,
 }: {
   id: string;
-  amount: number;
+  name: string;
+  actualName: string;
 }) {
   try {
-    // action goes here
+    if (name !== actualName) {
+      return {
+        success: false,
+        message: "Please enter the correct name",
+      };
+    }
+
+    await await db.reimbursementRequest.delete({
+      where: { id },
+    });
 
     return {
       success: true,
-      message: `Successfully approved expense`,
+      message: "Successfully approved expense",
     };
   } catch (error) {
     console.error(error);
     return {
       success: false,
-      message: `Failed to approve expense }`,
+      message: "Failed to approve expense",
+    };
+  }
+}
+
+export async function approveSupervisorExpense({ id }: { id: string }) {
+  try {
+    await db.reimbursementRequest.update({
+      where: { id },
+      data: {
+        status: "APPROVED",
+      },
+    });
+
+    return {
+      success: true,
+      message: "Successfully approved expense",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to approve expense ",
     };
   }
 }
