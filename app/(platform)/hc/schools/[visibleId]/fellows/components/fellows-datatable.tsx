@@ -16,24 +16,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { Prisma } from "@prisma/client";
-import { useContext } from "react";
+import { Dispatch, SetStateAction, use, useContext, useState } from "react";
 
 export default function FellowsDatatable({
   fellows,
-  supervisors,
 }: {
-  fellows: SchoolFellowTableData[];
-  supervisors: Prisma.SupervisorGetPayload<{}>[];
+  fellows: Promise<SchoolFellowTableData[]>;
 }) {
+  const [fellow, setFellow] = useState<SchoolFellowTableData | undefined>();
+
   const renderTableActions = () => {
     return <BatchUploadDownloadFellow />;
   };
 
+  const data = use(fellows);
   return (
     <DataTable
-      columns={columns(supervisors)}
-      data={fellows}
+      columns={columns({ setFellow })}
+      data={data}
       className={"data-table data-table-action mt-4"}
       emptyStateMessage="No fellows associated with this school"
       renderTableActions={renderTableActions()}
@@ -43,8 +43,12 @@ export default function FellowsDatatable({
 
 export function FellowsDatatableMenu({
   fellow,
+  state,
 }: {
   fellow: SchoolFellowTableData;
+  state: {
+    setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
+  };
 }) {
   const context = useContext(FellowInfoContext);
   return (
@@ -91,7 +95,6 @@ export function FellowsDatatableMenu({
           Session attendance history
         </DropdownMenuItem>
         <DropdownMenuItem>View student group evaluation</DropdownMenuItem>
-        <DropdownMenuItem>View weekly fellow evaluation</DropdownMenuItem>
         <DropdownMenuItem>View complaints</DropdownMenuItem>
         <DropdownMenuItem>
           <div className="text-shamiri-red">Drop-out fellow</div>

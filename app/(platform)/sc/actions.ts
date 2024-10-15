@@ -103,6 +103,7 @@ export async function loadFellowsData() {
     subCounty: fellow.subCounty,
     fellowName: fellow.fellowName,
     fellowEmail: fellow.fellowEmail,
+    cellNumber: fellow.cellNumber,
     mpesaNumber: fellow.mpesaNumber,
     mpesaName: fellow.mpesaName,
     createdAt: fellow.createdAt,
