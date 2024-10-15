@@ -1,10 +1,8 @@
 "use server";
 
-import {
-  FellowDetailsSchema,
-  WeeklyFellowEvaluationSchema,
-} from "#/app/(platform)/hc/schemas";
+import { FellowDetailsSchema } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
+import { WeeklyFellowEvaluationSchema } from "#/components/common/fellow/schema";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
