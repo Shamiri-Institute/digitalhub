@@ -31,15 +31,13 @@ export default function FellowsDatatable({
 
   const data = use(fellows);
   return (
-    <div>
-      <DataTable
-        columns={columns({ setFellow })}
-        data={data}
-        className={"data-table data-table-action mt-4"}
-        emptyStateMessage="No fellows associated with this school"
-        renderTableActions={renderTableActions()}
-      />
-    </div>
+    <DataTable
+      columns={columns({ setFellow })}
+      data={data}
+      className={"data-table data-table-action mt-4"}
+      emptyStateMessage="No fellows associated with this school"
+      renderTableActions={renderTableActions()}
+    />
   );
 }
 
