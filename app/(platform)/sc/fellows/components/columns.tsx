@@ -10,7 +10,7 @@ import FellowsTableDropdown from "./fellows-table-dropdown-menu";
 
 export const columns: ColumnDef<FellowsData>[] = [
   {
-    id: "button",
+    id: "checkbox",
     cell: ({ row }) => {
       return (
         <button
