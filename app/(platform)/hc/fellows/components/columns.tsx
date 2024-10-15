@@ -33,6 +33,7 @@ export const columns = (
   supervisors: Prisma.SupervisorGetPayload<{}>[],
   setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>,
   setEditDialog: Dispatch<SetStateAction<boolean>>,
+  setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>,
   setUploadContractDialog: Dispatch<SetStateAction<boolean>>,
   setUploadIdDialog: Dispatch<SetStateAction<boolean>>,
   setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>,
@@ -146,6 +147,7 @@ export const columns = (
           fellow={row.original}
           setFellow={setFellow}
           setEditDialog={setEditDialog}
+          setWeeklyEvaluationDialog={setWeeklyEvaluationDialog}
           setUploadContractDialog={setUploadContractDialog}
           setUploadIdDialog={setUploadIdDialog}
           setUploadQualificationDialog={setUploadQualificationDialog}

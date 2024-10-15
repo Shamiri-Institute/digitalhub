@@ -1171,6 +1171,7 @@ model WeeklyFellowRatings {
   supervisorId              String     @map("supervisor_id") @db.Text()
   supervisor                Supervisor @relation(fields: [supervisorId], references: [id])
 
+  @@unique([fellowId, supervisorId, week])
   @@map("weekly_fellow_ratings")
 }
 

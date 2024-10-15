@@ -8,14 +8,19 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
+import { Dispatch, SetStateAction } from "react";
 import type { FellowsData } from "../../actions";
 import DropoutFellowForm from "./dropout-fellow-form";
-import SubmitWeeklyFellowEvaluationForm from "./weekly-fellow-evaluations-form";
 
 export default function FellowsTableDropdownMenu({
   fellowRow,
+  state,
 }: {
   fellowRow: FellowsData;
+  state: {
+    setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+    setFellow: Dispatch<SetStateAction<FellowsData | null>>;
+  };
 }) {
   return (
     <DropdownMenu>
@@ -41,17 +46,14 @@ export default function FellowsTableDropdownMenu({
         <DropdownMenuItem>Edit fellow information</DropdownMenuItem>
         <DropdownMenuItem>Session Attendance History</DropdownMenuItem>
         <DropdownMenuItem>Request repayment</DropdownMenuItem>
-        <SubmitWeeklyFellowEvaluationForm
-          previousRatings={fellowRow.weeklyFellowRatings}
-          fellowId={fellowRow.id}
-          fellowName={fellowRow.fellowName ?? "N/A"}
-          fellowPhoneNumber={fellowRow.mpesaNumber ?? "N/A"}
+        <DropdownMenuItem
+          onClick={() => {
+            state.setFellow(fellowRow);
+            state.setWeeklyEvaluationDialog(true);
+          }}
         >
-          {/* TODO: find a solution to allow easy interop with the DropdownMenuItemComponent */}
-          <div className={cn("cursor-pointer px-2 py-1.5 text-sm")}>
-            Weekly Fellow Evaluation
-          </div>
-        </SubmitWeeklyFellowEvaluationForm>
+          Submit weekly fellow evaluation
+        </DropdownMenuItem>
         <DropdownMenuItem>Submit Complaint</DropdownMenuItem>
         {!fellowRow.droppedOut || !fellowRow.droppedOutAt ? (
           <DropoutFellowForm
