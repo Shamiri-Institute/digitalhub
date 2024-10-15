@@ -14,7 +14,7 @@ export const columns = (state: {
   setFellow: Dispatch<SetStateAction<FellowsData | null>>;
 }): ColumnDef<FellowsData>[] => [
   {
-    id: "button",
+    id: "checkbox",
     cell: ({ row }) => {
       return (
         <button
