@@ -5,10 +5,14 @@ import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
+import { Dispatch, SetStateAction } from "react";
 import FellowsSessionsTableDropdownMenu from "./fellows-sessions-table-dropdown-menu";
 import FellowsTableDropdown from "./fellows-table-dropdown-menu";
 
-export const columns: ColumnDef<FellowsData>[] = [
+export const columns = (state: {
+  setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+  setFellow: Dispatch<SetStateAction<FellowsData | null>>;
+}): ColumnDef<FellowsData>[] => [
   {
     id: "checkbox",
     cell: ({ row }) => {
@@ -60,7 +64,9 @@ export const columns: ColumnDef<FellowsData>[] = [
   },
   {
     id: "button",
-    cell: ({ row }) => <FellowsTableDropdown fellowRow={row.original} />,
+    cell: ({ row }) => (
+      <FellowsTableDropdown fellowRow={row.original} state={state} />
+    ),
     enableHiding: false,
   },
 ];
