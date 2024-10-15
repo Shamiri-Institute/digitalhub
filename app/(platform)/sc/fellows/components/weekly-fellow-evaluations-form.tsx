@@ -79,6 +79,7 @@ const InputSchema = WeeklyFellowRatingSchema.pick({
   punctualityRating: true,
 });
 
+// Depreciated
 export default function WeeklyEvaluationForm({
   children,
   previousRatings = [],

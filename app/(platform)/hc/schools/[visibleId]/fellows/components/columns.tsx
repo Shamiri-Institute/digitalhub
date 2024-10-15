@@ -4,9 +4,9 @@ import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-ratin
 import { FellowsDatatableMenu } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
+import { Dispatch, SetStateAction } from "react";
 
 export type SchoolFellowTableData = {
   id: string;
@@ -20,9 +20,9 @@ export type SchoolFellowTableData = {
   averageRating: number | null;
 };
 
-export const columns = (
-  supervisors: Prisma.SupervisorGetPayload<{}>[],
-): ColumnDef<SchoolFellowTableData>[] => {
+export const columns = (state: {
+  setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
+}): ColumnDef<SchoolFellowTableData>[] => {
   return [
     {
       id: "checkbox",
@@ -95,7 +95,9 @@ export const columns = (
     },
     {
       id: "button",
-      cell: ({ row }) => <FellowsDatatableMenu fellow={row.original} />,
+      cell: ({ row }) => (
+        <FellowsDatatableMenu fellow={row.original} state={state} />
+      ),
       enableHiding: false,
     },
   ];

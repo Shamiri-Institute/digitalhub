@@ -208,7 +208,7 @@ export default function DataTable<TData, TValue>({
                 </TableRow>
                 {row.getIsExpanded() && renderSubComponent ? (
                   <TableRow>
-                    <TableCell colSpan={columns.length}>
+                    <TableCell colSpan={columns.length} className="p-0">
                       {renderSubComponent({ row })}
                     </TableCell>
                   </TableRow>
