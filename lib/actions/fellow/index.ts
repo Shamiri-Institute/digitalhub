@@ -139,7 +139,6 @@ export async function submitWeeklyFellowEvaluation(
       mode,
       week,
     } = WeeklyFellowEvaluationSchema.parse(data);
-    console.log(week);
 
     if (mode === "add" && supervisor) {
       const fellow = await db.fellow.findUniqueOrThrow({
