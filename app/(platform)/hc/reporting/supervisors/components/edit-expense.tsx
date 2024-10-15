@@ -1,0 +1,323 @@
+"use client";
+import { Button } from "#/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTrigger,
+} from "#/components/ui/dialog";
+import { useState } from "react";
+
+import { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/supervisors/actions";
+import { FileUploaderWithDrop } from "#/components/file-uploader";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "#/components/ui/form";
+import { Input } from "#/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
+import { Separator } from "#/components/ui/separator";
+import { stringValidation } from "#/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format, startOfWeek, subWeeks } from "date-fns";
+import { Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+function generateWeekFieldValues() {
+  const numWeeks = 4;
+
+  let selectValues = [];
+  const today = new Date();
+
+  for (let i = numWeeks; i >= 0; i--) {
+    const date = subWeeks(today, i);
+    const week = startOfWeek(date, { weekStartsOn: 1 });
+    selectValues.push(
+      <SelectItem value={format(week, "yyyy-MM-dd")}>
+        {format(week, "dd/MM/yyyy")}
+      </SelectItem>,
+    );
+  }
+
+  return selectValues;
+}
+
+export const EditSupervisorExpenseSchema = z.object({
+  comments: stringValidation("Please enter your comments"),
+  mpesaNumber: stringValidation("Please confirm the Mpesa number"),
+  week: z.string(),
+
+  session: stringValidation("Please select a session"),
+  reason: stringValidation("Please select a reason."),
+  destination: stringValidation("Please select a destination."),
+});
+
+export default function HCEditSupervisorExpense({
+  children,
+  expense,
+}: {
+  children: React.ReactNode;
+  expense: HubSupervisorExpensesType;
+}) {
+  const [open, setDialogOpen] = useState<boolean>(false);
+  const [transportSubtype, setTransportSubtype] = useState("");
+
+  const form = useForm<z.infer<typeof EditSupervisorExpenseSchema>>({
+    resolver: zodResolver(EditSupervisorExpenseSchema),
+    defaultValues: {
+      comments: "",
+      mpesaNumber: "",
+      week: "",
+      session: "",
+      reason: "",
+      destination: "",
+    },
+  });
+
+  const onSubmit = async (
+    data: z.infer<typeof EditSupervisorExpenseSchema>,
+  ) => {
+    // TODO: add action here
+    form.reset();
+    setDialogOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
+        <DialogHeader className="sticky top-0 z-10 bg-white">
+          <h2>Edit Expense</h2>
+        </DialogHeader>
+        <Separator />
+        <div className="min-w-max overflow-x-auto overflow-y-scroll px-1">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+              <FormField
+                control={form.control}
+                name="week"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Select date /time{" "}
+                      <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a date/time" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>{generateWeekFieldValues()}</SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex space-x-2">
+                <FormField
+                  control={form.control}
+                  name="reason"
+                  render={({ field }) => (
+                    <div className="grid w-full ">
+                      <FormLabel>
+                        Expense type
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <Select
+                        name="reason"
+                        defaultValue={field.value}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          setTransportSubtype(value);
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            className="text-muted-foreground"
+                            defaultValue={field.value}
+                            onChange={field.onChange}
+                            placeholder={
+                              <span className="text-muted-foreground">
+                                Select reason
+                              </span>
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Self">Self</SelectItem>
+                          <SelectItem value="Material">Material</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="session"
+                  render={({ field }) => (
+                    <div className="grid w-full">
+                      <FormLabel>
+                        Select session
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <Select
+                        name="session"
+                        defaultValue={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue
+                            className="text-muted-foreground"
+                            defaultValue={field.value}
+                            onChange={field.onChange}
+                            placeholder={
+                              <span className="text-muted-foreground">
+                                Select session
+                              </span>
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {transportSubtype === "Self" ? (
+                            <>
+                              <SelectItem value="F1">Follow-up 1</SelectItem>
+                              <SelectItem value="F2">Follow-up 2</SelectItem>
+                              <SelectItem value="F3">Follow-up 3</SelectItem>
+                              <SelectItem value="F4">Follow-up 4</SelectItem>
+                              <SelectItem value="F5">Follow-up 5</SelectItem>
+                              <SelectItem value="F6">Follow-up 6</SelectItem>
+                              <SelectItem value="F7">Follow-up 7</SelectItem>
+                              <SelectItem value="F8">Follow-up 8</SelectItem>
+                              <SelectItem value="data-collection">
+                                Data collection
+                              </SelectItem>
+                            </>
+                          ) : (
+                            <>
+                              <SelectItem value="Pre">Pre session</SelectItem>
+                              <SelectItem value="S1">Session 1</SelectItem>
+                              <SelectItem value="S2">Session 2</SelectItem>
+                              <SelectItem value="S3">Session 3</SelectItem>
+                              <SelectItem value="S4">Session 4</SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="mpesaNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Total Amount (KES){" "}
+                      <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder=""
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex w-full space-x-2">
+                <FormField
+                  control={form.control}
+                  name="mpesaNumber"
+                  render={({ field }) => (
+                    <div className="w-full">
+                      <FormItem>
+                        <FormLabel>
+                          M-Pesa name.{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder=""
+                            className="w-full flex-1"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    </div>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="mpesaNumber"
+                  render={({ field }) => (
+                    <div className="w-full">
+                      <FormItem>
+                        <FormLabel>
+                          M-Pesa no.{" "}
+                          <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder=""
+                            className="w-full flex-1"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    </div>
+                  )}
+                />
+              </div>
+              <Separator />
+              <FileUploaderWithDrop
+                label="Upload csv file"
+                onChange={() => {}}
+                files={[]}
+                accept=".csv"
+              />
+              <DialogFooter>
+                <Button
+                  variant="ghost"
+                  className="text-base font-semibold leading-6 text-shamiri-new-blue "
+                  onClick={() => {
+                    form.reset();
+                    setDialogOpen(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button className="bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
+                  {form.formState.isSubmitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  Submit
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
