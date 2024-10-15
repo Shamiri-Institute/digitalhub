@@ -93,7 +93,7 @@ export function PersonnelSwitcher({
             >
               <CommandInput placeholder="Search personnel..." className="h-9" />
               <CommandEmpty>No personnel found.</CommandEmpty>
-              <CommandGroup>
+              <CommandGroup className="max-h-[300px] overflow-y-scroll">
                 {personnel.map((person) => (
                   <CommandItem
                     key={person.id}
