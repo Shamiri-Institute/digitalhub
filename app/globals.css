@@ -238,15 +238,15 @@
     @apply border-shamiri-new-blue;
   }
 
-  .pagination{
-    @apply flex h-10 w-10 items-center justify-center rounded-lg border shadow hover:bg-shamiri-new-blue hover:text-white transition ease-in-out cursor-pointer;
+  .pagination {
+    @apply flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border shadow transition ease-in-out hover:bg-shamiri-new-blue hover:text-white;
   }
 
-  .pagination.active{
-    @apply bg-shamiri-new-blue text-white
+  .pagination.active {
+    @apply bg-shamiri-new-blue text-white;
   }
 
-  .pagination:disabled{
-    @apply pointer-events-none shadow-none hover:bg-transparent hover:text-black
+  .pagination:disabled {
+    @apply pointer-events-none shadow-none hover:bg-transparent hover:text-black;
   }
 }
