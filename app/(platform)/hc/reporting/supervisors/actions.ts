@@ -36,14 +36,17 @@ export async function loadHubSupervisorExpenses() {
       typeof details === "object" && details !== null && "subtype" in details
         ? details.subtype
         : "N/A";
-
+    const session =
+      typeof details === "object" && details !== null && "session" in details
+        ? details.session
+        : "N/A";
     return {
       id: expense.id,
       supervisorName: expense.supervisor.supervisorName,
       dateCreated: expense.createdAt,
       dateOfExpense: expense.incurredAt,
       typeOfExpense,
-      session: "N/A",
+      session,
       destination: "N/A",
       amount: expense.amount,
       status: expense.status,
