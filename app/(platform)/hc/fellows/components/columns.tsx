@@ -3,11 +3,17 @@
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import AssignFellowSupervisorSelect from "#/app/(platform)/hc/fellows/components/assign-fellow-supervisor-select";
 import MainFellowsDatatableMenu from "#/app/(platform)/hc/fellows/components/main-fellows-datatable-menu";
+import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
-import { parsePhoneNumber } from "libphonenumber-js";
+import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import { Dispatch, SetStateAction } from "react";
 
 export type MainFellowTableData = {
@@ -101,11 +107,39 @@ export const columns = (
     },
     {
       header: "Phone Number",
-      accessorFn: (row) => {
-        return (
-          row.cellNumber &&
-          parsePhoneNumber(row.cellNumber, "KE").formatNational()
-        );
+      cell: ({ row }) => {
+        try {
+          return (
+            row.original.cellNumber &&
+            parsePhoneNumberWithError(
+              row.original.cellNumber,
+              "KE",
+            ).formatNational()
+          );
+        } catch (error) {
+          if (error instanceof ParseError) {
+            // Not a phone number, non-existent country, etc.
+            return (
+              row.original.cellNumber && (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="flex gap-1">
+                      <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
+                      <span>{row.original.cellNumber}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="px-2 py-1 capitalize">
+                      {error.message.toLowerCase().replace("_", " ")}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              )
+            );
+          } else {
+            throw error;
+          }
+        }
       },
     },
     {
