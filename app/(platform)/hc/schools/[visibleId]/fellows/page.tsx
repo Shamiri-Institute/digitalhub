@@ -44,7 +44,13 @@ export default async function FellowsPage({
       SELECT
         f.id, 
         f.fellow_name as "fellowName", 
+        f.fellow_email as "fellowEmail", 
         f.cell_number as "cellNumber", 
+        f.mpesa_number as "mpesaNumber", 
+        f.mpesa_name as "mpesaName", 
+        f.gender as "gender", 
+        f.county as "county", 
+        f.sub_county as "subCounty", 
         f.supervisor_id as "supervisorId",
         sup.supervisor_name as "supervisorName", 
         f.dropped_out as "droppedOut", 
