@@ -31,7 +31,7 @@ export type MainFellowTableData = {
   supervisorId: string | null;
   supervisorName: string | null;
   droppedOut: boolean | null;
-  groupCount: number;
+  groupCount?: number;
   averageRating: number | null;
 };
 

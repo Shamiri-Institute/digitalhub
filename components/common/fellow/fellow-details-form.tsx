@@ -52,7 +52,7 @@ export default function FellowDetailsForm({
   fellow?: MainFellowTableData;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  mode: "edit" | "add";
+  mode: "edit" | "add" | "view";
   children?: React.ReactNode;
 }) {
   const counties = KENYAN_COUNTIES.map((county) => county.name);
@@ -124,10 +124,17 @@ export default function FellowDetailsForm({
       {children}
       <DialogContent className="w-2/5 max-w-none">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className={cn(mode === "view" ? "form-view-mode" : "")}
+          >
             <DialogHeader>
               <span className="text-xl">
-                {mode === "edit" ? "Edit fellow information" : "Add new fellow"}
+                {mode === "edit"
+                  ? "Edit fellow information"
+                  : mode === "view"
+                    ? "View fellow information"
+                    : "Add new fellow"}
               </span>
             </DialogHeader>
             {mode !== "add" && fellow && (
@@ -159,6 +166,7 @@ export default function FellowDetailsForm({
                   <FormField
                     control={form.control}
                     name="fellowName"
+                    disabled={mode === "view"}
                     render={({ field }) => (
                       <FormItem className="col-span-2">
                         <FormLabel>
@@ -175,6 +183,7 @@ export default function FellowDetailsForm({
                   <FormField
                     control={form.control}
                     name="cellNumber"
+                    disabled={mode === "view"}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
@@ -191,6 +200,7 @@ export default function FellowDetailsForm({
                   <FormField
                     control={form.control}
                     name="fellowEmail"
+                    disabled={mode === "view"}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
@@ -207,6 +217,7 @@ export default function FellowDetailsForm({
                   <FormField
                     control={form.control}
                     name="idNumber"
+                    disabled={mode === "view"}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
@@ -233,10 +244,15 @@ export default function FellowDetailsForm({
                           onValueChange={field.onChange}
                           value={field.value}
                           defaultValue={field.value}
+                          disabled={mode === "view"}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select gender" />
+                              <SelectValue
+                                placeholder={
+                                  mode !== "view" ? "Select gender" : ""
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="max-h-[200px]">
@@ -260,32 +276,44 @@ export default function FellowDetailsForm({
                           Date of birth{" "}
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                                !field.value && "text-muted-foreground",
-                              )}
-                            >
-                              <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {field.value ? (
-                                format(field.value, "dd/MM/yyyy")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
+                        {mode !== "view" ? (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground",
+                                )}
+                              >
+                                <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                                {field.value ? (
+                                  format(field.value, "dd/MM/yyyy")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <Input
+                            value={
+                              field.value !== undefined
+                                ? format(field.value, "dd-MM-yyyy")
+                                : undefined
+                            }
+                            type="text"
+                            disabled={mode === "view"}
+                          />
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -303,11 +331,16 @@ export default function FellowDetailsForm({
                           onValueChange={field.onChange}
                           value={field.value}
                           defaultValue={field.value}
+                          disabled={mode === "view"}
                         >
                           <FormControl>
                             <SelectTrigger>
                               {!countyWatcher ? (
-                                <SelectValue placeholder="Select county" />
+                                <SelectValue
+                                  placeholder={
+                                    mode !== "view" ? "Select county" : ""
+                                  }
+                                />
                               ) : (
                                 <SelectValue />
                               )}
@@ -338,10 +371,15 @@ export default function FellowDetailsForm({
                           onValueChange={field.onChange}
                           value={field.value}
                           defaultValue={field.value}
+                          disabled={mode === "view"}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select sub-county" />
+                              <SelectValue
+                                placeholder={
+                                  mode !== "view" ? "Select sub-county" : ""
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="max-h-[200px]">
@@ -380,6 +418,7 @@ export default function FellowDetailsForm({
                   <FormField
                     control={form.control}
                     name="mpesaName"
+                    disabled={mode === "view"}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
@@ -396,6 +435,7 @@ export default function FellowDetailsForm({
                   <FormField
                     control={form.control}
                     name="mpesaNumber"
+                    disabled={mode === "view"}
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
@@ -409,59 +449,43 @@ export default function FellowDetailsForm({
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <Input
-                          id="id"
-                          name="id"
-                          type="hidden"
-                          value={field.value}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="mode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <Input
-                          id="mode"
-                          name="mode"
-                          type="hidden"
-                          value={field.value}
-                        />
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
               </div>
             </div>
             <Separator className="my-6" />
             <DialogFooter className="flex justify-end gap-2">
-              <Button
-                variant="ghost"
-                type="button"
-                className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
-                onClick={() => {
-                  onOpenChange(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
-              >
-                {mode === "add" ? "Add" : "Update & Save"}
-              </Button>
+              {mode !== "view" ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+                    onClick={() => {
+                      onOpenChange(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="brand"
+                    type="submit"
+                    disabled={form.formState.isSubmitting}
+                    loading={form.formState.isSubmitting}
+                  >
+                    {mode === "add" ? "Add" : "Update & Save"}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="brand"
+                  type="button"
+                  onClick={() => {
+                    onOpenChange(false);
+                  }}
+                >
+                  Done
+                </Button>
+              )}
             </DialogFooter>
           </form>
         </Form>
