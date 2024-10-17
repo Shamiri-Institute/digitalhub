@@ -6,6 +6,7 @@ import {
 } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/columns";
 import { BatchUploadDownloadFellow } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/upload-csv";
 import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
+import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import {
@@ -24,20 +25,30 @@ export default function FellowsDatatable({
   fellows: Promise<SchoolFellowTableData[]>;
 }) {
   const [fellow, setFellow] = useState<SchoolFellowTableData | undefined>();
-
+  const [detailsDialog, setDetailsDialog] = useState(false);
   const renderTableActions = () => {
     return <BatchUploadDownloadFellow />;
   };
 
   const data = use(fellows);
   return (
-    <DataTable
-      columns={columns({ setFellow })}
-      data={data}
-      className={"data-table data-table-action mt-4"}
-      emptyStateMessage="No fellows associated with this school"
-      renderTableActions={renderTableActions()}
-    />
+    <>
+      <DataTable
+        columns={columns({ setFellow, setDetailsDialog })}
+        data={data}
+        className={"data-table data-table-action mt-4"}
+        emptyStateMessage="No fellows associated with this school"
+        renderTableActions={renderTableActions()}
+      />
+      {fellow && (
+        <FellowDetailsForm
+          open={detailsDialog}
+          onOpenChange={setDetailsDialog}
+          mode={"view"}
+          fellow={fellow}
+        />
+      )}
+    </>
   );
 }
 
@@ -48,6 +59,7 @@ export function FellowsDatatableMenu({
   fellow: SchoolFellowTableData;
   state: {
     setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
+    setDetailsDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const context = useContext(FellowInfoContext);
@@ -71,7 +83,14 @@ export function FellowsDatatableMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>View Fellow information</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            state.setFellow(fellow);
+            state.setDetailsDialog(true);
+          }}
+        >
+          View fellow information
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
             context.setAssignSupervisor(true);
