@@ -6,6 +6,7 @@ import { WeeklyFellowEvaluationSchema } from "#/components/common/fellow/schema"
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 async function checkAuth() {
@@ -218,6 +219,70 @@ export async function submitWeeklyFellowEvaluation(
       message:
         (err as Error)?.message ??
         "Sorry, could not submit fellow's evaluation.",
+    };
+  }
+}
+
+export async function replaceGroupLeader({
+  leaderId,
+  groupId,
+  schoolVisibleId,
+}: {
+  leaderId: string;
+  groupId: string;
+  schoolVisibleId: string;
+}) {
+  try {
+    await checkAuth();
+
+    const result = await db.interventionGroup.update({
+      where: {
+        id: groupId,
+        school: {
+          visibleId: schoolVisibleId,
+        },
+      },
+      data: {
+        leaderId,
+      },
+      include: {
+        leader: true,
+      },
+    });
+    return {
+      success: true,
+      message: `Group ${result.groupName} successfully assigned to ${result.leader.fellowName}`,
+    };
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === "P2002") {
+        console.log(
+          "There is a unique constraint violation, fellow already assigned to another group in the same school.",
+        );
+
+        const result = await db.interventionGroup.findFirst({
+          where: {
+            school: {
+              visibleId: schoolVisibleId,
+            },
+            leaderId,
+          },
+          include: {
+            leader: true,
+          },
+        });
+        if (result !== null) {
+          return {
+            success: false,
+            message: `Sorry, could not replace fellow. ${result.leader.fellowName} is already assigned to group ${result.groupName}`,
+          };
+        }
+      }
+    }
+    console.error(err);
+    return {
+      success: false,
+      message: (err as Error)?.message ?? "Sorry, could not replace fellow",
     };
   }
 }
