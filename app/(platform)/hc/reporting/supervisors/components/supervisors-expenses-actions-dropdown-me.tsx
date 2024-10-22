@@ -26,12 +26,7 @@ export default function HCSupervisorExpenseDropdownMenu({
           </div>
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        onCloseAutoFocus={(e) => {
-          e.preventDefault();
-        }}
-      >
+      <DropdownMenuContent align="end">
         <DropdownMenuLabel>
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">
             Actions
