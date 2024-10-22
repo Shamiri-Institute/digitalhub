@@ -41,7 +41,7 @@ export default function HCFellowsExpenseDropdownMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <HCConfirmReversal expense={expense ?? []}>
+        <HCConfirmReversal expense={expense}>
           <div
             className={cn(
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
@@ -61,7 +61,7 @@ export default function HCFellowsExpenseDropdownMenu({
         </HCRequestRepayment>
         <DropdownMenuSeparator />
 
-        <HCApproveSpecialSession expense={expense ?? []}>
+        <HCApproveSpecialSession expense={expense}>
           <div
             className={cn(
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",

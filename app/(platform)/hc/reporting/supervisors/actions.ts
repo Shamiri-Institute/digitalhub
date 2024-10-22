@@ -58,21 +58,24 @@ export async function loadHubSupervisorExpenses() {
 export async function deleteSupervisorExpenseRequest({
   id,
   name,
-  actualName,
 }: {
   id: string;
   name: string;
-  actualName: string;
 }) {
   try {
-    if (name !== actualName) {
+    const hubCoordinator = await currentHubCoordinator();
+
+    if (!hubCoordinator) {
+      throw new Error("Unauthorised user");
+    }
+    if (name !== hubCoordinator.coordinatorName) {
       return {
         success: false,
         message: "Please enter the correct name",
       };
     }
 
-    await await db.reimbursementRequest.delete({
+    await db.reimbursementRequest.delete({
       where: { id },
     });
 
@@ -91,6 +94,12 @@ export async function deleteSupervisorExpenseRequest({
 
 export async function approveSupervisorExpense({ id }: { id: string }) {
   try {
+    const hubCoordinator = await currentHubCoordinator();
+
+    if (!hubCoordinator) {
+      throw new Error("Unauthorised user");
+    }
+
     await db.reimbursementRequest.update({
       where: { id },
       data: {

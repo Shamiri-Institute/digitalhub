@@ -54,7 +54,6 @@ export default function HCDeleteExpenseRequest({
     const response = await deleteSupervisorExpenseRequest({
       id: expense?.id,
       name: data.name,
-      actualName: expense?.hubCoordinatorName,
     });
     if (!response.success) {
       toast({
@@ -122,7 +121,11 @@ export default function HCDeleteExpenseRequest({
                 >
                   Cancel
                 </Button>
-                <Button className="bg-shamiri-light-red text-base font-semibold leading-6 text-white">
+                <Button
+                  variant="destructive"
+                  loading={form.formState.isSubmitting}
+                  disabled={form.formState.isSubmitting}
+                >
                   {form.formState.isSubmitting ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : null}
