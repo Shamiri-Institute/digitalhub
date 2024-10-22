@@ -49,6 +49,15 @@ export default async function FellowPage() {
       hubId: hc?.assignedHubId as string,
     },
   });
+
+  const weeklyFellowEvaluations = await db.weeklyFellowRatings.findMany({
+    where: {
+      fellow: {
+        hubId: hc?.assignedHubId as string,
+      },
+    },
+  });
+
   return (
     <div className="flex h-full flex-col">
       <div className="container w-full grow space-y-3 py-10">
@@ -58,7 +67,11 @@ export default async function FellowPage() {
         <Suspense fallback={<GraphLoadingIndicator />}>
           <FellowsChartsWrapper coordinator={hc} />
         </Suspense>
-        <MainFellowsDatatable fellows={fellows} supervisors={supervisors} />
+        <MainFellowsDatatable
+          fellows={fellows}
+          supervisors={supervisors}
+          weeklyEvaluations={weeklyFellowEvaluations}
+        />
       </div>
       <PageFooter />
     </div>
