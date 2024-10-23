@@ -71,12 +71,19 @@ export default async function FellowsPage({
     where: {
       hubId: hc?.assignedHubId as string,
     },
+    include: {
+      fellows: true,
+    },
   });
 
   return (
     <FellowInfoContextProvider>
       <Suspense fallback={<Loading />}>
-        <FellowsDatatable fellows={fellows} />
+        <FellowsDatatable
+          fellows={fellows}
+          supervisors={supervisors}
+          schoolVisibleId={visibleId}
+        />
       </Suspense>
       <StudentsInGroup />
       <AddStudentToGroup />

@@ -30,3 +30,10 @@ export const WeeklyFellowEvaluationSchema = z.object({
 export type WeeklyFellowEvaluationSchema = z.infer<
   typeof WeeklyFellowEvaluationSchema
 >;
+
+export const ReplaceGroupLeaderSchema = z.object({
+  leaderId: stringValidation("Fellow ID is required"),
+  newLeaderId: stringValidation("Please select a fellow"),
+  supervisorId: stringValidation("Please select a supervisor"),
+  groupId: stringValidation("Group ID is required"),
+});
