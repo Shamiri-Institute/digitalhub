@@ -15,8 +15,8 @@ export type SchoolFellowTableData = {
   supervisorId: string | null;
   supervisorName: string | null;
   droppedOut: boolean | null;
-  groupId: string;
-  groupName: string;
+  groupId: string | null;
+  groupName: string | null;
   averageRating: number | null;
   fellowEmail: string | null;
   idNumber: string | null;
@@ -31,6 +31,7 @@ export type SchoolFellowTableData = {
 export const columns = (state: {
   setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
   setDetailsDialog: Dispatch<SetStateAction<boolean>>;
+  setReplaceDialog: Dispatch<SetStateAction<boolean>>;
 }): ColumnDef<SchoolFellowTableData>[] => {
   return [
     {
