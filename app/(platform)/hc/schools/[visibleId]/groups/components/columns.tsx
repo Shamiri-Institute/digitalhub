@@ -58,8 +58,8 @@ export const columns = (state: {
     },
     {
       accessorKey: "groupName",
-      id: "Name",
-      header: "Name",
+      id: "Group",
+      header: "Group",
     },
     {
       header: "Group Rating",

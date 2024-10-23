@@ -1,8 +1,10 @@
 import { SchoolGroupDataTableData } from "#/app/(platform)/hc/schools/[visibleId]/groups/components/columns";
 import GroupsDataTable from "#/app/(platform)/hc/schools/[visibleId]/groups/components/groups-datatable";
+import GroupsTableSkeleton from "#/app/(platform)/hc/schools/[visibleId]/groups/loading";
 import { currentHubCoordinator } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
+import { Suspense } from "react";
 
 export default async function FellowsPage({
   params: { visibleId },
@@ -43,8 +45,8 @@ export default async function FellowsPage({
   `;
 
   return (
-    <>
+    <Suspense fallback={<GroupsTableSkeleton />}>
       <GroupsDataTable data={groups} />
-    </>
+    </Suspense>
   );
 }
