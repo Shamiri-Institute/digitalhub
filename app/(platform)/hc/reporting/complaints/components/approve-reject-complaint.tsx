@@ -75,9 +75,20 @@ export default function HCApproveRejectComplaint({
   async function confirmAccept() {
     setLoading(true);
     if (formData) {
+      if (form.formState.errors) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Please fill all required fields",
+        });
+        setLoading(false);
+        return;
+      }
+
       const response = await approveComplaint({
         id: complaint.id,
         reason: formData.reasonForAccepting ?? "",
+        formData,
       });
       if (!response.success) {
         toast({
@@ -87,17 +98,35 @@ export default function HCApproveRejectComplaint({
         return;
       }
 
+      toast({
+        title: "Success",
+        variant: "default",
+        description: response.message ?? "Successfully approved complaint",
+      });
+
       form.reset();
       setApproveDialogOpen(false);
       setLoading(false);
     }
   }
+
   async function confirmReject() {
     setLoading(true);
+    if (form.formState.errors) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please fill all required fields",
+      });
+      setLoading(false);
+      return;
+    }
+
     if (formData) {
       const response = await rejectComplaint({
         id: complaint.id,
         reason: formData.reasonForRejecting ?? "",
+        formData,
       });
       if (!response.success) {
         toast({
@@ -106,11 +135,31 @@ export default function HCApproveRejectComplaint({
         });
         return;
       }
+
+      toast({
+        title: "Success",
+        variant: "default",
+        description: response.message ?? "Successfully rejected complaint",
+      });
+
       form.reset();
       setRejectDialogOpen(false);
       setLoading(false);
     }
   }
+
+  const onSubmit = (data: z.infer<typeof ComplaintSchema>) => {
+    if (form.formState.errors) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please fill all required fields",
+      });
+      return;
+    }
+
+    setFormData(data);
+  };
 
   return (
     <Form {...form}>
@@ -123,7 +172,7 @@ export default function HCApproveRejectComplaint({
 
           <DialogAlertWidget label={`${complaint.status}`} variant="default" />
           <div className="min-w-max overflow-x-auto overflow-y-scroll px-1">
-            <form className="space-y-2">
+            <form className="space-y-2" onSubmit={form.handleSubmit(onSubmit)}>
               <FormField
                 control={form.control}
                 name="fellow"
@@ -523,9 +572,7 @@ export default function HCApproveRejectComplaint({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
-                confirmReject();
-              }}
+              onClick={confirmReject}
               disabled={loading}
               loading={loading}
             >
@@ -583,9 +630,7 @@ export default function HCApproveRejectComplaint({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
-                confirmAccept();
-              }}
+              onClick={confirmAccept}
               disabled={loading}
               loading={loading}
             >
