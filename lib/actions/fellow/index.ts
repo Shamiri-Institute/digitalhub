@@ -256,10 +256,6 @@ export async function replaceGroupLeader({
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError) {
       if (err.code === "P2002") {
-        console.log(
-          "There is a unique constraint violation, fellow already assigned to another group in the same school.",
-        );
-
         const result = await db.interventionGroup.findFirst({
           where: {
             school: {
