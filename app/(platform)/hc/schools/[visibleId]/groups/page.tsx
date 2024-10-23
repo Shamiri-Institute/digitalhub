@@ -2,8 +2,8 @@ import { SchoolGroupDataTableData } from "#/app/(platform)/hc/schools/[visibleId
 import GroupsDataTable from "#/app/(platform)/hc/schools/[visibleId]/groups/components/groups-datatable";
 import GroupsTableSkeleton from "#/app/(platform)/hc/schools/[visibleId]/groups/loading";
 import { currentHubCoordinator } from "#/app/auth";
-import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
+import { signOut } from "next-auth/react";
 import { Suspense } from "react";
 
 export default async function FellowsPage({
@@ -13,7 +13,7 @@ export default async function FellowsPage({
 }) {
   const hc = await currentHubCoordinator();
   if (!hc) {
-    return <InvalidPersonnelRole role="hub-coordinator" />;
+    await signOut({ callbackUrl: "/login" });
   }
 
   const groups = await db.$queryRaw<SchoolGroupDataTableData[]>`
