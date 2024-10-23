@@ -144,7 +144,7 @@ function renderStatus(status: string) {
   if (status === "Rejected") {
     return <Badge variant="destructive">Rejected</Badge>;
   }
-  if (status === "Approved") {
+  if (status === "Accepted") {
     return <Badge variant="shamiri-green">Accepted</Badge>;
   }
   return <Badge variant="default">Pending</Badge>;
