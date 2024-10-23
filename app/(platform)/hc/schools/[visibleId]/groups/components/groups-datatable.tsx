@@ -17,9 +17,9 @@ export default function GroupsDataTable({
     <DataTable
       columns={columns({ setGroup })}
       data={data}
-      className={"data-table data-table-action mt-4"}
+      className="data-table data-table-action mt-4"
       columnVisibilityState={{ "Active Status": false }}
-      emptyStateMessage={"No groups associated with this school"}
+      emptyStateMessage="No groups associated with this school"
     />
   );
 }
