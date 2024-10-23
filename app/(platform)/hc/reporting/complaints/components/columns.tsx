@@ -76,72 +76,69 @@ export const columns: ColumnDef<HubReportComplaintsType>[] = [
 export const subColumns: ColumnDef<
   HubReportComplaintsType["complaints"][number]
 >[] = [
-    {
-      id: "checkbox",
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
-          aria-label="Select all"
-          className={
-            "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-          }
-        />
-      ),
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center justify-center">
-            <Checkbox
-              checked={row.getIsSelected()}
-              onCheckedChange={(val) => row.toggleSelected(!!val)}
-              aria-label="Select row"
-              className={
-                "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-              }
-            />
-          </div>
-        );
-      },
-      enableSorting: false,
-      enableHiding: false,
+  {
+    id: "checkbox",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
+        aria-label="Select all"
+        className={
+          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+        }
+      />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(val) => row.toggleSelected(!!val)}
+            aria-label="Select row"
+            className={
+              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+            }
+          />
+        </div>
+      );
     },
-    {
-      accessorKey: "dateOfComplaint",
-      header: "Date of complaint",
-    },
-    {
-      accessorKey: "reasonForComplaint",
-      header: "Reason for complaint",
-    },
-    {
-      accessorKey: "statement",
-      header: "Statement",
-    },
-    {
-      accessorKey: "difference",
-      header: "Difference (KES)",
-    },
-    {
-      accessorKey: "confirmedAmountReceived",
-      header: "Confirmed amount received (KES)",
-    },
-    {
-      cell: ({ row }) =>
-        renderStatus(row.original.status),
-      header: "Status",
-      id: "Status",
-    },
-    {
-      id: "button",
-      cell: ({ row }) => <HCComplaintsDropdownMenu complaint={row.original} />,
-      enableHiding: false,
-    },
-  ];
-
-
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "dateOfComplaint",
+    header: "Date of complaint",
+  },
+  {
+    accessorKey: "reasonForComplaint",
+    header: "Reason for complaint",
+  },
+  {
+    accessorKey: "statement",
+    header: "Statement",
+  },
+  {
+    accessorKey: "difference",
+    header: "Difference (KES)",
+  },
+  {
+    accessorKey: "confirmedAmountReceived",
+    header: "Confirmed amount received (KES)",
+  },
+  {
+    cell: ({ row }) => renderStatus(row.original.status),
+    header: "Status",
+    id: "Status",
+  },
+  {
+    id: "button",
+    cell: ({ row }) => <HCComplaintsDropdownMenu complaint={row.original} />,
+    enableHiding: false,
+  },
+];
 
 function renderStatus(status: string) {
   if (status === "Rejected") {
