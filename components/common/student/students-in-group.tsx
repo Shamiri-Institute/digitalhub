@@ -1,6 +1,5 @@
 "use client";
 
-import { SchoolGroupDataTableData } from "#/app/(platform)/hc/schools/[visibleId]/groups/components/columns";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import DataTable from "#/components/data-table";
@@ -20,12 +19,26 @@ export default function StudentsInGroup({
   children,
   open,
   onOpenChange,
-  group,
+  students,
+  schoolVisibleId,
+  groupId,
+  groupName,
 }: {
   children: React.ReactNode;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  group: SchoolGroupDataTableData;
+  students: Prisma.StudentGetPayload<{
+    include: {
+      _count: {
+        select: {
+          clinicalCases: true;
+        };
+      };
+    };
+  }>[];
+  schoolVisibleId: string;
+  groupId: string;
+  groupName: string | null;
 }) {
   const [addStudentDialog, setAddStudentDialog] = React.useState(false);
   return (
@@ -39,7 +52,9 @@ export default function StudentsInGroup({
           <DataTable
             columns={columns}
             editColumns={false}
-            data={group.students}
+            data={students.sort(
+              (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+            )}
             emptyStateMessage={"No students associated to this group"}
             className="data-table"
           />
@@ -47,7 +62,7 @@ export default function StudentsInGroup({
             <Button
               variant="ghost"
               type="button"
-              className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+              className="text-shamiri-new-blue hover:text-shamiri-new-blue"
               onClick={() => {
                 onOpenChange(false);
               }}
@@ -71,10 +86,13 @@ export default function StudentsInGroup({
         open={addStudentDialog}
         onOpenChange={setAddStudentDialog}
         mode="add"
+        schoolVisibleId={schoolVisibleId}
+        assignedGroupId={groupId}
+        groupName={groupName ?? undefined}
       >
         <DialogAlertWidget>
           <div className="flex items-center gap-2">
-            <span>Group {group.groupName}</span>
+            <span>Group {groupName}</span>
           </div>
         </DialogAlertWidget>
       </StudentDetailsForm>
@@ -108,6 +126,11 @@ const columns: ColumnDef<
     header: "Shamiri ID",
     id: "Shamiri ID",
     accessorKey: "visibleId",
+  },
+  {
+    header: "Admission number",
+    id: "Admission number",
+    accessorKey: "admissionNumber",
   },
   {
     header: "Age",

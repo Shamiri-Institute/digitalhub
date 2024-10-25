@@ -70,7 +70,7 @@ export default async function FellowsPage({
 
   return (
     <Suspense fallback={<GroupsTableSkeleton />}>
-      <GroupsDataTable data={data} />
+      <GroupsDataTable data={data} schoolVisibleId={visibleId} />
     </Suspense>
   );
 }

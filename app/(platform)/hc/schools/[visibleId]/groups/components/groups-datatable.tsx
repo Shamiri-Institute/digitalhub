@@ -11,8 +11,10 @@ import { useState } from "react";
 
 export default function GroupsDataTable({
   data,
+  schoolVisibleId,
 }: {
   data: SchoolGroupDataTableData[];
+  schoolVisibleId: string;
 }) {
   const [group, setGroup] = useState<SchoolGroupDataTableData>();
   const [studentsDialog, setStudentsDialog] = useState(false);
@@ -27,7 +29,10 @@ export default function GroupsDataTable({
       />
       {group && (
         <StudentsInGroup
-          group={group}
+          students={group.students}
+          groupId={group.id}
+          groupName={group.groupName}
+          schoolVisibleId={schoolVisibleId}
           open={studentsDialog}
           onOpenChange={setStudentsDialog}
         >
