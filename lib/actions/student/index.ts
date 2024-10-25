@@ -58,7 +58,6 @@ export async function submitStudentDetails(
           studentName,
           gender,
           yearOfBirth,
-          admissionNumber,
           form,
           stream,
           phoneNumber,
@@ -69,16 +68,17 @@ export async function submitStudentDetails(
         message: `Successfully updated details for ${studentName}`,
       };
     } else {
-      const group = await db.interventionGroup.findFirst({
+      const group = await db.interventionGroup.findFirstOrThrow({
         where: {
           id: assignedGroupId,
         },
       });
-      const school = await db.school.findFirst({
+      const school = await db.school.findFirstOrThrow({
         where: {
-          visibleId: assignedGroupId,
+          visibleId: schoolVisibleId,
         },
       });
+
       const studentCount = await db.student.count();
       const student = await db.student.create({
         data: {
@@ -88,7 +88,7 @@ export async function submitStudentDetails(
             studentCount,
           ),
           studentName,
-          schoolId: school!.id,
+          schoolId: school.id,
           admissionNumber,
           yearOfBirth,
           gender,
@@ -100,7 +100,7 @@ export async function submitStudentDetails(
 
       return {
         success: true,
-        message: `Successfully added ${student.studentName} to group ${group !== null ? group.groupName : null}`,
+        message: `Successfully added ${student.studentName} to group ${group.groupName}`,
         data: student,
       };
     }
@@ -274,14 +274,15 @@ export async function submitStudentReportingNotes(
 }
 
 export async function checkExistingStudents(
-  data: z.infer<typeof StudentDetailsSchema>,
+  admissionNumber: string,
+  schoolVisibleId: string,
 ) {
   await checkAuth();
   return await db.student.findMany({
     where: {
-      admissionNumber: data.admissionNumber,
+      admissionNumber: admissionNumber,
       school: {
-        visibleId: data.schoolVisibleId,
+        visibleId: schoolVisibleId,
       },
     },
     include: {

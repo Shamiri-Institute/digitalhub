@@ -48,7 +48,7 @@ export default function StudentDetailsForm({
   open,
   onOpenChange,
   student,
-  mode = "edit",
+  mode,
   children,
   schoolVisibleId,
   assignedGroupId,
@@ -57,7 +57,7 @@ export default function StudentDetailsForm({
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   student?: SchoolStudentTableData;
-  mode?: "add" | "edit";
+  mode: "add" | "edit";
   children: React.ReactNode;
   schoolVisibleId: string | null;
   assignedGroupId?: string;
@@ -91,6 +91,7 @@ export default function StudentDetailsForm({
   useEffect(() => {
     if (open && mode === "edit" && student !== undefined) {
       form.reset({
+        mode,
         id: student.id,
         studentName: student.studentName ?? undefined,
         admissionNumber: student.admissionNumber ?? undefined,
@@ -116,12 +117,23 @@ export default function StudentDetailsForm({
   const checkMatchingAdmissions = async (
     values: z.infer<typeof StudentDetailsSchema>,
   ) => {
-    const students = await checkExistingStudents(values);
-    if (students.length > 0) {
-      setMatchedStudents(students);
-      setTransferDialog(true);
+    if (schoolVisibleId !== null && values.admissionNumber !== undefined) {
+      const students = await checkExistingStudents(
+        values.admissionNumber,
+        schoolVisibleId,
+      );
+      if (students.length > 0) {
+        setMatchedStudents(students);
+        setTransferDialog(true);
+      } else {
+        await onSubmit(values);
+      }
     } else {
-      await onSubmit(values);
+      toast({
+        variant: "destructive",
+        description:
+          "Something went wrong during submission, school not found.",
+      });
     }
   };
 
@@ -176,6 +188,7 @@ export default function StudentDetailsForm({
     }
 
     revalidatePageAction(pathname).then(() => {
+      console.log(pathname);
       toast({
         description: response.message,
       });
@@ -196,15 +209,12 @@ export default function StudentDetailsForm({
             </h2>
           </DialogHeader>
           {children}
-          {/*<DialogAlertWidget>*/}
-          {/*  <div className="flex items-center gap-2">*/}
-          {/*    <span>{student.studentName}</span>*/}
-          {/*    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>*/}
-          {/*    <span>{student.visibleId}</span>*/}
-          {/*  </div>*/}
-          {/*</DialogAlertWidget>*/}
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(checkMatchingAdmissions)}>
+            <form
+              onSubmit={form.handleSubmit(
+                mode === "edit" ? onSubmit : checkMatchingAdmissions,
+              )}
+            >
               <div className="space-y-6">
                 <div className="flex flex-col">
                   <div className="grid grid-cols-2 gap-3">
@@ -296,6 +306,7 @@ export default function StudentDetailsForm({
                     <FormField
                       control={form.control}
                       name="admissionNumber"
+                      disabled={mode === "edit"}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
@@ -372,7 +383,7 @@ export default function StudentDetailsForm({
                   disabled={form.formState.isSubmitting}
                   loading={form.formState.isSubmitting}
                 >
-                  Update & save
+                  {mode === "edit" ? "Update & save" : "Submit"}
                 </Button>
               </DialogFooter>
             </form>

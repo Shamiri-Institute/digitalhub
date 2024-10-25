@@ -17,9 +17,7 @@ export const StudentDetailsSchema = z
     gender: stringValidation("Please select the student's gender"),
     schoolVisibleId: z.string().optional(),
     assignedGroupId: z.string().optional(),
-    admissionNumber: stringValidation(
-      "Please enter the student's admission number",
-    ),
+    admissionNumber: z.string().optional(),
     yearOfBirth: z.coerce.number({
       required_error: "Please enter year of birth",
       invalid_type_error: "Please enter year of birth",
@@ -38,6 +36,17 @@ export const StudentDetailsSchema = z
         message: `Student Id is required.`,
         fatal: true,
         path: ["id"],
+      });
+
+      return z.NEVER;
+    }
+
+    if (val.mode === "add" && val.admissionNumber === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Please enter the student's admission number.`,
+        fatal: true,
+        path: ["admissionNumber"],
       });
 
       return z.NEVER;
