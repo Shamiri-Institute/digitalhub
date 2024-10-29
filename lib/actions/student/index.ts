@@ -72,6 +72,13 @@ export async function submitStudentDetails(
         where: {
           id: assignedGroupId,
         },
+        include: {
+          leader: {
+            include: {
+              supervisor: true,
+            },
+          },
+        },
       });
       const school = await db.school.findFirstOrThrow({
         where: {
@@ -97,6 +104,8 @@ export async function submitStudentDetails(
           assignedGroupId,
           implementerId:
             hubCoordinator?.implementerId ?? supervisor?.implementerId,
+          fellowId: group.leader.id,
+          supervisorId: group.leader.supervisor?.id,
         },
       });
 
