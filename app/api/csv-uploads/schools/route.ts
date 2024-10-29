@@ -8,7 +8,6 @@ import { Readable } from "stream";
 
 const schoolsCSVHeaders = [
   "school_name",
-  "assigned_supervisor",
   "numbers_expected",
   "school_demographics",
   "boardingorday",
@@ -58,10 +57,15 @@ export async function POST(request: NextRequest) {
       .pipe(fastCsv.parse({ headers: true }))
       .on("data", async (row) => {
         let schoolId = objectId("school");
+
+        let parsedPreSessionDate = parseDate(row.presession_date);
+        if (!parsedPreSessionDate) {
+          parsedPreSessionDate = null;
+        }
+
         rows.push({
           id: schoolId,
           schoolName: row.school_name,
-          assignedSupervisorId: row.assigned_supervisor,
           numbersExpected: parseInt(row.numbers_expected),
           schoolDemographics: row.school_demographics,
           boardingDay: row.boardingorday,
@@ -72,12 +76,12 @@ export async function POST(request: NextRequest) {
           principalPhone: row.principal_phone,
           pointPersonName: row.point_person_name,
           pointPersonPhone: row.point_person_phone,
-          // float or null
           latitude: parseFloat(row.latitude),
           longitude: parseFloat(row.longitude),
           hubId: hubId,
           implementerId: implementerId,
-          preSessionDate: new Date(row.presession_date),
+          preSessionDate: parsedPreSessionDate ?? null,
+          assignedSupervisorId: null,
           visibleId: schoolId,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -155,4 +159,20 @@ async function hasRequiredHeaders(csvStream: Readable): Promise<boolean> {
       })
       .on("error", reject);
   });
+}
+
+function parseDate(dateString: string | undefined): Date | null {
+  if (!dateString) return null;
+
+  const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const match = dateString.match(dateRegex);
+
+  if (!match) {
+    return null;
+  }
+
+  const [_, month, day, year] = match;
+  const parsedDate = new Date(`${year}-${month}-${day}`);
+
+  return isNaN(parsedDate.getTime()) ? null : parsedDate;
 }
