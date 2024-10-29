@@ -3,7 +3,6 @@
 import {
   DropoutStudentSchema,
   MarkAttendanceSchema,
-  StudentDetailsSchema,
   StudentReportingNotesSchema,
 } from "#/app/(platform)/hc/schemas";
 import {
@@ -11,8 +10,11 @@ import {
   currentSupervisor,
   getCurrentUser,
 } from "#/app/auth";
+import { StudentDetailsSchema } from "#/components/common/student/schemas";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
+import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { generateStudentVisibleID } from "#/lib/utils";
 import { z } from "zod";
 
 async function checkAuth() {
@@ -31,7 +33,7 @@ export async function submitStudentDetails(
   data: z.infer<typeof StudentDetailsSchema>,
 ) {
   try {
-    await checkAuth();
+    const { hubCoordinator, supervisor } = await checkAuth();
 
     const {
       id,
@@ -42,26 +44,68 @@ export async function submitStudentDetails(
       yearOfBirth,
       admissionNumber,
       phoneNumber,
+      mode,
+      assignedGroupId,
+      schoolVisibleId,
     } = StudentDetailsSchema.parse(data);
 
-    await db.student.update({
-      where: {
-        id,
-      },
-      data: {
-        studentName,
-        gender,
-        yearOfBirth,
-        admissionNumber,
-        form,
-        stream,
-        phoneNumber,
-      },
-    });
-    return {
-      success: true,
-      message: `Successfully updated details for ${studentName}`,
-    };
+    if (mode === "edit") {
+      await db.student.update({
+        where: {
+          id,
+        },
+        data: {
+          studentName,
+          gender,
+          yearOfBirth,
+          form,
+          stream,
+          phoneNumber,
+        },
+      });
+      return {
+        success: true,
+        message: `Successfully updated details for ${studentName}`,
+      };
+    } else {
+      const group = await db.interventionGroup.findFirstOrThrow({
+        where: {
+          id: assignedGroupId,
+        },
+      });
+      const school = await db.school.findFirstOrThrow({
+        where: {
+          visibleId: schoolVisibleId,
+        },
+      });
+
+      const studentCount = await db.student.count();
+      const student = await db.student.create({
+        data: {
+          id: objectId("stu"),
+          visibleId: generateStudentVisibleID(
+            group?.groupName ?? "NA",
+            studentCount,
+          ),
+          studentName,
+          schoolId: school.id,
+          admissionNumber,
+          yearOfBirth,
+          gender,
+          form,
+          stream,
+          assignedGroupId,
+          implementerId:
+            hubCoordinator?.implementerId ?? supervisor?.implementerId,
+        },
+      });
+
+      return {
+        success: true,
+        message: `Successfully added ${student.studentName} to group ${group.groupName}`,
+        data: student,
+      };
+    }
   } catch (err) {
     console.error(err);
     return {
@@ -228,5 +272,51 @@ export async function submitStudentReportingNotes(
       message:
         (err as Error)?.message ?? "Sorry, could not submit reporting notes.",
     };
+  }
+}
+
+export async function checkExistingStudents(
+  admissionNumber: string,
+  schoolVisibleId: string,
+) {
+  await checkAuth();
+  return await db.student.findMany({
+    where: {
+      admissionNumber: admissionNumber,
+      school: {
+        visibleId: schoolVisibleId,
+      },
+    },
+    include: {
+      assignedGroup: {
+        include: {
+          leader: true,
+        },
+      },
+    },
+  });
+}
+
+export async function transferStudentToGroup(id: string, groupId: string) {
+  try {
+    await checkAuth();
+    const student = await db.student.update({
+      where: {
+        id,
+      },
+      data: {
+        assignedGroupId: groupId,
+      },
+      include: {
+        assignedGroup: true,
+      },
+    });
+
+    return {
+      success: true,
+      message: `Successfully transferred ${student.studentName} to group ${student.assignedGroup?.groupName}`,
+    };
+  } catch (error: unknown) {
+    return { error: "Something went wrong while adding student to the group." };
   }
 }

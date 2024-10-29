@@ -90,7 +90,21 @@ export default function StudentsDatatable({
             open={editDialog}
             onOpenChange={setEditDialog}
             student={student}
-          />
+            schoolVisibleId={student.school?.visibleId ?? null}
+            assignedGroupId={student.assignedGroupId ?? undefined}
+            groupName={student.assignedGroup?.groupName ?? undefined}
+            mode="edit"
+          >
+            <DialogAlertWidget>
+              <div className="flex items-center gap-2">
+                <span className="capitalize">
+                  {student.studentName?.toLowerCase()}
+                </span>
+                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+                <span>{student.visibleId}</span>
+              </div>
+            </DialogAlertWidget>
+          </StudentDetailsForm>
           <MarkAttendance
             title={"Mark student attendance"}
             sessions={student.school ? student.school.interventionSessions : []}
