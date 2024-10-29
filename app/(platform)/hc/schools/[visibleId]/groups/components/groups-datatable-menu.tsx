@@ -17,6 +17,7 @@ export function GroupsDatatableMenu({
   group: SchoolGroupDataTableData;
   state: {
     setGroup: Dispatch<SetStateAction<SchoolGroupDataTableData | undefined>>;
+    setStudentsDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   return (
@@ -35,7 +36,14 @@ export function GroupsDatatableMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>View students in group</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            state.setGroup(group);
+            state.setStudentsDialog(true);
+          }}
+        >
+          View students in group
+        </DropdownMenuItem>
         <DropdownMenuItem>View student group evaluation</DropdownMenuItem>
         <DropdownMenuItem className="text-shamiri-red">
           Archive group
