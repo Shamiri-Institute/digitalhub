@@ -4,6 +4,7 @@ import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-ratin
 import { FellowsDatatableMenu } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
+import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
 import { Dispatch, SetStateAction } from "react";
@@ -26,12 +27,22 @@ export type SchoolFellowTableData = {
   subCounty: string | null;
   mpesaName: string | null;
   mpesaNumber: string | null;
+  students: Prisma.StudentGetPayload<{
+    include: {
+      _count: {
+        select: {
+          clinicalCases: true;
+        };
+      };
+    };
+  }>[];
 };
 
 export const columns = (state: {
   setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
   setDetailsDialog: Dispatch<SetStateAction<boolean>>;
   setReplaceDialog: Dispatch<SetStateAction<boolean>>;
+  setStudentsDialog: Dispatch<SetStateAction<boolean>>;
 }): ColumnDef<SchoolFellowTableData>[] => {
   return [
     {

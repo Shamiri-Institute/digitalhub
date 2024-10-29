@@ -16,7 +16,8 @@ export default async function FellowsPage({
     await signOut({ callbackUrl: "/login" });
   }
 
-  const groups = await db.$queryRaw<SchoolGroupDataTableData[]>`
+  const data = await Promise.all([
+    await db.$queryRaw<Omit<SchoolGroupDataTableData, "students">[]>`
   SELECT
 	intg.id,
 	intg.group_name AS "groupName",
@@ -26,7 +27,6 @@ export default async function FellowsPage({
 	fel.fellow_name AS "fellowName",
 	sup.supervisor_name AS "supervisorName",
 	sup.id AS "supervisorId",
-	COUNT(stu.*) AS "studentCount",
 	(AVG(intgr.engagement_1) + AVG(intgr.engagement_2) + AVG(intgr.engagement_3) + AVG(intgr.cooperation_1) + AVG(intgr.cooperation_2) + AVG(intgr.cooperation_3) + AVG(intgr.content)) / 7 AS "groupRating"
   FROM
       intervention_groups intg
@@ -34,7 +34,6 @@ export default async function FellowsPage({
       LEFT JOIN fellows fel ON intg.leader_id = fel.id
       LEFT JOIN supervisors sup ON fel.supervisor_id = sup.id
       LEFT JOIN intervention_group_reports intgr ON intg.id = intgr.group_id
-      LEFT JOIN students stu ON stu.assigned_group_id = intg.id
   WHERE
       sch.visible_id = ${visibleId}
   GROUP BY
@@ -42,11 +41,36 @@ export default async function FellowsPage({
       fel.fellow_name,
       sup.supervisor_name,
       sup.id
-  `;
+  `,
+
+    db.student.findMany({
+      where: {
+        school: {
+          visibleId,
+        },
+      },
+      include: {
+        _count: {
+          select: {
+            clinicalCases: true,
+          },
+        },
+      },
+    }),
+  ]).then((values) => {
+    return values[0].map((group) => {
+      return {
+        ...group,
+        students: values[1].filter((student) => {
+          return student.assignedGroupId === group.id;
+        }),
+      };
+    });
+  });
 
   return (
     <Suspense fallback={<GroupsTableSkeleton />}>
-      <GroupsDataTable data={groups} />
+      <GroupsDataTable data={data} schoolVisibleId={visibleId} />
     </Suspense>
   );
 }

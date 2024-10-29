@@ -4,6 +4,7 @@ import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-ratin
 import { GroupsDatatableMenu } from "#/app/(platform)/hc/schools/[visibleId]/groups/components/groups-datatable-menu";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
+import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { Dispatch, SetStateAction } from "react";
 
@@ -17,11 +18,20 @@ export type SchoolGroupDataTableData = {
   schoolId: string;
   archivedAt: string;
   groupRating: number | null;
-  studentCount: number;
+  students: Prisma.StudentGetPayload<{
+    include: {
+      _count: {
+        select: {
+          clinicalCases: true;
+        };
+      };
+    };
+  }>[];
 };
 
 export const columns = (state: {
   setGroup: Dispatch<SetStateAction<SchoolGroupDataTableData | undefined>>;
+  setStudentsDialog: Dispatch<SetStateAction<boolean>>;
 }): ColumnDef<SchoolGroupDataTableData>[] => {
   return [
     {
@@ -89,7 +99,7 @@ export const columns = (state: {
       id: "Active Status",
     },
     {
-      cell: ({ row }) => `${row.original.studentCount}/15`,
+      cell: ({ row }) => `${row.original.students.length}/15`,
       header: "No. of students",
       id: "No. of students",
     },
