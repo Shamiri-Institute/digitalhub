@@ -33,7 +33,7 @@ export async function submitStudentDetails(
   data: z.infer<typeof StudentDetailsSchema>,
 ) {
   try {
-    await checkAuth();
+    const { hubCoordinator, supervisor } = await checkAuth();
 
     const {
       id,
@@ -95,6 +95,8 @@ export async function submitStudentDetails(
           form,
           stream,
           assignedGroupId,
+          implementerId:
+            hubCoordinator?.implementerId ?? supervisor?.implementerId,
         },
       });
 
