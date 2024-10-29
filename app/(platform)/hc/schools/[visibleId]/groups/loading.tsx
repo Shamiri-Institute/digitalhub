@@ -42,7 +42,7 @@ export default function GroupsTableSkeleton() {
           schoolId: "",
           archivedAt: "",
           groupRating: null,
-          studentCount: 0,
+          students: [],
         };
       })}
       className="data-table data-table-action mt-4"
