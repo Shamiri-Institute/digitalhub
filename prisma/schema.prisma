@@ -531,6 +531,7 @@ model FellowAttendance {
   delayedPaymentRequests  DelayedPaymentRequest[]
   PayoutStatements        PayoutStatements[]
   SpecialApprovalRequests SpecialApprovalRequests[]
+  fellowPaymentComplaints FellowPaymentComplaints[]
 
   @@map("fellow_attendances")
 }
@@ -1401,4 +1402,20 @@ model FellowDocuments {
   link       String   @db.VarChar(255)
 
   @@map("fellow_documents")
+}
+
+model FellowPaymentComplaints {
+  id                      String           @id @default(cuid())
+  createdAt               DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt               DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
+  dateOfComplaint         DateTime?        @map("date_of_complaint") @db.Timestamptz()
+  reason                  String           @db.VarChar(255)
+  statement               String           @db.VarChar(255) // link to the payout statement as per the designs
+  confirmedAmountReceived Int?             @map("confirmed_amount_received")
+  differenceInAmount      Int?             @map("difference_in_amount")
+  status                  ApprovalStatus   @default(PENDING)
+  fellowAttendanceId      Int              @map("fellow_attendance_id")
+  fellowAttendance        FellowAttendance @relation(fields: [fellowAttendanceId], references: [id])
+
+  @@map("fellow_payment_complaints")
 }
