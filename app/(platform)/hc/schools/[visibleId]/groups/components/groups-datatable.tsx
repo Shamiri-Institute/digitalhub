@@ -7,7 +7,7 @@ import {
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function GroupsDataTable({
   data,
@@ -18,6 +18,16 @@ export default function GroupsDataTable({
 }) {
   const [group, setGroup] = useState<SchoolGroupDataTableData>();
   const [studentsDialog, setStudentsDialog] = useState(false);
+
+  useEffect(() => {
+    if (group) {
+      const updatedGroup = data.find((_group) => {
+        return _group.id === group.id;
+      });
+      setGroup(updatedGroup);
+    }
+  }, [data, group]);
+
   return (
     <>
       <DataTable

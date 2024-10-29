@@ -188,7 +188,6 @@ export default function StudentDetailsForm({
     }
 
     revalidatePageAction(pathname).then(() => {
-      console.log(pathname);
       toast({
         description: response.message,
       });
