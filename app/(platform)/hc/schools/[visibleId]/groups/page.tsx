@@ -82,9 +82,22 @@ export default async function FellowsPage({
     });
   });
 
+  const supervisors = await db.supervisor.findMany({
+    where: {
+      hubId: hc?.assignedHubId as string,
+    },
+    include: {
+      fellows: true,
+    },
+  });
+
   return (
     <Suspense fallback={<GroupsTableSkeleton />}>
-      <GroupsDataTable data={data} schoolVisibleId={visibleId} />
+      <GroupsDataTable
+        data={data}
+        schoolVisibleId={visibleId}
+        supervisors={supervisors}
+      />
     </Suspense>
   );
 }
