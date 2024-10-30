@@ -38,6 +38,7 @@ export const columns = (state: {
   setGroup: Dispatch<SetStateAction<SchoolGroupDataTableData | undefined>>;
   setStudentsDialog: Dispatch<SetStateAction<boolean>>;
   setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+  setLeaderDialog: Dispatch<SetStateAction<boolean>>;
 }): ColumnDef<SchoolGroupDataTableData>[] => {
   return [
     {
