@@ -43,6 +43,7 @@ export default function GroupsTableSkeleton() {
           archivedAt: "",
           groupRating: null,
           students: [],
+          reports: [],
         };
       })}
       className="data-table data-table-action mt-4"

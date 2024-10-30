@@ -250,7 +250,8 @@
     @apply pointer-events-none shadow-none hover:bg-transparent hover:text-black;
   }
 
-  .form-view-mode label span {
+  .form-view-mode label span,
+  .form-view-mode .label span {
     @apply hidden;
   }
 }
