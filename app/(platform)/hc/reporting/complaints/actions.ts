@@ -38,14 +38,7 @@ export async function loadHubPaymentComplaints() {
               session: true,
             },
           },
-          group: true,
-          school: {
-            select: {
-              schoolName: true,
-            },
-          },
-          SpecialApprovalRequests: true,
-          PayoutStatements: true,
+          fellowPaymentComplaints: true,
         },
       },
     },
@@ -68,20 +61,17 @@ export async function loadHubPaymentComplaints() {
       trainingSupervision: `${trainingCount} - T | ${supervisionCount} - SV`,
       paidAmount: totalPaidAmount,
       totalAmount: totalAmount,
-      complaints: fellow.fellowAttendances.map((attendance) => {
-        const payout = attendance.PayoutStatements[0];
-        const specialRequest = attendance.SpecialApprovalRequests[0];
-
-        return {
-          id: attendance.id,
-          dateOfComplaint: specialRequest?.createdAt ?? "N/A",
-          reasonForComplaint: "N/A", //we need to add this to the schema
-          statement: payout?.notes ?? "N/A",
-          difference: payout?.amount ?? "N/A",
-          confirmedAmountReceived: payout?.amount ?? "N/A",
-          status: specialRequest?.status ?? "N/A",
-          mpesaName: fellow?.mpesaName ?? "N/A",
-          mpesaNumber: payout?.mpesaNumber ?? fellow?.mpesaNumber ?? "N/A",
+      complaints: fellow.fellowAttendances.flatMap((attendance) => {
+        return attendance.fellowPaymentComplaints.map((complaint) => ({
+          id: complaint.id,
+          dateOfComplaint: complaint?.dateOfComplaint,
+          reasonForComplaint: complaint.reason,
+          statement: complaint?.statement,
+          difference: complaint?.differenceInAmount,
+          confirmedAmountReceived: complaint?.confirmedAmountReceived,
+          status: complaint?.status,
+          mpesaName: fellow?.mpesaName,
+          mpesaNumber: fellow.mpesaNumber,
           fellowName: fellow.fellowName,
           paidAmount: totalAmount,
           noOfSpecialSessions: specialSessionCount(fellow.fellowAttendances),
@@ -90,12 +80,11 @@ export async function loadHubPaymentComplaints() {
           noOfPreSessions: preCount,
           noOfMainSessions: mainCount,
           confirmedTotalReceived: totalPaidAmount,
-          complaintReason: "N/A", //we need to add this to the schema
-          comments: "N/A", //we need to add this to the schema
-          reasonForAccepting: "N/A", //we need to add this to the schema
-          reasonForRejecting: "N/A", // we need to add this to the schema
+          comments: complaint.comments,
+          reasonForAccepting: complaint.reasonForAcceptance,
+          reasonForRejecting: complaint.reasonForRejection,
           allFellowsInHub: fellows,
-        };
+        }));
       }),
     };
   });
@@ -164,8 +153,7 @@ type FellowAttendance = Prisma.FellowAttendanceGetPayload<{
 }>;
 
 export async function rejectComplaint(data: {
-  id: number;
-  reason: string;
+  id: string;
   formData: ComplaintSchema;
 }) {
   const hubCoordinator = await currentHubCoordinator();
@@ -173,16 +161,25 @@ export async function rejectComplaint(data: {
     throw new Error("Unauthorised user");
   }
   try {
-    // will be in a separate PR for actions
-    // do we update the payout statement here then the special approval request
-    // since the figures will be different if the complaint is approved and the values are updated
-
+    await db.fellowPaymentComplaints.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        status: "REJECTED",
+        reasonForRejection: data.formData.reasonForRejecting,
+        confirmedAmountReceived: data.formData.confirmedAmountReceived,
+        comments: data.formData.comments,
+        // TODO: statement should be link to uploaded mpesa statement (defaulting to "mpesa statement" for now) We will need to update this when we know how processed payouts will be stored
+        statement: "mpesa statement",
+      },
+    });
     return {
       success: true,
       message: "Complaint has been rejected",
     };
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return {
       success: false,
       message: "Something went wrong, please try again",
@@ -191,8 +188,7 @@ export async function rejectComplaint(data: {
 }
 
 export async function approveComplaint(data: {
-  id: number;
-  reason: string;
+  id: string;
   formData: ComplaintSchema;
 }) {
   const hubCoordinator = await currentHubCoordinator();
@@ -201,16 +197,26 @@ export async function approveComplaint(data: {
   }
 
   try {
-    // will be in a separate PR for actions
-    // do we update the payout statement here then the special approval request
-    // since the figures will be different if the complaint is approved and the values are updated
+    await db.fellowPaymentComplaints.update({
+      where: {
+        id: data.id,
+      },
+      data: {
+        status: "APPROVED",
+        reasonForAcceptance: data.formData.reasonForAccepting,
+        confirmedAmountReceived: data.formData.confirmedAmountReceived,
+        comments: data.formData.comments,
+        // TODO: statement should be link to uploaded mpesa statement (defaulting to "mpesa statement" for now) We will need to update this when we know how processed payouts will be stored
+        statement: "mpesa statement",
+      },
+    });
 
     return {
       success: true,
       message: `Complaint has been approved`,
     };
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return {
       success: false,
       message: "Something went wrong, please try again",
