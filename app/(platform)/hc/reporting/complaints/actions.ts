@@ -170,6 +170,7 @@ export async function rejectComplaint(data: {
         reasonForRejection: data.formData.reasonForRejecting,
         confirmedAmountReceived: data.formData.confirmedAmountReceived,
         comments: data.formData.comments,
+        reason: data.formData.reasonForComplaint,
         // TODO: statement should be link to uploaded mpesa statement (defaulting to "mpesa statement" for now) We will need to update this when we know how processed payouts will be stored
         statement: "mpesa statement",
       },
@@ -206,6 +207,7 @@ export async function approveComplaint(data: {
         reasonForAcceptance: data.formData.reasonForAccepting,
         confirmedAmountReceived: data.formData.confirmedAmountReceived,
         comments: data.formData.comments,
+        reason: data.formData.reasonForComplaint,
         // TODO: statement should be link to uploaded mpesa statement (defaulting to "mpesa statement" for now) We will need to update this when we know how processed payouts will be stored
         statement: "mpesa statement",
       },
