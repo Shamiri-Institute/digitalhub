@@ -1414,6 +1414,9 @@ model FellowPaymentComplaints {
   confirmedAmountReceived Int?             @map("confirmed_amount_received")
   differenceInAmount      Int?             @map("difference_in_amount")
   status                  ApprovalStatus   @default(PENDING)
+  comments                String?          @db.Text()
+  reasonForRejection      String?          @map("reason_for_rejection") @db.Text()
+  reasonForAcceptance     String?          @map("reason_for_acceptance") @db.Text()
   fellowAttendanceId      Int              @map("fellow_attendance_id")
   fellowAttendance        FellowAttendance @relation(fields: [fellowAttendanceId], references: [id])
 

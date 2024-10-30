@@ -9,6 +9,9 @@ CREATE TABLE "fellow_payment_complaints" (
     "confirmed_amount_received" INTEGER,
     "difference_in_amount" INTEGER,
     "status" "approval_status" NOT NULL DEFAULT 'PENDING',
+    "comments" TEXT,
+    "reason_for_rejection" TEXT,
+    "reason_for_acceptance" TEXT,
     "fellow_attendance_id" INTEGER NOT NULL,
 
     CONSTRAINT "fellow_payment_complaints_pkey" PRIMARY KEY ("id")
