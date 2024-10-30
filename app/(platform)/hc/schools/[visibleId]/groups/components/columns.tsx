@@ -27,11 +27,17 @@ export type SchoolGroupDataTableData = {
       };
     };
   }>[];
+  reports: Prisma.InterventionGroupReportGetPayload<{
+    include: {
+      session: true;
+    };
+  }>[];
 };
 
 export const columns = (state: {
   setGroup: Dispatch<SetStateAction<SchoolGroupDataTableData | undefined>>;
   setStudentsDialog: Dispatch<SetStateAction<boolean>>;
+  setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
 }): ColumnDef<SchoolGroupDataTableData>[] => {
   return [
     {

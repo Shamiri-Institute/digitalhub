@@ -42,7 +42,6 @@ export default async function FellowsPage({
       sup.supervisor_name,
       sup.id
   `,
-
     db.student.findMany({
       where: {
         school: {
@@ -57,12 +56,27 @@ export default async function FellowsPage({
         },
       },
     }),
+    db.interventionGroupReport.findMany({
+      where: {
+        group: {
+          school: {
+            visibleId,
+          },
+        },
+      },
+      include: {
+        session: true,
+      },
+    }),
   ]).then((values) => {
     return values[0].map((group) => {
       return {
         ...group,
         students: values[1].filter((student) => {
           return student.assignedGroupId === group.id;
+        }),
+        reports: values[2].filter((report) => {
+          return report.groupId === group.id;
         }),
       };
     });
