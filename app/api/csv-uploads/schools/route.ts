@@ -28,13 +28,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const file = formData.get("file") as File;
-
     const hc = await currentHubCoordinator();
 
     if (!hc) {
       return NextResponse.json(
         { error: "Hub coordinator not found." },
-        { status: 404 },
+        { status: 401 },
       );
     }
 
@@ -44,97 +43,92 @@ export async function POST(request: NextRequest) {
 
     const buffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(buffer);
-
     const csvStream = Readable.from([fileBuffer]);
 
-    await hasRequiredHeaders(csvStream);
+    try {
+      await hasRequiredHeaders(csvStream);
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : error },
+        { status: 400 },
+      );
+    }
 
-    const rows: Prisma.SchoolGetPayload<{}>[] = [];
+    const rows: Prisma.SchoolGetPayload<{}>[] = await new Promise(
+      (resolve, reject) => {
+        const parsedRows: Prisma.SchoolGetPayload<{}>[] = [];
+        const dataStream = Readable.from([fileBuffer]);
 
-    const dataStream = Readable.from([fileBuffer]);
+        dataStream
+          .pipe(fastCsv.parse({ headers: true }))
+          .on("data", (row) => {
+            let schoolId = objectId("school");
+            const parsedPreSessionDate = parseDate(row.presession_date) || null;
 
-    dataStream
-      .pipe(fastCsv.parse({ headers: true }))
-      .on("data", async (row) => {
-        let schoolId = objectId("school");
+            parsedRows.push({
+              id: schoolId,
+              schoolName: row.school_name,
+              numbersExpected: parseInt(row.numbers_expected),
+              schoolDemographics: row.school_demographics,
+              boardingDay: row.boardingorday,
+              schoolType: row.school_type,
+              schoolCounty: row.school_county,
+              schoolSubCounty: row.school_subcounty,
+              principalName: row.principal_name,
+              principalPhone: row.principal_phone,
+              pointPersonName: row.point_person_name,
+              pointPersonPhone: row.point_person_phone,
+              latitude: parseFloat(row.latitude),
+              longitude: parseFloat(row.longitude),
+              hubId: hubId,
+              implementerId: implementerId,
+              preSessionDate: parsedPreSessionDate,
+              visibleId: schoolId,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              archivedAt: null,
+              schoolEmail: null,
+              pointPersonId: null,
+              pointPersonEmail: null,
+              droppedOut: null,
+              droppedOutAt: null,
+              dropoutReason: null,
+              assignedSupervisorId: null,
+              session1Date: null,
+              session2Date: null,
+              session3Date: null,
+              session4Date: null,
+              clinicalFollowup1Date: null,
+              clinicalFollowup2Date: null,
+              clinicalFollowup3Date: null,
+              clinicalFollowup4Date: null,
+              clinicalFollowup5Date: null,
+              clinicalFollowup6Date: null,
+              clinicalFollowup7Date: null,
+              clinicalFollowup8Date: null,
+              dataCollectionFollowup1Date: null,
+            });
+          })
 
-        let parsedPreSessionDate = parseDate(row.presession_date);
-        if (!parsedPreSessionDate) {
-          parsedPreSessionDate = null;
-        }
+          .on("error", (err) => reject(err))
+          .on("end", () => resolve(parsedRows));
+      },
+    );
 
-        rows.push({
-          id: schoolId,
-          schoolName: row.school_name,
-          numbersExpected: parseInt(row.numbers_expected),
-          schoolDemographics: row.school_demographics,
-          boardingDay: row.boardingorday,
-          schoolType: row.school_type,
-          schoolCounty: row.school_county,
-          schoolSubCounty: row.school_subcounty,
-          principalName: row.principal_name,
-          principalPhone: row.principal_phone,
-          pointPersonName: row.point_person_name,
-          pointPersonPhone: row.point_person_phone,
-          latitude: parseFloat(row.latitude),
-          longitude: parseFloat(row.longitude),
-          hubId: hubId,
-          implementerId: implementerId,
-          preSessionDate: parsedPreSessionDate ?? null,
-          assignedSupervisorId: null,
-          visibleId: schoolId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          archivedAt: null,
-          schoolEmail: null,
-          pointPersonId: null,
-          pointPersonEmail: null,
-          droppedOut: null,
-          droppedOutAt: null,
-          dropoutReason: null,
-          session1Date: null,
-          session2Date: null,
-          session3Date: null,
-          session4Date: null,
-          clinicalFollowup1Date: null,
-          clinicalFollowup2Date: null,
-          clinicalFollowup3Date: null,
-          clinicalFollowup4Date: null,
-          clinicalFollowup5Date: null,
-          clinicalFollowup6Date: null,
-          clinicalFollowup7Date: null,
-          clinicalFollowup8Date: null,
-          dataCollectionFollowup1Date: null,
-        });
-        try {
-          await db.$transaction(async (prisma) => {
-            await prisma.school.createMany({ data: rows });
-          });
-
-          return NextResponse.json({
-            status: 200,
-            message: "File uploaded successfully.",
-          });
-        } catch (error) {
-          console.error("Error uploading to database:", error);
-
-          return NextResponse.json(
-            { error: "Error uploading to database" },
-            { status: 500 },
-          );
-        }
-      })
-      .on("error", (err) => {
-        return NextResponse.json({ error: err }, { status: 500 });
-      });
+    await db.$transaction(async (prisma) => {
+      await prisma.school.createMany({ data: rows });
+    });
 
     return NextResponse.json({
       status: 200,
       message: "File uploaded successfully.",
     });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error }, { status: 500 });
+    console.error("Error processing file upload:", error);
+    return NextResponse.json(
+      { error: "Something went wrong. Please try again." },
+      { status: 500 },
+    );
   }
 }
 
