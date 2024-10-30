@@ -33,19 +33,23 @@ export default async function HCComplaintsDropdownMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <HCApproveRejectComplaint
-          complaint={complaint}
-          fellows={complaint.allFellowsInHub ?? []}
-        >
-          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-            Approve/reject complaint
-          </div>
-        </HCApproveRejectComplaint>
-        <HCViewComplaint complaint={complaint}>
-          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-            View complaint
-          </div>
-        </HCViewComplaint>
+
+        {complaint.status !== "PENDING" ? (
+          <HCViewComplaint complaint={complaint}>
+            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+              View complaint
+            </div>
+          </HCViewComplaint>
+        ) : (
+          <HCApproveRejectComplaint
+            complaint={complaint}
+            fellows={complaint.allFellowsInHub ?? []}
+          >
+            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+              Approve/reject complaint
+            </div>
+          </HCApproveRejectComplaint>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

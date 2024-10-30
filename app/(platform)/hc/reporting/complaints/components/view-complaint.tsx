@@ -46,6 +46,7 @@ export default function HCViewComplaint({
   const form = useForm<z.infer<typeof ComplaintSchema>>({
     resolver: zodResolver(ComplaintSchema),
     defaultValues: {
+      fellow: complaint?.fellowName ?? "",
       mpesaNumber: complaint?.mpesaNumber ?? "",
       mpesaName: complaint?.mpesaName ?? "",
       noOfTrainingSessions: complaint?.noOfTrainingSessions ?? 0,
@@ -54,8 +55,8 @@ export default function HCViewComplaint({
       noOfMainSessions: complaint?.noOfMainSessions ?? 0,
       noOfSpecialSessions: complaint?.noOfSpecialSessions ?? 0,
       paidAmount: complaint?.paidAmount ?? 0,
-      confirmedTotalReceived: complaint?.confirmedTotalReceived ?? 0,
-      complaintReason: complaint?.complaintReason ?? "",
+      confirmedAmountReceived: complaint?.confirmedTotalReceived ?? 0,
+      reasonForComplaint: complaint?.reasonForComplaint ?? "",
       comments: complaint?.comments ?? "",
       reasonForAccepting: complaint?.reasonForAccepting ?? "",
       reasonForRejecting: complaint?.reasonForRejecting ?? "",
@@ -72,7 +73,7 @@ export default function HCViewComplaint({
 
         <DialogAlertWidget
           label={`${complaint.status}`}
-          variant={complaint.status === "Rejected" ? "destructive" : "primary"}
+          variant={complaint.status === "REJECTED" ? "destructive" : "primary"}
         />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-1">
           <Form {...form}>
@@ -80,6 +81,7 @@ export default function HCViewComplaint({
               <FormField
                 control={form.control}
                 name="fellow"
+                disabled
                 render={({ field }) => (
                   <FormItem className="space-y-2">
                     <FormLabel>
@@ -293,7 +295,7 @@ export default function HCViewComplaint({
               </div>
               <FormField
                 control={form.control}
-                name="confirmedTotalReceived"
+                name="confirmedAmountReceived"
                 render={({ field }) => (
                   <div className="w-full">
                     <FormItem>
@@ -326,7 +328,7 @@ export default function HCViewComplaint({
 
               <FormField
                 control={form.control}
-                name="complaintReason"
+                name="reasonForComplaint"
                 render={({ field }) => (
                   <div className="w-full">
                     <FormItem>
@@ -342,10 +344,10 @@ export default function HCViewComplaint({
                         </FormControl>
                         <SelectContent>
                           <SelectItem
-                            key={complaint?.complaintReason}
-                            value={complaint?.complaintReason!}
+                            key={complaint?.reasonForComplaint}
+                            value={complaint?.reasonForComplaint!}
                           >
-                            {complaint?.complaintReason}
+                            {complaint?.reasonForComplaint}
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -377,7 +379,7 @@ export default function HCViewComplaint({
                 )}
               />
 
-              {complaint.status === "Accepted" && (
+              {complaint.status === "APPROVED" && (
                 <FormField
                   control={form.control}
                   name="reasonForAccepting"
@@ -401,7 +403,7 @@ export default function HCViewComplaint({
                 />
               )}
 
-              {complaint.status === "Rejected" && (
+              {complaint.status === "REJECTED" && (
                 <FormField
                   control={form.control}
                   name="reasonForRejecting"
