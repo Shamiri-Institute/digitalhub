@@ -5,6 +5,7 @@ import {
 } from "#/app/(platform)/hc/reporting/complaints/actions";
 import { ComplaintData } from "#/app/(platform)/hc/reporting/complaints/components/complaints-actions-dropdown";
 import { ComplaintSchema } from "#/app/(platform)/hc/reporting/complaints/schema";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { FileUploaderWithDrop } from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
@@ -54,10 +55,27 @@ export default function HCApproveRejectComplaint({
   const [approveDialogOpen, setApproveDialogOpen] = useState<boolean>(false);
   const [formData, setFormData] = useState<z.infer<typeof ComplaintSchema>>();
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"reject" | "accept" | "none">("none");
+
+  const reasonsForComplaint = [
+    {
+      id: "1",
+      reason: "Received less payment",
+    },
+    {
+      id: "2",
+      reason: "Received more payment",
+    },
+    {
+      id: "3",
+      reason: "Payment not received",
+    },
+  ];
 
   const form = useForm<z.infer<typeof ComplaintSchema>>({
     resolver: zodResolver(ComplaintSchema),
     defaultValues: {
+      fellow: complaint?.fellowName ?? "",
       mpesaNumber: complaint?.mpesaNumber ?? "",
       mpesaName: complaint?.mpesaName ?? "",
       noOfTrainingSessions: complaint?.noOfTrainingSessions ?? 0,
@@ -66,16 +84,18 @@ export default function HCApproveRejectComplaint({
       noOfMainSessions: complaint?.noOfMainSessions ?? 0,
       noOfSpecialSessions: complaint?.noOfSpecialSessions ?? 0,
       paidAmount: complaint?.paidAmount ?? 0,
-      confirmedTotalReceived: complaint?.confirmedTotalReceived ?? 0,
-      complaintReason: complaint?.complaintReason ?? "",
+      confirmedAmountReceived: complaint?.confirmedAmountReceived ?? 0,
+      reasonForComplaint: complaint?.reasonForComplaint ?? "",
       comments: complaint?.comments ?? "",
+      reasonForAccepting: complaint?.reasonForAccepting ?? "",
+      reasonForRejecting: complaint?.reasonForRejecting ?? "",
     },
   });
 
   async function confirmAccept() {
     setLoading(true);
     if (formData) {
-      if (form.formState.errors) {
+      if (Object.keys(form.formState.errors).length) {
         toast({
           variant: "destructive",
           title: "Error",
@@ -87,9 +107,9 @@ export default function HCApproveRejectComplaint({
 
       const response = await approveComplaint({
         id: complaint.id,
-        reason: formData.reasonForAccepting ?? "",
         formData,
       });
+
       if (!response.success) {
         toast({
           description:
@@ -97,6 +117,7 @@ export default function HCApproveRejectComplaint({
         });
         return;
       }
+      revalidatePageAction("/hc/reporting/complaints");
 
       toast({
         title: "Success",
@@ -107,55 +128,68 @@ export default function HCApproveRejectComplaint({
       form.reset();
       setApproveDialogOpen(false);
       setLoading(false);
+      setDialogOpen(false);
     }
   }
 
   async function confirmReject() {
     setLoading(true);
-    if (form.formState.errors) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please fill all required fields",
-      });
-      setLoading(false);
-      return;
-    }
-
     if (formData) {
-      const response = await rejectComplaint({
-        id: complaint.id,
-        reason: formData.reasonForRejecting ?? "",
-        formData,
-      });
-      if (!response.success) {
+      if (Object.keys(form.formState.errors).length) {
         toast({
-          description:
-            response.message ?? "Something went wrong, please try again",
+          variant: "destructive",
+          title: "Error",
+          description: "Please fill all required fields",
         });
+        setLoading(false);
         return;
       }
 
-      toast({
-        title: "Success",
-        variant: "default",
-        description: response.message ?? "Successfully rejected complaint",
-      });
+      if (formData) {
+        const response = await rejectComplaint({
+          id: complaint.id,
+          formData,
+        });
+        if (!response.success) {
+          toast({
+            description:
+              response.message ?? "Something went wrong, please try again",
+          });
+          return;
+        }
 
-      form.reset();
-      setRejectDialogOpen(false);
-      setLoading(false);
+        revalidatePageAction("/hc/reporting/complaints");
+
+        toast({
+          title: "Success",
+          variant: "default",
+          description: response.message ?? "Successfully rejected complaint",
+        });
+
+        form.reset();
+        setRejectDialogOpen(false);
+        setLoading(false);
+        setDialogOpen(false);
+      }
     }
   }
 
   const onSubmit = (data: z.infer<typeof ComplaintSchema>) => {
-    if (form.formState.errors) {
+    if (Object.keys(form.formState.errors).length) {
       toast({
         variant: "destructive",
         title: "Error",
         description: "Please fill all required fields",
       });
       return;
+    }
+    if (mode === "reject") {
+      setRejectDialogOpen(true);
+      setApproveDialogOpen(false);
+    }
+    if (mode === "accept") {
+      setApproveDialogOpen(true);
+      setRejectDialogOpen(false);
     }
 
     setFormData(data);
@@ -165,44 +199,39 @@ export default function HCApproveRejectComplaint({
     <Form {...form}>
       <Dialog open={open} onOpenChange={setDialogOpen}>
         <DialogTrigger asChild>{children}</DialogTrigger>
-        <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
+        <DialogContent>
           <DialogHeader className="bg-white">
             <h2>Approve/reject complaint</h2>
           </DialogHeader>
 
-          <DialogAlertWidget label={`${complaint.status}`} variant="default" />
+          <DialogAlertWidget
+            label={`${complaint.status}`}
+            variant={
+              complaint.status === "REJECTED" ? "destructive" : "primary"
+            }
+          />
           <div className="min-w-max overflow-x-auto overflow-y-scroll px-1">
             <form className="space-y-2" onSubmit={form.handleSubmit(onSubmit)}>
               <FormField
                 control={form.control}
                 name="fellow"
                 render={({ field }) => (
-                  <FormItem className="space-y-2">
-                    <FormLabel>
-                      Select fellow (KES){" "}
-                      <span className="text-shamiri-light-red">*</span>
-                    </FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                      }}
-                      defaultValue={field.value}
-                    >
+                  <div className="w-full">
+                    <FormItem>
+                      <FormLabel>
+                        Fellow <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a fellow" />
-                        </SelectTrigger>
+                        <Input
+                          placeholder="Please select a fellow"
+                          className="w-full flex-1"
+                          {...field}
+                          value={field.value || ""}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {fellows.map((fellow) => (
-                          <SelectItem key={fellow.id} value={fellow.id}>
-                            {fellow.fellowName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+                      <FormMessage />
+                    </FormItem>
+                  </div>
                 )}
               />
 
@@ -243,6 +272,7 @@ export default function HCApproveRejectComplaint({
                           <Input
                             placeholder=""
                             className="w-full flex-1"
+                            type="number"
                             {...field}
                           />
                         </FormControl>
@@ -267,6 +297,7 @@ export default function HCApproveRejectComplaint({
                           <Input
                             placeholder=""
                             className="w-full flex-1"
+                            type="number"
                             {...field}
                           />
                         </FormControl>
@@ -289,6 +320,7 @@ export default function HCApproveRejectComplaint({
                           <Input
                             placeholder=""
                             className="w-full flex-1"
+                            type="number"
                             {...field}
                           />
                         </FormControl>
@@ -313,6 +345,7 @@ export default function HCApproveRejectComplaint({
                           <Input
                             placeholder=""
                             className="w-full flex-1"
+                            type="number"
                             {...field}
                           />
                         </FormControl>
@@ -335,6 +368,7 @@ export default function HCApproveRejectComplaint({
                           <Input
                             placeholder=""
                             className="w-full flex-1"
+                            type="number"
                             {...field}
                           />
                         </FormControl>
@@ -361,6 +395,7 @@ export default function HCApproveRejectComplaint({
                             placeholder=""
                             className="w-full flex-1"
                             {...field}
+                            type="number"
                           />
                         </FormControl>
                         <FormMessage />
@@ -381,6 +416,7 @@ export default function HCApproveRejectComplaint({
                         <FormControl>
                           <Input
                             placeholder=""
+                            type="number"
                             className="w-full flex-1"
                             {...field}
                           />
@@ -393,7 +429,7 @@ export default function HCApproveRejectComplaint({
               </div>
               <FormField
                 control={form.control}
-                name="confirmedTotalReceived"
+                name="confirmedAmountReceived"
                 render={({ field }) => (
                   <div className="w-full">
                     <FormItem>
@@ -429,7 +465,7 @@ export default function HCApproveRejectComplaint({
 
               <FormField
                 control={form.control}
-                name="complaintReason"
+                name="reasonForComplaint"
                 render={({ field }) => (
                   <div className="w-full">
                     <FormItem>
@@ -440,8 +476,9 @@ export default function HCApproveRejectComplaint({
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
+                          form.trigger("reasonForComplaint");
                         }}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -449,9 +486,9 @@ export default function HCApproveRejectComplaint({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {fellows.map((fellow) => (
-                            <SelectItem key={fellow.id} value={fellow.id}>
-                              {fellow.fellowName}
+                          {reasonsForComplaint.map((reason) => (
+                            <SelectItem key={reason.id} value={reason.reason}>
+                              {reason.reason}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -501,8 +538,7 @@ export default function HCApproveRejectComplaint({
                   disabled={form.formState.isSubmitting}
                   variant="destructive"
                   onClick={() => {
-                    setRejectDialogOpen(true);
-                    setFormData(form.getValues());
+                    setMode("reject");
                   }}
                 >
                   Reject
@@ -512,8 +548,7 @@ export default function HCApproveRejectComplaint({
                   disabled={form.formState.isSubmitting}
                   variant="brand"
                   onClick={() => {
-                    setApproveDialogOpen(true);
-                    setFormData(form.getValues());
+                    setMode("accept");
                   }}
                 >
                   Accept
@@ -540,7 +575,7 @@ export default function HCApproveRejectComplaint({
 
           <FormField
             control={form.control}
-            name="reasonForAccepting"
+            name="reasonForRejecting"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
@@ -552,6 +587,16 @@ export default function HCApproveRejectComplaint({
                     placeholder="Inaccurate reporting"
                     className="resize-none"
                     {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setFormData(
+                        (prevData) =>
+                          ({
+                            ...prevData,
+                            reasonForRejecting: e.target.value,
+                          }) as z.infer<typeof ComplaintSchema>,
+                      );
+                    }}
                   />
                 </FormControl>
                 <FormMessage />
@@ -610,6 +655,16 @@ export default function HCApproveRejectComplaint({
                     placeholder="Inaccurate reporting"
                     className="resize-none"
                     {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setFormData(
+                        (prevData) =>
+                          ({
+                            ...prevData,
+                            reasonForAccepting: e.target.value,
+                          }) as z.infer<typeof ComplaintSchema>,
+                      );
+                    }}
                   />
                 </FormControl>
                 <FormMessage />

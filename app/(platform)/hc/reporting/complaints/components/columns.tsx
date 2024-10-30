@@ -141,10 +141,10 @@ export const subColumns: ColumnDef<
 ];
 
 function renderStatus(status: string) {
-  if (status === "Rejected") {
+  if (status === "REJECTED") {
     return <Badge variant="destructive">Rejected</Badge>;
   }
-  if (status === "Accepted") {
+  if (status === "APPROVED") {
     return <Badge variant="shamiri-green">Accepted</Badge>;
   }
   return <Badge variant="default">Pending</Badge>;
