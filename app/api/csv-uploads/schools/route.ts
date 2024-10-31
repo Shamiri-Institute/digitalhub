@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       status: 200,
-      message: "File uploaded successfully.",
+      message: `${rows.length} schools uploaded successfully.`,
     });
   } catch (error) {
     console.error("Error processing file upload:", error);
