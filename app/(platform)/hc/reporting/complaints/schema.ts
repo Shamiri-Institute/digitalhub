@@ -29,8 +29,8 @@ export const ComplaintSchema = z.object({
   }),
   reasonForComplaint: stringValidation("Please enter the complaint reason"),
   comments: stringValidation("Please enter additional comments"),
-  reasonForAccepting: z.string().optional(),
-  reasonForRejecting: z.string().optional(),
+  reasonForAccepting: stringValidation("Please enter the reason for accepting"),
+  reasonForRejecting: stringValidation("Please enter the reason for rejecting"),
 });
 
 export type ComplaintSchema = z.infer<typeof ComplaintSchema>;

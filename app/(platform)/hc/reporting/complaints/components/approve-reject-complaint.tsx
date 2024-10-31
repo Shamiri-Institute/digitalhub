@@ -199,7 +199,7 @@ export default function HCApproveRejectComplaint({
     <Form {...form}>
       <Dialog open={open} onOpenChange={setDialogOpen}>
         <DialogTrigger asChild>{children}</DialogTrigger>
-        <DialogContent>
+        <DialogContent className="w-1/2 max-w-none">
           <DialogHeader className="bg-white">
             <h2>Approve/reject complaint</h2>
           </DialogHeader>
@@ -272,7 +272,6 @@ export default function HCApproveRejectComplaint({
                           <Input
                             placeholder=""
                             className="w-full flex-1"
-                            type="number"
                             {...field}
                           />
                         </FormControl>
