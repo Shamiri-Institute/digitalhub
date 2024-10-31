@@ -20,6 +20,7 @@ export function GroupsDatatableMenu({
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
     setLeaderDialog: Dispatch<SetStateAction<boolean>>;
     setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+    setArchiveDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   return (
@@ -62,7 +63,13 @@ export function GroupsDatatableMenu({
         >
           View student group evaluation
         </DropdownMenuItem>
-        <DropdownMenuItem className="text-shamiri-red">
+        <DropdownMenuItem
+          className="text-shamiri-red"
+          onClick={() => {
+            state.setGroup(group);
+            state.setArchiveDialog(true);
+          }}
+        >
           Archive group
         </DropdownMenuItem>
       </DropdownMenuContent>
