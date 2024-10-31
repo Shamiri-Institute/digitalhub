@@ -66,7 +66,7 @@ export default function HCViewComplaint({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
+      <DialogContent className="z-10">
         <DialogHeader className="bg-white">
           <h2>Approve/reject complaint</h2>
         </DialogHeader>
@@ -430,17 +430,6 @@ export default function HCViewComplaint({
               <Separator />
 
               <DialogFooter>
-                <Button
-                  variant="ghost"
-                  className="text-base font-semibold leading-6 text-shamiri-red"
-                  onClick={() => {
-                    form.reset();
-                    setDialogOpen(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-
                 <Button
                   onClick={() => {
                     form.reset();

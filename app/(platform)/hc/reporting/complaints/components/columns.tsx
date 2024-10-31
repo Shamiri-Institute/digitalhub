@@ -117,8 +117,17 @@ export const subColumns: ColumnDef<
     header: "Reason for complaint",
   },
   {
-    accessorKey: "statement",
+    cell: ({ row }) => (
+      <a
+        href={row.original.statement}
+        download
+        className="text-shamiri-new-blue"
+      >
+        Download
+      </a>
+    ),
     header: "Statement",
+    id: "Statement",
   },
   {
     accessorKey: "difference",
