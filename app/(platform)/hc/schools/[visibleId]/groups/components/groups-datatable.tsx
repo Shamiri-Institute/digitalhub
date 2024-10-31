@@ -6,6 +6,7 @@ import {
 } from "#/app/(platform)/hc/schools/[visibleId]/groups/components/columns";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
+import ArchiveGroup from "#/components/common/group/archive-group";
 import StudentGroupEvaluation from "#/components/common/group/student-group-evaluation";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
@@ -29,6 +30,7 @@ export default function GroupsDataTable({
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [evaluationDialog, setEvaluationDialog] = useState(false);
   const [leaderDialog, setLeaderDialog] = useState(false);
+  const [archiveDialog, setArchiveDialog] = useState(false);
 
   useEffect(() => {
     if (group) {
@@ -47,6 +49,7 @@ export default function GroupsDataTable({
           setStudentsDialog,
           setEvaluationDialog,
           setLeaderDialog,
+          setArchiveDialog,
         })}
         data={data}
         className="data-table data-table-action mt-4"
@@ -100,6 +103,17 @@ export default function GroupsDataTable({
               </div>
             </DialogAlertWidget>
           </ReplaceFellow>
+          <ArchiveGroup
+            groupId={group.id}
+            open={archiveDialog}
+            onOpenChange={setArchiveDialog}
+          >
+            <DialogAlertWidget>
+              <div className="flex items-center gap-2">
+                <span>{group.groupName}</span>
+              </div>
+            </DialogAlertWidget>
+          </ArchiveGroup>
         </>
       )}
     </>
