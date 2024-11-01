@@ -10,6 +10,7 @@ import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getSchoolInitials } from "#/lib/utils";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 async function checkAuth() {
@@ -77,9 +78,31 @@ export async function createInterventionGroup(
     });
     return {
       success: true,
-      message: `Successfully create new group ${result.groupName}`,
+      message: `Successfully created new group ${result.groupName}`,
     };
   } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === "P2002") {
+        const { schoolId, fellowId } = CreateGroupSchema.parse(data);
+        const result = await db.interventionGroup.findFirst({
+          where: {
+            school: {
+              id: schoolId,
+            },
+            leaderId: fellowId,
+          },
+          include: {
+            leader: true,
+          },
+        });
+        if (result !== null) {
+          return {
+            success: false,
+            message: `Sorry, ${result.leader.fellowName} is already assigned to group ${result.groupName}`,
+          };
+        }
+      }
+    }
     console.error(err);
     return {
       success: false,
