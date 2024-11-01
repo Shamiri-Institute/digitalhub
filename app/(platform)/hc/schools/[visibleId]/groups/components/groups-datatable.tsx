@@ -7,6 +7,7 @@ import {
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import ArchiveGroup from "#/components/common/group/archive-group";
+import CreateGroup from "#/components/common/group/create-group";
 import StudentGroupEvaluation from "#/components/common/group/student-group-evaluation";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
@@ -15,11 +16,11 @@ import { useEffect, useState } from "react";
 
 export default function GroupsDataTable({
   data,
-  schoolVisibleId,
+  school,
   supervisors,
 }: {
   data: SchoolGroupDataTableData[];
-  schoolVisibleId: string;
+  school: Prisma.SchoolGetPayload<{}>;
   supervisors: Prisma.SupervisorGetPayload<{
     include: {
       fellows: true;
@@ -41,6 +42,16 @@ export default function GroupsDataTable({
     }
   }, [data, group]);
 
+  const renderTableActions = () => {
+    return (
+      <CreateGroup
+        supervisors={supervisors}
+        school={school}
+        groupCount={data.length}
+      ></CreateGroup>
+    );
+  };
+
   return (
     <>
       <DataTable
@@ -55,6 +66,7 @@ export default function GroupsDataTable({
         className="data-table data-table-action mt-4"
         columnVisibilityState={{ "Active Status": false }}
         emptyStateMessage="No groups associated with this school"
+        renderTableActions={renderTableActions()}
       />
       {group && (
         <>
@@ -62,7 +74,7 @@ export default function GroupsDataTable({
             students={group.students}
             groupId={group.id}
             groupName={group.groupName}
-            schoolVisibleId={schoolVisibleId}
+            schoolVisibleId={school.visibleId}
             open={studentsDialog}
             onOpenChange={setStudentsDialog}
           >
@@ -91,7 +103,7 @@ export default function GroupsDataTable({
             fellowId={group.leaderId}
             groupId={group.id}
             supervisors={supervisors}
-            schoolVisibleId={schoolVisibleId}
+            schoolVisibleId={school.visibleId}
           >
             <DialogAlertWidget>
               <div className="flex items-center gap-2">

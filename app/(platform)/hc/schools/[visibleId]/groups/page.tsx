@@ -91,13 +91,15 @@ export default async function FellowsPage({
     },
   });
 
+  const school = await db.school.findFirstOrThrow({
+    where: {
+      visibleId,
+    },
+  });
+
   return (
     <Suspense fallback={<GroupsTableSkeleton />}>
-      <GroupsDataTable
-        data={data}
-        schoolVisibleId={visibleId}
-        supervisors={supervisors}
-      />
+      <GroupsDataTable data={data} school={school} supervisors={supervisors} />
     </Suspense>
   );
 }
