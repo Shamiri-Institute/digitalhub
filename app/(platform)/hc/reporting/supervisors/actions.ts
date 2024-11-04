@@ -2,6 +2,7 @@
 
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
+import { signOut } from "next-auth/react";
 
 export type HubSupervisorExpensesType = Awaited<
   ReturnType<typeof loadHubSupervisorExpenses>
@@ -11,6 +12,7 @@ export async function loadHubSupervisorExpenses() {
   const hubCoordinator = await currentHubCoordinator();
 
   if (!hubCoordinator) {
+    await signOut({ callbackUrl: "/login" });
     throw new Error("Unauthorised user");
   }
 
@@ -66,6 +68,7 @@ export async function deleteSupervisorExpenseRequest({
     const hubCoordinator = await currentHubCoordinator();
 
     if (!hubCoordinator) {
+      await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
     if (name !== hubCoordinator.coordinatorName) {
@@ -97,6 +100,7 @@ export async function approveSupervisorExpense({ id }: { id: string }) {
     const hubCoordinator = await currentHubCoordinator();
 
     if (!hubCoordinator) {
+      await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
 
