@@ -13,6 +13,12 @@ export async function loadHubPayoutHistory() {
     throw new Error("Unauthorised user");
   }
 
+  // TODO: Depends on the payout workflow from the supervisor side
   // TODO:  get the payout history for the hub and get the dateAdded, duration, totalpayoutAmount, and action(csv download link)
-  return [];
+  return [] as {
+    dateAdded: Date;
+    duration: string;
+    totalPayoutAmount: number;
+    downloadLink: string;
+  }[];
 }

@@ -13,11 +13,20 @@ export const columns: ColumnDef<HubPayoutHistoryType>[] = [
     header: "Duration",
   },
   {
-    accessorKey: "totalpayoutAmount",
+    accessorKey: "totalPayoutAmount",
     header: "Total Payout Amount (KES)",
   },
   {
-    accessorKey: "action",
+    cell: ({ row }) => (
+      <a
+        href={row.original.downloadLink}
+        download
+        className="text-shamiri-new-blue"
+      >
+        Download .csv
+      </a>
+    ),
     header: "Action",
+    id: "action",
   },
 ];
