@@ -24,7 +24,6 @@ import {
 import { Input } from "#/components/ui/input";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -122,7 +121,7 @@ export default function HCApproveSupervisorExpense({
               <DialogFooter>
                 <Button
                   variant="ghost"
-                  className="text-base font-semibold leading-6 text-shamiri-red"
+                  type="button"
                   onClick={() => {
                     form.reset();
                     setDialogOpen(false);
@@ -130,10 +129,12 @@ export default function HCApproveSupervisorExpense({
                 >
                   Cancel
                 </Button>
-                <Button className="bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
-                  {form.formState.isSubmitting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
+                <Button
+                  variant="brand"
+                  type="submit"
+                  loading={form.formState.isSubmitting}
+                  disabled={form.formState.isSubmitting}
+                >
                   Accept
                 </Button>
               </DialogFooter>
