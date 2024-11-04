@@ -210,7 +210,7 @@ export default function StudentGroupEvaluation({
           {children}
           {mode === "view" && evaluations.length === 0 ? (
             <div className="space-y-3">
-              <div className="rounded border bg-background-secondary px-4 py-2">
+              <div className="item-center flex justify-center text-shamiri-text-dark-grey">
                 No evaluations found.
               </div>
               <Separator />
