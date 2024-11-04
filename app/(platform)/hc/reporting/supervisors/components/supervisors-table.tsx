@@ -9,15 +9,18 @@ import { columns } from "./columns";
 export default function HCSupervisorsDataTable({
   supervisorExpenses,
   currentHubCoordinator,
+  supervisorsInHub,
 }: {
   supervisorExpenses: HubSupervisorExpensesType[];
   currentHubCoordinator: Prisma.HubCoordinatorGetPayload<{}>;
+  supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
 }) {
   return (
     <div className="container w-full grow space-y-3">
       <SupervisorsFilterTab
         hubCoordinatorId={currentHubCoordinator.id}
         hubId={currentHubCoordinator.assignedHubId!}
+        supervisorsInHub={supervisorsInHub}
       />
       <DataTable
         data={supervisorExpenses}
