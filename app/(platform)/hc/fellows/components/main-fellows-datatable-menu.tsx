@@ -18,6 +18,7 @@ export default function MainFellowsDatatableMenu({
   setUploadIdDialog,
   setUploadQualificationDialog,
   setWeeklyEvaluationDialog,
+  setViewComplaintsDialog,
 }: {
   fellow: MainFellowTableData;
   setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>;
@@ -26,6 +27,7 @@ export default function MainFellowsDatatableMenu({
   setUploadIdDialog: Dispatch<SetStateAction<boolean>>;
   setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>;
   setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+  setViewComplaintsDialog: Dispatch<SetStateAction<boolean>>;
 }) {
   return (
     <DropdownMenu>
@@ -56,9 +58,10 @@ export default function MainFellowsDatatableMenu({
           onSelect={(e) => {
             e.preventDefault();
             setFellow(fellow);
+            setViewComplaintsDialog(true);
           }}
         >
-          Submit complaint
+          View complaints
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={(e) => {

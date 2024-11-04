@@ -15,7 +15,8 @@ export default async function FellowPage() {
   if (!hc) {
     return <InvalidPersonnelRole role="hub-coordinator" />;
   }
-  const fellows = await db.$queryRaw<MainFellowTableData[]>`
+  const data = await Promise.all([
+    await db.$queryRaw<Omit<MainFellowTableData, "complaints">[]>`
       SELECT
         f.id,
         f.fellow_name AS "fellowName",
@@ -40,9 +41,30 @@ export default async function FellowPage() {
             _ig.*
           FROM
             intervention_groups _ig) ig ON f.id = ig.leader_id
+      WHERE f.hub_id =${hc.assignedHubId}
       GROUP BY
         f.id
-  `;
+  `,
+    await db.fellowComplaints.findMany({
+      where: {
+        fellow: {
+          hubId: hc.assignedHubId,
+        },
+      },
+      include: {
+        supervisor: true,
+      },
+    }),
+  ]).then((values) => {
+    return values[0].map((fellow) => {
+      return {
+        ...fellow,
+        complaints: values[1].filter((_complaints) => {
+          return _complaints.fellowId === fellow.id;
+        }),
+      };
+    });
+  });
 
   const supervisors = await db.supervisor.findMany({
     where: {
@@ -68,7 +90,7 @@ export default async function FellowPage() {
           <FellowsChartsWrapper coordinator={hc} />
         </Suspense>
         <MainFellowsDatatable
-          fellows={fellows}
+          fellows={data}
           supervisors={supervisors}
           weeklyEvaluations={weeklyFellowEvaluations}
         />

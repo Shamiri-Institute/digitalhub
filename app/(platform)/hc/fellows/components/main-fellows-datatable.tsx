@@ -4,6 +4,7 @@ import {
   columns,
   MainFellowTableData,
 } from "#/app/(platform)/hc/fellows/components/columns";
+import FellowComplaints from "#/app/(platform)/hc/fellows/components/fellow-complaints";
 import UploadFellowContract from "#/app/(platform)/hc/fellows/components/upload-contract";
 import UploadFellowID from "#/app/(platform)/hc/fellows/components/upload-id";
 import UploadFellowQualification from "#/app/(platform)/hc/fellows/components/upload-qualification";
@@ -36,6 +37,7 @@ export default function MainFellowsDatatable({
   const [uploadQualificationDialog, setUploadQualificationDialog] =
     useState<boolean>(false);
   const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
+  const [viewComplaintsDialog, setViewComplaintsDialog] = useState(false);
 
   const renderTableActions = () => {
     return (
@@ -74,6 +76,7 @@ export default function MainFellowsDatatable({
           setUploadContractDialog,
           setUploadIdDialog,
           setUploadQualificationDialog,
+          setViewComplaintsDialog,
         )}
         data={fellows}
         className={"data-table data-table-action mt-4 bg-white"}
@@ -131,6 +134,17 @@ export default function MainFellowsDatatable({
             open={uploadQualificationDialog}
             onOpenChange={setUploadQualificationDialog}
           />
+          <FellowComplaints
+            complaints={fellow.complaints ?? []}
+            open={viewComplaintsDialog}
+            onOpenChange={setViewComplaintsDialog}
+          >
+            <DialogAlertWidget separator={true}>
+              <div className="flex items-center gap-2">
+                <span>{fellow.fellowName}</span>
+              </div>
+            </DialogAlertWidget>
+          </FellowComplaints>
         </>
       )}
     </>

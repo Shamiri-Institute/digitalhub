@@ -33,6 +33,11 @@ export type MainFellowTableData = {
   droppedOut: boolean | null;
   groupCount?: number;
   averageRating: number | null;
+  complaints?: Prisma.FellowComplaintsGetPayload<{
+    include: {
+      supervisor: true;
+    };
+  }>[];
 };
 
 export const columns = (
@@ -43,6 +48,7 @@ export const columns = (
   setUploadContractDialog: Dispatch<SetStateAction<boolean>>,
   setUploadIdDialog: Dispatch<SetStateAction<boolean>>,
   setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>,
+  setViewComplaintsDialog: Dispatch<SetStateAction<boolean>>,
 ): ColumnDef<MainFellowTableData>[] => {
   return [
     {
@@ -185,6 +191,7 @@ export const columns = (
           setUploadContractDialog={setUploadContractDialog}
           setUploadIdDialog={setUploadIdDialog}
           setUploadQualificationDialog={setUploadQualificationDialog}
+          setViewComplaintsDialog={setViewComplaintsDialog}
         />
       ),
       enableHiding: false,
