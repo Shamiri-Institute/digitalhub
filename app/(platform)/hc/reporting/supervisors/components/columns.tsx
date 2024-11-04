@@ -1,6 +1,6 @@
 "use client";
-
 import { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/supervisors/actions";
+import { Badge } from "#/components/ui/badge";
 import { ColumnDef } from "@tanstack/react-table";
 import HCSupervisorExpenseDropdownMenu from "./supervisors-expenses-actions-dropdown-me";
 
@@ -34,8 +34,10 @@ export const columns: ColumnDef<HubSupervisorExpensesType>[] = [
     header: "Amount (KES)",
   },
   {
-    accessorKey: "status",
+    id: "status",
     header: "Status",
+    accessorKey: "status",
+    cell: ({ row }) => renderStatus(row.original.status),
   },
   {
     id: "button",
@@ -45,3 +47,13 @@ export const columns: ColumnDef<HubSupervisorExpensesType>[] = [
     enableHiding: false,
   },
 ];
+
+function renderStatus(status: string) {
+  if (status === "REJECTED") {
+    return <Badge variant="destructive">Rejected</Badge>;
+  }
+  if (status === "APPROVED") {
+    return <Badge variant="shamiri-green">Approved</Badge>;
+  }
+  return <Badge variant="default">Pending</Badge>;
+}
