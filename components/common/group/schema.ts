@@ -37,3 +37,10 @@ export const StudentGroupEvaluationSchema = z.object({
     .min(1)
     .max(5),
 });
+
+export const CreateGroupSchema = z.object({
+  fellowId: stringValidation("Please select a fellow"),
+  supervisorId: stringValidation("Please select a supervisor"),
+  schoolId: stringValidation("School ID is required"),
+  groupName: z.string().optional(),
+});
