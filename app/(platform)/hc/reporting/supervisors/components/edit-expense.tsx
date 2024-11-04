@@ -7,10 +7,13 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/supervisors/actions";
-import { FileUploaderWithDrop } from "#/components/file-uploader";
+import {
+  HubSupervisorExpensesType,
+  updateSupervisorExpense,
+} from "#/app/(platform)/hc/reporting/supervisors/actions";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
   Form,
   FormControl,
@@ -28,6 +31,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
+import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, startOfWeek, subWeeks } from "date-fns";
@@ -54,13 +58,12 @@ function generateWeekFieldValues() {
 }
 
 export const EditSupervisorExpenseSchema = z.object({
-  comments: stringValidation("Please enter your comments"),
-  mpesaNumber: stringValidation("Please confirm the Mpesa number"),
   week: z.string(),
-
+  expenseType: stringValidation("Please select an expense type"),
   session: stringValidation("Please select a session"),
-  reason: stringValidation("Please select a reason."),
-  destination: stringValidation("Please select a destination."),
+  totalAmount: stringValidation("Please enter the total amount"),
+  mpesaName: stringValidation("Please enter the M-Pesa name"),
+  mpesaNumber: stringValidation("Please enter the M-Pesa number"),
 });
 
 export default function HCEditSupervisorExpense({
@@ -71,27 +74,56 @@ export default function HCEditSupervisorExpense({
   expense: HubSupervisorExpensesType;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
-  const [transportSubtype, setTransportSubtype] = useState("");
 
   const form = useForm<z.infer<typeof EditSupervisorExpenseSchema>>({
     resolver: zodResolver(EditSupervisorExpenseSchema),
     defaultValues: {
-      comments: "",
-      mpesaNumber: "",
-      week: "",
-      session: "",
-      reason: "",
-      destination: "",
+      week: format(expense.dateOfExpense, "yyyy-MM-dd"),
+      expenseType: String(expense.typeOfExpense ?? ""),
+      session: String(expense.session ?? ""),
+      totalAmount: expense.amount.toString(),
+      mpesaName: expense.mpesaName ?? "",
+      mpesaNumber: expense.mpesaNumber ?? "",
     },
   });
+
+  const transportSubtype = form.getValues("expenseType");
 
   const onSubmit = async (
     data: z.infer<typeof EditSupervisorExpenseSchema>,
   ) => {
-    // TODO: add action here
+    const response = await updateSupervisorExpense({
+      id: expense.id,
+      data,
+    });
+
+    if (!response.success) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description:
+          response.message ??
+          "Something went wrong during update, please try again",
+      });
+      return;
+    }
+
+    revalidatePageAction("/hc/reporting/supervisors");
+    toast({
+      variant: "default",
+      title: "Success",
+      description: "Successfully updated expense",
+    });
+
     form.reset();
     setDialogOpen(false);
   };
+
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -128,10 +160,11 @@ export default function HCEditSupervisorExpense({
                   </FormItem>
                 )}
               />
+
               <div className="flex space-x-2">
                 <FormField
                   control={form.control}
-                  name="reason"
+                  name="expenseType"
                   render={({ field }) => (
                     <div className="grid w-full ">
                       <FormLabel>
@@ -139,11 +172,10 @@ export default function HCEditSupervisorExpense({
                         <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
                       <Select
-                        name="reason"
+                        name="expenseType"
                         defaultValue={field.value}
                         onValueChange={(value) => {
                           field.onChange(value);
-                          setTransportSubtype(value);
                         }}
                       >
                         <SelectTrigger>
@@ -177,20 +209,11 @@ export default function HCEditSupervisorExpense({
                       </FormLabel>
                       <Select
                         name="session"
-                        defaultValue={field.value}
+                        value={field.value}
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger>
-                          <SelectValue
-                            className="text-muted-foreground"
-                            defaultValue={field.value}
-                            onChange={field.onChange}
-                            placeholder={
-                              <span className="text-muted-foreground">
-                                Select session
-                              </span>
-                            }
-                          />
+                          <SelectValue placeholder="Select session" />
                         </SelectTrigger>
                         <SelectContent>
                           {transportSubtype === "Self" ? (
@@ -224,7 +247,7 @@ export default function HCEditSupervisorExpense({
               </div>
               <FormField
                 control={form.control}
-                name="mpesaNumber"
+                name="totalAmount"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
@@ -245,7 +268,7 @@ export default function HCEditSupervisorExpense({
               <div className="flex w-full space-x-2">
                 <FormField
                   control={form.control}
-                  name="mpesaNumber"
+                  name="mpesaName"
                   render={({ field }) => (
                     <div className="w-full">
                       <FormItem>
@@ -289,16 +312,11 @@ export default function HCEditSupervisorExpense({
                 />
               </div>
               <Separator />
-              <FileUploaderWithDrop
-                label="Upload csv file"
-                onChange={() => {}}
-                files={[]}
-                accept=".csv"
-              />
+
               <DialogFooter>
                 <Button
                   variant="ghost"
-                  className="text-base font-semibold leading-6 text-shamiri-new-blue "
+                  type="button"
                   onClick={() => {
                     form.reset();
                     setDialogOpen(false);
@@ -308,6 +326,7 @@ export default function HCEditSupervisorExpense({
                 </Button>
                 <Button
                   variant="brand"
+                  type="submit"
                   loading={form.formState.isSubmitting}
                   disabled={form.formState.isSubmitting}
                 >
