@@ -33,30 +33,20 @@ export default function HCSupervisorExpenseDropdownMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <HCApproveSupervisorExpense expense={expense ?? []}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
-            Approve
-          </div>
-        </HCApproveSupervisorExpense>
+        {expense.status !== "APPROVED" && (
+          <HCApproveSupervisorExpense expense={expense}>
+            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+              Approve
+            </div>
+          </HCApproveSupervisorExpense>
+        )}
         <HCEditSupervisorExpense expense={expense}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             Edit Request
           </div>
         </HCEditSupervisorExpense>
 
-        <div
-          className={cn(
-            "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-          )}
-        >
+        <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
           Download receipt(s)
         </div>
         <DropdownMenuSeparator />
