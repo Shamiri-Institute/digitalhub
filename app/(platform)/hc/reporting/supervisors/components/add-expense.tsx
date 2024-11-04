@@ -19,12 +19,14 @@ import { Separator } from "#/components/ui/separator";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, startOfWeek, subWeeks } from "date-fns";
-import { Loader2 } from "lucide-react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useCallback, useEffect, useState } from "react";
+import { UseFormReturn, useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { FileUploaderWithDrop } from "#/components/file-uploader";
+import { addSupervisorExpense } from "#/app/(platform)/hc/reporting/supervisors/actions";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import { formatBytes } from "#/app/(platform)/profile/refund/refund-form";
+import { Icons } from "#/components/icons";
 import {
   Form,
   FormControl,
@@ -34,15 +36,20 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
+import { toast } from "#/components/ui/use-toast";
+import { Prisma } from "@prisma/client";
+import { Loader2 } from "lucide-react";
+import { useS3Upload } from "next-s3-upload";
 
 export const AddAddSupervisorExpenseSchema = z.object({
-  comments: stringValidation("Please enter your comments"),
-  mpesaNumber: stringValidation("Please confirm the Mpesa number"),
   week: z.string(),
-
+  expenseType: stringValidation("Please select an expense type"),
   session: stringValidation("Please select a session"),
-  reason: stringValidation("Please select a reason."),
-  destination: stringValidation("Please select a destination."),
+  totalAmount: stringValidation("Please enter the total amount"),
+  mpesaName: stringValidation("Please enter the M-Pesa name"),
+  mpesaNumber: stringValidation("Please enter the M-Pesa number"),
+  receiptFileKey: stringValidation("Please upload a receipt"),
+  supervisor: stringValidation("Please select a supervisor"),
 });
 
 function generateWeekFieldValues() {
@@ -56,7 +63,7 @@ function generateWeekFieldValues() {
     const week = startOfWeek(date, { weekStartsOn: 1 });
     selectValues.push(
       <SelectItem value={format(week, "yyyy-MM-dd")}>
-        Week {numWeeks - i + 1} - {format(week, "dd/MM/yyyy")}
+        {format(week, "dd/MM/yyyy")}
       </SelectItem>,
     );
   }
@@ -65,36 +72,64 @@ function generateWeekFieldValues() {
 }
 
 export default function AddSupervisorExpensesForm({
-  hubCoordinatorId,
-  hubId,
   children,
+  supervisorsInHub,
 }: {
-  hubCoordinatorId: string;
-  hubId: string | null;
   children: React.ReactNode;
+  supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
-  const [transportSubtype, setTransportSubtype] = useState("");
 
   const form = useForm<z.infer<typeof AddAddSupervisorExpenseSchema>>({
     resolver: zodResolver(AddAddSupervisorExpenseSchema),
     defaultValues: {
-      comments: "",
-      mpesaNumber: "",
       week: "",
+      expenseType: "",
       session: "",
-      reason: "",
-      destination: "",
+      totalAmount: "",
+      mpesaName: "",
+      mpesaNumber: "",
+      receiptFileKey: "",
+      supervisor: "",
     },
   });
+
+  const transportSubtype = form.getValues("expenseType");
 
   const onSubmit = async (
     data: z.infer<typeof AddAddSupervisorExpenseSchema>,
   ) => {
-    // TODO: add action here
+    const response = await addSupervisorExpense({
+      data,
+    });
+
+    if (!response.success) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description:
+          response.message ??
+          "Something went wrong during submission, please try again",
+      });
+      return;
+    }
+
+    revalidatePageAction("/hc/reporting/supervisors");
+    toast({
+      variant: "default",
+      title: "Success",
+      description: "Successfully added expense",
+    });
+
     form.reset();
     setDialogOpen(false);
   };
+
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -131,10 +166,51 @@ export default function AddSupervisorExpensesForm({
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="supervisor"
+                render={({ field }) => (
+                  <div className="grid w-full ">
+                    <FormLabel>
+                      Select Supervisor
+                      <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
+                    <Select
+                      name="supervisor"
+                      defaultValue={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          className="text-muted-foreground"
+                          defaultValue={field.value}
+                          onChange={field.onChange}
+                          placeholder={
+                            <span className="text-muted-foreground">
+                              Select supervisor
+                            </span>
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {supervisorsInHub.map((supervisor) => (
+                          <SelectItem value={supervisor.id} key={supervisor.id}>
+                            {supervisor.supervisorName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              />
+
               <div className="flex space-x-2">
                 <FormField
                   control={form.control}
-                  name="reason"
+                  name="expenseType"
                   render={({ field }) => (
                     <div className="grid w-full ">
                       <FormLabel>
@@ -142,11 +218,10 @@ export default function AddSupervisorExpensesForm({
                         <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
                       <Select
-                        name="reason"
+                        name="expenseType"
                         defaultValue={field.value}
                         onValueChange={(value) => {
                           field.onChange(value);
-                          setTransportSubtype(value);
                         }}
                       >
                         <SelectTrigger>
@@ -227,7 +302,7 @@ export default function AddSupervisorExpensesForm({
               </div>
               <FormField
                 control={form.control}
-                name="mpesaNumber"
+                name="totalAmount"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
@@ -248,7 +323,7 @@ export default function AddSupervisorExpensesForm({
               <div className="flex w-full space-x-2">
                 <FormField
                   control={form.control}
-                  name="mpesaNumber"
+                  name="mpesaName"
                   render={({ field }) => (
                     <div className="w-full">
                       <FormItem>
@@ -292,16 +367,12 @@ export default function AddSupervisorExpensesForm({
                 />
               </div>
               <Separator />
-              <FileUploaderWithDrop
-                label="Upload csv file"
-                onChange={() => {}}
-                files={[]}
-                accept=".csv"
-              />
+              <ReceiptFileUpload form={form} className="flex flex-col gap-2" />
+
               <DialogFooter>
                 <Button
                   variant="ghost"
-                  className="text-base font-semibold leading-6 text-shamiri-new-blue "
+                  type="button"
                   onClick={() => {
                     form.reset();
                     setDialogOpen(false);
@@ -309,10 +380,12 @@ export default function AddSupervisorExpensesForm({
                 >
                   Cancel
                 </Button>
-                <Button className="bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
-                  {form.formState.isSubmitting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
+                <Button
+                  variant="brand"
+                  type="submit"
+                  loading={form.formState.isSubmitting}
+                  disabled={form.formState.isSubmitting}
+                >
                   Submit
                 </Button>
               </DialogFooter>
@@ -321,5 +394,95 @@ export default function AddSupervisorExpensesForm({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function ReceiptFileUpload({
+  form,
+  className,
+}: {
+  form: UseFormReturn<
+    z.infer<typeof AddAddSupervisorExpenseSchema>,
+    any,
+    undefined
+  >;
+  className: string;
+}) {
+  const { FileInput, openFileDialog, uploadToS3 } = useS3Upload();
+  const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+
+  const handleFileChange = useCallback(
+    async (file: File) => {
+      try {
+        setUploading(true);
+        const { key } = await uploadToS3(file, {
+          endpoint: {
+            request: {
+              url: "/api/files/upload",
+              body: {},
+              headers: {},
+            },
+          },
+        });
+        if (key) {
+          form.setValue("receiptFileKey", key);
+          setFile(file);
+        }
+      } catch (error) {
+        console.error("File upload error:", error);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [form, uploadToS3],
+  );
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={openFileDialog}
+        disabled={uploading}
+        className="flex w-full items-center space-x-6 rounded-lg  border-2 border-dashed border-secondary p-3"
+      >
+        <div className="cursor-pointer rounded-lg border border-gray-200 p-2">
+          <span className="text-normal cursor-pointer text-center">
+            {uploading ? "Uploading receipt..." : "Upload receipt"}
+          </span>
+        </div>
+
+        <div className="flex space-x-2">
+          {uploading ? (
+            <Loader2 className="h-6 w-6 animate-spin" />
+          ) : (
+            <Icons.uploadCloudIcon className="h-6 w-6" />
+          )}
+        </div>
+      </button>
+      <FileInput onChange={handleFileChange} />
+
+      {form.formState.errors.receiptFileKey && (
+        <p className="text-shamiri-light-red">
+          {form.formState.errors.receiptFileKey.message}
+        </p>
+      )}
+
+      {file && (
+        <div>
+          <span>
+            {file.name} ({formatBytes(file.size)})
+          </span>
+        </div>
+      )}
+      <Input
+        id="receiptFileKey"
+        type="text"
+        {...form.register("receiptFileKey", {
+          required: "Please upload the receipt",
+        })}
+        className="hidden h-10 py-2"
+      />
+    </div>
   );
 }
