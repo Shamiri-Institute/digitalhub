@@ -333,7 +333,10 @@ export function SessionDropDown({
           </DropdownMenuItem>
         )}
         <DropdownMenuItem
-          disabled={session.status === "Cancelled"}
+          disabled={
+            session.status === "Cancelled" ||
+            session.sessionRatings.length === 0
+          }
           onClick={(e) => {
             e.stopPropagation();
             state.setSession(session);
