@@ -8,11 +8,14 @@ import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session
 import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
+import type { Session } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
 import {
   columns,
   SessionData,
 } from "#/app/(platform)/hc/schools/[visibleId]/sessions/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import SessionRatings from "#/components/common/session/session-ratings";
 import DataTable from "#/components/data-table";
 import { Prisma } from "@prisma/client";
 import { addHours, addMinutes } from "date-fns";
@@ -38,6 +41,8 @@ export default function SessionsDatatable({
     React.useState<Prisma.InterventionSessionGetPayload<{
       include: { school: true; sessionRatings: true };
     }> | null>(null);
+  const [activeSession, setActiveSession] = useState<Session | undefined>();
+  const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
 
   function updateRescheduledSessionState(
     sessionDate: Date,
@@ -119,10 +124,30 @@ export default function SessionsDatatable({
           >
             <DataTable
               data={_sessions}
-              columns={columns}
+              columns={columns({
+                setSession: setActiveSession,
+                setRatingsDialog,
+              })}
               className={"data-table data-table-action mt-4"}
               emptyStateMessage="No sessions found for this school"
             />
+            {activeSession && (
+              <SessionRatings
+                schoolId={activeSession.schoolId}
+                open={ratingsDialog}
+                onOpenChange={setRatingsDialog}
+                ratings={activeSession.sessionRatings.map((rating) => {
+                  const { sessionRatings, ..._session } = activeSession;
+                  return {
+                    ...rating,
+                    session: _session,
+                  };
+                })}
+                mode="view"
+              >
+                <DialogAlertWidget label={activeSession.school.schoolName} />
+              </SessionRatings>
+            )}
             <RescheduleSession
               updateSessionsState={updateRescheduledSessionState}
             />
