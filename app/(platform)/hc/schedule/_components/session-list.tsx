@@ -15,6 +15,8 @@ import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session
 import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
+import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import SessionRatings from "#/components/common/session/session-ratings";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,19 +32,66 @@ import type { Session } from "./sessions-provider";
 import Element = React.JSX.Element;
 
 export function SessionList({ sessions }: { sessions: Session[] }) {
+  const [activeSession, setActiveSession] = useState<Session | undefined>();
+  const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
+
   if (sessions.length === 0) {
     return null;
   }
   if (sessions.length === 1) {
     const [session] = sessions;
-    return session && <SessionDetail session={session} layout="expanded" />;
+    return (
+      session && (
+        <>
+          <SessionDetail
+            state={{
+              session,
+              setSession: setActiveSession,
+              setRatingsDialog,
+            }}
+            layout="expanded"
+          />
+          {activeSession && (
+            <SessionRatings
+              schoolId={activeSession.schoolId}
+              open={ratingsDialog}
+              onOpenChange={setRatingsDialog}
+              ratings={activeSession.sessionRatings.map((rating) => {
+                const { sessionRatings, ..._session } = activeSession;
+                return {
+                  ...rating,
+                  session: _session,
+                };
+              })}
+              mode="view"
+            >
+              <DialogAlertWidget label={activeSession.school.schoolName} />
+            </SessionRatings>
+          )}
+        </>
+      )
+    );
   }
 
   const moreSessions = sessions.slice(2);
   return (
     <div className="flex flex-col gap-2">
-      <SessionDetail session={sessions[0]!} layout="compact" />
-      <SessionDetail session={sessions[1]!} layout="compact" />
+      <SessionDetail
+        layout="compact"
+        state={{
+          session: sessions[0]!,
+          setSession: setActiveSession,
+          setRatingsDialog,
+        }}
+      />
+      <SessionDetail
+        layout="compact"
+        state={{
+          session: sessions[1]!,
+          setSession: setActiveSession,
+          setRatingsDialog,
+        }}
+      />
       <div className="w-full">
         {moreSessions.length > 0 && (
           <DropdownMenu>
@@ -57,8 +106,12 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
                   return (
                     <SessionDetail
                       key={session.id}
-                      session={moreSessions[index]!}
                       layout="compact"
+                      state={{
+                        session: moreSessions[index]!,
+                        setSession: setActiveSession,
+                        setRatingsDialog,
+                      }}
                     />
                   );
                 })}
@@ -72,11 +125,15 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
 }
 
 export function SessionDetail({
-  session,
+  state,
   layout,
   withDropdown = true,
 }: {
-  session: Session;
+  state: {
+    session: Session;
+    setSession: Dispatch<SetStateAction<Session | undefined>>;
+    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
+  };
   layout: "compact" | "expanded";
   withDropdown?: boolean;
 }) {
@@ -89,6 +146,8 @@ export function SessionDetail({
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") ?? undefined;
 
+  const { session } = state;
+
   useEffect(() => {
     const startTimeLabel = format(session.sessionDate, "h:mma");
     const durationLabel = `${format(session.sessionDate, "h:mm")} - ${format(
@@ -100,7 +159,7 @@ export function SessionDetail({
       startTimeLabel,
       durationLabel,
     });
-  }, [session.sessionDate, session.sessionEndTime]);
+  }, [state.session.sessionDate, state.session.sessionEndTime]);
 
   const schoolName = session.school.schoolName;
   const completed = session.occurred;
@@ -188,7 +247,7 @@ export function SessionDetail({
 
   return withDropdown ? (
     <div>
-      <SessionDropDown open={open} setOpen={setOpen} session={session}>
+      <SessionDropDown open={open} setOpen={setOpen} state={state}>
         {renderSessionDetails()}
       </SessionDropDown>
     </div>
@@ -201,13 +260,18 @@ export function SessionDropDown({
   open,
   setOpen,
   children,
-  session,
+  state,
 }: {
   open?: boolean;
   setOpen?: Dispatch<SetStateAction<boolean>>;
   children: React.ReactNode;
-  session: Session;
+  state: {
+    session: Session;
+    setSession: Dispatch<SetStateAction<Session | undefined>>;
+    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
+  };
 }) {
+  const { session } = state;
   const supervisorAttendanceContext = useContext(SupervisorAttendanceContext);
   const fellowAttendanceContext = useContext(FellowAttendanceContext);
   const cancelSessionContext = useContext(CancelSessionContext);
@@ -268,7 +332,14 @@ export function SessionDropDown({
             Reschedule session
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem disabled={session.status === "Cancelled"}>
+        <DropdownMenuItem
+          disabled={session.status === "Cancelled"}
+          onClick={(e) => {
+            e.stopPropagation();
+            state.setSession(session);
+            state.setRatingsDialog(true);
+          }}
+        >
           Weekly session report
         </DropdownMenuItem>
         {session.sessionDate > new Date() && (
