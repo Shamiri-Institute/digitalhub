@@ -46,9 +46,18 @@ export function MonthView({
 
   useEffect(() => {
     if (state.value) {
-      setTitle(`${titleFormatter.format(state.value.toDate(state.timeZone))}`);
+      setTitle(
+        `${titleFormatter.format(state.visibleRange.start.toDate(state.timeZone))}`,
+      );
     }
-  }, [setTitle, state.timeZone, state.value, titleFormatter]);
+  }, [
+    setTitle,
+    state.timeZone,
+    state.value,
+    titleFormatter,
+    state.visibleRange.start,
+    state.visibleRange.end,
+  ]);
 
   useGSAP(
     () => {
