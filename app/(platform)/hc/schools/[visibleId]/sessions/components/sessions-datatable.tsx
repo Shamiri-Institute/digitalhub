@@ -36,7 +36,7 @@ export default function SessionsDatatable({
     React.useState(false);
   const [session, setSession] =
     React.useState<Prisma.InterventionSessionGetPayload<{
-      include: { school: true };
+      include: { school: true; sessionRatings: true };
     }> | null>(null);
 
   function updateRescheduledSessionState(

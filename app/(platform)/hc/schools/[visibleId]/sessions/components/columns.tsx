@@ -15,6 +15,7 @@ export type SessionData = Prisma.InterventionSessionGetPayload<{
         assignedSupervisor: true;
       };
     };
+    sessionRatings: true;
   };
 }>;
 
@@ -143,7 +144,7 @@ export const columns: ColumnDef<SessionData>[] = [
   {
     id: "button",
     cell: ({ row }) => (
-      <SessionDropDown session={row.original}>
+      <SessionDropDown state={{ session: row.original }}>
         <div className="absolute inset-0 border-l bg-white">
           <div className="flex h-full w-full items-center justify-center">
             <Icons.moreHorizontal className="h-5 w-5" />

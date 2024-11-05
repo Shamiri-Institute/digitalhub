@@ -29,7 +29,6 @@ import {
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import type { Session } from "./sessions-provider";
-import Element = React.JSX.Element;
 
 export function SessionList({ sessions }: { sessions: Session[] }) {
   const [activeSession, setActiveSession] = useState<Session | undefined>();
@@ -38,6 +37,28 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
   if (sessions.length === 0) {
     return null;
   }
+
+  const renderSessionRatingsDialog = () => {
+    return (
+      activeSession && (
+        <SessionRatings
+          schoolId={activeSession.schoolId}
+          open={ratingsDialog}
+          onOpenChange={setRatingsDialog}
+          ratings={activeSession.sessionRatings.map((rating) => {
+            const { sessionRatings, ..._session } = activeSession;
+            return {
+              ...rating,
+              session: _session,
+            };
+          })}
+          mode="view"
+        >
+          <DialogAlertWidget label={activeSession.school.schoolName} />
+        </SessionRatings>
+      )
+    );
+  };
   if (sessions.length === 1) {
     const [session] = sessions;
     return (
@@ -51,23 +72,7 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
             }}
             layout="expanded"
           />
-          {activeSession && (
-            <SessionRatings
-              schoolId={activeSession.schoolId}
-              open={ratingsDialog}
-              onOpenChange={setRatingsDialog}
-              ratings={activeSession.sessionRatings.map((rating) => {
-                const { sessionRatings, ..._session } = activeSession;
-                return {
-                  ...rating,
-                  session: _session,
-                };
-              })}
-              mode="view"
-            >
-              <DialogAlertWidget label={activeSession.school.schoolName} />
-            </SessionRatings>
-          )}
+          {renderSessionRatingsDialog()}
         </>
       )
     );
@@ -120,6 +125,7 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
           </DropdownMenu>
         )}
       </div>
+      {renderSessionRatingsDialog()}
     </div>
   );
 }
@@ -131,8 +137,8 @@ export function SessionDetail({
 }: {
   state: {
     session: Session;
-    setSession: Dispatch<SetStateAction<Session | undefined>>;
-    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
+    setSession?: Dispatch<SetStateAction<Session | undefined>>;
+    setRatingsDialog?: Dispatch<SetStateAction<boolean>>;
   };
   layout: "compact" | "expanded";
   withDropdown?: boolean;
@@ -267,8 +273,8 @@ export function SessionDropDown({
   children: React.ReactNode;
   state: {
     session: Session;
-    setSession: Dispatch<SetStateAction<Session | undefined>>;
-    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
+    setSession?: Dispatch<SetStateAction<Session | undefined>>;
+    setRatingsDialog?: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const { session } = state;
@@ -339,8 +345,12 @@ export function SessionDropDown({
           }
           onClick={(e) => {
             e.stopPropagation();
-            state.setSession(session);
-            state.setRatingsDialog(true);
+            if (state.setSession) {
+              state.setSession(session);
+            }
+            if (state.setRatingsDialog) {
+              state.setRatingsDialog(true);
+            }
           }}
         >
           Weekly session report
