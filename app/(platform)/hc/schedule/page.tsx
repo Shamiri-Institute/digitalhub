@@ -36,7 +36,7 @@ export default async function HubCoordinatorSchedulePage() {
         students c ON sch.id = c.school_id AND c.is_clinical_case=TRUE
     LEFT JOIN 
         fellows f ON h.id = f.hub_id
-        WHERE h.id='24P2_Hub_04'
+        WHERE h.id=${coordinator!.assignedHubId}
     GROUP BY 
         h.id, h.hub_name`;
 
