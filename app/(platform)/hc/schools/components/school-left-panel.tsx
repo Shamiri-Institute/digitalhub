@@ -46,7 +46,11 @@ export default function SchoolLeftPanel({
       _count: {
         select: {
           interventionSessions: true;
-          students: true;
+          students: {
+            where: {
+              isClinicalCase: true;
+            };
+          };
           interventionGroups: {
             where: {
               archivedAt: null;
