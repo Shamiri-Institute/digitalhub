@@ -7,6 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { Input } from "#/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -23,8 +24,10 @@ import {
   TableRow,
 } from "#/components/ui/table";
 import { cn } from "#/lib/utils";
+import { rankItem } from "@tanstack/match-sorter-utils";
 import {
   ColumnDef,
+  FilterFn,
   OnChangeFn,
   Row,
   RowSelectionState,
@@ -32,11 +35,21 @@ import {
   VisibilityState,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import { Fragment, ReactNode, useEffect, useState } from "react";
+
+const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+  // Rank the item
+  const itemRank = rankItem(row.getValue(columnId), value);
+  // Store the itemRank info
+  addMeta({ itemRank });
+  // Return if the item should be filtered in/out
+  return itemRank.passed;
+};
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -95,6 +108,8 @@ export default function DataTable<TData, TValue>({
     enableRowSelection,
     state: { sorting, columnVisibility, rowSelection, pagination },
     autoResetPageIndex: true, //turns off auto reset of pageIndex
+    getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: fuzzyFilter,
   });
 
   useEffect(() => {
@@ -129,14 +144,25 @@ export default function DataTable<TData, TValue>({
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-3">
+        <div className="flex w-2/3 justify-end gap-3">
+          <div className="relative">
+            <Icons.search
+              className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground"
+              strokeWidth={1.75}
+            />
+            <Input
+              onChange={(e) => table.setGlobalFilter(String(e.target.value))}
+              placeholder="Search..."
+              className="w-64 bg-white pl-10"
+            />
+          </div>
           {renderTableActions}
           {editColumns && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex gap-1 bg-white">
                   <Icons.settings className="h-4 w-4 text-shamiri-text-grey" />
-                  Edit columns
+                  <span>Edit columns</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align={"end"}>
