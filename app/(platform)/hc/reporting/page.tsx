@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function ReportingPage() {
-  return <div>Reporting workflow coming soon</div>;
+  redirect(`/hc/reporting/fellows`);
 }
