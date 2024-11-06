@@ -81,8 +81,15 @@ export function ScheduleNewSession({
         });
         form.reset();
         toggleDialog(false);
-        return;
+      } else {
+        toast({
+          variant: "destructive",
+          description:
+            response.message ??
+            "Something went wrong while scheduling a session, please try again",
+        });
       }
+      return;
     } catch (error: unknown) {
       console.log(error);
       toast({
@@ -123,19 +130,13 @@ export function ScheduleNewSession({
           render={({ field }) => (
             <FormItem className="space-y-2">
               <FormLabel>Select a session type</FormLabel>
-              <Select
-                onValueChange={(e) => {
-                  field.onChange(e);
-                  checkSessionExists();
-                }}
-                defaultValue={field.value}
-              >
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="max-h-[200px]">
                   {SESSION_TYPES.map((session) => (
                     <SelectItem key={session.name} value={session.name}>
                       Intervention group session -{" "}
@@ -157,19 +158,13 @@ export function ScheduleNewSession({
               <FormLabel>
                 Select school <span className="text-shamiri-light-red">*</span>
               </FormLabel>
-              <Select
-                onValueChange={(e) => {
-                  field.onChange(e);
-                  checkSessionExists();
-                }}
-                defaultValue={field.value}
-              >
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="max-h-[200px]">
                   {schools.map((school) => (
                     <SelectItem key={school.id} value={school.id}>
                       {school.schoolName}
@@ -360,8 +355,12 @@ export function ScheduleNewSession({
           >
             Cancel
           </Button>
-          <Button className="bg-shamiri-new-blue hover:bg-shamiri-blue">
-            Save Changes
+          <Button
+            variant="brand"
+            loading={form.formState.isSubmitting}
+            disabled={form.formState.isSubmitting}
+          >
+            Submit
           </Button>
         </div>
       </form>
