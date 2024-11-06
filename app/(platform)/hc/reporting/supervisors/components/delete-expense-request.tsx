@@ -1,5 +1,9 @@
 "use client";
-import { FellowExpenseData } from "#/app/(platform)/hc/reporting/fellows/components/fellow-expense-table-dropdown-me";
+import {
+  deleteSupervisorExpenseRequest,
+  HubSupervisorExpensesType,
+} from "#/app/(platform)/hc/reporting/supervisors/actions";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import {
@@ -18,28 +22,57 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { Textarea } from "#/components/ui/textarea";
+import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-export const RequestSpecialSessionSchema = z.object({
-  comments: stringValidation("Please enter your comments"),
-  amount: z.coerce.number({
-    required_error: "Please enter the amount",
-  }),
+export const DeleteExpenseRequestSchema = z.object({
+  name: stringValidation("Please enter your name"),
 });
 
-export default function HCApproveSpecialSession({
+export default function HCDeleteExpenseRequest({
   children,
   expense,
 }: {
   children: React.ReactNode;
-  expense: FellowExpenseData;
+  expense: HubSupervisorExpensesType;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
+
+  const form = useForm<z.infer<typeof DeleteExpenseRequestSchema>>({
+    resolver: zodResolver(DeleteExpenseRequestSchema),
+    defaultValues: {
+      name: "",
+    },
+  });
+
+  const onSubmit = async (data: z.infer<typeof DeleteExpenseRequestSchema>) => {
+    const response = await deleteSupervisorExpenseRequest({
+      id: expense?.id,
+      name: data.name,
+    });
+    if (!response.success) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description: response.message ?? "An error occurred",
+      });
+      return;
+    }
+
+    revalidatePageAction("/hc/reporting/supervisors");
+
+    toast({
+      variant: "default",
+      title: "Expense request deleted successfully",
+    });
+
+    form.reset();
+    setDialogOpen(false);
+  };
 
   useEffect(() => {
     if (!open) {
@@ -47,42 +80,28 @@ export default function HCApproveSpecialSession({
     }
   }, [open]);
 
-  const form = useForm<z.infer<typeof RequestSpecialSessionSchema>>({
-    resolver: zodResolver(RequestSpecialSessionSchema),
-    defaultValues: {
-      comments: "",
-      amount: expense?.amount ?? "",
-    },
-  });
-
-  const onSubmit = async (
-    data: z.infer<typeof RequestSpecialSessionSchema>,
-  ) => {
-    // todo: add action to approve special session
-    form.reset();
-    setDialogOpen(false);
-  };
-
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
         <DialogHeader className="sticky top-0 z-10 bg-white">
-          <h2>Approve special session</h2>
+          <h2 className="font-bold text-black">Delete Expense Request</h2>
         </DialogHeader>
+        <p>Are you sure?</p>
         <DialogAlertWidget
-          label={`${expense?.fellowName} - ${expense?.session} - ${expense.schoolVenue}`}
+          variant="destructive"
+          label={`You are about to delete the expense request for ${expense?.amount} KES. Are you sure you want to proceed?`}
         />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-1">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
               <FormField
                 control={form.control}
-                name="amount"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Confirm amount (KES) {""}
+                      Type your name to confirm{" "}
                       <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
@@ -96,28 +115,10 @@ export default function HCApproveSpecialSession({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="comments"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Confirm comments/reason for special session
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Extra transport cost to the school"
-                        className="resize-none"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <DialogFooter>
                 <Button
                   variant="ghost"
+                  className="text-base font-semibold leading-6 text-shamiri-red"
                   onClick={() => {
                     form.reset();
                     setDialogOpen(false);
@@ -126,11 +127,11 @@ export default function HCApproveSpecialSession({
                   Cancel
                 </Button>
                 <Button
+                  variant="destructive"
                   loading={form.formState.isSubmitting}
                   disabled={form.formState.isSubmitting}
-                  variant="brand"
                 >
-                  Accept
+                  Confirm
                 </Button>
               </DialogFooter>
             </form>
