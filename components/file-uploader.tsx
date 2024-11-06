@@ -155,7 +155,7 @@ export default function FileUploader({
   );
 }
 
-function FileUploaderWithDrop({
+export function FileUploaderWithDrop({
   label,
   onChange,
   files,
