@@ -125,8 +125,8 @@ export default function DataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-end justify-between">
+        <div className="shrink-0">
           {table.getSelectedRowModel().rows.length > 0 && (
             <div className="flex items-center gap-4">
               <span className="text-sm">
@@ -144,7 +144,7 @@ export default function DataTable<TData, TValue>({
             </div>
           )}
         </div>
-        <div className="flex w-2/3 justify-end gap-3">
+        <div className="min-w-2/3 flex flex-wrap-reverse justify-end gap-3">
           <div className="relative">
             <Icons.search
               className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground"
