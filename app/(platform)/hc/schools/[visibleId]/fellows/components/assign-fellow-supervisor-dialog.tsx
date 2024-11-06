@@ -33,7 +33,11 @@ import { z } from "zod";
 export default function AssignFellowSupervisorDialog({
   supervisors,
 }: {
-  supervisors: Prisma.SupervisorGetPayload<{}>[];
+  supervisors: Prisma.SupervisorGetPayload<{
+    include: {
+      fellows: true;
+    };
+  }>[];
 }) {
   const pathname = usePathname();
   const context = useContext(FellowInfoContext);

@@ -6,6 +6,10 @@ import {
 } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/columns";
 import { BatchUploadDownloadFellow } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/upload-csv";
 import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
+import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
+import ReplaceFellow from "#/components/common/fellow/replace-fellow";
+import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import {
@@ -16,28 +20,91 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { Dispatch, SetStateAction, use, useContext, useState } from "react";
+import { Prisma } from "@prisma/client";
+import { Dispatch, SetStateAction, useContext, useState } from "react";
 
 export default function FellowsDatatable({
   fellows,
+  supervisors,
+  schoolVisibleId,
 }: {
-  fellows: Promise<SchoolFellowTableData[]>;
+  fellows: SchoolFellowTableData[];
+  supervisors: Prisma.SupervisorGetPayload<{
+    include: {
+      fellows: true;
+    };
+  }>[];
+  schoolVisibleId: string;
 }) {
   const [fellow, setFellow] = useState<SchoolFellowTableData | undefined>();
-
+  const [detailsDialog, setDetailsDialog] = useState(false);
+  const [replaceDialog, setReplaceDialog] = useState(false);
+  const [studentsDialog, setStudentsDialog] = useState(false);
   const renderTableActions = () => {
     return <BatchUploadDownloadFellow />;
   };
 
-  const data = use(fellows);
   return (
-    <DataTable
-      columns={columns({ setFellow })}
-      data={data}
-      className={"data-table data-table-action mt-4"}
-      emptyStateMessage="No fellows associated with this school"
-      renderTableActions={renderTableActions()}
-    />
+    <>
+      <DataTable
+        columns={columns({
+          setFellow,
+          setDetailsDialog,
+          setReplaceDialog,
+          setStudentsDialog,
+        })}
+        data={fellows}
+        className={"data-table data-table-action mt-4"}
+        emptyStateMessage="No fellows associated with this school"
+        renderTableActions={renderTableActions()}
+      />
+      {fellow && (
+        <>
+          <FellowDetailsForm
+            open={detailsDialog}
+            onOpenChange={setDetailsDialog}
+            mode={"view"}
+            fellow={fellow}
+          />
+          {fellow.groupId !== null ? (
+            <>
+              <ReplaceFellow
+                open={replaceDialog}
+                onOpenChange={setReplaceDialog}
+                fellowId={fellow.id}
+                groupId={fellow.groupId}
+                supervisors={supervisors}
+                schoolVisibleId={schoolVisibleId}
+              >
+                <DialogAlertWidget>
+                  <div className="flex items-center gap-2">
+                    <span>{fellow.fellowName}</span>
+                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+                      {""}
+                    </span>
+                    <span>{fellow.groupName}</span>
+                  </div>
+                </DialogAlertWidget>
+              </ReplaceFellow>
+              <StudentsInGroup
+                students={fellow.students}
+                groupId={fellow.groupId}
+                groupName={fellow.groupName}
+                schoolVisibleId={schoolVisibleId}
+                open={studentsDialog}
+                onOpenChange={setStudentsDialog}
+              >
+                <DialogAlertWidget>
+                  <div className="flex items-center gap-2">
+                    <span>Group {fellow.groupName}</span>
+                  </div>
+                </DialogAlertWidget>
+              </StudentsInGroup>
+            </>
+          ) : null}
+        </>
+      )}
+    </>
   );
 }
 
@@ -48,6 +115,9 @@ export function FellowsDatatableMenu({
   fellow: SchoolFellowTableData;
   state: {
     setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
+    setDetailsDialog: Dispatch<SetStateAction<boolean>>;
+    setReplaceDialog: Dispatch<SetStateAction<boolean>>;
+    setStudentsDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const context = useContext(FellowInfoContext);
@@ -71,8 +141,16 @@ export function FellowsDatatableMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>View Fellow information</DropdownMenuItem>
         <DropdownMenuItem
+          onClick={() => {
+            state.setFellow(fellow);
+            state.setDetailsDialog(true);
+          }}
+        >
+          View fellow information
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={fellow.droppedOut ?? undefined}
           onClick={() => {
             context.setAssignSupervisor(true);
           }}
@@ -80,12 +158,22 @@ export function FellowsDatatableMenu({
           Assign supervisor
         </DropdownMenuItem>
         <DropdownMenuItem
-          disabled={context.fellow?.groupId === null}
+          disabled={fellow.groupId === null}
           onClick={() => {
-            context.setGroupDialog(true);
+            state.setFellow(fellow);
+            state.setStudentsDialog(true);
           }}
         >
           View students in group
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={fellow.groupId === null}
+          onClick={() => {
+            state.setFellow(fellow);
+            state.setReplaceDialog(true);
+          }}
+        >
+          Replace fellow
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
@@ -96,9 +184,6 @@ export function FellowsDatatableMenu({
         </DropdownMenuItem>
         <DropdownMenuItem>View student group evaluation</DropdownMenuItem>
         <DropdownMenuItem>View complaints</DropdownMenuItem>
-        <DropdownMenuItem>
-          <div className="text-shamiri-red">Drop-out fellow</div>
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
