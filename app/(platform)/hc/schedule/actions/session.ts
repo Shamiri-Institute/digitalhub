@@ -71,7 +71,7 @@ export async function createNewSession(
           sessionTypes[parsedData.sessionType as keyof typeof sessionTypes],
         sessionDate: parsedData.sessionDate,
         sessionType: parsedData.sessionType,
-        sessionEndTime,
+        // sessionEndTime,
         yearOfImplementation:
           parsedData.sessionDate.getFullYear() || new Date().getFullYear(),
         schoolId: parsedData.schoolId,
@@ -90,8 +90,27 @@ export async function createNewSession(
       message: "Successfully scheduled new session.",
     };
   } catch (error: unknown) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      // https://www.prisma.io/docs/reference/api-reference/error-reference#p2025
+      if (error.code === "P2002") {
+        const parsedData = ScheduleNewSessionSchema.parse(data);
+        const school = await db.school.findFirst({
+          where: {
+            id: parsedData.schoolId,
+          },
+        });
+        console.error(`This session already exists for ${school!.schoolName}`);
+        return {
+          success: false,
+          message: `Something went wrong while scheduling a new session. This session already exists for ${school!.schoolName}`,
+        };
+      }
+    }
     console.error(error);
-    return { error: "Something went wrong while scheduling a new session" };
+    return {
+      success: false,
+      message: "Something went wrong while scheduling a new session",
+    };
   }
 }
 
