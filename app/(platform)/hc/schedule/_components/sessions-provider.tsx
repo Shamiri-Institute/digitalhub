@@ -27,7 +27,10 @@ export const SessionsContext = createContext<SessionsContextType>({
 });
 
 export type Session = Prisma.InterventionSessionGetPayload<{
-  include: { school: true };
+  include: {
+    school: true;
+    sessionRatings: true;
+  };
 }>;
 
 export function SessionsProvider({

@@ -251,7 +251,7 @@ export function ListView({
                       </div>
                     </td>
                     <td className="action-cell relative cursor-pointer">
-                      <SessionDropDown session={session}>
+                      <SessionDropDown state={{ session }}>
                         <div className="absolute inset-0 bg-white">
                           <div className="flex h-full w-full items-center justify-center">
                             <Icons.moreHorizontal className="h-5 w-5" />

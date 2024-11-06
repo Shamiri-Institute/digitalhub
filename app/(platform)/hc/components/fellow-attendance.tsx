@@ -143,7 +143,7 @@ export default function FellowAttendance() {
             </DialogHeader>
             {context.session && (
               <SessionDetail
-                session={context.session}
+                state={{ session: context.session }}
                 layout={"compact"}
                 withDropdown={false}
               />

@@ -7,6 +7,7 @@ import { cn, sessionDisplayName } from "#/lib/utils";
 import { Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
+import { Dispatch, SetStateAction } from "react";
 
 export type SessionData = Prisma.InterventionSessionGetPayload<{
   include: {
@@ -15,10 +16,24 @@ export type SessionData = Prisma.InterventionSessionGetPayload<{
         assignedSupervisor: true;
       };
     };
+    sessionRatings: true;
   };
 }>;
 
-export const columns: ColumnDef<SessionData>[] = [
+export const columns = (state: {
+  setRatingsDialog: Dispatch<SetStateAction<boolean>>;
+  setSession: Dispatch<
+    SetStateAction<
+      | Prisma.InterventionSessionGetPayload<{
+          include: {
+            school: true;
+            sessionRatings: true;
+          };
+        }>
+      | undefined
+    >
+  >;
+}): ColumnDef<SessionData>[] => [
   {
     id: "checkbox",
     header: ({ table }) => (
@@ -143,7 +158,13 @@ export const columns: ColumnDef<SessionData>[] = [
   {
     id: "button",
     cell: ({ row }) => (
-      <SessionDropDown session={row.original}>
+      <SessionDropDown
+        state={{
+          session: row.original,
+          setRatingsDialog: state.setRatingsDialog,
+          setSession: state.setSession,
+        }}
+      >
         <div className="absolute inset-0 border-l bg-white">
           <div className="flex h-full w-full items-center justify-center">
             <Icons.moreHorizontal className="h-5 w-5" />
