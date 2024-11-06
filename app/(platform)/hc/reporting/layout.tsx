@@ -1,8 +1,8 @@
 import ReportingTabNav from "#/app/(platform)/hc/reporting/components/reporting-tabs-nav";
 import { currentHubCoordinator } from "#/app/auth";
-import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
+import { signOut } from "next-auth/react";
 import React from "react";
 
 export default async function SchoolViewLayout({
@@ -13,7 +13,7 @@ export default async function SchoolViewLayout({
   const hubCoordinator = await currentHubCoordinator();
 
   if (!hubCoordinator) {
-    return <InvalidPersonnelRole role="hub-coordinator" />;
+    await signOut({ callbackUrl: "/login" });
   }
 
   return (

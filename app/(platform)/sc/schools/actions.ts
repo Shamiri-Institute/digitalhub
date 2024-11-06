@@ -23,7 +23,11 @@ export async function fetchSchoolData(hubId: string) {
     },
     include: {
       assignedSupervisor: true,
-      interventionSessions: true,
+      interventionSessions: {
+        include: {
+          InterventionGroupReport: true,
+        },
+      },
       students: {
         include: {
           assignedGroup: true,

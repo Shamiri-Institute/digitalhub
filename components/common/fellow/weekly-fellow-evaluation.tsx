@@ -42,7 +42,7 @@ import {
   isEqual,
 } from "date-fns";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -169,7 +169,7 @@ export default function WeeklyFellowEvaluation({
           {children}
           {mode === "view" && evaluations.length === 0 ? (
             <div className="space-y-3">
-              <div className="rounded border bg-background-secondary px-4 py-2">
+              <div className="item-center flex justify-center text-shamiri-text-dark-grey">
                 No evaluations found.
               </div>
               <Separator />

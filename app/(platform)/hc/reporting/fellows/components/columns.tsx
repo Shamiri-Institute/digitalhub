@@ -1,6 +1,7 @@
 "use client";
 
 import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/fellows/actions";
+import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
@@ -140,12 +141,25 @@ export const subColumns: ColumnDef<
     header: "Amount (KES)",
   },
   {
-    accessorKey: "status",
+    id: "status",
     header: "Status",
+    accessorKey: "status",
+    cell: ({ row }) => renderStatus(row.original.status),
   },
+
   {
     id: "button",
     cell: ({ row }) => <HCFellowsExpenseDropdownMenu expense={row.original} />,
     enableHiding: false,
   },
 ];
+
+function renderStatus(status: string) {
+  if (status === "inititiated") {
+    return <Badge variant="shamiri-green">Payment Initiated</Badge>;
+  }
+  if (status === "deducted") {
+    return <Badge variant="destructive">Payment Deducted</Badge>;
+  }
+  return <Badge variant="default">Pending Payment</Badge>;
+}

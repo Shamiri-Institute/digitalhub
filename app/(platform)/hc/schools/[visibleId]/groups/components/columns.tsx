@@ -1,32 +1,23 @@
 "use client";
 
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { FellowsDatatableMenu } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
+import { GroupsDatatableMenu } from "#/app/(platform)/hc/schools/[visibleId]/groups/components/groups-datatable-menu";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
-import { parsePhoneNumber } from "libphonenumber-js";
 import { Dispatch, SetStateAction } from "react";
 
-export type SchoolFellowTableData = {
+export type SchoolGroupDataTableData = {
   id: string;
+  groupName: string;
+  leaderId: string;
   fellowName: string;
-  cellNumber: string;
-  supervisorId: string | null;
-  supervisorName: string | null;
-  droppedOut: boolean | null;
-  groupId: string | null;
-  groupName: string | null;
-  averageRating: number | null;
-  fellowEmail: string | null;
-  idNumber: string | null;
-  gender: string | null;
-  dateOfBirth: string | null;
-  county: string | null;
-  subCounty: string | null;
-  mpesaName: string | null;
-  mpesaNumber: string | null;
+  supervisorId: string;
+  supervisorName: string;
+  schoolId: string;
+  archivedAt: string;
+  groupRating: number | null;
   students: Prisma.StudentGetPayload<{
     include: {
       _count: {
@@ -36,14 +27,20 @@ export type SchoolFellowTableData = {
       };
     };
   }>[];
+  reports: Prisma.InterventionGroupReportGetPayload<{
+    include: {
+      session: true;
+    };
+  }>[];
 };
 
 export const columns = (state: {
-  setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
-  setDetailsDialog: Dispatch<SetStateAction<boolean>>;
-  setReplaceDialog: Dispatch<SetStateAction<boolean>>;
+  setGroup: Dispatch<SetStateAction<SchoolGroupDataTableData | undefined>>;
   setStudentsDialog: Dispatch<SetStateAction<boolean>>;
-}): ColumnDef<SchoolFellowTableData>[] => {
+  setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+  setLeaderDialog: Dispatch<SetStateAction<boolean>>;
+  setArchiveDialog: Dispatch<SetStateAction<boolean>>;
+}): ColumnDef<SchoolGroupDataTableData>[] => {
   return [
     {
       id: "checkbox",
@@ -78,21 +75,30 @@ export const columns = (state: {
       enableHiding: false,
     },
     {
-      accessorKey: "fellowName",
-      id: "Name",
-      header: "Name",
+      accessorKey: "groupName",
+      id: "Group",
+      header: "Group",
     },
     {
-      header: "Average Rating",
+      header: "Group Rating",
       cell: ({ row }) => {
-        const rating = row.original.averageRating ?? 0;
-        return <DataTableRatingStars rating={rating} />;
+        return <DataTableRatingStars rating={row.original.groupRating ?? 0} />;
       },
-      id: "Average Rating",
+      id: "Group Rating",
+    },
+    {
+      accessorKey: "supervisorName",
+      header: "Supervisor",
+      id: "Supervisor",
+    },
+    {
+      accessorKey: "fellowName",
+      header: "Fellow",
+      id: "Fellow",
     },
     {
       cell: ({ row }) =>
-        row.original.droppedOut ? (
+        row.original.archivedAt ? (
           <Badge variant="destructive">Inactive</Badge>
         ) : (
           <Badge variant="shamiri-green">Active</Badge>
@@ -101,23 +107,14 @@ export const columns = (state: {
       id: "Active Status",
     },
     {
-      accessorKey: "groupName",
-      header: "Group Name",
-      id: "Group Name",
-    },
-    {
-      header: "Phone Number",
-      accessorFn: (row) => {
-        return (
-          row.cellNumber &&
-          parsePhoneNumber(row.cellNumber, "KE").formatNational()
-        );
-      },
+      cell: ({ row }) => `${row.original.students.length}/15`,
+      header: "No. of students",
+      id: "No. of students",
     },
     {
       id: "button",
       cell: ({ row }) => (
-        <FellowsDatatableMenu fellow={row.original} state={state} />
+        <GroupsDatatableMenu group={row.original} state={state} />
       ),
       enableHiding: false,
     },

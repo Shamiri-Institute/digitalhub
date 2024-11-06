@@ -10,7 +10,11 @@ import { format, isAfter } from "date-fns";
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {
     assignedSupervisor: true;
-    interventionSessions: true;
+    interventionSessions: {
+      include: {
+        InterventionGroupReport: true;
+      };
+    };
     students: {
       include: {
         assignedGroup: true;
@@ -144,11 +148,45 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
       }
     },
   },
-  // {
-  //   // TODO: Get report submission status
-  //   header: "Report submission",
-  //   accessorKey: "schoolName",
-  // },
+  {
+    header: "Report submission",
+    id: "Report submission",
+    cell: ({ row }) => {
+      const sessions: Prisma.InterventionSessionGetPayload<{
+        include: {
+          InterventionGroupReport: true;
+        };
+      }>[] = row.original.interventionSessions
+        .filter((session) => {
+          return session.InterventionGroupReport !== undefined;
+        })
+        .sort((a, b) => {
+          return a.sessionDate.getTime() - b.sessionDate.getTime();
+        });
+
+      // TODO: refactor session names
+      if (sessions.length > 0) {
+        const recent = sessions[sessions.length - 1];
+        if (recent && recent.InterventionGroupReport !== undefined) {
+          return (
+            <Badge variant="shamiri-green">
+              {sessions[sessions.length - 1]?.sessionType?.toUpperCase() +
+                " - Report submitted"}
+            </Badge>
+          );
+        } else {
+          return (
+            <Badge variant="destructive">
+              {sessions[sessions.length - 1]?.sessionType?.toUpperCase() +
+                " - Not submitted"}
+            </Badge>
+          );
+        }
+      } else {
+        return <Badge variant="destructive">No report submitted</Badge>;
+      }
+    },
+  },
   {
     header: "Date added",
     id: "Date added",
