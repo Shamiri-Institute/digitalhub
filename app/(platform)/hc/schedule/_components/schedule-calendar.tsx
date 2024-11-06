@@ -334,7 +334,7 @@ function CalendarView({
 
   const [session, setSession] =
     React.useState<Prisma.InterventionSessionGetPayload<{
-      include: { school: true };
+      include: { school: true; sessionRatings: true };
     }> | null>(null);
 
   const activeMode = () => {
