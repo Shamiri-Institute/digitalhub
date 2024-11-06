@@ -21,8 +21,7 @@ import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -41,6 +40,12 @@ export default function HCApproveSpecialSession({
   expense: FellowExpenseData;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open]);
 
   const form = useForm<z.infer<typeof RequestSpecialSessionSchema>>({
     resolver: zodResolver(RequestSpecialSessionSchema),
@@ -113,7 +118,6 @@ export default function HCApproveSpecialSession({
               <DialogFooter>
                 <Button
                   variant="ghost"
-                  className="text-base font-semibold leading-6 text-shamiri-red"
                   onClick={() => {
                     form.reset();
                     setDialogOpen(false);
@@ -121,10 +125,11 @@ export default function HCApproveSpecialSession({
                 >
                   Cancel
                 </Button>
-                <Button className="bg-shamiri-new-blue text-base font-semibold leading-6 text-white">
-                  {form.formState.isSubmitting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
+                <Button
+                  variant="brand"
+                  disabled={form.formState.isSubmitting}
+                  loading={form.formState.isSubmitting}
+                >
                   Accept
                 </Button>
               </DialogFooter>
