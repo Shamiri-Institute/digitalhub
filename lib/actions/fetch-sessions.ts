@@ -43,6 +43,7 @@ export async function fetchInterventionSessions({
     },
     include: {
       school: true,
+      sessionRatings: true,
     },
     orderBy: {
       sessionDate: "asc",

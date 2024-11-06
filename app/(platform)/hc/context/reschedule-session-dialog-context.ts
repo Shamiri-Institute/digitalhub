@@ -5,11 +5,11 @@ type RescheduleSessionContextData = {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   session: Prisma.InterventionSessionGetPayload<{
-    include: { school: true };
+    include: { school: true; sessionRatings: true };
   }> | null;
   setSession: Dispatch<
     SetStateAction<Prisma.InterventionSessionGetPayload<{
-      include: { school: true };
+      include: { school: true; sessionRatings: true };
     }> | null>
   >;
 };

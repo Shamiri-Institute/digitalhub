@@ -18,6 +18,7 @@ export default async function SchoolSessionsPage({
           assignedSupervisor: true,
         },
       },
+      sessionRatings: true,
     },
   });
 
