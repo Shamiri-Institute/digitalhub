@@ -6,7 +6,6 @@ import SchoolsDatatable from "#/app/(platform)/hc/schools/components/schools-dat
 import SchoolsFilterToggle from "#/app/(platform)/hc/schools/components/schools-filter-toggle";
 import { UndoDropoutSchool } from "#/app/(platform)/hc/schools/components/undo-dropout-school-form";
 import { currentHubCoordinator } from "#/app/auth";
-import FileUploader from "#/components/file-uploader";
 import { SearchCommand } from "#/components/search-command";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
@@ -74,16 +73,6 @@ export default async function SchoolsPage() {
         />
         <Separator />
         <SchoolInfoProvider>
-          <div className="flex w-full justify-end">
-            <FileUploader
-              url="/api/csv-uploads/schools"
-              type="schools"
-              uploadVisibleMessage="Upload schools CSV"
-              metadata={{
-                urlPath: "/hc/schools",
-              }}
-            />
-          </div>
           <SchoolsDatatable />
           <EditSchoolDetailsForm />
           <AssignPointSupervisor supervisors={supervisors} />
