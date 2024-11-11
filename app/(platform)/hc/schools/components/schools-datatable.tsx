@@ -3,11 +3,26 @@
 import { columns } from "#/app/(platform)/hc/schools/components/columns";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import SchoolsDataTable from "#/components/data-table";
+import FileUploader from "#/components/file-uploader";
 import { useContext } from "react";
 
 export default function SchoolsDatatable() {
   const context = useContext(SchoolsDataContext);
 
+  const renderTableActions = () => {
+    return (
+      <div className="flex">
+        <FileUploader
+          url="/api/csv-uploads/schools"
+          type="schools"
+          uploadVisibleMessage="Upload schools CSV"
+          metadata={{
+            urlPath: "/hc/schools",
+          }}
+        />
+      </div>
+    );
+  };
   return (
     <SchoolsDataTable
       data={context.schools}
@@ -23,6 +38,7 @@ export default function SchoolsDatatable() {
         "Point supervisor phone no.": false,
         "Point supervisor email": false,
       }}
+      renderTableActions={renderTableActions()}
     />
   );
 }
