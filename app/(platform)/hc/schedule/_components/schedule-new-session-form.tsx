@@ -51,9 +51,7 @@ export function ScheduleNewSession({
     resolver: zodResolver(ScheduleNewSessionSchema),
     defaultValues: {
       sessionType: "s0",
-      sessionDuration: "1h",
       sessionStartTime: "06:00",
-      // notifications: "Email",
     },
   });
 
@@ -98,26 +96,6 @@ export function ScheduleNewSession({
         description:
           "Something went wrong while scheduling a session, please try again",
       });
-    }
-  };
-
-  const checkSessionExists = () => {
-    const values = form.getValues(["schoolId", "sessionType"]);
-    if (values.length > 1) {
-      const check = sessions.findIndex((session) => {
-        return (
-          session.schoolId === values[0] && session.sessionType === values[1]
-        );
-      });
-
-      if (check !== -1) {
-        form.setError("sessionType", {
-          type: "custom",
-          message: `This session already exists for ${sessions[check]?.school.schoolName}`,
-        });
-      } else {
-        form.clearErrors("sessionType");
-      }
     }
   };
 
@@ -177,7 +155,7 @@ export function ScheduleNewSession({
           )}
         />
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="sessionDate"
@@ -232,50 +210,6 @@ export function ScheduleNewSession({
                   className="mt-1.5 w-full appearance-none"
                 />
               </div>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="sessionDuration"
-            render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel>Duration</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {[
-                      {
-                        label: "1h",
-                        value: "01:00",
-                      },
-                      {
-                        label: "1h 15m",
-                        value: "01:15",
-                      },
-                      {
-                        label: "1h 30m",
-                        value: "01:30",
-                      },
-                      {
-                        label: "1h 45m",
-                        value: "01:45",
-                      },
-                    ].map((duration, index: number) => (
-                      <SelectItem key={index.toString()} value={duration.value}>
-                        {duration.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
             )}
           />
         </div>
