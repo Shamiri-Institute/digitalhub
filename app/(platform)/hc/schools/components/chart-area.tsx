@@ -43,7 +43,7 @@ export default function ChartArea({
 }) {
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
-      <ChartCard title="Session progress">
+      <ChartCard title="Session progress" showCardFooter={false}>
         {schoolAttendances?.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart width={307} height={307} data={schoolAttendances}>
@@ -65,7 +65,7 @@ export default function ChartArea({
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="Drop out reasons">
+      <ChartCard title="Drop out reasons" showCardFooter={false}>
         {dropoutData.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
@@ -99,7 +99,7 @@ export default function ChartArea({
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="School information completion">
+      <ChartCard title="School information completion" showCardFooter={false}>
         {schoolDataCompletenessData.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250}>
@@ -133,7 +133,7 @@ export default function ChartArea({
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard title="Ratings">
+      <ChartCard title="Ratings" showCardFooter={false}>
         {sessionRatingsData?.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart width={307} height={307} data={sessionRatingsData}>
