@@ -1,7 +1,6 @@
 import AddSupervisorExpensesForm from "#/app/(platform)/hc/reporting/expenses/supervisors/components/add-expense";
 import SupervisorFilterToggle from "#/app/(platform)/hc/reporting/expenses/supervisors/components/supervisor-expense-toggle";
 import { Icons } from "#/components/icons";
-import { SearchCommand } from "#/components/search-command";
 import { Button } from "#/components/ui/button";
 import { Prisma } from "@prisma/client";
 
@@ -17,7 +16,6 @@ export default async function SupervisorsFilterTab({
   return (
     <div className="flex items-center justify-between">
       <div className="flex w-1/4 gap-3">
-        <SearchCommand data={[]} />
         <SupervisorFilterToggle supervisors={[]} />
       </div>
       <div>
