@@ -31,7 +31,7 @@ import {
 } from "./ui/layout-icons";
 
 import { cn } from "#/lib/utils";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -95,6 +95,11 @@ function LayoutV2({
 
   const activeColor = "#0085FF";
   const inactiveColour = "#969696";
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  useEffect(() => {
+    setPopoverOpen(false);
+  }, [pathname]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -191,14 +196,11 @@ function LayoutV2({
               <GraduationCapIcon />
               <Link href={`/${mainRoute}/students`}>Students</Link>
             </div>
-            <div className={`tab-link ${cn(reportingActive && "active")}`}>
-              <BarChartIcon />
-              <Link href={`/${mainRoute}/reporting`}>Reporting</Link>
-              <Image
-                unoptimized
-                priority
-                src={ArrowDropdown}
-                alt="Drop down Icon"
+            <div className={`tab-link ${reportingActive ? "active" : ""}`}>
+              <ReportingDropdown
+                popoverOpen={popoverOpen}
+                setPopoverOpen={setPopoverOpen}
+                mainRoute={mainRoute ?? ""}
               />
             </div>
           </div>
@@ -243,4 +245,50 @@ function getInitials(name: string) {
   }
 
   return "N/A";
+}
+
+function ReportingDropdown({
+  popoverOpen,
+  setPopoverOpen,
+  mainRoute,
+}: {
+  popoverOpen: boolean;
+  setPopoverOpen: (open: boolean) => void;
+  mainRoute: string;
+}) {
+  return (
+    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+      <PopoverTrigger className="flex cursor-pointer items-center space-x-1">
+        <BarChartIcon />
+        <p>Reporting</p>
+        <Image
+          unoptimized
+          priority
+          src={ArrowDropdown}
+          alt="Drop down Icon"
+          className="cursor-pointer"
+        />
+      </PopoverTrigger>
+      <PopoverContent className="absolute min-w-44 space-y-2 rounded-md  bg-white p-2 shadow-md">
+        <Link
+          href={`/${mainRoute}/reporting`}
+          className="block px-4 py-2 hover:bg-gray-200"
+        >
+          Expenses
+        </Link>
+        <Link
+          href={`/${mainRoute}/reporting/school-reports`}
+          className="block px-4 py-2 hover:bg-gray-200"
+        >
+          School Reports
+        </Link>
+        <Link
+          href={`/${mainRoute}/reporting/fellow-reports`}
+          className="block px-4 py-2 hover:bg-gray-200"
+        >
+          Fellow Reports
+        </Link>
+      </PopoverContent>
+    </Popover>
+  );
 }
