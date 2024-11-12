@@ -11,23 +11,9 @@ import {
   DialogHeader,
   DialogPortal,
 } from "#/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "#/components/ui/form";
+import { Form, FormField, FormLabel } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { Popover, PopoverContent } from "#/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
@@ -177,7 +163,11 @@ export default function RescheduleSession({
                   >
                     Cancel
                   </Button>
-                  <Button variant="brand" loading={form.formState.isSubmitting} disabled={form.formState.isSubmitting}>
+                  <Button
+                    variant="brand"
+                    loading={form.formState.isSubmitting}
+                    disabled={form.formState.isSubmitting}
+                  >
                     Save Changes
                   </Button>
                 </div>

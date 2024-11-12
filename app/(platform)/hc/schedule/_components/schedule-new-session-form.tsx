@@ -51,7 +51,7 @@ export function ScheduleNewSession({
     resolver: zodResolver(ScheduleNewSessionSchema),
     defaultValues: {
       sessionType: "s0",
-      sessionStartTime: "06:00"
+      sessionStartTime: "06:00",
     },
   });
 

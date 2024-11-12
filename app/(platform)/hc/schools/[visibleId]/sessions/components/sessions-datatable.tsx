@@ -18,7 +18,7 @@ import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-ale
 import SessionRatings from "#/components/common/session/session-ratings";
 import DataTable from "#/components/data-table";
 import { Prisma } from "@prisma/client";
-import { addHours, addMinutes } from "date-fns";
+import { addHours } from "date-fns";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 import { useState } from "react";
@@ -44,9 +44,7 @@ export default function SessionsDatatable({
   const [activeSession, setActiveSession] = useState<Session | undefined>();
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
 
-  function updateRescheduledSessionState(
-    sessionDate: Date,
-  ) {
+  function updateRescheduledSessionState(sessionDate: Date) {
     const sessionIndex =
       session !== null
         ? sessions.findIndex((_session) => {
@@ -58,10 +56,7 @@ export default function SessionsDatatable({
     if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
       copiedSessions[sessionIndex]!.sessionDate = sessionDate;
 
-      copiedSessions[sessionIndex]!.sessionEndTime = addHours(
-        sessionDate,
-        1,
-      );
+      copiedSessions[sessionIndex]!.sessionEndTime = addHours(sessionDate, 1);
       copiedSessions[sessionIndex]!.status = "Rescheduled";
       setSessions(copiedSessions);
     }
