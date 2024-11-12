@@ -43,11 +43,10 @@ export async function createNewSession(
       s4: "Session 04",
     };
 
-    const hours = +(parsedData.sessionDuration.split(":")[0] ?? 0);
-    const minutes = +(parsedData.sessionDuration.split(":")[1] ?? 0);
+
     const sessionEndTime = addHours(
-      addMinutes(parsedData.sessionDate, minutes),
-      hours,
+      parsedData.sessionDate,
+      1,
     );
     const hubSupervisors = await db.supervisor.findMany();
     const supervisorAttendances: Prisma.SupervisorAttendanceCreateManySessionInput[] =
@@ -71,7 +70,7 @@ export async function createNewSession(
           sessionTypes[parsedData.sessionType as keyof typeof sessionTypes],
         sessionDate: parsedData.sessionDate,
         sessionType: parsedData.sessionType,
-        // sessionEndTime,
+        sessionEndTime,
         yearOfImplementation:
           parsedData.sessionDate.getFullYear() || new Date().getFullYear(),
         schoolId: parsedData.schoolId,
