@@ -55,7 +55,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
 import { Prisma, SessionStatus } from "@prisma/client";
-import { addHours, addMinutes } from "date-fns";
+import { addHours } from "date-fns";
 import * as React from "react";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
@@ -362,10 +362,7 @@ function CalendarView({
     }
   };
 
-  function updateRescheduledSessionState(
-    sessionDate: Date,
-    sessionDuration: string,
-  ) {
+  function updateRescheduledSessionState(sessionDate: Date) {
     const sessionIndex =
       session !== null
         ? sessions.findIndex((_session) => {
@@ -376,13 +373,7 @@ function CalendarView({
     const copiedSessions = [...sessions];
     if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
       copiedSessions[sessionIndex]!.sessionDate = sessionDate;
-
-      const hours = +(sessionDuration.split(":")[0] ?? 0);
-      const minutes = +(sessionDuration.split(":")[1] ?? 0);
-      copiedSessions[sessionIndex]!.sessionEndTime = addHours(
-        addMinutes(sessionDate, minutes),
-        hours,
-      );
+      copiedSessions[sessionIndex]!.sessionEndTime = addHours(sessionDate, 1);
       copiedSessions[sessionIndex]!.status = "Rescheduled";
       setSessions(copiedSessions);
     }
