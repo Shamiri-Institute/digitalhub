@@ -9,7 +9,7 @@ import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
-import { addHours, addMinutes } from "date-fns";
+import { addHours } from "date-fns";
 import { z } from "zod";
 
 function checkAuthorizedUser() {
@@ -43,12 +43,7 @@ export async function createNewSession(
       s4: "Session 04",
     };
 
-    const hours = +(parsedData.sessionDuration.split(":")[0] ?? 0);
-    const minutes = +(parsedData.sessionDuration.split(":")[1] ?? 0);
-    const sessionEndTime = addHours(
-      addMinutes(parsedData.sessionDate, minutes),
-      hours,
-    );
+    const sessionEndTime = addHours(parsedData.sessionDate, 1);
     const hubSupervisors = await db.supervisor.findMany();
     const supervisorAttendances: Prisma.SupervisorAttendanceCreateManySessionInput[] =
       hubSupervisors.map((supervisor) => {
@@ -71,7 +66,7 @@ export async function createNewSession(
           sessionTypes[parsedData.sessionType as keyof typeof sessionTypes],
         sessionDate: parsedData.sessionDate,
         sessionType: parsedData.sessionType,
-        // sessionEndTime,
+        sessionEndTime,
         yearOfImplementation:
           parsedData.sessionDate.getFullYear() || new Date().getFullYear(),
         schoolId: parsedData.schoolId,
@@ -143,12 +138,7 @@ export async function rescheduleSession(
   checkAuthorizedUser();
   try {
     const parsedData = RescheduleSessionSchema.parse(data);
-    const hours = +(parsedData.sessionDuration.split(":")[0] ?? 0);
-    const minutes = +(parsedData.sessionDuration.split(":")[1] ?? 0);
-    const sessionEndTime = addHours(
-      addMinutes(parsedData.sessionDate, minutes),
-      hours,
-    );
+    const sessionEndTime = addHours(parsedData.sessionDate, 1);
 
     await db.interventionSession.update({
       data: {
