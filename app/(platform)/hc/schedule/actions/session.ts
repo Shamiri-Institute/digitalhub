@@ -142,11 +142,9 @@ export async function rescheduleSession(
   checkAuthorizedUser();
   try {
     const parsedData = RescheduleSessionSchema.parse(data);
-    const hours = +(parsedData.sessionDuration.split(":")[0] ?? 0);
-    const minutes = +(parsedData.sessionDuration.split(":")[1] ?? 0);
     const sessionEndTime = addHours(
-      addMinutes(parsedData.sessionDate, minutes),
-      hours,
+      parsedData.sessionDate,
+      1,
     );
 
     await db.interventionSession.update({

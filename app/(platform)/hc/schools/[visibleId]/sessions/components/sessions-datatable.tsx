@@ -46,7 +46,6 @@ export default function SessionsDatatable({
 
   function updateRescheduledSessionState(
     sessionDate: Date,
-    sessionDuration: string,
   ) {
     const sessionIndex =
       session !== null
@@ -59,11 +58,9 @@ export default function SessionsDatatable({
     if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
       copiedSessions[sessionIndex]!.sessionDate = sessionDate;
 
-      const hours = +(sessionDuration.split(":")[0] ?? 0);
-      const minutes = +(sessionDuration.split(":")[1] ?? 0);
       copiedSessions[sessionIndex]!.sessionEndTime = addHours(
-        addMinutes(sessionDate, minutes),
-        hours,
+        sessionDate,
+        1,
       );
       copiedSessions[sessionIndex]!.status = "Rescheduled";
       setSessions(copiedSessions);

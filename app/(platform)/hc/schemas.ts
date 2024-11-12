@@ -394,7 +394,6 @@ export const ScheduleNewSessionSchema = z.object({
 export const RescheduleSessionSchema = z.object({
   sessionDate: z.coerce.date({ required_error: "Please select a date" }),
   sessionStartTime: stringValidation("Please select a start time"),
-  sessionDuration: stringValidation("Please select the session's duration"),
 });
 
 export const MarkSupervisorAttendanceSchema = z

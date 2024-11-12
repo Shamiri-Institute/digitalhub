@@ -41,14 +41,13 @@ import { z } from "zod";
 export default function RescheduleSession({
   updateSessionsState,
 }: {
-  updateSessionsState: (sessionDate: Date, sessionDuration: string) => void;
+  updateSessionsState: (sessionDate: Date) => void;
 }) {
   const context = useContext(RescheduleSessionContext);
 
   const form = useForm<z.infer<typeof RescheduleSessionSchema>>({
     resolver: zodResolver(RescheduleSessionSchema),
     defaultValues: {
-      sessionDuration: "1h",
       sessionStartTime: "06:00",
     },
   });
@@ -61,17 +60,15 @@ export default function RescheduleSession({
       ":00";
     data.sessionDate = new Date(sessionDate);
     try {
-      if (context.session) {
-        const response = await rescheduleSession(context.session?.id, data);
-        if (response.success) {
-          updateSessionsState(data.sessionDate, data.sessionDuration);
-          context.setIsOpen(false);
-          toast({
-            description: response.message,
-          });
-          form.reset();
-          return;
-        }
+      const response = await rescheduleSession(context.session!.id, data);
+      if (response.success) {
+        updateSessionsState(data.sessionDate);
+        context.setIsOpen(false);
+        toast({
+          description: response.message,
+        });
+        form.reset();
+        return;
       }
     } catch (error: unknown) {
       console.log(error);
@@ -108,7 +105,7 @@ export default function RescheduleSession({
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
                     name="sessionDate"
@@ -165,53 +162,6 @@ export default function RescheduleSession({
                       </div>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="sessionDuration"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <FormLabel>Duration</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {[
-                              {
-                                label: "1h",
-                                value: "01:00",
-                              },
-                              {
-                                label: "1h 15m",
-                                value: "01:15",
-                              },
-                              {
-                                label: "1h 30m",
-                                value: "01:30",
-                              },
-                              {
-                                label: "1h 45m",
-                                value: "01:45",
-                              },
-                            ].map((duration, index: number) => (
-                              <SelectItem
-                                key={index.toString()}
-                                value={duration.value}
-                              >
-                                {duration.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
                 </div>
 
                 <Separator />
@@ -227,7 +177,7 @@ export default function RescheduleSession({
                   >
                     Cancel
                   </Button>
-                  <Button className="bg-shamiri-new-blue hover:bg-shamiri-blue">
+                  <Button variant="brand" loading={form.formState.isSubmitting} disabled={form.formState.isSubmitting}>
                     Save Changes
                   </Button>
                 </div>
