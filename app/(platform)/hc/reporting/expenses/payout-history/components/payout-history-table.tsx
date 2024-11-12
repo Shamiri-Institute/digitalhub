@@ -15,10 +15,7 @@ export default function HCPayoutHistoryDataTable({
 }) {
   return (
     <div className="container w-full grow space-y-3">
-      <PayoutFilterTab
-        hubCoordinatorId={currentHubCoordinator.id}
-        hubId={currentHubCoordinator.assignedHubId!}
-      />
+      <PayoutFilterTab hubId={currentHubCoordinator.assignedHubId!} />
       <DataTable
         data={payoutHistory}
         columns={columns}
