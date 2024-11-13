@@ -38,7 +38,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const session = useSession();
 
-  if (pathname.startsWith("/hc") || pathname.startsWith("/sc")) {
+  // TODO: this logic should be made more straightforward
+  if (pathname.startsWith("/hc/") || pathname.startsWith("/sc/")) {
     return (
       <LayoutV2
         userName={session.data?.user.name ?? "N/A"}
