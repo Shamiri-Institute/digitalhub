@@ -29,7 +29,9 @@ import CancelSession from "#/app/(platform)/hc/components/cancel-session";
 import FellowAttendance from "#/app/(platform)/hc/components/fellow-attendance";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import RescheduleSession from "#/app/(platform)/hc/components/reschedule-session";
-import SupervisorAttendance from "#/app/(platform)/hc/components/supervisor-attendance";
+import SupervisorAttendance, {
+  SupervisorAttendanceTableData,
+} from "#/app/(platform)/hc/components/supervisor-attendance";
 import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
 import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
@@ -74,6 +76,21 @@ import { WeekView } from "./week-view";
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
   hubId: string;
   schools: Prisma.SchoolGetPayload<{}>[];
+  supervisors: Prisma.SupervisorGetPayload<{
+    include: {
+      supervisorAttendances: {
+        include: {
+          session: true;
+        };
+      };
+      fellows: {
+        include: {
+          fellowAttendances: true;
+        };
+      };
+      assignedSchools: true;
+    };
+  }>[];
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
@@ -211,6 +228,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 dayProps={{ state: dayState }}
                 listProps={{ state: listState, hubId }}
                 tableProps={{ state: tableState, hubId }}
+                supervisors={props.supervisors}
               />
             </FiltersContext.Provider>
           </div>
@@ -302,6 +320,7 @@ function CalendarView({
   dayProps,
   listProps,
   tableProps,
+  supervisors,
 }: {
   monthProps: {
     state: CalendarState;
@@ -321,6 +340,21 @@ function CalendarView({
     state: CalendarState;
     hubId: string;
   };
+  supervisors: Prisma.SupervisorGetPayload<{
+    include: {
+      supervisorAttendances: {
+        include: {
+          session: true;
+        };
+      };
+      fellows: {
+        include: {
+          fellowAttendances: true;
+        };
+      };
+      assignedSchools: true;
+    };
+  }>[];
 }) {
   const { mode } = useMode();
   const { sessions, setSessions } = useContext(SessionsContext);
@@ -331,6 +365,9 @@ function CalendarView({
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
   const [rescheduleSessionDialog, setRescheduleSessionDialog] =
     React.useState(false);
+  const [markAttendanceDialog, setMarkAttendanceDialog] = React.useState(false);
+  const [supervisorAttendance, setSupervisorAttendance] =
+    React.useState<SupervisorAttendanceTableData | null>(null);
 
   const [session, setSession] =
     React.useState<Prisma.InterventionSessionGetPayload<{
@@ -402,6 +439,10 @@ function CalendarView({
           setIsOpen: setSupervisorAttendanceDialog,
           session,
           setSession,
+          markAttendanceDialog,
+          setMarkAttendanceDialog,
+          attendance: supervisorAttendance,
+          setAttendance: setSupervisorAttendance,
         }}
       >
         <FellowAttendanceContext.Provider
@@ -437,7 +478,7 @@ function CalendarView({
           </CancelSessionContext.Provider>
           <FellowAttendance />
         </FellowAttendanceContext.Provider>
-        <SupervisorAttendance />
+        <SupervisorAttendance supervisors={supervisors} />
       </SupervisorAttendanceContext.Provider>
     </div>
   );

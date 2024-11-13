@@ -1,6 +1,7 @@
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
 import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
-import { markManySupervisorAttendance } from "#/app/(platform)/hc/schedule/actions/supervisor-attendance";
+import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import { MarkAttendance } from "#/components/common/mark-attendance";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -20,78 +21,76 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { toast } from "#/components/ui/use-toast";
-import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
-import { cn } from "#/lib/utils";
-import { SessionStatus } from "@prisma/client";
-import { ColumnDef, Row, VisibilityState } from "@tanstack/react-table";
-import { createColumnHelper } from "@tanstack/table-core";
 import {
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
+import {
+  markManySupervisorAttendance,
+  markSupervisorAttendance,
+} from "#/lib/actions/supervisor";
+import { cn, sessionDisplayName } from "#/lib/utils";
+import { Prisma, SessionStatus } from "@prisma/client";
+import { ColumnDef, Row } from "@tanstack/react-table";
+import { createColumnHelper } from "@tanstack/table-core";
+import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
+import { useContext, useEffect, useState } from "react";
 
-export default function SupervisorAttendance() {
+export default function SupervisorAttendance({
+  supervisors,
+}: {
+  supervisors: Prisma.SupervisorGetPayload<{
+    include: {
+      supervisorAttendances: {
+        include: {
+          session: true;
+        };
+      };
+      fellows: {
+        include: {
+          fellowAttendances: true;
+        };
+      };
+      assignedSchools: true;
+    };
+  }>[];
+}) {
   const context = useContext(SupervisorAttendanceContext);
   const [attendances, setAttendances] = useState<
     SupervisorAttendanceTableData[]
   >([]);
 
   useEffect(() => {
-    try {
-      const fetchAttendances = async () => {
-        const attendances = await fetchSupervisorAttendances({
-          where: {
-            school: {
-              id: context.session?.schoolId,
-            },
-            session: {
-              id: context.session?.id,
-            },
-          },
-        });
-        const tableData = attendances.map((attendance) => {
-          const totalAttendedFellows = attendance.supervisor.fellows.filter(
-            (fellow) => {
-              const attended = fellow.fellowAttendances.find(
-                (attendance) => attendance.sessionId === context.session?.id,
-              );
-              if (attended) {
-                return fellow;
-              }
-            },
-          );
-          return {
-            id: attendance.id,
-            supervisorId: attendance.supervisor.id,
-            supervisorName: attendance.supervisor.supervisorName ?? "",
-            pointSchools: attendance.supervisor.assignedSchools.map(
-              (school) => school.schoolName,
-            ),
-            attendance: attendance.attended,
-            phoneNumber: attendance.supervisor.cellNumber ?? "",
-            fellows:
-              totalAttendedFellows.length +
-              "/" +
-              attendance.supervisor.fellows.length,
-          };
-        });
-        setAttendances(tableData);
-      };
-      fetchAttendances();
-    } catch (error: unknown) {
-      console.log(error);
-      toast({
-        variant: "destructive",
-        title: "Fetch failed!",
-        description:
-          "Something went wrong while fetching supervisor data, please try again.",
+    const tableData = supervisors.map((supervisor) => {
+      const totalAttendedFellows = supervisor.fellows.filter((fellow) => {
+        const attended = fellow.fellowAttendances.find(
+          (attendance) => attendance.sessionId === context.session?.id,
+        );
+        if (attended) {
+          return fellow;
+        }
       });
-    }
-  }, [context.isOpen, context.session]);
+      const attendance = supervisor.supervisorAttendances.find(
+        (_attendance) => _attendance.sessionId === context.session?.id,
+      );
+      return {
+        id: attendance?.id,
+        supervisorId: supervisor.id,
+        supervisorName: supervisor.supervisorName ?? "",
+        pointSchools: supervisor.assignedSchools.map(
+          (school) => school.schoolName,
+        ),
+        attendance: attendance?.attended,
+        phoneNumber: supervisor.cellNumber ?? "",
+        fellows: totalAttendedFellows.length + "/" + supervisor.fellows.length,
+        sessionId: attendance?.sessionId,
+        absenceReason: attendance?.absenceReason ?? "",
+        absenceComments: attendance?.absenceComments ?? "",
+      };
+    });
+    setAttendances(tableData);
+  }, [context.isOpen, context.session, supervisors]);
 
   return (
     <div>
@@ -119,11 +118,6 @@ export default function SupervisorAttendance() {
             <SupervisorAttendanceDataTable
               columns={columns() as ColumnDef<unknown>[]}
               data={attendances}
-              onChangeData={setAttendances}
-              closeDialogFn={context.setIsOpen}
-              columnVisibility={{
-                checkbox: context.session ? !context.session?.occurred : false,
-              }}
             />
           </DialogContent>
         </DialogPortal>
@@ -135,52 +129,42 @@ export default function SupervisorAttendance() {
 export function SupervisorAttendanceDataTable({
   columns,
   data,
-  onChangeData,
-  closeDialogFn,
-  emptyStateMessage = "No supervisors associated with this session",
-  columnVisibility,
+  emptyStateMessage = "No supervisors in hub",
 }: {
   columns: ColumnDef<unknown>[];
   data: SupervisorAttendanceTableData[];
-  onChangeData: Dispatch<SetStateAction<SupervisorAttendanceTableData[]>>;
-  closeDialogFn?: Dispatch<SetStateAction<boolean>>;
   emptyStateMessage?: string;
-  columnVisibility?: VisibilityState;
 }) {
   const [selectedRows, setSelectedRows] = useState([]);
-  const [loading, setLoading] = useState(false);
+
+  const context = useContext(SupervisorAttendanceContext);
 
   async function batchMarkAttendances(attended: boolean | null) {
-    setLoading(true);
-    try {
-      const ids = (selectedRows as SupervisorAttendanceTableData[]).map(
-        (row) => row.id,
-      );
-      const response = await markManySupervisorAttendance(ids, attended);
-      if (response.success) {
-        let attendancesCopy = [...data];
-        attendancesCopy = attendancesCopy.map((attendance) => {
-          if (ids.includes(attendance.id)) {
-            attendance.attendance = attended;
-          }
-          return attendance;
-        });
-        onChangeData(attendancesCopy);
-        setLoading(false);
-        toast({
-          variant: "default",
-          title: response.data?.count + " rows marked successfully",
-        });
-      }
-    } catch (error: unknown) {
-      console.log(error);
-      setLoading(false);
-      toast({
-        variant: "destructive",
-        description: "Something went wrong, please try again",
-      });
-    }
+    const ids = (selectedRows as SupervisorAttendanceTableData[])
+      .filter((row) => {
+        return row.id !== undefined;
+      })
+      .map((x): string => x.id!);
+    await markManySupervisorAttendance(ids, attended);
   }
+
+  const renderTableActions = () => {
+    return (
+      <div className="flex gap-3">
+        <Button
+          variant="outline"
+          className="flex gap-1"
+          disabled={selectedRows.length === 0}
+          onClick={() => {
+            context.setMarkAttendanceDialog(true);
+          }}
+        >
+          <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
+          <span>Mark supervisor attendance</span>
+        </Button>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-4 pt-2">
@@ -189,95 +173,63 @@ export function SupervisorAttendanceDataTable({
         columns={columns as ColumnDef<SupervisorAttendanceTableData>[]}
         data={data}
         editColumns={false}
-        className={"data-table data-table-action"}
+        className={"data-table data-table-action mt-4"}
         emptyStateMessage={emptyStateMessage}
         onRowSelectionChange={setSelectedRows as () => {}}
-        columnVisibilityState={columnVisibility}
+        columnVisibilityState={{
+          checkbox: context.session ? !context.session?.occurred : false,
+        }}
         enableRowSelection={(row: Row<SupervisorAttendanceTableData>) =>
           row.original.sessionStatus !== SessionStatus.Cancelled
         }
+        renderTableActions={renderTableActions()}
       />
-      <div className="flex justify-end gap-4">
-        {selectedRows.length > 0 ? (
-          <div className="flex items-center justify-end gap-3">
-            <div className="px-3 text-sm">
-              {loading ? (
-                <div className="flex items-center gap-2 text-shamiri-new-blue">
-                  <span>Updating rows</span>
-                  <Icons.hourglass className={"h-3.5 w-3.5 animate-pulse"} />
-                </div>
-              ) : selectedRows.length === 1 ? (
-                <span className="text-shamiri-text-dark-grey/50">
-                  Mark row as:
-                </span>
-              ) : selectedRows.length > 1 ? (
-                <span className="text-shamiri-text-dark-grey/50">
-                  Mark {selectedRows.length} rows as:
-                </span>
-              ) : null}
-            </div>
-            <Button
-              variant="ghost"
-              className="hover:bg-blue-bg active:scale-x-95"
-              disabled={loading}
-              onClick={() => {
-                batchMarkAttendances(null);
-              }}
-            >
-              <div className="flex items-center gap-2 text-shamiri-new-blue">
-                <Icons.helpCircle className="h-4 w-4" />
-                <span>Not marked</span>
-              </div>
-            </Button>
-
-            <Button
-              variant="ghost"
-              className="hover:bg-red-bg active:scale-x-95"
-              disabled={loading}
-              onClick={() => {
-                batchMarkAttendances(false);
-              }}
-            >
-              <div className="flex items-center gap-2 text-shamiri-light-red">
-                <Icons.crossCircleFilled className="h-4 w-4" />
-                <span>Missed</span>
-              </div>
-            </Button>
-
-            <Button
-              variant="ghost"
-              className="hover:bg-green-bg active:scale-x-95"
-              disabled={loading}
-              onClick={() => {
-                batchMarkAttendances(true);
-              }}
-            >
-              <div className="flex items-center gap-2 text-shamiri-green">
-                <Icons.checkCircle className="h-4 w-4" />
-                <span>Attended</span>
-              </div>
-            </Button>
+      <MarkAttendance
+        title={"Mark supervisor attendance"}
+        selectedSessionId={context.session?.id}
+        attendances={
+          context.attendance
+            ? [
+                {
+                  attendanceId: context.attendance.id!,
+                  id: context.attendance.supervisorId,
+                  attended: context.attendance.attendance ?? null,
+                  absenceReason: context.attendance.absenceReason ?? null,
+                  sessionId: context.attendance.sessionId!,
+                  schoolId: context.session!.schoolId,
+                  comments: context.attendance.absenceComments,
+                },
+              ]
+            : []
+        }
+        id={context.attendance?.supervisorId}
+        isOpen={context.markAttendanceDialog}
+        setIsOpen={context.setMarkAttendanceDialog}
+        markAttendanceAction={markSupervisorAttendance}
+        markBulkAttendanceAction={batchMarkAttendances}
+        sessionMode="single"
+        markMode="many"
+      >
+        <DialogAlertWidget>
+          <div className="flex items-center gap-2">
+            <span>{context.attendance?.supervisorName}</span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+              {""}
+            </span>
+            <span>{sessionDisplayName(context.session?.sessionType!)}</span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+              {""}
+            </span>
+            <span>{context.session?.school.schoolName}</span>
           </div>
-        ) : null}
-        {closeDialogFn && (
-          <Button
-            type="button"
-            disabled={loading}
-            className="border-0 bg-shamiri-new-blue text-white hover:bg-shamiri-new-blue/80"
-            onClick={() => {
-              closeDialogFn(false);
-            }}
-          >
-            Done
-          </Button>
-        )}
-      </div>
+        </DialogAlertWidget>
+      </MarkAttendance>
     </div>
   );
 }
 
 export type SupervisorAttendanceTableData = {
-  id: string;
+  id: string | undefined;
   supervisorId: string;
   supervisorName: string;
   pointSchools?: string[];
@@ -286,9 +238,12 @@ export type SupervisorAttendanceTableData = {
   fellows: string;
   schoolName?: string;
   sessionType?: string;
+  sessionId?: string;
   occurred?: boolean | null;
   sessionStatus?: SessionStatus | null;
   sessionDate?: Date;
+  absenceReason?: string;
+  absenceComments?: string;
 };
 
 export const columns = () => {
@@ -413,11 +368,44 @@ export const columns = () => {
       header: "Point Schools",
       id: "pointSchools",
     }),
-    {
-      accessorKey: "phoneNumber",
+    columnHelper.accessor("phoneNumber", {
+      cell: ({ row }) => {
+        try {
+          return (
+            row.original.phoneNumber &&
+            parsePhoneNumberWithError(
+              row.original.phoneNumber,
+              "KE",
+            ).formatNational()
+          );
+        } catch (error) {
+          if (error instanceof ParseError) {
+            // Not a phone number, non-existent country, etc.
+            return (
+              row.original.phoneNumber && (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="flex gap-1">
+                      <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
+                      <span>{row.original.phoneNumber}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="px-2 py-1 capitalize">
+                      {error.message.toLowerCase().replace("_", " ")}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              )
+            );
+          } else {
+            throw error;
+          }
+        }
+      },
       header: "Phone number",
       id: "phoneNumber",
-    },
+    }),
     {
       accessorKey: "fellows",
       header: "No. of fellows",
@@ -425,39 +413,8 @@ export const columns = () => {
     },
     columnHelper.accessor("attendance", {
       cell: (props) => {
-        const sessionOccurredStatus =
-          props.row.original.sessionStatus === SessionStatus.Cancelled;
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div className="absolute inset-0 border-l bg-white">
-                <div className="flex h-full w-full items-center justify-center">
-                  <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-                </div>
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuContent
-                align="end"
-                onCloseAutoFocus={(e) => {
-                  e.preventDefault();
-                }}
-              >
-                <DropdownMenuLabel>
-                  <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-                    Actions
-                  </span>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem disabled={sessionOccurredStatus}>
-                  Mark delayed attendance
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled={sessionOccurredStatus}>
-                  Fellow attendance history
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenuPortal>
-          </DropdownMenu>
+          <SupervisorAttendanceDataTableMenu attendance={props.row.original} />
         );
       },
       id: "button",
@@ -465,3 +422,46 @@ export const columns = () => {
     }),
   ];
 };
+
+function SupervisorAttendanceDataTableMenu({
+  attendance,
+}: {
+  attendance: SupervisorAttendanceTableData;
+}) {
+  const context = useContext(SupervisorAttendanceContext);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <div className="absolute inset-0 border-l bg-white">
+          <div className="flex h-full w-full items-center justify-center">
+            <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
+          </div>
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuPortal>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>
+            <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+              Actions
+            </span>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              context.setAttendance(attendance);
+              context.setMarkAttendanceDialog(true);
+            }}
+            disabled={context.session?.status === SessionStatus.Cancelled}
+          >
+            Mark attendance
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={context.session?.status === SessionStatus.Cancelled}
+          >
+            Fellow attendance history
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenuPortal>
+    </DropdownMenu>
+  );
+}
