@@ -87,13 +87,29 @@ export const WeeklyHubReportSchema = z.object({
   week: z.coerce.date({ required_error: "Please select a week" }),
   recommendations: stringValidation("Please input recommendations"),
   schoolRelatedIssuesAndObservations: stringValidation(),
-  schoolRelatedIssuesAndObservationRating: z.number().lte(5),
+  schoolRelatedIssuesAndObservationsRating: z
+    .number({
+      required_error: "Please provide a rating",
+    })
+    .min(1),
   supervisorRelatedIssuesAndObservations: stringValidation(),
-  supervisorRelatedIssuesAndObservationsRating: z.number().lte(5),
+  supervisorRelatedIssuesAndObservationsRating: z
+    .number({
+      required_error: "Please provide a rating",
+    })
+    .min(1),
   fellowRelatedIssuesAndObservations: stringValidation(),
-  fellowRelatedIssuesAndObservationsRating: z.number().lte(5),
+  fellowRelatedIssuesAndObservationsRating: z
+    .number({
+      required_error: "Please provide a rating",
+    })
+    .min(1),
   hubRelatedIssuesAndObservations: stringValidation(),
-  hubRelatedIssuesAndObservationsRating: z.number().lte(5),
+  hubRelatedIssuesAndObservationsRating: z
+    .number({
+      required_error: "Please provide a rating",
+    })
+    .min(1),
   successes: stringValidation(),
   challenges: stringValidation(),
 });
