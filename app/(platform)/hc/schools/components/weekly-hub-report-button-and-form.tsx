@@ -1,6 +1,6 @@
 "use client";
 
-import RatingStars from "#/components/rating-stars";
+import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -27,11 +27,12 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
+import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import AddCircleOutlined from "../../../../../public/icons/add-circle-outline.svg";
@@ -71,7 +72,7 @@ export default function WeeklyHubReportButtonAndForm({
       successes: "",
       challenges: "",
       schoolRelatedIssuesAndObservations: "",
-      schoolRelatedIssuesAndObservationRating: 0,
+      schoolRelatedIssuesAndObservationsRating: 0,
       hubRelatedIssuesAndObservations: "",
       hubRelatedIssuesAndObservationsRating: 0,
       supervisorRelatedIssuesAndObservations: "",
@@ -106,6 +107,12 @@ export default function WeeklyHubReportButtonAndForm({
     form.reset();
     setDialogOpen(false);
   };
+
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -151,51 +158,49 @@ export default function WeeklyHubReportButtonAndForm({
                   </FormItem>
                 )}
               />
-              <div className="flex items-center">
-                <FormField
-                  control={form.control}
-                  name="hubRelatedIssuesAndObservations"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex gap-4">
-                        Hub Related Issues and Observations{" "}
-                        <FormField
-                          control={form.control}
-                          name="hubRelatedIssuesAndObservationsRating"
-                          render={({ field }) => (
-                            <RatingStars
-                              rating={field.value}
-                              onSelect={field.onChange}
-                            />
-                          )}
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder=""
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="hubRelatedIssuesAndObservations"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex w-full items-start justify-between gap-4">
+                      Hub Related Issues and Observations{" "}
+                      <FormField
+                        control={form.control}
+                        name="hubRelatedIssuesAndObservationsRating"
+                        render={({ field }) => (
+                          <RatingStarsInput
+                            value={field.value}
+                            onChange={field.onChange}
+                          />
+                        )}
+                      />
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder=""
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="schoolRelatedIssuesAndObservations"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex gap-4">
+                    <FormLabel className="flex w-full items-start justify-between gap-4">
                       School Related Issues and Observations
                       <FormField
                         control={form.control}
-                        name="schoolRelatedIssuesAndObservationRating"
+                        name="schoolRelatedIssuesAndObservationsRating"
                         render={({ field }) => (
-                          <RatingStars
-                            rating={field.value}
-                            onSelect={field.onChange}
+                          <RatingStarsInput
+                            value={field.value}
+                            onChange={field.onChange}
                           />
                         )}
                       />
@@ -216,15 +221,15 @@ export default function WeeklyHubReportButtonAndForm({
                 name="supervisorRelatedIssuesAndObservations"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex gap-4">
+                    <FormLabel className="flex w-full items-start justify-between gap-4">
                       Supervisor Related Issues and Observations
                       <FormField
                         control={form.control}
                         name="supervisorRelatedIssuesAndObservationsRating"
                         render={({ field }) => (
-                          <RatingStars
-                            rating={field.value}
-                            onSelect={field.onChange}
+                          <RatingStarsInput
+                            value={field.value}
+                            onChange={field.onChange}
                           />
                         )}
                       />
@@ -240,20 +245,21 @@ export default function WeeklyHubReportButtonAndForm({
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="fellowRelatedIssuesAndObservations"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex gap-4">
+                    <FormLabel className="flex w-full items-start justify-between gap-4">
                       Fellow Related Issues and Observations
                       <FormField
                         control={form.control}
                         name="fellowRelatedIssuesAndObservationsRating"
                         render={({ field }) => (
-                          <RatingStars
-                            rating={field.value}
-                            onSelect={field.onChange}
+                          <RatingStarsInput
+                            value={field.value}
+                            onChange={field.onChange}
                           />
                         )}
                       />
@@ -344,5 +350,46 @@ export default function WeeklyHubReportButtonAndForm({
         </Form>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function RatingStarsInput({
+  value,
+  onChange,
+  disabled = false,
+}: {
+  value?: number;
+  onChange: (value: number) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col",
+        disabled ? "pointer-events-none" : "pointer-events-auto",
+      )}
+    >
+      <div className="rating-stars flex flex-row-reverse gap-1 py-2">
+        {Array.from(Array(5).keys()).map((index) => {
+          return (
+            <span
+              key={index.toString()}
+              className={cn(
+                "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-shamiri-light-orange active:scale-[1.25] peer-hover:text-shamiri-light-orange",
+                value && value >= 5 - index
+                  ? "text-shamiri-light-orange"
+                  : "text-shamiri-light-grey",
+              )}
+              onClick={() => {
+                onChange(5 - index);
+              }}
+            >
+              <Icons.starRating className="h-full w-full" />
+            </span>
+          );
+        })}
+      </div>
+      <FormMessage className="text-[10px]" />
+    </div>
   );
 }
