@@ -72,7 +72,7 @@ export default function WeeklyHubReportButtonAndForm({
       successes: "",
       challenges: "",
       schoolRelatedIssuesAndObservations: "",
-      schoolRelatedIssuesAndObservationsRating: 0,
+      schoolRelatedIssuesAndObservationRating: 0,
       hubRelatedIssuesAndObservations: "",
       hubRelatedIssuesAndObservationsRating: 0,
       supervisorRelatedIssuesAndObservations: "",
@@ -196,7 +196,7 @@ export default function WeeklyHubReportButtonAndForm({
                       School Related Issues and Observations
                       <FormField
                         control={form.control}
-                        name="schoolRelatedIssuesAndObservationsRating"
+                        name="schoolRelatedIssuesAndObservationRating"
                         render={({ field }) => (
                           <RatingStarsInput
                             value={field.value}
