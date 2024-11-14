@@ -103,7 +103,7 @@ export default function StudentDropoutForm({
 
   function renderAlertWidget() {
     return (
-      <DialogAlertWidget separator={!student.droppedOut ?? undefined}>
+      <DialogAlertWidget separator={student.droppedOut ?? undefined}>
         <div className="flex items-center gap-2">
           <span>{student.studentName}</span>
           <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
