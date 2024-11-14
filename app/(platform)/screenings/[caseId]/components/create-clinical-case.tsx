@@ -278,9 +278,7 @@ export function StudentSelector({
     <Combobox
       items={students.map((student) => ({
         id: student.id,
-        label:
-          `${student?.studentName ?? "N/A"} - ${student?.admissionNumber ?? "N/A"} - ${student?.form ?? ""}${student?.stream ?? "N/A"}` ??
-          "",
+        label: `${student?.studentName ?? "N/A"} - ${student?.admissionNumber ?? "N/A"} - ${student?.form ?? ""}${student?.stream ?? "N/A"}`,
       }))}
       activeItemId={activeStudentId}
       onSelectItem={onSelectStudent}
