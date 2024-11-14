@@ -103,7 +103,7 @@ export default function SessionRatings({
       sessionId:
         mode === "add" && existingRating === undefined
           ? form.getValues("sessionId")
-          : existingRating?.sessionId ?? undefined,
+          : (existingRating?.sessionId ?? undefined),
       studentBehaviorRating: existingRating?.studentBehaviorRating ?? undefined,
       adminSupportRating: existingRating?.adminSupportRating ?? undefined,
       workloadRating: existingRating?.workloadRating ?? undefined,
