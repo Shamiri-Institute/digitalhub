@@ -482,7 +482,6 @@ export function TableView({
         <SupervisorAttendanceDataTable
           columns={getSupervisorAttendanceColumns() as ColumnDef<unknown>[]}
           data={supervisorAttendances}
-          onChangeData={setSupervisorAttendances}
           emptyStateMessage={"No sessions scheduled on this day."}
         />
       )}

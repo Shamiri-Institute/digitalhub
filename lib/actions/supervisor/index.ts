@@ -40,6 +40,8 @@ export async function markSupervisorAttendance(
       });
 
       if (attendance) {
+        const attendanceStatus =
+          attended === "attended" ? true : attended === "missed" ? false : null;
         await db.supervisorAttendance.update({
           where: {
             id: attendance.id,
@@ -47,8 +49,8 @@ export async function markSupervisorAttendance(
           data: {
             markedBy: auth.user!.user.id,
             supervisorId: id,
-            absenceReason,
-            absenceComments: comments,
+            absenceReason: attendanceStatus === false ? absenceReason : null,
+            absenceComments: attendanceStatus === false ? comments : null,
             attended:
               attended === "attended"
                 ? true
@@ -69,12 +71,12 @@ export async function markSupervisorAttendance(
         });
         await db.supervisorAttendance.create({
           data: {
-            supervisorId: id,
+            supervisorId: id!,
             schoolId: session.schoolId,
-            projectId: CURRENT_PROJECT_ID,
+            projectId: session.projectId ?? CURRENT_PROJECT_ID,
+            sessionId,
             absenceReason,
             absenceComments: comments,
-            sessionId,
             markedBy: auth.user!.user.id,
             attended:
               attended === "attended"
@@ -108,31 +110,76 @@ export async function markSupervisorAttendance(
 
 export async function markManySupervisorAttendance(
   ids: string[],
-  attended: boolean | null,
+  data: z.infer<typeof MarkAttendanceSchema>,
 ) {
   const auth = await checkAuth();
 
-  try {
-    const data = await db.supervisorAttendance.updateMany({
-      where: {
-        id: {
-          in: ids,
+  const { sessionId, absenceReason, attended, comments } =
+    MarkAttendanceSchema.parse(data);
+
+  const session = await db.interventionSession.findFirstOrThrow({
+    where: {
+      id: sessionId,
+    },
+  });
+
+  return await Promise.all(
+    ids.map(async (supervisorId) => {
+      const attendance = await db.supervisorAttendance.findFirst({
+        where: {
+          supervisorId,
+          sessionId,
         },
-      },
-      data: {
-        attended,
-        markedBy: auth.user!.user.id,
-      },
+      });
+
+      const attendanceStatus =
+        attended === "attended" ? true : attended === "missed" ? false : null;
+      if (attendance) {
+        await db.supervisorAttendance.update({
+          where: {
+            id: attendance.id,
+          },
+          data: {
+            markedBy: auth.user!.user.id,
+            supervisorId,
+            absenceReason: attendanceStatus === false ? absenceReason : null,
+            absenceComments: attendanceStatus === false ? comments : null,
+            attended: attendanceStatus,
+          },
+        });
+      } else {
+        await db.supervisorAttendance.create({
+          data: {
+            supervisorId,
+            schoolId: session.schoolId,
+            projectId: session.projectId ?? CURRENT_PROJECT_ID,
+            absenceReason,
+            absenceComments: comments,
+            sessionId,
+            markedBy: auth.user!.user.id,
+            attended:
+              attended === "attended"
+                ? true
+                : attended === "missed"
+                  ? false
+                  : null,
+          },
+        });
+      }
+      return;
+    }),
+  )
+    .then(() => {
+      return {
+        success: true,
+        message: `Successfully marked ${ids.length} supervisor attendances.`,
+      };
+    })
+    .catch((error: unknown) => {
+      console.error(error);
+      return {
+        success: false,
+        message: "Something went wrong while updating supervisor attendance",
+      };
     });
-    return {
-      success: true,
-      message: `Successfully marked ${data.count} supervisor attendances.`,
-      data,
-    };
-  } catch (error: unknown) {
-    console.error(error);
-    return {
-      error: "Something went wrong while updating supervisor attendance",
-    };
-  }
 }

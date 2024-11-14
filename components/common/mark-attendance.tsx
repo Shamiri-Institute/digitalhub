@@ -60,7 +60,9 @@ export function MarkAttendance({
   markBulkAttendanceAction,
   selectedSessionId,
   sessionMode = "many",
-  markMode = "single",
+  bulkMode = false,
+  toggleBulkMode,
+  selectedIds,
 }: {
   id?: string;
   title: string;
@@ -75,10 +77,18 @@ export function MarkAttendance({
     success: boolean;
     message: string;
   }>;
-  markBulkAttendanceAction: (attended: boolean | null) => {};
+  markBulkAttendanceAction: (
+    ids: string[],
+    data: z.infer<typeof MarkAttendanceSchema>,
+  ) => Promise<{
+    success: boolean;
+    message: string;
+  }>;
   selectedSessionId?: string;
   sessionMode?: "single" | "many";
-  markMode?: "single" | "many";
+  bulkMode: boolean;
+  toggleBulkMode: Dispatch<SetStateAction<boolean>>;
+  selectedIds: string[];
 }) {
   const pathname = usePathname();
 
@@ -107,11 +117,15 @@ export function MarkAttendance({
         : "unmarked",
       absenceReason: defaultAttendance?.absenceReason ?? undefined,
       comments: defaultAttendance?.comments ?? undefined,
+      bulkMode,
     };
   }
 
   useEffect(() => {
     form.reset(getDefaultValues(sessionIdWatcher));
+    if (!isOpen) {
+      toggleBulkMode(false);
+    }
   }, [sessions, id, form, isOpen, attendances, sessionIdWatcher]);
 
   useEffect(() => {
@@ -124,7 +138,12 @@ export function MarkAttendance({
   }, [statusWatcher]);
 
   const onSubmit = async (data: z.infer<typeof MarkAttendanceSchema>) => {
-    const response = await markAttendanceAction(data);
+    let response;
+    if (bulkMode) {
+      response = await markBulkAttendanceAction(selectedIds, data);
+    } else {
+      response = await markAttendanceAction(data);
+    }
     if (!response.success) {
       toast({
         description:

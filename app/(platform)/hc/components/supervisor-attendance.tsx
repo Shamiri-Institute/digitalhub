@@ -136,17 +136,9 @@ export function SupervisorAttendanceDataTable({
   emptyStateMessage?: string;
 }) {
   const [selectedRows, setSelectedRows] = useState([]);
+  const [bulkMode, setBulkMode] = useState<boolean>(false);
 
   const context = useContext(SupervisorAttendanceContext);
-
-  async function batchMarkAttendances(attended: boolean | null) {
-    const ids = (selectedRows as SupervisorAttendanceTableData[])
-      .filter((row) => {
-        return row.id !== undefined;
-      })
-      .map((x): string => x.id!);
-    await markManySupervisorAttendance(ids, attended);
-  }
 
   const renderTableActions = () => {
     return (
@@ -156,6 +148,7 @@ export function SupervisorAttendanceDataTable({
           className="flex gap-1"
           disabled={selectedRows.length === 0}
           onClick={() => {
+            setBulkMode(true);
             context.setMarkAttendanceDialog(true);
           }}
         >
@@ -206,13 +199,21 @@ export function SupervisorAttendanceDataTable({
         isOpen={context.markAttendanceDialog}
         setIsOpen={context.setMarkAttendanceDialog}
         markAttendanceAction={markSupervisorAttendance}
-        markBulkAttendanceAction={batchMarkAttendances}
         sessionMode="single"
-        markMode="many"
+        bulkMode={bulkMode}
+        toggleBulkMode={setBulkMode}
+        markBulkAttendanceAction={markManySupervisorAttendance}
+        selectedIds={(selectedRows as SupervisorAttendanceTableData[]).map(
+          (x): string => x.supervisorId,
+        )}
       >
         <DialogAlertWidget>
           <div className="flex items-center gap-2">
-            <span>{context.attendance?.supervisorName}</span>
+            {bulkMode ? (
+              <span>{selectedRows.length} supervisors</span>
+            ) : (
+              <span>{context.attendance?.supervisorName}</span>
+            )}
             <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
               {""}
             </span>
