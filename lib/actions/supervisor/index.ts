@@ -172,7 +172,7 @@ export async function markManySupervisorAttendance(
     .then(() => {
       return {
         success: true,
-        message: `Successfully marked ${ids.length} supervisor attendances.`,
+        message: `Successfully marked attendances for ${ids.length} supervisors.`,
       };
     })
     .catch((error: unknown) => {

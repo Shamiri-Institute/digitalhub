@@ -3,7 +3,9 @@
 import CancelSession from "#/app/(platform)/hc/components/cancel-session";
 import FellowAttendance from "#/app/(platform)/hc/components/fellow-attendance";
 import RescheduleSession from "#/app/(platform)/hc/components/reschedule-session";
-import SupervisorAttendance from "#/app/(platform)/hc/components/supervisor-attendance";
+import SupervisorAttendance, {
+  SupervisorAttendanceTableData,
+} from "#/app/(platform)/hc/components/supervisor-attendance";
 import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
 import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
@@ -25,8 +27,24 @@ import { useState } from "react";
 
 export default function SessionsDatatable({
   sessions,
+  supervisors,
 }: {
   sessions: SessionData[];
+  supervisors: Prisma.SupervisorGetPayload<{
+    include: {
+      supervisorAttendances: {
+        include: {
+          session: true;
+        };
+      };
+      fellows: {
+        include: {
+          fellowAttendances: true;
+        };
+      };
+      assignedSchools: true;
+    };
+  }>[];
 }) {
   const pathname = usePathname();
   const [_sessions, setSessions] = useState(sessions);
@@ -43,6 +61,9 @@ export default function SessionsDatatable({
     }> | null>(null);
   const [activeSession, setActiveSession] = useState<Session | undefined>();
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
+  const [markAttendanceDialog, setMarkAttendanceDialog] = React.useState(false);
+  const [supervisorAttendance, setSupervisorAttendance] =
+    React.useState<SupervisorAttendanceTableData | null>(null);
 
   function updateRescheduledSessionState(sessionDate: Date) {
     const sessionIndex =
@@ -88,6 +109,10 @@ export default function SessionsDatatable({
         setIsOpen: setSupervisorAttendanceDialog,
         session,
         setSession,
+        markAttendanceDialog,
+        setMarkAttendanceDialog,
+        attendance: supervisorAttendance,
+        setAttendance: setSupervisorAttendance,
       }}
     >
       <FellowAttendanceContext.Provider
@@ -148,7 +173,7 @@ export default function SessionsDatatable({
         </CancelSessionContext.Provider>
         <FellowAttendance />
       </FellowAttendanceContext.Provider>
-      <SupervisorAttendance />
+      <SupervisorAttendance supervisors={supervisors} />
     </SupervisorAttendanceContext.Provider>
   );
 }

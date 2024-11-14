@@ -24,7 +24,7 @@ export async function markManySupervisorAttendance(
     });
     return {
       success: true,
-      message: `Successfully marked ${data.count} supervisor attendances.`,
+      message: `Successfully marked attendance for ${data.count} supervisors.`,
       data,
     };
   } catch (error: unknown) {

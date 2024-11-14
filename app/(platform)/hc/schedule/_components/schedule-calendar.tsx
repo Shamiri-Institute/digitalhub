@@ -393,7 +393,7 @@ function CalendarView({
       case "list":
         return <ListView {...listProps} />;
       case "table":
-        return <TableView {...tableProps} />;
+        return <TableView {...tableProps} supervisors={supervisors} />;
       default:
         throw new Error(`Invalid mode: ${mode}`);
     }
