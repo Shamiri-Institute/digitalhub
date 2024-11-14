@@ -112,7 +112,7 @@ export async function submitFellowDetails(
     return {
       success: false,
       message:
-        (err as Error)?.message ?? mode === "edit"
+        ((err as Error)?.message ?? mode === "edit")
           ? "Sorry, could not update fellow details."
           : "Sorry, could not add new fellow",
     };

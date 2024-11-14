@@ -87,8 +87,8 @@ export default function SupervisorsDataTable({
           Gender: false,
           "Phone number": false,
           Status: false,
-          checkbox: !schoolContext.school?.droppedOut ?? null,
-          button: !schoolContext.school?.droppedOut ?? null,
+          checkbox: !schoolContext.school?.droppedOut,
+          button: !schoolContext.school?.droppedOut,
         }}
         renderTableActions={renderTableActions()}
         enableRowSelection={(row: Row<SupervisorsData>) =>
