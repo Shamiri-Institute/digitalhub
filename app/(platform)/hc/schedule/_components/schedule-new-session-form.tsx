@@ -74,7 +74,6 @@ export function ScheduleNewSession({
 
         toast({
           variant: "default",
-          title: "Success",
           description: `Successfully created new session`,
         });
         form.reset();
