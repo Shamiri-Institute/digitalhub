@@ -946,27 +946,6 @@ async function seedDatabase() {
                 project: {
                   connect: { id: createdProject.id },
                 },
-                supervisorAttendances: {
-                  createMany: {
-                    data: Object.values(hub.supervisors).map((supervisor) => {
-                      return {
-                        id: objectId("supatt"),
-                        visibleId:
-                          supervisor.id +
-                          " _" +
-                          createdSchool.id +
-                          "_" +
-                          session.sessionType,
-                        projectId: createdProject.id,
-                        supervisorId: supervisor.id,
-                        schoolId: createdSchool.id,
-                      };
-                    }),
-                  },
-                },
-              },
-              include: {
-                supervisorAttendances: true,
               },
             });
           }

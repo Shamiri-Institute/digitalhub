@@ -24,6 +24,7 @@ model User {
   recentOpens           UserRecentOpen[]
   schoolDropoutHistory  SchoolDropoutHistory[]
   studentAttendance     StudentAttendance[]
+  supervisorAttendance     SupervisorAttendance[]
   studentReportingNotes StudentReportingNotes[]
   schoolDocuments       SchoolDocuments[]
   fellowDocuments       FellowDocuments[]
@@ -596,7 +597,6 @@ model Supervisor {
 
 model SupervisorAttendance {
   id              String              @id @default(cuid())
-  visibleId       String              @unique @map("visible_id") @db.VarChar(100)
   createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
   projectId       String              @map("project_id")
@@ -610,6 +610,8 @@ model SupervisorAttendance {
   absenceComments String?             @map("absence_comments") @db.Text
   sessionId       String              @map("session_id")
   session         InterventionSession @relation(fields: [sessionId], references: [id])
+  markedBy      String             @map("marked_by")
+  user          User               @relation(fields: [markedBy], references: [id])
 
   @@map("supervisor_attendances")
 }

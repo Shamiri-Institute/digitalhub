@@ -57,12 +57,17 @@ export function MarkAttendance({
   isOpen,
   setIsOpen,
   markAttendanceAction,
+  markBulkAttendanceAction,
   selectedSessionId,
+  sessionMode = "many",
+  bulkMode = false,
+  setBulkMode,
+  selectedIds,
 }: {
-  id: string;
+  id?: string;
   title: string;
   children: React.ReactNode;
-  sessions: Prisma.InterventionSessionGetPayload<{}>[];
+  sessions?: Prisma.InterventionSessionGetPayload<{}>[];
   attendances: Attendance[];
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
@@ -72,7 +77,18 @@ export function MarkAttendance({
     success: boolean;
     message: string;
   }>;
+  markBulkAttendanceAction?: (
+    ids: string[],
+    data: z.infer<typeof MarkAttendanceSchema>,
+  ) => Promise<{
+    success: boolean;
+    message: string;
+  }>;
   selectedSessionId?: string;
+  sessionMode?: "single" | "many";
+  bulkMode?: boolean;
+  setBulkMode?: Dispatch<SetStateAction<boolean>>;
+  selectedIds?: string[];
 }) {
   const pathname = usePathname();
 
@@ -87,7 +103,9 @@ export function MarkAttendance({
   function getDefaultValues(sessionId?: string) {
     const defaultSession = sessionId
       ? sessionId
-      : sessions[sessions.length - 1]?.id;
+      : sessions
+        ? sessions[sessions.length - 1]?.id
+        : undefined;
     const defaultAttendance = attendances.find((attendance) => {
       return attendance.sessionId === defaultSession;
     });
@@ -99,11 +117,15 @@ export function MarkAttendance({
         : "unmarked",
       absenceReason: defaultAttendance?.absenceReason ?? undefined,
       comments: defaultAttendance?.comments ?? undefined,
+      bulkMode,
     };
   }
 
   useEffect(() => {
     form.reset(getDefaultValues(sessionIdWatcher));
+    if (!isOpen) {
+      setBulkMode && setBulkMode(false);
+    }
   }, [sessions, id, form, isOpen, attendances, sessionIdWatcher]);
 
   useEffect(() => {
@@ -116,7 +138,12 @@ export function MarkAttendance({
   }, [statusWatcher]);
 
   const onSubmit = async (data: z.infer<typeof MarkAttendanceSchema>) => {
-    const response = await markAttendanceAction(data);
+    let response;
+    if (bulkMode && markBulkAttendanceAction && selectedIds) {
+      response = await markBulkAttendanceAction(selectedIds, data);
+    } else {
+      response = await markAttendanceAction(data);
+    }
     if (!response.success) {
       toast({
         description:
@@ -156,55 +183,57 @@ export function MarkAttendance({
           </DialogHeader>
           {children}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            <FormField
-              control={form.control}
-              name="sessionId"
-              render={({ field }) => (
-                <FormItem className="space-y-2">
-                  <FormLabel>Select session</FormLabel>
-                  <Select
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                    }}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a session" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {sessions.map((session) => {
-                        const time = `${format(session.sessionDate, "h:mm")} - ${format(
-                          session.sessionEndTime ??
-                            addHours(session.sessionDate, 1.5),
-                          "h:mm a",
-                        )}`;
-                        return (
-                          <SelectItem key={session.id} value={session.id}>
-                            <div className="flex items-center gap-2">
-                              <span>
-                                {sessionDisplayName(session.sessionType!)}
-                              </span>
-                              <span>-</span>
-                              <span>
-                                {format(
-                                  new Date(session.sessionDate),
-                                  "dd MMM yyyy",
-                                )}
-                              </span>
-                              <span className="h-1 w-1 rounded-full bg-black"></span>
-                              <span>{time}</span>
-                            </div>
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {sessionMode === "many" && (
+              <FormField
+                control={form.control}
+                name="sessionId"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
+                    <FormLabel>Select session</FormLabel>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                      }}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a session" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {sessions?.map((session) => {
+                          const time = `${format(session.sessionDate, "h:mm")} - ${format(
+                            session.sessionEndTime ??
+                              addHours(session.sessionDate, 1.5),
+                            "h:mm a",
+                          )}`;
+                          return (
+                            <SelectItem key={session.id} value={session.id}>
+                              <div className="flex items-center gap-2">
+                                <span>
+                                  {sessionDisplayName(session.sessionType!)}
+                                </span>
+                                <span>-</span>
+                                <span>
+                                  {format(
+                                    new Date(session.sessionDate),
+                                    "dd MMM yyyy",
+                                  )}
+                                </span>
+                                <span className="h-1 w-1 rounded-full bg-black"></span>
+                                <span>{time}</span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
               name="attended"
