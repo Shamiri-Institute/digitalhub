@@ -9,6 +9,7 @@ import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-ale
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
+import { MarkAttendance } from "#/components/common/mark-attendance";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -20,10 +21,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import {
+  markManySupervisorAttendance,
+  markSupervisorAttendance,
+} from "#/lib/actions/supervisor";
 import { Prisma } from "@prisma/client";
 import { Row } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
-import { useContext, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 export default function SupervisorsDataTable({
   supervisors,
@@ -46,6 +57,9 @@ export default function SupervisorsDataTable({
   const [batchMode, setBatchMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<SupervisorsData[]>([]);
   const context = useContext(SupervisorInfoContext);
+  const [markAttendanceDialog, setMarkAttendanceDialog] =
+    useState<boolean>(false);
+  const [selectedSession, setSelectedSession] = useState<string>();
 
   useEffect(() => {
     if (!context.attendanceDialog) {
@@ -66,7 +80,7 @@ export default function SupervisorsDataTable({
           }
           onClick={() => {
             setBatchMode(true);
-            context.setAttendanceDialog(true);
+            setMarkAttendanceDialog(true);
           }}
         >
           <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
@@ -80,7 +94,7 @@ export default function SupervisorsDataTable({
     <div>
       <DataTable
         data={supervisors}
-        columns={columns}
+        columns={columns({ setMarkAttendanceDialog })}
         className={"data-table data-table-action mt-4"}
         emptyStateMessage="No supervisors found for this hub"
         columnVisibilityState={{
@@ -143,27 +157,73 @@ export default function SupervisorsDataTable({
           </div>
         </DialogAlertWidget>
       </UndropSupervisor>
-      {/*<MarkAttendance*/}
-      {/*  schoolVisibleId={visibleId}*/}
-      {/*  batchMode={batchMode}*/}
-      {/*  selectedSupervisors={selectedRows}*/}
-      {/*/>*/}
+      <MarkAttendance
+        title={"Mark supervisor attendance"}
+        sessions={schoolContext.school?.interventionSessions ?? []}
+        selectedSessionId={selectedSession}
+        attendances={
+          context.supervisor?.supervisorAttendances.map((attendance) => {
+            const {
+              id,
+              supervisorId,
+              attended,
+              absenceReason,
+              sessionId,
+              absenceComments,
+              session,
+            } = attendance;
+            return {
+              attendanceId: id.toString(),
+              id: supervisorId,
+              attended,
+              absenceReason,
+              sessionId,
+              schoolId: session.schoolId,
+              comments: absenceComments,
+            };
+          }) ?? []
+        }
+        id={context.supervisor?.id}
+        isOpen={markAttendanceDialog}
+        setIsOpen={setMarkAttendanceDialog}
+        markAttendanceAction={markSupervisorAttendance}
+        bulkMode={batchMode}
+        setBulkMode={setBatchMode}
+        markBulkAttendanceAction={markManySupervisorAttendance}
+        selectedIds={(selectedRows as SupervisorsData[]).map(
+          (x): string => x.id,
+        )}
+      >
+        <DialogAlertWidget>
+          <div className="flex items-center gap-2">
+            {batchMode ? (
+              <span>{selectedRows.length} supervisors</span>
+            ) : (
+              <span>{context.supervisor?.supervisorName}</span>
+            )}
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+              {""}
+            </span>
+            <span>{schoolContext.school?.schoolName}</span>
+          </div>
+        </DialogAlertWidget>
+      </MarkAttendance>
     </div>
   );
 }
 
 export function SupervisorsDataTableMenu({
   supervisor,
+  state,
 }: {
   supervisor: SupervisorsData;
+  state: {
+    setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  };
 }) {
   const context = useContext(SupervisorInfoContext);
   return (
-    <DropdownMenu
-      onOpenChange={() => {
-        context.setSupervisor(supervisor);
-      }}
-    >
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="absolute inset-0 border-l bg-white">
           <div className="flex h-full w-full items-center justify-center">
@@ -181,7 +241,8 @@ export function SupervisorsDataTableMenu({
         <DropdownMenuItem
           disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
           onClick={() => {
-            context.setAttendanceDialog && context.setAttendanceDialog(true);
+            context.setSupervisor(supervisor);
+            state.setMarkAttendanceDialog(true);
           }}
         >
           Mark attendance
