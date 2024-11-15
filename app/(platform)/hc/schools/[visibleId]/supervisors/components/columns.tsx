@@ -14,6 +14,7 @@ import { InterventionSessionType } from "#/lib/app-constants/constants";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
+import { Dispatch, SetStateAction } from "react";
 
 export type SupervisorsData = Prisma.SupervisorGetPayload<{
   include: {
@@ -27,7 +28,9 @@ export type SupervisorsData = Prisma.SupervisorGetPayload<{
   };
 }>;
 
-export const columns: ColumnDef<SupervisorsData>[] = [
+export const columns = (state: {
+  setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+}): ColumnDef<SupervisorsData>[] => [
   {
     id: "checkbox",
     header: ({ table }) => (
@@ -159,7 +162,9 @@ export const columns: ColumnDef<SupervisorsData>[] = [
   },
   {
     id: "button",
-    cell: ({ row }) => <SupervisorsDataTableMenu supervisor={row.original} />,
+    cell: ({ row }) => (
+      <SupervisorsDataTableMenu state={state} supervisor={row.original} />
+    ),
     enableHiding: false,
   },
 ];
