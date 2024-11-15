@@ -14,14 +14,19 @@ export default async function HubCoordinatorSchedulePage() {
     await signOut({ callbackUrl: "/login" });
   }
 
-  const schools = await fetchSchoolData(coordinator?.assignedHubId as string);
-  const schoolStats = await db.$queryRaw<
-    {
-      session_count: number;
-      clinical_case_count: number;
-      fellow_count: number;
-    }[]
-  >`SELECT 
+  if (!coordinator?.assignedHubId) {
+    return <div>Hub coordinator has no assigned hub</div>;
+  }
+
+  const values = await Promise.all([
+    await fetchSchoolData(coordinator?.assignedHubId as string),
+    await db.$queryRaw<
+      {
+        session_count: number;
+        clinical_case_count: number;
+        fellow_count: number;
+      }[]
+    >`SELECT 
     h.id,
     COUNT(DISTINCT s.id) AS session_count,
     COUNT(DISTINCT c.id) AS clinical_case_count,
@@ -38,17 +43,30 @@ export default async function HubCoordinatorSchedulePage() {
         fellows f ON h.id = f.hub_id
         WHERE h.id=${coordinator!.assignedHubId}
     GROUP BY 
-        h.id, h.hub_name`;
+        h.id, h.hub_name`,
+    await db.supervisor.findMany({
+      where: {
+        hubId: coordinator?.assignedHubId as string,
+      },
+      include: {
+        supervisorAttendances: {
+          include: {
+            session: true,
+          },
+        },
+        fellows: {
+          include: {
+            fellowAttendances: true,
+          },
+        },
+        assignedSchools: true,
+      },
+    }),
+  ]);
+  const schools = values[0];
+  const schoolStats = values[1];
+  const supervisors = values[2];
 
-  if (!coordinator) {
-    await signOut({ callbackUrl: "/login" });
-  }
-
-  if (!coordinator?.assignedHubId) {
-    return <div>Hub coordinator has no assigned hub</div>;
-  }
-
-  console.log(schoolStats);
   return (
     <div className="flex h-full w-full flex-col">
       <div className="container w-full grow bg-white py-10">
@@ -62,6 +80,7 @@ export default async function HubCoordinatorSchedulePage() {
           hubId={coordinator.assignedHubId}
           aria-label="Session schedule"
           schools={schools}
+          supervisors={supervisors}
         />
       </div>
       <PageFooter />

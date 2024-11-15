@@ -177,7 +177,7 @@ export async function markStudentAttendance(
         if (student.assignedGroup) {
           await db.studentAttendance.create({
             data: {
-              studentId: id,
+              studentId: id!,
               schoolId: student.schoolId,
               projectId: CURRENT_PROJECT_ID,
               absenceReason,

@@ -5,8 +5,8 @@ import {
 } from "#/app/(platform)/hc/components/fellow-attendance";
 import {
   SupervisorAttendanceDataTable,
+  SupervisorAttendanceDataTableMenu,
   SupervisorAttendanceTableData,
-  columns as supervisorAttendanceColumns,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
 import {
   Session,
@@ -19,17 +19,23 @@ import {
   FiltersContext,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { Icons } from "#/components/icons";
+import { Checkbox } from "#/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
 import { toast } from "#/components/ui/use-toast";
 import { fetchFellowsWithSupervisor } from "#/lib/actions/fetch-fellows";
-import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
 import { getCalendarDate } from "#/lib/date-utils";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { CalendarDate } from "@internationalized/date";
-import { SessionStatus } from "@prisma/client";
+import { Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
 import { addDays, format, isBefore, isWithinInterval } from "date-fns";
+import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import {
   Dispatch,
   SetStateAction,
@@ -42,46 +48,181 @@ import { CalendarState } from "react-stately";
 
 type Role = "supervisors" | "fellows";
 
-function getSupervisorAttendanceColumns() {
-  const columnHelper = createColumnHelper<SupervisorAttendanceTableData>();
-  return [
-    supervisorAttendanceColumns().find((column) => column.id === "checkbox"),
-    supervisorAttendanceColumns().find((column) => column.id === "name"),
-    {
-      id: "schoolName",
-      accessorKey: "schoolName",
-      header: "School",
+const supervisorAttendanceColumns = (state: {
+  setAttendance: Dispatch<
+    SetStateAction<SupervisorAttendanceTableData | undefined>
+  >;
+}): ColumnDef<SupervisorAttendanceTableData>[] => [
+  {
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
+        aria-label="Select all"
+        className={
+          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+        }
+      />
+    ),
+    cell: ({ row }) => {
+      const sessionOccurredStatus =
+        row.original.sessionStatus === SessionStatus.Cancelled;
+      return (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(val) => row.toggleSelected(!!val)}
+            disabled={sessionOccurredStatus}
+            aria-label="Select row"
+            className={
+              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+            }
+          />
+        </div>
+      );
     },
-    supervisorAttendanceColumns().find((column) => column.id === "phoneNumber"),
-    supervisorAttendanceColumns().find((column) => column.id === "fellows"),
-    columnHelper.accessor("sessionType", {
-      id: "sessionType",
-      header: "Session",
-      cell: (props) => {
-        const value = props.getValue();
-        const completed =
-          props.row.original.occurred !== null
-            ? props.row.original.occurred !== undefined
-              ? props.row.original.occurred
-              : false
-            : false;
-        const cancelled =
-          props.row.original.sessionStatus === SessionStatus.Cancelled;
-        const rescheduled =
-          props.row.original.sessionStatus === SessionStatus.Rescheduled;
-
-        return renderSessionTypeAndStatus(
-          completed,
-          cancelled,
-          rescheduled,
-          value,
+    id: "checkbox",
+    accessorKey: "id",
+  },
+  {
+    id: "schoolName",
+    accessorKey: "schoolName",
+    header: "School",
+  },
+  {
+    id: "name",
+    accessorKey: "supervisorName",
+    header: "Name",
+  },
+  {
+    cell: ({ row }) => {
+      try {
+        return (
+          row.original.phoneNumber &&
+          parsePhoneNumberWithError(
+            row.original.phoneNumber,
+            "KE",
+          ).formatNational()
         );
-      },
-    }),
-    supervisorAttendanceColumns().find((column) => column.id === "attendance"),
-    supervisorAttendanceColumns().find((column) => column.id === "button"),
-  ];
-}
+      } catch (error) {
+        if (error instanceof ParseError) {
+          // Not a phone number, non-existent country, etc.
+          return (
+            row.original.phoneNumber && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className="flex gap-1">
+                    <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
+                    <span>{row.original.phoneNumber}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="px-2 py-1 capitalize">
+                    {error.message.toLowerCase().replace("_", " ")}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            )
+          );
+        } else {
+          throw error;
+        }
+      }
+    },
+    header: "Phone number",
+    id: "phoneNumber",
+    accessorKey: "phoneNumber",
+  },
+  {
+    accessorKey: "fellows",
+    header: "No. of fellows",
+    id: "fellows",
+  },
+  {
+    cell: (props) => {
+      const attended = props.getValue();
+      return (
+        <div className="flex">
+          <div
+            className={cn(
+              "flex items-center rounded-[0.25rem] border px-1.5 py-0.5",
+              {
+                "border-green-border": attended,
+                "border-red-border": !attended,
+                "border-blue-border":
+                  attended === undefined || attended === null,
+              },
+              {
+                "bg-green-bg": attended,
+                "bg-red-bg": !attended,
+                "bg-blue-bg": attended === undefined || attended === null,
+              },
+            )}
+          >
+            {attended === null || attended === undefined ? (
+              <div className="flex items-center gap-1 text-blue-base">
+                <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
+                <span>Not marked</span>
+              </div>
+            ) : attended ? (
+              <div className="flex items-center gap-1 text-green-base">
+                <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
+                <span>Attended</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-red-base">
+                <Icons.crossCircleFilled
+                  className="h-3 w-3"
+                  strokeWidth={2.5}
+                />
+                <span>Missed</span>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    },
+    header: "Attendance",
+    id: "attendance",
+    accessorKey: "attendance",
+  },
+  {
+    id: "sessionType",
+    accessorKey: "sessionType",
+    header: "Session",
+    cell: (props) => {
+      const value = props.row.original.sessionType;
+      const completed = props.row.original.occurred ?? false;
+      const cancelled =
+        props.row.original.sessionStatus === SessionStatus.Cancelled;
+      const rescheduled =
+        props.row.original.sessionStatus === SessionStatus.Rescheduled;
+
+      return renderSessionTypeAndStatus(
+        completed,
+        cancelled,
+        rescheduled,
+        value,
+      );
+    },
+  },
+  {
+    cell: (props) => {
+      return (
+        <SupervisorAttendanceDataTableMenu
+          attendance={props.row.original}
+          state={state}
+        />
+      );
+    },
+    id: "button",
+    header: undefined,
+    accessorKey: "attendance",
+  },
+];
 
 function getFellowAttendanceColumns() {
   const columnHelper = createColumnHelper<FellowAttendancesTableData>();
@@ -133,7 +274,7 @@ const renderSessionTypeAndStatus = (
   value: string | undefined,
 ) => {
   return (
-    <div className="flex justify-center">
+    <div className="flex">
       <div
         className={cn(
           "select-none rounded-[0.25rem] border px-1.5 py-0.5",
@@ -204,70 +345,6 @@ const renderSessionTypeAndStatus = (
     </div>
   );
 };
-
-async function getSupervisorAttendances(
-  hubId: string,
-  selectedDay: CalendarDate,
-  state: CalendarState,
-  setSupervisorAttendances: Dispatch<
-    SetStateAction<SupervisorAttendanceTableData[]>
-  >,
-  filters: Filters,
-) {
-  const attendances = await fetchSupervisorAttendances({
-    where: {
-      school: {
-        hubId: hubId,
-      },
-      session: {
-        sessionDate: {
-          gte: selectedDay.toDate(state.timeZone),
-          lt: addDays(selectedDay.toDate(state.timeZone), 1),
-        },
-        sessionType: {
-          in: Object.keys(filters.sessionTypes).filter((sessionType) => {
-            return filters.sessionTypes[sessionType];
-          }),
-        },
-        status: {
-          in: Object.keys(filters.statusTypes).filter((status) => {
-            return filters.statusTypes[status];
-          }) as SessionStatus[],
-        },
-      },
-    },
-  });
-
-  const tableData = attendances.map((attendance) => {
-    const totalAttendedFellows = attendance.supervisor.fellows.filter(
-      (fellow) => {
-        const attended = fellow.fellowAttendances.find(
-          (attendance) => attendance.sessionId === hubId, //change this
-        );
-        if (attended) {
-          return fellow;
-        }
-      },
-    );
-    return {
-      id: attendance.id,
-      supervisorId: attendance.supervisor.id,
-      supervisorName: attendance.supervisor.supervisorName ?? "",
-      schoolName: attendance.school.schoolName,
-      attendance: attendance.attended,
-      phoneNumber: attendance.supervisor.cellNumber ?? "",
-      fellows:
-        totalAttendedFellows.length +
-        "/" +
-        attendance.supervisor.fellows.length,
-      sessionType: attendance.session.sessionType!,
-      sessionDate: attendance.session.sessionDate,
-      sessionStatus: attendance.session.status,
-      occurred: attendance.session.occurred,
-    };
-  });
-  setSupervisorAttendances(tableData);
-}
 
 async function getFellowAttendances(
   hubId: string,
@@ -343,9 +420,25 @@ async function getFellowAttendances(
 export function TableView({
   state,
   hubId,
+  supervisors,
 }: {
   state: CalendarState;
   hubId: string;
+  supervisors: Prisma.SupervisorGetPayload<{
+    include: {
+      supervisorAttendances: {
+        include: {
+          session: true;
+        };
+      };
+      fellows: {
+        include: {
+          fellowAttendances: true;
+        };
+      };
+      assignedSchools: true;
+    };
+  }>[];
 }) {
   const [selectedDay, setSelectedDay] = useState<CalendarDate>(state.value);
   const weekDays = state.getDatesInWeek(0);
@@ -370,12 +463,70 @@ export function TableView({
   useEffect(() => {
     try {
       if (roleToggle === "supervisors") {
-        getSupervisorAttendances(
-          hubId,
-          selectedDay,
-          state,
-          setSupervisorAttendances,
-          filters,
+        const start = selectedDay.toDate(state.timeZone);
+        const end = addDays(selectedDay.toDate(state.timeZone), 1);
+
+        const attendances = sessions
+          .filter((session) => {
+            return isWithinInterval(session.sessionDate, { start, end });
+          })
+          .map((session) => {
+            // filter by sessionType
+            if (filters.sessionTypes) {
+              if (
+                session.sessionType !== null &&
+                !Object.keys(filters.sessionTypes).includes(session.sessionType)
+              ) {
+                return;
+              }
+            }
+            // filter by session status
+            if (filters.statusTypes) {
+              if (
+                session.status !== null &&
+                !Object.keys(filters.statusTypes).includes(session.status)
+              ) {
+                return;
+              }
+            }
+            return supervisors.map((supervisor) => {
+              const totalAttendedFellows = supervisor.fellows.filter(
+                (fellow) => {
+                  const attended = fellow.fellowAttendances.find(
+                    (attendance) => attendance.sessionId === session?.id,
+                  );
+                  if (attended) {
+                    return fellow;
+                  }
+                },
+              );
+              const attendance = supervisor.supervisorAttendances.find(
+                (_attendance) => _attendance.sessionId === session?.id,
+              );
+              return {
+                id: attendance?.id,
+                supervisorId: supervisor.id,
+                supervisorName: supervisor.supervisorName ?? "",
+                pointSchools: supervisor.assignedSchools.map(
+                  (school) => school.schoolName,
+                ),
+                attendance: attendance?.attended,
+                phoneNumber: supervisor.cellNumber ?? "",
+                fellows:
+                  totalAttendedFellows.length + "/" + supervisor.fellows.length,
+                sessionId: session?.id,
+                schoolId: attendance?.schoolId,
+                absenceReason: attendance?.absenceReason ?? "",
+                absenceComments: attendance?.absenceComments ?? "",
+                schoolName: session.school.schoolName,
+                sessionType: session?.sessionType!,
+                occurred: session?.occurred,
+                sessionStatus: session?.status,
+              };
+            });
+          });
+        setSupervisorAttendances(
+          attendances.filter((x) => x !== undefined).flat(),
         );
       } else {
         getFellowAttendances(
@@ -396,7 +547,7 @@ export function TableView({
           "Something went wrong while fetching attendance data, please try again.",
       });
     }
-  }, [hubId, selectedDay, roleToggle, filters, sessions]);
+  }, [hubId, selectedDay, roleToggle, filters, sessions, supervisors]);
 
   useEffect(() => {
     setTitle(
@@ -480,9 +631,8 @@ export function TableView({
       </div>
       {roleToggle === "supervisors" && (
         <SupervisorAttendanceDataTable
-          columns={getSupervisorAttendanceColumns() as ColumnDef<unknown>[]}
+          overrideColumns={supervisorAttendanceColumns}
           data={supervisorAttendances}
-          onChangeData={setSupervisorAttendances}
           emptyStateMessage={"No sessions scheduled on this day."}
         />
       )}

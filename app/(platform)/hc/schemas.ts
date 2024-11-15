@@ -540,7 +540,7 @@ export const FellowDetailsSchema = z
 
 export const MarkAttendanceSchema = z
   .object({
-    id: stringValidation("ID is required"),
+    id: z.string().optional(),
     attended: z.enum(ATTENDANCE_STATUS, {
       errorMap: (issue, _ctx) => ({
         message: "Please mark attendance",
@@ -549,6 +549,7 @@ export const MarkAttendanceSchema = z
     sessionId: stringValidation("session ID is required"),
     absenceReason: z.string().optional(),
     comments: z.string().optional(),
+    bulkMode: z.boolean(),
   })
   .superRefine((val, ctx) => {
     if (val.attended === "missed" && val.absenceReason === undefined) {
@@ -557,6 +558,17 @@ export const MarkAttendanceSchema = z
         message: `Please select reason for absence.`,
         fatal: true,
         path: ["absenceReason"],
+      });
+
+      return z.NEVER;
+    }
+
+    if (!val.bulkMode && val.id === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `ID is required`,
+        fatal: true,
+        path: ["id"],
       });
 
       return z.NEVER;
