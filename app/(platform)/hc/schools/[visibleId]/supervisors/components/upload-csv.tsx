@@ -15,6 +15,10 @@ const supervisorCSVHeaders = [
   "mpesa_number",
   "training_level",
   "kra",
+  "bank_name",
+  "bank_branch",
+  "bank_account_name",
+  "bank_account_number",
 ];
 
 export const handleSupervisorCSVTemplateDownload = () => {
@@ -28,7 +32,7 @@ export const handleSupervisorCSVTemplateDownload = () => {
   document.body.appendChild(link);
   link.click();
 };
-3423;
+
 export function BatchUploadDownloadSupervisors({
   hubId,
   implementerId,
