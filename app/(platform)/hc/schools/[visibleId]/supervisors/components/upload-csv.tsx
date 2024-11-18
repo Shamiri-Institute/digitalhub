@@ -48,7 +48,6 @@ export function BatchUploadDownloadSupervisors({
     <div className="flex flex-1 flex-wrap justify-end space-x-2">
       <Button
         onClick={handleSupervisorCSVTemplateDownload}
-        disabled
         className="flex items-center gap-2 bg-shamiri-new-blue text-sm font-semibold leading-5 text-white"
       >
         Download supervisor csv template
