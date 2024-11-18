@@ -18,7 +18,37 @@ const supervisorCSVHeaders = [
   "mpesa_number",
   "training_level",
   "kra",
+  "bank_name",
+  "bank_branch",
+  "bank_account_name",
+  "bank_account_number",
 ];
+
+type SupervisorUpploadSchema = Prisma.SupervisorGetPayload<{
+  select: {
+    id: boolean;
+    createdAt: boolean;
+    updatedAt: boolean;
+    supervisorName: boolean;
+    cellNumber: boolean;
+    hubId: boolean;
+    personalEmail: boolean;
+    supervisorEmail: boolean;
+    implementerId: boolean;
+    visibleId: boolean;
+    county: boolean;
+    subCounty: boolean;
+    mpesaName: boolean;
+    mpesaNumber: boolean;
+    trainingLevel: boolean;
+    kra: boolean;
+    bankName: boolean;
+    bankBranch: boolean;
+    bankAccountName: boolean;
+    bankAccountNumber: boolean;
+    idNumber: boolean;
+  };
+}>[];
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
@@ -42,78 +72,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rows: Prisma.SupervisorGetPayload<{
-      select: {
-        id: boolean;
-        createdAt: boolean;
-        updatedAt: boolean;
-        supervisorName: boolean;
-        cellNumber: boolean;
-        hubId: boolean;
-        personalEmail: boolean;
-        supervisorEmail: boolean;
-        implementerId: boolean;
-        visibleId: boolean;
-        county: boolean;
-        subCounty: boolean;
-        mpesaName: boolean;
-        mpesaNumber: boolean;
-        trainingLevel: boolean;
-        kra: boolean;
-      };
-    }>[] = await new Promise((resolve, reject) => {
-      const parsedRows: Prisma.SupervisorGetPayload<{
-        select: {
-          id: boolean;
-          createdAt: boolean;
-          updatedAt: boolean;
-          supervisorName: boolean;
-          cellNumber: boolean;
-          hubId: boolean;
-          personalEmail: boolean;
-          supervisorEmail: boolean;
-          implementerId: boolean;
-          visibleId: boolean;
-          county: boolean;
-          subCounty: boolean;
-          mpesaName: boolean;
-          mpesaNumber: boolean;
-          trainingLevel: boolean;
-          kra: boolean;
-          idNumber: boolean;
-        };
-      }>[] = [];
-      const dataStream = Readable.from([fileBuffer]);
+    const rows: SupervisorUpploadSchema = await new Promise(
+      (resolve, reject) => {
+        const parsedRows: SupervisorUpploadSchema = [];
+        const dataStream = Readable.from([fileBuffer]);
 
-      dataStream
-        .pipe(fastCsv.parse({ headers: true }))
-        .on("data", (row) => {
-          let supervisorId = objectId("sup");
+        dataStream
+          .pipe(fastCsv.parse({ headers: true }))
+          .on("data", (row) => {
+            let supervisorId = objectId("sup");
 
-          parsedRows.push({
-            id: supervisorId,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            supervisorName: row.supervisor_name,
-            cellNumber: row.cell_number,
-            hubId,
-            personalEmail: row.personal_email,
-            supervisorEmail: row.shamiri_email,
-            implementerId,
-            visibleId: supervisorId,
-            county: row.county,
-            subCounty: row.sub_county,
-            mpesaName: row.mpesa_name,
-            mpesaNumber: row.mpesa_number,
-            trainingLevel: row.training_level,
-            kra: row.kra,
-            idNumber: row.id_number,
-          });
-        })
+            parsedRows.push({
+              id: supervisorId,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              supervisorName: row.supervisor_name,
+              cellNumber: row.cell_number,
+              hubId,
+              personalEmail: row.personal_email,
+              supervisorEmail: row.shamiri_email,
+              implementerId,
+              visibleId: supervisorId,
+              county: row.county,
+              subCounty: row.sub_county,
+              mpesaName: row.mpesa_name,
+              mpesaNumber: row.mpesa_number,
+              trainingLevel: row.training_level,
+              kra: row.kra,
+              idNumber: row.id_number,
+              bankName: row.bank_name,
+              bankBranch: row.bank_branch,
+              bankAccountName: row.bank_account_name,
+              bankAccountNumber: row.bank_account_number,
+            });
+          })
 
-        .on("error", (err) => reject(err))
-        .on("end", () => resolve(parsedRows));
-    });
+          .on("error", (err) => reject(err))
+          .on("end", () => resolve(parsedRows));
+      },
+    );
 
     await db.$transaction(async (prisma) => {
       await prisma.supervisor.createMany({ data: rows });

@@ -15,6 +15,10 @@ const supervisorCSVHeaders = [
   "mpesa_number",
   "training_level",
   "kra",
+  "bank_name",
+  "bank_branch",
+  "bank_account_name",
+  "bank_account_number",
 ];
 
 export const handleSupervisorCSVTemplateDownload = () => {
@@ -28,7 +32,7 @@ export const handleSupervisorCSVTemplateDownload = () => {
   document.body.appendChild(link);
   link.click();
 };
-3423;
+
 export function BatchUploadDownloadSupervisors({
   hubId,
   implementerId,
@@ -44,7 +48,6 @@ export function BatchUploadDownloadSupervisors({
     <div className="flex flex-1 flex-wrap justify-end space-x-2">
       <Button
         onClick={handleSupervisorCSVTemplateDownload}
-        disabled
         className="flex items-center gap-2 bg-shamiri-new-blue text-sm font-semibold leading-5 text-white"
       >
         Download supervisor csv template
