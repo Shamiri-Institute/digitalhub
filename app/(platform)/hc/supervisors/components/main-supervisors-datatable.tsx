@@ -1,5 +1,6 @@
 "use client";
 
+import { handleSupervisorCSVTemplateDownload } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/upload-csv";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import {
   columns,
@@ -74,7 +75,11 @@ export default function MainSupervisorsDataTable({
   const renderTableActions = () => {
     return (
       <div className="flex gap-3">
-        <Button variant="outline" className="flex gap-1 bg-white">
+        <Button
+          variant="outline"
+          className="flex gap-1 bg-white"
+          onClick={handleSupervisorCSVTemplateDownload}
+        >
           <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
           <span>Download supervisors CSV template</span>
         </Button>
