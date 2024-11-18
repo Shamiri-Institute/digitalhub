@@ -19,6 +19,18 @@ import { Prisma } from "@prisma/client";
 import { parsePhoneNumber } from "libphonenumber-js";
 import { useState } from "react";
 
+const fellowCSVHeaders = [
+  "fellow_name",
+  "cell_no",
+  "email",
+  "mpesa_name",
+  "mpesa_number",
+  "id_number",
+  "gender",
+  "county",
+  "sub_county",
+];
+
 export default function MainFellowsDatatable({
   fellows,
   supervisors,
@@ -39,6 +51,18 @@ export default function MainFellowsDatatable({
   const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
   const [viewComplaintsDialog, setViewComplaintsDialog] = useState(false);
 
+  const downloadFellowsCsvTemplate = () => {
+    const csvContent =
+      "data:text/csv;charset=utf-8," + fellowCSVHeaders.join(",") + "\n";
+    const encodedUri = encodeURI(csvContent);
+
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "fellows-upload-template.csv");
+    document.body.appendChild(link);
+    link.click();
+  };
+
   const renderTableActions = () => {
     return (
       <div className="flex items-center gap-3">
@@ -50,13 +74,21 @@ export default function MainFellowsDatatable({
             urlPath: "/hc/fellows",
           }}
         />
+        <Button
+          type="button"
+          variant="outline"
+          className="bg-white"
+          onClick={downloadFellowsCsvTemplate}
+        >
+          Download fellows csv template
+        </Button>
         <FellowDetailsForm
           open={addDialog}
           onOpenChange={setAddDialog}
           mode={"add"}
         >
           <DialogTrigger asChild={true}>
-            <Button variant={"outline"} className={"bg-white"}>
+            <Button variant="outline" className="bg-white">
               Add new fellow
             </Button>
           </DialogTrigger>
