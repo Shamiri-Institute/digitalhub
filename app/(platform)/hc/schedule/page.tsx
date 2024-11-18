@@ -57,6 +57,7 @@ export default async function HubCoordinatorSchedulePage() {
         fellows: {
           include: {
             fellowAttendances: true,
+            groups: true,
           },
         },
         assignedSchools: true,

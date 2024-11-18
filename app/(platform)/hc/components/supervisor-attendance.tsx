@@ -55,6 +55,7 @@ export default function SupervisorAttendance({
       fellows: {
         include: {
           fellowAttendances: true;
+          groups: true;
         };
       };
       assignedSchools: true;

@@ -86,6 +86,7 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
       fellows: {
         include: {
           fellowAttendances: true;
+          groups: true;
         };
       };
       assignedSchools: true;
@@ -350,6 +351,7 @@ function CalendarView({
       fellows: {
         include: {
           fellowAttendances: true;
+          groups: true;
         };
       };
       assignedSchools: true;
@@ -476,7 +478,7 @@ function CalendarView({
             </RescheduleSessionContext.Provider>
             <CancelSession updateSessionsState={updateCancelledSessionState} />
           </CancelSessionContext.Provider>
-          <FellowAttendance />
+          <FellowAttendance supervisors={supervisors} />
         </FellowAttendanceContext.Provider>
         <SupervisorAttendance supervisors={supervisors} />
       </SupervisorAttendanceContext.Provider>

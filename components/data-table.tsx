@@ -259,7 +259,10 @@ export default function DataTable<TData, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="text-center">
+              <TableCell
+                colSpan={columns.length}
+                className="text-center text-shamiri-text-dark-grey"
+              >
                 {emptyStateMessage}
               </TableCell>
             </TableRow>
