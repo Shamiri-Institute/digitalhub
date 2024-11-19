@@ -87,9 +87,6 @@ export default function SchoolsBreadcrumb() {
             <Icons.arrowDown className="h-4 w-4" />
           </div>
         </div>
-        <span className="text-gray-400">
-          1 of {context.schools.length} schools
-        </span>
       </div>
     </div>
   );
