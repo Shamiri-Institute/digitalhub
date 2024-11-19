@@ -598,7 +598,7 @@ export async function fetchSupervisorAttendanceData(hubId: string) {
       COUNT(sa.attended)::integer AS attended
     FROM supervisor_attendances sa
     INNER JOIN supervisors sup ON sa.supervisor_id = sup.id
-    WHERE sup.hub_id = ${hubId}
+    WHERE sup.hub_id = ${hubId} AND (sa.attended IS NOT NULL AND sa.attended = true)
     GROUP BY sup.supervisor_name
   `;
 
