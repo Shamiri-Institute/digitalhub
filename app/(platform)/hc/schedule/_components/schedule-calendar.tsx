@@ -86,11 +86,16 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
       fellows: {
         include: {
           fellowAttendances: true;
+          groups: true;
         };
       };
       assignedSchools: true;
     };
   }>[];
+  fellowRatings: {
+    id: string;
+    averageRating: number;
+  }[];
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
@@ -229,6 +234,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 listProps={{ state: listState, hubId }}
                 tableProps={{ state: tableState, hubId }}
                 supervisors={props.supervisors}
+                fellowRatings={props.fellowRatings}
               />
             </FiltersContext.Provider>
           </div>
@@ -321,6 +327,7 @@ function CalendarView({
   listProps,
   tableProps,
   supervisors,
+  fellowRatings,
 }: {
   monthProps: {
     state: CalendarState;
@@ -350,11 +357,16 @@ function CalendarView({
       fellows: {
         include: {
           fellowAttendances: true;
+          groups: true;
         };
       };
       assignedSchools: true;
     };
   }>[];
+  fellowRatings: {
+    id: string;
+    averageRating: number;
+  }[];
 }) {
   const { mode } = useMode();
   const { sessions, setSessions } = useContext(SessionsContext);
@@ -476,7 +488,10 @@ function CalendarView({
             </RescheduleSessionContext.Provider>
             <CancelSession updateSessionsState={updateCancelledSessionState} />
           </CancelSessionContext.Provider>
-          <FellowAttendance />
+          <FellowAttendance
+            supervisors={supervisors}
+            fellowRatings={fellowRatings}
+          />
         </FellowAttendanceContext.Provider>
         <SupervisorAttendance supervisors={supervisors} />
       </SupervisorAttendanceContext.Provider>
