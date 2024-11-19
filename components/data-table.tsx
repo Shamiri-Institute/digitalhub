@@ -259,7 +259,10 @@ export default function DataTable<TData, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="text-center">
+              <TableCell
+                colSpan={columns.length}
+                className="text-center text-shamiri-text-dark-grey"
+              >
                 {emptyStateMessage}
               </TableCell>
             </TableRow>
@@ -343,7 +346,7 @@ export default function DataTable<TData, TValue>({
               <SelectValue placeholder="Pick rows" />
             </SelectTrigger>
             <SelectContent>
-              {[10, 20, 30, 40, 50].map((pageSize) => (
+              {[5, 10, 20, 30, 40, 50].map((pageSize) => (
                 <SelectItem key={pageSize} value={pageSize.toString()}>
                   Show {pageSize}
                 </SelectItem>

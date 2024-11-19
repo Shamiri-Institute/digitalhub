@@ -28,6 +28,7 @@ import { useState } from "react";
 export default function SessionsDatatable({
   sessions,
   supervisors,
+  fellowRatings,
 }: {
   sessions: SessionData[];
   supervisors: Prisma.SupervisorGetPayload<{
@@ -40,11 +41,16 @@ export default function SessionsDatatable({
       fellows: {
         include: {
           fellowAttendances: true;
+          groups: true;
         };
       };
       assignedSchools: true;
     };
   }>[];
+  fellowRatings: {
+    id: string;
+    averageRating: number;
+  }[];
 }) {
   const pathname = usePathname();
   const [_sessions, setSessions] = useState(sessions);
@@ -171,7 +177,10 @@ export default function SessionsDatatable({
           </RescheduleSessionContext.Provider>
           <CancelSession updateSessionsState={updateCancelledSessionState} />
         </CancelSessionContext.Provider>
-        <FellowAttendance />
+        <FellowAttendance
+          supervisors={supervisors}
+          fellowRatings={fellowRatings}
+        />
       </FellowAttendanceContext.Provider>
       <SupervisorAttendance supervisors={supervisors} />
     </SupervisorAttendanceContext.Provider>
