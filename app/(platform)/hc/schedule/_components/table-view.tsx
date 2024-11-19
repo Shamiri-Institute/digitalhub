@@ -8,16 +8,9 @@ import {
   SupervisorAttendanceDataTableMenu,
   SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
-import {
-  Session,
-  SessionsContext,
-} from "#/app/(platform)/hc/schedule/_components/sessions-provider";
+import { SessionsContext } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
 import { useTitle } from "#/app/(platform)/hc/schedule/_components/title-provider";
-import { fetchDayFellowAttendances } from "#/app/(platform)/hc/schedule/actions/fellow-attendances";
-import {
-  Filters,
-  FiltersContext,
-} from "#/app/(platform)/hc/schedule/context/filters-context";
+import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
@@ -26,8 +19,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "#/components/ui/tooltip";
-import { toast } from "#/components/ui/use-toast";
-import { fetchFellowsWithSupervisor } from "#/lib/actions/fetch-fellows";
 import { getCalendarDate } from "#/lib/date-utils";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { CalendarDate } from "@internationalized/date";
@@ -346,77 +337,6 @@ const renderSessionTypeAndStatus = (
   );
 };
 
-async function getFellowAttendances(
-  hubId: string,
-  selectedDay: CalendarDate,
-  state: CalendarState,
-  setFellowAttendances: Dispatch<SetStateAction<FellowAttendancesTableData[]>>,
-  filters: Filters,
-  sessions: Session[],
-) {
-  const start = selectedDay.toDate(state.timeZone);
-  const end = addDays(selectedDay.toDate(state.timeZone), 1);
-  const attendances = await fetchDayFellowAttendances({
-    hubId,
-    start,
-    end,
-    filters,
-  });
-  const fellows = await fetchFellowsWithSupervisor({
-    where: {
-      hubId,
-    },
-  });
-  const _sessions = sessions.filter((session) => {
-    return isWithinInterval(session.sessionDate, { start, end });
-  });
-
-  const tableData: FellowAttendancesTableData[] = [];
-  _sessions.forEach((session) => {
-    const sessionTypes = Object.keys(filters.sessionTypes).filter((key) => {
-      return filters.sessionTypes[key];
-    });
-    const statusTypes = Object.keys(filters.statusTypes).filter((key) => {
-      return filters.statusTypes[key];
-    });
-    if (
-      session.status !== null &&
-      statusTypes.includes(session.status) &&
-      sessionTypes.includes(session.sessionType!)
-    ) {
-      fellows.forEach((fellow) => {
-        const matchingAttendance = attendances.find((attendance) => {
-          return (
-            attendance.sessionId === session.id &&
-            attendance.fellowId === fellow.id
-          );
-        });
-        if (matchingAttendance) {
-          tableData.push(matchingAttendance);
-        } else {
-          tableData.push({
-            schoolName: session.school.schoolName,
-            fellowId: fellow.id,
-            fellowName: fellow.fellowName,
-            attended: null,
-            averageRating: null,
-            sessionId: session.id,
-            groupName: null,
-            supervisorId: fellow.supervisorId,
-            supervisorName: fellow.supervisor?.supervisorName,
-            cellNumber: fellow.cellNumber,
-            sessionType: session.sessionType!,
-            occurred: session.occurred,
-            sessionStatus: session.status,
-            sessionDate: session.sessionDate,
-          });
-        }
-      });
-    }
-  });
-  setFellowAttendances(tableData);
-}
-
 export function TableView({
   state,
   hubId,
@@ -434,6 +354,7 @@ export function TableView({
       fellows: {
         include: {
           fellowAttendances: true;
+          groups: true;
         };
       };
       assignedSchools: true;
@@ -461,92 +382,96 @@ export function TableView({
   const { sessions } = useContext(SessionsContext);
 
   useEffect(() => {
-    try {
-      if (roleToggle === "supervisors") {
-        const start = selectedDay.toDate(state.timeZone);
-        const end = addDays(selectedDay.toDate(state.timeZone), 1);
+    const start = selectedDay.toDate(state.timeZone);
+    const end = addDays(selectedDay.toDate(state.timeZone), 1);
+    const activeSessions = sessions.filter((session) => {
+      return isWithinInterval(session.sessionDate, { start, end });
+    });
+    const _fellowAttendances: FellowAttendancesTableData[] = [];
 
-        const attendances = sessions
-          .filter((session) => {
-            return isWithinInterval(session.sessionDate, { start, end });
-          })
-          .map((session) => {
-            // filter by sessionType
-            if (filters.sessionTypes) {
-              if (
-                session.sessionType !== null &&
-                !Object.keys(filters.sessionTypes).includes(session.sessionType)
-              ) {
-                return;
-              }
-            }
-            // filter by session status
-            if (filters.statusTypes) {
-              if (
-                session.status !== null &&
-                !Object.keys(filters.statusTypes).includes(session.status)
-              ) {
-                return;
-              }
-            }
-            return supervisors.map((supervisor) => {
-              const totalAttendedFellows = supervisor.fellows.filter(
-                (fellow) => {
-                  const attended = fellow.fellowAttendances.find(
-                    (attendance) => attendance.sessionId === session?.id,
-                  );
-                  if (attended) {
-                    return fellow;
-                  }
-                },
-              );
-              const attendance = supervisor.supervisorAttendances.find(
-                (_attendance) => _attendance.sessionId === session?.id,
-              );
-              return {
-                id: attendance?.id,
-                supervisorId: supervisor.id,
-                supervisorName: supervisor.supervisorName ?? "",
-                pointSchools: supervisor.assignedSchools.map(
-                  (school) => school.schoolName,
-                ),
-                attendance: attendance?.attended,
-                phoneNumber: supervisor.cellNumber ?? "",
-                fellows:
-                  totalAttendedFellows.length + "/" + supervisor.fellows.length,
-                sessionId: session?.id,
-                schoolId: attendance?.schoolId,
-                absenceReason: attendance?.absenceReason ?? "",
-                absenceComments: attendance?.absenceComments ?? "",
-                schoolName: session.school.schoolName,
-                sessionType: session?.sessionType!,
-                occurred: session?.occurred,
-                sessionStatus: session?.status,
-              };
-            });
-          });
-        setSupervisorAttendances(
-          attendances.filter((x) => x !== undefined).flat(),
-        );
-      } else {
-        getFellowAttendances(
-          hubId,
-          selectedDay,
-          state,
-          setFellowAttendances,
-          filters,
-          sessions,
-        );
+    const attendances = activeSessions.map((session) => {
+      // filter by sessionType
+      if (filters.sessionTypes) {
+        if (
+          session.sessionType !== null &&
+          !Object.keys(filters.sessionTypes).includes(session.sessionType)
+        ) {
+          return;
+        }
       }
-    } catch (error: unknown) {
-      console.log(error);
-      toast({
-        variant: "destructive",
-        title: "Fetch failed!",
-        description:
-          "Something went wrong while fetching attendance data, please try again.",
+      // filter by session status
+      if (filters.statusTypes) {
+        if (
+          session.status !== null &&
+          !Object.keys(filters.statusTypes).includes(session.status)
+        ) {
+          return;
+        }
+      }
+      return supervisors.map((supervisor) => {
+        const totalAttendedFellows = supervisor.fellows.filter((fellow) => {
+          const attended = fellow.fellowAttendances.find(
+            (attendance) => attendance.sessionId === session?.id,
+          );
+          if (attended) {
+            return fellow;
+          }
+        });
+        const attendance = supervisor.supervisorAttendances.find(
+          (_attendance) => _attendance.sessionId === session?.id,
+        );
+        supervisor.fellows.filter((fellow) => {
+          const group = fellow.groups.find(
+            (group) => group.schoolId === session.schoolId,
+          );
+          if (group) {
+            const fellow_attendance = fellow.fellowAttendances.find(
+              (_attendance) => _attendance.sessionId === session.id,
+            );
+
+            _fellowAttendances.push({
+              schoolName: session.school.schoolName,
+              fellowId: fellow.id,
+              fellowName: fellow.fellowName,
+              attended: fellow_attendance?.attended ?? null,
+              averageRating: null,
+              sessionId: session.id,
+              groupName: group.groupName ?? null,
+              supervisorId: fellow.supervisorId,
+              supervisorName: supervisor.supervisorName,
+              cellNumber: fellow.cellNumber,
+              sessionType: session.sessionType!,
+              occurred: session.occurred,
+              sessionStatus: session.status,
+              sessionDate: session.sessionDate,
+            });
+          }
+        });
+
+        return {
+          id: attendance?.id,
+          supervisorId: supervisor.id,
+          supervisorName: supervisor.supervisorName ?? "",
+          pointSchools: supervisor.assignedSchools.map(
+            (school) => school.schoolName,
+          ),
+          attendance: attendance?.attended,
+          phoneNumber: supervisor.cellNumber ?? "",
+          fellows:
+            totalAttendedFellows.length + "/" + supervisor.fellows.length,
+          sessionId: session?.id,
+          schoolId: attendance?.schoolId,
+          absenceReason: attendance?.absenceReason ?? "",
+          absenceComments: attendance?.absenceComments ?? "",
+          schoolName: session.school.schoolName,
+          sessionType: session?.sessionType!,
+          occurred: session?.occurred,
+          sessionStatus: session?.status,
+        };
       });
-    }
+    });
+    setSupervisorAttendances(attendances.filter((x) => x !== undefined).flat());
+    setFellowAttendances(_fellowAttendances);
   }, [hubId, selectedDay, roleToggle, filters, sessions, supervisors]);
 
   useEffect(() => {

@@ -504,11 +504,12 @@ export function SupervisorAttendanceDataTableMenu({
           >
             Mark attendance
           </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={attendance?.sessionStatus === SessionStatus.Cancelled}
-          >
-            Fellow attendance history
-          </DropdownMenuItem>
+          {/*TODO: Refactor Session attendance history component*/}
+          {/*<DropdownMenuItem*/}
+          {/*  disabled={attendance?.sessionStatus === SessionStatus.Cancelled}*/}
+          {/*>*/}
+          {/*  Supervisor attendance history*/}
+          {/*</DropdownMenuItem>*/}
         </DropdownMenuContent>
       </DropdownMenuPortal>
     </DropdownMenu>

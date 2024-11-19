@@ -12,40 +12,62 @@ export default async function SchoolSessionsPage({
   if (coordinator === null) {
     await signOut({ callbackUrl: "/login" });
   }
-  const sessions = await db.interventionSession.findMany({
-    where: {
-      school: {
-        visibleId,
-      },
-    },
-    include: {
-      school: {
-        include: {
-          assignedSupervisor: true,
-        },
-      },
-      sessionRatings: true,
-    },
-  });
 
-  const supervisors = await db.supervisor.findMany({
-    where: {
-      hubId: coordinator?.assignedHubId as string,
-    },
-    include: {
-      supervisorAttendances: {
-        include: {
-          session: true,
+  const data = await Promise.all([
+    await db.interventionSession.findMany({
+      where: {
+        school: {
+          visibleId,
         },
       },
-      fellows: {
-        include: {
-          fellowAttendances: true,
+      include: {
+        school: {
+          include: {
+            assignedSupervisor: true,
+          },
         },
+        sessionRatings: true,
       },
-      assignedSchools: true,
-    },
-  });
+    }),
+    await db.supervisor.findMany({
+      where: {
+        hubId: coordinator?.assignedHubId as string,
+      },
+      include: {
+        supervisorAttendances: {
+          include: {
+            session: true,
+          },
+        },
+        fellows: {
+          include: {
+            fellowAttendances: true,
+            groups: true,
+          },
+        },
+        assignedSchools: true,
+      },
+    }),
+    await db.$queryRaw<
+      {
+        id: string;
+        averageRating: number;
+      }[]
+    >`SELECT
+    fel.id,
+    (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
+    FROM
+    fellows fel
+    LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
+    WHERE fel.hub_id=${coordinator!.assignedHubId}
+    GROUP BY fel.id`,
+  ]);
 
-  return <SessionsDatatable sessions={sessions} supervisors={supervisors} />;
+  return (
+    <SessionsDatatable
+      sessions={data[0]}
+      supervisors={data[1]}
+      fellowRatings={data[2]}
+    />
+  );
 }

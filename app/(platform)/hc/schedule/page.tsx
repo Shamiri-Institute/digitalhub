@@ -63,10 +63,24 @@ export default async function HubCoordinatorSchedulePage() {
         assignedSchools: true,
       },
     }),
+    await db.$queryRaw<
+      {
+        id: string;
+        averageRating: number;
+      }[]
+    >`SELECT
+    fel.id,
+    (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
+    FROM
+    fellows fel
+    LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
+    WHERE fel.hub_id=${coordinator!.assignedHubId}
+    GROUP BY fel.id`,
   ]);
   const schools = values[0];
   const schoolStats = values[1];
   const supervisors = values[2];
+  const fellowRatings = values[3];
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -82,6 +96,7 @@ export default async function HubCoordinatorSchedulePage() {
           aria-label="Session schedule"
           schools={schools}
           supervisors={supervisors}
+          fellowRatings={fellowRatings}
         />
       </div>
       <PageFooter />

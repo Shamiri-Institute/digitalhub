@@ -62,8 +62,13 @@ type SupervisorData = Prisma.SupervisorGetPayload<{
 
 export default function FellowAttendance({
   supervisors,
+  fellowRatings,
 }: {
   supervisors: SupervisorData[];
+  fellowRatings: {
+    id: string;
+    averageRating: number;
+  }[];
 }) {
   const context = useContext(FellowAttendanceContext);
   const [selectedSupervisor, setSelectedSupervisor] = useState<string>();
@@ -95,7 +100,9 @@ export default function FellowAttendance({
           supervisorId: supervisor.id,
           schoolName: undefined,
           groupName: group?.groupName ?? null,
-          averageRating: 0,
+          averageRating:
+            fellowRatings.find((rating) => rating.id === fellow.id)
+              ?.averageRating ?? null,
           sessionType: context.session?.sessionType!,
           occurred: context.session?.occurred,
           sessionStatus: context.session?.status,
@@ -185,16 +192,13 @@ export default function FellowAttendance({
               />
               <div className="flex justify-end gap-6">
                 <Button
-                  variant="ghost"
-                  type="button"
-                  className="border-0 text-shamiri-new-blue"
+                  className="bg-shamiri-new-blue"
                   onClick={() => {
                     context.setIsOpen(false);
                   }}
                 >
-                  Cancel
+                  Done
                 </Button>
-                <Button className="bg-shamiri-new-blue">Done</Button>
               </div>
             </div>
           </DialogContent>
