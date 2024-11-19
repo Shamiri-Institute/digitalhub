@@ -334,6 +334,7 @@ export function SessionDropDown({
               e.stopPropagation();
               rescheduleSessionContext.setIsOpen(true);
             }}
+            disabled={session.occurred}
           >
             Reschedule session
           </DropdownMenuItem>

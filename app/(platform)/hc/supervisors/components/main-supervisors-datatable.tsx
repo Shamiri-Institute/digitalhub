@@ -96,10 +96,10 @@ export default function MainSupervisorsDataTable({
           }}
         />
 
-        <Button variant="outline" className="flex gap-1 bg-white">
-          <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
-          <span>Upload fellow monthly feedback CSV</span>
-        </Button>
+        {/*<Button variant="outline" className="flex gap-1 bg-white">*/}
+        {/*  <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />*/}
+        {/*  <span>Upload fellow monthly feedback CSV</span>*/}
+        {/*</Button>*/}
       </div>
     );
   };
