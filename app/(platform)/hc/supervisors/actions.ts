@@ -81,7 +81,7 @@ export async function dropoutSupervisor(
     const result = await db.supervisor.update({
       data: {
         // TODO: add columns for drop-out details. Confirm with @Wendy
-        // dropoutReason: data.dropoutReason,
+        dropOutReason: data.dropoutReason,
         // droppedOutAt: new Date(),
         droppedOut: true,
       },
@@ -110,7 +110,7 @@ export async function undropSupervisor(supervisorId: string) {
     const result = await db.supervisor.update({
       data: {
         // TODO: add columns for drop-out details. Confirm with @Wendy
-        // dropoutReason: null,
+        dropOutReason: null,
         // droppedOutAt: null,
         droppedOut: false,
       },
@@ -507,6 +507,7 @@ export async function fetchSupervisorDropoutReasons(hudId: string) {
     FROM supervisors
     WHERE
       drop_out_reason IS NOT NULL
+      AND dropped_out = true
       AND hub_id = ${hudId}
     GROUP BY
       drop_out_reason

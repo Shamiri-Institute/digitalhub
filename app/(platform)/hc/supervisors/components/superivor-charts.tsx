@@ -7,7 +7,10 @@ import {
 } from "#/app/(platform)/hc/supervisors/actions";
 import { generateRandomColor } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
-import { SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING } from "#/lib/app-constants/constants";
+import {
+  SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
+  SCHOOL_DROPOUT_REASONS_MAPPING,
+} from "#/lib/app-constants/constants";
 import { Prisma } from "@prisma/client";
 import {
   Bar,
@@ -89,7 +92,11 @@ export default function SupervisorCharts({
                   {dropoutData.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
                 {dropoutData.map((reason, index) => (
-                  <Cell key={index} fill={randomColors[index]} />
+                  <Cell
+                    key={index}
+                    // @ts-ignore
+                    fill={SCHOOL_DROPOUT_REASONS_MAPPING[reason.name]}
+                  />
                 ))}
               </Pie>
               <Tooltip />
