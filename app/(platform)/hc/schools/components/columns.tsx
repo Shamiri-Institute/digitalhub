@@ -159,7 +159,6 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
         .sort((a, b) => {
           return a.sessionDate.getTime() - b.sessionDate.getTime();
         });
-      console.log(sessions);
 
       // TODO: refactor session names
       if (sessions.length > 0) {
