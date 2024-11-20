@@ -49,6 +49,7 @@ export const columns = (
   setUploadIdDialog: Dispatch<SetStateAction<boolean>>,
   setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>,
   setViewComplaintsDialog: Dispatch<SetStateAction<boolean>>,
+  setDropOutDialog: Dispatch<SetStateAction<boolean>>,
 ): ColumnDef<MainFellowTableData>[] => {
   return [
     {
@@ -192,6 +193,7 @@ export const columns = (
           setUploadIdDialog={setUploadIdDialog}
           setUploadQualificationDialog={setUploadQualificationDialog}
           setViewComplaintsDialog={setViewComplaintsDialog}
+          setDropOutDialog={setDropOutDialog}
         />
       ),
       enableHiding: false,
