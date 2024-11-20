@@ -10,6 +10,7 @@ import UploadFellowID from "#/app/(platform)/hc/fellows/components/upload-id";
 import UploadFellowQualification from "#/app/(platform)/hc/fellows/components/upload-qualification";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
+import FellowDropoutForm from "#/components/common/fellow/fellow-dropout-form";
 import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-evaluation";
 import DataTable from "#/components/data-table";
 import FileUploader from "#/components/file-uploader";
@@ -50,6 +51,7 @@ export default function MainFellowsDatatable({
     useState<boolean>(false);
   const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
   const [viewComplaintsDialog, setViewComplaintsDialog] = useState(false);
+  const [dropOutDialog, setDropOutDialog] = useState(false);
 
   const downloadFellowsCsvTemplate = () => {
     const csvContent =
@@ -109,6 +111,7 @@ export default function MainFellowsDatatable({
           setUploadIdDialog,
           setUploadQualificationDialog,
           setViewComplaintsDialog,
+          setDropOutDialog,
         )}
         data={fellows}
         className={"data-table data-table-action mt-4 bg-white"}
@@ -177,6 +180,11 @@ export default function MainFellowsDatatable({
               </div>
             </DialogAlertWidget>
           </FellowComplaints>
+          <FellowDropoutForm
+            fellow={fellow}
+            isOpen={dropOutDialog}
+            setIsOpen={setDropOutDialog}
+          />
         </>
       )}
     </>
