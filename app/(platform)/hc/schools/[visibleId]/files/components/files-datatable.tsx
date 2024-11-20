@@ -5,30 +5,34 @@ import {
   SchoolFilesTableData,
 } from "#/app/(platform)/hc/schools/[visibleId]/files/components/columns";
 import { RemoveUploadedFile } from "#/app/(platform)/hc/schools/[visibleId]/files/components/delete-file-modal";
+import UploadFileDialogue from "#/app/(platform)/hc/schools/[visibleId]/files/components/files-upload-dialogue";
 import RenameUploadedFile from "#/app/(platform)/hc/schools/[visibleId]/files/components/rename-file";
 
 import DataTable from "#/components/data-table";
-import { Prisma } from "@prisma/client";
+import { Icons } from "#/components/icons";
+import { Button } from "#/components/ui/button";
 import { use, useState } from "react";
 
 export default function SchoolFilesDatatable({
   data,
-  hubCoordinator,
+  schoolId,
 }: {
   data: Promise<SchoolFilesTableData[]>;
-  hubCoordinator: Prisma.HubCoordinatorGetPayload<{
-    include: {
-      assignedHub: true;
-    };
-  }> | null;
+  schoolId: string;
 }) {
   const schoolFiles = use(data);
   const [renameDialog, setRenameDialog] = useState<boolean>(false);
   const [deleteDialog, setDeleteDialog] = useState<boolean>(false);
   const [file, setFile] = useState<SchoolFilesTableData | null>(null);
+  const [uploadDialog, setUploadDialog] = useState<boolean>(false);
 
   const renderTableActions = () => {
-    return <div></div>;
+    return (
+      <Button onClick={() => setUploadDialog(true)}>
+        <Icons.plusCircle className="h-4 w-4" />
+        <span>Upload file</span>
+      </Button>
+    );
   };
 
   return (
@@ -60,6 +64,11 @@ export default function SchoolFilesDatatable({
           />
         </div>
       )}
+      <UploadFileDialogue
+        schoolId={schoolId}
+        open={uploadDialog}
+        onOpenChange={setUploadDialog}
+      />
     </div>
   );
 }
