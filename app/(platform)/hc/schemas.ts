@@ -6,6 +6,7 @@ import {
   SCHOOL_DROPOUT_REASONS,
   SCHOOL_TYPES,
   STUDENT_DROPOUT_REASONS,
+  SUPERVISOR_DROP_OUT_REASONS,
 } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
 import { isValidPhoneNumber } from "libphonenumber-js";
@@ -28,7 +29,7 @@ export const DropoutSupervisorSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
   // TODO: Replace dropout reasons with supervisor specific options
   dropoutReason: z.enum(
-    [SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)],
+    [SUPERVISOR_DROP_OUT_REASONS[0]!, ...SUPERVISOR_DROP_OUT_REASONS.slice(1)],
     {
       errorMap: (_issue, _ctx) => ({
         message:
