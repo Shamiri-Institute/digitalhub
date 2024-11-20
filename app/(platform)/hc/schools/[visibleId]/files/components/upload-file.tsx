@@ -8,7 +8,6 @@ import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import clsx from "clsx";
-import { Loader2 } from "lucide-react";
 import { useS3Upload } from "next-s3-upload";
 
 import { useCallback, useState } from "react";
@@ -108,8 +107,8 @@ export default function SchoolFilesUploader({
           variant="brand"
           onClick={handleUpload}
           className="bg-shamiri-new-blue"
+          loading={uploading}
         >
-          {uploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {uploading ? "Uploading file..." : <>Submit</>}
         </Button>
       </DialogFooter>
