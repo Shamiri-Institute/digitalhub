@@ -1,11 +1,11 @@
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
 import {
+  fetchSupervisorAttendanceData,
   fetchSupervisorDataCompletenessData,
   fetchSupervisorDropoutReasons,
   fetchSupervisorSessionRatingAverages,
 } from "#/app/(platform)/hc/supervisors/actions";
 import SupervisorCharts from "#/app/(platform)/hc/supervisors/components/superivor-charts";
-import { db } from "#/lib/db";
 
 export default async function SupervisorChartsWrapper({
   coordinator,
@@ -30,22 +30,9 @@ export default async function SupervisorChartsWrapper({
       coordinator?.assignedHubId as string,
     );
 
-    const supervisorAttendanceData = db.interventionSession.groupBy({
-      by: ["sessionType"],
-      where: {
-        school: {
-          hubId: coordinator?.assignedHubId,
-          supervisorAttendances: {
-            every: {
-              attended: true,
-            },
-          },
-        },
-      },
-      _count: {
-        sessionType: true,
-      },
-    });
+    const supervisorAttendanceData = fetchSupervisorAttendanceData(
+      coordinator?.assignedHubId as string,
+    );
 
     const data = await Promise.all([
       dropoutData,

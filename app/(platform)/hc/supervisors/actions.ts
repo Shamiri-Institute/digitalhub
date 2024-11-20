@@ -585,3 +585,23 @@ export async function fetchSupervisorSessionRatingAverages(hubId: string) {
 
   return ratingAverages;
 }
+export type SupervisorAttendanceData = {
+  supervisor_name: string;
+  attended: number;
+};
+
+export async function fetchSupervisorAttendanceData(hubId: string) {
+  const supervisorAttendanceData = await db.$queryRaw<
+    SupervisorAttendanceData[]
+  >`
+    SELECT
+      sup.supervisor_name AS supervisor_name,
+      COUNT(sa.attended)::integer AS attended
+    FROM supervisor_attendances sa
+    INNER JOIN supervisors sup ON sa.supervisor_id = sup.id
+    WHERE sup.hub_id = ${hubId} AND (sa.attended IS NOT NULL AND sa.attended = true)
+    GROUP BY sup.supervisor_name
+  `;
+
+  return supervisorAttendanceData;
+}

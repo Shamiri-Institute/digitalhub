@@ -3,15 +3,14 @@
 import {
   fetchSupervisorDataCompletenessData,
   SessionRatingAverages,
+  SupervisorAttendanceData,
   SupervisorDropoutReasonsGraphData,
 } from "#/app/(platform)/hc/supervisors/actions";
-import { generateRandomColor } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 import {
   SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
   SCHOOL_DROPOUT_REASONS_MAPPING,
 } from "#/lib/app-constants/constants";
-import { Prisma } from "@prisma/client";
 import {
   Bar,
   BarChart,
@@ -35,14 +34,7 @@ export default function SupervisorCharts({
   supervisorDataCompletenessPercentage,
   supervisorsSessionRatings,
 }: {
-  attendanceData: (Prisma.PickEnumerable<
-    Prisma.InterventionSessionGroupByOutputType,
-    "sessionType"[]
-  > & {
-    _count: {
-      sessionType: number;
-    };
-  })[];
+  attendanceData: SupervisorAttendanceData[];
   dropoutData: SupervisorDropoutReasonsGraphData[];
   supervisorDataCompletenessPercentage: Awaited<
     ReturnType<typeof fetchSupervisorDataCompletenessData>
@@ -50,11 +42,10 @@ export default function SupervisorCharts({
   supervisorsSessionRatings: SessionRatingAverages[];
 }) {
   const formattedAttendanceData = attendanceData.map((session) => ({
-    sessionType: session.sessionType,
-    count: session._count.sessionType,
+    supervisor_name: session.supervisor_name,
+    attended: session.attended,
   }));
 
-  const randomColors = dropoutData.map(() => generateRandomColor());
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
       <ChartCard title="Attendances" showCardFooter={false}>
@@ -62,11 +53,11 @@ export default function SupervisorCharts({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart width={307} height={307} data={formattedAttendanceData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="sessionType" />
-              <YAxis dataKey="count" />
+              <XAxis dataKey="supervisor_name" />
+              <YAxis dataKey="attended" />
               <Tooltip />
-              <Bar dataKey="count" stackId="a" fill="#0085FF" />
-              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" />
+              <Bar dataKey="attended" stackId="a" fill="#0085FF" />
+              <Bar dataKey="supervisor_name" stackId="a" fill="#CCE7FF" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
