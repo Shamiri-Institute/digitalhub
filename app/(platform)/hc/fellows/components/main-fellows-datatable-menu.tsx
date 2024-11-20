@@ -19,6 +19,7 @@ export default function MainFellowsDatatableMenu({
   setUploadQualificationDialog,
   setWeeklyEvaluationDialog,
   setViewComplaintsDialog,
+  setDropOutDialog,
 }: {
   fellow: MainFellowTableData;
   setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>;
@@ -28,6 +29,7 @@ export default function MainFellowsDatatableMenu({
   setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>;
   setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
   setViewComplaintsDialog: Dispatch<SetStateAction<boolean>>;
+  setDropOutDialog: Dispatch<SetStateAction<boolean>>;
 }) {
   return (
     <DropdownMenu>
@@ -107,6 +109,18 @@ export default function MainFellowsDatatableMenu({
             Upload qualification document
             <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
           </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            setFellow(fellow);
+            setDropOutDialog(true);
+          }}
+        >
+          {fellow.droppedOut ? (
+            <div className="text-shamiri-red">Undo drop out</div>
+          ) : (
+            <div className="text-shamiri-red">Drop-out fellow</div>
+          )}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
