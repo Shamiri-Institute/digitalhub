@@ -28,7 +28,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { dropoutFellow } from "#/lib/actions/fellow";
-import { STUDENT_DROPOUT_REASONS } from "#/lib/app-constants/constants";
+import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { parsePhoneNumber } from "libphonenumber-js";
@@ -147,7 +147,7 @@ export default function FellowDropoutForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {STUDENT_DROPOUT_REASONS.map((reason) => (
+                        {FELLOW_DROP_OUT_REASONS.map((reason) => (
                           <SelectItem key={reason} value={reason}>
                             {reason}
                           </SelectItem>
