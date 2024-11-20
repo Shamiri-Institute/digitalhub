@@ -6,13 +6,11 @@ import {
   SupervisorAttendanceData,
   SupervisorDropoutReasonsGraphData,
 } from "#/app/(platform)/hc/supervisors/actions";
-import { generateRandomColor } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 import {
   SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
   SCHOOL_DROPOUT_REASONS_MAPPING,
 } from "#/lib/app-constants/constants";
-import { Prisma } from "@prisma/client";
 import {
   Bar,
   BarChart,
@@ -48,7 +46,6 @@ export default function SupervisorCharts({
     attended: session.attended,
   }));
 
-  const randomColors = dropoutData.map(() => generateRandomColor());
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
       <ChartCard title="Attendances" showCardFooter={false}>
