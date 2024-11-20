@@ -65,6 +65,18 @@ export default function MainFellowsDatatable({
     link.click();
   };
 
+  const downloadFellowsCsvTemplate = () => {
+    const csvContent =
+      "data:text/csv;charset=utf-8," + fellowCSVHeaders.join(",") + "\n";
+    const encodedUri = encodeURI(csvContent);
+
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "fellows-upload-template.csv");
+    document.body.appendChild(link);
+    link.click();
+  };
+
   const renderTableActions = () => {
     return (
       <div className="flex items-center gap-3">

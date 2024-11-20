@@ -1,6 +1,5 @@
 import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
 import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
-import { fetchSessionFellowAttendances } from "#/app/(platform)/hc/schedule/actions/fellow-attendances";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -25,12 +24,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { toast } from "#/components/ui/use-toast";
-import { fetchSupervisorAttendances } from "#/lib/actions/fetch-supervisors";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 import { Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
+import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import {
   Dispatch,
   SetStateAction,
@@ -40,94 +43,82 @@ import {
 } from "react";
 import { useForm } from "react-hook-form";
 
-export default function FellowAttendance() {
-  const context = useContext(FellowAttendanceContext);
-  const [supervisorAttendances, setSupervisorAttendances] = useState<
-    Prisma.SupervisorAttendanceGetPayload<{
+type SupervisorData = Prisma.SupervisorGetPayload<{
+  include: {
+    supervisorAttendances: {
       include: {
-        supervisor: {
-          include: {
-            fellows: true;
-          };
-        };
+        session: true;
       };
-    }>[]
-  >([]);
+    };
+    fellows: {
+      include: {
+        fellowAttendances: true;
+        groups: true;
+      };
+    };
+    assignedSchools: true;
+  };
+}>;
+
+export default function FellowAttendance({
+  supervisors,
+  fellowRatings,
+}: {
+  supervisors: SupervisorData[];
+  fellowRatings: {
+    id: string;
+    averageRating: number;
+  }[];
+}) {
+  const context = useContext(FellowAttendanceContext);
   const [selectedSupervisor, setSelectedSupervisor] = useState<string>();
-  const [fellowAttendances, setFellowAttendances] = useState<
-    FellowAttendancesTableData[]
-  >([]);
   const [fellows, setFellows] = useState<FellowAttendancesTableData[]>([]);
 
-  useEffect(() => {
-    try {
-      const fetchAttendances = async () => {
-        const supervisorAttendances = await fetchSupervisorAttendances({
-          where: {
-            school: {
-              id: context.session?.schoolId,
-            },
-            session: {
-              id: context.session?.id,
-            },
-            attended: true,
-          },
-        });
-        setSupervisorAttendances(supervisorAttendances);
-
-        const fellowAttendances =
-          context.session &&
-          (await fetchSessionFellowAttendances({
-            sessionId: context.session?.id,
-          }));
-        setFellowAttendances(fellowAttendances ?? []);
-      };
-      fetchAttendances();
-    } catch (error: unknown) {
-      console.log(error);
-      toast({
-        variant: "destructive",
-        title: "Fetch failed!",
-        description:
-          "Something went wrong while fetching attendance data, please try again.",
-      });
-    }
-  }, [context.isOpen, context.session]);
+  const form = useForm<{ supervisor: string }>({});
+  const watcher = form.watch("supervisor");
 
   useEffect(() => {
-    const supervisorAttendance = supervisorAttendances.find(
-      (attendance) => attendance.supervisorId === selectedSupervisor,
+    const supervisor = supervisors.find(
+      (supervisor) => supervisor.id === watcher,
     );
-    if (supervisorAttendance !== undefined) {
-      const tableData: FellowAttendancesTableData[] =
-        supervisorAttendance.supervisor.fellows.map((fellow) => {
-          const fellowAttendance = fellowAttendances.find(
-            (attendance) => attendance.fellowId === fellow.id,
-          );
+    if (supervisor) {
+      const attendances = supervisor.fellows.map((fellow) => {
+        const sessionAttendance = fellow.fellowAttendances.find(
+          (attendance) => attendance.sessionId === context.session?.id,
+        );
 
-          if (fellowAttendance === undefined) {
-            return {
-              fellowId: fellow.id,
-              fellowName: fellow.fellowName ?? null,
-              cellNumber: fellow.cellNumber ?? null,
-              attended: null,
-              supervisorId: fellow.supervisorId,
-              groupName: null,
-              averageRating: null,
-            };
-          } else return fellowAttendance;
-        });
-      setFellows(tableData);
+        const group = fellow.groups.find(
+          (group) => group.schoolId === context.session?.schoolId,
+        );
+        return {
+          sessionId: context.session?.id,
+          fellowId: fellow.id,
+          fellowName: fellow.fellowName,
+          cellNumber: fellow.cellNumber,
+          attended: sessionAttendance?.attended ?? null,
+          supervisorName: supervisor.supervisorName,
+          supervisorId: supervisor.id,
+          schoolName: undefined,
+          groupName: group?.groupName ?? null,
+          averageRating:
+            fellowRatings.find((rating) => rating.id === fellow.id)
+              ?.averageRating ?? null,
+          sessionType: context.session?.sessionType!,
+          occurred: context.session?.occurred,
+          sessionStatus: context.session?.status,
+          sessionDate: context.session?.sessionDate,
+        };
+      });
+      setFellows(attendances);
     }
-  }, [fellowAttendances, selectedSupervisor, supervisorAttendances]);
+  }, [selectedSupervisor]);
 
   useEffect(() => {
-    if (!context.isOpen) {
+    if (context.isOpen) {
+      form.reset();
       setFellows([]);
     }
   }, [context.isOpen]);
-
-  const form = useForm<{ supervisor: string }>({});
 
   return (
     <div>
@@ -171,12 +162,12 @@ export default function FellowAttendance() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {supervisorAttendances.map((attendance) => (
+                          {supervisors.map((supervisor) => (
                             <SelectItem
-                              key={attendance.supervisorId}
-                              value={attendance.supervisorId}
+                              key={supervisor.id}
+                              value={supervisor.id}
                             >
-                              {attendance.supervisor.supervisorName}
+                              {supervisor.supervisorName}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -187,25 +178,27 @@ export default function FellowAttendance() {
                 />
               </Form>
             </div>
-            <div className="space-y-4 pt-2">
+            <div className="space-y-4">
               {/* TODO: https://github.com/TanStack/table/issues/4382 --> ColumnDef types gives typescript error */}
               <FellowAttendanceDataTable
                 columns={columns() as ColumnDef<unknown>[]}
                 data={fellows}
                 editColumns={false}
+                emptyStateMessage={
+                  watcher === undefined
+                    ? "Please select a supervisor"
+                    : undefined
+                }
               />
               <div className="flex justify-end gap-6">
                 <Button
-                  variant="ghost"
-                  type="button"
-                  className="border-0 text-shamiri-new-blue"
+                  className="bg-shamiri-new-blue"
                   onClick={() => {
                     context.setIsOpen(false);
                   }}
                 >
-                  Cancel
+                  Done
                 </Button>
-                <Button className="bg-shamiri-new-blue">Done</Button>
               </div>
             </div>
           </DialogContent>
@@ -220,7 +213,7 @@ export function FellowAttendanceDataTable({
   data,
   editColumns = false,
   closeDialogFn,
-  emptyStateMessage = "No fellows associated with this session",
+  emptyStateMessage = "No fellows assigned to this supervisor",
 }: {
   columns: ColumnDef<unknown>[];
   data: FellowAttendancesTableData[];
@@ -230,12 +223,12 @@ export function FellowAttendanceDataTable({
   emptyStateMessage?: string;
 }) {
   return (
-    <div className="space-y-4 pt-2">
+    <div className="space-y-4">
       <DataTable
         columns={columns as ColumnDef<unknown>[]}
         data={data}
         editColumns={editColumns}
-        className={"data-table"}
+        className={"data-table mt-4"}
         emptyStateMessage={emptyStateMessage}
       />
       {closeDialogFn && (
@@ -360,11 +353,44 @@ export const columns = () => {
       header: "Average Rating",
       id: "averageRating",
     }),
-    {
-      accessorKey: "cellNumber",
+    columnHelper.accessor("cellNumber", {
       id: "cellNumber",
       header: "Phone Number",
-    },
+      cell: ({ row }) => {
+        try {
+          return (
+            row.original.cellNumber &&
+            parsePhoneNumberWithError(
+              row.original.cellNumber,
+              "KE",
+            ).formatNational()
+          );
+        } catch (error) {
+          if (error instanceof ParseError) {
+            // Not a phone number, non-existent country, etc.
+            return (
+              row.original.cellNumber && (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="flex gap-1">
+                      <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
+                      <span>{row.original.cellNumber}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="px-2 py-1 capitalize">
+                      {error.message.toLowerCase().replace("_", " ")}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              )
+            );
+          } else {
+            throw error;
+          }
+        }
+      },
+    }),
     {
       accessorKey: "groupName",
       id: "groupName",
