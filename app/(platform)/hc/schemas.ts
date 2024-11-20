@@ -40,7 +40,7 @@ export const DropoutSupervisorSchema = z.object({
 
 export const DropoutStudentSchema = z
   .object({
-    studentId: stringValidation("Missing supervisor ID"),
+    studentId: stringValidation("Missing student ID"),
     mode: z.enum(["dropout", "undo"]),
     dropoutReason: z
       .enum(
@@ -48,7 +48,7 @@ export const DropoutStudentSchema = z
         {
           errorMap: (_issue, _ctx) => ({
             message:
-              "Please select one of the supplied supervisor dropout reason options",
+              "Please select one of the supplied student dropout reason options",
           }),
         },
       )

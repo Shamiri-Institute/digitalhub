@@ -2,7 +2,10 @@
 
 import { FellowDetailsSchema } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
-import { WeeklyFellowEvaluationSchema } from "#/components/common/fellow/schema";
+import {
+  DropoutFellowSchema,
+  WeeklyFellowEvaluationSchema,
+} from "#/components/common/fellow/schema";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
@@ -279,6 +282,38 @@ export async function replaceGroupLeader({
     return {
       success: false,
       message: (err as Error)?.message ?? "Sorry, could not replace fellow",
+    };
+  }
+}
+
+export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
+  try {
+    await checkAuth();
+
+    const { fellowId, mode, dropoutReason } = DropoutFellowSchema.parse(data);
+    const result = await db.fellow.update({
+      data: {
+        droppedOut: mode === "dropout",
+        dropOutReason: mode === "dropout" ? dropoutReason : null,
+        droppedOutAt: mode === "dropout" ? new Date() : null,
+      },
+      where: {
+        id: fellowId,
+      },
+    });
+
+    return {
+      success: true,
+      message:
+        mode === "dropout"
+          ? `${result.fellowName} successfully dropped out.`
+          : `${result.fellowName} successfully un-dropped.`,
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      success: false,
+      message: `Something went wrong while trying to ${data.mode === "dropout" ? "drop out fellow" : "undo drop out"}`,
     };
   }
 }
