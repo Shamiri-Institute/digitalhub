@@ -25,7 +25,7 @@ export async function fetchSchoolData(hubId: string) {
       assignedSupervisor: true,
       interventionSessions: {
         include: {
-          InterventionGroupReport: true,
+          sessionRatings: true,
         },
       },
       students: {
