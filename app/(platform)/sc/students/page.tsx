@@ -2,7 +2,6 @@ import { currentSupervisor } from "#/app/auth";
 import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
 import HubStudentDemographicsCharts from "#/components/charts/student-demographics-charts";
 import HubStudentsDetailsCharts from "#/components/charts/students-charts";
-import StudentsFilterTab from "#/components/students-filter-tab";
 import StudentsStats from "#/components/students-stats";
 import PageFooter from "#/components/ui/page-footer";
 import { db } from "#/lib/db";
@@ -183,7 +182,6 @@ export default async function SupervisorStudentsPage({
   return (
     <>
       {/* TODO: this should filter by schools and fellow */}
-      <StudentsFilterTab hubCoordinatorId={supervisor.id} />
 
       <StudentsStats
         totalNumberOfStudentsInHub={totalNumberOfStudentsInHub}
