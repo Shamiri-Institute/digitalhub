@@ -27,7 +27,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
+import { SUPERVISOR_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -118,7 +118,7 @@ export default function DropoutSupervisor({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {SCHOOL_DROPOUT_REASONS.map((reason) => (
+                      {SUPERVISOR_DROP_OUT_REASONS.map((reason) => (
                         <SelectItem key={reason} value={reason}>
                           {reason}
                         </SelectItem>
