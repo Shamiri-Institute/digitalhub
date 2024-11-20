@@ -182,7 +182,6 @@ export function FellowsDatatableMenu({
         >
           Session attendance history
         </DropdownMenuItem>
-        <DropdownMenuItem>View student group evaluation</DropdownMenuItem>
         <DropdownMenuItem>View complaints</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
