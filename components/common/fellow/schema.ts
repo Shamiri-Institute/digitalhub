@@ -1,3 +1,4 @@
+import { STUDENT_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
 
@@ -37,3 +38,33 @@ export const ReplaceGroupLeaderSchema = z.object({
   supervisorId: stringValidation("Please select a supervisor"),
   groupId: stringValidation("Group ID is required"),
 });
+
+export const DropoutFellowSchema = z
+  .object({
+    fellowId: stringValidation("Missing fellow ID"),
+    mode: z.enum(["dropout", "undo"]),
+    dropoutReason: z
+      .enum(
+        // TODO: Replace with fellow reasons
+        [STUDENT_DROPOUT_REASONS[0]!, ...STUDENT_DROPOUT_REASONS.slice(1)],
+        {
+          errorMap: (_issue, _ctx) => ({
+            message:
+              "Please select one of the supplied fellow dropout reason options",
+          }),
+        },
+      )
+      .optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (val.dropoutReason === undefined && val.mode === "dropout") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Please select reason for drop out.`,
+        fatal: true,
+        path: ["dropoutReason"],
+      });
+
+      return z.NEVER;
+    }
+  });

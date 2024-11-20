@@ -94,7 +94,10 @@ export default function SupervisorsDataTable({
     <div>
       <DataTable
         data={supervisors}
-        columns={columns({ setMarkAttendanceDialog })}
+        columns={columns({
+          setMarkAttendanceDialog,
+          sessions: schoolContext.school?.interventionSessions ?? [],
+        })}
         className={"data-table data-table-action mt-4"}
         emptyStateMessage="No supervisors found for this hub"
         columnVisibilityState={{

@@ -12,7 +12,7 @@ export type SchoolsTableData = Prisma.SchoolGetPayload<{
     assignedSupervisor: true;
     interventionSessions: {
       include: {
-        InterventionGroupReport: true;
+        sessionRatings: true;
       };
     };
     students: {
@@ -152,13 +152,9 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
     header: "Report submission",
     id: "Report submission",
     cell: ({ row }) => {
-      const sessions: Prisma.InterventionSessionGetPayload<{
-        include: {
-          InterventionGroupReport: true;
-        };
-      }>[] = row.original.interventionSessions
+      const sessions = row.original.interventionSessions
         .filter((session) => {
-          return session.InterventionGroupReport !== undefined;
+          return session.occurred;
         })
         .sort((a, b) => {
           return a.sessionDate.getTime() - b.sessionDate.getTime();
@@ -167,7 +163,7 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
       // TODO: refactor session names
       if (sessions.length > 0) {
         const recent = sessions[sessions.length - 1];
-        if (recent && recent.InterventionGroupReport !== undefined) {
+        if (recent && recent.sessionRatings.length > 0) {
           return (
             <Badge variant="shamiri-green">
               {sessions[sessions.length - 1]?.sessionType?.toUpperCase() +
