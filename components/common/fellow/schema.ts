@@ -1,4 +1,4 @@
-import { STUDENT_DROPOUT_REASONS } from "#/lib/app-constants/constants";
+import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
 
@@ -45,8 +45,7 @@ export const DropoutFellowSchema = z
     mode: z.enum(["dropout", "undo"]),
     dropoutReason: z
       .enum(
-        // TODO: Replace with fellow reasons
-        [STUDENT_DROPOUT_REASONS[0]!, ...STUDENT_DROPOUT_REASONS.slice(1)],
+        [FELLOW_DROP_OUT_REASONS[0]!, ...FELLOW_DROP_OUT_REASONS.slice(1)],
         {
           errorMap: (_issue, _ctx) => ({
             message:
