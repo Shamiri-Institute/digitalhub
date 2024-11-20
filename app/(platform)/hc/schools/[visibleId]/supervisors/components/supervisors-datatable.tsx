@@ -254,6 +254,7 @@ export function SupervisorsDataTableMenu({
         {supervisor.droppedOut === null || !supervisor.droppedOut ? (
           <DropdownMenuItem
             onClick={() => {
+              context.setSupervisor(supervisor);
               context.setDropoutDialog(true);
             }}
           >
@@ -262,6 +263,7 @@ export function SupervisorsDataTableMenu({
         ) : (
           <DropdownMenuItem
             onClick={() => {
+              context.setSupervisor(supervisor);
               context.setUndropDialog(true);
             }}
           >
