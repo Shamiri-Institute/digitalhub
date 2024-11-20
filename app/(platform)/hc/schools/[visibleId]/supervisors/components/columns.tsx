@@ -10,7 +10,6 @@ import {
   DropdownMenuPortal,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { InterventionSessionType } from "#/lib/app-constants/constants";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
@@ -30,6 +29,7 @@ export type SupervisorsData = Prisma.SupervisorGetPayload<{
 
 export const columns = (state: {
   setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  sessions: Prisma.InterventionSessionGetPayload<{}>[];
 }): ColumnDef<SupervisorsData>[] => [
   {
     id: "checkbox",
@@ -109,21 +109,22 @@ export const columns = (state: {
   {
     header: "Attendance history",
     cell: ({ row }) => {
-      const attendedSessions: {
-        [key in InterventionSessionType]: Prisma.SupervisorAttendanceGetPayload<{
-          include: {
-            session: true;
-          };
-        }>;
-      } = {};
-      row.original.supervisorAttendances.forEach((attendance) => {
-        if (attendance.session.occurred) {
-          attendedSessions[
-            attendance.session.sessionType as keyof typeof attendedSessions
-          ] = attendance;
-        }
+      const attendances = state.sessions.map((session) => {
+        const attendance = row.original.supervisorAttendances.find(
+          (x) => x.sessionId === session?.id,
+        );
+        return {
+          id: attendance?.id,
+          attended: attendance?.attended ?? null,
+          sessionId: attendance?.sessionId,
+          absenceReason: attendance?.absenceReason ?? "",
+          absenceComments: attendance?.absenceComments ?? "",
+          sessionType: session.sessionType ?? null,
+          sessionOccurred: session.occurred,
+          sessionDate: session.sessionDate,
+        };
       });
-      return <SessionHistoryWidget attendedSessions={attendedSessions} />;
+      return <SessionHistoryWidget attendedSessions={attendances} />;
     },
   },
   {
