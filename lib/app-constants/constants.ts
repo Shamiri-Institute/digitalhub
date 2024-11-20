@@ -19,6 +19,16 @@ export const SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING = {
   difference: "#E5F3FF",
 };
 
+export const SUPERVISOR_DROP_OUT_REASONS = [
+  "Prolonged lateness",
+  "Program extension issue",
+  "Prolonged absence",
+  "Other opportunities",
+  "Health issues",
+  "Personal issues",
+  "Other",
+] as const;
+
 export const FELLOW_DROP_OUT_REASONS = [
   "Another Job",
   "Dress Code",
