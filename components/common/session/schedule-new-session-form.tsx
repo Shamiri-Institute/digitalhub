@@ -1,5 +1,6 @@
-import { SessionsContext } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
 import { createNewSession } from "#/app/(platform)/hc/schedule/actions/session";
+import { ScheduleNewSessionSchema } from "#/components/common/session/schema";
+import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -33,7 +34,6 @@ import { format } from "date-fns";
 import { Dispatch, SetStateAction, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { ScheduleNewSessionSchema } from "../../schemas";
 
 export function ScheduleNewSession({
   toggleDialog,
@@ -45,7 +45,7 @@ export function ScheduleNewSession({
   hubId: string;
 }) {
   const { toast } = useToast();
-  const { sessions, setSessions } = useContext(SessionsContext);
+  const { setSessions } = useContext(SessionsContext);
 
   const form = useForm<z.infer<typeof ScheduleNewSessionSchema>>({
     resolver: zodResolver(ScheduleNewSessionSchema),
