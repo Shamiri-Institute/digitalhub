@@ -10,7 +10,6 @@ import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session
 import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
-import type { Session } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
 import {
   columns,
   SessionData,
@@ -18,6 +17,7 @@ import {
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import SessionRatings from "#/components/common/session/session-ratings";
+import type { Session } from "#/components/common/session/sessions-provider";
 import DataTable from "#/components/data-table";
 import { Prisma } from "@prisma/client";
 import { addHours } from "date-fns";

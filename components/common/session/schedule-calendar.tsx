@@ -36,7 +36,6 @@ import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session
 import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
-import { ScheduleNewSession } from "#/app/(platform)/hc/schedule/_components/schedule-new-session-form";
 import {
   DateRangeType,
   Filters,
@@ -44,6 +43,7 @@ import {
   sessionTypeFilterOptions,
   statusFilterOptions,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
+import { ScheduleNewSession } from "#/components/common/session/schedule-new-session-form";
 import {
   Dialog,
   DialogContent,
@@ -56,7 +56,7 @@ import {
   DropdownMenuLabel,
 } from "#/components/ui/dropdown-menu";
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
-import { Prisma, SessionStatus } from "@prisma/client";
+import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { addHours } from "date-fns";
 import * as React from "react";
 import { DayView } from "./day-view";
@@ -96,6 +96,7 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
     id: string;
     averageRating: number;
   }[];
+  role: ImplementerRole;
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
