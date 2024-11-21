@@ -514,7 +514,7 @@ export async function fetchSupervisorDropoutReasons(hudId: string) {
   `;
 
   dropoutData.forEach((data) => {
-    data.value = Number(data.value);
+    data.value = Math.round(data.value);
   });
 
   return dropoutData;
@@ -539,7 +539,7 @@ export async function fetchSupervisorDataCompletenessData(hubId: string) {
     return [];
   }
 
-  const percentage = +Number(supervisorData.percentage).toFixed(2);
+  const percentage = Math.round(supervisorData.percentage);
 
   return [
     { name: "actual", value: percentage },
@@ -578,9 +578,9 @@ export async function fetchSupervisorSessionRatingAverages(hubId: string) {
 
   // @ts-ignore
   ratingAverages.forEach((item) => {
-    item.student_behaviour = Number(item.student_behaviour);
-    item.admin_support = Number(item.admin_support);
-    item.workload = Number(item.workload);
+    item.student_behaviour = Math.round(item.student_behaviour) || 0;
+    item.admin_support = Math.round(item.admin_support) || 0;
+    item.workload = Math.round(item.workload) || 0;
   });
 
   return ratingAverages;
