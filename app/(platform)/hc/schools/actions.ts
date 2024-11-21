@@ -116,6 +116,7 @@ export async function fetchDropoutReasons(hubId: string) {
     FROM schools
     WHERE
       dropout_reason IS NOT NULL
+      AND dropped_out = true
       AND hub_id = ${hubId}
     GROUP BY
       dropout_reason
