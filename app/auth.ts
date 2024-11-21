@@ -133,7 +133,7 @@ export async function currentSupervisor() {
     };
   });
 
-  return { ...supervisor, fellows: newFellowsData };
+  return { ...supervisor, user, fellows: newFellowsData };
 }
 
 export type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>;

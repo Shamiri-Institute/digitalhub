@@ -1,6 +1,6 @@
 "use client";
 
-import { SessionDropDown } from "#/app/(platform)/hc/schedule/_components/session-list";
+import { SessionDropDown } from "#/components/common/session/session-list";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";
