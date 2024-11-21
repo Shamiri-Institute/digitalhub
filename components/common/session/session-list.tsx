@@ -1,4 +1,4 @@
-import { SessionStatus } from "@prisma/client";
+import { ImplementerRole, SessionStatus } from "@prisma/client";
 import { addHours, format } from "date-fns";
 import {
   Dispatch,
@@ -30,7 +30,13 @@ import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import type { Session } from "./sessions-provider";
 
-export function SessionList({ sessions }: { sessions: Session[] }) {
+export function SessionList({
+  sessions,
+  role,
+}: {
+  sessions: Session[];
+  role: ImplementerRole;
+}) {
   const [activeSession, setActiveSession] = useState<Session | undefined>();
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
 
@@ -70,6 +76,7 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
               setSession: setActiveSession,
               setRatingsDialog,
             }}
+            role={role}
             layout="expanded"
           />
           {renderSessionRatingsDialog()}
@@ -88,6 +95,7 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
           setSession: setActiveSession,
           setRatingsDialog,
         }}
+        role={role}
       />
       <SessionDetail
         layout="compact"
@@ -96,6 +104,7 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
           setSession: setActiveSession,
           setRatingsDialog,
         }}
+        role={role}
       />
       <div className="w-full">
         {moreSessions.length > 0 && (
@@ -117,6 +126,7 @@ export function SessionList({ sessions }: { sessions: Session[] }) {
                         setSession: setActiveSession,
                         setRatingsDialog,
                       }}
+                      role={role}
                     />
                   );
                 })}
@@ -134,6 +144,7 @@ export function SessionDetail({
   state,
   layout,
   withDropdown = true,
+  role,
 }: {
   state: {
     session: Session;
@@ -142,6 +153,7 @@ export function SessionDetail({
   };
   layout: "compact" | "expanded";
   withDropdown?: boolean;
+  role: ImplementerRole;
 }) {
   const [timeLabels, setTimeLabels] = useState({
     startTimeLabel: "",
@@ -253,7 +265,7 @@ export function SessionDetail({
 
   return withDropdown ? (
     <div>
-      <SessionDropDown open={open} setOpen={setOpen} state={state}>
+      <SessionDropDown open={open} setOpen={setOpen} state={state} role={role}>
         {renderSessionDetails()}
       </SessionDropDown>
     </div>
@@ -267,6 +279,7 @@ export function SessionDropDown({
   setOpen,
   children,
   state,
+  role,
 }: {
   open?: boolean;
   setOpen?: Dispatch<SetStateAction<boolean>>;
@@ -276,6 +289,7 @@ export function SessionDropDown({
     setSession?: Dispatch<SetStateAction<Session | undefined>>;
     setRatingsDialog?: Dispatch<SetStateAction<boolean>>;
   };
+  role: ImplementerRole;
 }) {
   const { session } = state;
   const supervisorAttendanceContext = useContext(SupervisorAttendanceContext);
@@ -308,26 +322,61 @@ export function SessionDropDown({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={(e) => {
-            e.stopPropagation();
-            supervisorAttendanceContext.setIsOpen(true);
-          }}
-          disabled={session.status === "Cancelled"}
-        >
-          {session.occurred
-            ? "View supervisor attendance"
-            : "Mark supervisor attendance"}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={(e) => {
-            e.stopPropagation();
-            fellowAttendanceContext.setIsOpen(true);
-          }}
-          disabled={session.status === "Cancelled"}
-        >
-          View fellow attendance
-        </DropdownMenuItem>
+        {role === "HUB_COORDINATOR" && (
+          <>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                supervisorAttendanceContext.setIsOpen(true);
+              }}
+              disabled={session.status === "Cancelled"}
+            >
+              {session.occurred
+                ? "View supervisor attendance"
+                : "Mark supervisor attendance"}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                fellowAttendanceContext.setIsOpen(true);
+              }}
+              disabled={session.status === "Cancelled"}
+            >
+              View fellow attendance
+            </DropdownMenuItem>
+          </>
+        )}
+        {role === "SUPERVISOR" && (
+          <>
+            <DropdownMenuItem
+              onClick={(e) => {
+                // e.stopPropagation();
+                // supervisorAttendanceContext.setIsOpen(true);
+              }}
+              disabled={session.status === "Cancelled"}
+            >
+              Mark session occurrence
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                // e.stopPropagation();
+                // supervisorAttendanceContext.setIsOpen(true);
+              }}
+              disabled={session.status === "Cancelled"}
+            >
+              Mark student attendance
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                fellowAttendanceContext.setIsOpen(true);
+              }}
+              disabled={session.status === "Cancelled"}
+            >
+              Mark fellow attendance
+            </DropdownMenuItem>
+          </>
+        )}
         {session.sessionDate > new Date() && (
           <DropdownMenuItem
             onClick={(e) => {
