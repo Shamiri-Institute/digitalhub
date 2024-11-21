@@ -46,10 +46,15 @@ export default function FellowsCharts({
   >;
   fellowsSessionRatings: FellowSessionRatingAverages[];
 }) {
-  const formattedAttendanceData = attendanceData.map((session) => ({
-    sessionType: session.sessionType,
-    count: session._count.sessionType,
-  }));
+  const formattedAttendanceData = attendanceData
+    .filter(
+      (session) =>
+        session?.sessionType && /^s[0-4]$/i.test(session.sessionType),
+    )
+    .map((session) => ({
+      sessionType: session.sessionType,
+      count: session._count.sessionType,
+    }));
 
   const randomColors = dropoutData.map(() => generateRandomColor());
   return (

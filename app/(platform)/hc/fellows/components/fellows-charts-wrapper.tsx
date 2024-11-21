@@ -32,9 +32,16 @@ export default async function FellowsChartsWrapper({
     const fellowAttendanceData = db.interventionSession.groupBy({
       by: ["sessionType"],
       where: {
-        school: {
-          hubId: coordinator?.assignedHubId,
-        },
+        AND: [
+          {
+            school: {
+              hubId: coordinator?.assignedHubId,
+            },
+          },
+          {
+            occurred: true,
+          },
+        ],
       },
       _count: {
         sessionType: true,
