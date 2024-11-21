@@ -169,6 +169,7 @@ export default async function StudentsPage() {
       school: {
         hubId: hubCoordinator?.assignedHubId,
       },
+      droppedOut: true,
     },
     _count: {
       dropOutReason: true,
