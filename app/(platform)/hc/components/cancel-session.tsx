@@ -1,6 +1,6 @@
 import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
-import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
 import { cancelSession } from "#/app/(platform)/hc/schedule/actions/session";
+import { SessionDetail } from "#/components/common/session/session-list";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
