@@ -24,6 +24,7 @@ export async function fetchFellowDropoutReasons(hudId: string) {
     FROM fellows
     WHERE
       drop_out_reason IS NOT NULL
+      AND dropped_out = true
       AND hub_id = ${hudId}
     GROUP BY
       drop_out_reason
