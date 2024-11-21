@@ -1,7 +1,7 @@
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
-import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
 import { rescheduleSession } from "#/app/(platform)/hc/schedule/actions/session";
 import { RescheduleSessionSchema } from "#/app/(platform)/hc/schemas";
+import { SessionDetail } from "#/components/common/session/session-list";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";

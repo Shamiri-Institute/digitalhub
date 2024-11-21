@@ -1,9 +1,9 @@
 "use client";
 
-import { SessionDropDown } from "#/app/(platform)/hc/schedule/_components/session-list";
-import { SessionsContext } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
-import { useTitle } from "#/app/(platform)/hc/schedule/_components/title-provider";
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
+import { SessionDropDown } from "#/components/common/session/session-list";
+import { SessionsContext } from "#/components/common/session/sessions-provider";
+import { useTitle } from "#/components/common/session/title-provider";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";

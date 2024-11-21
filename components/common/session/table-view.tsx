@@ -8,9 +8,9 @@ import {
   SupervisorAttendanceDataTableMenu,
   SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
-import { SessionsContext } from "#/app/(platform)/hc/schedule/_components/sessions-provider";
-import { useTitle } from "#/app/(platform)/hc/schedule/_components/title-provider";
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
+import { SessionsContext } from "#/components/common/session/sessions-provider";
+import { useTitle } from "#/components/common/session/title-provider";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";

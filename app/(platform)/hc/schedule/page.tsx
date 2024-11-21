@@ -1,22 +1,23 @@
-import { currentHubCoordinator } from "#/app/auth";
+import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { Separator } from "#/components/ui/separator";
 
 import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
 import PageFooter from "#/components/ui/page-footer";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
-import { ScheduleCalendar } from "./_components/schedule-calendar";
-import { ScheduleHeader } from "./_components/schedule-header";
+import { ScheduleCalendar } from "../../../../components/common/session/schedule-calendar";
+import { ScheduleHeader } from "../../../../components/common/session/schedule-header";
 
 export default async function HubCoordinatorSchedulePage() {
   const coordinator = await currentHubCoordinator();
   if (coordinator === null) {
     await signOut({ callbackUrl: "/login" });
   }
-
   if (!coordinator?.assignedHubId) {
     return <div>Hub coordinator has no assigned hub</div>;
   }
+
+  const user = await getCurrentUser();
 
   const values = await Promise.all([
     await fetchSchoolData(coordinator?.assignedHubId as string),
@@ -97,6 +98,7 @@ export default async function HubCoordinatorSchedulePage() {
           schools={schools}
           supervisors={supervisors}
           fellowRatings={fellowRatings}
+          role={user?.membership.role!}
         />
       </div>
       <PageFooter />

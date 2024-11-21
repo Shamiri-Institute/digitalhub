@@ -1,7 +1,7 @@
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
-import { SessionDetail } from "#/app/(platform)/hc/schedule/_components/session-list";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
+import { SessionDetail } from "#/components/common/session/session-list";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
