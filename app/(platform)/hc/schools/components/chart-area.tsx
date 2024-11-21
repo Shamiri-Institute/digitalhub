@@ -55,12 +55,15 @@ export default function ChartArea({
                 dataKey="count_attendance_marked"
                 stackId="a"
                 fill="#0085FF"
+                name="Marked Attendance"
               />
               <Bar
                 dataKey="count_attendance_unmarked"
                 stackId="a"
                 fill="#CCE7FF"
+                name="Unmarked Attendance"
               />
+              <Legend />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -94,6 +97,7 @@ export default function ChartArea({
                   />
                 ))}
               </Pie>
+              <Legend />
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
@@ -129,6 +133,7 @@ export default function ChartArea({
                   />
                 ))}
               </Pie>
+              <Legend />
             </PieChart>
           </ResponsiveContainer>
         ) : null}
@@ -142,9 +147,9 @@ export default function ChartArea({
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line dataKey="student_behaviour" stroke="#0085FF" />
-              <Line dataKey="admin_support" stroke="#00BA34" />
-              <Line dataKey="workload" stroke="#F98600" />
+              <Line dataKey="student_behaviour" stroke="#0085FF" name="Behavior" />
+              <Line dataKey="admin_support" stroke="#00BA34" name="Admin Support" />
+              <Line dataKey="workload" stroke="#F98600" name="Workload" />
             </LineChart>
           </ResponsiveContainer>
         ) : null}

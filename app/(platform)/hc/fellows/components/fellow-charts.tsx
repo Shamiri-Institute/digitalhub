@@ -62,12 +62,14 @@ export default function FellowsCharts({
               <XAxis dataKey="sessionType" />
               <YAxis dataKey="count" />
               <Tooltip />
-              <Bar dataKey="count" stackId="a" fill="#0085FF" />
-              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" />
+              <Legend />
+              <Bar dataKey="count" stackId="a" fill="#0085FF" name="Session Count" />
+              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" name="Session Type" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
+
       <ChartCard title="Drop out reasons" showCardFooter={false}>
         {dropoutData.length ? (
           <ResponsiveContainer width="100%" height="100%">
@@ -81,6 +83,7 @@ export default function FellowsCharts({
                 outerRadius={100}
                 innerRadius={70}
                 fill="#8884d8"
+              // label={({ name, value }) => `${name}: ${value}`}  // Add labels to pie segments
               >
                 <Label
                   position="center"
@@ -93,10 +96,12 @@ export default function FellowsCharts({
                 ))}
               </Pie>
               <Tooltip />
+              <Legend />
             </PieChart>
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
+
       <ChartCard title="Fellows information completion" showCardFooter={false}>
         {fellowsDataCompletenessPercentage.length ? (
           <ResponsiveContainer width="100%" height="100%">
@@ -127,23 +132,29 @@ export default function FellowsCharts({
                   />
                 ))}
               </Pie>
+              <Legend />
             </PieChart>
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
+
       <ChartCard title="Ratings" showCardFooter={false}>
         {fellowsSessionRatings?.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart width={307} height={307} data={fellowsSessionRatings}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="session_date" />
-              <YAxis />
+              <XAxis dataKey="session_date">
+                {/* <Label value="Session Date" position="bottom" offset={0} /> */}
+              </XAxis>
+              <YAxis dataKey="rating_score">
+                {/* <Label value="Rating Score" angle={-90} position="left" /> */}
+              </YAxis>
               <Tooltip />
-              <Legend />
-              <Line dataKey="behaviour_rating" stroke="#0085FF" />
-              <Line dataKey="program_delivery_rating" stroke="#00BA34" />
-              <Line dataKey="dressing_and_grooming_rating" stroke="#F98600" />
-              <Line dataKey="punctuality_rating" stroke="#8884d8" />
+              {/* <Legend /> */}
+              <Line dataKey="behaviour_rating" stroke="#0085FF" name="Behavior" />
+              <Line dataKey="program_delivery_rating" stroke="#00BA34" name="Program Delivery" />
+              <Line dataKey="dressing_and_grooming_rating" stroke="#F98600" name="Dressing & Grooming" />
+              <Line dataKey="punctuality_rating" stroke="#8884d8" name="Punctuality" />
             </LineChart>
           </ResponsiveContainer>
         ) : null}

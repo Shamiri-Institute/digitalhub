@@ -56,8 +56,9 @@ export default function SupervisorCharts({
               <XAxis dataKey="supervisor_name" />
               <YAxis dataKey="attended" />
               <Tooltip />
-              <Bar dataKey="attended" stackId="a" fill="#0085FF" />
-              <Bar dataKey="supervisor_name" stackId="a" fill="#CCE7FF" />
+              <Legend />
+              <Bar dataKey="attended" stackId="a" fill="#0085FF" name="Marked Attendance" />
+              <Bar dataKey="supervisor_name" stackId="a" fill="#CCE7FF" name="Supervisor Name" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -90,6 +91,7 @@ export default function SupervisorCharts({
                   />
                 ))}
               </Pie>
+              <Legend />
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
@@ -128,6 +130,8 @@ export default function SupervisorCharts({
                   />
                 ))}
               </Pie>
+              <Legend />
+              <Tooltip />
             </PieChart>
           </ResponsiveContainer>
         ) : null}
@@ -145,9 +149,9 @@ export default function SupervisorCharts({
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line dataKey="student_behaviour" stroke="#0085FF" />
-              <Line dataKey="admin_support" stroke="#00BA34" />
-              <Line dataKey="workload" stroke="#F98600" />
+              <Line dataKey="student_behaviour" stroke="#0085FF" name="Behavior" />
+              <Line dataKey="admin_support" stroke="#00BA34" name="Admin Support" />
+              <Line dataKey="workload" stroke="#F98600" name="Workload" />
             </LineChart>
           </ResponsiveContainer>
         ) : null}
