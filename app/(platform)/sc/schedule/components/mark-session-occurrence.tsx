@@ -84,7 +84,6 @@ export function MarkSessionOccurrence({
       ) {
         copiedSessions[sessionIndex].occurred = response.data.occurred;
         setSessions(copiedSessions);
-        console.log(copiedSessions[sessionIndex]);
       }
       toast({
         description: response.message,
