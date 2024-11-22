@@ -13,12 +13,19 @@ import {
 import { cn } from "#/lib/utils";
 
 import { useGSAP } from "@gsap/react";
+import { ImplementerRole } from "@prisma/client";
 import gsap from "gsap";
 import { SessionList } from "./session-list";
 import { useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
-export function DayView({ state }: { state: CalendarState }) {
+export function DayView({
+  state,
+  role,
+}: {
+  state: CalendarState;
+  role: ImplementerRole;
+}) {
   const headerRowRef: any = useRef(null);
   const dayFormatter = useDateFormatter({ weekday: "long" });
 
@@ -122,6 +129,7 @@ export function DayView({ state }: { state: CalendarState }) {
                 hour={hour}
                 date={currentDate}
                 state={state}
+                role={role}
               />
             </tr>
           ))}
@@ -136,11 +144,13 @@ function DayCalendarCell({
   hour,
   date,
   state,
+  role,
 }: {
   rowIdx: number;
   hour: number;
   date: CalendarDate;
   state: CalendarState;
+  role: ImplementerRole;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const { cellProps, buttonProps, isSelected, isDisabled, isUnavailable } =
@@ -169,7 +179,7 @@ function DayCalendarCell({
             { "border-t-0": rowIdx === 0 },
           )}
         >
-          <SessionList sessions={sessions} />
+          <SessionList sessions={sessions} role={role} />
         </div>
       </div>
     </td>

@@ -11,12 +11,15 @@ import {
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
+import { ImplementerRole } from "@prisma/client";
 import { useContext } from "react";
 
 export default function CancelSession({
   updateSessionsState,
+  role,
 }: {
   updateSessionsState: () => void;
+  role: ImplementerRole;
 }) {
   const context = useContext(CancelSessionContext);
   async function cancelSelectedSession() {
@@ -53,6 +56,7 @@ export default function CancelSession({
                 state={{ session: context.session }}
                 layout={"compact"}
                 withDropdown={false}
+                role={role}
               />
             )}
             <div className="flex flex-col gap-y-4">

@@ -30,7 +30,7 @@ import {
   TooltipTrigger,
 } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
-import { Prisma, SessionStatus } from "@prisma/client";
+import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/table-core";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
@@ -63,12 +63,14 @@ type SupervisorData = Prisma.SupervisorGetPayload<{
 export default function FellowAttendance({
   supervisors,
   fellowRatings,
+  role,
 }: {
   supervisors: SupervisorData[];
   fellowRatings: {
     id: string;
     averageRating: number;
   }[];
+  role: ImplementerRole;
 }) {
   const context = useContext(FellowAttendanceContext);
   const [selectedSupervisor, setSelectedSupervisor] = useState<string>();
@@ -137,6 +139,7 @@ export default function FellowAttendance({
                 state={{ session: context.session }}
                 layout={"compact"}
                 withDropdown={false}
+                role={role}
               />
             )}
             <div className="mb-4">

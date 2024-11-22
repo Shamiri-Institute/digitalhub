@@ -19,7 +19,7 @@ import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-ale
 import SessionRatings from "#/components/common/session/session-ratings";
 import type { Session } from "#/components/common/session/sessions-provider";
 import DataTable from "#/components/data-table";
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { addHours } from "date-fns";
 import { usePathname } from "next/navigation";
 import * as React from "react";
@@ -29,6 +29,7 @@ export default function SessionsDatatable({
   sessions,
   supervisors,
   fellowRatings,
+  role,
 }: {
   sessions: SessionData[];
   supervisors: Prisma.SupervisorGetPayload<{
@@ -51,6 +52,7 @@ export default function SessionsDatatable({
     id: string;
     averageRating: number;
   }[];
+  role: ImplementerRole;
 }) {
   const pathname = usePathname();
   const [_sessions, setSessions] = useState(sessions);
@@ -150,6 +152,7 @@ export default function SessionsDatatable({
               columns={columns({
                 setSession: setActiveSession,
                 setRatingsDialog,
+                role,
               })}
               className={"data-table data-table-action mt-4"}
               emptyStateMessage="No sessions found for this school"
@@ -173,16 +176,21 @@ export default function SessionsDatatable({
             )}
             <RescheduleSession
               updateSessionsState={updateRescheduledSessionState}
+              role={role}
             />
           </RescheduleSessionContext.Provider>
-          <CancelSession updateSessionsState={updateCancelledSessionState} />
+          <CancelSession
+            updateSessionsState={updateCancelledSessionState}
+            role={role}
+          />
         </CancelSessionContext.Provider>
         <FellowAttendance
           supervisors={supervisors}
           fellowRatings={fellowRatings}
+          role={role}
         />
       </FellowAttendanceContext.Provider>
-      <SupervisorAttendance supervisors={supervisors} />
+      <SupervisorAttendance supervisors={supervisors} role={role} />
     </SupervisorAttendanceContext.Provider>
   );
 }

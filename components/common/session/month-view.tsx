@@ -17,6 +17,7 @@ import { CalendarState } from "react-stately";
 import { cn } from "#/lib/utils";
 
 import { useGSAP } from "@gsap/react";
+import { ImplementerRole } from "@prisma/client";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SessionList } from "./session-list";
@@ -31,6 +32,7 @@ export function MonthView({
 }: {
   state: CalendarState;
   weekdayStyle: CalendarGridProps["weekdayStyle"];
+  role: ImplementerRole;
 }) {
   const { locale } = useLocale();
   const { gridProps, headerProps, weekDays } = useCalendarGrid(props, state);
@@ -112,6 +114,7 @@ export function MonthView({
                       state={state}
                       date={date}
                       weekend={isWeekend(date, "en-US")}
+                      role={props.role}
                     />
                   ) : (
                     <td key={i} />
@@ -129,10 +132,12 @@ export function MonthCalendarCell({
   state,
   date,
   weekend,
+  role,
 }: {
   state: CalendarState;
   date: CalendarDate;
   weekend: boolean;
+  role: ImplementerRole;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -196,7 +201,7 @@ export function MonthCalendarCell({
               {formattedDate}
             </div>
           </div>
-          <SessionList sessions={sessions} />
+          <SessionList sessions={sessions} role={role} />
         </div>
       </div>
     </td>
