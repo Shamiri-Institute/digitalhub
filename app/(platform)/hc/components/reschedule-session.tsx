@@ -18,6 +18,7 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ImplementerRole } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { useContext } from "react";
@@ -26,8 +27,10 @@ import { z } from "zod";
 
 export default function RescheduleSession({
   updateSessionsState,
+  role,
 }: {
   updateSessionsState: (sessionDate: Date) => void;
+  role: ImplementerRole;
 }) {
   const context = useContext(RescheduleSessionContext);
 
@@ -84,6 +87,7 @@ export default function RescheduleSession({
                 state={{ session: context.session }}
                 layout={"compact"}
                 withDropdown={false}
+                role={role}
               />
             )}
             <Form {...form}>
