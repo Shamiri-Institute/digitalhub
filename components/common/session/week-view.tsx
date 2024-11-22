@@ -11,12 +11,19 @@ import {
 import { cn } from "#/lib/utils";
 
 import { useGSAP } from "@gsap/react";
+import { ImplementerRole } from "@prisma/client";
 import gsap from "gsap";
 import { SessionList } from "./session-list";
 import { useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
-export function WeekView({ state }: { state: CalendarState }) {
+export function WeekView({
+  state,
+  role,
+}: {
+  state: CalendarState;
+  role: ImplementerRole;
+}) {
   const headerRowRef: any = useRef(null);
   const { gridProps, headerProps } = useCalendarGrid(
     { weekdayStyle: "long" },
@@ -132,6 +139,7 @@ export function WeekView({ state }: { state: CalendarState }) {
                       hour={hour}
                       date={date}
                       state={state}
+                      role={role}
                     />
                   ) : (
                     <td key={colIdx} />
@@ -188,12 +196,14 @@ function WeekCalendarCell({
   hour,
   date,
   state,
+  role,
 }: {
   rowIdx: number;
   colIdx: number;
   hour: number;
   date: CalendarDate;
   state: CalendarState;
+  role: ImplementerRole;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -230,7 +240,7 @@ function WeekCalendarCell({
             },
           )}
         >
-          <SessionList sessions={sessions} />
+          <SessionList sessions={sessions} role={role} />
         </div>
       </div>
     </td>

@@ -31,7 +31,7 @@ import {
   markSupervisorAttendance,
 } from "#/lib/actions/supervisor";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { Prisma, SessionStatus } from "@prisma/client";
+import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import {
@@ -44,6 +44,7 @@ import {
 
 export default function SupervisorAttendance({
   supervisors,
+  role,
 }: {
   supervisors: Prisma.SupervisorGetPayload<{
     include: {
@@ -61,6 +62,7 @@ export default function SupervisorAttendance({
       assignedSchools: true;
     };
   }>[];
+  role: ImplementerRole;
 }) {
   const context = useContext(SupervisorAttendanceContext);
   const [attendances, setAttendances] = useState<
@@ -123,6 +125,7 @@ export default function SupervisorAttendance({
                 state={{ session: context.session }}
                 layout={"compact"}
                 withDropdown={false}
+                role={role}
               />
             )}
             <SupervisorAttendanceDataTable
