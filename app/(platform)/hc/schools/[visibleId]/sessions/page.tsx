@@ -1,5 +1,5 @@
 import SessionsDatatable from "#/app/(platform)/hc/schools/[visibleId]/sessions/components/sessions-datatable";
-import { currentHubCoordinator } from "#/app/auth";
+import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
 
@@ -13,6 +13,7 @@ export default async function SchoolSessionsPage({
     await signOut({ callbackUrl: "/login" });
   }
 
+  const user = await getCurrentUser();
   const data = await Promise.all([
     await db.interventionSession.findMany({
       where: {
@@ -68,6 +69,7 @@ export default async function SchoolSessionsPage({
       sessions={data[0]}
       supervisors={data[1]}
       fellowRatings={data[2]}
+      role={user?.membership.role!}
     />
   );
 }

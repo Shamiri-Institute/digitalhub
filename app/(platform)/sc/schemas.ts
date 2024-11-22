@@ -1,4 +1,7 @@
-import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
+import {
+  FELLOW_DROP_OUT_REASONS,
+  OCCURRENCE_STATUS,
+} from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
 
@@ -52,3 +55,12 @@ export const DropoutFellowSchema = z.object({
 });
 
 export type DropoutFellowSchema = z.infer<typeof DropoutFellowSchema>;
+
+export const MarkSessionOccurrenceSchema = z.object({
+  occurrence: z.enum(OCCURRENCE_STATUS, {
+    errorMap: (issue, _ctx) => ({
+      message: "Please mark occurrence",
+    }),
+  }),
+  sessionId: stringValidation("session ID is required"),
+});

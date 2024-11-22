@@ -211,7 +211,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 />
               </div>
               <div className="mx-2">
-                <ScheduleModeToggle />
+                <ScheduleModeToggle role={props.role} />
               </div>
               <FiltersContext.Provider value={{ filters, setFilters }}>
                 <ScheduleFilterToggle />
@@ -236,6 +236,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 tableProps={{ state: tableState, hubId }}
                 supervisors={props.supervisors}
                 fellowRatings={props.fellowRatings}
+                role={props.role}
               />
             </FiltersContext.Provider>
           </div>
@@ -329,6 +330,7 @@ function CalendarView({
   tableProps,
   supervisors,
   fellowRatings,
+  role,
 }: {
   monthProps: {
     state: CalendarState;
@@ -368,6 +370,7 @@ function CalendarView({
     id: string;
     averageRating: number;
   }[];
+  role: ImplementerRole;
 }) {
   const { mode } = useMode();
   const { sessions, setSessions } = useContext(SessionsContext);
@@ -390,23 +393,27 @@ function CalendarView({
   const activeMode = () => {
     switch (mode) {
       case "month":
-        return <MonthView {...monthProps} />;
+        return <MonthView {...monthProps} role={role} />;
       case "week":
         return weekProps.state.value ? (
-          <WeekView {...weekProps} />
+          <WeekView {...weekProps} role={role} />
         ) : (
           <div>Loading...</div>
         );
       case "day":
         return dayProps.state.value ? (
-          <DayView {...dayProps} />
+          <DayView {...dayProps} role={role} />
         ) : (
           <div>Loading...</div>
         );
       case "list":
-        return <ListView {...listProps} />;
+        return <ListView {...listProps} role={role} />;
       case "table":
-        return <TableView {...tableProps} supervisors={supervisors} />;
+        if (role === "HUB_COORDINATOR") {
+          return <TableView {...tableProps} supervisors={supervisors} />;
+        } else {
+          throw new Error(`User not authenticated: ${role}`);
+        }
       default:
         throw new Error(`Invalid mode: ${mode}`);
     }
@@ -485,16 +492,21 @@ function CalendarView({
               {activeMode()}
               <RescheduleSession
                 updateSessionsState={updateRescheduledSessionState}
+                role={role}
               />
             </RescheduleSessionContext.Provider>
-            <CancelSession updateSessionsState={updateCancelledSessionState} />
+            <CancelSession
+              updateSessionsState={updateCancelledSessionState}
+              role={role}
+            />
           </CancelSessionContext.Provider>
           <FellowAttendance
             supervisors={supervisors}
             fellowRatings={fellowRatings}
+            role={role}
           />
         </FellowAttendanceContext.Provider>
-        <SupervisorAttendance supervisors={supervisors} />
+        <SupervisorAttendance supervisors={supervisors} role={role} />
       </SupervisorAttendanceContext.Provider>
     </div>
   );

@@ -4,7 +4,7 @@ import { SessionDropDown } from "#/components/common/session/session-list";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { Prisma, SessionStatus } from "@prisma/client";
+import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { Dispatch, SetStateAction } from "react";
@@ -21,6 +21,7 @@ export type SessionData = Prisma.InterventionSessionGetPayload<{
 }>;
 
 export const columns = (state: {
+  role: ImplementerRole;
   setRatingsDialog: Dispatch<SetStateAction<boolean>>;
   setSession: Dispatch<
     SetStateAction<
@@ -164,6 +165,7 @@ export const columns = (state: {
           setRatingsDialog: state.setRatingsDialog,
           setSession: state.setSession,
         }}
+        role={state.role}
       >
         <div className="absolute inset-0 border-l bg-white">
           <div className="flex h-full w-full items-center justify-center">

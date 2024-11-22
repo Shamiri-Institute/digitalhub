@@ -1,8 +1,9 @@
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 
+import { ImplementerRole } from "@prisma/client";
 import { useMode, type Mode } from "./mode-provider";
 
-export function ScheduleModeToggle() {
+export function ScheduleModeToggle({ role }: { role: ImplementerRole }) {
   const { mode, setMode } = useMode();
 
   return (
@@ -35,13 +36,15 @@ export function ScheduleModeToggle() {
       >
         Month
       </ToggleGroupItem>
-      <ToggleGroupItem
-        value="table"
-        aria-label="Select table view"
-        className="rounded-none border-0 text-base"
-      >
-        Table
-      </ToggleGroupItem>
+      {role === "HUB_COORDINATOR" && (
+        <ToggleGroupItem
+          value="table"
+          aria-label="Select table view"
+          className="rounded-none border-0 text-base"
+        >
+          Table
+        </ToggleGroupItem>
+      )}
       <ToggleGroupItem
         value="list"
         aria-label="Select list view"
