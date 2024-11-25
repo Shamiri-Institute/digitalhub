@@ -55,7 +55,13 @@ export function BatchUploadDownloadSupervisors({
       <FileUploader
         url="/api/csv-uploads/supervisors"
         type="supervisors"
-        metadata={{ hubId, implementerId, projectId, schoolVisibleId }}
+        metadata={{
+          hubId,
+          implementerId,
+          projectId,
+          schoolVisibleId,
+          urlPath: `/hc/schools/${schoolVisibleId}/supervisors`,
+        }}
       />
     </div>
   );
