@@ -67,8 +67,8 @@ export async function fetchSessionAttendanceData(hubId: string) {
   `;
 
   sessionAttendanceData.map((val) => {
-    val.session_number = Number(val.session_number);
-    val.count = Number(val.count);
+    val.session_number = Math.round(val.session_number);
+    val.count = Math.round(val.count);
   });
 
   return sessionAttendanceData;
@@ -95,7 +95,7 @@ export async function fetchSchoolDataCompletenessData(hubId: string) {
     return [];
   }
 
-  const percentage = +Number(schoolAttendanceData.percentage).toFixed(2);
+  const percentage = +Math.round(schoolAttendanceData.percentage);
 
   return [
     { name: "actual", value: percentage },
@@ -280,9 +280,9 @@ export async function fetchSessionRatingAverages(hubId: string) {
 
   // @ts-ignore
   ratingAverages.forEach((item) => {
-    item.student_behaviour = Number(item.student_behaviour);
-    item.admin_support = Number(item.admin_support);
-    item.workload = Number(item.workload);
+    item.student_behaviour = Math.round(item.student_behaviour) || 0;
+    item.admin_support = Math.round(item.admin_support) || 0;
+    item.workload = Math.round(item.workload) || 0;
   });
 
   return ratingAverages;
@@ -326,7 +326,7 @@ export async function fetchSchoolAttendances(hubId: string) {
   return schoolAttendances.map<SchoolAttendances>(
     ({ session_type, count }) => ({
       session_type,
-      count_attendance_marked: Number(count),
+      count_attendance_marked: Math.round(count),
       count_attendance_unmarked: numSchools - Number(count),
     }),
   );
