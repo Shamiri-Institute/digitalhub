@@ -3,7 +3,7 @@
 import { columns } from "#/app/(platform)/hc/schools/components/columns";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import SchoolsDataTable from "#/components/data-table";
-import FileUploader from "#/components/file-uploader";
+import FileUploaderWithDataTable from "#/components/file-uploader-with-datatable";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { useContext } from "react";
@@ -51,7 +51,7 @@ export default function SchoolsDatatable() {
           <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
           <span>Download schools CSV template</span>
         </Button>
-        <FileUploader
+        <FileUploaderWithDataTable
           url="/api/csv-uploads/schools"
           type="schools"
           uploadVisibleMessage="Upload schools CSV"
