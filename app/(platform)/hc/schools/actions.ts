@@ -326,7 +326,7 @@ export async function fetchSchoolAttendances(hubId: string) {
   return schoolAttendances.map<SchoolAttendances>(
     ({ session_type, count }) => ({
       session_type,
-      count_attendance_marked: Math.round(count),
+      count_attendance_marked: Number(count),
       count_attendance_unmarked: numSchools - Number(count),
     }),
   );
