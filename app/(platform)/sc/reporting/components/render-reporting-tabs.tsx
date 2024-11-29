@@ -4,7 +4,7 @@ import TabToggleNavigation, {
 } from "#/components/common/tabs/tab-navigation";
 import { usePathname } from "next/navigation";
 
-export default function RenderReportingTabs() {
+export default function RenderSCReportingTabs() {
   const pathname = usePathname();
 
   const isFellowReports = pathname.includes("reporting/fellow-reports");
@@ -13,33 +13,34 @@ export default function RenderReportingTabs() {
   const fellowReportOptions: TabType[] = [
     {
       name: "Weekly fellow evaluation",
-      href: `/hc/reporting/fellow-reports/weekly-fellow-evaluation`,
+      href: `/sc/reporting/fellow-reports/weekly-fellow-evaluation`,
     },
     {
       name: "Student group evaluation",
-      href: `/hc/reporting/fellow-reports/student-group-evaluation`,
+      href: `/sc/reporting/fellow-reports/student-group-evaluation`,
     },
-    { name: "Complaints", href: `/hc/reporting/fellow-reports/complaints` },
+    { name: "Complaints", href: `/sc/reporting/fellow-reports/complaints` },
     {
       name: "Fellow attendance sheet",
-      href: `/hc/reporting/fellow-reports/fellow-attendance-sheet`,
+      href: `/sc/reporting/fellow-reports/fellow-attendance-sheet`,
     },
   ];
 
   const schoolReportOptions: TabType[] = [
-    { name: "Session", href: `/hc/reporting/school-reports/session` },
+    { name: "Session", href: `/sc/reporting/school-reports/session` },
     {
       name: "School Feedback",
-      href: `/hc/reporting/school-reports/school-feedback`,
+      href: `/sc/reporting/school-reports/school-feedback`,
     },
   ];
 
   const expensesReportOptions: TabType[] = [
-    { name: "Fellows", href: `/hc/reporting/expenses/fellows` },
-    { name: "Supervisors", href: `/hc/reporting/expenses/supervisors` },
-    { name: "Payout history", href: `/hc/reporting/expenses/payout-history` },
-    { name: "Complaints", href: `/hc/reporting/expenses/complaints` },
+    { name: "Fellows", href: `/sc/reporting/expenses/fellows` },
+    { name: "My Expenses", href: `/sc/reporting/expenses/my-expenses` },
+    { name: "Payout history", href: `/sc/reporting/expenses/payout-history` },
+    { name: "Complaints", href: `/sc/reporting/expenses/complaints` },
   ];
+
   return (
     <>
       {isFellowReports && <TabToggleNavigation options={fellowReportOptions} />}
