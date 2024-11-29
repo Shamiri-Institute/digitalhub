@@ -1,6 +1,7 @@
 "use client";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export type TabType = {
   name: string;
@@ -15,12 +16,20 @@ export default function TabToggleNavigation({
   const pathname = usePathname();
   const router = useRouter();
 
+  const currentTab = options.find((tab) => tab.href === pathname) || options[0];
+
+  useEffect(() => {
+    if (!options.find((tab) => tab.href === pathname) && options.length > 0) {
+      router.push(options[0]!.href);
+    }
+  }, [pathname, options, router]);
+
   return (
     <div className="flex">
       <ToggleGroup
         type="single"
         className="form-toggle"
-        defaultValue={options.find((tab) => tab.href === pathname)?.name}
+        defaultValue={currentTab!.name}
         onValueChange={(value) => {
           if (value) {
             const tab = options.find((tab) => tab.name === value);
