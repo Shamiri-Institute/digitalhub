@@ -332,8 +332,6 @@ export function DataTableDialog({
 }) {
   return (
     <Dialog open={dataTableOpen} onOpenChange={setDataTableOpen}>
-      <Button onClick={() => setDataTableOpen(true)}>Open Table</Button>
-
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
