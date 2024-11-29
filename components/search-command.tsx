@@ -7,12 +7,50 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "#/components/ui/command";
-import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { Prisma } from "@prisma/client";
+import { MagnifyingGlassIcon, ResetIcon } from "@radix-ui/react-icons";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-export function SearchCommand({ data }: { data: any[] }) {
+export function SearchCommand({
+  data,
+}: {
+  data: Prisma.SchoolGetPayload<{
+    include: {
+      assignedSupervisor: true;
+      interventionSessions: {
+        include: {
+          sessionRatings: true;
+        };
+      };
+      students: {
+        include: {
+          assignedGroup: true;
+          _count: {
+            select: {
+              clinicalCases: true;
+            };
+          };
+        };
+      };
+    };
+  }>[];
+}) {
   const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<string | null>(null);
+  const pathname = usePathname();
+  const { replace } = useRouter();
+  const searchParams = useSearchParams();
+
+  const handleReset = () => {
+    setSelected(null);
+    const params = new URLSearchParams(searchParams);
+    params.delete("query");
+    replace(`${pathname}?${params.toString()}`);
+    setOpen(false);
+  };
 
   return (
     <div className="flex-1 shrink-0">
@@ -25,7 +63,7 @@ export function SearchCommand({ data }: { data: any[] }) {
         }}
       >
         <MagnifyingGlassIcon className="h-4 w-4 shrink-0 opacity-50" />
-        <span className="select-none">Search</span>
+        <span className="select-none">{selected ?? "Search"}</span>
       </div>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
@@ -34,12 +72,34 @@ export function SearchCommand({ data }: { data: any[] }) {
         />
         <CommandList>
           <CommandEmpty>No schools found</CommandEmpty>
-          <CommandGroup heading={"Schools"}>
+          <CommandGroup heading="Schools">
             {data
-              .map((school) => school.schoolName)
+              .map((school) => school)
               .map((sch) => (
-                <CommandItem key={sch}>{sch}</CommandItem>
+                <CommandItem
+                  key={sch.id}
+                  onSelect={() => {
+                    setSelected(sch.schoolName);
+                    const params = new URLSearchParams(searchParams);
+                    if (sch) {
+                      params.set("query", sch.id);
+                    } else {
+                      params.delete("query");
+                    }
+                    replace(`${pathname}?${params.toString()}`);
+                    setOpen(false);
+                  }}
+                >
+                  {sch.schoolName}
+                </CommandItem>
               ))}
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Options">
+            <CommandItem onSelect={handleReset} className="text-red-500">
+              <ResetIcon className="mr-2 h-4 w-4" />
+              Reset Selection
+            </CommandItem>
           </CommandGroup>
         </CommandList>
       </CommandDialog>
