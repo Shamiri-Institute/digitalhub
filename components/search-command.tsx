@@ -7,9 +7,10 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "#/components/ui/command";
 import { Prisma } from "@prisma/client";
-import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { MagnifyingGlassIcon, ResetIcon } from "@radix-ui/react-icons";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
@@ -43,6 +44,14 @@ export function SearchCommand({
   const { replace } = useRouter();
   const searchParams = useSearchParams();
 
+  const handleReset = () => {
+    setSelected(null);
+    const params = new URLSearchParams(searchParams);
+    params.delete("query");
+    replace(`${pathname}?${params.toString()}`);
+    setOpen(false);
+  };
+
   return (
     <div className="flex-1 shrink-0">
       <div
@@ -63,7 +72,7 @@ export function SearchCommand({
         />
         <CommandList>
           <CommandEmpty>No schools found</CommandEmpty>
-          <CommandGroup heading={"Schools"}>
+          <CommandGroup heading="Schools">
             {data
               .map((school) => school)
               .map((sch) => (
@@ -84,6 +93,13 @@ export function SearchCommand({
                   {sch.schoolName}
                 </CommandItem>
               ))}
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Options">
+            <CommandItem onSelect={handleReset} className="text-red-500">
+              <ResetIcon className="mr-2 h-4 w-4" />
+              Reset Selection
+            </CommandItem>
           </CommandGroup>
         </CommandList>
       </CommandDialog>
