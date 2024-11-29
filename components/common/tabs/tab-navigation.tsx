@@ -2,20 +2,18 @@
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { usePathname, useRouter } from "next/navigation";
 
-type TabType = {
+export type TabType = {
   name: string;
   href: string;
 };
 
-export default function ReportingTabNav() {
+export default function TabToggleNavigation({
+  options = [],
+}: {
+  options: TabType[];
+}) {
   const pathname = usePathname();
   const router = useRouter();
-  const options: TabType[] = [
-    { name: "Fellows", href: `/hc/reporting/expenses/fellows` },
-    { name: "Supervisors", href: `/hc/reporting/expenses/supervisors` },
-    { name: "Payout history", href: `/hc/reporting/expenses/payout-history` },
-    { name: "Complaints", href: `/hc/reporting/expenses/complaints` },
-  ];
 
   return (
     <div className="flex">
