@@ -8,11 +8,40 @@ import {
   CommandItem,
   CommandList,
 } from "#/components/ui/command";
+import { Prisma } from "@prisma/client";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-export function SearchCommand({ data }: { data: any[] }) {
+export function SearchCommand({
+  data,
+}: {
+  data: Prisma.SchoolGetPayload<{
+    include: {
+      assignedSupervisor: true;
+      interventionSessions: {
+        include: {
+          sessionRatings: true;
+        };
+      };
+      students: {
+        include: {
+          assignedGroup: true;
+          _count: {
+            select: {
+              clinicalCases: true;
+            };
+          };
+        };
+      };
+    };
+  }>[];
+}) {
   const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<string | null>(null);
+  const pathname = usePathname();
+  const { replace } = useRouter();
+  const searchParams = useSearchParams();
 
   return (
     <div className="flex-1 shrink-0">
@@ -25,7 +54,7 @@ export function SearchCommand({ data }: { data: any[] }) {
         }}
       >
         <MagnifyingGlassIcon className="h-4 w-4 shrink-0 opacity-50" />
-        <span className="select-none">Search</span>
+        <span className="select-none">{selected ?? "Search"}</span>
       </div>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
@@ -36,9 +65,24 @@ export function SearchCommand({ data }: { data: any[] }) {
           <CommandEmpty>No schools found</CommandEmpty>
           <CommandGroup heading={"Schools"}>
             {data
-              .map((school) => school.schoolName)
+              .map((school) => school)
               .map((sch) => (
-                <CommandItem key={sch}>{sch}</CommandItem>
+                <CommandItem
+                  key={sch.id}
+                  onSelect={() => {
+                    setSelected(sch.schoolName);
+                    const params = new URLSearchParams(searchParams);
+                    if (sch) {
+                      params.set("query", sch.id);
+                    } else {
+                      params.delete("query");
+                    }
+                    replace(`${pathname}?${params.toString()}`);
+                    setOpen(false);
+                  }}
+                >
+                  {sch.schoolName}
+                </CommandItem>
               ))}
           </CommandGroup>
         </CommandList>
