@@ -3,7 +3,6 @@ import { DropoutSchool } from "#/app/(platform)/hc/schools/components/dropout-sc
 import EditSchoolDetailsForm from "#/app/(platform)/hc/schools/components/edit-school-details-form";
 import SchoolInfoProvider from "#/app/(platform)/hc/schools/components/school-info-provider";
 import SchoolsDatatable from "#/app/(platform)/hc/schools/components/schools-datatable";
-import SchoolsFilterToggle from "#/app/(platform)/hc/schools/components/schools-filter-toggle";
 import { UndoDropoutSchool } from "#/app/(platform)/hc/schools/components/undo-dropout-school-form";
 import { currentHubCoordinator } from "#/app/auth";
 import { SearchCommand } from "#/components/search-command";
@@ -21,24 +20,37 @@ import {
 import ChartArea from "./components/chart-area";
 import WeeklyHubReportButtonAndForm from "./components/weekly-hub-report-button-and-form";
 
-export default async function SchoolsPage() {
+export default async function SchoolsPage(props: {
+  searchParams?: Promise<{
+    query?: string;
+    page?: string;
+  }>;
+}) {
+  const searchParams = await props.searchParams;
+  const queryAsSchoolId = searchParams?.query || "";
+
   const hubCoordinator = await currentHubCoordinator();
   // TODO: convert this to Promise.all for concurrent fetch
+
   const data = await fetchSchoolData(hubCoordinator?.assignedHubId as string);
   const dropoutData = await fetchDropoutReasons(
     hubCoordinator?.assignedHubId as string,
+    queryAsSchoolId,
   );
   const schoolDataCompletenessPercentage =
     await fetchSchoolDataCompletenessData(
       hubCoordinator?.assignedHubId as string,
+      queryAsSchoolId,
     );
 
   const sessionRatings = await fetchSessionRatingAverages(
     hubCoordinator?.assignedHubId as string,
+    queryAsSchoolId,
   );
 
   const schoolAttendanceData = await fetchSchoolAttendances(
     hubCoordinator?.assignedHubId as string,
+    queryAsSchoolId,
   );
 
   const supervisors = await fetchHubSupervisors({
@@ -53,9 +65,9 @@ export default async function SchoolsPage() {
         <PageHeading title="Schools" />
         <Separator />
         <div className="flex items-center justify-between">
-          <div className="flex w-1/4 gap-3">
+          <div className="flex w-1/4 items-start gap-3">
             <SearchCommand data={data} />
-            <SchoolsFilterToggle schools={data} />
+            {/* <SchoolsFilterToggle schools={data} /> */}
           </div>
           <div className="flex items-center gap-3">
             <WeeklyHubReportButtonAndForm
