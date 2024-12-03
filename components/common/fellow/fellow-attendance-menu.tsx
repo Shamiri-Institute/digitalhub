@@ -46,7 +46,6 @@ export default function FellowAttendanceMenu({
           disabled={disabled}
           onClick={() => {
             state.setAttendance(attendance);
-            console.log(attendance);
             state.setAttendanceDialog(true);
           }}
         >
