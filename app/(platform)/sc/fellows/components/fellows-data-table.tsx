@@ -4,7 +4,7 @@ import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-eva
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { Prisma } from "@prisma/client";
-import { parsePhoneNumber } from "libphonenumber-js";
+import parsePhoneNumberFromString from "libphonenumber-js";
 import { useState } from "react";
 import { FellowsData } from "../../actions";
 import AddNewFellowForm from "../../components/add-new-fellow-form";
@@ -72,7 +72,10 @@ export default function FellowsDataTable({
               </span>
               <span>
                 {fellow.cellNumber &&
-                  parsePhoneNumber(fellow.cellNumber, "KE").formatNational()}
+                  parsePhoneNumberFromString(
+                    fellow.cellNumber,
+                    "KE",
+                  )?.formatNational()}
               </span>
             </div>
           </DialogAlertWidget>

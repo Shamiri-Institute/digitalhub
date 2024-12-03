@@ -92,6 +92,7 @@ export default async function SupervisorSchedulePage() {
           supervisors={supervisors}
           fellowRatings={fellowRatings}
           role={supervisor?.user.membership.role!}
+          supervisorId={supervisor?.id}
         />
       </div>
       <PageFooter />

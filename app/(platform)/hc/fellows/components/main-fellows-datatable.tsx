@@ -17,7 +17,7 @@ import FileUploader from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { Prisma } from "@prisma/client";
-import { parsePhoneNumber } from "libphonenumber-js";
+import parsePhoneNumberFromString from "libphonenumber-js";
 import { useState } from "react";
 
 const fellowCSVHeaders = [
@@ -143,7 +143,10 @@ export default function MainFellowsDatatable({
                 </span>
                 <span>
                   {fellow.cellNumber &&
-                    parsePhoneNumber(fellow.cellNumber, "KE").formatNational()}
+                    parsePhoneNumberFromString(
+                      fellow.cellNumber,
+                      "KE",
+                    )?.formatNational()}
                 </span>
               </div>
             </DialogAlertWidget>
