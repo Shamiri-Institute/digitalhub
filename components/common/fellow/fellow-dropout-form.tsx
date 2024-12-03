@@ -31,7 +31,7 @@ import { dropoutFellow } from "#/lib/actions/fellow";
 import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { parsePhoneNumber } from "libphonenumber-js";
+import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
@@ -109,8 +109,12 @@ export default function FellowDropoutForm({
           <span>{fellow.fellowName}</span>
           <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
           <span>
-            {fellow.cellNumber &&
-              parsePhoneNumber(fellow.cellNumber, "KE").formatNational()}
+            {(fellow.cellNumber &&
+              parsePhoneNumberFromString(
+                fellow.cellNumber,
+                "KE",
+              )?.formatNational()) ??
+              fellow.cellNumber}
           </span>
         </div>
       </DialogAlertWidget>

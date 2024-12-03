@@ -34,9 +34,13 @@ import type { Session } from "./sessions-provider";
 export function SessionList({
   sessions,
   role,
+  dialogState,
 }: {
   sessions: Session[];
   role: ImplementerRole;
+  dialogState: {
+    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  };
 }) {
   const [activeSession, setActiveSession] = useState<Session | undefined>();
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
@@ -96,6 +100,7 @@ export function SessionList({
               setSession: setActiveSession,
               setRatingsDialog,
               setSessionOccurrenceDialog,
+              setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
             }}
             role={role}
             layout="expanded"
@@ -116,6 +121,7 @@ export function SessionList({
           setSession: setActiveSession,
           setRatingsDialog,
           setSessionOccurrenceDialog,
+          setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
         }}
         role={role}
       />
@@ -126,6 +132,7 @@ export function SessionList({
           setSession: setActiveSession,
           setRatingsDialog,
           setSessionOccurrenceDialog,
+          setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
         }}
         role={role}
       />
@@ -149,6 +156,8 @@ export function SessionList({
                         setSession: setActiveSession,
                         setRatingsDialog,
                         setSessionOccurrenceDialog,
+                        setFellowAttendanceDialog:
+                          dialogState.setFellowAttendanceDialog,
                       }}
                       role={role}
                     />
@@ -175,6 +184,7 @@ export function SessionDetail({
     setSession?: Dispatch<SetStateAction<Session | undefined>>;
     setRatingsDialog?: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog?: Dispatch<SetStateAction<boolean>>;
+    setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
   };
   layout: "compact" | "expanded";
   withDropdown?: boolean;
@@ -314,6 +324,7 @@ export function SessionDropDown({
     setSession?: Dispatch<SetStateAction<Session | undefined>>;
     setRatingsDialog?: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog?: Dispatch<SetStateAction<boolean>>;
+    setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
   };
   role: ImplementerRole;
 }) {
@@ -364,7 +375,9 @@ export function SessionDropDown({
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
-                fellowAttendanceContext.setIsOpen(true);
+                state.setSession && state.setSession(session);
+                state.setFellowAttendanceDialog &&
+                  state.setFellowAttendanceDialog(true);
               }}
               disabled={session.status === "Cancelled"}
             >
@@ -397,7 +410,9 @@ export function SessionDropDown({
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
-                fellowAttendanceContext.setIsOpen(true);
+                state.setSession && state.setSession(session);
+                state.setFellowAttendanceDialog &&
+                  state.setFellowAttendanceDialog(true);
               }}
               disabled={session.status === "Cancelled"}
             >
