@@ -4,7 +4,7 @@ import {
   isSameDay,
   isWeekend,
 } from "@internationalized/date";
-import { useEffect, useRef } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef } from "react";
 import {
   useCalendarCell,
   useCalendarGrid,
@@ -33,6 +33,9 @@ export function MonthView({
   state: CalendarState;
   weekdayStyle: CalendarGridProps["weekdayStyle"];
   role: ImplementerRole;
+  dialogState: {
+    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  };
 }) {
   const { locale } = useLocale();
   const { gridProps, headerProps, weekDays } = useCalendarGrid(props, state);
@@ -115,6 +118,7 @@ export function MonthView({
                       date={date}
                       weekend={isWeekend(date, "en-US")}
                       role={props.role}
+                      dialogState={props.dialogState}
                     />
                   ) : (
                     <td key={i} />
@@ -133,11 +137,15 @@ export function MonthCalendarCell({
   date,
   weekend,
   role,
+  dialogState,
 }: {
   state: CalendarState;
   date: CalendarDate;
   weekend: boolean;
   role: ImplementerRole;
+  dialogState: {
+    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  };
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -201,7 +209,11 @@ export function MonthCalendarCell({
               {formattedDate}
             </div>
           </div>
-          <SessionList sessions={sessions} role={role} />
+          <SessionList
+            sessions={sessions}
+            role={role}
+            dialogState={dialogState}
+          />
         </div>
       </div>
     </td>

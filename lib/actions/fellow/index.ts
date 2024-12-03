@@ -1,11 +1,19 @@
 "use server";
 
-import { FellowDetailsSchema } from "#/app/(platform)/hc/schemas";
-import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
+import {
+  FellowDetailsSchema,
+  MarkAttendanceSchema,
+} from "#/app/(platform)/hc/schemas";
+import {
+  currentHubCoordinator,
+  currentSupervisor,
+  getCurrentUser,
+} from "#/app/auth";
 import {
   DropoutFellowSchema,
   WeeklyFellowEvaluationSchema,
 } from "#/components/common/fellow/schema";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateFellowVisibleID } from "#/lib/utils";
@@ -20,7 +28,8 @@ async function checkAuth() {
     throw new Error("The session has not been authenticated");
   }
 
-  return { hubCoordinator, supervisor };
+  const user = await getCurrentUser();
+  return { hubCoordinator, supervisor, user };
 }
 
 export async function submitFellowDetails(
@@ -316,4 +325,181 @@ export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
       message: `Something went wrong while trying to ${data.mode === "dropout" ? "drop out fellow" : "undo drop out"}`,
     };
   }
+}
+
+export async function markFellowAttendance(
+  data: z.infer<typeof MarkAttendanceSchema>,
+) {
+  try {
+    const auth = await checkAuth();
+
+    const { id, sessionId, absenceReason, attended, comments } =
+      MarkAttendanceSchema.parse(data);
+    const fellow = await db.fellow.findUniqueOrThrow({
+      where: {
+        id,
+      },
+    });
+
+    if (fellow) {
+      const attendance = await db.fellowAttendance.findFirst({
+        where: {
+          fellowId: id,
+          sessionId,
+        },
+      });
+
+      if (attendance) {
+        const attendanceStatus =
+          attended === "attended" ? true : attended === "missed" ? false : null;
+        await db.fellowAttendance.update({
+          where: {
+            id: attendance.id,
+          },
+          data: {
+            markedBy: auth.user!.user.id,
+            fellowId: id,
+            absenceReason: attendanceStatus === false ? absenceReason : null,
+            absenceComments: attendanceStatus === false ? comments : null,
+            attended:
+              attended === "attended"
+                ? true
+                : attended === "missed"
+                  ? false
+                  : null,
+          },
+        });
+        return {
+          success: true,
+          message: `Successfully updated attendance for ${fellow.fellowName}`,
+        };
+      } else {
+        const session = await db.interventionSession.findFirstOrThrow({
+          where: {
+            id: sessionId,
+          },
+        });
+        await db.fellowAttendance.create({
+          data: {
+            fellowId: id!,
+            schoolId: session.schoolId,
+            projectId: session.projectId ?? CURRENT_PROJECT_ID,
+            sessionId,
+            absenceReason,
+            absenceComments: comments,
+            markedBy: auth.user!.user.id,
+            supervisorId: auth.supervisor?.id!,
+            attended:
+              attended === "attended"
+                ? true
+                : attended === "missed"
+                  ? false
+                  : null,
+          },
+        });
+        return {
+          success: true,
+          message: `Successfully marked attendance for ${fellow.fellowName}`,
+        };
+      }
+    } else {
+      return {
+        success: false,
+        message: `Supervisor details not found.`,
+      };
+    }
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ??
+        "Sorry, could not mark supervisor attendance.",
+    };
+  }
+}
+
+export async function markManyFellowAttendance(
+  ids: string[],
+  data: z.infer<typeof MarkAttendanceSchema>,
+) {
+  const auth = await checkAuth();
+
+  const { sessionId, absenceReason, attended, comments } =
+    MarkAttendanceSchema.parse(data);
+
+  const session = await db.interventionSession.findFirstOrThrow({
+    where: {
+      id: sessionId,
+    },
+  });
+
+  return await Promise.all(
+    ids.map(async (fellowId) => {
+      const attendance = await db.fellowAttendance.findFirst({
+        where: {
+          fellowId,
+          sessionId,
+        },
+      });
+
+      const attendanceStatus =
+        attended === "attended" ? true : attended === "missed" ? false : null;
+      if (attendance) {
+        await db.fellowAttendance.update({
+          where: {
+            id: attendance.id,
+          },
+          data: {
+            markedBy: auth.user!.user.id,
+            fellowId,
+            absenceReason: attendanceStatus === false ? absenceReason : null,
+            absenceComments: attendanceStatus === false ? comments : null,
+            attended: attendanceStatus,
+          },
+        });
+      } else {
+        let fellow;
+        if (!auth.supervisor && auth.hubCoordinator) {
+          fellow = await db.fellow.findFirst({
+            where: {
+              id: fellowId,
+            },
+          });
+        }
+        await db.fellowAttendance.create({
+          data: {
+            fellowId,
+            schoolId: session.schoolId,
+            projectId: session.projectId ?? CURRENT_PROJECT_ID,
+            absenceReason,
+            absenceComments: comments,
+            sessionId,
+            supervisorId: auth.supervisor?.id ?? fellow?.supervisorId!,
+            markedBy: auth.user!.user.id,
+            attended:
+              attended === "attended"
+                ? true
+                : attended === "missed"
+                  ? false
+                  : null,
+          },
+        });
+      }
+      return;
+    }),
+  )
+    .then(() => {
+      return {
+        success: true,
+        message: `Successfully marked attendances for ${ids.length} fellows.`,
+      };
+    })
+    .catch((error: unknown) => {
+      console.error(error);
+      return {
+        success: false,
+        message: "Something went wrong while updating fellow attendance",
+      };
+    });
 }
