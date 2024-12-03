@@ -1,18 +1,17 @@
 import {
-  FellowAttendanceDataTable,
-  FellowAttendancesTableData,
-  columns as fellowAttendanceColumns,
-} from "#/app/(platform)/hc/components/fellow-attendance";
-import {
   SupervisorAttendanceDataTable,
   SupervisorAttendanceDataTableMenu,
   SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
+import {
+  FellowAttendanceDataTable,
+  FellowAttendancesTableData,
+} from "#/components/common/fellow/fellow-attendance";
+import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-menu";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { useTitle } from "#/components/common/session/title-provider";
 import { Icons } from "#/components/icons";
-import { Checkbox } from "#/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import {
   Tooltip,
@@ -24,7 +23,6 @@ import { cn, sessionDisplayName } from "#/lib/utils";
 import { CalendarDate } from "@internationalized/date";
 import { Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
-import { createColumnHelper } from "@tanstack/table-core";
 import { addDays, format, isBefore, isWithinInterval } from "date-fns";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import {
@@ -44,40 +42,6 @@ const supervisorAttendanceColumns = (state: {
     SetStateAction<SupervisorAttendanceTableData | undefined>
   >;
 }): ColumnDef<SupervisorAttendanceTableData>[] => [
-  {
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
-        aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
-      />
-    ),
-    cell: ({ row }) => {
-      const sessionOccurredStatus =
-        row.original.sessionStatus === SessionStatus.Cancelled;
-      return (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(val) => row.toggleSelected(!!val)}
-            disabled={sessionOccurredStatus}
-            aria-label="Select row"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
-          />
-        </div>
-      );
-    },
-    id: "checkbox",
-    accessorKey: "id",
-  },
   {
     id: "schoolName",
     accessorKey: "schoolName",
@@ -215,48 +179,154 @@ const supervisorAttendanceColumns = (state: {
   },
 ];
 
-function getFellowAttendanceColumns() {
-  const columnHelper = createColumnHelper<FellowAttendancesTableData>();
-  return [
-    {
-      id: "schoolName",
-      accessorKey: "schoolName",
-      header: "School",
-    },
-    fellowAttendanceColumns().find((column) => column.id === "name"),
-    fellowAttendanceColumns().find((column) => column.id === "cellNumber"),
-    {
-      id: "supervisorName",
-      accessorKey: "supervisorName",
-      header: "Supervisor",
-    },
-    fellowAttendanceColumns().find((column) => column.id === "groupName"),
-    columnHelper.accessor("sessionType", {
-      id: "sessionType",
-      header: "Session",
-      cell: (props) => {
-        const value = props.getValue();
-        const completed =
-          props.row.original.occurred !== null
-            ? props.row.original.occurred !== undefined
-              ? props.row.original.occurred
-              : false
-            : false;
-        const cancelled =
-          props.row.original.sessionStatus === SessionStatus.Cancelled;
-        const rescheduled =
-          props.row.original.sessionStatus === SessionStatus.Rescheduled;
-        return renderSessionTypeAndStatus(
-          completed,
-          cancelled,
-          rescheduled,
-          value,
+const fellowAttendanceColumns = (state: {
+  setAttendance: Dispatch<
+    SetStateAction<FellowAttendancesTableData | undefined>
+  >;
+  setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+}): ColumnDef<FellowAttendancesTableData>[] => [
+  {
+    id: "schoolName",
+    accessorKey: "schoolName",
+    header: "School",
+  },
+  {
+    id: "name",
+    accessorKey: "fellowName",
+    header: "Name",
+  },
+  {
+    accessorKey: "cellNumber",
+    id: "cellNumber",
+    header: "Phone Number",
+    cell: ({ row }) => {
+      try {
+        return (
+          row.original.cellNumber &&
+          parsePhoneNumberWithError(
+            row.original.cellNumber,
+            "KE",
+          ).formatNational()
         );
-      },
-    }),
-    fellowAttendanceColumns().find((column) => column.id === "attendance"),
-  ];
-}
+      } catch (error) {
+        if (error instanceof ParseError) {
+          // Not a phone number, non-existent country, etc.
+          return (
+            row.original.cellNumber && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className="flex gap-1">
+                    <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
+                    <span>{row.original.cellNumber}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="px-2 py-1 capitalize">
+                    {error.message.toLowerCase().replace("_", " ")}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            )
+          );
+        } else {
+          throw error;
+        }
+      }
+    },
+  },
+  {
+    id: "supervisorName",
+    accessorKey: "supervisorName",
+    header: "Supervisor",
+  },
+  {
+    accessorKey: "groupName",
+    id: "groupName",
+    header: "Group",
+  },
+  {
+    id: "sessionType",
+    header: "Session",
+    cell: ({ row }) => {
+      const value = row.original.sessionType;
+      const completed =
+        row.original.occurred !== null
+          ? row.original.occurred !== undefined
+            ? row.original.occurred
+            : false
+          : false;
+      const cancelled = row.original.sessionStatus === SessionStatus.Cancelled;
+      const rescheduled =
+        row.original.sessionStatus === SessionStatus.Rescheduled;
+      return renderSessionTypeAndStatus(
+        completed,
+        cancelled,
+        rescheduled,
+        value,
+      );
+    },
+    accessorKey: "sessionType",
+  },
+  {
+    cell: ({ row }) => {
+      const attended = row.original.attended;
+      return (
+        <div className="flex">
+          <div
+            className={cn(
+              "flex items-center rounded-[0.25rem] border px-1.5 py-0.5",
+              {
+                "border-green-border": attended,
+                "border-red-border": !attended,
+                "border-blue-border":
+                  attended === undefined || attended === null,
+              },
+              {
+                "bg-green-bg": attended,
+                "bg-red-bg": !attended,
+                "bg-blue-bg": attended === undefined || attended === null,
+              },
+            )}
+          >
+            {attended === undefined || attended === null ? (
+              <div className="flex items-center gap-1 text-blue-base">
+                <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
+                <span>Not marked</span>
+              </div>
+            ) : attended ? (
+              <div className="flex items-center gap-1 text-green-base">
+                <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
+                <span>Attended</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-red-base">
+                <Icons.crossCircleFilled
+                  className="h-3 w-3"
+                  strokeWidth={2.5}
+                />
+                <span>Missed</span>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    },
+    header: "Attendance",
+    id: "attendance",
+    accessorKey: "attended",
+  },
+  {
+    id: "button",
+    cell: ({ row }) => (
+      <FellowAttendanceMenu
+        state={state}
+        attendance={row.original}
+        disabled={!row.getCanSelect()}
+      />
+    ),
+    enableHiding: false,
+  },
+];
 
 const renderSessionTypeAndStatus = (
   completed: boolean,
@@ -563,7 +633,7 @@ export function TableView({
       )}
       {roleToggle === "fellows" && (
         <FellowAttendanceDataTable
-          columns={getFellowAttendanceColumns() as ColumnDef<unknown>[]}
+          overrideColumns={fellowAttendanceColumns}
           data={fellowAttendances}
           editColumns={false}
           emptyStateMessage={"No sessions scheduled on this day."}

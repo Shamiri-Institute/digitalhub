@@ -1,13 +1,11 @@
 "use client";
 
 import CancelSession from "#/app/(platform)/hc/components/cancel-session";
-import FellowAttendance from "#/app/(platform)/hc/components/fellow-attendance";
 import RescheduleSession from "#/app/(platform)/hc/components/reschedule-session";
 import SupervisorAttendance, {
   SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
 import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
-import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
 import {
@@ -16,6 +14,7 @@ import {
 } from "#/app/(platform)/hc/schools/[visibleId]/sessions/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import SessionRatings from "#/components/common/session/session-ratings";
 import type { Session } from "#/components/common/session/sessions-provider";
 import DataTable from "#/components/data-table";
@@ -123,73 +122,68 @@ export default function SessionsDatatable({
         setAttendance: setSupervisorAttendance,
       }}
     >
-      <FellowAttendanceContext.Provider
+      <CancelSessionContext.Provider
         value={{
-          isOpen: fellowAttendanceDialog,
-          setIsOpen: setFellowAttendanceDialog,
+          isOpen: cancelSessionDialog,
+          setIsOpen: setCancelSessionDialog,
           session,
           setSession,
         }}
       >
-        <CancelSessionContext.Provider
+        <RescheduleSessionContext.Provider
           value={{
-            isOpen: cancelSessionDialog,
-            setIsOpen: setCancelSessionDialog,
+            isOpen: rescheduleSessionDialog,
+            setIsOpen: setRescheduleSessionDialog,
             session,
             setSession,
           }}
         >
-          <RescheduleSessionContext.Provider
-            value={{
-              isOpen: rescheduleSessionDialog,
-              setIsOpen: setRescheduleSessionDialog,
-              session,
-              setSession,
-            }}
-          >
-            <DataTable
-              data={_sessions}
-              columns={columns({
-                setSession: setActiveSession,
-                setRatingsDialog,
-                role,
+          <DataTable
+            data={_sessions}
+            columns={columns({
+              setSession: setActiveSession,
+              setRatingsDialog,
+              setFellowAttendanceDialog,
+              role,
+            })}
+            className={"data-table data-table-action mt-4"}
+            emptyStateMessage="No sessions found for this school"
+          />
+          {activeSession && (
+            <SessionRatings
+              schoolId={activeSession.schoolId}
+              open={ratingsDialog}
+              onOpenChange={setRatingsDialog}
+              ratings={activeSession.sessionRatings.map((rating) => {
+                const { sessionRatings, ..._session } = activeSession;
+                return {
+                  ...rating,
+                  session: _session,
+                };
               })}
-              className={"data-table data-table-action mt-4"}
-              emptyStateMessage="No sessions found for this school"
-            />
-            {activeSession && (
-              <SessionRatings
-                schoolId={activeSession.schoolId}
-                open={ratingsDialog}
-                onOpenChange={setRatingsDialog}
-                ratings={activeSession.sessionRatings.map((rating) => {
-                  const { sessionRatings, ..._session } = activeSession;
-                  return {
-                    ...rating,
-                    session: _session,
-                  };
-                })}
-                mode="view"
-              >
-                <DialogAlertWidget label={activeSession.school.schoolName} />
-              </SessionRatings>
-            )}
-            <RescheduleSession
-              updateSessionsState={updateRescheduledSessionState}
-              role={role}
-            />
-          </RescheduleSessionContext.Provider>
-          <CancelSession
-            updateSessionsState={updateCancelledSessionState}
+              mode="view"
+            >
+              <DialogAlertWidget label={activeSession.school.schoolName} />
+            </SessionRatings>
+          )}
+          <RescheduleSession
+            updateSessionsState={updateRescheduledSessionState}
             role={role}
           />
-        </CancelSessionContext.Provider>
-        <FellowAttendance
-          supervisors={supervisors}
-          fellowRatings={fellowRatings}
+        </RescheduleSessionContext.Provider>
+        <CancelSession
+          updateSessionsState={updateCancelledSessionState}
           role={role}
         />
-      </FellowAttendanceContext.Provider>
+      </CancelSessionContext.Provider>
+      <FellowAttendance
+        supervisors={supervisors}
+        fellowRatings={fellowRatings}
+        role={role}
+        session={session}
+        isOpen={fellowAttendanceDialog}
+        setIsOpen={setFellowAttendanceDialog}
+      />
       <SupervisorAttendance supervisors={supervisors} role={role} />
     </SupervisorAttendanceContext.Provider>
   );

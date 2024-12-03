@@ -27,7 +27,7 @@ import {
 } from "#/lib/actions/supervisor";
 import { Prisma } from "@prisma/client";
 import { Row } from "@tanstack/react-table";
-import { parsePhoneNumber } from "libphonenumber-js";
+import parsePhoneNumberFromString from "libphonenumber-js";
 import {
   Dispatch,
   SetStateAction,
@@ -128,10 +128,10 @@ export default function SupervisorsDataTable({
               </span>
               <span>
                 {context.supervisor?.cellNumber &&
-                  parsePhoneNumber(
+                  parsePhoneNumberFromString(
                     context.supervisor?.cellNumber,
                     "KE",
-                  ).formatNational()}
+                  )?.formatNational()}
               </span>
             </div>
           </DialogAlertWidget>
@@ -152,10 +152,10 @@ export default function SupervisorsDataTable({
             </span>
             <span>
               {context.supervisor?.cellNumber &&
-                parsePhoneNumber(
+                parsePhoneNumberFromString(
                   context.supervisor?.cellNumber,
                   "KE",
-                ).formatNational()}
+                )?.formatNational()}
             </span>
           </div>
         </DialogAlertWidget>
