@@ -56,7 +56,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   editColumns?: boolean;
   className?: string;
-  onRowSelectionChange?: (rows: unknown[]) => void;
+  onRowSelectionChange?: (rows: Row<TData>[]) => void;
   rowSelectionDescription?: string;
   columnVisibilityState?: VisibilityState;
   enableRowSelection?: boolean | ((row: Row<TData>) => boolean) | undefined;
@@ -115,7 +115,7 @@ export default function DataTable<TData, TValue>({
   useEffect(() => {
     const rows = table.getSelectedRowModel().rows;
     if (onRowSelectionChange) {
-      onRowSelectionChange(rows.map((row) => row.original));
+      onRowSelectionChange(rows);
     }
   }, [onRowSelectionChange, rowSelection, table]);
 
