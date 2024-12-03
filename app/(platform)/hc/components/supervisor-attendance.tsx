@@ -154,7 +154,9 @@ export function SupervisorAttendanceDataTable({
   }) => ColumnDef<SupervisorAttendanceTableData>[];
   toggleBulkMode?: boolean;
 }) {
-  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectedRows, setSelectedRows] = useState<
+    Row<SupervisorAttendanceTableData>[]
+  >([]);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [attendance, setAttendance] = useState<
     SupervisorAttendanceTableData | undefined
@@ -200,7 +202,7 @@ export function SupervisorAttendanceDataTable({
         editColumns={false}
         className={"data-table data-table-action mt-4"}
         emptyStateMessage={emptyStateMessage}
-        onRowSelectionChange={setSelectedRows as () => {}}
+        onRowSelectionChange={setSelectedRows}
         enableRowSelection={(row: Row<SupervisorAttendanceTableData>) =>
           row.original.sessionStatus !== SessionStatus.Cancelled
         }
@@ -232,9 +234,7 @@ export function SupervisorAttendanceDataTable({
         bulkMode={bulkMode}
         setBulkMode={setBulkMode}
         markBulkAttendanceAction={markManySupervisorAttendance}
-        selectedIds={(selectedRows as SupervisorAttendanceTableData[]).map(
-          (x): string => x.supervisorId,
-        )}
+        selectedIds={selectedRows.map((x): string => x.original.supervisorId)}
       >
         <DialogAlertWidget>
           <div className="flex items-center gap-2">
