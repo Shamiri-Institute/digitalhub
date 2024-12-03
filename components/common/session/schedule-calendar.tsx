@@ -26,14 +26,12 @@ import { CalendarState, useCalendarState } from "react-stately";
 import { Icons } from "#/components/icons";
 
 import CancelSession from "#/app/(platform)/hc/components/cancel-session";
-import FellowAttendance from "#/app/(platform)/hc/components/fellow-attendance";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import RescheduleSession from "#/app/(platform)/hc/components/reschedule-session";
 import SupervisorAttendance, {
   SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
 import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
-import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
 import {
@@ -43,6 +41,7 @@ import {
   sessionTypeFilterOptions,
   statusFilterOptions,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
+import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import { ScheduleNewSession } from "#/components/common/session/schedule-new-session-form";
 import {
   Dialog,
@@ -97,6 +96,7 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
     averageRating: number;
   }[];
   role: ImplementerRole;
+  supervisorId?: string;
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
@@ -237,6 +237,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 supervisors={props.supervisors}
                 fellowRatings={props.fellowRatings}
                 role={props.role}
+                supervisorId={props.supervisorId}
               />
             </FiltersContext.Provider>
           </div>
@@ -331,6 +332,7 @@ function CalendarView({
   supervisors,
   fellowRatings,
   role,
+  supervisorId,
 }: {
   monthProps: {
     state: CalendarState;
@@ -371,6 +373,7 @@ function CalendarView({
     averageRating: number;
   }[];
   role: ImplementerRole;
+  supervisorId?: string;
 }) {
   const { mode } = useMode();
   const { sessions, setSessions } = useContext(SessionsContext);
@@ -393,21 +396,41 @@ function CalendarView({
   const activeMode = () => {
     switch (mode) {
       case "month":
-        return <MonthView {...monthProps} role={role} />;
+        return (
+          <MonthView
+            {...monthProps}
+            role={role}
+            dialogState={{ setFellowAttendanceDialog }}
+          />
+        );
       case "week":
         return weekProps.state.value ? (
-          <WeekView {...weekProps} role={role} />
+          <WeekView
+            {...weekProps}
+            role={role}
+            dialogState={{ setFellowAttendanceDialog }}
+          />
         ) : (
           <div>Loading...</div>
         );
       case "day":
         return dayProps.state.value ? (
-          <DayView {...dayProps} role={role} />
+          <DayView
+            {...dayProps}
+            role={role}
+            dialogState={{ setFellowAttendanceDialog }}
+          />
         ) : (
           <div>Loading...</div>
         );
       case "list":
-        return <ListView {...listProps} role={role} />;
+        return (
+          <ListView
+            {...listProps}
+            role={role}
+            dialogState={{ setFellowAttendanceDialog }}
+          />
+        );
       case "table":
         if (role === "HUB_COORDINATOR") {
           return <TableView {...tableProps} supervisors={supervisors} />;
@@ -465,47 +488,42 @@ function CalendarView({
           setAttendance: setSupervisorAttendance,
         }}
       >
-        <FellowAttendanceContext.Provider
+        <CancelSessionContext.Provider
           value={{
-            isOpen: fellowAttendanceDialog,
-            setIsOpen: setFellowAttendanceDialog,
+            isOpen: cancelSessionDialog,
+            setIsOpen: setCancelSessionDialog,
             session,
             setSession,
           }}
         >
-          <CancelSessionContext.Provider
+          <RescheduleSessionContext.Provider
             value={{
-              isOpen: cancelSessionDialog,
-              setIsOpen: setCancelSessionDialog,
+              isOpen: rescheduleSessionDialog,
+              setIsOpen: setRescheduleSessionDialog,
               session,
               setSession,
             }}
           >
-            <RescheduleSessionContext.Provider
-              value={{
-                isOpen: rescheduleSessionDialog,
-                setIsOpen: setRescheduleSessionDialog,
-                session,
-                setSession,
-              }}
-            >
-              {activeMode()}
-              <RescheduleSession
-                updateSessionsState={updateRescheduledSessionState}
-                role={role}
-              />
-            </RescheduleSessionContext.Provider>
-            <CancelSession
-              updateSessionsState={updateCancelledSessionState}
+            {activeMode()}
+            <RescheduleSession
+              updateSessionsState={updateRescheduledSessionState}
               role={role}
             />
-          </CancelSessionContext.Provider>
-          <FellowAttendance
-            supervisors={supervisors}
-            fellowRatings={fellowRatings}
+          </RescheduleSessionContext.Provider>
+          <CancelSession
+            updateSessionsState={updateCancelledSessionState}
             role={role}
           />
-        </FellowAttendanceContext.Provider>
+        </CancelSessionContext.Provider>
+        <FellowAttendance
+          supervisors={supervisors}
+          supervisorId={role === "SUPERVISOR" ? supervisorId : undefined}
+          fellowRatings={fellowRatings}
+          role={role}
+          session={session}
+          isOpen={fellowAttendanceDialog}
+          setIsOpen={setFellowAttendanceDialog}
+        />
         <SupervisorAttendance supervisors={supervisors} role={role} />
       </SupervisorAttendanceContext.Provider>
     </div>

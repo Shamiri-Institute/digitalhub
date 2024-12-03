@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarDate, isToday } from "@internationalized/date";
-import { useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import { useCalendarCell, useDateFormatter } from "react-aria";
 import { CalendarState } from "react-stately";
 
@@ -22,9 +22,13 @@ import { useTitle } from "./title-provider";
 export function DayView({
   state,
   role,
+  dialogState,
 }: {
   state: CalendarState;
   role: ImplementerRole;
+  dialogState: {
+    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  };
 }) {
   const headerRowRef: any = useRef(null);
   const dayFormatter = useDateFormatter({ weekday: "long" });
@@ -130,6 +134,7 @@ export function DayView({
                 date={currentDate}
                 state={state}
                 role={role}
+                dialogState={dialogState}
               />
             </tr>
           ))}
@@ -145,12 +150,16 @@ function DayCalendarCell({
   date,
   state,
   role,
+  dialogState,
 }: {
   rowIdx: number;
   hour: number;
   date: CalendarDate;
   state: CalendarState;
   role: ImplementerRole;
+  dialogState: {
+    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  };
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const { cellProps, buttonProps, isSelected, isDisabled, isUnavailable } =
@@ -179,7 +188,11 @@ function DayCalendarCell({
             { "border-t-0": rowIdx === 0 },
           )}
         >
-          <SessionList sessions={sessions} role={role} />
+          <SessionList
+            sessions={sessions}
+            role={role}
+            dialogState={dialogState}
+          />
         </div>
       </div>
     </td>

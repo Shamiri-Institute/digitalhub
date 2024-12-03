@@ -36,7 +36,7 @@ import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
-import { parsePhoneNumber } from "libphonenumber-js";
+import parsePhoneNumberFromString from "libphonenumber-js";
 import { usePathname } from "next/navigation";
 import React, { Dispatch, SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -145,10 +145,10 @@ export default function FellowDetailsForm({
                     <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
                     <span>
                       {fellow.cellNumber &&
-                        parsePhoneNumber(
+                        parsePhoneNumberFromString(
                           fellow.cellNumber,
                           "KE",
-                        ).formatNational()}
+                        )?.formatNational()}
                     </span>
                   </div>
                 </DialogAlertWidget>

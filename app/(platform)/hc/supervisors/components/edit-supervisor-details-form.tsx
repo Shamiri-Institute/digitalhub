@@ -37,7 +37,9 @@ import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
-import { isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js";
+import parsePhoneNumberFromString, {
+  isValidPhoneNumber,
+} from "libphonenumber-js";
 import { usePathname } from "next/navigation";
 import { useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -132,10 +134,10 @@ export default function EditSupervisorDetails() {
                   <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
                   <span>
                     {context.supervisor?.cellNumber &&
-                      parsePhoneNumber(
+                      parsePhoneNumberFromString(
                         context.supervisor?.cellNumber,
                         "KE",
-                      ).formatNational()}
+                      )?.formatNational()}
                   </span>
                 </div>
               </DialogAlertWidget>

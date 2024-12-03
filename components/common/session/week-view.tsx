@@ -1,5 +1,5 @@
 import { CalendarDate, isToday } from "@internationalized/date";
-import { useEffect, useRef } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useDateFormatter } from "react-aria";
 import { CalendarState } from "react-stately";
 
@@ -20,9 +20,13 @@ import { useTitle } from "./title-provider";
 export function WeekView({
   state,
   role,
+  dialogState,
 }: {
   state: CalendarState;
   role: ImplementerRole;
+  dialogState: {
+    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  };
 }) {
   const headerRowRef: any = useRef(null);
   const { gridProps, headerProps } = useCalendarGrid(
@@ -140,6 +144,7 @@ export function WeekView({
                       date={date}
                       state={state}
                       role={role}
+                      dialogState={dialogState}
                     />
                   ) : (
                     <td key={colIdx} />
@@ -197,6 +202,7 @@ function WeekCalendarCell({
   date,
   state,
   role,
+  dialogState,
 }: {
   rowIdx: number;
   colIdx: number;
@@ -204,6 +210,9 @@ function WeekCalendarCell({
   date: CalendarDate;
   state: CalendarState;
   role: ImplementerRole;
+  dialogState: {
+    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  };
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -240,7 +249,11 @@ function WeekCalendarCell({
             },
           )}
         >
-          <SessionList sessions={sessions} role={role} />
+          <SessionList
+            sessions={sessions}
+            role={role}
+            dialogState={dialogState}
+          />
         </div>
       </div>
     </td>
