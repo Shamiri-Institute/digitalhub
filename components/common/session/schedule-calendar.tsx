@@ -97,6 +97,7 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
   }[];
   role: ImplementerRole;
   supervisorId?: string;
+  hubSessionTypes: Prisma.SessionNameGetPayload<{}>[];
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
@@ -223,6 +224,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 setDialogOpen={setNewScheduleDialog}
                 schools={schools}
                 hubId={hubId}
+                hubSessionTypes={props.hubSessionTypes}
               />
             </SessionsLoader>
           </div>
@@ -252,11 +254,13 @@ function CreateSessionButton({
   setDialogOpen,
   hubId,
   schools,
+  hubSessionTypes,
 }: {
   open: boolean;
   setDialogOpen: Dispatch<SetStateAction<boolean>>;
   hubId: string;
   schools: Prisma.SchoolGetPayload<{}>[];
+  hubSessionTypes: Prisma.SessionNameGetPayload<{}>[];
 }) {
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -275,6 +279,7 @@ function CreateSessionButton({
             toggleDialog={setDialogOpen}
             schools={schools}
             hubId={hubId}
+            hubSessionTypes={hubSessionTypes}
           />
         </DialogContent>
       </DialogPortal>

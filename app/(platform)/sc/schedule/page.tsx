@@ -14,15 +14,16 @@ export default async function SupervisorSchedulePage() {
     await signOut({ callbackUrl: "/login" });
   }
 
-  const [schools, schoolStats, supervisors, fellowRatings] = await Promise.all([
-    await fetchSchoolData(supervisor?.hubId as string),
-    await db.$queryRaw<
-      {
-        session_count: number;
-        clinical_case_count: number;
-        fellow_count: number;
-      }[]
-    >`SELECT 
+  const [schools, schoolStats, supervisors, fellowRatings, hubSessionTypes] =
+    await Promise.all([
+      await fetchSchoolData(supervisor?.hubId as string),
+      await db.$queryRaw<
+        {
+          session_count: number;
+          clinical_case_count: number;
+          fellow_count: number;
+        }[]
+      >`SELECT 
     h.id,
     COUNT(DISTINCT s.id) AS session_count,
     COUNT(DISTINCT c.id) AS clinical_case_count,
@@ -40,31 +41,31 @@ export default async function SupervisorSchedulePage() {
         WHERE h.id=${supervisor?.hubId}
     GROUP BY 
         h.id, h.hub_name`,
-    await db.supervisor.findMany({
-      where: {
-        hubId: supervisor?.hubId as string,
-      },
-      include: {
-        supervisorAttendances: {
-          include: {
-            session: true,
-          },
+      await db.supervisor.findMany({
+        where: {
+          hubId: supervisor?.hubId as string,
         },
-        fellows: {
-          include: {
-            fellowAttendances: true,
-            groups: true,
+        include: {
+          supervisorAttendances: {
+            include: {
+              session: true,
+            },
           },
+          fellows: {
+            include: {
+              fellowAttendances: true,
+              groups: true,
+            },
+          },
+          assignedSchools: true,
         },
-        assignedSchools: true,
-      },
-    }),
-    await db.$queryRaw<
-      {
-        id: string;
-        averageRating: number;
-      }[]
-    >`SELECT
+      }),
+      await db.$queryRaw<
+        {
+          id: string;
+          averageRating: number;
+        }[]
+      >`SELECT
     fel.id,
     (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
     FROM
@@ -72,7 +73,12 @@ export default async function SupervisorSchedulePage() {
     LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
     WHERE fel.hub_id=${supervisor?.hubId}
     GROUP BY fel.id`,
-  ]);
+      await db.sessionName.findMany({
+        where: {
+          hubId: supervisor?.hubId as string,
+        },
+      }),
+    ]);
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -93,6 +99,7 @@ export default async function SupervisorSchedulePage() {
           fellowRatings={fellowRatings}
           role={supervisor?.user.membership.role!}
           supervisorId={supervisor?.id}
+          hubSessionTypes={hubSessionTypes}
         />
       </div>
       <PageFooter />
