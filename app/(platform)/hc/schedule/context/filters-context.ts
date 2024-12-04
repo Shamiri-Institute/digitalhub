@@ -1,11 +1,10 @@
-import { SESSION_TYPES } from "#/lib/app-constants/constants";
 import { SessionStatus } from "@prisma/client";
 import { createContext, Dispatch, SetStateAction } from "react";
 
 const sessionTypeFilterOptions: { [key: string]: boolean } = {};
-SESSION_TYPES.forEach((sessionType) => {
-  sessionTypeFilterOptions[sessionType.name] = true;
-});
+// SESSION_TYPES.forEach((sessionType) => {
+//   sessionTypeFilterOptions[sessionType.name] = true;
+// });
 
 const statusFilterOptions: { [key: string]: boolean } = {};
 Object.keys(SessionStatus).forEach((status) => {

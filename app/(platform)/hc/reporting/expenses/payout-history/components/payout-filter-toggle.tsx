@@ -22,9 +22,8 @@ export default function PayoutFilterToggle({
   return (
     <FilterToggle
       filterIsActive={filterIsActive}
-      updateFilters={() => {
-        setOpen(false);
-      }}
+      open={open}
+      setOpen={setOpen}
       setDefaultFilters={() => {}}
     >
       <div className="flex flex-col gap-y-2 p-1">

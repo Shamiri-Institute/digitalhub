@@ -72,7 +72,7 @@ export default function FellowAttendance({
   supervisors: SupervisorData[];
   supervisorId?: string;
   session: Prisma.InterventionSessionGetPayload<{
-    include: { school: true; sessionRatings: true };
+    include: { school: true; sessionRatings: true; session: true };
   }> | null;
   fellowRatings: {
     id: string;

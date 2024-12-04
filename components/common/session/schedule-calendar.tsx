@@ -38,11 +38,11 @@ import {
   DateRangeType,
   Filters,
   FiltersContext,
-  sessionTypeFilterOptions,
   statusFilterOptions,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import { ScheduleNewSession } from "#/components/common/session/schedule-new-session-form";
+import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -54,7 +54,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuLabel,
 } from "#/components/ui/dropdown-menu";
-import { SESSION_TYPES } from "#/lib/app-constants/constants";
+import { sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { addHours } from "date-fns";
 import * as React from "react";
@@ -106,8 +106,12 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") ?? "month";
 
+  const sessionTypes: { [key: string]: boolean } = {};
+  props.hubSessionTypes.map((sessionType) => {
+    sessionTypes[sessionType.sessionName] = true;
+  });
   const [filters, setFilters] = useState<Filters>({
-    sessionTypes: sessionTypeFilterOptions,
+    sessionTypes,
     statusTypes: statusFilterOptions,
     dates: ["day", "week", "month"].includes(mode)
       ? (mode as DateRangeType)
@@ -215,7 +219,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 <ScheduleModeToggle role={props.role} />
               </div>
               <FiltersContext.Provider value={{ filters, setFilters }}>
-                <ScheduleFilterToggle />
+                <ScheduleFilterToggle sessionFilters={props.hubSessionTypes} />
               </FiltersContext.Provider>
             </div>
             <SessionsLoader>
@@ -395,7 +399,7 @@ function CalendarView({
 
   const [session, setSession] =
     React.useState<Prisma.InterventionSessionGetPayload<{
-      include: { school: true; sessionRatings: true };
+      include: { school: true; sessionRatings: true; session: true };
     }> | null>(null);
 
   const activeMode = () => {
@@ -581,12 +585,20 @@ function NavigationButton({
   );
 }
 
-function ScheduleFilterToggle() {
+function ScheduleFilterToggle({
+  sessionFilters,
+}: {
+  sessionFilters: Prisma.SessionNameGetPayload<{}>[];
+}) {
   const [open, setOpen] = useState(false);
   const { filters, setFilters } = useContext(FiltersContext);
   const { mode } = useMode();
+  const _sessionTypes: { [key: string]: boolean } = {};
+  Object.keys(filters.sessionTypes).map((sessionType) => {
+    _sessionTypes[sessionType] = true;
+  });
   const defaultFilterSettings = {
-    sessionTypes: sessionTypeFilterOptions,
+    sessionTypes: _sessionTypes,
     statusTypes: statusFilterOptions,
     dates: ["day", "week", "month"].includes(mode)
       ? (mode as DateRangeType)
@@ -623,50 +635,159 @@ function ScheduleFilterToggle() {
       setFilterIsActive(true);
     } else {
       setFilterIsActive(false);
-      setSessionTypes(sessionTypeFilterOptions);
-      setStatusTypes(statusFilterOptions);
+      setSessionTypes(defaultFilterSettings.sessionTypes);
+      setStatusTypes(defaultFilterSettings.statusTypes);
     }
   }, [filters]);
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 p-2">
       <FilterToggle
         filterIsActive={filterIsActive}
         setDefaultFilters={() => setFilters(defaultFilterSettings)}
-        updateFilters={() => {
-          setOpen(false);
-          setFilters({
-            sessionTypes,
-            statusTypes,
-            dates,
-          });
-        }}
+        open={open}
+        setOpen={setOpen}
       >
-        <div className="flex gap-8 px-1">
-          <div>
+        <div className="grid grid-cols-7 gap-x-4 gap-y-2">
+          <div className="col-span-5">
             <DropdownMenuLabel>
               <span className="text-xs font-medium uppercase text-shamiri-text-grey">
                 SESSION TYPE
               </span>
             </DropdownMenuLabel>
-            {SESSION_TYPES.map((sessionType) => {
-              return (
-                <DropdownMenuCheckboxItem
-                  key={sessionType.name}
-                  checked={sessionTypes[sessionType.name]}
-                  onCheckedChange={(value) => {
-                    const state = { ...sessionTypes };
-                    state[sessionType.name] = value;
-                    setSessionTypes(state);
-                  }}
-                  onSelect={(e) => {
-                    e.preventDefault();
-                  }}
-                >
-                  <span className="">{sessionType.description}</span>
-                </DropdownMenuCheckboxItem>
-              );
-            })}
+            <div className="grid grid-cols-5 gap-x-4">
+              <div>
+                {sessionFilters
+                  .filter(
+                    (sessionType) => sessionType.sessionType === "INTERVENTION",
+                  )
+                  .map((sessionType) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={sessionType.sessionName}
+                        checked={sessionTypes[sessionType.sessionName]}
+                        onCheckedChange={(value) => {
+                          const state = { ...sessionTypes };
+                          state[sessionType.sessionName] = value;
+                          setSessionTypes(state);
+                        }}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                        }}
+                      >
+                        <span className="uppercase">
+                          {sessionDisplayName(sessionType.sessionName)}
+                        </span>
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </div>
+              <div>
+                {sessionFilters
+                  .filter(
+                    (sessionType) =>
+                      sessionType.sessionType === "DATA_COLLECTION",
+                  )
+                  .map((sessionType) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={sessionType.sessionName}
+                        checked={sessionTypes[sessionType.sessionName]}
+                        onCheckedChange={(value) => {
+                          const state = { ...sessionTypes };
+                          state[sessionType.sessionName] = value;
+                          setSessionTypes(state);
+                        }}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                        }}
+                      >
+                        <span className="uppercase">
+                          {sessionDisplayName(sessionType.sessionName)}
+                        </span>
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </div>
+              <div>
+                {sessionFilters
+                  .filter(
+                    (sessionType) => sessionType.sessionType === "SUPERVISION",
+                  )
+                  .map((sessionType) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={sessionType.sessionName}
+                        checked={sessionTypes[sessionType.sessionName]}
+                        onCheckedChange={(value) => {
+                          const state = { ...sessionTypes };
+                          state[sessionType.sessionName] = value;
+                          setSessionTypes(state);
+                        }}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                        }}
+                      >
+                        <span className="uppercase">
+                          {sessionDisplayName(sessionType.sessionName)}
+                        </span>
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </div>
+              <div>
+                {sessionFilters
+                  .filter(
+                    (sessionType) => sessionType.sessionType === "TRAINING",
+                  )
+                  .map((sessionType) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={sessionType.sessionName}
+                        checked={sessionTypes[sessionType.sessionName]}
+                        onCheckedChange={(value) => {
+                          const state = { ...sessionTypes };
+                          state[sessionType.sessionName] = value;
+                          setSessionTypes(state);
+                        }}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                        }}
+                      >
+                        <span className="uppercase">
+                          {sessionDisplayName(sessionType.sessionName)}
+                        </span>
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </div>
+              <div>
+                {sessionFilters
+                  .filter(
+                    (sessionType) => sessionType.sessionType === "CLINICAL",
+                  )
+                  .map((sessionType) => {
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={sessionType.sessionName}
+                        checked={sessionTypes[sessionType.sessionName]}
+                        onCheckedChange={(value) => {
+                          const state = { ...sessionTypes };
+                          state[sessionType.sessionName] = value;
+                          setSessionTypes(state);
+                        }}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                        }}
+                      >
+                        <span className="uppercase">
+                          {sessionDisplayName(sessionType.sessionName)}
+                        </span>
+                      </DropdownMenuCheckboxItem>
+                    );
+                  })}
+              </div>
+            </div>
           </div>
           <div>
             <DropdownMenuLabel>
@@ -722,6 +843,24 @@ function ScheduleFilterToggle() {
               );
             })}
           </div>
+        </div>
+        <div className="flex justify-end gap-4">
+          <Button variant="ghost" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="brand"
+            onClick={() => {
+              setFilters({
+                sessionTypes,
+                statusTypes,
+                dates,
+              });
+              setOpen(false);
+            }}
+          >
+            Filter sessions
+          </Button>
         </div>
       </FilterToggle>
     </div>
