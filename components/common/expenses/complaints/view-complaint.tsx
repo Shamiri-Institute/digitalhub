@@ -1,7 +1,7 @@
 "use client";
-import { ComplaintData } from "#/app/(platform)/hc/reporting/expenses/complaints/components/complaints-actions-dropdown";
-import { ComplaintSchema } from "#/app/(platform)/hc/reporting/expenses/complaints/schema";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import { ComplaintData } from "#/components/common/expenses/complaints/complaints-actions-dropdown";
+import { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
 import { FileUploaderWithDrop } from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
 import {
@@ -34,7 +34,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-export default function HCViewComplaint({
+export default function ViewFellowComplaint({
   children,
   complaint,
 }: {
@@ -43,8 +43,8 @@ export default function HCViewComplaint({
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
-  const form = useForm<z.infer<typeof ComplaintSchema>>({
-    resolver: zodResolver(ComplaintSchema),
+  const form = useForm<z.infer<typeof ReportFellowComplaintSchema>>({
+    resolver: zodResolver(ReportFellowComplaintSchema),
     defaultValues: {
       fellow: complaint?.fellowName ?? "",
       mpesaNumber: complaint?.mpesaNumber ?? "",
