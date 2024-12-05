@@ -3,10 +3,9 @@ import {
   approveComplaint,
   rejectComplaint,
 } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
-import { ComplaintData } from "#/app/(platform)/hc/reporting/expenses/complaints/components/complaints-actions-dropdown";
-import { ComplaintSchema } from "#/app/(platform)/hc/reporting/expenses/complaints/schema";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import { ComplaintData } from "#/components/common/expenses/complaints/complaints-actions-dropdown";
 import { FileUploaderWithDrop } from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
 import {
@@ -40,8 +39,9 @@ import { Prisma } from "@prisma/client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { ReportFellowComplaintSchema } from "./schema";
 
-export default function HCApproveRejectComplaint({
+export default function ApproveRejectFellowComplaint({
   children,
   complaint,
   fellows = [],
@@ -53,7 +53,8 @@ export default function HCApproveRejectComplaint({
   const [open, setDialogOpen] = useState<boolean>(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState<boolean>(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState<boolean>(false);
-  const [formData, setFormData] = useState<z.infer<typeof ComplaintSchema>>();
+  const [formData, setFormData] =
+    useState<z.infer<typeof ReportFellowComplaintSchema>>();
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"reject" | "accept" | "none">("none");
 
@@ -72,8 +73,8 @@ export default function HCApproveRejectComplaint({
     },
   ];
 
-  const form = useForm<z.infer<typeof ComplaintSchema>>({
-    resolver: zodResolver(ComplaintSchema),
+  const form = useForm<z.infer<typeof ReportFellowComplaintSchema>>({
+    resolver: zodResolver(ReportFellowComplaintSchema),
     defaultValues: {
       fellow: complaint?.fellowName ?? "",
       mpesaNumber: complaint?.mpesaNumber ?? "",
@@ -174,7 +175,7 @@ export default function HCApproveRejectComplaint({
     }
   }
 
-  const onSubmit = (data: z.infer<typeof ComplaintSchema>) => {
+  const onSubmit = (data: z.infer<typeof ReportFellowComplaintSchema>) => {
     if (Object.keys(form.formState.errors).length) {
       toast({
         variant: "destructive",
@@ -593,7 +594,7 @@ export default function HCApproveRejectComplaint({
                           ({
                             ...prevData,
                             reasonForRejecting: e.target.value,
-                          }) as z.infer<typeof ComplaintSchema>,
+                          }) as z.infer<typeof ReportFellowComplaintSchema>,
                       );
                     }}
                   />
@@ -661,7 +662,7 @@ export default function HCApproveRejectComplaint({
                           ({
                             ...prevData,
                             reasonForAccepting: e.target.value,
-                          }) as z.infer<typeof ComplaintSchema>,
+                          }) as z.infer<typeof ReportFellowComplaintSchema>,
                       );
                     }}
                   />
