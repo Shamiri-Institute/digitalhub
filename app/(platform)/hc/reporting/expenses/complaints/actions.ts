@@ -1,7 +1,7 @@
 "use server";
 
-import { ComplaintSchema } from "#/app/(platform)/hc/reporting/expenses/complaints/schema";
 import { currentHubCoordinator } from "#/app/auth";
+import { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
 
@@ -154,7 +154,7 @@ type FellowAttendance = Prisma.FellowAttendanceGetPayload<{
 
 export async function rejectComplaint(data: {
   id: string;
-  formData: ComplaintSchema;
+  formData: ReportFellowComplaintSchema;
 }) {
   const hubCoordinator = await currentHubCoordinator();
   if (!hubCoordinator) {
@@ -190,7 +190,7 @@ export async function rejectComplaint(data: {
 
 export async function approveComplaint(data: {
   id: string;
-  formData: ComplaintSchema;
+  formData: ReportFellowComplaintSchema;
 }) {
   const hubCoordinator = await currentHubCoordinator();
   if (!hubCoordinator) {
