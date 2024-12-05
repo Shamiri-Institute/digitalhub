@@ -67,8 +67,8 @@ export async function fetchSessionAttendanceData(hubId: string) {
   `;
 
   sessionAttendanceData.map((val) => {
-    val.session_number = Number(val.session_number);
-    val.count = Number(val.count);
+    val.session_number = Math.round(val.session_number);
+    val.count = Math.round(val.count);
   });
 
   return sessionAttendanceData;
@@ -111,7 +111,7 @@ export async function fetchSchoolDataCompletenessData(
     return [];
   }
 
-  const percentage = +Number(schoolAttendanceData.percentage).toFixed(2);
+  const percentage = +Math.round(schoolAttendanceData.percentage);
 
   return [
     { name: "actual", value: Math.round(percentage) },
@@ -322,9 +322,9 @@ export async function fetchSessionRatingAverages(
 
   // @ts-ignore
   ratingAverages.forEach((item) => {
-    item.student_behaviour = Math.round(item.student_behaviour);
-    item.admin_support = Math.round(item.admin_support);
-    item.workload = Math.round(item.workload);
+    item.student_behaviour = Math.round(item.student_behaviour) || 0;
+    item.admin_support = Math.round(item.admin_support) || 0;
+    item.workload = Math.round(item.workload) || 0;
   });
 
   return ratingAverages;
