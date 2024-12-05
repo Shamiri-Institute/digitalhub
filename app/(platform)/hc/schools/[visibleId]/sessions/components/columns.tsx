@@ -23,6 +23,7 @@ export type SessionData = Prisma.InterventionSessionGetPayload<{
 export const columns = (state: {
   role: ImplementerRole;
   setRatingsDialog: Dispatch<SetStateAction<boolean>>;
+  setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   setSession: Dispatch<
     SetStateAction<
       | Prisma.InterventionSessionGetPayload<{
@@ -164,6 +165,7 @@ export const columns = (state: {
           session: row.original,
           setRatingsDialog: state.setRatingsDialog,
           setSession: state.setSession,
+          setFellowAttendanceDialog: state.setFellowAttendanceDialog,
         }}
         role={state.role}
       >

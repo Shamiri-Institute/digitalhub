@@ -1,0 +1,53 @@
+"use client";
+import TabToggleNavigation, {
+  TabType,
+} from "#/components/common/tabs/tab-navigation";
+import { usePathname } from "next/navigation";
+
+export default function RenderSCReportingTabs() {
+  const pathname = usePathname();
+
+  const isFellowReports = pathname.includes("reporting/fellow-reports");
+  const isSchoolReports = pathname.includes("reporting/school-reports");
+
+  const fellowReportOptions: TabType[] = [
+    {
+      name: "Weekly fellow evaluation",
+      href: `/sc/reporting/fellow-reports/weekly-fellow-evaluation`,
+    },
+    {
+      name: "Student group evaluation",
+      href: `/sc/reporting/fellow-reports/student-group-evaluation`,
+    },
+    { name: "Complaints", href: `/sc/reporting/fellow-reports/complaints` },
+    {
+      name: "Fellow attendance sheet",
+      href: `/sc/reporting/fellow-reports/fellow-attendance-sheet`,
+    },
+  ];
+
+  const schoolReportOptions: TabType[] = [
+    { name: "Session", href: `/sc/reporting/school-reports/session` },
+    {
+      name: "School Feedback",
+      href: `/sc/reporting/school-reports/school-feedback`,
+    },
+  ];
+
+  const expensesReportOptions: TabType[] = [
+    { name: "Fellows", href: `/sc/reporting/expenses/fellows` },
+    { name: "My Expenses", href: `/sc/reporting/expenses/my-expenses` },
+    { name: "Payout history", href: `/sc/reporting/expenses/payout-history` },
+    { name: "Complaints", href: `/sc/reporting/expenses/complaints` },
+  ];
+
+  return (
+    <>
+      {isFellowReports && <TabToggleNavigation options={fellowReportOptions} />}
+      {isSchoolReports && <TabToggleNavigation options={schoolReportOptions} />}
+      {!isFellowReports && !isSchoolReports && (
+        <TabToggleNavigation options={expensesReportOptions} />
+      )}
+    </>
+  );
+}

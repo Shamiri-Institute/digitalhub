@@ -1,28 +1,35 @@
 "use client";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-type TabType = {
+export type TabType = {
   name: string;
   href: string;
 };
 
-export default function ReportingTabNav() {
+export default function TabToggleNavigation({
+  options = [],
+}: {
+  options: TabType[];
+}) {
   const pathname = usePathname();
   const router = useRouter();
-  const options: TabType[] = [
-    { name: "Fellows", href: `/hc/reporting/expenses/fellows` },
-    { name: "Supervisors", href: `/hc/reporting/expenses/supervisors` },
-    { name: "Payout history", href: `/hc/reporting/expenses/payout-history` },
-    { name: "Complaints", href: `/hc/reporting/expenses/complaints` },
-  ];
+
+  const currentTab = options.find((tab) => tab.href === pathname) || options[0];
+
+  useEffect(() => {
+    if (!options.find((tab) => tab.href === pathname) && options.length > 0) {
+      router.push(options[0]!.href);
+    }
+  }, [pathname, options, router]);
 
   return (
     <div className="flex">
       <ToggleGroup
         type="single"
         className="form-toggle"
-        defaultValue={options.find((tab) => tab.href === pathname)?.name}
+        defaultValue={currentTab!.name}
         onValueChange={(value) => {
           if (value) {
             const tab = options.find((tab) => tab.name === value);

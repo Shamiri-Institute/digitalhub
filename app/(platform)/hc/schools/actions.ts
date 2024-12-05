@@ -74,21 +74,37 @@ export async function fetchSessionAttendanceData(hubId: string) {
   return sessionAttendanceData;
 }
 
-export async function fetchSchoolDataCompletenessData(hubId: string) {
+export async function fetchSchoolDataCompletenessData(
+  hubId: string,
+  schoolId?: string,
+) {
   // TODO: uncomment the school_sub_county query and adjust division from 6.0 -> 7.0
   const [schoolAttendanceData] = await db.$queryRaw<{ percentage: number }[]>`
     SELECT
-      AVG((
-        (CASE WHEN school_county IS NOT NULL THEN 1 ELSE 0 END)
-        -- + (CASE WHEN school_sub_county is null THEN 1 ELSE 0 END)
-        + (CASE WHEN school_type IS NOT NULL THEN 1 ELSE 0 END)
-        + (CASE WHEN school_demographics IS NOT NULL THEN 1 ELSE 0 END)
-        + (CASE WHEN boarding_day IS NOT NULL THEN 1 ELSE 0 END)
-        + (CASE WHEN point_person_name IS NOT NULL THEN 1 ELSE 0 END)
-        + (CASE WHEN point_person_phone IS NOT NULL THEN 1 ELSE 0 END)
-      ) / 6.0 * 100) AS percentage
+      ${
+        schoolId
+          ? Prisma.sql`(
+            (CASE WHEN school_county IS NOT NULL THEN 1 ELSE 0 END)
+            -- + (CASE WHEN school_sub_county is null THEN 1 ELSE 0 END)
+            + (CASE WHEN school_type IS NOT NULL THEN 1 ELSE 0 END)
+            + (CASE WHEN school_demographics IS NOT NULL THEN 1 ELSE 0 END)
+            + (CASE WHEN boarding_day IS NOT NULL THEN 1 ELSE 0 END)
+            + (CASE WHEN point_person_name IS NOT NULL THEN 1 ELSE 0 END)
+            + (CASE WHEN point_person_phone IS NOT NULL THEN 1 ELSE 0 END)
+          ) / 6.0 * 100`
+          : Prisma.sql`AVG(
+            (CASE WHEN school_county IS NOT NULL THEN 1 ELSE 0 END)
+            -- + (CASE WHEN school_sub_county is null THEN 1 ELSE 0 END)
+            + (CASE WHEN school_type IS NOT NULL THEN 1 ELSE 0 END)
+            + (CASE WHEN school_demographics IS NOT NULL THEN 1 ELSE 0 END)
+            + (CASE WHEN boarding_day IS NOT NULL THEN 1 ELSE 0 END)
+            + (CASE WHEN point_person_name IS NOT NULL THEN 1 ELSE 0 END)
+            + (CASE WHEN point_person_phone IS NOT NULL THEN 1 ELSE 0 END)
+          ) / 6.0 * 100`
+      } AS percentage
     FROM schools
     WHERE hub_id = ${hubId}
+      ${schoolId ? Prisma.sql`AND id = ${schoolId}` : Prisma.sql``}
   `;
 
   if (!schoolAttendanceData) {
@@ -98,8 +114,8 @@ export async function fetchSchoolDataCompletenessData(hubId: string) {
   const percentage = +Math.round(schoolAttendanceData.percentage);
 
   return [
-    { name: "actual", value: percentage },
-    { name: "difference", value: 100 - percentage },
+    { name: "actual", value: Math.round(percentage) },
+    { name: "difference", value: 100 - Math.round(percentage) },
   ];
 }
 
@@ -108,7 +124,7 @@ export type DropoutReasonsGraphData = {
   value: number;
 };
 
-export async function fetchDropoutReasons(hubId: string) {
+export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
   const dropoutData = await db.$queryRaw<DropoutReasonsGraphData[]>`
     SELECT
       COUNT(*) AS value,
@@ -118,6 +134,7 @@ export async function fetchDropoutReasons(hubId: string) {
       dropout_reason IS NOT NULL
       AND dropped_out = true
       AND hub_id = ${hubId}
+      ${schoolId ? Prisma.sql`AND id = ${schoolId}` : Prisma.sql``}
     GROUP BY
       dropout_reason
   `;
@@ -256,22 +273,47 @@ export type SessionRatingAverages = {
   workload: number;
 };
 
-export async function fetchSessionRatingAverages(hubId: string) {
+export async function fetchSessionRatingAverages(
+  hubId: string,
+  schoolId?: string,
+) {
   const ratingAverages = await db.$queryRaw<SessionRatingAverages[]>`
-    SELECT
-      ses.session_type AS session_type,
-      AVG(isr.student_behavior_rating) AS student_behavior,
-      AVG(isr.admin_support_rating) AS admin_support,
-      AVG(isr.workload_rating) AS workload
-    FROM intervention_session_ratings isr
-    INNER JOIN supervisors AS sup ON isr.supervisor_id = sup.id
-    INNER JOIN intervention_sessions AS ses ON isr.session_id = ses.id
-    WHERE
-      sup.hub_id = ${hubId}
-    GROUP BY
-      ses.session_type
-    ORDER BY
-      ses.session_type
+    ${
+      schoolId
+        ? Prisma.sql`
+        SELECT
+          ses.session_type AS session_type,
+          AVG(isr.student_behavior_rating) AS student_behavior,
+          AVG(isr.admin_support_rating) AS admin_support,
+          AVG(isr.workload_rating) AS workload
+        FROM intervention_session_ratings isr
+        INNER JOIN supervisors AS sup ON isr.supervisor_id = sup.id
+        INNER JOIN intervention_sessions AS ses ON isr.session_id = ses.id
+        WHERE
+          sup.hub_id = ${hubId}
+          AND ses.school_id = ${schoolId}
+        GROUP BY
+          ses.session_type
+        ORDER BY
+          ses.session_type
+      `
+        : Prisma.sql`
+        SELECT
+          ses.session_type AS session_type,
+          AVG(isr.student_behavior_rating) AS student_behavior,
+          AVG(isr.admin_support_rating) AS admin_support,
+          AVG(isr.workload_rating) AS workload
+        FROM intervention_session_ratings isr
+        INNER JOIN supervisors AS sup ON isr.supervisor_id = sup.id
+        INNER JOIN intervention_sessions AS ses ON isr.session_id = ses.id
+        WHERE
+          sup.hub_id = ${hubId}
+        GROUP BY
+          ses.session_type
+        ORDER BY
+          ses.session_type
+      `
+    }
   `;
 
   if (!ratingAverages.length) {
@@ -294,7 +336,7 @@ export type SchoolAttendances = {
   count_attendance_unmarked: number;
 };
 
-export async function fetchSchoolAttendances(hubId: string) {
+export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
   const [schoolCount] = await db.$queryRaw<{ count: number }[]>`
     SELECT
       COUNT(*) AS "count"
@@ -302,6 +344,7 @@ export async function fetchSchoolAttendances(hubId: string) {
       schools
     WHERE
       hub_id = ${hubId}
+      ${schoolId ? Prisma.sql`AND id = ${schoolId}` : Prisma.sql``}
   `;
 
   const numSchools = Number(schoolCount?.count) ?? 0;
@@ -318,6 +361,7 @@ export async function fetchSchoolAttendances(hubId: string) {
     LEFT JOIN intervention_sessions ON sa.session_id = intervention_sessions.id
     WHERE
       schools.hub_id = ${hubId}
+      ${schoolId ? Prisma.sql`AND schools.id = ${schoolId}` : Prisma.sql``}
     GROUP BY
       session_type
     ORDER BY

@@ -1,7 +1,7 @@
 "use client";
-import ReportingTabNav from "#/app/(platform)/hc/reporting/components/expenses-reports-tabs-nav";
-import FellowReportsNav from "#/app/(platform)/hc/reporting/components/fellow-reports-nav";
-import SchoolReportsNav from "#/app/(platform)/hc/reporting/components/school-reports-nav";
+import TabToggleNavigation, {
+  TabType,
+} from "#/components/common/tabs/tab-navigation";
 import { usePathname } from "next/navigation";
 
 export default function RenderReportingTabs() {
@@ -10,11 +10,43 @@ export default function RenderReportingTabs() {
   const isFellowReports = pathname.includes("reporting/fellow-reports");
   const isSchoolReports = pathname.includes("reporting/school-reports");
 
+  const fellowReportOptions: TabType[] = [
+    {
+      name: "Weekly fellow evaluation",
+      href: `/hc/reporting/fellow-reports/weekly-fellow-evaluation`,
+    },
+    {
+      name: "Student group evaluation",
+      href: `/hc/reporting/fellow-reports/student-group-evaluation`,
+    },
+    { name: "Complaints", href: `/hc/reporting/fellow-reports/complaints` },
+    {
+      name: "Fellow attendance sheet",
+      href: `/hc/reporting/fellow-reports/fellow-attendance-sheet`,
+    },
+  ];
+
+  const schoolReportOptions: TabType[] = [
+    { name: "Session", href: `/hc/reporting/school-reports/session` },
+    {
+      name: "School Feedback",
+      href: `/hc/reporting/school-reports/school-feedback`,
+    },
+  ];
+
+  const expensesReportOptions: TabType[] = [
+    { name: "Fellows", href: `/hc/reporting/expenses/fellows` },
+    { name: "Supervisors", href: `/hc/reporting/expenses/supervisors` },
+    { name: "Payout history", href: `/hc/reporting/expenses/payout-history` },
+    { name: "Complaints", href: `/hc/reporting/expenses/complaints` },
+  ];
   return (
     <>
-      {isFellowReports && <FellowReportsNav />}
-      {isSchoolReports && <SchoolReportsNav />}
-      {!isFellowReports && !isSchoolReports && <ReportingTabNav />}
+      {isFellowReports && <TabToggleNavigation options={fellowReportOptions} />}
+      {isSchoolReports && <TabToggleNavigation options={schoolReportOptions} />}
+      {!isFellowReports && !isSchoolReports && (
+        <TabToggleNavigation options={expensesReportOptions} />
+      )}
     </>
   );
 }

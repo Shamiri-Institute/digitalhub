@@ -9,7 +9,13 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { addDays, addHours, format, isAfter, isBefore } from "date-fns";
-import { useContext, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useDateFormatter } from "react-aria";
 import { CalendarState } from "react-stately";
 
@@ -17,10 +23,14 @@ export function ListView({
   state,
   hubId,
   role,
+  dialogState,
 }: {
   state: CalendarState;
   hubId: string;
   role: ImplementerRole;
+  dialogState: {
+    setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  };
 }) {
   const { sessions } = useContext(SessionsContext);
   const [sessionGroups, setSessionGroups] = useState<string[]>([]);
@@ -253,7 +263,14 @@ export function ListView({
                       </div>
                     </td>
                     <td className="action-cell relative cursor-pointer">
-                      <SessionDropDown state={{ session }} role={role}>
+                      <SessionDropDown
+                        state={{
+                          session,
+                          setFellowAttendanceDialog:
+                            dialogState.setFellowAttendanceDialog,
+                        }}
+                        role={role}
+                      >
                         <div className="absolute inset-0 bg-white">
                           <div className="flex h-full w-full items-center justify-center">
                             <Icons.moreHorizontal className="h-5 w-5" />

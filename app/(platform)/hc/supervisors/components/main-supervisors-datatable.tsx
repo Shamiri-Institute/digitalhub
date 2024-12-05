@@ -26,7 +26,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { Prisma } from "@prisma/client";
 import { Row } from "@tanstack/react-table";
-import { parsePhoneNumber } from "libphonenumber-js";
+import parsePhoneNumberFromString from "libphonenumber-js";
 import { useContext, useState } from "react";
 
 export default function MainSupervisorsDataTable({
@@ -62,10 +62,10 @@ export default function MainSupervisorsDataTable({
           <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
           <span>
             {context.supervisor?.cellNumber &&
-              parsePhoneNumber(
+              parsePhoneNumberFromString(
                 context.supervisor?.cellNumber,
                 "KE",
-              ).formatNational()}
+              )?.formatNational()}
           </span>
         </div>
       </DialogAlertWidget>
