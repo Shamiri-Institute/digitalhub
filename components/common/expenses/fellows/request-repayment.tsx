@@ -11,7 +11,7 @@ import {
 import { useState } from "react";
 
 import { submitRequestRepayment } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
-import { FellowExpenseData } from "#/app/(platform)/hc/reporting/expenses/fellows/components/fellow-expense-table-dropdown-me";
+import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown-me";
 import {
   Form,
   FormControl,
@@ -33,7 +33,7 @@ export const RequestRepaymentSchema = z.object({
   mpesaNumber: stringValidation("Please confirm the Mpesa number"),
 });
 
-export default function HCRequestRepayment({
+export default function RequestRepaymentFellows({
   children,
   expense,
 }: {
