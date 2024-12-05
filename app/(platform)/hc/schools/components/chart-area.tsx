@@ -48,18 +48,20 @@ export default function ChartArea({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart width={307} height={307} data={schoolAttendances}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="session_type" />
-              <YAxis />
+              <XAxis dataKey="session_type" label="Session type" />
+              <YAxis label="Number of students" />
               <Tooltip />
               <Bar
                 dataKey="count_attendance_marked"
                 stackId="a"
                 fill="#0085FF"
+                label="Attendance marked"
               />
               <Bar
                 dataKey="count_attendance_unmarked"
                 stackId="a"
                 fill="#CCE7FF"
+                label="Attendance unmarked"
               />
             </BarChart>
           </ResponsiveContainer>
@@ -142,9 +144,17 @@ export default function ChartArea({
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line dataKey="student_behaviour" stroke="#0085FF" />
-              <Line dataKey="admin_support" stroke="#00BA34" />
-              <Line dataKey="workload" stroke="#F98600" />
+              <Line
+                dataKey="student_behaviour"
+                stroke="#0085FF"
+                label="Student behaviour"
+              />
+              <Line
+                dataKey="admin_support"
+                stroke="#00BA34"
+                label="Admin support"
+              />
+              <Line dataKey="workload" stroke="#F98600" label="Workload" />
             </LineChart>
           </ResponsiveContainer>
         ) : null}
