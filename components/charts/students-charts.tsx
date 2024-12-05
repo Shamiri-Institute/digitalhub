@@ -50,7 +50,7 @@ export default function HubStudentsDetailsCharts({
       );
       return {
         sessionType: session,
-        count: found ? found._count.sessionType : 0,
+        attendance: found ? found._count.sessionType : 0,
       };
     },
   );
@@ -89,10 +89,20 @@ export default function HubStudentsDetailsCharts({
             <BarChart width={307} height={307} data={filteredFormatedSessions}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="sessionType" />
-              <YAxis dataKey="count" />
-              <Tooltip />
-              <Bar dataKey="count" stackId="a" fill="#0085FF" />
-              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" />
+              <YAxis dataKey="attendance" />
+              <Tooltip labelFormatter={(value) => `Session: ${value}`} />
+              <Bar
+                dataKey="attendance"
+                stackId="a"
+                fill="#0085FF"
+                label="Attendance count"
+              />
+              <Bar
+                dataKey="sessionType"
+                stackId="a"
+                fill="#CCE7FF"
+                label="Session type"
+              />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
