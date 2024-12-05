@@ -1,13 +1,13 @@
 "use client";
 
 import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
+import FellowExpenseTableDropdownMe from "#/components/common/expenses/fellows/fellow-expense-table-dropdown-me";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
-import HCFellowsExpenseDropdownMenu from "./fellow-expense-table-dropdown-me";
 
 export const columns: ColumnDef<HubFellowsAttendancesType>[] = [
   {
@@ -149,7 +149,7 @@ export const subColumns: ColumnDef<
 
   {
     id: "button",
-    cell: ({ row }) => <HCFellowsExpenseDropdownMenu expense={row.original} />,
+    cell: ({ row }) => <FellowExpenseTableDropdownMe expense={row.original} />,
     enableHiding: false,
   },
 ];
