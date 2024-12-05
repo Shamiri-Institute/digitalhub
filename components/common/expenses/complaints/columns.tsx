@@ -1,7 +1,7 @@
 "use client";
 
 import { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
-import HCComplaintsDropdownMenu from "#/app/(platform)/hc/reporting/expenses/complaints/components/complaints-actions-dropdown";
+import FellowComplaintsActionsDropdown from "#/components/common/expenses/complaints/complaints-actions-dropdown";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
@@ -144,7 +144,9 @@ export const subColumns: ColumnDef<
   },
   {
     id: "button",
-    cell: ({ row }) => <HCComplaintsDropdownMenu complaint={row.original} />,
+    cell: ({ row }) => (
+      <FellowComplaintsActionsDropdown complaint={row.original} />
+    ),
     enableHiding: false,
   },
 ];

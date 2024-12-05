@@ -5,17 +5,17 @@ import { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/
 import {
   columns,
   subColumns,
-} from "#/app/(platform)/hc/reporting/expenses/complaints/components/columns";
-import HCComplaintsFilterTab from "#/app/(platform)/hc/reporting/expenses/complaints/components/complaints-filter";
+} from "#/components/common/expenses/complaints/columns";
+import FellowComplaintsFilterTab from "#/components/common/expenses/complaints/complaints-filter";
 
-export default function HCComplaintsDataTable({
+export default function FellowComplaintsDataTable({
   complaints,
 }: {
   complaints: HubReportComplaintsType[];
 }) {
   return (
     <div className="container w-full grow space-y-3">
-      <HCComplaintsFilterTab />
+      <FellowComplaintsFilterTab />
       <DataTable
         data={complaints}
         columns={columns}
