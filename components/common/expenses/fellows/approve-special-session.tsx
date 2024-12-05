@@ -1,6 +1,6 @@
 "use client";
-import { FellowExpenseData } from "#/app/(platform)/hc/reporting/expenses/fellows/components/fellow-expense-table-dropdown-me";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown-me";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -32,7 +32,7 @@ export const RequestSpecialSessionSchema = z.object({
   }),
 });
 
-export default function HCApproveSpecialSession({
+export default function ApproveSpecialSessionFellows({
   children,
   expense,
 }: {
