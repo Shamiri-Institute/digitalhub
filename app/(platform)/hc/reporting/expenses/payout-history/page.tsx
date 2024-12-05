@@ -1,6 +1,6 @@
 import { loadHubPayoutHistory } from "#/app/(platform)/hc/reporting/expenses/payout-history/actions";
-import HCPayoutHistoryDataTable from "#/app/(platform)/hc/reporting/expenses/payout-history/components/payout-history-table";
 import { currentHubCoordinator } from "#/app/auth";
+import FellowPayoutHistoryDataTable from "#/components/common/expenses/payout-history/payout-history-table";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 
 export default async function PayoutHistoryPage() {
@@ -12,10 +12,5 @@ export default async function PayoutHistoryPage() {
     return <InvalidPersonnelRole role="hub-coordinator" />;
   }
 
-  return (
-    <HCPayoutHistoryDataTable
-      payoutHistory={hubPayoutHistory}
-      currentHubCoordinator={hubCoordinator}
-    />
-  );
+  return <FellowPayoutHistoryDataTable payoutHistory={hubPayoutHistory} />;
 }
