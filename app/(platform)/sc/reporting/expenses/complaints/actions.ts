@@ -1,24 +1,24 @@
 "use server";
 
-import { currentHubCoordinator } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
 
-export type HubReportComplaintsType = Awaited<
-  ReturnType<typeof loadHubPaymentComplaints>
+export type FellowReportComplaintsType = Awaited<
+  ReturnType<typeof loadFellowPaymentComplaints>
 >[number];
 
-export async function loadHubPaymentComplaints() {
-  const hubCoordinator = await currentHubCoordinator();
+export async function loadFellowPaymentComplaints() {
+  const supervisor = await currentSupervisor();
 
-  if (!hubCoordinator) {
+  if (!supervisor) {
     throw new Error("Unauthorised user");
   }
 
   const fellows = await db.fellow.findMany({
     where: {
-      hubId: hubCoordinator.assignedHubId,
+      supervisorId: supervisor.id,
     },
     include: {
       hub: {
@@ -156,8 +156,8 @@ export async function rejectComplaint(data: {
   id: string;
   formData: ReportFellowComplaintSchema;
 }) {
-  const hubCoordinator = await currentHubCoordinator();
-  if (!hubCoordinator) {
+  const supervisor = await currentSupervisor();
+  if (!supervisor) {
     throw new Error("Unauthorised user");
   }
   try {
@@ -192,8 +192,8 @@ export async function approveComplaint(data: {
   id: string;
   formData: ReportFellowComplaintSchema;
 }) {
-  const hubCoordinator = await currentHubCoordinator();
-  if (!hubCoordinator) {
+  const supervisor = await currentSupervisor();
+  if (!supervisor) {
     throw new Error("Unauthorised user");
   }
 

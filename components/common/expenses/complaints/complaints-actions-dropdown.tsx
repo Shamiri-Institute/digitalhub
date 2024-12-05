@@ -1,6 +1,6 @@
 import { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
-import HCApproveRejectComplaint from "#/app/(platform)/hc/reporting/expenses/complaints/components/approve-reject-complaint";
-import HCViewComplaint from "#/app/(platform)/hc/reporting/expenses/complaints/components/view-complaint";
+import ApproveRejectFellowComplaint from "#/components/common/expenses/complaints/approve-reject-complaint";
+import ViewFellowComplaint from "#/components/common/expenses/complaints/view-complaint";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import {
 
 export type ComplaintData = HubReportComplaintsType["complaints"][number];
 
-export default async function HCComplaintsDropdownMenu({
+export default async function FellowComplaintsActionsDropdown({
   complaint,
 }: {
   complaint: ComplaintData;
@@ -35,20 +35,20 @@ export default async function HCComplaintsDropdownMenu({
         <DropdownMenuSeparator />
 
         {complaint.status !== "PENDING" ? (
-          <HCViewComplaint complaint={complaint}>
+          <ViewFellowComplaint complaint={complaint}>
             <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
               View complaint
             </div>
-          </HCViewComplaint>
+          </ViewFellowComplaint>
         ) : (
-          <HCApproveRejectComplaint
+          <ApproveRejectFellowComplaint
             complaint={complaint}
             fellows={complaint.allFellowsInHub ?? []}
           >
             <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
               Approve/reject complaint
             </div>
-          </HCApproveRejectComplaint>
+          </ApproveRejectFellowComplaint>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
