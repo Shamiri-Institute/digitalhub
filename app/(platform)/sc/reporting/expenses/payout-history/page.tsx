@@ -1,3 +1,16 @@
+import { loadSupervisorPayoutHistory } from "#/app/(platform)/sc/reporting/expenses/payout-history/actions";
+import { currentSupervisor } from "#/app/auth";
+import FellowPayoutHistoryDataTable from "#/components/common/expenses/payout-history/payout-history-table";
+import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
+
 export default async function PayoutHistoryPage() {
-  return <div>Sc payout history page</div>;
+  const fellowPayoutHistory = await loadSupervisorPayoutHistory();
+
+  const supervisor = await currentSupervisor();
+
+  if (!supervisor) {
+    return <InvalidPersonnelRole role="supervisor" />;
+  }
+
+  return <FellowPayoutHistoryDataTable payoutHistory={fellowPayoutHistory} />;
 }
