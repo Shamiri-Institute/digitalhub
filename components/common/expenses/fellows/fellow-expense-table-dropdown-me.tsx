@@ -1,7 +1,7 @@
 import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
-import HCApproveSpecialSession from "#/app/(platform)/hc/reporting/expenses/fellows/components/approve-special-session";
-import HCConfirmReversal from "#/app/(platform)/hc/reporting/expenses/fellows/components/confirm-reversal";
-import HCRequestRepayment from "#/app/(platform)/hc/reporting/expenses/fellows/components/request-repayment";
+import ApproveSpecialSessionFellows from "#/components/common/expenses/fellows/approve-special-session";
+import ConfirmReversalFellows from "#/components/common/expenses/fellows/confirm-reversal";
+import RequestRepaymentFellows from "#/components/common/expenses/fellows/request-repayment";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -15,7 +15,7 @@ import { cn } from "#/lib/utils";
 export type FellowExpenseData =
   HubFellowsAttendancesType["attendances"][number];
 
-export default function HCFellowsExpenseDropdownMenu({
+export default function FellowExpenseTableDropdownMe({
   expense,
 }: {
   expense: FellowExpenseData;
@@ -41,7 +41,7 @@ export default function HCFellowsExpenseDropdownMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <HCConfirmReversal expense={expense}>
+        <ConfirmReversalFellows expense={expense}>
           <div
             className={cn(
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
@@ -49,8 +49,8 @@ export default function HCFellowsExpenseDropdownMenu({
           >
             Reverse payment
           </div>
-        </HCConfirmReversal>
-        <HCRequestRepayment expense={expense}>
+        </ConfirmReversalFellows>
+        <RequestRepaymentFellows expense={expense}>
           <div
             className={cn(
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
@@ -58,10 +58,10 @@ export default function HCFellowsExpenseDropdownMenu({
           >
             Request repayment
           </div>
-        </HCRequestRepayment>
+        </RequestRepaymentFellows>
         <DropdownMenuSeparator />
 
-        <HCApproveSpecialSession expense={expense}>
+        <ApproveSpecialSessionFellows expense={expense}>
           <div
             className={cn(
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
@@ -69,7 +69,7 @@ export default function HCFellowsExpenseDropdownMenu({
           >
             Approve/reject special session
           </div>
-        </HCApproveSpecialSession>
+        </ApproveSpecialSessionFellows>
       </DropdownMenuContent>
     </DropdownMenu>
   );
