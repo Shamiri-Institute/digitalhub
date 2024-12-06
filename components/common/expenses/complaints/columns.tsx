@@ -1,15 +1,15 @@
 "use client";
 
-import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
+import { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
+import FellowComplaintsActionsDropdown from "#/components/common/expenses/complaints/complaints-actions-dropdown";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
-import HCFellowsExpenseDropdownMenu from "./fellow-expense-table-dropdown-me";
 
-export const columns: ColumnDef<HubFellowsAttendancesType>[] = [
+export const columns: ColumnDef<HubReportComplaintsType>[] = [
   {
     id: "button",
     cell: ({ row }) => {
@@ -45,40 +45,36 @@ export const columns: ColumnDef<HubFellowsAttendancesType>[] = [
   },
   {
     accessorKey: "fellowName",
-    header: "Fellow Name",
-  },
-  {
-    accessorKey: "hub",
-    header: "Hub",
+    header: "Fellow name",
   },
   {
     accessorKey: "supervisorName",
-    header: "Supervisor Name",
+    header: "Supervisor name",
   },
   {
     accessorKey: "specialSession",
-    header: "Special Session",
+    header: "Special sessions",
   },
   {
     accessorKey: "preVsMain",
-    header: "Pre vs Main sessions",
+    header: "Pre vs main Sessions",
   },
   {
     accessorKey: "trainingSupervision",
-    header: "Training vs Supervision",
+    header: "Training vs supervision",
   },
   {
     accessorKey: "paidAmount",
-    header: "Paid Amount (KES)",
+    header: "Paid amount (KES)",
   },
   {
     accessorKey: "totalAmount",
-    header: "Total Amount (KES)",
+    header: "Total amount (KES)",
   },
 ];
 
 export const subColumns: ColumnDef<
-  HubFellowsAttendancesType["attendances"][number]
+  HubReportComplaintsType["complaints"][number]
 >[] = [
   {
     id: "checkbox",
@@ -113,53 +109,54 @@ export const subColumns: ColumnDef<
     enableHiding: false,
   },
   {
-    accessorKey: "session",
-    header: "Session",
+    accessorKey: "dateOfComplaint",
+    header: "Date of complaint",
   },
   {
-    accessorKey: "mpesaNo",
-    header: "Mpesa no.",
+    accessorKey: "reasonForComplaint",
+    header: "Reason for complaint",
   },
   {
-    accessorKey: "schoolVenue",
-    header: "School/Venue",
+    cell: ({ row }) => (
+      <a
+        href={row.original.statement}
+        download
+        className="text-shamiri-new-blue"
+      >
+        Download
+      </a>
+    ),
+    header: "Statement",
+    id: "Statement",
   },
   {
-    accessorKey: "dateOfAttendance",
-    header: "Date of attendance",
+    accessorKey: "difference",
+    header: "Difference (KES)",
   },
   {
-    accessorKey: "dateMarked",
-    header: "Date marked",
+    accessorKey: "confirmedAmountReceived",
+    header: "Confirmed amount received (KES)",
   },
   {
-    accessorKey: "group",
-    header: "Group",
-  },
-  {
-    accessorKey: "amount",
-    header: "Amount (KES)",
-  },
-  {
-    id: "status",
-    header: "Status",
-    accessorKey: "status",
     cell: ({ row }) => renderStatus(row.original.status),
+    header: "Status",
+    id: "Status",
   },
-
   {
     id: "button",
-    cell: ({ row }) => <HCFellowsExpenseDropdownMenu expense={row.original} />,
+    cell: ({ row }) => (
+      <FellowComplaintsActionsDropdown complaint={row.original} />
+    ),
     enableHiding: false,
   },
 ];
 
 function renderStatus(status: string) {
-  if (status === "inititiated") {
-    return <Badge variant="shamiri-green">Payment Initiated</Badge>;
+  if (status === "REJECTED") {
+    return <Badge variant="destructive">Rejected</Badge>;
   }
-  if (status === "deducted") {
-    return <Badge variant="destructive">Payment Deducted</Badge>;
+  if (status === "APPROVED") {
+    return <Badge variant="shamiri-green">Accepted</Badge>;
   }
-  return <Badge variant="default">Pending Payment</Badge>;
+  return <Badge variant="default">Pending</Badge>;
 }

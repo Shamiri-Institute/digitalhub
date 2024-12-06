@@ -53,7 +53,7 @@ export default function FellowsCharts({
     )
     .map((session) => ({
       sessionType: session.sessionType,
-      count: session._count.sessionType,
+      attendance: session._count.sessionType,
     }));
 
   const randomColors = dropoutData.map(() => generateRandomColor());
@@ -65,10 +65,20 @@ export default function FellowsCharts({
             <BarChart width={307} height={307} data={formattedAttendanceData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="sessionType" />
-              <YAxis dataKey="count" />
-              <Tooltip />
-              <Bar dataKey="count" stackId="a" fill="#0085FF" />
-              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" />
+              <YAxis dataKey="attendance" />
+              <Tooltip labelFormatter={(value) => `Session: ${value}`} />
+              <Bar
+                dataKey="attendance"
+                stackId="a"
+                fill="#0085FF"
+                label="Attendance count"
+              />
+              <Bar
+                dataKey="sessionType"
+                stackId="a"
+                fill="#CCE7FF"
+                label="Session type"
+              />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -145,10 +155,26 @@ export default function FellowsCharts({
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line dataKey="behaviour_rating" stroke="#0085FF" />
-              <Line dataKey="program_delivery_rating" stroke="#00BA34" />
-              <Line dataKey="dressing_and_grooming_rating" stroke="#F98600" />
-              <Line dataKey="punctuality_rating" stroke="#8884d8" />
+              <Line
+                dataKey="behaviour_rating"
+                stroke="#0085FF"
+                label="Behaviour"
+              />
+              <Line
+                dataKey="program_delivery_rating"
+                stroke="#00BA34"
+                label="Program delivery"
+              />
+              <Line
+                dataKey="dressing_and_grooming_rating"
+                stroke="#F98600"
+                label="Dressing and grooming"
+              />
+              <Line
+                dataKey="punctuality_rating"
+                stroke="#8884d8"
+                label="Punctuality"
+              />
             </LineChart>
           </ResponsiveContainer>
         ) : null}

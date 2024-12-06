@@ -11,7 +11,7 @@ import {
 import { Prisma } from "@prisma/client";
 import { useState } from "react";
 
-export default function PayoutFilterToggle({
+export default function FellowPayoutFilterToggle({
   payout,
 }: {
   payout: Prisma.PayoutStatementsGetPayload<{}>[];

@@ -4,7 +4,7 @@ import DataTable from "#/components/data-table";
 
 import { columns, subColumns } from "./columns";
 
-export default function HCFellowsDataTable({
+export default function FellowsReportingDataTable({
   fellowAttendanceExpenses,
 }: {
   fellowAttendanceExpenses: HubFellowsAttendancesType[];
