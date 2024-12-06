@@ -17,10 +17,9 @@ export default function ComplaintsFilterToggle() {
   return (
     <FilterToggle
       filterIsActive={filterIsActive}
-      updateFilters={() => {
-        setOpen(false);
-      }}
       setDefaultFilters={() => {}}
+      open={open}
+      setOpen={setOpen}
     >
       <div className="flex flex-col gap-y-2 p-1">
         <Select onValueChange={(value) => {}}>

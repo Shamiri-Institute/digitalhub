@@ -114,7 +114,7 @@ export function notEmpty<T>(value: T | null | undefined): value is T {
   return value !== null && value !== undefined;
 }
 
-export function sessionDisplayName(sessionType: string) {
+export function sessionDisplayName(sessionType?: string) {
   switch (sessionType) {
     case "s0":
       return "Pre";
@@ -127,7 +127,7 @@ export function sessionDisplayName(sessionType: string) {
     case "s4":
       return "S4";
     default:
-      return sessionType;
+      return sessionType?.toUpperCase();
   }
 }
 

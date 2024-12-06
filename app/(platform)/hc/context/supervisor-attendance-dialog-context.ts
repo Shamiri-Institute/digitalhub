@@ -8,11 +8,11 @@ type SupervisorAttendanceContextData = {
   markAttendanceDialog: boolean;
   setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   session: Prisma.InterventionSessionGetPayload<{
-    include: { school: true; sessionRatings: true };
+    include: { school: true; sessionRatings: true; session: true };
   }> | null;
   setSession: Dispatch<
     SetStateAction<Prisma.InterventionSessionGetPayload<{
-      include: { school: true; sessionRatings: true };
+      include: { school: true; sessionRatings: true; session: true };
     }> | null>
   >;
   attendance: SupervisorAttendanceTableData | null;
