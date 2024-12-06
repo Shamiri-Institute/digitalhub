@@ -84,7 +84,7 @@ export default function HubStudentDemographicsCharts({
                   />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip formatter={(value) => `${value} students`} />
             </PieChart>
           </ResponsiveContainer>
         ) : null}
@@ -107,7 +107,10 @@ export default function HubStudentDemographicsCharts({
                   <Cell key={index} fill={randomColors[index]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                formatter={(value) => `${value} students`}
+                labelFormatter={(label) => `${label} years`}
+              />
             </PieChart>
           </ResponsiveContainer>
         ) : null}

@@ -1,3 +1,16 @@
+import { loadFellowPaymentComplaints } from "#/app/(platform)/sc/reporting/expenses/complaints/actions";
+import { currentSupervisor } from "#/app/auth";
+import FellowComplaintsDataTable from "#/components/common/expenses/complaints/complaints-table";
+import { signOut } from "next-auth/react";
+
 export default async function ComplaintsPage() {
-  return <div>Sc complaints page</div>;
+  const supervisor = await currentSupervisor();
+
+  if (!supervisor) {
+    await signOut({ callbackUrl: "/login" });
+  }
+
+  const complainsData = await loadFellowPaymentComplaints();
+
+  return <FellowComplaintsDataTable complaints={complainsData} />;
 }

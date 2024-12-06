@@ -1,7 +1,7 @@
 "use client";
 
-import { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
-import HCComplaintsDropdownMenu from "#/app/(platform)/hc/reporting/expenses/complaints/components/complaints-actions-dropdown";
+import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
+import FellowExpenseTableDropdownMe from "#/components/common/expenses/fellows/fellow-expense-table-dropdown-me";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
@@ -9,7 +9,7 @@ import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 
-export const columns: ColumnDef<HubReportComplaintsType>[] = [
+export const columns: ColumnDef<HubFellowsAttendancesType>[] = [
   {
     id: "button",
     cell: ({ row }) => {
@@ -45,36 +45,40 @@ export const columns: ColumnDef<HubReportComplaintsType>[] = [
   },
   {
     accessorKey: "fellowName",
-    header: "Fellow name",
+    header: "Fellow Name",
+  },
+  {
+    accessorKey: "hub",
+    header: "Hub",
   },
   {
     accessorKey: "supervisorName",
-    header: "Supervisor name",
+    header: "Supervisor Name",
   },
   {
     accessorKey: "specialSession",
-    header: "Special sessions",
+    header: "Special Session",
   },
   {
     accessorKey: "preVsMain",
-    header: "Pre vs main Sessions",
+    header: "Pre vs Main sessions",
   },
   {
     accessorKey: "trainingSupervision",
-    header: "Training vs supervision",
+    header: "Training vs Supervision",
   },
   {
     accessorKey: "paidAmount",
-    header: "Paid amount (KES)",
+    header: "Paid Amount (KES)",
   },
   {
     accessorKey: "totalAmount",
-    header: "Total amount (KES)",
+    header: "Total Amount (KES)",
   },
 ];
 
 export const subColumns: ColumnDef<
-  HubReportComplaintsType["complaints"][number]
+  HubFellowsAttendancesType["attendances"][number]
 >[] = [
   {
     id: "checkbox",
@@ -109,52 +113,53 @@ export const subColumns: ColumnDef<
     enableHiding: false,
   },
   {
-    accessorKey: "dateOfComplaint",
-    header: "Date of complaint",
+    accessorKey: "session",
+    header: "Session",
   },
   {
-    accessorKey: "reasonForComplaint",
-    header: "Reason for complaint",
+    accessorKey: "mpesaNo",
+    header: "Mpesa no.",
   },
   {
-    cell: ({ row }) => (
-      <a
-        href={row.original.statement}
-        download
-        className="text-shamiri-new-blue"
-      >
-        Download
-      </a>
-    ),
-    header: "Statement",
-    id: "Statement",
+    accessorKey: "schoolVenue",
+    header: "School/Venue",
   },
   {
-    accessorKey: "difference",
-    header: "Difference (KES)",
+    accessorKey: "dateOfAttendance",
+    header: "Date of attendance",
   },
   {
-    accessorKey: "confirmedAmountReceived",
-    header: "Confirmed amount received (KES)",
+    accessorKey: "dateMarked",
+    header: "Date marked",
   },
   {
-    cell: ({ row }) => renderStatus(row.original.status),
+    accessorKey: "group",
+    header: "Group",
+  },
+  {
+    accessorKey: "amount",
+    header: "Amount (KES)",
+  },
+  {
+    id: "status",
     header: "Status",
-    id: "Status",
+    accessorKey: "status",
+    cell: ({ row }) => renderStatus(row.original.status),
   },
+
   {
     id: "button",
-    cell: ({ row }) => <HCComplaintsDropdownMenu complaint={row.original} />,
+    cell: ({ row }) => <FellowExpenseTableDropdownMe expense={row.original} />,
     enableHiding: false,
   },
 ];
 
 function renderStatus(status: string) {
-  if (status === "REJECTED") {
-    return <Badge variant="destructive">Rejected</Badge>;
+  if (status === "inititiated") {
+    return <Badge variant="shamiri-green">Payment Initiated</Badge>;
   }
-  if (status === "APPROVED") {
-    return <Badge variant="shamiri-green">Accepted</Badge>;
+  if (status === "deducted") {
+    return <Badge variant="destructive">Payment Deducted</Badge>;
   }
-  return <Badge variant="default">Pending</Badge>;
+  return <Badge variant="default">Pending Payment</Badge>;
 }
