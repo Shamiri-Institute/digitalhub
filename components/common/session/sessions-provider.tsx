@@ -30,6 +30,7 @@ export type Session = Prisma.InterventionSessionGetPayload<{
   include: {
     school: true;
     sessionRatings: true;
+    session: true;
   };
 }>;
 

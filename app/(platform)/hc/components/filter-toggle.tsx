@@ -9,32 +9,24 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import * as React from "react";
-import { useState } from "react";
+import { Dispatch, SetStateAction } from "react";
 
 export default function FilterToggle({
   children,
   filterIsActive,
   setDefaultFilters,
-  updateFilters,
+  open,
+  setOpen,
 }: {
   children: React.ReactNode;
   filterIsActive: boolean;
   setDefaultFilters: () => void;
-  updateFilters: () => void;
+  open: boolean;
+  setOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  const [open, setOpen] = useState(false);
-
   return (
     <div className="flex shrink-0 items-center gap-4">
-      <DropdownMenu
-        open={open}
-        onOpenChange={(value) => {
-          setOpen(value);
-          if (!value) {
-            updateFilters();
-          }
-        }}
-      >
+      <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <div className="flex cursor-pointer select-none items-center justify-center rounded-lg border border-gray-300 bg-white py-1.5 pl-3 pr-2 ring-0 hover:bg-secondary hover:shadow-inner">
             <div className="flex items-center gap-2 text-shamiri-text-dark-grey hover:text-black">
@@ -48,7 +40,7 @@ export default function FilterToggle({
           </div>
         </DropdownMenuTrigger>
         <DropdownMenuPortal>
-          <DropdownMenuContent align={"start"}>{children}</DropdownMenuContent>
+          <DropdownMenuContent className="p-2">{children}</DropdownMenuContent>
         </DropdownMenuPortal>
       </DropdownMenu>
       {filterIsActive && (
