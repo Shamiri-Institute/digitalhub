@@ -1,4 +1,3 @@
-import { createNewSession } from "#/app/(platform)/hc/schedule/actions/session";
 import { ScheduleNewSessionSchema } from "#/components/common/session/schema";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
@@ -24,7 +23,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
-import { SESSION_TYPES } from "#/lib/app-constants/constants";
+import { createNewSession } from "#/lib/actions/session/session";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,10 +38,12 @@ export function ScheduleNewSession({
   toggleDialog,
   schools,
   hubId,
+  hubSessionTypes,
 }: {
   toggleDialog: Dispatch<SetStateAction<boolean>>;
   schools: Prisma.SchoolGetPayload<{}>[];
   hubId: string;
+  hubSessionTypes: Prisma.SessionNameGetPayload<{}>[];
 }) {
   const { toast } = useToast();
   const { setSessions } = useContext(SessionsContext);
@@ -50,7 +51,7 @@ export function ScheduleNewSession({
   const form = useForm<z.infer<typeof ScheduleNewSessionSchema>>({
     resolver: zodResolver(ScheduleNewSessionSchema),
     defaultValues: {
-      sessionType: "s0",
+      sessionId: hubSessionTypes[0]?.id,
       sessionStartTime: "06:00",
     },
   });
@@ -103,7 +104,7 @@ export function ScheduleNewSession({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="sessionType"
+          name="sessionId"
           render={({ field }) => (
             <FormItem className="space-y-2">
               <FormLabel>Select a session type</FormLabel>
@@ -114,10 +115,16 @@ export function ScheduleNewSession({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent className="max-h-[200px]">
-                  {SESSION_TYPES.map((session) => (
-                    <SelectItem key={session.name} value={session.name}>
-                      Intervention group session -{" "}
-                      {session.description.toUpperCase()}
+                  {hubSessionTypes.map((sessionType) => (
+                    <SelectItem key={sessionType.id} value={sessionType.id}>
+                      <span className="">
+                        {sessionType.sessionType.charAt(0).toUpperCase() +
+                          sessionType.sessionType
+                            .slice(1)
+                            .replace("_", " ")
+                            .toLowerCase()}{" "}
+                      </span>
+                      session - <span>{sessionType.sessionLabel}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -51,15 +51,8 @@ export default function SchoolsFilterToggle({
     <SchoolsFiltersContext.Provider value={{ filters, setFilters }}>
       <FilterToggle
         filterIsActive={filterIsActive}
-        updateFilters={() => {
-          setOpen(false);
-          setFilters({
-            sessionTypes,
-            statusTypes,
-            selectedSchool,
-            setSelectedSchool,
-          });
-        }}
+        open={open}
+        setOpen={setOpen}
         setDefaultFilters={() => setFilters(defaultFilterSettings)}
       >
         <div className="flex flex-col gap-y-2 p-1">

@@ -64,7 +64,7 @@ export default function SessionsDatatable({
     React.useState(false);
   const [session, setSession] =
     React.useState<Prisma.InterventionSessionGetPayload<{
-      include: { school: true; sessionRatings: true };
+      include: { school: true; sessionRatings: true; session: true };
     }> | null>(null);
   const [activeSession, setActiveSession] = useState<Session | undefined>();
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);

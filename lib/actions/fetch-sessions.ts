@@ -26,12 +26,14 @@ export async function fetchInterventionSessions({
         gte: start,
         lte: end,
       },
-      sessionType: {
-        in:
-          filters &&
-          Object.keys(filters.sessionTypes).filter((sessionType) => {
-            return filters.sessionTypes[sessionType];
-          }),
+      session: {
+        sessionName: {
+          in:
+            filters &&
+            Object.keys(filters.sessionTypes).filter((sessionType) => {
+              return filters.sessionTypes[sessionType];
+            }),
+        },
       },
       status: {
         in:
@@ -44,6 +46,7 @@ export async function fetchInterventionSessions({
     include: {
       school: true,
       sessionRatings: true,
+      session: true,
     },
     orderBy: {
       sessionDate: "asc",

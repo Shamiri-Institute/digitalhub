@@ -77,11 +77,17 @@ export default async function HubCoordinatorSchedulePage() {
     LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
     WHERE fel.hub_id=${coordinator!.assignedHubId}
     GROUP BY fel.id`,
+    await db.sessionName.findMany({
+      where: {
+        hubId: coordinator!.assignedHubId as string,
+      },
+    }),
   ]);
   const schools = values[0];
   const schoolStats = values[1];
   const supervisors = values[2];
   const fellowRatings = values[3];
+  const hubSessionTypes = values[4];
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -99,6 +105,7 @@ export default async function HubCoordinatorSchedulePage() {
           supervisors={supervisors}
           fellowRatings={fellowRatings}
           role={user?.membership.role!}
+          hubSessionTypes={hubSessionTypes}
         />
       </div>
       <PageFooter />

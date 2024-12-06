@@ -1,5 +1,4 @@
 import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
-import { cancelSession } from "#/app/(platform)/hc/schedule/actions/session";
 import { SessionDetail } from "#/components/common/session/session-list";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -11,6 +10,7 @@ import {
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
+import { cancelSession } from "#/lib/actions/session/session";
 import { ImplementerRole } from "@prisma/client";
 import { useContext } from "react";
 
