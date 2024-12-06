@@ -17,6 +17,7 @@ export type SessionData = Prisma.InterventionSessionGetPayload<{
       };
     };
     sessionRatings: true;
+    session: true;
   };
 }>;
 
@@ -30,6 +31,7 @@ export const columns = (state: {
           include: {
             school: true;
             sessionRatings: true;
+            session: true;
           };
         }>
       | undefined

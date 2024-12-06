@@ -267,11 +267,11 @@ export function SessionDetail({
               <Icons.calendarCheck2 className="h-3.5 w-3.5" strokeWidth={2.5} />
             )}
             {isExpanded && (
-              <div>{sessionDisplayName(session.sessionType!)}</div>
+              <div>{sessionDisplayName(session.session?.sessionName)}</div>
             )}
             {isCompact && (
               <div className="flex gap-1 truncate">
-                {sessionDisplayName(session.sessionType!)} -{" "}
+                {sessionDisplayName(session.session?.sessionName)} -{" "}
                 {timeLabels.startTimeLabel}
                 {(mode === "day" || !withDropdown) && (
                   <div className="truncate">- {schoolName}</div>

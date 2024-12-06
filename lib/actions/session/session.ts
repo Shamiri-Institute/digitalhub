@@ -1,10 +1,8 @@
 "use server";
 
-import {
-  RescheduleSessionSchema,
-  ScheduleNewSessionSchema,
-} from "#/app/(platform)/hc/schemas";
+import { RescheduleSessionSchema } from "#/app/(platform)/hc/schemas";
 import { getCurrentUser } from "#/app/auth";
+import { ScheduleNewSessionSchema } from "#/components/common/session/schema";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
@@ -34,22 +32,12 @@ export async function createNewSession(
   try {
     const parsedData = ScheduleNewSessionSchema.parse(data);
 
-    const sessionTypes = {
-      s0: "Presession",
-      s1: "Session 01",
-      s2: "Session 02",
-      s3: "Session 03",
-      s4: "Session 04",
-    };
-
     const sessionEndTime = addHours(parsedData.sessionDate, 1);
     await db.interventionSession.create({
       data: {
         id: objectId("isess"),
-        sessionName:
-          sessionTypes[parsedData.sessionType as keyof typeof sessionTypes],
+        sessionId: parsedData.sessionId,
         sessionDate: parsedData.sessionDate,
-        sessionType: parsedData.sessionType,
         sessionEndTime,
         yearOfImplementation:
           parsedData.sessionDate.getFullYear() || new Date().getFullYear(),

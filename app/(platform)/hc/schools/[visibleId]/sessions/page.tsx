@@ -28,6 +28,7 @@ export default async function SchoolSessionsPage({
           },
         },
         sessionRatings: true,
+        session: true,
       },
     }),
     await db.supervisor.findMany({

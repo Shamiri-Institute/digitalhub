@@ -22,7 +22,7 @@ export const SessionRatingsSchema = z.object({
 });
 
 export const ScheduleNewSessionSchema = z.object({
-  sessionType: stringValidation("Please select a session type"),
+  sessionId: stringValidation("Please select a session type"),
   schoolId: stringValidation("Please select a school"),
   sessionDate: z.coerce.date({ required_error: "Please select a date" }),
   sessionStartTime: stringValidation("Please select a start time"),

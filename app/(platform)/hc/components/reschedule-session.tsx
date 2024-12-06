@@ -1,5 +1,4 @@
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
-import { rescheduleSession } from "#/app/(platform)/hc/schedule/actions/session";
 import { RescheduleSessionSchema } from "#/app/(platform)/hc/schemas";
 import { SessionDetail } from "#/components/common/session/session-list";
 import { Icons } from "#/components/icons";
@@ -16,6 +15,7 @@ import { Input } from "#/components/ui/input";
 import { Popover, PopoverContent } from "#/components/ui/popover";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
+import { rescheduleSession } from "#/lib/actions/session/session";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImplementerRole } from "@prisma/client";
