@@ -96,7 +96,10 @@ export default function SupervisorAttendance({
         schoolId: attendance?.schoolId,
         absenceReason: attendance?.absenceReason ?? "",
         absenceComments: attendance?.absenceComments ?? "",
-        schoolName: context.session?.school.schoolName,
+        schoolName:
+          context.session?.school?.schoolName ??
+          context.session?.venue ??
+          undefined,
         sessionType: context.session?.sessionType ?? undefined,
         sessionStatus: context.session?.status,
       };
@@ -255,7 +258,9 @@ export function SupervisorAttendanceDataTable({
               {""}
             </span>
             <span>
-              {attendance?.schoolName ?? context.session?.school.schoolName}
+              {attendance?.schoolName ??
+                context.session?.school?.schoolName ??
+                context.session?.venue}
             </span>
           </div>
         </DialogAlertWidget>

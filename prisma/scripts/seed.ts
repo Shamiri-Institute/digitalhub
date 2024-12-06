@@ -1,6 +1,7 @@
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { addDays, addHours, setHours, setMinutes } from "date-fns";
 
+import { SESSION_TYPES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
@@ -851,6 +852,20 @@ async function seedDatabase() {
           },
         });
 
+        await db.sessionName.createMany({
+          data: SESSION_TYPES.map((sessionType) => {
+            return {
+              sessionType: sessionType.type,
+              sessionName: sessionType.name,
+              sessionLabel: sessionType.label,
+              hubId: hub.id,
+              currency: "KES",
+              amount: sessionType.amount,
+            };
+          }),
+          skipDuplicates: true,
+        });
+
         for (const supervisor of Object.values(hub.supervisors)) {
           await db.supervisor.create({
             data: {
@@ -931,6 +946,12 @@ async function seedDatabase() {
           });
 
           for (const session of Object.values(school.sessions)) {
+            const sessionType = await db.sessionName.findFirstOrThrow({
+              where: {
+                hubId: hub.id,
+                sessionName: session.sessionType,
+              },
+            });
             await db.interventionSession.create({
               data: {
                 id: session.id,
@@ -945,6 +966,11 @@ async function seedDatabase() {
                 },
                 project: {
                   connect: { id: createdProject.id },
+                },
+                session: {
+                  connect: {
+                    id: sessionType.id,
+                  },
                 },
               },
             });

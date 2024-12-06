@@ -36,6 +36,7 @@ import {
   markFellowAttendance,
   markManyFellowAttendance,
 } from "#/lib/actions/fellow";
+import { SESSION_NAME_TYPE } from "#/lib/app-constants/constants";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef, Row } from "@tanstack/react-table";
@@ -114,14 +115,15 @@ export default function FellowAttendance({
           attended: sessionAttendance?.attended ?? null,
           supervisorName: supervisor.supervisorName,
           supervisorId: supervisor.id,
-          schoolName: session?.school.schoolName,
+          schoolName: session?.school?.schoolName ?? session?.venue,
           schoolId: sessionAttendance?.schoolId,
           groupName: group?.groupName ?? null,
           groupId: group?.id,
           averageRating:
             fellowRatings.find((rating) => rating.id === fellow.id)
               ?.averageRating ?? null,
-          sessionType: session?.sessionType!,
+          sessionType: session?.session?.sessionType,
+          sessionName: session?.session?.sessionName,
           occurred: session?.occurred,
           sessionStatus: session?.status,
           sessionDate: session?.sessionDate,
@@ -206,10 +208,13 @@ export default function FellowAttendance({
                     : undefined
                 }
                 enableRowSelection={(row: Row<FellowAttendancesTableData>) =>
+                  !(
+                    row.original.sessionType === "INTERVENTION" &&
+                    row.original.groupId === undefined
+                  ) &&
                   (row.original.supervisorId === supervisorId ||
                     role === "HUB_COORDINATOR") &&
-                  !row.original.droppedOut &&
-                  row.original.groupId !== undefined
+                  !row.original.droppedOut
                 }
                 session={session}
               />
@@ -246,7 +251,7 @@ export function FellowAttendanceDataTable({
   closeDialogFn?: Dispatch<SetStateAction<boolean>>;
   emptyStateMessage?: string;
   session?: Prisma.InterventionSessionGetPayload<{
-    include: { school: true; sessionRatings: true };
+    include: { school: true; sessionRatings: true; session: true };
   }> | null;
   enableRowSelection?:
     | boolean
@@ -349,13 +354,17 @@ export function FellowAttendanceDataTable({
             </span>
             <span>
               {sessionDisplayName(
-                attendance?.sessionType ?? session?.sessionType ?? "",
+                attendance?.sessionName ?? session?.session?.sessionName ?? "",
               )}
             </span>
             <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
               {""}
             </span>
-            <span>{attendance?.schoolName ?? session?.school.schoolName}</span>
+            <span>
+              {attendance?.schoolName ??
+                session?.school?.schoolName ??
+                session?.venue}
+            </span>
           </div>
         </DialogAlertWidget>
       </MarkAttendance>
@@ -388,7 +397,8 @@ export type FellowAttendancesTableData = {
   groupName: string | null;
   groupId?: string;
   averageRating: number | null;
-  sessionType?: string;
+  sessionType?: SESSION_NAME_TYPE;
+  sessionName?: string;
   occurred?: boolean | null;
   sessionStatus?: SessionStatus | null;
   sessionDate?: Date;
