@@ -379,9 +379,24 @@ export async function markFellowAttendance(
             id: sessionId,
           },
         });
+        let groupId;
+        if (session.schoolId && id) {
+          const group = await db.interventionGroup.findFirst({
+            where: {
+              schoolId: session.schoolId,
+              leaderId: id,
+            },
+          });
+          if (group) {
+            groupId = group.id;
+          } else {
+            throw new Error(fellow.fellowName + " has no assigned group");
+          }
+        }
         await db.fellowAttendance.create({
           data: {
             fellowId: id!,
+            groupId,
             schoolId: session.schoolId,
             projectId: session.projectId ?? CURRENT_PROJECT_ID,
             sessionId,
@@ -467,10 +482,25 @@ export async function markManyFellowAttendance(
             },
           });
         }
+        let groupId;
+        if (session.schoolId && fellow) {
+          const group = await db.interventionGroup.findFirst({
+            where: {
+              schoolId: session.schoolId,
+              leaderId: fellow.id,
+            },
+          });
+          if (group) {
+            groupId = group.id;
+          } else {
+            throw new Error(fellow.fellowName + " has no assigned group");
+          }
+        }
         await db.fellowAttendance.create({
           data: {
             fellowId,
             schoolId: session.schoolId,
+            groupId,
             projectId: session.projectId ?? CURRENT_PROJECT_ID,
             absenceReason,
             absenceComments: comments,

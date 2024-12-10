@@ -278,7 +278,7 @@ export type SupervisorAttendanceTableData = {
   phoneNumber: string;
   fellows: string;
   schoolName?: string;
-  schoolId?: string;
+  schoolId?: string | null;
   sessionType?: string;
   sessionId?: string;
   occurred?: boolean | null;

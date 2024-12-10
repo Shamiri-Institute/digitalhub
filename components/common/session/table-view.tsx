@@ -500,7 +500,7 @@ export function TableView({
             );
 
             _fellowAttendances.push({
-              schoolName: session.school.schoolName,
+              schoolName: session.school?.schoolName,
               fellowId: fellow.id,
               fellowName: fellow.fellowName,
               attended: fellow_attendance?.attended ?? null,
@@ -510,7 +510,7 @@ export function TableView({
               supervisorId: fellow.supervisorId,
               supervisorName: supervisor.supervisorName,
               cellNumber: fellow.cellNumber,
-              sessionType: session.sessionType!,
+              sessionType: session.session?.sessionType,
               occurred: session.occurred,
               sessionStatus: session.status,
               sessionDate: session.sessionDate,
@@ -533,7 +533,7 @@ export function TableView({
           schoolId: attendance?.schoolId,
           absenceReason: attendance?.absenceReason ?? "",
           absenceComments: attendance?.absenceComments ?? "",
-          schoolName: session.school.schoolName,
+          schoolName: session.school?.schoolName,
           sessionType: session?.sessionType!,
           occurred: session?.occurred,
           sessionStatus: session?.status,
