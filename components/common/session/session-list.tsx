@@ -55,21 +55,24 @@ export function SessionList({
     return (
       activeSession && (
         <>
-          <SessionRatings
-            schoolId={activeSession.schoolId}
-            open={ratingsDialog}
-            onOpenChange={setRatingsDialog}
-            ratings={activeSession.sessionRatings.map((rating) => {
-              const { sessionRatings, ..._session } = activeSession;
-              return {
-                ...rating,
-                session: _session,
-              };
-            })}
-            mode="view"
-          >
-            <DialogAlertWidget label={activeSession.school.schoolName} />
-          </SessionRatings>
+          {activeSession.session?.sessionType === "INTERVENTION" &&
+            activeSession.schoolId && (
+              <SessionRatings
+                schoolId={activeSession.schoolId}
+                open={ratingsDialog}
+                onOpenChange={setRatingsDialog}
+                ratings={activeSession.sessionRatings.map((rating) => {
+                  const { sessionRatings, ..._session } = activeSession;
+                  return {
+                    ...rating,
+                    session: _session,
+                  };
+                })}
+                mode="view"
+              >
+                <DialogAlertWidget label={activeSession.school?.schoolName} />
+              </SessionRatings>
+            )}
           <MarkSessionOccurrence
             id={activeSession.id}
             defaultOccurrence={activeSession.occurred}
@@ -214,7 +217,7 @@ export function SessionDetail({
     });
   }, [state.session.sessionDate, state.session.sessionEndTime]);
 
-  const schoolName = session.school.schoolName;
+  const schoolName = session.school?.schoolName ?? session.venue;
   const completed = session.occurred;
   const cancelled = session.status === SessionStatus.Cancelled;
   const rescheduled = session.status === SessionStatus.Rescheduled;
@@ -383,6 +386,23 @@ export function SessionDropDown({
             >
               View fellow attendance
             </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={
+                session.status === "Cancelled" ||
+                session.sessionRatings.length === 0
+              }
+              onClick={(e) => {
+                e.stopPropagation();
+                if (state.setSession) {
+                  state.setSession(session);
+                }
+                if (state.setRatingsDialog) {
+                  state.setRatingsDialog(true);
+                }
+              }}
+            >
+              Weekly session report
+            </DropdownMenuItem>
           </>
         )}
         {role === "SUPERVISOR" && (
@@ -398,15 +418,39 @@ export function SessionDropDown({
             >
               Mark session occurrence
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={(e) => {
-                // e.stopPropagation();
-                // supervisorAttendanceContext.setIsOpen(true);
-              }}
-              disabled={session.status === "Cancelled"}
-            >
-              Mark student attendance
-            </DropdownMenuItem>
+            {(session.session?.sessionType === "INTERVENTION" ||
+              session.session?.sessionType === "CLINICAL" ||
+              session.session?.sessionType === "DATA_COLLECTION") && (
+              <>
+                <DropdownMenuItem
+                  disabled={
+                    session.status === "Cancelled" ||
+                    session.session?.sessionType === "DATA_COLLECTION"
+                  }
+                >
+                  Mark student attendance
+                </DropdownMenuItem>
+                {session.session?.sessionType === "INTERVENTION" && (
+                  <DropdownMenuItem
+                    disabled={
+                      session.status === "Cancelled" ||
+                      session.sessionRatings.length === 0
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (state.setSession) {
+                        state.setSession(session);
+                      }
+                      if (state.setRatingsDialog) {
+                        state.setRatingsDialog(true);
+                      }
+                    }}
+                  >
+                    Weekly session report
+                  </DropdownMenuItem>
+                )}
+              </>
+            )}
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
@@ -414,7 +458,10 @@ export function SessionDropDown({
                 state.setFellowAttendanceDialog &&
                   state.setFellowAttendanceDialog(true);
               }}
-              disabled={session.status === "Cancelled"}
+              disabled={
+                session.status === "Cancelled" ||
+                session.session?.sessionType === "CLINICAL"
+              }
             >
               Mark fellow attendance
             </DropdownMenuItem>
@@ -431,23 +478,6 @@ export function SessionDropDown({
             Reschedule session
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem
-          disabled={
-            session.status === "Cancelled" ||
-            session.sessionRatings.length === 0
-          }
-          onClick={(e) => {
-            e.stopPropagation();
-            if (state.setSession) {
-              state.setSession(session);
-            }
-            if (state.setRatingsDialog) {
-              state.setRatingsDialog(true);
-            }
-          }}
-        >
-          Weekly session report
-        </DropdownMenuItem>
         {session.sessionDate > new Date() && (
           <DropdownMenuItem
             className="text-shamiri-light-red"

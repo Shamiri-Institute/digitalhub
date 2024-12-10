@@ -1,3 +1,4 @@
+import { SESSION_NAME_TYPES } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
 
@@ -21,10 +22,46 @@ export const SessionRatingsSchema = z.object({
   recommendations: z.string().optional(),
 });
 
-export const ScheduleNewSessionSchema = z.object({
-  sessionId: stringValidation("Please select a session type"),
-  schoolId: stringValidation("Please select a school"),
-  sessionDate: z.coerce.date({ required_error: "Please select a date" }),
-  sessionStartTime: stringValidation("Please select a start time"),
-  projectId: z.string().optional(),
-});
+export const ScheduleNewSessionSchema = z
+  .object({
+    sessionId: stringValidation("Please select a session type"),
+    sessionType: z.enum(SESSION_NAME_TYPES),
+    schoolId: z.string().optional(),
+    venue: z.string().optional(),
+    sessionDate: z.coerce.date({ required_error: "Please select a date" }),
+    sessionStartTime: stringValidation("Please select a start time"),
+    projectId: z.string().optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (
+      (val.sessionType === "INTERVENTION" ||
+        val.sessionType === "CLINICAL" ||
+        val.sessionType === "DATA_COLLECTION") &&
+      val.schoolId === undefined
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Please select a school.`,
+        fatal: true,
+        path: ["schoolId"],
+      });
+
+      return z.NEVER;
+    }
+
+    if (
+      (val.sessionType !== "INTERVENTION" &&
+        val.sessionType !== "CLINICAL" &&
+        val.venue === undefined) ||
+      val.venue === ""
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Please enter the venue location.`,
+        fatal: true,
+        path: ["venue"],
+      });
+
+      return z.NEVER;
+    }
+  });

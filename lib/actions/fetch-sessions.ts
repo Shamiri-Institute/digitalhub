@@ -21,12 +21,12 @@ export async function fetchInterventionSessions({
 
   const sessions = await db.interventionSession.findMany({
     where: {
-      school: { hubId },
       sessionDate: {
         gte: start,
         lte: end,
       },
       session: {
+        hubId,
         sessionName: {
           in:
             filters &&

@@ -74,7 +74,7 @@ export default function SessionsOccurredWidget({
                   />
                 )}
               </div>
-              {sessionType.description}
+              {sessionType.name}
             </div>
           </div>
         );

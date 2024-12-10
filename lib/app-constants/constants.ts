@@ -65,14 +65,14 @@ export type DATA_FOLLOWUP_SESSION_TYPES =
   | "dfu5"
   | "dfu6";
 
-type AllSessionTypes =
+export type ALL_SESSION_TYPE =
   | INTERVENTION_SESSION_TYPES
   | SUPERVISION_SESSION_TYPES
   | TRAINING_SESSION_TYPES
   | CLINICAL_SESSION_TYPES
   | DATA_FOLLOWUP_SESSION_TYPES;
 
-export type SPECIAL_SESSION_TYPES = `special_${AllSessionTypes}`;
+export type SPECIAL_SESSION_TYPES = `special_${ALL_SESSION_TYPE}`;
 
 export const SCHOOL_TYPES = [
   "County",
@@ -652,35 +652,206 @@ export const KENYAN_COUNTIES = [
   },
 ] as const;
 
-// TODO: Refactor to string array with s0, s1, etc. values
-export const SESSION_TYPES: { name: string; description: string }[] = [
+export type SESSION_NAME_TYPE =
+  | "INTERVENTION"
+  | "SUPERVISION"
+  | "TRAINING"
+  | "SPECIAL"
+  | "CLINICAL"
+  | "DATA_COLLECTION";
+
+export const SESSION_NAME_TYPES = [
+  "INTERVENTION",
+  "SUPERVISION",
+  "TRAINING",
+  "SPECIAL",
+  "CLINICAL",
+  "DATA_COLLECTION",
+] as const;
+
+type SessionType = {
+  name: ALL_SESSION_TYPE;
+  label: string;
+  type: SESSION_NAME_TYPE;
+  amount?: number;
+};
+
+export const SESSION_TYPES: SessionType[] = [
   {
     name: "s0",
-    description: "Pre",
+    label: "Pre-session",
+    type: "INTERVENTION",
+    amount: 500,
   },
   {
     name: "s1",
-    description: "S1",
+    label: "Session 1",
+    type: "INTERVENTION",
+    amount: 1000,
   },
   {
     name: "s2",
-    description: "S2",
+    label: "Session 2",
+    type: "INTERVENTION",
+    amount: 1000,
   },
   {
     name: "s3",
-    description: "S3",
+    label: "Session 3",
+    type: "INTERVENTION",
+    amount: 1000,
   },
   {
     name: "s4",
-    description: "S4",
+    label: "Session 4",
+    type: "INTERVENTION",
+    amount: 1000,
+  },
+  {
+    name: "sv1",
+    label: "Supervision 1",
+    type: "SUPERVISION",
+    amount: 1000,
+  },
+  {
+    name: "sv2",
+    label: "Supervision 2",
+    type: "SUPERVISION",
+    amount: 1000,
+  },
+  {
+    name: "sv3",
+    label: "Supervision 3",
+    type: "SUPERVISION",
+    amount: 1000,
+  },
+  {
+    name: "sv4",
+    label: "Supervision 4",
+    type: "SUPERVISION",
+    amount: 1000,
+  },
+  {
+    name: "sv5",
+    label: "Supervision 5",
+    type: "SUPERVISION",
+    amount: 1000,
+  },
+  {
+    name: "t1",
+    label: "Training 1",
+    type: "TRAINING",
+    amount: 1000,
+  },
+  {
+    name: "t2",
+    label: "Training 2",
+    type: "TRAINING",
+    amount: 1000,
+  },
+  {
+    name: "t3",
+    label: "Training 3",
+    type: "TRAINING",
+    amount: 1000,
+  },
+  {
+    name: "t4",
+    label: "Training 4",
+    type: "TRAINING",
+    amount: 1000,
+  },
+  {
+    name: "t5",
+    label: "Training 5",
+    type: "TRAINING",
+    amount: 1000,
+  },
+  {
+    name: "cl1",
+    label: "Clinical 1",
+    type: "CLINICAL",
+    amount: 1000,
+  },
+  {
+    name: "cl2",
+    label: "Clinical 2",
+    type: "CLINICAL",
+    amount: 1000,
+  },
+  {
+    name: "cl3",
+    label: "Clinical 3",
+    type: "CLINICAL",
+    amount: 1000,
+  },
+  {
+    name: "cl4",
+    label: "Clinical 4",
+    type: "CLINICAL",
+    amount: 1000,
+  },
+  {
+    name: "cl5",
+    label: "Clinical 5",
+    type: "CLINICAL",
+    amount: 1000,
+  },
+  {
+    name: "cl6",
+    label: "Clinical 6",
+    type: "CLINICAL",
+    amount: 1000,
+  },
+  {
+    name: "cl7",
+    label: "Clinical 7",
+    type: "CLINICAL",
+    amount: 1000,
+  },
+  {
+    name: "cl8",
+    label: "Clinical 8",
+    type: "CLINICAL",
+    amount: 1000,
+  },
+  {
+    name: "dfu1",
+    label: "Data Follow Up 1",
+    type: "DATA_COLLECTION",
+    amount: 1000,
+  },
+  {
+    name: "dfu2",
+    label: "Data Follow Up 2",
+    type: "DATA_COLLECTION",
+    amount: 1000,
+  },
+  {
+    name: "dfu3",
+    label: "Data Follow Up 3",
+    type: "DATA_COLLECTION",
+    amount: 1000,
+  },
+  {
+    name: "dfu4",
+    label: "Data Follow Up 4",
+    type: "DATA_COLLECTION",
+    amount: 1000,
+  },
+  {
+    name: "dfu5",
+    label: "Data Follow Up 5",
+    type: "DATA_COLLECTION",
+    amount: 1000,
+  },
+  {
+    name: "dfu6",
+    label: "Data Follow Up 6",
+    type: "DATA_COLLECTION",
+    amount: 1000,
   },
 ];
-
-const sessionTypes = {};
-SESSION_TYPES.forEach((type) => {
-  sessionTypes[type.name] = type.description;
-});
-export type InterventionSessionType = keyof typeof sessionTypeKeys;
 
 export const STUDENT_DROPOUT_REASONS = [
   "Mistrust/Ethical Concerns",
