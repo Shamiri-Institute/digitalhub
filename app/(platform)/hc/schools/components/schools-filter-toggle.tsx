@@ -118,7 +118,7 @@ export default function SchoolsFilterToggle({
                     e.preventDefault();
                   }}
                 >
-                  <span className="">{sessionType.description}</span>
+                  <span className="">{sessionType.name}</span>
                 </DropdownMenuCheckboxItem>
               );
             })}

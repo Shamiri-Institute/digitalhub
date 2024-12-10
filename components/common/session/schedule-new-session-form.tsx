@@ -30,7 +30,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
-import { Dispatch, SetStateAction, useContext } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -48,13 +54,39 @@ export function ScheduleNewSession({
   const { toast } = useToast();
   const { setSessions } = useContext(SessionsContext);
 
+  const [mode, setMode] = useState<"school" | "venue">("school");
+
   const form = useForm<z.infer<typeof ScheduleNewSessionSchema>>({
     resolver: zodResolver(ScheduleNewSessionSchema),
     defaultValues: {
       sessionId: hubSessionTypes[0]?.id,
       sessionStartTime: "06:00",
+      schoolId: undefined,
+      venue: undefined,
     },
   });
+
+  const sessionIdWatcher = form.watch("sessionId");
+
+  useEffect(() => {
+    const sessionType = hubSessionTypes.find((x) => x.id === sessionIdWatcher);
+    if (sessionType) {
+      form.setValue("sessionType", sessionType.sessionType);
+      if (
+        sessionType.sessionType !== "INTERVENTION" &&
+        sessionType.sessionType !== "CLINICAL" &&
+        sessionType.sessionType !== "DATA_COLLECTION"
+      ) {
+        form.resetField("venue");
+        form.resetField("schoolId");
+        setMode("venue");
+      } else {
+        form.resetField("schoolId");
+        form.resetField("venue");
+        setMode("school");
+      }
+    }
+  }, [hubSessionTypes, sessionIdWatcher]);
 
   const onSubmit = async (data: z.infer<typeof ScheduleNewSessionSchema>) => {
     const sessionDate =
@@ -134,32 +166,53 @@ export function ScheduleNewSession({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="schoolId"
-          render={({ field }) => (
-            <FormItem className="space-y-2">
-              <FormLabel>
-                Select school <span className="text-shamiri-light-red">*</span>
-              </FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="max-h-[200px]">
-                  {schools.map((school) => (
-                    <SelectItem key={school.id} value={school.id}>
-                      {school.schoolName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {mode === "school" && (
+          <FormField
+            control={form.control}
+            name="schoolId"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel>
+                  Select school{" "}
+                  <span className="text-shamiri-light-red">*</span>
+                </FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent className="max-h-[200px]">
+                    {schools.map((school) => (
+                      <SelectItem key={school.id} value={school.id}>
+                        {school.schoolName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        {mode === "venue" && (
+          <FormField
+            control={form.control}
+            name="venue"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel>
+                  Enter venue <span className="text-shamiri-light-red">*</span>
+                </FormLabel>
+                <Input {...field} type="text" />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <FormField

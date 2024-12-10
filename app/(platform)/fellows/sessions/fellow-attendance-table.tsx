@@ -83,7 +83,7 @@ export function FellowAttendanceTable({
                             : "N/A"}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {att.school.schoolName}
+                          {att.school?.schoolName}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {att.session

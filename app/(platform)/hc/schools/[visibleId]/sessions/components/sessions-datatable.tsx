@@ -150,21 +150,25 @@ export default function SessionsDatatable({
             emptyStateMessage="No sessions found for this school"
           />
           {activeSession && (
-            <SessionRatings
-              schoolId={activeSession.schoolId}
-              open={ratingsDialog}
-              onOpenChange={setRatingsDialog}
-              ratings={activeSession.sessionRatings.map((rating) => {
-                const { sessionRatings, ..._session } = activeSession;
-                return {
-                  ...rating,
-                  session: _session,
-                };
-              })}
-              mode="view"
-            >
-              <DialogAlertWidget label={activeSession.school.schoolName} />
-            </SessionRatings>
+            <>
+              {activeSession.schoolId !== null && activeSession.school && (
+                <SessionRatings
+                  schoolId={activeSession.schoolId}
+                  open={ratingsDialog}
+                  onOpenChange={setRatingsDialog}
+                  ratings={activeSession.sessionRatings.map((rating) => {
+                    const { sessionRatings, ..._session } = activeSession;
+                    return {
+                      ...rating,
+                      session: _session,
+                    };
+                  })}
+                  mode="view"
+                >
+                  <DialogAlertWidget label={activeSession.school.schoolName} />
+                </SessionRatings>
+              )}
+            </>
           )}
           <RescheduleSession
             updateSessionsState={updateRescheduledSessionState}

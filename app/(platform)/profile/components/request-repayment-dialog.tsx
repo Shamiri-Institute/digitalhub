@@ -297,7 +297,7 @@ function RepaymentRequestHistory({
                 {format(new Date(request.createdAt), "dd/MM/yyyy")}
               </td>
               <td className="px-2 py-1">
-                {request.fellowAttendance.school.schoolName} — Session{" "}
+                {request.fellowAttendance.school?.schoolName} — Session{" "}
                 {request.fellowAttendance.session?.sessionType || "N/A"}
               </td>
               <td className="px-2 py-1">{fellow.mpesaNumber}</td>
