@@ -72,7 +72,7 @@ export async function markSupervisorAttendance(
         await db.supervisorAttendance.create({
           data: {
             supervisorId: id!,
-            schoolId: session.schoolId,
+            schoolId: session.schoolId ?? undefined,
             projectId: session.projectId ?? CURRENT_PROJECT_ID,
             sessionId,
             absenceReason,

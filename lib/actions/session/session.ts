@@ -44,6 +44,7 @@ export async function createNewSession(
         schoolId: parsedData.schoolId,
         occurred: false,
         projectId: parsedData.projectId,
+        venue: parsedData.venue,
       },
     });
 

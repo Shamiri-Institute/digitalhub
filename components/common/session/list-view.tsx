@@ -205,7 +205,7 @@ export function ListView({
                           {sessionDisplayName(session.sessionType!)}
                         </span>
                         <span className="opacity-50">
-                          {session.school.schoolName}
+                          {session.school?.schoolName}
                         </span>
                         <div
                           className={cn(

@@ -60,7 +60,7 @@ export const processAttendances = (
           : MAIN_SESSION_COMPENSATION;
         isPreSession ? payout.preSessionCount++ : payout.mainSessionCount++;
 
-        let sessionDetail = `${session.school.schoolName.trim()}-${sessionDisplayName(
+        let sessionDetail = `${session.school?.schoolName.trim()}-${sessionDisplayName(
           session.sessionType!,
         )}`;
         if (attendance.delayedPaymentRequests?.length > 0) {
