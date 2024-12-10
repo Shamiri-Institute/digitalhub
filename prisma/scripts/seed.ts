@@ -1,6 +1,7 @@
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { addDays, addHours, setHours, setMinutes } from "date-fns";
 
+import { SESSION_TYPES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
@@ -352,27 +353,6 @@ const ids = {
                     },
                   },
 
-                  fellowAttendances: {
-                    FELATT_1: {
-                      id: 1,
-                      visibleId: "ANS24_07_FELATT_1",
-                      attended: null,
-                      supervisorVisibleId: "SPV24_S_03",
-                      fellowVisibleId: "TFW24_S_05",
-                      sessionType: "s1",
-                      groupId: "07G1",
-                    },
-                    FELATT_2: {
-                      id: 2,
-                      visibleId: "ANS24_07_FELATT_2",
-                      attended: true,
-                      supervisorVisibleId: "SPV24_S_03",
-                      fellowVisibleId: "TFW24_S_06",
-                      sessionType: "s1",
-                      groupId: "07G2",
-                    },
-                  },
-
                   studentAttendances: {
                     STUDATT_1: {
                       id: 1,
@@ -470,8 +450,6 @@ const ids = {
 
                   supervisorAttendances: {},
 
-                  fellowAttendances: {},
-
                   studentAttendances: {},
                 },
 
@@ -540,8 +518,6 @@ const ids = {
                       sessionType: "s0",
                     },
                   },
-
-                  fellowAttendances: {},
 
                   studentAttendances: {},
                 },
@@ -664,8 +640,6 @@ const ids = {
 
                   supervisorAttendances: {},
 
-                  fellowAttendances: {},
-
                   studentAttendances: {},
                 },
 
@@ -723,8 +697,6 @@ const ids = {
 
                   supervisorAttendances: {},
 
-                  fellowAttendances: {},
-
                   studentAttendances: {},
                 },
 
@@ -753,8 +725,6 @@ const ids = {
                   students: {},
 
                   supervisorAttendances: {},
-
-                  fellowAttendances: {},
 
                   studentAttendances: {},
                 },
@@ -851,6 +821,20 @@ async function seedDatabase() {
           },
         });
 
+        await db.sessionName.createMany({
+          data: SESSION_TYPES.map((sessionType) => {
+            return {
+              sessionType: sessionType.type,
+              sessionName: sessionType.name,
+              sessionLabel: sessionType.label,
+              hubId: hub.id,
+              currency: "KES",
+              amount: sessionType.amount,
+            };
+          }),
+          skipDuplicates: true,
+        });
+
         for (const supervisor of Object.values(hub.supervisors)) {
           await db.supervisor.create({
             data: {
@@ -931,6 +915,12 @@ async function seedDatabase() {
           });
 
           for (const session of Object.values(school.sessions)) {
+            const sessionType = await db.sessionName.findFirstOrThrow({
+              where: {
+                hubId: hub.id,
+                sessionName: session.sessionType,
+              },
+            });
             await db.interventionSession.create({
               data: {
                 id: session.id,
@@ -945,6 +935,11 @@ async function seedDatabase() {
                 },
                 project: {
                   connect: { id: createdProject.id },
+                },
+                session: {
+                  connect: {
+                    id: sessionType.id,
+                  },
                 },
               },
             });
@@ -964,45 +959,6 @@ async function seedDatabase() {
                 school: {
                   connect: { id: createdSchool.id },
                 },
-              },
-            });
-          }
-
-          for (const fellowAttendance of Object.values(
-            school.fellowAttendances,
-          )) {
-            const fellow = await db.fellow.findUniqueOrThrow({
-              where: {
-                visibleId: fellowAttendance.fellowVisibleId,
-              },
-            });
-
-            const supervisor = await db.supervisor.findUniqueOrThrow({
-              where: {
-                visibleId: fellowAttendance.supervisorVisibleId,
-              },
-            });
-
-            const session = await db.interventionSession.findUniqueOrThrow({
-              where: {
-                interventionBySchoolIdAndSessionType: {
-                  schoolId: createdSchool.id,
-                  sessionType: fellowAttendance.sessionType,
-                },
-              },
-            });
-
-            await db.fellowAttendance.create({
-              data: {
-                id: fellowAttendance.id,
-                visibleId: fellowAttendance.visibleId,
-                supervisorId: supervisor.id,
-                fellowId: fellow.id,
-                attended: fellowAttendance.attended,
-                projectId: createdProject.id,
-                schoolId: createdSchool.id,
-                sessionId: session.id,
-                groupId: fellowAttendance.groupId,
               },
             });
           }
