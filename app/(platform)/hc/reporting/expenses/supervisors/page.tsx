@@ -4,7 +4,7 @@ import {
 } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import HCSupervisorsDataTable from "#/app/(platform)/hc/reporting/expenses/supervisors/components/supervisors-table";
 import { currentHubCoordinator } from "#/app/auth";
-import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
+import { signOut } from "next-auth/react";
 
 export default async function SupervisorsPage() {
   const expensesData = await loadHubSupervisorExpenses();
@@ -12,7 +12,7 @@ export default async function SupervisorsPage() {
   const hubCoordinator = await currentHubCoordinator();
 
   if (!hubCoordinator) {
-    return <InvalidPersonnelRole role="hub-coordinator" />;
+    await signOut({ callbackUrl: "/login" });
   }
 
   const supervisorsInHub = await getSupervisorsInHub();
@@ -20,7 +20,6 @@ export default async function SupervisorsPage() {
   return (
     <HCSupervisorsDataTable
       supervisorExpenses={expensesData}
-      currentHubCoordinator={hubCoordinator}
       supervisorsInHub={supervisorsInHub}
     />
   );
