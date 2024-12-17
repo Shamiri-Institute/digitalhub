@@ -1,5 +1,4 @@
-import { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
-import HCApproveSupervisorExpense from "#/app/(platform)/hc/reporting/expenses/supervisors/components/approve-expense";
+import { SupervisorExpensesType } from "#/app/(platform)/sc/reporting/expenses/my-expenses/actions";
 import HCDeleteExpenseRequest from "#/components/common/expenses/supervisor-expenses/delete-expense-request";
 import HCEditSupervisorExpense from "#/components/common/expenses/supervisor-expenses/edit-expense";
 import { Icons } from "#/components/icons";
@@ -12,10 +11,10 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 
-export default function HCSupervisorExpenseDropdownMenu({
+export default function SupervisorExpenseDropdownMenu({
   expense,
 }: {
-  expense: HubSupervisorExpensesType;
+  expense: SupervisorExpensesType;
 }) {
   return (
     <DropdownMenu>
@@ -32,14 +31,6 @@ export default function HCSupervisorExpenseDropdownMenu({
             Actions
           </span>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {expense.status !== "APPROVED" && (
-          <HCApproveSupervisorExpense expense={expense}>
-            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-              Approve
-            </div>
-          </HCApproveSupervisorExpense>
-        )}
         <HCEditSupervisorExpense expense={expense}>
           <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             Edit Request
