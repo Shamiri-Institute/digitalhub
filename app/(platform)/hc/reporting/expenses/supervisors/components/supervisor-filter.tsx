@@ -1,16 +1,12 @@
-import AddSupervisorExpensesForm from "#/app/(platform)/hc/reporting/expenses/supervisors/components/add-expense";
 import SupervisorFilterToggle from "#/app/(platform)/hc/reporting/expenses/supervisors/components/supervisor-expense-toggle";
+import AddSupervisorExpensesForm from "#/components/common/expenses/supervisor-expenses/add-expense";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Prisma } from "@prisma/client";
 
-export default async function SupervisorsFilterTab({
-  hubCoordinatorId,
-  hubId,
+export default async function SupervisorExpensesFilterTab({
   supervisorsInHub,
 }: {
-  hubCoordinatorId: string;
-  hubId: string;
   supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
 }) {
   return (
