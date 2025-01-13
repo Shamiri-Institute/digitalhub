@@ -4,6 +4,7 @@ import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
+import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
@@ -27,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
+import { Separator } from "#/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
@@ -41,6 +43,7 @@ import { cn, sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
+import { InfoIcon } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -342,31 +345,48 @@ export function FellowAttendanceDataTable({
         markBulkAttendanceAction={markManyFellowAttendance}
         selectedIds={selectedRows.map((x): string => x.original.fellowId)}
       >
-        <DialogAlertWidget>
-          <div className="flex items-center gap-2">
-            {bulkMode ? (
-              <span>{selectedRows.length} fellows</span>
-            ) : (
-              <span>{attendance?.fellowName}</span>
-            )}
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
-            <span>
-              {sessionDisplayName(
-                attendance?.sessionName ?? session?.session?.sessionName ?? "",
+        <div className="flex flex-col gap-y-3">
+          <DialogAlertWidget>
+            <div className="flex items-center gap-2">
+              {bulkMode ? (
+                <span>{selectedRows.length} fellows</span>
+              ) : (
+                <span>{attendance?.fellowName}</span>
               )}
-            </span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
-            <span>
-              {attendance?.schoolName ??
-                session?.school?.schoolName ??
-                session?.venue}
-            </span>
-          </div>
-        </DialogAlertWidget>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+                {""}
+              </span>
+              <span>
+                {sessionDisplayName(
+                  attendance?.sessionName ??
+                    session?.session?.sessionName ??
+                    "",
+                )}
+              </span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+                {""}
+              </span>
+              <span>
+                {attendance?.schoolName ??
+                  session?.school?.schoolName ??
+                  session?.venue}
+              </span>
+            </div>
+          </DialogAlertWidget>
+          <Alert variant="destructive">
+            <AlertTitle className="flex gap-2">
+              <InfoIcon className="mt-1 h-4 w-4 shrink-0" />
+              <span className="text-base">
+                Please confirm{" "}
+                {bulkMode
+                  ? "fellows' M-Pesa numbers"
+                  : "fellow's M-Pesa number"}{" "}
+                before marking attendance.
+              </span>
+            </AlertTitle>
+          </Alert>
+          <Separator />
+        </div>
       </MarkAttendance>
       {closeDialogFn && (
         <Button

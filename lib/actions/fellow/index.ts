@@ -347,11 +347,58 @@ export async function markFellowAttendance(
           fellowId: id,
           sessionId,
         },
+        include: {
+          session: {
+            include: {
+              session: true,
+            },
+          },
+        },
       });
 
       if (attendance) {
+        let amount = attendance.session?.session?.amount;
+        let reason = "MARK_SESSION_ATTENDANCE";
         const attendanceStatus =
           attended === "attended" ? true : attended === "missed" ? false : null;
+
+        if (amount) {
+          if (!attendanceStatus) {
+            amount = -amount;
+            reason = "UNMARK_SESSION_ATTENDANCE";
+          }
+
+          const existingPayout = await db.payoutStatements.findFirst({
+            where: {
+              fellowId: id!,
+              fellowAttendanceId: attendance.id,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          });
+
+          if (
+            (!existingPayout && attendanceStatus) ||
+            (existingPayout && existingPayout.reason !== reason)
+          ) {
+            await db.payoutStatements.create({
+              data: {
+                fellowId: id!,
+                fellowAttendanceId: attendance.id,
+                createdBy: auth.user!.user.id,
+                amount,
+                reason,
+                mpesaNumber: fellow.mpesaNumber,
+              },
+            });
+          }
+        } else {
+          throw new Error(
+            "An error occurred while marking attendance. Session missing payout amount.",
+          );
+        }
+
         await db.fellowAttendance.update({
           where: {
             id: attendance.id,
@@ -361,14 +408,10 @@ export async function markFellowAttendance(
             fellowId: id,
             absenceReason: attendanceStatus === false ? absenceReason : null,
             absenceComments: attendanceStatus === false ? comments : null,
-            attended:
-              attended === "attended"
-                ? true
-                : attended === "missed"
-                  ? false
-                  : null,
+            attended: attendanceStatus,
           },
         });
+
         return {
           success: true,
           message: `Successfully updated attendance for ${fellow.fellowName}`,
@@ -378,7 +421,19 @@ export async function markFellowAttendance(
           where: {
             id: sessionId,
           },
+          include: {
+            session: true,
+          },
         });
+
+        if (!session.occurred) {
+          throw new Error(
+            "An error occurred while marking attendance for " +
+              fellow.fellowName +
+              ". Session has not occurred.",
+          );
+        }
+
         let groupId;
         if (session.schoolId && id) {
           const group = await db.interventionGroup.findFirst({
@@ -393,9 +448,24 @@ export async function markFellowAttendance(
             throw new Error(fellow.fellowName + " has no assigned group");
           }
         }
+
+        if (!session.session?.amount) {
+          throw new Error(
+            "An error occurred while marking attendance for " +
+              fellow.fellowName +
+              ". Session payout amount not found.",
+          );
+        }
+
+        if (!id) {
+          throw new Error("Fellow ID not found");
+        }
+
+        const attendanceStatus =
+          attended === "attended" ? true : attended === "missed" ? false : null;
         await db.fellowAttendance.create({
           data: {
-            fellowId: id!,
+            fellowId: id,
             groupId,
             schoolId: session.schoolId,
             projectId: session.projectId ?? CURRENT_PROJECT_ID,
@@ -403,13 +473,20 @@ export async function markFellowAttendance(
             absenceReason,
             absenceComments: comments,
             markedBy: auth.user!.user.id,
-            supervisorId: auth.supervisor?.id!,
-            attended:
-              attended === "attended"
-                ? true
-                : attended === "missed"
-                  ? false
-                  : null,
+            attended: attendanceStatus,
+            PayoutStatements: attendanceStatus
+              ? {
+                  create: [
+                    {
+                      fellowId: id,
+                      createdBy: auth.user!.user.id,
+                      amount: session.session?.amount,
+                      reason: "MARK_SESSION_ATTENDANCE",
+                      mpesaNumber: fellow.mpesaNumber,
+                    },
+                  ],
+                }
+              : undefined,
           },
         });
         return {
@@ -420,7 +497,7 @@ export async function markFellowAttendance(
     } else {
       return {
         success: false,
-        message: `Supervisor details not found.`,
+        message: `Fellow details not found.`,
       };
     }
   } catch (err) {
@@ -428,8 +505,7 @@ export async function markFellowAttendance(
     return {
       success: false,
       message:
-        (err as Error)?.message ??
-        "Sorry, could not mark supervisor attendance.",
+        (err as Error)?.message ?? "Sorry, could not mark fellow attendance.",
     };
   }
 }
@@ -447,7 +523,17 @@ export async function markManyFellowAttendance(
     where: {
       id: sessionId,
     },
+    include: {
+      session: true,
+    },
   });
+
+  const _amount = session.session?.amount;
+  if (!Number.isInteger(_amount)) {
+    throw new Error(
+      "An error occurred while marking attendance. Session payout amount not found.",
+    );
+  }
 
   return await Promise.all(
     ids.map(async (fellowId) => {
@@ -458,9 +544,50 @@ export async function markManyFellowAttendance(
         },
       });
 
+      const fellow = await db.fellow.findFirstOrThrow({
+        where: {
+          id: fellowId,
+        },
+      });
+
       const attendanceStatus =
         attended === "attended" ? true : attended === "missed" ? false : null;
+      let amount = session.session?.amount!;
+
       if (attendance) {
+        let reason = "MARK_SESSION_ATTENDANCE";
+        if (!attendanceStatus) {
+          amount = -amount;
+          reason = "UNMARK_SESSION_ATTENDANCE";
+        }
+
+        const existingPayout = await db.payoutStatements.findFirst({
+          where: {
+            fellowId,
+            fellowAttendanceId: attendance.id,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+
+        if (
+          ((!existingPayout && attendanceStatus) ||
+            (existingPayout && existingPayout.reason !== reason)) &&
+          amount
+        ) {
+          await db.payoutStatements.create({
+            data: {
+              fellowId,
+              fellowAttendanceId: attendance.id,
+              createdBy: auth.user!.user.id,
+              amount,
+              reason,
+              mpesaNumber: fellow.mpesaNumber,
+            },
+          });
+        }
+
         await db.fellowAttendance.update({
           where: {
             id: attendance.id,
@@ -474,16 +601,8 @@ export async function markManyFellowAttendance(
           },
         });
       } else {
-        let fellow;
-        if (!auth.supervisor && auth.hubCoordinator) {
-          fellow = await db.fellow.findFirst({
-            where: {
-              id: fellowId,
-            },
-          });
-        }
         let groupId;
-        if (session.schoolId && fellow) {
+        if (session.schoolId) {
           const group = await db.interventionGroup.findFirst({
             where: {
               schoolId: session.schoolId,
@@ -496,6 +615,18 @@ export async function markManyFellowAttendance(
             throw new Error(fellow.fellowName + " has no assigned group");
           }
         }
+
+        const payouts = attendanceStatus
+          ? [
+              {
+                fellowId,
+                createdBy: auth.user!.user.id,
+                amount: amount!,
+                reason: "MARK_SESSION_ATTENDANCE",
+                mpesaNumber: fellow?.mpesaNumber,
+              },
+            ]
+          : [];
         await db.fellowAttendance.create({
           data: {
             fellowId,
@@ -505,14 +636,11 @@ export async function markManyFellowAttendance(
             absenceReason,
             absenceComments: comments,
             sessionId,
-            supervisorId: auth.supervisor?.id ?? fellow?.supervisorId!,
             markedBy: auth.user!.user.id,
-            attended:
-              attended === "attended"
-                ? true
-                : attended === "missed"
-                  ? false
-                  : null,
+            attended: attendanceStatus,
+            PayoutStatements: {
+              create: payouts,
+            },
           },
         });
       }
