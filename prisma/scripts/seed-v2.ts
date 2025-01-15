@@ -1,3 +1,8 @@
+import { objectId } from "#/lib/crypto";
+import { db } from "#/lib/db";
+import { faker } from "@faker-js/faker";
+import { ImplementerRole } from "@prisma/client";
+
 // GETTING STARTED WITH SEEDING
 // ===========================
 
@@ -130,6 +135,67 @@
 // 6. Include both active and archived records
 // 7. Test edge cases (e.g., dropouts, transfers)
 
-async function createUsers() {}
+function createUsers() {
+  // TODO; consider randomizing these roles? or ask the developer to select this before seeding
+  const users = [
+    {
+      id: objectId("user"),
+      email: "benny@shamiri.institute",
+      role: ImplementerRole.SUPERVISOR,
+      roleByVisibleId: "SPV24_S_01",
+    },
+    {
+      id: objectId("user"),
+      email: "shadrack.lilan@shamiri.institute",
+      role: ImplementerRole.SUPERVISOR,
+      roleByVisibleId: "SPV24_S_01",
+    },
+    {
+      id: objectId("user"),
+      email: "wambugu.davis@shamiri.institute",
+      role: ImplementerRole.SUPERVISOR,
+      roleByVisibleId: "SPV24_S_01",
+    },
+  ];
 
-async function createImplementers() {}
+  return db.user.createMany({
+    data: users,
+  });
+}
+
+function generateImplementers(n: number) {
+  const implmenters = [];
+  for (let i = 0; i < n; i++) {
+    implmenters.push({
+      id: objectId("impl"),
+      visibleId: faker,
+      implementerName: faker.company.name(),
+      implementerType: "NGO",
+      implementerAddress: faker.location.secondaryAddress(),
+      pointPersonName: faker.person.fullName(),
+      pointPersonPhone: faker.phone.number({ style: "international" }),
+      pointPersonEmail: faker.internet.email(),
+      countyOfOperation: "Nairobi",
+    });
+  }
+
+  return implmenters;
+}
+
+async function createImplementers() {
+  const implementers = [
+    {
+      id: objectId("impl"),
+      visibleId: "SHA",
+      implementerName: "Shamiri Institute",
+      implementerType: "NGO",
+      implementerAddress:
+        "13th Floor, Pioneer Point (CMS-Africa)\nChania Avenue, Nairobi, Kenya",
+      pointPersonName: "Tom Osborn",
+      pointPersonPhone: "+254 (0) 11 254 0760",
+      pointPersonEmail: "team@shamiri.institute",
+      countyOfOperation: "Nairobi",
+    },
+    ...generateImplementers(4),
+  ];
+}
