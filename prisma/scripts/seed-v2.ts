@@ -135,6 +135,30 @@ import { ImplementerRole } from "@prisma/client";
 // 6. Include both active and archived records
 // 7. Test edge cases (e.g., dropouts, transfers)
 
+async function truncateTables() {
+  console.log("Truncating tables");
+
+  const excludedTables = ["_prisma_migrations"];
+
+  const tables = await db.$queryRaw<Array<{ table_name: string }>>`
+    SELECT table_name
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+    AND table_type = 'BASE TABLE'
+    AND table_name NOT IN (${excludedTables.map((table) => `'${table}'`).join(", ")});
+  `;
+
+  if (tables.length > 0) {
+    const truncateCommand = `TRUNCATE TABLE ${tables.map((t) => `"${t.table_name}"`).join(", ")} CASCADE;`;
+    await db.$executeRawUnsafe(truncateCommand);
+    console.log("Selected tables truncated successfully.");
+  } else {
+    console.log(
+      "No tables to truncate. Make sure to run `npm run db:dev:migrate` first.",
+    );
+  }
+}
+
 function createUsers() {
   // TODO; consider randomizing these roles? or ask the developer to select this before seeding
   const users = [
@@ -168,7 +192,7 @@ function generateImplementers(n: number) {
   for (let i = 0; i < n; i++) {
     implmenters.push({
       id: objectId("impl"),
-      visibleId: faker,
+      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
       implementerName: faker.company.name(),
       implementerType: "NGO",
       implementerAddress: faker.location.secondaryAddress(),
@@ -183,19 +207,42 @@ function generateImplementers(n: number) {
 }
 
 async function createImplementers() {
-  const implementers = [
-    {
-      id: objectId("impl"),
-      visibleId: "SHA",
-      implementerName: "Shamiri Institute",
-      implementerType: "NGO",
-      implementerAddress:
-        "13th Floor, Pioneer Point (CMS-Africa)\nChania Avenue, Nairobi, Kenya",
-      pointPersonName: "Tom Osborn",
-      pointPersonPhone: "+254 (0) 11 254 0760",
-      pointPersonEmail: "team@shamiri.institute",
-      countyOfOperation: "Nairobi",
-    },
-    ...generateImplementers(4),
-  ];
+  return db.implementer.createMany({
+    data: [
+      {
+        id: objectId("impl"),
+        visibleId: "SHA",
+        implementerName: "Shamiri Institute",
+        implementerType: "NGO",
+        implementerAddress:
+          "13th Floor, Pioneer Point (CMS-Africa)\nChania Avenue, Nairobi, Kenya",
+        pointPersonName: "Tom Osborn",
+        pointPersonPhone: "+254 (0) 11 254 0760",
+        pointPersonEmail: "team@shamiri.institute",
+        countyOfOperation: "Nairobi",
+      },
+      ...generateImplementers(4),
+    ],
+  });
 }
+
+async function createProjects() {
+  const projects = [];
+
+  for (let i = 0; i < 4; i++) {
+    projects.push({
+      id: objectId("proj"),
+      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+      name: faker.company.name(),
+    });
+  }
+
+  return db.project.createMany({
+    data: projects,
+  });
+}
+async function main() {
+  await truncateTables();
+}
+
+main();
