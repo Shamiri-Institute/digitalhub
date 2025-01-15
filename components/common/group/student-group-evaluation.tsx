@@ -172,7 +172,7 @@ export default function StudentGroupEvaluation({
       sessionId:
         mode === "add" && existingEvaluation === undefined
           ? form.getValues("sessionId")
-          : (existingEvaluation?.sessionId ?? undefined),
+          : existingEvaluation?.sessionId ?? undefined,
     };
     form.reset(values);
 

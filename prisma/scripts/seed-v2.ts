@@ -1,6 +1,3 @@
-import { db } from "#/lib/db";
-import { objectId } from "#/lib/crypto";
-
 // GETTING STARTED WITH SEEDING
 // ===========================
 
@@ -8,7 +5,7 @@ import { objectId } from "#/lib/crypto";
 // ------------------------
 // First, create the foundational data that other records will depend on
 
-// 1.1 Create Files (Required for all avatars)
+// 1.1 Create Files (Optional for all avatars)
 // - Files are needed before creating any avatars
 // - Required fields: id, key, fileName, byteSize, contentType
 // - Example: Profile pictures, organization logos
@@ -18,6 +15,7 @@ import { objectId } from "#/lib/crypto";
 // - Required fields: id, name, email
 // - Optional: Create UserAvatar (needs File record from 1.1)
 // - Optional: Add some UserRecentOpen records to simulate usage
+// - Required: if any staff member leaves the org then update the user creation script to prevent logins with shamiri emails
 
 // 1.3 Create Implementers (Organizations running programs)
 // - These are the parent organizations
@@ -131,3 +129,7 @@ import { objectId } from "#/lib/crypto";
 // 5. Use realistic dates for historical data
 // 6. Include both active and archived records
 // 7. Test edge cases (e.g., dropouts, transfers)
+
+async function createUsers() {}
+
+async function createImplementers() {}
