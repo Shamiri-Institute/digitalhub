@@ -42,8 +42,9 @@ import { SESSION_NAME_TYPE } from "#/lib/app-constants/constants";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef, Row } from "@tanstack/react-table";
+import { format } from "date-fns";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
-import { InfoIcon } from "lucide-react";
+import { CheckCheck, InfoIcon } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
@@ -111,6 +112,7 @@ export default function FellowAttendance({
         );
         return {
           id: sessionAttendance?.id.toString(),
+          processedAt: sessionAttendance?.processedAt ?? null,
           sessionId: session?.id,
           fellowId: fellow.id,
           fellowName: fellow.fellowName,
@@ -217,7 +219,8 @@ export default function FellowAttendance({
                   ) &&
                   (row.original.supervisorId === supervisorId ||
                     role === "HUB_COORDINATOR") &&
-                  !row.original.droppedOut
+                  !row.original.droppedOut &&
+                  row.original.processedAt === null
                 }
                 session={session}
               />
@@ -425,6 +428,7 @@ export type FellowAttendancesTableData = {
   droppedOut?: boolean;
   absenceReason?: string;
   absenceComments?: string;
+  processedAt: Date | null;
 };
 
 export const columns = (state: {
@@ -475,7 +479,7 @@ export const columns = (state: {
     cell: ({ row }) => {
       const attended = row.original.attended;
       return (
-        <div className="flex">
+        <div className="flex flex-row gap-1">
           <div
             className={cn(
               "flex items-center rounded-[0.25rem] border px-1.5 py-0.5",
@@ -512,6 +516,23 @@ export const columns = (state: {
               </div>
             )}
           </div>
+          {row.original.processedAt && (
+            <Tooltip>
+              <TooltipTrigger>
+                <div className="flex items-center rounded-[0.25rem] border border-green-border bg-green-bg px-1.5 py-1.5">
+                  <div className="flex items-center gap-1 text-green-base">
+                    <CheckCheck className="h-3 w-3" strokeWidth={2.5} />
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="border bg-background-secondary text-foreground drop-shadow">
+                <div className="px-2 py-1 text-sm">
+                  Processed on{" "}
+                  {format(row.original.processedAt, "dd-MM-yyyy HH:mm a")}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
       );
     },
