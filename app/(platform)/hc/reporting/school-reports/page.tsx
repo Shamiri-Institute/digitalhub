@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function SchoolReportsPage() {
-  redirect(`/hc/reporting/school-reports/session`);
+  redirect(`/sc/reporting/school-reports/session`);
 }
