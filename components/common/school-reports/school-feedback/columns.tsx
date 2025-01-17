@@ -2,7 +2,7 @@
 
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
-import SchoolFeedbackDropdownMenu from "#/app/(platform)/sc/reporting/school-reports/school-feedback/components/school-feedback-action-dropdown";
+import SchoolFeedbackDropdownMenu from "#/components/common/school-reports/school-feedback/school-feedback-action-dropdown";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";

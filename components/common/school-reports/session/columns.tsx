@@ -2,7 +2,7 @@
 
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
-import SessionDropdownMenu from "#/app/(platform)/sc/reporting/school-reports/session/components/session-action-dropdown";
+import SessionDropdownMenu from "#/components/common/school-reports/session/session-action-dropdown";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";

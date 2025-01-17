@@ -1,5 +1,5 @@
 import { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
-import ViewEditSchoolFeedback from "#/app/(platform)/sc/reporting/school-reports/school-feedback/components/view-edit-school-feedback";
+import ViewEditSchoolFeedback from "#/components/common/school-reports/school-feedback/view-edit-school-feedback";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,

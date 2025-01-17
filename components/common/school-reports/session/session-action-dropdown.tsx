@@ -1,5 +1,5 @@
-import { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
-import ViewEditSchoolFeedback from "#/app/(platform)/sc/reporting/school-reports/school-feedback/components/view-edit-school-feedback";
+import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
+import ViewEditQualitativeFeedback from "#/components/common/school-reports/session/view-edit-qualitative-feedback";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -10,10 +10,10 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 
-export default function SchoolFeedbackDropdownMenu({
-  feedback,
+export default function SessionDropdownMenu({
+  sessionReportData,
 }: {
-  feedback: SchoolFeedbackType;
+  sessionReportData: SessionReportType;
 }) {
   return (
     <DropdownMenu>
@@ -31,24 +31,30 @@ export default function SchoolFeedbackDropdownMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <ViewEditSchoolFeedback feedback={feedback} action="view">
+        <ViewEditQualitativeFeedback
+          sessionReport={sessionReportData}
+          action="view"
+        >
           <div
             className={cn(
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
             )}
           >
-            View school feedback
+            View qualitative feedback
           </div>
-        </ViewEditSchoolFeedback>
-        <ViewEditSchoolFeedback feedback={feedback} action="edit">
+        </ViewEditQualitativeFeedback>
+        <ViewEditQualitativeFeedback
+          sessionReport={sessionReportData}
+          action="edit"
+        >
           <div
             className={cn(
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
             )}
           >
-            Edit school feedback
+            Edit school report
           </div>
-        </ViewEditSchoolFeedback>
+        </ViewEditQualitativeFeedback>
       </DropdownMenuContent>
     </DropdownMenu>
   );
