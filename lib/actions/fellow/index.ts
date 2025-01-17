@@ -633,9 +633,9 @@ export async function markManyFellowAttendance(
 
       // create new attendances
       const fellowIds = ids.filter((fellowId) => {
-        return !attendances
-          .map((attendance) => attendance.fellowId)
-          .includes(fellowId);
+        return !attendances.some(
+          (attendance) => attendance.fellowId === fellowId,
+        );
       });
 
       const fellows = await tx.fellow.findMany({
