@@ -4,12 +4,11 @@ export async function loadSchoolFeedback() {
   return [
     {
       schoolName: "School 1",
-      studentTeacherSatisfaction: 3
-      
+      studentTeacherSatisfaction: 3,
     },
     {
       schoolName: "School 2",
-      studentTeacherSatisfaction: 4
+      studentTeacherSatisfaction: 4,
     },
     {
       schoolName: "School 3",

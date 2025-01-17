@@ -1,24 +1,12 @@
 "use client";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
-import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "#/components/ui/form";
-import { Input } from "#/components/ui/input";
-import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -35,7 +23,7 @@ export default function ViewEditQualitativeFeedback({
   action = "view",
 }: {
   children: React.ReactNode;
-  sessionReport: SessionReportType
+  sessionReport: SessionReportType;
   action: "view" | "edit";
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
@@ -62,13 +50,11 @@ export default function ViewEditQualitativeFeedback({
     //   });
     //   return;
     // }
-
     // toast({
     //   variant: "default",
     //   title: "Success",
     //   description: "Successfully submitted payment reversal",
     // });
-
     // form.reset();
     // setDialogOpen(false);
   };
@@ -91,9 +77,7 @@ export default function ViewEditQualitativeFeedback({
               label="test"           
                 />
           </div> */}
-          <p>
-            {JSON.stringify(sessionReport)}
-          </p>
+          <p>{JSON.stringify(sessionReport)}</p>
 
           {/* <div className="px-1">
             <Form {...form}>

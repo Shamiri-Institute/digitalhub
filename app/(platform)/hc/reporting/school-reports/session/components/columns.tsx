@@ -1,13 +1,13 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { Checkbox } from "#/components/ui/checkbox";
-import Image from "next/image";
-import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
-import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
 import SessionDropdownMenu from "#/app/(platform)/sc/reporting/school-reports/session/components/session-action-dropdown";
+import { Checkbox } from "#/components/ui/checkbox";
+import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
+import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
+import { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 
 export const columns: ColumnDef<SessionReportType>[] = [
   {
@@ -45,7 +45,7 @@ export const columns: ColumnDef<SessionReportType>[] = [
   },
   {
     accessorKey: "schoolName",
-      header: "School name",
+    header: "School name",
   },
   {
     accessorKey: "avgStudentBehaviour",
@@ -55,7 +55,7 @@ export const columns: ColumnDef<SessionReportType>[] = [
       return <DataTableRatingStars rating={studentBehaviour} />;
     },
     id: "Avg. student behaviour",
-    },
+  },
   {
     accessorKey: "avgAdminSupport",
     header: "Avg. admin support",
@@ -74,12 +74,9 @@ export const columns: ColumnDef<SessionReportType>[] = [
     },
     id: "Avg. workload",
   },
-
 ];
 
-export const subColumns: ColumnDef<
-  SessionReportType["session"][number]
->[] = [
+export const subColumns: ColumnDef<SessionReportType["session"][number]>[] = [
   {
     id: "checkbox",
     header: ({ table }) => (
@@ -126,7 +123,7 @@ export const subColumns: ColumnDef<
     id: "Student behaviour",
   },
   {
-      accessorKey: "adminSupport",
+    accessorKey: "adminSupport",
     header: "Admin support",
     cell: ({ row }) => {
       const adminSupport = row.original.avgAdminSupport;

@@ -42,5 +42,3 @@ export async function loadSessionReport() {
 export type SessionReportType = Awaited<
   ReturnType<typeof loadSessionReport>
 >[number];
-
-

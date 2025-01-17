@@ -1,29 +1,26 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import Image from "next/image";
-import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
-import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
 import SchoolFeedbackDropdownMenu from "#/app/(platform)/sc/reporting/school-reports/school-feedback/components/school-feedback-action-dropdown";
+import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
+import { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 
 export const columns: ColumnDef<SchoolFeedbackType>[] = [
   {
     id: "button",
     cell: ({ row }) => {
       return (
-        <div
-          className="px-4 py-2"
-        >
-            <Image
-              unoptimized
-              priority
-              src={ArrowDownIcon}
-              alt="Arrow Down Icon"
-              width={16}
-              height={16}
-            />
+        <div className="px-4 py-2">
+          <Image
+            unoptimized
+            priority
+            src={ArrowDownIcon}
+            alt="Arrow Down Icon"
+            width={16}
+            height={16}
+          />
         </div>
       );
     },
@@ -32,13 +29,14 @@ export const columns: ColumnDef<SchoolFeedbackType>[] = [
   },
   {
     accessorKey: "schoolName",
-      header: "School name",
+    header: "School name",
   },
   {
     accessorKey: "studentTeacherSatisfaction",
     header: "Student & teacher satisfaction",
     cell: ({ row }) => {
-      const studentTeacherSatisfaction = row.original.studentTeacherSatisfaction;
+      const studentTeacherSatisfaction =
+        row.original.studentTeacherSatisfaction;
       return <DataTableRatingStars rating={studentTeacherSatisfaction} />;
     },
     id: "Student teacher satisfaction",
@@ -50,4 +48,3 @@ export const columns: ColumnDef<SchoolFeedbackType>[] = [
     enableHiding: false,
   },
 ];
-

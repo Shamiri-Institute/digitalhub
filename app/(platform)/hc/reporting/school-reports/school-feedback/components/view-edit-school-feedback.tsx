@@ -1,25 +1,12 @@
 "use client";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
-import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
-import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "#/components/ui/form";
-import { Input } from "#/components/ui/input";
-import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -36,8 +23,8 @@ export default function ViewEditSchoolFeedback({
   action,
 }: {
   children: React.ReactNode;
-  feedback: SchoolFeedbackType
-  action: "view" | "edit"
+  feedback: SchoolFeedbackType;
+  action: "view" | "edit";
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
@@ -63,13 +50,11 @@ export default function ViewEditSchoolFeedback({
     //   });
     //   return;
     // }
-
     // toast({
     //   variant: "default",
     //   title: "Success",
     //   description: "Successfully submitted payment reversal",
     // });
-
     // form.reset();
     // setDialogOpen(false);
   };
@@ -81,16 +66,10 @@ export default function ViewEditSchoolFeedback({
         <DialogHeader className="sticky top-0 z-10 bg-white">
           <h2>{`${action === "view" ? "View" : "Edit"} school feedback`}</h2>
         </DialogHeader>
-        <DialogAlertWidget
-          label={`${feedback.schoolName}`}
-        />
+        <DialogAlertWidget label={`${feedback.schoolName}`} />
         <div className="min-w-max overflow-x-auto overflow-y-scroll">
-          <p>
-            {feedback.schoolName}
-          </p>
-          <p>
-            {feedback.studentTeacherSatisfaction}
-          </p>
+          <p>{feedback.schoolName}</p>
+          <p>{feedback.studentTeacherSatisfaction}</p>
 
           {/* <div className="px-1">
             <Form {...form}>
