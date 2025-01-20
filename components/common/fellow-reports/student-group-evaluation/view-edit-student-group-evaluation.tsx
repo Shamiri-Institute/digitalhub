@@ -35,9 +35,7 @@ export default function ViewEditStudentGroupEvaluation({
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof ConfirmReversalSchema>) => {
-    
-  };
+  const onSubmit = async (data: z.infer<typeof ConfirmReversalSchema>) => {};
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>

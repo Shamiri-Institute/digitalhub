@@ -35,9 +35,7 @@ export default function ViewEditWeeklyFellowEvaluation({
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof ConfirmReversalSchema>) => {
-  
-  };
+  const onSubmit = async (data: z.infer<typeof ConfirmReversalSchema>) => {};
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -50,7 +48,7 @@ export default function ViewEditWeeklyFellowEvaluation({
           label={`${action === "view" ? "View" : "Edit"} school report`}
         />
         <div className="min-w-max overflow-x-auto overflow-y-scroll">
-        {/* code here */}
+          {/* code here */}
         </div>
       </DialogContent>
     </Dialog>
