@@ -36,27 +36,7 @@ export default function ViewEditWeeklyFellowEvaluation({
   });
 
   const onSubmit = async (data: z.infer<typeof ConfirmReversalSchema>) => {
-    // const response = await submitPaymentReversal({
-    //   id: expense.id,
-    //   name: data.name,
-    // });
-    // if (!response.success) {
-    //   toast({
-    //     variant: "destructive",
-    //     title: "Submission error",
-    //     description:
-    //       response.message ??
-    //       "Something went wrong during submission, please try again",
-    //   });
-    //   return;
-    // }
-    // toast({
-    //   variant: "default",
-    //   title: "Success",
-    //   description: "Successfully submitted payment reversal",
-    // });
-    // form.reset();
-    // setDialogOpen(false);
+  
   };
 
   return (
@@ -70,63 +50,7 @@ export default function ViewEditWeeklyFellowEvaluation({
           label={`${action === "view" ? "View" : "Edit"} school report`}
         />
         <div className="min-w-max overflow-x-auto overflow-y-scroll">
-          {/* <h2 className="mb-4 text-black">Are you sure ?</h2>
-          <div className="w-[31rem]">
-            <DialogAlertWidget
-              variant="destructive"
-              label="test"           
-                />
-          </div> */}
-          <p>{JSON.stringify(weeklyFellowEvaluation)}</p>
-
-          {/* <div className="px-1">
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-2"
-              >
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Type your name to confirm{" "}
-                        <span className="text-shamiri-light-red">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder=""
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <DialogFooter>
-                  <Button
-                    variant="ghost"
-                    className="text-base font-semibold leading-6 text-shamiri-red"
-                    onClick={() => {
-                      form.reset();
-                      setDialogOpen(false);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="brand"
-                    loading={form.formState.isSubmitting}
-                    disabled={form.formState.isSubmitting}
-                  >
-                    Submit
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </div> */}
+        {/* code here */}
         </div>
       </DialogContent>
     </Dialog>
