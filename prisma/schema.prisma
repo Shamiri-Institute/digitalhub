@@ -29,6 +29,7 @@ model User {
   studentReportingNotes StudentReportingNotes[]
   schoolDocuments       SchoolDocuments[]
   fellowDocuments       FellowDocuments[]
+  payoutStatements      PayoutStatements[]
 
   @@map("users")
 }
@@ -518,10 +519,10 @@ model FellowAttendance {
   sessionNumber           Int?                      @map("session_number") // TODO: deprecate after data migration
   sessionDate             DateTime?                 @map("session_date") // TODO: deprecate after data migration
   yearOfImplementation    Int?                      @map("year_of_implementation") // TODO: might not be needed , use projectId
-  schoolId                String?                    @map("school_id") @db.VarChar(255)
-  school                  School?                    @relation(fields: [schoolId], references: [id])
-  supervisorId            String                    @map("supervisor_id") @db.VarChar(255)
-  supervisor              Supervisor                @relation(fields: [supervisorId], references: [id])
+  schoolId                String?                   @map("school_id") @db.VarChar(255)
+  school                  School?                   @relation(fields: [schoolId], references: [id])
+  supervisorId            String?                    @map("supervisor_id") @db.VarChar(255)
+  supervisor              Supervisor?                @relation(fields: [supervisorId], references: [id])
   attended                Boolean?                  @map("attended")
   absenceReason           String?                   @map("absence_reason")
   absenceComments         String?                   @map("absence_comments") @db.Text
@@ -592,7 +593,6 @@ model Supervisor {
   assignedSchools             School[]
   monthlySupervisorEvaluation MonthlySupervisorEvaluation[]
   dropOutReason               String?                       @map("drop_out_reason")
-  PayoutStatements            PayoutStatements[]
   SpecialApprovalRequests     SpecialApprovalRequests[]
 
   @@map("supervisors")
@@ -606,8 +606,8 @@ model SupervisorAttendance {
   updatedAt       DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
   projectId       String              @map("project_id")
   project         Project             @relation(fields: [projectId], references: [id])
-  schoolId        String?              @map("school_id") @db.VarChar(255)
-  school          School?              @relation(fields: [schoolId], references: [id])
+  schoolId        String?             @map("school_id") @db.VarChar(255)
+  school          School?             @relation(fields: [schoolId], references: [id])
   supervisorId    String              @map("supervisor_id") @db.VarChar(255)
   supervisor      Supervisor          @relation(fields: [supervisorId], references: [id])
   attended        Boolean?            @map("attended")
@@ -843,8 +843,8 @@ model InterventionSession {
   sessionId               String?                     @map("session_id") @db.VarChar(255)
   session                 SessionName?                @relation(fields: [sessionId], references: [id])
   // TODO: consider adding column for sessionIndex Int, while sessionType tracks, intervention, dataCollation, followUp
-  schoolId                String?                      @map("school_id") @db.VarChar(255)
-  school                  School?                      @relation(fields: [schoolId], references: [id])
+  schoolId                String?                     @map("school_id") @db.VarChar(255)
+  school                  School?                     @relation(fields: [schoolId], references: [id])
   // If session has occurred. Should be set by assigned supervisor of the school before attendance can be marked
   occurred                Boolean
   yearOfImplementation    Int                         @map("year_of_implementation") // TODO: might not be needed anymore
@@ -1355,7 +1355,7 @@ model PayoutStatements {
   reason                 String // the intent is to capture the type of payout (timely_attendance, delayed_attendance, reconciliaton, repayment, special_payout?)
   notes                  String?
   createdBy              String                   @map("created_by")
-  supervisor             Supervisor               @relation(fields: [createdBy], references: [id])
+  user                   User                     @relation(fields: [createdBy], references: [id])
   executedAt             DateTime?                @map("executed_at") @db.Timestamptz()
   mpesaNumber            String?                  @map("mpesa_number")
   specialPayoutRequestId String?                  @map("special_payout_request_id")

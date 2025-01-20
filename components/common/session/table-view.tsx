@@ -514,6 +514,7 @@ export function TableView({
               occurred: session.occurred,
               sessionStatus: session.status,
               sessionDate: session.sessionDate,
+              processedAt: fellow_attendance?.processedAt ?? null,
             });
           }
         });

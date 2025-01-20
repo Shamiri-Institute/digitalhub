@@ -144,8 +144,10 @@ export function MarkAttendance({
     } else {
       response = await markAttendanceAction(data);
     }
+
     if (!response.success) {
       toast({
+        variant: "destructive",
         description:
           response.message ??
           "Something went wrong during submission, please try again",
