@@ -13,7 +13,7 @@ import { cn } from "#/lib/utils";
 export default function SessionDropdownMenu({
   sessionReportData,
 }: {
-  sessionReportData: SessionReportType;
+  sessionReportData: SessionReportType["session"][number];
 }) {
   return (
     <DropdownMenu>
