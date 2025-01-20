@@ -414,7 +414,7 @@ export function SessionDropDown({
                 state.setSessionOccurrenceDialog &&
                   state.setSessionOccurrenceDialog(true);
               }}
-              disabled={session.status === "Cancelled"}
+              disabled={session.status === "Cancelled" || session.occurred}
             >
               Mark session occurrence
             </DropdownMenuItem>
