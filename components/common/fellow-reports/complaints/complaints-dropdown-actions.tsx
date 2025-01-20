@@ -1,5 +1,5 @@
-import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
-import ViewEditQualitativeFeedback from "#/components/common/school-reports/session/view-edit-qualitative-feedback";
+import { FellowComplaintsType } from "#/components/common/fellow-reports/complaints/actions";
+import ViewEditFellowComplaints from "#/components/common/fellow-reports/complaints/view-edit-complaints";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -10,10 +10,10 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 
-export default function SessionDropdownMenu({
-  sessionReportData,
+export default function FellowComplaintsDropdownMenu({
+  fellowComplaints,
 }: {
-  sessionReportData: SessionReportType["session"][number];
+  fellowComplaints: FellowComplaintsType["complaints"][number];
 }) {
   return (
     <DropdownMenu>
@@ -31,8 +31,8 @@ export default function SessionDropdownMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <ViewEditQualitativeFeedback
-          sessionReport={sessionReportData}
+        <ViewEditFellowComplaints
+          fellowComplaints={fellowComplaints}
           action="view"
         >
           <div
@@ -40,11 +40,11 @@ export default function SessionDropdownMenu({
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
             )}
           >
-            View qualitative feedback
+            View fellow complaint
           </div>
-        </ViewEditQualitativeFeedback>
-        <ViewEditQualitativeFeedback
-          sessionReport={sessionReportData}
+        </ViewEditFellowComplaints>
+        <ViewEditFellowComplaints
+          fellowComplaints={fellowComplaints}
           action="edit"
         >
           <div
@@ -52,9 +52,9 @@ export default function SessionDropdownMenu({
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
             )}
           >
-            Edit school report
+            Edit fellow complaint
           </div>
-        </ViewEditQualitativeFeedback>
+        </ViewEditFellowComplaints>
       </DropdownMenuContent>
     </DropdownMenu>
   );

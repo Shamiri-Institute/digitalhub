@@ -1,5 +1,5 @@
-import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
-import ViewEditQualitativeFeedback from "#/components/common/school-reports/session/view-edit-qualitative-feedback";
+import { WeeklyFellowEvaluationType } from "#/components/common/fellow-reports/weekly-fellow-evaluation/actions";
+import ViewEditWeeklyFellowEvaluation from "#/components/common/fellow-reports/weekly-fellow-evaluation/view-edit-weekly-fellow-evaluation";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -10,10 +10,10 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 
-export default function SessionDropdownMenu({
-  sessionReportData,
+export default function WeeklyFellowEvaluationDropdownMenu({
+  weeklyFellowEvaluation,
 }: {
-  sessionReportData: SessionReportType["session"][number];
+  weeklyFellowEvaluation: WeeklyFellowEvaluationType["week"][number];
 }) {
   return (
     <DropdownMenu>
@@ -31,8 +31,8 @@ export default function SessionDropdownMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <ViewEditQualitativeFeedback
-          sessionReport={sessionReportData}
+        <ViewEditWeeklyFellowEvaluation
+          weeklyFellowEvaluation={weeklyFellowEvaluation}
           action="view"
         >
           <div
@@ -40,11 +40,11 @@ export default function SessionDropdownMenu({
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
             )}
           >
-            View qualitative feedback
+            View weekly evaluation
           </div>
-        </ViewEditQualitativeFeedback>
-        <ViewEditQualitativeFeedback
-          sessionReport={sessionReportData}
+        </ViewEditWeeklyFellowEvaluation>
+        <ViewEditWeeklyFellowEvaluation
+          weeklyFellowEvaluation={weeklyFellowEvaluation}
           action="edit"
         >
           <div
@@ -52,9 +52,9 @@ export default function SessionDropdownMenu({
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
             )}
           >
-            Edit school report
+            Edit weekly evaluation
           </div>
-        </ViewEditQualitativeFeedback>
+        </ViewEditWeeklyFellowEvaluation>
       </DropdownMenuContent>
     </DropdownMenu>
   );

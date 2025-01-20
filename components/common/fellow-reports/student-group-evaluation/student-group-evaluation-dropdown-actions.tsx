@@ -1,5 +1,5 @@
-import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
-import ViewEditQualitativeFeedback from "#/components/common/school-reports/session/view-edit-qualitative-feedback";
+import { StudentGroupEvaluationType } from "#/components/common/fellow-reports/student-group-evaluation/actions";
+import ViewEditStudentGroupEvaluation from "#/components/common/fellow-reports/student-group-evaluation/view-edit-student-group-evaluation";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -10,10 +10,10 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 
-export default function SessionDropdownMenu({
-  sessionReportData,
+export default function StudentGroupEvaluationDropdownMenu({
+  studentGroupEvaluation,
 }: {
-  sessionReportData: SessionReportType["session"][number];
+  studentGroupEvaluation: StudentGroupEvaluationType["session"][number];
 }) {
   return (
     <DropdownMenu>
@@ -31,8 +31,8 @@ export default function SessionDropdownMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <ViewEditQualitativeFeedback
-          sessionReport={sessionReportData}
+        <ViewEditStudentGroupEvaluation
+          studentGroupEvaluation={studentGroupEvaluation}
           action="view"
         >
           <div
@@ -40,11 +40,11 @@ export default function SessionDropdownMenu({
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
             )}
           >
-            View qualitative feedback
+            View weekly evaluation
           </div>
-        </ViewEditQualitativeFeedback>
-        <ViewEditQualitativeFeedback
-          sessionReport={sessionReportData}
+        </ViewEditStudentGroupEvaluation>
+        <ViewEditStudentGroupEvaluation
+          studentGroupEvaluation={studentGroupEvaluation}
           action="edit"
         >
           <div
@@ -52,9 +52,9 @@ export default function SessionDropdownMenu({
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
             )}
           >
-            Edit school report
+            Edit weekly evaluation
           </div>
-        </ViewEditQualitativeFeedback>
+        </ViewEditStudentGroupEvaluation>
       </DropdownMenuContent>
     </DropdownMenu>
   );

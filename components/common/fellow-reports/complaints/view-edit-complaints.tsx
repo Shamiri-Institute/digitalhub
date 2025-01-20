@@ -1,6 +1,6 @@
 "use client";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
-import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
+import { FellowComplaintsType } from "#/components/common/fellow-reports/complaints/actions";
 import {
   Dialog,
   DialogContent,
@@ -17,13 +17,13 @@ export const ConfirmReversalSchema = z.object({
   name: stringValidation("Please enter your name"),
 });
 
-export default function ViewEditQualitativeFeedback({
+export default function ViewEditFellowComplaints({
   children,
-  sessionReport,
+  fellowComplaints,
   action = "view",
 }: {
   children: React.ReactNode;
-  sessionReport: SessionReportType["session"][number];
+  fellowComplaints: FellowComplaintsType["complaints"][number];
   action: "view" | "edit";
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
@@ -35,29 +35,7 @@ export default function ViewEditQualitativeFeedback({
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof ConfirmReversalSchema>) => {
-    // const response = await submitPaymentReversal({
-    //   id: expense.id,
-    //   name: data.name,
-    // });
-    // if (!response.success) {
-    //   toast({
-    //     variant: "destructive",
-    //     title: "Submission error",
-    //     description:
-    //       response.message ??
-    //       "Something went wrong during submission, please try again",
-    //   });
-    //   return;
-    // }
-    // toast({
-    //   variant: "default",
-    //   title: "Success",
-    //   description: "Successfully submitted payment reversal",
-    // });
-    // form.reset();
-    // setDialogOpen(false);
-  };
+  const onSubmit = async (data: z.infer<typeof ConfirmReversalSchema>) => {};
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
