@@ -928,7 +928,7 @@ async function seedDatabase() {
                 sessionType: session.sessionType,
                 sessionName: session.sessionName,
                 sessionDate: session.sessionDate,
-                occurred: true,
+                occurred: false,
                 yearOfImplementation: session.sessionDate.getFullYear(),
                 school: {
                   connect: { id: createdSchool.id },
