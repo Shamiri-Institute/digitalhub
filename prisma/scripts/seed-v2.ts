@@ -1,7 +1,7 @@
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { faker } from "@faker-js/faker";
-import { ImplementerRole } from "@prisma/client";
+import { Implementer, ImplementerRole, Project } from "@prisma/client";
 
 // GETTING STARTED WITH SEEDING
 // ===========================
@@ -159,9 +159,106 @@ async function truncateTables() {
   }
 }
 
-function createUsers() {
-  // TODO; consider randomizing these roles? or ask the developer to select this before seeding
-  const users = [
+function generateImplementers(n: number) {
+  const implmenters = [];
+  for (let i = 0; i < n; i++) {
+    implmenters.push({
+      id: objectId("impl"),
+      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+      implementerName: faker.company.name(),
+      implementerType: "NGO",
+      implementerAddress: faker.location.secondaryAddress(),
+      pointPersonName: faker.person.fullName(),
+      pointPersonPhone: faker.phone.number({ style: "international" }),
+      pointPersonEmail: faker.internet.email(),
+      countyOfOperation: "Nairobi",
+    });
+  }
+
+  return implmenters;
+}
+
+function createImplementers() {
+  return db.implementer.createManyAndReturn({
+    data: [
+      {
+        id: objectId("impl"),
+        visibleId: "SHA",
+        implementerName: "Shamiri Institute",
+        implementerType: "NGO",
+        implementerAddress:
+          "13th Floor, Pioneer Point (CMS-Africa)\nChania Avenue, Nairobi, Kenya",
+        pointPersonName: "Tom Osborn",
+        pointPersonPhone: "+254 (0) 11 254 0760",
+        pointPersonEmail: "team@shamiri.institute",
+        countyOfOperation: "Nairobi",
+      },
+      ...generateImplementers(4),
+    ],
+  });
+}
+
+function createProjects() {
+  const projects = [];
+
+  for (let i = 0; i < 4; i++) {
+    projects.push({
+      id: objectId("proj"),
+      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+      name: faker.company.name(),
+    });
+  }
+
+  return db.project.createManyAndReturn({
+    data: projects,
+  });
+}
+
+function createProjectImplementers(
+  projects: Project[],
+  implementers: Implementer[],
+) {
+  const projectImplementers = [];
+
+  const minLength = Math.min(projects.length, implementers.length);
+
+  for (let i = 0; i < minLength; i++) {
+    projectImplementers.push({
+      projectId: projects[i]?.id as string,
+      implementerId: implementers[i]?.id as string,
+    });
+  }
+
+  return db.projectImplementer.createManyAndReturn({
+    data: projectImplementers,
+  });
+}
+
+function createHubs(projects: Project[], implementers: Implementer[]) {
+  const hubs = [];
+  const minLength = Math.min(projects.length, implementers.length);
+
+  for (let i = 0; i < minLength; i++) {
+    const numHubs = faker.number.int({ min: 3, max: 6 });
+
+    for (let j = 0; j < numHubs; j++) {
+      hubs.push({
+        id: objectId("hub"),
+        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+        hubName: faker.company.name(),
+        projectId: projects[i]?.id as string,
+        implementerId: implementers[i]?.id as string,
+      });
+    }
+  }
+
+  return db.hub.createManyAndReturn({
+    data: hubs,
+  });
+}
+
+async function createUsers(implementers: Implementer[]) {
+  const userData = [
     {
       id: objectId("user"),
       email: "benny@shamiri.institute",
@@ -182,67 +279,35 @@ function createUsers() {
     },
   ];
 
-  return db.user.createMany({
-    data: users,
+  const users = await db.user.createManyAndReturn({
+    data: userData,
   });
-}
 
-function generateImplementers(n: number) {
-  const implmenters = [];
-  for (let i = 0; i < n; i++) {
-    implmenters.push({
-      id: objectId("impl"),
-      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
-      implementerName: faker.company.name(),
-      implementerType: "NGO",
-      implementerAddress: faker.location.secondaryAddress(),
-      pointPersonName: faker.person.fullName(),
-      pointPersonPhone: faker.phone.number({ style: "international" }),
-      pointPersonEmail: faker.internet.email(),
-      countyOfOperation: "Nairobi",
-    });
-  }
+  const membershipData = users.map((user) => ({
+    userId: user.id,
+    implementerId: faker.helpers.arrayElement(implementers).id,
+    role: ImplementerRole.SUPERVISOR,
+    identifier: faker.string.alpha({ casing: "upper", length: 6 }),
+  }));
 
-  return implmenters;
-}
-
-async function createImplementers() {
-  return db.implementer.createMany({
-    data: [
-      {
-        id: objectId("impl"),
-        visibleId: "SHA",
-        implementerName: "Shamiri Institute",
-        implementerType: "NGO",
-        implementerAddress:
-          "13th Floor, Pioneer Point (CMS-Africa)\nChania Avenue, Nairobi, Kenya",
-        pointPersonName: "Tom Osborn",
-        pointPersonPhone: "+254 (0) 11 254 0760",
-        pointPersonEmail: "team@shamiri.institute",
-        countyOfOperation: "Nairobi",
-      },
-      ...generateImplementers(4),
-    ],
+  const implementerMembers = await db.implementerMember.createManyAndReturn({
+    data: membershipData,
   });
+
+  return { users, implementerMembers };
 }
 
-async function createProjects() {
-  const projects = [];
-
-  for (let i = 0; i < 4; i++) {
-    projects.push({
-      id: objectId("proj"),
-      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
-      name: faker.company.name(),
-    });
-  }
-
-  return db.project.createMany({
-    data: projects,
-  });
-}
 async function main() {
   await truncateTables();
+
+  const projects = await createProjects();
+  const implementers = await createImplementers();
+  const projectImplementers = await createProjectImplementers(
+    projects,
+    implementers,
+  );
+  const hubs = await createHubs(projects, implementers);
+  const { users, implementerMembers } = await createUsers(implementers);
 }
 
 main();
