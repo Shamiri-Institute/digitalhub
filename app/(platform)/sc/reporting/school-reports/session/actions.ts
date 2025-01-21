@@ -2,6 +2,7 @@
 
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
+import { format } from "date-fns";
 
 type SchoolGroup = {
   schoolName: string;
@@ -18,6 +19,8 @@ type SchoolGroup = {
       content: string;
       sessionNoteId: number;
     }[];
+    schoolName: string;
+    date: string;
   }[];
   count: number;
 };
@@ -56,7 +59,7 @@ export async function loadSessionReport() {
           avgAdminSupport: 0,
           avgWorkload: 0,
           session: [],
-          count: 0, 
+          count: 0,
         };
         acc.push(schoolGroup);
       }
@@ -66,11 +69,14 @@ export async function loadSessionReport() {
         avgStudentBehaviour: session.studentBehaviorRating || 0,
         avgAdminSupport: session.adminSupportRating || 0,
         avgWorkload: session.workloadRating || 0,
-        sessionNotes: session.session?.sessionNotes.map(note => ({
-          kind: note.kind,
-          content: note.content,
-          sessionNoteId: note.id
-        })) || []
+        sessionNotes:
+          session.session?.sessionNotes.map((note) => ({
+            kind: note.kind,
+            content: note.content,
+            sessionNoteId: note.id,
+          })) || [],
+        schoolName: session.session?.school?.schoolName || "N/A",
+        date: format(session.session?.sessionDate, "dd/MM/yyyy") || "N/A",
       });
 
       schoolGroup.avgStudentBehaviour += session.studentBehaviorRating || 0;
