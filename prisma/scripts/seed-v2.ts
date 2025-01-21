@@ -330,17 +330,16 @@ async function createCoreUsers(implementers: Implementer[], hubs: Hub[]) {
 
 async function createHubCoordinators(
   hubs: Hub[],
-  n = 6,
   implementers: Implementer[],
 ) {
   const hubCoordinators = [];
 
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < hubs.length; i++) {
     hubCoordinators.push({
       id: objectId("user"),
       email: faker.internet.email(),
       role: ImplementerRole.HUB_COORDINATOR,
-      roleByVisibleId: "HUB_COORDINATOR",
+      roleByVisibleId: `HUB_COORDINATOR_${i + 1}`,
     });
   }
 
@@ -661,12 +660,12 @@ async function main() {
   );
   const hubs = await createHubs(projects, implementers);
   const users = await createCoreUsers(implementers, hubs); // AT THE MOMENT THESE ARE ALL SUPERVISORS
-  const hubCoordinators = await createHubCoordinators(hubs, 6, implementers);
+  const hubCoordinators = await createHubCoordinators(hubs, implementers);
   const supervisors = await createSupervisors(hubs, 6, implementers);
 
   const fellows = await createFellows(supervisors);
   const schools = await createSchools(hubs, supervisors);
-  const groups = await createInterventionGroups(schools);
+  const groups = await createInterventionGroups(schools, fellows);
   const schoolsWithGroup = await db.school.findMany({
     include: {
       interventionGroups: true,
