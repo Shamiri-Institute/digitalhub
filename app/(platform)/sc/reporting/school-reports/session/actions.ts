@@ -13,6 +13,11 @@ type SchoolGroup = {
     avgStudentBehaviour: number;
     avgAdminSupport: number;
     avgWorkload: number;
+    sessionNotes: {
+      kind: string;
+      content: string;
+      sessionNoteId: number;
+    }[];
   }[];
   count: number;
 };
@@ -42,31 +47,32 @@ export async function loadSessionReport() {
     const groupedBySchool = sessions.reduce<SchoolGroup[]>((acc, session) => {
       const schoolName = session?.session?.school?.schoolName || "N/A";
 
-      // Find the school in the accumulator
       let schoolGroup = acc.find((group) => group.schoolName === schoolName);
 
       if (!schoolGroup) {
-        // Create a new school group if it doesn't exist
         schoolGroup = {
           schoolName,
           avgStudentBehaviour: 0,
           avgAdminSupport: 0,
           avgWorkload: 0,
           session: [],
-          count: 0, // To keep track of the total count for averages
+          count: 0, 
         };
         acc.push(schoolGroup);
       }
 
-      // Add session data to the school group
       schoolGroup.session.push({
         session: session.session?.sessionName || "N/A",
         avgStudentBehaviour: session.studentBehaviorRating || 0,
         avgAdminSupport: session.adminSupportRating || 0,
         avgWorkload: session.workloadRating || 0,
+        sessionNotes: session.session?.sessionNotes.map(note => ({
+          kind: note.kind,
+          content: note.content,
+          sessionNoteId: note.id
+        })) || []
       });
 
-      // Update the totals for the school group
       schoolGroup.avgStudentBehaviour += session.studentBehaviorRating || 0;
       schoolGroup.avgAdminSupport += session.adminSupportRating || 0;
       schoolGroup.avgWorkload += session.workloadRating || 0;
@@ -75,7 +81,6 @@ export async function loadSessionReport() {
       return acc;
     }, []);
 
-    // Calculate final averages for each school
     groupedBySchool.forEach((school) => {
       school.avgStudentBehaviour = parseFloat(
         (school.avgStudentBehaviour / school.count).toFixed(2),
