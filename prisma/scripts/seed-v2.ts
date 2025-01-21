@@ -257,7 +257,7 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
   });
 }
 
-async function createCoreUsers(implementers: Implementer[]) {
+async function createCoreUsers(implementers: Implementer[], hubs: Hub[]) {
   const userData = [
     {
       id: objectId("user"),
@@ -290,11 +290,32 @@ async function createCoreUsers(implementers: Implementer[]) {
     identifier: faker.string.alpha({ casing: "upper", length: 6 }),
   }));
 
-  const implementerMembers = await db.implementerMember.createManyAndReturn({
+  await db.implementerMember.createMany({
     data: membershipData,
   });
 
-  return { users, implementerMembers };
+  const supervisorRecords = users.map((user) => ({
+    id: objectId("supervisor"),
+    userId: user.id,
+    implementerId: faker.helpers.arrayElement(implementers).id,
+    visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+    supervisorName: faker.person.fullName(),
+    supervisorEmail: faker.internet.email(),
+    county: faker.location.county(),
+    subCounty: faker.location.county(),
+    bankName: faker.company.name(),
+    bankBranch: faker.location.county(),
+    bankAccountNumber: faker.finance.accountNumber(),
+    bankAccountName: faker.person.fullName(),
+    kra: faker.finance.accountNumber(),
+    nhif: faker.finance.accountNumber(),
+    dateOfBirth: faker.date.birthdate(),
+    hubId: faker.helpers.arrayElement(hubs).id,
+  }));
+
+  return db.supervisor.createManyAndReturn({
+    data: supervisorRecords,
+  });
 }
 
 async function createHubCoordinators(
@@ -379,7 +400,7 @@ async function createSupervisors(
     identifier: faker.string.alpha({ casing: "upper", length: 6 }),
   }));
 
-  const implementerMembers = await db.implementerMember.createManyAndReturn({
+  await db.implementerMember.createMany({
     data: membershipData,
   });
 
@@ -417,7 +438,8 @@ async function main() {
     implementers,
   );
   const hubs = await createHubs(projects, implementers);
-  const { users, implementerMembers } = await createCoreUsers(implementers);
+  // TODO: check if you need to also update the hubs that they are assigned to
+  const users = await createCoreUsers(implementers, hubs);
   const hubCoordinators = await createHubCoordinators(hubs, 6, implementers);
   const supervisors = await createSupervisors(hubs, 6, implementers);
 }
