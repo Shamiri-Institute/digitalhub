@@ -1,7 +1,7 @@
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { faker } from "@faker-js/faker";
-import { Implementer, ImplementerRole, Project } from "@prisma/client";
+import { Hub, Implementer, ImplementerRole, Project } from "@prisma/client";
 
 // GETTING STARTED WITH SEEDING
 // ===========================
@@ -257,7 +257,7 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
   });
 }
 
-async function createUsers(implementers: Implementer[]) {
+async function createCoreUsers(implementers: Implementer[]) {
   const userData = [
     {
       id: objectId("user"),
@@ -297,6 +297,116 @@ async function createUsers(implementers: Implementer[]) {
   return { users, implementerMembers };
 }
 
+async function createHubCoordinators(
+  hubs: Hub[],
+  n = 6,
+  implementers: Implementer[],
+) {
+  const hubCoordinators = [];
+
+  for (let i = 0; i < n; i++) {
+    hubCoordinators.push({
+      id: objectId("user"),
+      email: faker.internet.email(),
+      role: ImplementerRole.HUB_COORDINATOR,
+      roleByVisibleId: "HUB_COORDINATOR",
+    });
+  }
+
+  const createHubCoordinators = await db.user.createManyAndReturn({
+    data: hubCoordinators,
+  });
+
+  const membershipData = createHubCoordinators.map((user) => ({
+    userId: user.id,
+    implementerId: faker.helpers.arrayElement(implementers).id,
+    role: ImplementerRole.HUB_COORDINATOR,
+    identifier: faker.string.alpha({ casing: "upper", length: 6 }),
+  }));
+
+  await db.implementerMember.createMany({
+    data: membershipData,
+  });
+
+  const hubCoordinatorRecords = hubCoordinators.map((user) => ({
+    id: objectId("hub_coordinator"),
+    userId: user.id,
+    implementerId: faker.helpers.arrayElement(implementers).id,
+    visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+    coordinatorName: faker.person.fullName(),
+    coordinatorEmail: faker.internet.email(),
+    county: faker.location.county(),
+    subCounty: faker.location.county(),
+    bankName: faker.company.name(),
+    bankBranch: faker.location.county(),
+    bankAccountNumber: faker.finance.accountNumber(),
+    bankAccountName: faker.person.fullName(),
+    kra: faker.finance.accountNumber(),
+    nhif: faker.finance.accountNumber(),
+    dateOfBirth: faker.date.birthdate(),
+    hubId: faker.helpers.arrayElement(hubs).id,
+  }));
+
+  return db.hubCoordinator.createManyAndReturn({
+    data: hubCoordinatorRecords,
+  });
+}
+
+async function createSupervisors(
+  hubs: Hub[],
+  n = 6,
+  implementers: Implementer[],
+) {
+  const supervisors = [];
+
+  for (let i = 0; i < n; i++) {
+    supervisors.push({
+      id: objectId("user"),
+      email: faker.internet.email(),
+      role: ImplementerRole.SUPERVISOR,
+      roleByVisibleId: "SUPERVISOR",
+    });
+  }
+
+  const createHubCoordinators = await db.user.createManyAndReturn({
+    data: supervisors,
+  });
+
+  const membershipData = createHubCoordinators.map((user) => ({
+    userId: user.id,
+    implementerId: faker.helpers.arrayElement(implementers).id,
+    role: ImplementerRole.SUPERVISOR,
+    identifier: faker.string.alpha({ casing: "upper", length: 6 }),
+  }));
+
+  const implementerMembers = await db.implementerMember.createManyAndReturn({
+    data: membershipData,
+  });
+
+  const supervisorRecords = supervisors.map((user) => ({
+    id: objectId("supervisor"),
+    userId: user.id,
+    implementerId: faker.helpers.arrayElement(implementers).id,
+    visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+    supervisorName: faker.person.fullName(),
+    supervisorEmail: faker.internet.email(),
+    county: faker.location.county(),
+    subCounty: faker.location.county(),
+    bankName: faker.company.name(),
+    bankBranch: faker.location.county(),
+    bankAccountNumber: faker.finance.accountNumber(),
+    bankAccountName: faker.person.fullName(),
+    kra: faker.finance.accountNumber(),
+    nhif: faker.finance.accountNumber(),
+    dateOfBirth: faker.date.birthdate(),
+    hubId: faker.helpers.arrayElement(hubs).id,
+  }));
+
+  return db.supervisor.createManyAndReturn({
+    data: supervisorRecords,
+  });
+}
+
 async function main() {
   await truncateTables();
 
@@ -307,7 +417,9 @@ async function main() {
     implementers,
   );
   const hubs = await createHubs(projects, implementers);
-  const { users, implementerMembers } = await createUsers(implementers);
+  const { users, implementerMembers } = await createCoreUsers(implementers);
+  const hubCoordinators = await createHubCoordinators(hubs, 6, implementers);
+  const supervisors = await createSupervisors(hubs, 6, implementers);
 }
 
 main();
