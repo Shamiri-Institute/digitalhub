@@ -1,7 +1,17 @@
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { faker } from "@faker-js/faker";
-import { Hub, Implementer, ImplementerRole, Project } from "@prisma/client";
+import {
+  Fellow,
+  Hub,
+  Implementer,
+  ImplementerRole,
+  Prisma,
+  Project,
+  SessionName,
+  sessionTypes,
+  Supervisor,
+} from "@prisma/client";
 
 // GETTING STARTED WITH SEEDING
 // ===========================
@@ -428,6 +438,218 @@ async function createSupervisors(
   });
 }
 
+async function createFellows(supervisors: Supervisor[]) {
+  const fellows: Prisma.FellowCreateManyInput[] = [];
+
+  supervisors.forEach((supervisor) => {
+    const numFellows = faker.number.int({ min: 3, max: 6 });
+
+    for (let i = 0; i < numFellows; i++) {
+      const fellowName = faker.person.fullName();
+      fellows.push({
+        id: objectId("fellow"),
+        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+        fellowName,
+        fellowEmail: faker.internet.email().toLowerCase(),
+        mpesaName: Math.random() > 0.5 ? fellowName : faker.person.fullName(),
+        // NOTE: if we ever need to make this real, we would have to control the formatting
+        mpesaNumber: faker.phone.number({ style: "international" }),
+        // TODO: should we allow some fellows to have no supervisor?
+        supervisorId: supervisor.id,
+        hubId: supervisor.hubId,
+        implementerId: supervisor.implementerId,
+        county: faker.location.county(),
+        subCounty: faker.location.county(),
+        dateOfBirth: faker.date.birthdate(),
+      });
+    }
+  });
+
+  return db.fellow.createManyAndReturn({
+    data: fellows,
+  });
+}
+
+// TODO: should each school have a unique supervisor?
+async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
+  const schools: Prisma.SchoolCreateManyInput[] = [];
+
+  hubs.forEach((hub) => {
+    const numSchools = faker.number.int({ min: supervisors.length, max: 6 });
+
+    for (let i = 0; i < numSchools; i++) {
+      schools.push({
+        id: objectId("sch"),
+        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+        schoolName: faker.company.name(),
+        hubId: hub.id,
+        schoolType: faker.helpers.arrayElement([
+          "National",
+          "County",
+          "Subcounty",
+        ]),
+        schoolEmail: faker.internet.email(),
+        schoolCounty: faker.location.county(),
+        schoolDemographics: faker.helpers.arrayElement([
+          "Boys",
+          "Girls",
+          "Mixed",
+        ]),
+        pointPersonId: faker.string.alpha({ casing: "upper", length: 6 }),
+        pointPersonName: faker.person.fullName(),
+        pointPersonPhone: faker.phone.number({ style: "international" }),
+        numbersExpected: faker.number.int({ min: 1000, max: 10000 }),
+        principalName: faker.person.fullName(),
+        droppedOut: false,
+        dropoutReason: null,
+        droppedOutAt: null,
+        assignedSupervisorId: faker.helpers.arrayElement(supervisors).id,
+      });
+    }
+  });
+
+  return db.school.createManyAndReturn({
+    data: schools,
+    include: {
+      hub: {
+        include: {
+          project: true,
+          fellows: true,
+        },
+      },
+    },
+  });
+}
+
+type SchoolCreationResult = Awaited<ReturnType<typeof createSchools>>;
+
+async function createInterventionGroups(
+  schools: SchoolCreationResult,
+  fellows: Fellow[],
+) {
+  const interventionGroups: Prisma.InterventionGroupCreateManyInput[] = [];
+
+  const schoolFellowAssignments = new Map<string, Set<string>>();
+
+  for (const school of schools) {
+    const numGroups = school.numbersExpected
+      ? Math.ceil(school.numbersExpected / 16)
+      : Math.ceil(1000 / 16);
+
+    schoolFellowAssignments.set(school.id, new Set());
+
+    for (let i = 0; i < numGroups; i++) {
+      const availableFellows = fellows.filter(
+        (fellow) => !schoolFellowAssignments.get(school.id)?.has(fellow.id),
+      );
+
+      if (!availableFellows.length) {
+        console.warn(
+          `No available fellows for school ${school.schoolName}. Groups will be created without an assigned fellow`,
+        );
+        break;
+      }
+
+      const leader = faker.helpers.arrayElement(availableFellows);
+      schoolFellowAssignments.get(school.id)?.add(leader.id);
+
+      interventionGroups.push({
+        id: objectId("group"),
+        groupName: faker.company.name(),
+        schoolId: school.id,
+        leaderId: leader.id,
+        projectId: school.hub?.projectId as string,
+      });
+    }
+  }
+
+  return db.interventionGroup.createManyAndReturn({
+    data: interventionGroups,
+    include: {
+      school: true,
+    },
+  });
+}
+
+async function craateStudentsForSchools(
+  schools: Prisma.SchoolGetPayload<{ include: { interventionGroups: true } }>[],
+) {
+  const students: Prisma.StudentCreateManyInput[] = [];
+
+  for (const school of schools) {
+    const numStudents = faker.number.int({
+      min: school.numbersExpected || 1000 - Math.ceil(Math.random() * 60),
+      max: school.numbersExpected || 1000,
+    });
+    for (let i = 0; i < numStudents; i++) {
+      students.push({
+        id: objectId("student"),
+        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+        studentName: faker.person.fullName(),
+        schoolId: school.id,
+        assignedGroupId: faker.helpers.arrayElement(school.interventionGroups)
+          .id,
+      });
+    }
+  }
+
+  return db.student.createManyAndReturn({
+    data: students,
+  });
+}
+
+async function createSessionNames(hubs: Hub[]) {
+  const sessionNamesRecords: Prisma.SessionNameCreateManyInput[] = [];
+  const interventionSessionNames = ["s0", "s1", "s2", "s3", "s4"];
+  const followUpSessionNames = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"];
+
+  for (const hub of hubs) {
+    for (const sessionName of interventionSessionNames) {
+      sessionNamesRecords.push({
+        id: objectId("session_name"),
+        sessionName,
+        sessionType: sessionTypes.INTERVENTION,
+        sessionLabel: sessionName,
+        // TODO: ensure amount maps to the correct session type
+        amount: faker.number.int({ min: 500, max: 1000 }),
+        currency: "KES",
+        hubId: hub.id,
+      });
+    }
+  }
+
+  for (const sessionName of followUpSessionNames) {
+    sessionNamesRecords.push({
+      id: objectId("session_name"),
+      sessionName,
+      sessionType: sessionTypes.CLINICAL,
+      sessionLabel: sessionName,
+      amount: faker.number.int({ min: 500, max: 1000 }),
+      currency: "KES",
+      hubId: faker.helpers.arrayElement(hubs).id,
+    });
+  }
+
+  const sessions = await db.sessionName.createManyAndReturn({
+    data: sessionNamesRecords,
+  });
+
+  return sessions.reduce<
+    Record<"interventionSessions" | "followUpSessions", SessionName[]>
+  >(
+    (acc, val) => {
+      if (val.sessionType === sessionTypes.INTERVENTION) {
+        acc.interventionSessions.push(val);
+      } else {
+        acc.followUpSessions.push(val);
+      }
+      return acc;
+    },
+    { interventionSessions: [], followUpSessions: [] },
+  );
+}
+
+// TODO: should we guarantee that all child records are created for each parent record?
 async function main() {
   await truncateTables();
 
@@ -438,10 +660,20 @@ async function main() {
     implementers,
   );
   const hubs = await createHubs(projects, implementers);
-  // TODO: check if you need to also update the hubs that they are assigned to
-  const users = await createCoreUsers(implementers, hubs);
+  const users = await createCoreUsers(implementers, hubs); // AT THE MOMENT THESE ARE ALL SUPERVISORS
   const hubCoordinators = await createHubCoordinators(hubs, 6, implementers);
   const supervisors = await createSupervisors(hubs, 6, implementers);
+
+  const fellows = await createFellows(supervisors);
+  const schools = await createSchools(hubs, supervisors);
+  const groups = await createInterventionGroups(schools);
+  const schoolsWithGroup = await db.school.findMany({
+    include: {
+      interventionGroups: true,
+    },
+  });
+
+  const { interventionSessions } = await createSessionNames(hubs);
 }
 
 main();
