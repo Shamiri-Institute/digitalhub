@@ -37,7 +37,7 @@ export default function ViewEditQualitativeFeedback({
           <h2>{`${action === "view" ? "View" : "Edit"} school report`}</h2>
         </DialogHeader>
         <DialogAlertWidget
-          label={`${action === "view" ? "View" : "Edit"} ${sessionReport.schoolName} - ${sessionReport.session} - ${sessionReport.date}`}
+          label={`${sessionReport.schoolName} - ${sessionReport.session} - ${sessionReport.date}}`}
         />
         <div className="min-w-max space-y-2 overflow-x-auto overflow-y-scroll">
           <div className="flex flex-col items-start gap-2">
