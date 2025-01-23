@@ -75,15 +75,4 @@ export default function ViewEditQualitativeFeedback({
   );
 }
 
-function mapSessionNotesKindToTitle(kind: string) {
-  switch (kind) {
-    case "positive-highlights":
-      return "Positive Highlights";
-    case "reported-challenges":
-      return "Reported Challenges";
-    case "recommendations":
-      return "Recommendations";
-    default:
-      return "Other";
-  }
 }
