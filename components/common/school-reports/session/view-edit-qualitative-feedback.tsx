@@ -62,7 +62,7 @@ export default function ViewEditQualitativeFeedback({
         <Separator />
         {sessionReport.sessionNotes.map((note) => (
           <div key={note.sessionNoteId}>
-            <p>{mapSessionNotesKindToTitle(note.kind)}</p>
+            <p className="capitalize">{note.kind.replace('-',' ')}</p>
             <Textarea
               value={note.content}
               rows={5}
