@@ -37,7 +37,7 @@ export default function ViewEditQualitativeFeedback({
           <h2>{`${action === "view" ? "View" : "Edit"} school report`}</h2>
         </DialogHeader>
         <DialogAlertWidget
-          label={`${sessionReport.schoolName} - ${sessionReport.session} - ${sessionReport.date}}`}
+          label={`${action === "view" ? "View" : "Edit"} ${sessionReport.schoolName} - ${sessionReport.session} - ${sessionReport.date}`}
         />
         <div className="min-w-max space-y-2 overflow-x-auto overflow-y-scroll">
           <div className="flex flex-col items-start gap-2">
@@ -62,7 +62,7 @@ export default function ViewEditQualitativeFeedback({
         <Separator />
         {sessionReport.sessionNotes.map((note) => (
           <div key={note.sessionNoteId}>
-            <p className="capitalize">{note.kind.replace('-',' ')}</p>
+            <p className="capitalize">{note.kind.replace("-", " ")}</p>
             <Textarea
               value={note.content}
               rows={5}
@@ -73,6 +73,4 @@ export default function ViewEditQualitativeFeedback({
       </DialogContent>
     </Dialog>
   );
-}
-
 }

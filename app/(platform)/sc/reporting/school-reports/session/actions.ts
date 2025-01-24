@@ -19,6 +19,12 @@ type SchoolGroup = {
       content: string;
       sessionNoteId: number;
     }[];
+    sessionComments: {
+      content: string;
+      sessionCommentId: string;
+      name: string;
+      date: Date;
+    }[];
     schoolName: string;
     date: string;
   }[];
@@ -42,6 +48,15 @@ export async function loadSessionReport() {
           include: {
             school: true,
             sessionNotes: true,
+            sessionComments: {
+              include: {
+                user: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -76,6 +91,13 @@ export async function loadSessionReport() {
             sessionNoteId: note.id,
           })) || [],
         schoolName: session.session?.school?.schoolName || "N/A",
+        sessionComments:
+          session.session?.sessionComments.map((comment) => ({
+            content: comment.content,
+            sessionCommentId: comment.id,
+            name: comment.user?.name || "N/A",
+            date: comment.createdAt,
+          })) || [],
         date: format(session.session?.sessionDate, "dd/MM/yyyy") || "N/A",
       });
 
