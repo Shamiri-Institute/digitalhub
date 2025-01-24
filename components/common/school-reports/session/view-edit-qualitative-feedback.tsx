@@ -2,20 +2,35 @@
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
+import { submitQualitativeFeedback } from "#/app/actions";
+import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "#/components/ui/form";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
+import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-export const ConfirmReversalSchema = z.object({
-  name: stringValidation("Please enter your name"),
+export const QualitativeFeedbackSchema = z.object({
+  notes: stringValidation("Please enter your notes"),
 });
 
 export default function ViewEditQualitativeFeedback({
@@ -29,6 +44,39 @@ export default function ViewEditQualitativeFeedback({
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
+  const form = useForm<z.infer<typeof QualitativeFeedbackSchema>>({
+    resolver: zodResolver(QualitativeFeedbackSchema),
+    defaultValues: {
+      notes: "",
+    },
+  });
+
+  const onSubmit = async (data: z.infer<typeof QualitativeFeedbackSchema>) => {
+    const response = await submitQualitativeFeedback({
+      notes: data.notes,
+      sessionId: sessionReport.session,
+    });
+    if (!response.success) {
+      toast({
+        variant: "destructive",
+        title: "Submission error",
+        description:
+          response.message ??
+          "Something went wrong during submission, please try again",
+      });
+      return;
+    }
+
+    toast({
+      variant: "default",
+      title: "Success",
+      description: "Successfully submitted qualitative feedback",
+    });
+
+    form.reset();
+    setDialogOpen(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -41,19 +89,19 @@ export default function ViewEditQualitativeFeedback({
         />
         <div className="min-w-max space-y-2 overflow-x-auto overflow-y-scroll">
           <div className="flex flex-col items-start gap-2">
-            <p className="text-shamiri">
+            <p className="text-shamiri-black">
               Student behaviour (1 unacceptable to 5 outstanding)
             </p>
             <DataTableRatingStars rating={sessionReport.avgStudentBehaviour} />
           </div>
           <div className="flex flex-col items-start gap-2">
-            <p className="text-shamiri">
+            <p className="text-shamiri-black">
               Admin support (1 unacceptable to 5 outstanding)
             </p>
             <DataTableRatingStars rating={sessionReport.avgAdminSupport} />
           </div>
           <div className="flex flex-col items-start gap-2">
-            <p className="text-shamiri">
+            <p className="text-shamiri-black">
               Workload (1 unacceptable to 5 outstanding)
             </p>
             <DataTableRatingStars rating={sessionReport.avgWorkload} />
@@ -70,6 +118,64 @@ export default function ViewEditQualitativeFeedback({
             />
           </div>
         ))}
+
+        <Separator />
+        <p className="text-shamiri-black"> Notes</p>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Add your notes</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder=""
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <Separator className="my-4" />
+            {sessionReport.sessionComments.map((comment) => (
+              <div key={comment.sessionCommentId}>
+                <div>
+                  <p className="text-shamiri-text-grey">
+                    {format(comment.date, "dd MMM yyyy | hh.mm a")}
+                  </p>
+                </div>
+                <p className="text-shamiri-text-grey">{comment.name}</p>
+                <p className="text-shamiri-text-grey">{comment.content}</p>
+              </div>
+            ))}
+            <DialogFooter>
+              <Button
+                variant="ghost"
+                className="text-base font-semibold leading-6 text-shamiri-red"
+                onClick={() => {
+                  form.reset();
+                  setDialogOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="brand"
+                type="submit"
+                loading={form.formState.isSubmitting}
+                disabled={form.formState.isSubmitting}
+              >
+                Add notes
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
