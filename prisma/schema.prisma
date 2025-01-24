@@ -30,6 +30,8 @@ model User {
   schoolDocuments       SchoolDocuments[]
   fellowDocuments       FellowDocuments[]
   payoutStatements      PayoutStatements[]
+  schoolReports         SchoolReport[]
+  schoolFeedbacks       SchoolFeedback[]
 
   @@map("users")
 }
@@ -521,8 +523,8 @@ model FellowAttendance {
   yearOfImplementation    Int?                      @map("year_of_implementation") // TODO: might not be needed , use projectId
   schoolId                String?                   @map("school_id") @db.VarChar(255)
   school                  School?                   @relation(fields: [schoolId], references: [id])
-  supervisorId            String?                    @map("supervisor_id") @db.VarChar(255)
-  supervisor              Supervisor?                @relation(fields: [supervisorId], references: [id])
+  supervisorId            String?                   @map("supervisor_id") @db.VarChar(255)
+  supervisor              Supervisor?               @relation(fields: [supervisorId], references: [id])
   attended                Boolean?                  @map("attended")
   absenceReason           String?                   @map("absence_reason")
   absenceComments         String?                   @map("absence_comments") @db.Text
@@ -728,8 +730,46 @@ model School {
   schoolDropoutHistory        SchoolDropoutHistory[]
   studentAttendances          StudentAttendance[]
   schoolDocuments             SchoolDocuments[]
+  schoolReports               SchoolReport[]
+  schoolFeedbacks             SchoolFeedback[]
 
   @@map("schools")
+}
+
+model SchoolReport {
+  id                    String              @id @default(cuid())
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+  studentBehaviorRating Int?                @map("student_behavior_rating")
+  adminSupportRating    Int?                @map("admin_support_rating")
+  workloadRating        Int?                @map("workload_rating")
+  positiveHighlights    String?             @map("positive_highlights") @db.Text
+  reportedChallenges    String?             @map("reported_challenges") @db.Text
+  recommendations       String?             @map("recommendations") @db.Text
+  schoolId              String?             @db.VarChar(255)
+  School                School?             @relation(fields: [schoolId], references: [id])
+  sessionId             String              @map("session_id") @db.VarChar(255)
+  session               InterventionSession @relation(fields: [sessionId], references: [id])
+  userId                String              @map("user_id") @db.VarChar(255)
+  user                  User                @relation(fields: [userId], references: [id])
+
+  @@map("school_reports")
+}
+
+model SchoolFeedback {
+  id                                    String   @id @default(cuid())
+  createdAt                             DateTime @default(now()) @map("created_at")
+  updatedAt                             DateTime @updatedAt @map("updated_at")
+  studentTeacherSatisfactionRating      Int?     @map("student_teacher_satisfaction_rating")
+  factorsInfluencedStudentParticipation String?  @map("factors_influenced_student_participation") @db.Text
+  concernsRaisedByTeachers              String?  @map("concerns_raised_by_teachers") @db.Text
+  programImpactOnStudents               String?  @map("program_impact_on_students") @db.Text
+  schoolId                              String?  @db.VarChar(255)
+  School                                School?  @relation(fields: [schoolId], references: [id])
+  userId                                String   @map("user_id") @db.VarChar(255)
+  user                                  User     @relation(fields: [userId], references: [id])
+
+  @@map("school_feedbacks")
 }
 
 /// Records school dropout details
@@ -858,6 +898,7 @@ model InterventionSession {
   studentAttendances      StudentAttendance[]
   delayedPaymentRequests  DelayedPaymentRequest[]
   InterventionGroupReport InterventionGroupReport[]
+  schoolReports           SchoolReport[]
 
   @@unique([schoolId, sessionType], name: "interventionBySchoolIdAndSessionType")
   @@unique([schoolId, sessionId], name: "interventionBySchoolIdAndSessionId")
