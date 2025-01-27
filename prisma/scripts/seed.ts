@@ -762,7 +762,7 @@ const ids = {
         stanley: {
           id: objectId("user"),
           email: "stanley.george@shamiri.institute",
-          role: ImplementerRole.SUPERVISOR,
+          role: ImplementerRole.HUB_COORDINATOR,
           roleByVisibleId: "SPV24_S_01",
         },
       },
