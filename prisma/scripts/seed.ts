@@ -759,6 +759,12 @@ const ids = {
           role: ImplementerRole.SUPERVISOR,
           roleByVisibleId: "SPV24_S_01",
         },
+        stanley: {
+          id: objectId("user"),
+          email: "stanley.george@shamiri.institute",
+          role: ImplementerRole.SUPERVISOR,
+          roleByVisibleId: "SPV24_S_01",
+        },
       },
     },
   },
