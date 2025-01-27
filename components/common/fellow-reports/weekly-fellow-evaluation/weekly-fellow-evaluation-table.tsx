@@ -1,12 +1,12 @@
 "use client";
-import { WeeklyFellowEvaluationType } from "#/components/common/fellow-reports/weekly-fellow-evaluation/actions";
+import { HubWeeklyFellowEvaluationType } from "#/app/(platform)/hc/reporting/fellow-reports/weekly-fellow-evaluation/action";
 import DataTable from "#/components/data-table";
 import { columns, subColumns } from "./columns";
 
 export default function WeeklyFellowEvaluationTable({
   weeklyFellowEvaluation,
 }: {
-  weeklyFellowEvaluation: WeeklyFellowEvaluationType[];
+  weeklyFellowEvaluation: HubWeeklyFellowEvaluationType[];
 }) {
   return (
     <div className="container w-full grow space-y-3">
