@@ -11,7 +11,7 @@ export async function editSchoolFeedback(
 ) {
   try {
     const user = await getCurrentUser();
-    if ((user?.user.id !== userId) || (user?.personnelRole !== "hc")) {
+    if (user?.user.id !== userId || user?.personnelRole !== "hc") {
       return {
         message: "You are not authorized to edit this feedback",
         success: false,
