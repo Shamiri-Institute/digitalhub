@@ -13,7 +13,7 @@ import { cn } from "#/lib/utils";
 export default function SchoolFeedbackDropdownMenu({
   feedback,
 }: {
-  feedback: SchoolFeedbackType;
+  feedback: SchoolFeedbackType["supervisorRatings"][number];
 }) {
   return (
     <DropdownMenu>
