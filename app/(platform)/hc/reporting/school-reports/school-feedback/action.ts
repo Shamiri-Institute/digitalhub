@@ -3,7 +3,7 @@
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 
-export async function loadSchoolFeedback() {
+export async function loadHubSchoolFeedback() {
   try {
     const hubCoordinator = await currentHubCoordinator();
 
@@ -56,5 +56,5 @@ export async function loadSchoolFeedback() {
 }
 
 export type SchoolFeedbackType = Awaited<
-  ReturnType<typeof loadSchoolFeedback>
+  ReturnType<typeof loadHubSchoolFeedback>
 >[number];
