@@ -1,3 +1,4 @@
+import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { faker } from "@faker-js/faker";
@@ -316,23 +317,28 @@ async function createCoreUsers(implementers: Implementer[], hubs: Hub[]) {
     data: membershipData,
   });
 
-  const supervisorRecords = users.map((user) => ({
-    id: objectId("supervisor"),
-    implementerId: faker.helpers.arrayElement(implementers).id,
-    visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
-    supervisorName: faker.person.fullName(),
-    supervisorEmail: faker.internet.email(),
-    county: faker.location.county(),
-    subCounty: faker.location.county(),
-    bankName: faker.company.name(),
-    bankBranch: faker.location.county(),
-    bankAccountNumber: faker.finance.accountNumber(),
-    bankAccountName: faker.person.fullName(),
-    kra: faker.finance.accountNumber(),
-    nhif: faker.finance.accountNumber(),
-    dateOfBirth: faker.date.birthdate(),
-    hubId: faker.helpers.arrayElement(hubs).id,
-  }));
+  const supervisorRecords = users.map((user) => {
+    const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
+    const subCounty = faker.helpers.arrayElement(county.sub_counties);
+
+    return {
+      id: objectId("supervisor"),
+      implementerId: faker.helpers.arrayElement(implementers).id,
+      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+      supervisorName: faker.person.fullName(),
+      supervisorEmail: faker.internet.email(),
+      county: county.name,
+      subCounty: subCounty,
+      bankName: faker.company.name(),
+      bankBranch: faker.location.county(),
+      bankAccountNumber: faker.finance.accountNumber(),
+      bankAccountName: faker.person.fullName(),
+      kra: faker.finance.accountNumber(),
+      nhif: faker.finance.accountNumber(),
+      dateOfBirth: faker.date.birthdate(),
+      hubId: faker.helpers.arrayElement(hubs).id,
+    };
+  });
 
   return db.supervisor.createManyAndReturn({
     data: supervisorRecords,
@@ -370,23 +376,28 @@ async function createHubCoordinators(hubs: Hub[], implementers: Implementer[]) {
     data: membershipData,
   });
 
-  const hubCoordinatorRecords = hubCoordinators.map((_user) => ({
-    id: objectId("hubcoordinator"),
-    implementerId: faker.helpers.arrayElement(implementers).id,
-    visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
-    coordinatorName: faker.person.fullName(),
-    coordinatorEmail: faker.internet.email(),
-    county: faker.location.county(),
-    subCounty: faker.location.county(),
-    bankName: faker.company.name(),
-    bankBranch: faker.location.county(),
-    bankAccountNumber: faker.finance.accountNumber(),
-    bankAccountName: faker.person.fullName(),
-    kra: faker.finance.accountNumber(),
-    nhif: faker.finance.accountNumber(),
-    dateOfBirth: faker.date.birthdate(),
-    assignedHubId: faker.helpers.arrayElement(hubs).id,
-  }));
+  const hubCoordinatorRecords = hubCoordinators.map((_user) => {
+    const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
+    const subCounty = faker.helpers.arrayElement(county.sub_counties);
+
+    return {
+      id: objectId("hubcoordinator"),
+      implementerId: faker.helpers.arrayElement(implementers).id,
+      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+      coordinatorName: faker.person.fullName(),
+      coordinatorEmail: faker.internet.email(),
+      county: county.name,
+      subCounty: subCounty,
+      bankName: faker.company.name(),
+      bankBranch: faker.location.county(),
+      bankAccountNumber: faker.finance.accountNumber(),
+      bankAccountName: faker.person.fullName(),
+      kra: faker.finance.accountNumber(),
+      nhif: faker.finance.accountNumber(),
+      dateOfBirth: faker.date.birthdate(),
+      assignedHubId: faker.helpers.arrayElement(hubs).id,
+    };
+  });
 
   return db.hubCoordinator.createManyAndReturn({
     data: hubCoordinatorRecords,
@@ -428,23 +439,29 @@ async function createSupervisors(
     data: membershipData,
   });
 
-  const supervisorRecords = supervisors.map((user) => ({
-    id: objectId("supervisor"),
-    implementerId: faker.helpers.arrayElement(implementers).id,
-    visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
-    supervisorName: faker.person.fullName(),
-    supervisorEmail: faker.internet.email(),
-    county: faker.location.county(),
-    subCounty: faker.location.county(),
-    bankName: faker.company.name(),
-    bankBranch: faker.location.county(),
-    bankAccountNumber: faker.finance.accountNumber(),
-    bankAccountName: faker.person.fullName(),
-    kra: faker.finance.accountNumber(),
-    nhif: faker.finance.accountNumber(),
-    dateOfBirth: faker.date.birthdate(),
-    hubId: faker.helpers.arrayElement(hubs).id,
-  }));
+  const supervisorRecords = supervisors.map((_user) => {
+    const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
+    const subCounty = faker.helpers.arrayElement(county.sub_counties);
+
+    return {
+      id: objectId("supervisor"),
+      implementerId: faker.helpers.arrayElement(implementers).id,
+      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+      supervisorName: faker.person.fullName(),
+      supervisorEmail: faker.internet.email(),
+      county: county.name,
+      subCounty: subCounty,
+
+      bankName: faker.company.name(),
+      bankBranch: faker.location.county(),
+      bankAccountNumber: faker.finance.accountNumber(),
+      bankAccountName: faker.person.fullName(),
+      kra: faker.finance.accountNumber(),
+      nhif: faker.finance.accountNumber(),
+      dateOfBirth: faker.date.birthdate(),
+      hubId: faker.helpers.arrayElement(hubs).id,
+    };
+  });
 
   return db.supervisor.createManyAndReturn({
     data: supervisorRecords,
@@ -472,8 +489,8 @@ async function createFellows(supervisors: Supervisor[]) {
         supervisorId: supervisor.id,
         hubId: supervisor.hubId,
         implementerId: supervisor.implementerId,
-        county: faker.location.county(),
-        subCounty: faker.location.county(),
+        county: supervisor.county,
+        subCounty: supervisor.subCounty,
         dateOfBirth: faker.date.birthdate(),
       });
     }
@@ -493,6 +510,9 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
     const numSchools = faker.number.int({ min: supervisors.length, max: 6 });
 
     for (let i = 0; i < numSchools; i++) {
+      const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
+      const subCounty = faker.helpers.arrayElement(county.sub_counties);
+
       schools.push({
         id: objectId("sch"),
         visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
@@ -504,7 +524,8 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
           "Subcounty",
         ]),
         schoolEmail: faker.internet.email(),
-        schoolCounty: faker.location.county(),
+        schoolCounty: county.name,
+        schoolSubCounty: subCounty,
         schoolDemographics: faker.helpers.arrayElement([
           "Boys",
           "Girls",
