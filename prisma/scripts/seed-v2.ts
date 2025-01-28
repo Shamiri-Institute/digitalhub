@@ -646,7 +646,9 @@ async function createSessionNames(hubs: Hub[]) {
 }
 
 async function createInterventionSessionsForSchools(
-  schools: SchoolCreationResult,
+  schools: Prisma.SchoolGetPayload<{
+    include: { interventionGroups: { include: { leader: true } }; hub: true };
+  }>[],
   interventionSessionNames: SessionName[],
 ) {
   const interventionSessions: Prisma.InterventionSessionCreateManyInput[] = [];
@@ -654,12 +656,17 @@ async function createInterventionSessionsForSchools(
 
   // Sort session names by hubId and then by sessionName for lookup
   const hubIdSessionNameMapping = interventionSessionNames.reduce<
-    Record<string, string[]>
+    Record<string, { sessionName: string; sessionId: string }[]>
   >((acc, sessionName) => {
     if (!acc[sessionName.hubId]) {
-      acc[sessionName.hubId] = [sessionName.sessionName];
+      acc[sessionName.hubId] = [
+        { sessionId: sessionName.id, sessionName: sessionName.sessionName },
+      ];
     } else {
-      acc[sessionName.hubId]!.push(sessionName.sessionName);
+      acc[sessionName.hubId]!.push({
+        sessionId: sessionName.id,
+        sessionName: sessionName.sessionName,
+      });
     }
     return acc;
   }, {});
@@ -681,8 +688,10 @@ async function createInterventionSessionsForSchools(
     if (!hubSessionNames || hubSessionNames.length === 0) continue;
 
     // Get all fellows who lead groups in this school
-    const fellowsInHub = school.hub?.fellows || [];
-    const fellowIds = new Set(fellowsInHub.map((f) => f.id));
+    const fellowsInSchool = school.interventionGroups.map(
+      (group) => group.leader,
+    );
+    const fellowIds = new Set(fellowsInSchool.map((f) => f.id));
 
     // Start from current date for this school
     let currentDate = new Date();
@@ -691,7 +700,7 @@ async function createInterventionSessionsForSchools(
     for (const sessionName of hubSessionNames) {
       // Check if any fellow in this school has a session on this date
       while (
-        [...fellowIds].some((fellowId) => {
+        Array.from(fellowIds).some((fellowId) => {
           const fellowDates = fellowSessionDates.get(fellowId);
           return fellowDates?.has(currentDate.toISOString().split("T")[0]!);
         })
@@ -707,7 +716,7 @@ async function createInterventionSessionsForSchools(
         sessionEndTime: new Date(currentDate.getTime() + 3 * 60 * 60 * 1000), // 3 hours later
         status: "Scheduled",
         sessionType: sessionName.sessionName,
-        sessionId: sessionName.id,
+        sessionId: sessionName.sessionId,
         schoolId: school.id,
         occurred: false,
         yearOfImplementation: new Date().getFullYear(),
@@ -715,13 +724,13 @@ async function createInterventionSessionsForSchools(
       });
 
       // Record the date for all fellows in this school
-      fellowsInHub.forEach((fellow) => {
+      fellowsInSchool.forEach((fellow) => {
         if (!fellowSessionDates.has(fellow.id)) {
           fellowSessionDates.set(fellow.id, new Set());
         }
         fellowSessionDates
           .get(fellow.id)
-          ?.add(currentDate.toISOString().split("T")[0]);
+          ?.add(currentDate.toISOString().split("T")[0]!);
       });
 
       // Move to next week for next session
@@ -752,13 +761,22 @@ async function main() {
   const fellows = await createFellows(supervisors);
   const schools = await createSchools(hubs, supervisors);
   const groups = await createInterventionGroups(schools, fellows);
-  const schoolsWithGroup = await db.school.findMany({
+  const schoolsWithGroupsAndFellows = await db.school.findMany({
     include: {
-      interventionGroups: true,
+      interventionGroups: {
+        include: {
+          leader: true,
+        },
+      },
+      hub: true,
     },
   });
 
   const { interventionSessionsNames } = await createSessionNames(hubs);
+  const interventionSessions = await createInterventionSessionsForSchools(
+    schoolsWithGroupsAndFellows,
+    interventionSessionsNames,
+  );
 }
 
 main();
