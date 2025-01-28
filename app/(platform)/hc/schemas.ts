@@ -313,7 +313,9 @@ export const EditSupervisorSchema = z
     );
     if (
       selectedCounty &&
-      !(selectedCounty.sub_counties as readonly string[]).includes(val.subCounty)
+      !(selectedCounty.sub_counties as readonly string[]).includes(
+        val.subCounty,
+      )
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -503,7 +505,9 @@ export const FellowDetailsSchema = z
     );
     if (
       selectedCounty &&
-      !(selectedCounty.sub_counties as readonly string[]).includes(val.subCounty)
+      !(selectedCounty.sub_counties as readonly string[]).includes(
+        val.subCounty,
+      )
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
