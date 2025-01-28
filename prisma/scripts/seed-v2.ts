@@ -328,10 +328,7 @@ async function createCoreUsers(implementers: Implementer[], hubs: Hub[]) {
   });
 }
 
-async function createHubCoordinators(
-  hubs: Hub[],
-  implementers: Implementer[],
-) {
+async function createHubCoordinators(hubs: Hub[], implementers: Implementer[]) {
   const hubCoordinators = [];
 
   for (let i = 0; i < hubs.length; i++) {
@@ -634,18 +631,107 @@ async function createSessionNames(hubs: Hub[]) {
   });
 
   return sessions.reduce<
-    Record<"interventionSessions" | "followUpSessions", SessionName[]>
+    Record<"interventionSessionsNames" | "followUpSessionsNames", SessionName[]>
   >(
     (acc, val) => {
       if (val.sessionType === sessionTypes.INTERVENTION) {
-        acc.interventionSessions.push(val);
+        acc.interventionSessionsNames.push(val);
       } else {
-        acc.followUpSessions.push(val);
+        acc.followUpSessionsNames.push(val);
       }
       return acc;
     },
-    { interventionSessions: [], followUpSessions: [] },
+    { interventionSessionsNames: [], followUpSessionsNames: [] },
   );
+}
+
+async function createInterventionSessionsForSchools(
+  schools: SchoolCreationResult,
+  interventionSessionNames: SessionName[],
+) {
+  const interventionSessions: Prisma.InterventionSessionCreateManyInput[] = [];
+  const fellowSessionDates = new Map<string, Set<string>>(); // fellowId -> Set of dates (YYYY-MM-DD)
+
+  // Sort session names by hubId and then by sessionName for lookup
+  const hubIdSessionNameMapping = interventionSessionNames.reduce<
+    Record<string, string[]>
+  >((acc, sessionName) => {
+    if (!acc[sessionName.hubId]) {
+      acc[sessionName.hubId] = [sessionName.sessionName];
+    } else {
+      acc[sessionName.hubId]!.push(sessionName.sessionName);
+    }
+    return acc;
+  }, {});
+
+  const hubIdKeys = Object.keys(hubIdSessionNameMapping);
+  for (let key of hubIdKeys) {
+    // taking advantage of lexigraphic sorting due to the constant prefix
+    hubIdSessionNameMapping[key] = hubIdSessionNameMapping[key]!.sort();
+  }
+
+  for (const school of schools) {
+    // Skip if school has no hub
+    if (!school.hubId) continue;
+
+    // Filter session names for this school's hub
+    const hubSessionNames = hubIdSessionNameMapping[school.hubId];
+
+    // Skip if no session names found for this hub
+    if (!hubSessionNames || hubSessionNames.length === 0) continue;
+
+    // Get all fellows who lead groups in this school
+    const fellowsInHub = school.hub?.fellows || [];
+    const fellowIds = new Set(fellowsInHub.map((f) => f.id));
+
+    // Start from current date for this school
+    let currentDate = new Date();
+    currentDate.setHours(9, 0, 0, 0); // Set to 9 AM
+
+    for (const sessionName of hubSessionNames) {
+      // Check if any fellow in this school has a session on this date
+      while (
+        [...fellowIds].some((fellowId) => {
+          const fellowDates = fellowSessionDates.get(fellowId);
+          return fellowDates?.has(currentDate.toISOString().split("T")[0]!);
+        })
+      ) {
+        // If conflict exists, move to next day
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // Create session for this school
+      interventionSessions.push({
+        id: objectId("session"),
+        sessionDate: currentDate,
+        sessionEndTime: new Date(currentDate.getTime() + 3 * 60 * 60 * 1000), // 3 hours later
+        status: "Scheduled",
+        sessionType: sessionName.sessionName,
+        sessionId: sessionName.id,
+        schoolId: school.id,
+        occurred: false,
+        yearOfImplementation: new Date().getFullYear(),
+        projectId: school.hub?.projectId || undefined,
+      });
+
+      // Record the date for all fellows in this school
+      fellowsInHub.forEach((fellow) => {
+        if (!fellowSessionDates.has(fellow.id)) {
+          fellowSessionDates.set(fellow.id, new Set());
+        }
+        fellowSessionDates
+          .get(fellow.id)
+          ?.add(currentDate.toISOString().split("T")[0]);
+      });
+
+      // Move to next week for next session
+      currentDate.setDate(currentDate.getDate() + 7);
+    }
+  }
+
+  return db.interventionSession.createMany({
+    data: interventionSessions,
+  });
 }
 
 // TODO: should we guarantee that all child records are created for each parent record?
@@ -672,7 +758,7 @@ async function main() {
     },
   });
 
-  const { interventionSessions } = await createSessionNames(hubs);
+  const { interventionSessionsNames } = await createSessionNames(hubs);
 }
 
 main();
