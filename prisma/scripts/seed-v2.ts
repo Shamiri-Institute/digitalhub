@@ -92,6 +92,10 @@ import {
 // - Must be linked to: School, Fellow (as leader), and Project
 // - Groups need to exist before adding students
 
+// 4.3 Create Intervention Sessions
+// - This is where the intervention is delivered
+// - Must be linked to the school.
+
 // STEP 5: PARTICIPANT MANAGEMENT
 // ----------------------------
 // Add program participants and their data
@@ -189,6 +193,7 @@ function generateImplementers(n: number) {
 }
 
 function createImplementers() {
+  console.log("creating implementers");
   return db.implementer.createManyAndReturn({
     data: [
       {
@@ -209,6 +214,7 @@ function createImplementers() {
 }
 
 function createProjects() {
+  console.log("creating projects");
   const projects = [];
 
   for (let i = 0; i < 4; i++) {
@@ -228,6 +234,7 @@ function createProjectImplementers(
   projects: Project[],
   implementers: Implementer[],
 ) {
+  console.log("creating project implementers");
   const projectImplementers = [];
 
   const minLength = Math.min(projects.length, implementers.length);
@@ -245,6 +252,7 @@ function createProjectImplementers(
 }
 
 function createHubs(projects: Project[], implementers: Implementer[]) {
+  console.log("creating hubs");
   const hubs = [];
   const minLength = Math.min(projects.length, implementers.length);
 
@@ -268,6 +276,7 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
 }
 
 async function createCoreUsers(implementers: Implementer[], hubs: Hub[]) {
+  console.log("creating core users");
   const userData = [
     {
       id: objectId("user"),
@@ -290,7 +299,10 @@ async function createCoreUsers(implementers: Implementer[], hubs: Hub[]) {
   ];
 
   const users = await db.user.createManyAndReturn({
-    data: userData,
+    data: userData.map(({ id, email }) => ({
+      id,
+      email,
+    })),
   });
 
   const membershipData = users.map((user) => ({
@@ -306,7 +318,6 @@ async function createCoreUsers(implementers: Implementer[], hubs: Hub[]) {
 
   const supervisorRecords = users.map((user) => ({
     id: objectId("supervisor"),
-    userId: user.id,
     implementerId: faker.helpers.arrayElement(implementers).id,
     visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
     supervisorName: faker.person.fullName(),
@@ -329,6 +340,7 @@ async function createCoreUsers(implementers: Implementer[], hubs: Hub[]) {
 }
 
 async function createHubCoordinators(hubs: Hub[], implementers: Implementer[]) {
+  console.log("creating hub coordinators");
   const hubCoordinators = [];
 
   for (let i = 0; i < hubs.length; i++) {
@@ -341,7 +353,10 @@ async function createHubCoordinators(hubs: Hub[], implementers: Implementer[]) {
   }
 
   const createHubCoordinators = await db.user.createManyAndReturn({
-    data: hubCoordinators,
+    data: hubCoordinators.map(({ id, email }) => ({
+      id,
+      email,
+    })),
   });
 
   const membershipData = createHubCoordinators.map((user) => ({
@@ -355,9 +370,8 @@ async function createHubCoordinators(hubs: Hub[], implementers: Implementer[]) {
     data: membershipData,
   });
 
-  const hubCoordinatorRecords = hubCoordinators.map((user) => ({
-    id: objectId("hub_coordinator"),
-    userId: user.id,
+  const hubCoordinatorRecords = hubCoordinators.map((_user) => ({
+    id: objectId("hubcoordinator"),
     implementerId: faker.helpers.arrayElement(implementers).id,
     visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
     coordinatorName: faker.person.fullName(),
@@ -371,7 +385,7 @@ async function createHubCoordinators(hubs: Hub[], implementers: Implementer[]) {
     kra: faker.finance.accountNumber(),
     nhif: faker.finance.accountNumber(),
     dateOfBirth: faker.date.birthdate(),
-    hubId: faker.helpers.arrayElement(hubs).id,
+    assignedHubId: faker.helpers.arrayElement(hubs).id,
   }));
 
   return db.hubCoordinator.createManyAndReturn({
@@ -384,6 +398,7 @@ async function createSupervisors(
   n = 6,
   implementers: Implementer[],
 ) {
+  console.log("creating supervisors");
   const supervisors = [];
 
   for (let i = 0; i < n; i++) {
@@ -396,7 +411,10 @@ async function createSupervisors(
   }
 
   const createHubCoordinators = await db.user.createManyAndReturn({
-    data: supervisors,
+    data: supervisors.map(({ id, email }) => ({
+      id,
+      email,
+    })),
   });
 
   const membershipData = createHubCoordinators.map((user) => ({
@@ -412,7 +430,6 @@ async function createSupervisors(
 
   const supervisorRecords = supervisors.map((user) => ({
     id: objectId("supervisor"),
-    userId: user.id,
     implementerId: faker.helpers.arrayElement(implementers).id,
     visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
     supervisorName: faker.person.fullName(),
@@ -435,6 +452,7 @@ async function createSupervisors(
 }
 
 async function createFellows(supervisors: Supervisor[]) {
+  console.log("creating fellows");
   const fellows: Prisma.FellowCreateManyInput[] = [];
 
   supervisors.forEach((supervisor) => {
@@ -468,6 +486,7 @@ async function createFellows(supervisors: Supervisor[]) {
 
 // TODO: should each school have a unique supervisor?
 async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
+  console.log("creating schools");
   const schools: Prisma.SchoolCreateManyInput[] = [];
 
   hubs.forEach((hub) => {
@@ -494,7 +513,7 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
         pointPersonId: faker.string.alpha({ casing: "upper", length: 6 }),
         pointPersonName: faker.person.fullName(),
         pointPersonPhone: faker.phone.number({ style: "international" }),
-        numbersExpected: faker.number.int({ min: 1000, max: 10000 }),
+        numbersExpected: faker.number.int({ min: 200, max: 600 }),
         principalName: faker.person.fullName(),
         droppedOut: false,
         dropoutReason: null,
@@ -523,6 +542,7 @@ async function createInterventionGroups(
   schools: SchoolCreationResult,
   fellows: Fellow[],
 ) {
+  console.log("creating intervention groups");
   const interventionGroups: Prisma.InterventionGroupCreateManyInput[] = [];
 
   const schoolFellowAssignments = new Map<string, Set<string>>();
@@ -567,9 +587,12 @@ async function createInterventionGroups(
   });
 }
 
-async function craateStudentsForSchools(
-  schools: Prisma.SchoolGetPayload<{ include: { interventionGroups: true } }>[],
+async function createStudentsForSchools(
+  schools: Prisma.SchoolGetPayload<{
+    include: { interventionGroups: { include: { leader: true } } };
+  }>[],
 ) {
+  console.log("creating students");
   const students: Prisma.StudentCreateManyInput[] = [];
 
   for (const school of schools) {
@@ -578,13 +601,18 @@ async function craateStudentsForSchools(
       max: school.numbersExpected || 1000,
     });
     for (let i = 0; i < numStudents; i++) {
+      // consider making the form + year of birth more realistic
       students.push({
         id: objectId("student"),
-        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+        visibleId: objectId("student"), // use short id?
         studentName: faker.person.fullName(),
         schoolId: school.id,
         assignedGroupId: faker.helpers.arrayElement(school.interventionGroups)
           .id,
+        gender: faker.helpers.arrayElement(["Male", "Female"]),
+        yearOfBirth: faker.date
+          .birthdate({ mode: "age", min: 12, max: 20 })
+          .getFullYear(),
       });
     }
   }
@@ -595,6 +623,7 @@ async function craateStudentsForSchools(
 }
 
 async function createSessionNames(hubs: Hub[]) {
+  console.log("creating session names");
   const sessionNamesRecords: Prisma.SessionNameCreateManyInput[] = [];
   const interventionSessionNames = ["s0", "s1", "s2", "s3", "s4"];
   const followUpSessionNames = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"];
@@ -602,7 +631,7 @@ async function createSessionNames(hubs: Hub[]) {
   for (const hub of hubs) {
     for (const sessionName of interventionSessionNames) {
       sessionNamesRecords.push({
-        id: objectId("session_name"),
+        id: objectId("sessionname"),
         sessionName,
         sessionType: sessionTypes.INTERVENTION,
         sessionLabel: sessionName,
@@ -616,7 +645,7 @@ async function createSessionNames(hubs: Hub[]) {
 
   for (const sessionName of followUpSessionNames) {
     sessionNamesRecords.push({
-      id: objectId("session_name"),
+      id: objectId("sessionname"),
       sessionName,
       sessionType: sessionTypes.CLINICAL,
       sessionLabel: sessionName,
@@ -651,6 +680,7 @@ async function createInterventionSessionsForSchools(
   }>[],
   interventionSessionNames: SessionName[],
 ) {
+  console.log("creating intervention sessions");
   const interventionSessions: Prisma.InterventionSessionCreateManyInput[] = [];
   const fellowSessionDates = new Map<string, Set<string>>(); // fellowId -> Set of dates (YYYY-MM-DD)
 
@@ -744,23 +774,24 @@ async function createInterventionSessionsForSchools(
 }
 
 // TODO: should we guarantee that all child records are created for each parent record?
+//POSSIBLE PERFORMANCE WIN BY PARALLELISING SOME OF THESE QUERIES?
 async function main() {
   await truncateTables();
 
-  const projects = await createProjects();
-  const implementers = await createImplementers();
-  const projectImplementers = await createProjectImplementers(
-    projects,
-    implementers,
-  );
+  const [projects, implementers] = await Promise.all([
+    createProjects(),
+    createImplementers(),
+  ]);
+
+  await createProjectImplementers(projects, implementers);
   const hubs = await createHubs(projects, implementers);
-  const users = await createCoreUsers(implementers, hubs); // AT THE MOMENT THESE ARE ALL SUPERVISORS
-  const hubCoordinators = await createHubCoordinators(hubs, implementers);
+  await createCoreUsers(implementers, hubs); // AT THE MOMENT THESE ARE ALL SUPERVISORS
+  await createHubCoordinators(hubs, implementers);
   const supervisors = await createSupervisors(hubs, 6, implementers);
 
   const fellows = await createFellows(supervisors);
   const schools = await createSchools(hubs, supervisors);
-  const groups = await createInterventionGroups(schools, fellows);
+  await createInterventionGroups(schools, fellows);
   const schoolsWithGroupsAndFellows = await db.school.findMany({
     include: {
       interventionGroups: {
@@ -777,6 +808,12 @@ async function main() {
     schoolsWithGroupsAndFellows,
     interventionSessionsNames,
   );
+
+  const students = await createStudentsForSchools(schoolsWithGroupsAndFellows);
+
+  // create fellow attendance records
+  // create student attendance records
+  // create supervisor attendance records
 }
 
 main();
