@@ -1,8 +1,8 @@
 "use server";
 
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { getCurrentUser } from "#/app/auth";
 import { WeeklyEvaluationFormValues } from "#/components/common/fellow-reports/weekly-fellow-evaluation/view-edit-weekly-fellow-evaluation";
-import { WeeklyFellowEvaluationSchema } from "#/components/common/fellow/schema";
 import { db } from "#/lib/db";
 
 export const updateWeeklyEvaluation = async (
@@ -19,30 +19,16 @@ export const updateWeeklyEvaluation = async (
       };
     }
 
-    const {
-      behaviourRating,
-      behaviourNotes,
-      programDeliveryRating,
-      programDeliveryNotes,
-      dressingAndGroomingRating,
-      dressingAndGroomingNotes,
-      punctualityRating,
-      punctualityNotes,
-    } = WeeklyFellowEvaluationSchema.parse(data);
-
     await db.weeklyFellowRatings.update({
       where: { id: evaluationId },
       data: {
-        behaviourRating,
-        behaviourNotes,
-        programDeliveryRating,
-        programDeliveryNotes,
-        dressingAndGroomingRating,
-        dressingAndGroomingNotes,
-        punctualityRating,
-        punctualityNotes,
+        ...data,
       },
     });
+
+    await revalidatePageAction(
+      "sc/reporting/fellow-reports/weekly-fellow-evaluation",
+    );
     return {
       success: true,
       message: "Weekly evaluation updated successfully",
