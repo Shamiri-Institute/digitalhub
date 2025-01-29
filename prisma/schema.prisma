@@ -30,6 +30,7 @@ model User {
   schoolDocuments       SchoolDocuments[]
   fellowDocuments       FellowDocuments[]
   payoutStatements      PayoutStatements[]
+  sessionComment        SessionComment[]
   schoolFeedbacks       SchoolFeedback[]
 
   @@map("users")
@@ -876,6 +877,7 @@ model InterventionSession {
   studentAttendances      StudentAttendance[]
   delayedPaymentRequests  DelayedPaymentRequest[]
   InterventionGroupReport InterventionGroupReport[]
+  sessionComments         SessionComment[]
 
   @@unique([schoolId, sessionType], name: "interventionBySchoolIdAndSessionType")
   @@unique([schoolId, sessionId], name: "interventionBySchoolIdAndSessionId")
@@ -958,6 +960,19 @@ model InterventionGroupReport {
   isAllReport        Boolean?             @map("is_all_report")
 
   @@map("intervention_group_reports")
+}
+
+model SessionComment {
+  id        String              @id @default(cuid())
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+  content   String              @db.Text
+  userId    String              @map("user_id") @db.VarChar(255)
+  sessionId String              @map("session_id") @db.VarChar(255)
+  session   InterventionSession @relation(fields: [sessionId], references: [id])
+  user      User                @relation(fields: [userId], references: [id])
+
+  @@map("session_comments")
 }
 
 model ReimbursementRequest {

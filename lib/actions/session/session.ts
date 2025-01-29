@@ -15,15 +15,6 @@ function checkAuthorizedUser() {
     return { success: false, message: "Unauthenticated user." };
 }
 
-function generateSupervisorAttendanceVisibleId(
-  supervisorId: string,
-  schoolId: string,
-  sessionLabel: string,
-) {
-  const randomString = Math.random().toString(36).substring(7);
-  return `${supervisorId}_${schoolId}_${sessionLabel}_${randomString}`;
-}
-
 export async function createNewSession(
   data: z.infer<typeof ScheduleNewSessionSchema>,
 ) {
@@ -126,5 +117,33 @@ export async function rescheduleSession(
   } catch (error: unknown) {
     console.error(error);
     return { error: "Something went wrong while rescheduling session" };
+  }
+}
+
+export async function submitQualitativeFeedback({
+  notes,
+  sessionId,
+}: {
+  notes: string;
+  sessionId: string;
+}) {
+  try {
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      return { success: false, message: "User not found" };
+    }
+
+    await db.sessionComment.create({
+      data: {
+        sessionId,
+        content: notes,
+        userId: currentUser?.user.id,
+      },
+    });
+    return { success: true, message: "Notes submitted successfully" };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Something went wrong" };
   }
 }
