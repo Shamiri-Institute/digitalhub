@@ -42,6 +42,7 @@ import {
 } from "#/app/(platform)/hc/schedule/context/filters-context";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import { ScheduleNewSession } from "#/components/common/session/schedule-new-session-form";
+import StudentAttendance from "#/components/common/student/student-attendance";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -64,6 +65,7 @@ import { ModeProvider, useMode, type Mode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
 import {
+  Session,
   SessionsContext,
   SessionsProvider,
   useSessions,
@@ -390,6 +392,8 @@ function CalendarView({
     React.useState(false);
   const [fellowAttendanceDialog, setFellowAttendanceDialog] =
     React.useState(false);
+  const [studentAttendanceDialog, setStudentAttendanceDialog] =
+    React.useState(false);
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
   const [rescheduleSessionDialog, setRescheduleSessionDialog] =
     React.useState(false);
@@ -397,10 +401,7 @@ function CalendarView({
   const [supervisorAttendance, setSupervisorAttendance] =
     React.useState<SupervisorAttendanceTableData | null>(null);
 
-  const [session, setSession] =
-    React.useState<Prisma.InterventionSessionGetPayload<{
-      include: { school: true; sessionRatings: true; session: true };
-    }> | null>(null);
+  const [session, setSession] = React.useState<Session | null>(null);
 
   const activeMode = () => {
     switch (mode) {
@@ -409,7 +410,10 @@ function CalendarView({
           <MonthView
             {...monthProps}
             role={role}
-            dialogState={{ setFellowAttendanceDialog }}
+            dialogState={{
+              setFellowAttendanceDialog,
+              setStudentAttendanceDialog,
+            }}
           />
         );
       case "week":
@@ -417,7 +421,10 @@ function CalendarView({
           <WeekView
             {...weekProps}
             role={role}
-            dialogState={{ setFellowAttendanceDialog }}
+            dialogState={{
+              setFellowAttendanceDialog,
+              setStudentAttendanceDialog,
+            }}
           />
         ) : (
           <div>Loading...</div>
@@ -427,7 +434,10 @@ function CalendarView({
           <DayView
             {...dayProps}
             role={role}
-            dialogState={{ setFellowAttendanceDialog }}
+            dialogState={{
+              setFellowAttendanceDialog,
+              setStudentAttendanceDialog,
+            }}
           />
         ) : (
           <div>Loading...</div>
@@ -437,7 +447,10 @@ function CalendarView({
           <ListView
             {...listProps}
             role={role}
-            dialogState={{ setFellowAttendanceDialog }}
+            dialogState={{
+              setFellowAttendanceDialog,
+              setStudentAttendanceDialog,
+            }}
           />
         );
       case "table":
@@ -532,6 +545,16 @@ function CalendarView({
           session={session}
           isOpen={fellowAttendanceDialog}
           setIsOpen={setFellowAttendanceDialog}
+        />
+        <StudentAttendance
+          isOpen={studentAttendanceDialog}
+          setIsOpen={setStudentAttendanceDialog}
+          role={role}
+          session={session}
+          fellows={
+            supervisors.find((supervisor) => supervisor.id === supervisorId)
+              ?.fellows ?? []
+          }
         />
         <SupervisorAttendance supervisors={supervisors} role={role} />
       </SupervisorAttendanceContext.Provider>

@@ -1,17 +1,11 @@
-import { Prisma } from "@prisma/client";
+import { Session } from "#/components/common/session/sessions-provider";
 import { createContext, Dispatch, SetStateAction } from "react";
 
 type RescheduleSessionContextData = {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  session: Prisma.InterventionSessionGetPayload<{
-    include: { school: true; sessionRatings: true; session: true };
-  }> | null;
-  setSession: Dispatch<
-    SetStateAction<Prisma.InterventionSessionGetPayload<{
-      include: { school: true; sessionRatings: true; session: true };
-    }> | null>
-  >;
+  session: Session | null;
+  setSession: Dispatch<SetStateAction<Session | null>>;
 };
 
 export const RescheduleSessionContext =

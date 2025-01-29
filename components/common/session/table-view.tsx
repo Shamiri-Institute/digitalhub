@@ -4,6 +4,7 @@ import {
   SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
+import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import {
   FellowAttendanceDataTable,
   FellowAttendancesTableData,
@@ -272,42 +273,7 @@ const fellowAttendanceColumns = (state: {
       const attended = row.original.attended;
       return (
         <div className="flex">
-          <div
-            className={cn(
-              "flex items-center rounded-[0.25rem] border px-1.5 py-0.5",
-              {
-                "border-green-border": attended,
-                "border-red-border": !attended,
-                "border-blue-border":
-                  attended === undefined || attended === null,
-              },
-              {
-                "bg-green-bg": attended,
-                "bg-red-bg": !attended,
-                "bg-blue-bg": attended === undefined || attended === null,
-              },
-            )}
-          >
-            {attended === undefined || attended === null ? (
-              <div className="flex items-center gap-1 text-blue-base">
-                <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
-                <span>Not marked</span>
-              </div>
-            ) : attended ? (
-              <div className="flex items-center gap-1 text-green-base">
-                <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
-                <span>Attended</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1 text-red-base">
-                <Icons.crossCircleFilled
-                  className="h-3 w-3"
-                  strokeWidth={2.5}
-                />
-                <span>Missed</span>
-              </div>
-            )}
-          </div>
+          <AttendanceStatusWidget attended={attended} />
         </div>
       );
     },
