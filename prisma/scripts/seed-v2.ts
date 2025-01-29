@@ -832,7 +832,6 @@ async function main() {
     interventionSessionsNames,
   );
 
-
   // TODO:
   // create fellow attendance records
   // create student attendance records
