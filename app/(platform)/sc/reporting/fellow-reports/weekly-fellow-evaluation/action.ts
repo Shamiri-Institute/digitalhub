@@ -1,10 +1,8 @@
 "use server";
 
 import { currentSupervisor } from "#/app/auth";
+import { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import { db } from "#/lib/db";
-import { WeeklyFellowEvaluation } from "./types";
-
-export type WeeklyFellowEvaluationType = WeeklyFellowEvaluation;
 
 export async function loadWeeklyFellowEvaluation(): Promise<
   WeeklyFellowEvaluation[]
