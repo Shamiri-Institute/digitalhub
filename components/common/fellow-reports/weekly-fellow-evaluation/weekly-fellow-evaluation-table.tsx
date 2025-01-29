@@ -1,12 +1,12 @@
 "use client";
-import { HubWeeklyFellowEvaluationType } from "#/app/(platform)/hc/reporting/fellow-reports/weekly-fellow-evaluation/action";
+import { WeeklyFellowEvaluation } from "#/app/(platform)/sc/reporting/fellow-reports/weekly-fellow-evaluation/types";
 import DataTable from "#/components/data-table";
 import { columns, subColumns } from "./columns";
 
 export default function WeeklyFellowEvaluationTable({
   weeklyFellowEvaluation,
 }: {
-  weeklyFellowEvaluation: HubWeeklyFellowEvaluationType[];
+  weeklyFellowEvaluation: WeeklyFellowEvaluation[];
 }) {
   return (
     <div className="container w-full grow space-y-3">
@@ -14,14 +14,14 @@ export default function WeeklyFellowEvaluationTable({
         data={weeklyFellowEvaluation}
         columns={columns}
         className="data-table data-table-action mt-4 bg-white"
-        emptyStateMessage="No feedback data found"
+        emptyStateMessage="No fellow evaluation data found"
         renderSubComponent={({ row }) => (
           <DataTable
             data={row.original?.week}
             editColumns={false}
             columns={subColumns}
             className="data-table data-table-action border-0 bg-white"
-            emptyStateMessage="No expenses found for this fellow"
+            emptyStateMessage="No weekly evaluation found for this fellow"
           />
         )}
       />
