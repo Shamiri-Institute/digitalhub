@@ -16,7 +16,7 @@ import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import SessionRatings from "#/components/common/session/session-ratings";
-import type { Session } from "#/components/common/session/sessions-provider";
+import { Session } from "#/components/common/session/sessions-provider";
 import DataTable from "#/components/data-table";
 import { ImplementerRole, Prisma } from "@prisma/client";
 import { addHours } from "date-fns";
@@ -62,10 +62,7 @@ export default function SessionsDatatable({
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
   const [rescheduleSessionDialog, setRescheduleSessionDialog] =
     React.useState(false);
-  const [session, setSession] =
-    React.useState<Prisma.InterventionSessionGetPayload<{
-      include: { school: true; sessionRatings: true; session: true };
-    }> | null>(null);
+  const [session, setSession] = React.useState<Session | null>(null);
   const [activeSession, setActiveSession] = useState<Session | undefined>();
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
   const [markAttendanceDialog, setMarkAttendanceDialog] = React.useState(false);

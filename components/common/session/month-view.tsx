@@ -35,6 +35,7 @@ export function MonthView({
   role: ImplementerRole;
   dialogState: {
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const { locale } = useLocale();
@@ -145,6 +146,7 @@ export function MonthCalendarCell({
   role: ImplementerRole;
   dialogState: {
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const ref = useRef<HTMLDivElement>(null);
