@@ -823,18 +823,22 @@ async function main() {
       hub: true,
     },
   });
-
+  const students = await createStudentsForSchools(schoolsWithGroupsAndFellows);
   const { interventionSessionsNames } = await createSessionNames(hubs);
+
+  // TODO: question, should we also dynamically mark attendance for fellows in these sessions?
   const interventionSessions = await createInterventionSessionsForSchools(
     schoolsWithGroupsAndFellows,
     interventionSessionsNames,
   );
 
-  const students = await createStudentsForSchools(schoolsWithGroupsAndFellows);
 
+  // TODO:
   // create fellow attendance records
   // create student attendance records
   // create supervisor attendance records
+  // create clinical records
+  // create payouts
 }
 
 main();
