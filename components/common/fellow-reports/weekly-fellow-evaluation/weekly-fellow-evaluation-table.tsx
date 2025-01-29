@@ -1,5 +1,5 @@
 "use client";
-import { WeeklyFellowEvaluation } from "#/app/(platform)/sc/reporting/fellow-reports/weekly-fellow-evaluation/types";
+import { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import DataTable from "#/components/data-table";
 import { columns, subColumns } from "./columns";
 

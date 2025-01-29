@@ -1,8 +1,8 @@
 "use client";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { WeeklyFellowEvaluation } from "#/app/(platform)/sc/reporting/fellow-reports/weekly-fellow-evaluation/types";
 import { updateWeeklyEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/action";
+import { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
