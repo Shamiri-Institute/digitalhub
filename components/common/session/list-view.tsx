@@ -30,6 +30,7 @@ export function ListView({
   role: ImplementerRole;
   dialogState: {
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const { sessions } = useContext(SessionsContext);

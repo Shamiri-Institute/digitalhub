@@ -12,7 +12,6 @@ import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
 import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
-import { FellowAttendanceContext } from "#/app/(platform)/hc/context/fellow-attendance-dialog-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
@@ -40,6 +39,7 @@ export function SessionList({
   role: ImplementerRole;
   dialogState: {
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const [activeSession, setActiveSession] = useState<Session | undefined>();
@@ -104,6 +104,8 @@ export function SessionList({
               setRatingsDialog,
               setSessionOccurrenceDialog,
               setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
+              setStudentAttendanceDialog:
+                dialogState.setStudentAttendanceDialog,
             }}
             role={role}
             layout="expanded"
@@ -125,6 +127,7 @@ export function SessionList({
           setRatingsDialog,
           setSessionOccurrenceDialog,
           setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
+          setStudentAttendanceDialog: dialogState.setStudentAttendanceDialog,
         }}
         role={role}
       />
@@ -136,6 +139,7 @@ export function SessionList({
           setRatingsDialog,
           setSessionOccurrenceDialog,
           setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
+          setStudentAttendanceDialog: dialogState.setStudentAttendanceDialog,
         }}
         role={role}
       />
@@ -161,6 +165,8 @@ export function SessionList({
                         setSessionOccurrenceDialog,
                         setFellowAttendanceDialog:
                           dialogState.setFellowAttendanceDialog,
+                        setStudentAttendanceDialog:
+                          dialogState.setStudentAttendanceDialog,
                       }}
                       role={role}
                     />
@@ -188,6 +194,7 @@ export function SessionDetail({
     setRatingsDialog?: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog?: Dispatch<SetStateAction<boolean>>;
     setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
+    setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
   };
   layout: "compact" | "expanded";
   withDropdown?: boolean;
@@ -328,14 +335,18 @@ export function SessionDropDown({
     setRatingsDialog?: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog?: Dispatch<SetStateAction<boolean>>;
     setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
+    setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
   };
   role: ImplementerRole;
 }) {
   const { session } = state;
   const supervisorAttendanceContext = useContext(SupervisorAttendanceContext);
-  const fellowAttendanceContext = useContext(FellowAttendanceContext);
   const cancelSessionContext = useContext(CancelSessionContext);
   const rescheduleSessionContext = useContext(RescheduleSessionContext);
+
+  useEffect(() => {
+    state.setSession && state.setSession(session);
+  }, [session, state]);
 
   return (
     <DropdownMenu
@@ -346,7 +357,6 @@ export function SessionDropDown({
         }
         if (open) {
           supervisorAttendanceContext.setSession(session);
-          fellowAttendanceContext.setSession(session);
           cancelSessionContext.setSession(session);
           rescheduleSessionContext.setSession(session);
         }
@@ -423,9 +433,16 @@ export function SessionDropDown({
               session.session?.sessionType === "DATA_COLLECTION") && (
               <>
                 <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    state.setSession && state.setSession(session);
+                    state.setStudentAttendanceDialog &&
+                      state.setStudentAttendanceDialog(true);
+                  }}
                   disabled={
                     session.status === "Cancelled" ||
-                    session.session?.sessionType === "DATA_COLLECTION"
+                    session.session?.sessionType === "DATA_COLLECTION" ||
+                    !session.occurred
                   }
                 >
                   Mark student attendance
@@ -460,7 +477,8 @@ export function SessionDropDown({
               }}
               disabled={
                 session.status === "Cancelled" ||
-                session.session?.sessionType === "CLINICAL"
+                session.session?.sessionType === "CLINICAL" ||
+                !session.occurred
               }
             >
               Mark fellow attendance
@@ -485,7 +503,7 @@ export function SessionDropDown({
               e.stopPropagation();
               cancelSessionContext.setIsOpen(true);
             }}
-            disabled={session.status === "Cancelled"}
+            disabled={session.status === "Cancelled" || session.occurred}
           >
             Cancel session
           </DropdownMenuItem>

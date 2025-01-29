@@ -28,6 +28,7 @@ export function DayView({
   role: ImplementerRole;
   dialogState: {
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const headerRowRef: any = useRef(null);
@@ -159,6 +160,7 @@ function DayCalendarCell({
   role: ImplementerRole;
   dialogState: {
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const ref = useRef<HTMLDivElement>(null);

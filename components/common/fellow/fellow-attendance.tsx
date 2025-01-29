@@ -1,7 +1,9 @@
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-menu";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
+import { Session } from "#/components/common/session/sessions-provider";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Alert, AlertTitle } from "#/components/ui/alert";
@@ -39,7 +41,7 @@ import {
   markManyFellowAttendance,
 } from "#/lib/actions/fellow";
 import { SESSION_NAME_TYPE } from "#/lib/app-constants/constants";
-import { cn, sessionDisplayName } from "#/lib/utils";
+import { sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -76,9 +78,7 @@ export default function FellowAttendance({
 }: {
   supervisors: SupervisorData[];
   supervisorId?: string;
-  session: Prisma.InterventionSessionGetPayload<{
-    include: { school: true; sessionRatings: true; session: true };
-  }> | null;
+  session: Session | null;
   fellowRatings: {
     id: string;
     averageRating: number;
@@ -480,42 +480,7 @@ export const columns = (state: {
       const attended = row.original.attended;
       return (
         <div className="flex flex-row gap-1">
-          <div
-            className={cn(
-              "flex items-center rounded-[0.25rem] border px-1.5 py-0.5",
-              {
-                "border-green-border": attended,
-                "border-red-border": !attended,
-                "border-blue-border":
-                  attended === undefined || attended === null,
-              },
-              {
-                "bg-green-bg": attended,
-                "bg-red-bg": !attended,
-                "bg-blue-bg": attended === undefined || attended === null,
-              },
-            )}
-          >
-            {attended === undefined || attended === null ? (
-              <div className="flex items-center gap-1 text-blue-base">
-                <Icons.helpCircle className="h-3 w-3" strokeWidth={2.5} />
-                <span>Not marked</span>
-              </div>
-            ) : attended ? (
-              <div className="flex items-center gap-1 text-green-base">
-                <Icons.checkCircle className="h-3 w-3" strokeWidth={2.5} />
-                <span>Attended</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1 text-red-base">
-                <Icons.crossCircleFilled
-                  className="h-3 w-3"
-                  strokeWidth={2.5}
-                />
-                <span>Missed</span>
-              </div>
-            )}
-          </div>
+          <AttendanceStatusWidget attended={attended} />
           {row.original.processedAt && (
             <Tooltip>
               <TooltipTrigger>
