@@ -2,7 +2,6 @@
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
-import { submitQualitativeFeedback } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -22,6 +21,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
+import { submitQualitativeFeedback } from "#/lib/actions/session/session";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";

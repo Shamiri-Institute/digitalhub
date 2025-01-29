@@ -1879,31 +1879,3 @@ export async function editStudentInfoFromClinicalCaseScreen(
     return { error: "Something went wrong" };
   }
 }
-
-export async function submitQualitativeFeedback({
-  notes,
-  sessionId,
-}: {
-  notes: string;
-  sessionId: string;
-}) {
-  try {
-    const currentUser = await getCurrentUser();
-
-    if (!currentUser) {
-      return { success: false, message: "User not found" };
-    }
-
-    await db.sessionComment.create({
-      data: {
-        sessionId,
-        content: notes,
-        userId: currentUser?.user.id,
-      },
-    });
-    return { success: true, message: "Notes submitted successfully" };
-  } catch (error) {
-    console.error(error);
-    return { success: false, message: "Something went wrong" };
-  }
-}
