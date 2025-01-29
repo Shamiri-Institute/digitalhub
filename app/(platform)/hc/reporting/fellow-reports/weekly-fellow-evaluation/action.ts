@@ -45,11 +45,14 @@ export async function loadHubWeeklyFellowEvaluation() {
         week: fellow.weeklyFellowRatings.map((rating) => ({
           evaluationId: rating.id,
           week: rating.week,
-          behaviour: rating.behaviourRating,
-          programDelivery: rating.programDeliveryRating,
-          dressingGrooming: rating.dressingAndGroomingRating,
-          // attendancePunctuality: rating.studentAttendanceRating ?? 0
-          attendancePunctuality: 4,
+          behaviour: rating.behaviourRating ?? 0,
+          behaviourNotes: rating.behaviourNotes,
+          programDelivery: rating.programDeliveryRating ?? 0,
+          programDeliveryNotes: rating.programDeliveryNotes,
+          dressingGrooming: rating.dressingAndGroomingRating ?? 0,
+          dressingGroomingNotes: rating.dressingAndGroomingNotes,
+          attendancePunctuality: rating.punctualityRating ?? 0,
+          attendancePunctualityNotes: rating.punctualityNotes,
         })),
       };
     });
