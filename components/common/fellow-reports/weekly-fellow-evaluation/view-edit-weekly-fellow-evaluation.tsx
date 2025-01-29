@@ -27,14 +27,14 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const WeeklyEvaluationSchema = z.object({
-  behaviour: z.number().min(1).max(5),
+  behaviourRating: z.number().min(1).max(5),
   behaviourNotes: z.string().min(1, "This field is required"),
-  programDelivery: z.number().min(1).max(5),
+  programDeliveryRating: z.number().min(1).max(5),
   programDeliveryNotes: z.string().min(1, "This field is required"),
-  dressingGrooming: z.number().min(1).max(5),
-  dressingGroomingNotes: z.string().min(1, "This field is required"),
-  attendancePunctuality: z.number().min(1).max(5),
-  attendancePunctualityNotes: z.string().min(1, "This field is required"),
+  dressingAndGroomingRating: z.number().min(1).max(5),
+  dressingAndGroomingNotes: z.string().min(1, "This field is required"),
+  punctualityRating: z.number().min(1).max(5),
+  punctualityNotes: z.string().min(1, "This field is required"),
 });
 
 export type WeeklyEvaluationFormValues = z.infer<typeof WeeklyEvaluationSchema>;
@@ -53,15 +53,15 @@ export default function ViewEditWeeklyFellowEvaluation({
   const form = useForm<WeeklyEvaluationFormValues>({
     resolver: zodResolver(WeeklyEvaluationSchema),
     defaultValues: {
-      behaviour: weeklyFellowEvaluation.behaviour ?? 0,
+      behaviourRating: weeklyFellowEvaluation.behaviour ?? 0,
       behaviourNotes: weeklyFellowEvaluation.behaviourNotes ?? "",
-      programDelivery: weeklyFellowEvaluation.programDelivery ?? 0,
+      programDeliveryRating: weeklyFellowEvaluation.programDelivery ?? 0,
       programDeliveryNotes: weeklyFellowEvaluation.programDeliveryNotes ?? "",
-      dressingGrooming: weeklyFellowEvaluation.dressingGrooming ?? 0,
-      dressingGroomingNotes: weeklyFellowEvaluation.dressingGroomingNotes ?? "",
-      attendancePunctuality: weeklyFellowEvaluation.attendancePunctuality ?? 0,
-      attendancePunctualityNotes:
-        weeklyFellowEvaluation.attendancePunctualityNotes ?? "",
+      dressingAndGroomingRating: weeklyFellowEvaluation.dressingGrooming ?? 0,
+      dressingAndGroomingNotes:
+        weeklyFellowEvaluation.dressingGroomingNotes ?? "",
+      punctualityRating: weeklyFellowEvaluation.attendancePunctuality ?? 0,
+      punctualityNotes: weeklyFellowEvaluation.attendancePunctualityNotes ?? "",
     },
   });
 
@@ -113,7 +113,7 @@ export default function ViewEditWeeklyFellowEvaluation({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="behaviour"
+                name="behaviourRating"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Behaviour Rating</FormLabel>
@@ -145,7 +145,7 @@ export default function ViewEditWeeklyFellowEvaluation({
 
               <FormField
                 control={form.control}
-                name="programDelivery"
+                name="programDeliveryRating"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Program Delivery Rating</FormLabel>
@@ -177,7 +177,7 @@ export default function ViewEditWeeklyFellowEvaluation({
 
               <FormField
                 control={form.control}
-                name="dressingGrooming"
+                name="dressingAndGroomingRating"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Dressing & Grooming Rating</FormLabel>
@@ -191,7 +191,7 @@ export default function ViewEditWeeklyFellowEvaluation({
 
               <FormField
                 control={form.control}
-                name="dressingGroomingNotes"
+                name="dressingAndGroomingNotes"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Dressing & Grooming Notes</FormLabel>
@@ -209,7 +209,7 @@ export default function ViewEditWeeklyFellowEvaluation({
 
               <FormField
                 control={form.control}
-                name="attendancePunctuality"
+                name="punctualityRating"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Attendance & Punctuality Rating</FormLabel>
@@ -223,7 +223,7 @@ export default function ViewEditWeeklyFellowEvaluation({
 
               <FormField
                 control={form.control}
-                name="attendancePunctualityNotes"
+                name="punctualityNotes"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Attendance & Punctuality Notes</FormLabel>
