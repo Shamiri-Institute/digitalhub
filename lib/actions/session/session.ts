@@ -128,7 +128,11 @@ export async function submitQualitativeFeedback({
   sessionId: string;
 }) {
   try {
-    checkAuthorizedUser();
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      return { success: false, message: "User not found" };
+    }
 
     await db.sessionComment.create({
       data: {
