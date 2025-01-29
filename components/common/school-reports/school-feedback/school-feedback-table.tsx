@@ -2,7 +2,7 @@
 import { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
 import DataTable from "#/components/data-table";
 
-import { columns } from "./columns";
+import { columns, subColumns } from "./columns";
 
 export default function SchoolFeedbackDataTable({
   feedback,
@@ -16,6 +16,15 @@ export default function SchoolFeedbackDataTable({
         columns={columns}
         className="data-table data-table-action mt-4 bg-white"
         emptyStateMessage="No feedback data found"
+        renderSubComponent={({ row }) => (
+          <DataTable
+            data={row.original?.supervisorRatings}
+            editColumns={false}
+            columns={subColumns}
+            className="data-table data-table-action border-0 bg-white"
+            emptyStateMessage="No feedback found for this school"
+          />
+        )}
       />
     </div>
   );
