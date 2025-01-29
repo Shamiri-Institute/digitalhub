@@ -21,7 +21,7 @@ export default function StudentsDatatable({
   hubCoordinator,
 }: {
   data: Promise<SchoolStudentTableData[]>;
-  hubCoordinator: Prisma.HubCoordinatorGetPayload<{
+  hubCoordinator?: Prisma.HubCoordinatorGetPayload<{
     include: {
       assignedHub: true;
     };

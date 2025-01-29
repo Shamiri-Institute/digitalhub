@@ -1,5 +1,5 @@
 import { SupervisorAttendanceTableData } from "#/app/(platform)/hc/components/supervisor-attendance";
-import { Prisma } from "@prisma/client";
+import { Session } from "#/components/common/session/sessions-provider";
 import { createContext, Dispatch, SetStateAction } from "react";
 
 type SupervisorAttendanceContextData = {
@@ -7,14 +7,8 @@ type SupervisorAttendanceContextData = {
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   markAttendanceDialog: boolean;
   setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  session: Prisma.InterventionSessionGetPayload<{
-    include: { school: true; sessionRatings: true; session: true };
-  }> | null;
-  setSession: Dispatch<
-    SetStateAction<Prisma.InterventionSessionGetPayload<{
-      include: { school: true; sessionRatings: true; session: true };
-    }> | null>
-  >;
+  session: Session | null;
+  setSession: Dispatch<SetStateAction<Session | null>>;
   attendance: SupervisorAttendanceTableData | null;
   setAttendance: Dispatch<SetStateAction<SupervisorAttendanceTableData | null>>;
 };

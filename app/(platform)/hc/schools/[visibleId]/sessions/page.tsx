@@ -25,6 +25,20 @@ export default async function SchoolSessionsPage({
         school: {
           include: {
             assignedSupervisor: true,
+            interventionGroups: {
+              include: {
+                students: {
+                  include: {
+                    _count: {
+                      select: {
+                        clinicalCases: true,
+                      },
+                    },
+                    studentAttendances: true,
+                  },
+                },
+              },
+            },
           },
         },
         sessionRatings: true,

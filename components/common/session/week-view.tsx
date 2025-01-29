@@ -26,6 +26,7 @@ export function WeekView({
   role: ImplementerRole;
   dialogState: {
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const headerRowRef: any = useRef(null);
@@ -212,6 +213,7 @@ function WeekCalendarCell({
   role: ImplementerRole;
   dialogState: {
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const ref = useRef<HTMLDivElement>(null);

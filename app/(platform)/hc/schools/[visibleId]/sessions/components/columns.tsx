@@ -1,6 +1,7 @@
 "use client";
 
 import { SessionDropDown } from "#/components/common/session/session-list";
+import { Session } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";
@@ -14,6 +15,20 @@ export type SessionData = Prisma.InterventionSessionGetPayload<{
     school: {
       include: {
         assignedSupervisor: true;
+        interventionGroups: {
+          include: {
+            students: {
+              include: {
+                _count: {
+                  select: {
+                    clinicalCases: true;
+                  };
+                };
+                studentAttendances: true;
+              };
+            };
+          };
+        };
       };
     };
     sessionRatings: true;
@@ -25,18 +40,7 @@ export const columns = (state: {
   role: ImplementerRole;
   setRatingsDialog: Dispatch<SetStateAction<boolean>>;
   setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  setSession: Dispatch<
-    SetStateAction<
-      | Prisma.InterventionSessionGetPayload<{
-          include: {
-            school: true;
-            sessionRatings: true;
-            session: true;
-          };
-        }>
-      | undefined
-    >
-  >;
+  setSession: Dispatch<SetStateAction<Session | undefined>>;
 }): ColumnDef<SessionData>[] => [
   {
     id: "checkbox",
