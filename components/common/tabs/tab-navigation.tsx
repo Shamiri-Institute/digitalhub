@@ -25,7 +25,7 @@ export default function TabToggleNavigation({
   }, [pathname, options, router]);
 
   return (
-    <div className="flex">
+    <div className="container flex">
       <ToggleGroup
         type="single"
         className="form-toggle"
