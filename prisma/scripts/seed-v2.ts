@@ -298,11 +298,11 @@ async function createCoreUsers(implementers: Implementer[], hubs: Hub[]) {
       roleByVisibleId: "SPV24_S_01",
     },
     {
-          id: objectId("user"),
-          email: "stanley.george@shamiri.institute",
-          role: ImplementerRole.SUPERVISOR,
-          roleByVisibleId: "SPV24_S_01",
-    }
+      id: objectId("user"),
+      email: "stanley.george@shamiri.institute",
+      role: ImplementerRole.SUPERVISOR,
+      roleByVisibleId: "SPV24_S_01",
+    },
   ];
 
   const users = await db.user.createManyAndReturn({
