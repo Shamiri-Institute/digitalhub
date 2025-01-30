@@ -766,6 +766,7 @@ model SchoolDropoutHistory {
   @@map("school_dropout_history")
 }
 
+// FIXME: remove this table
 /// Join table for schools and implementers
 model SchoolImplementer {
   schoolId      String
