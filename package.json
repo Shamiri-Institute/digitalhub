@@ -22,6 +22,7 @@
     "next-auth:session": "dotenv -c development -- tsx scripts/auth/get-next-session.ts",
     "db:dev:up": "docker-compose down && docker-compose up db",
     "db:dev:seed": "dotenv -c development -- tsx prisma/scripts/seed.ts",
+    "db:seed": "dotenv -c development -- tsx prisma/scripts/seed-v2.ts",
     "db:dev:migrate": "dotenv -c development -- npx prisma migrate dev",
     "db:dev:types": "dotenv -c development -- npx prisma generate",
     "db:prod:shell": "dotenv -c development -- bash -c 'PGPASSWORD=${PROD_DBPASS} psql -h ${PROD_DBHOST} -p ${PROD_DBPORT} -U ${PROD_DBUSER} -d ${PROD_DBNAME}'",
@@ -101,7 +102,7 @@
     "zustand": "^4.4.1"
   },
   "devDependencies": {
-    "@faker-js/faker": "^8.3.1",
+    "@faker-js/faker": "^9.3.0",
     "@playwright/test": "^1.38.1",
     "@tailwindcss/forms": "^0.5.6",
     "@testing-library/react": "^14.1.2",
