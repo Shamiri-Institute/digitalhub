@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import MyProfileDialog from 'components/common/profile/edit-profile'
 
 import { PersonnelTool } from "#/app/dev-personnel-switcher";
 import { Footer } from "#/components/footer";
@@ -93,6 +94,8 @@ function LayoutV2({
   const fellowsActive = subRoute?.includes("fellow");
   const studentsActive = subRoute?.includes("student");
   const reportingActive = subRoute?.includes("reporting");
+  const [isDialogOpen, setIsDialogOpen] = useState(false); 
+
 
   const activeColor = "#0085FF";
   const inactiveColour = "#969696";
@@ -148,6 +151,39 @@ function LayoutV2({
                     </div>
                   </PopoverTrigger>
                   <PopoverContent>
+                  <>
+                  <button
+  className="flex items-center gap-3"
+  onClick={() => setIsDialogOpen(true)}
+>
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    fill="none"
+  >
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M12 2C13.0609 2 14.0783 2.42143 14.8284 3.17157C15.5786 3.92172 16 4.93913 16 6C16 7.06087 15.5786 8.07828 14.8284 8.82843C14.0783 9.57857 13.0609 10 12 10C10.9391 10 9.92172 9.57857 9.17157 8.82843C8.42143 8.07828 8 7.06087 8 6C8 4.93913 8.42143 3.92172 9.17157 3.17157C9.92172 2.42143 10.9391 2 12 2ZM12 12C15.3137 12 18 14.6863 18 18C18 18.7956 17.6839 19.5587 17.1213 20.1213C16.5587 20.6839 15.7956 21 15 21H9C8.20435 21 7.44129 20.6839 6.87868 20.1213C6.31607 19.5587 6 18.7956 6 18C6 14.6863 8.68629 12 12 12Z"
+      fill="#969696"
+    />
+  </svg>
+  <p>Profile</p>
+</button>
+
+
+      {/* Profile Dialog */}
+      <MyProfileDialog isOpen={isDialogOpen} setIsOpen={setIsDialogOpen} />
+    </>
+
+
+                  <hr className="border-t border-gray-200 my-2" />
+
+  
+
+
                     <button
                       className="flex items-center gap-3"
                       onClick={() => signOut({ callbackUrl: "/login" })}
@@ -168,6 +204,8 @@ function LayoutV2({
                       </svg>
                       <p>Sign out</p>
                     </button>
+
+ 
                   </PopoverContent>
                 </Popover>
               </div>
