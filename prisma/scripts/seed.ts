@@ -765,8 +765,6 @@ const ids = {
           role: ImplementerRole.SUPERVISOR,
           roleByVisibleId: "SPV24_S_01",
         },
-
-        
       },
     },
   },

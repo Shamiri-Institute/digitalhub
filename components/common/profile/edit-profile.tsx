@@ -1,16 +1,20 @@
 "use client";
 
-import React from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useSession } from "next-auth/react";
+import { ChevronDownIcon } from "@radix-ui/react-icons";
+import { Button } from "components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogPortal,
 } from "components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "components/ui/dropdown-menu";
 import {
   Form,
   FormControl,
@@ -19,15 +23,10 @@ import {
   FormLabel,
   FormMessage,
 } from "components/ui/form";
-import { Button } from "components/ui/button";
 import { Input } from "components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "components/ui/dropdown-menu";
-import { ChevronDownIcon } from "@radix-ui/react-icons";
+import { useSession } from "next-auth/react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const profileSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
@@ -52,7 +51,10 @@ type MyProfileDialogProps = {
   setIsOpen: (open: boolean) => void;
 };
 
-export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogProps) {
+export default function MyProfileDialog({
+  isOpen,
+  setIsOpen,
+}: MyProfileDialogProps) {
   const { data: session } = useSession();
 
   const defaultProfile: ProfileFormData = {
@@ -82,7 +84,8 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
         body: JSON.stringify(data),
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.message || "Failed to update profile");
+      if (!response.ok)
+        throw new Error(result.message || "Failed to update profile");
       alert("Profile updated successfully!");
       setIsOpen(false);
     } catch (error: any) {
@@ -94,10 +97,10 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogPortal>
-        <DialogContent className="w-full max-w-lg p-8 space-y-4">
+        <DialogContent className="w-full max-w-lg space-y-4 p-8">
           <DialogHeader>
             <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-gray-200 overflow-hidden">
+              <div className="h-16 w-16 overflow-hidden rounded-full bg-gray-200">
                 <img
                   src={session?.user?.image || "/placeholder.png"}
                   alt="Profile"
@@ -106,7 +109,9 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
               </div>
               <div>
                 <h2 className="text-lg font-semibold">My Profile</h2>
-                <p className="text-gray-700 text-xs">{defaultProfile.fullName || "N/A"}</p>
+                <p className="text-xs text-gray-700">
+                  {defaultProfile.fullName || "N/A"}
+                </p>
               </div>
             </div>
           </DialogHeader>
@@ -120,9 +125,15 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
                   control={form.control}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Email address</FormLabel>
+                      <FormLabel className="text-xs font-semibold">
+                        Email address
+                      </FormLabel>
                       <FormControl>
-                        <Input {...field} disabled style={{ backgroundColor: "white" }} />
+                        <Input
+                          {...field}
+                          disabled
+                          style={{ backgroundColor: "white" }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -137,7 +148,10 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
                         Phone number <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} style={{ backgroundColor: "white" }} />
+                        <Input
+                          {...field}
+                          style={{ backgroundColor: "white" }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -156,7 +170,10 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
                         National ID <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} style={{ backgroundColor: "white" }} />
+                        <Input
+                          {...field}
+                          style={{ backgroundColor: "white" }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -172,15 +189,19 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
                       </FormLabel>
                       <FormControl>
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="flex justify-between items-center w-full border border-gray-300 rounded-md p-2 bg-white text-xs">
+                          <DropdownMenuTrigger className="flex w-full items-center justify-between rounded-md border border-gray-300 bg-white p-2 text-xs">
                             <span>{field.value || "Select Gender"}</span>
                             <ChevronDownIcon className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => field.onChange("Male")}>
+                            <DropdownMenuItem
+                              onSelect={() => field.onChange("Male")}
+                            >
                               Male
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => field.onChange("Female")}>
+                            <DropdownMenuItem
+                              onSelect={() => field.onChange("Female")}
+                            >
                               Female
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -202,7 +223,11 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
                       Date of Birth <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} type="date" className="bg-white w-full" />
+                      <Input
+                        {...field}
+                        type="date"
+                        className="w-full bg-white"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -220,7 +245,10 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
                         County <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} style={{ backgroundColor: "white" }} />
+                        <Input
+                          {...field}
+                          style={{ backgroundColor: "white" }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -235,7 +263,10 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
                         Sub-County <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} style={{ backgroundColor: "white" }} />
+                        <Input
+                          {...field}
+                          style={{ backgroundColor: "white" }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -245,7 +276,9 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
 
               {/* MPESA Section */}
               <div className="space-y-2">
-                <h2 className="text-[10px] font-semibold text-gray-400">MPESA</h2>
+                <h2 className="text-[10px] font-semibold text-gray-400">
+                  MPESA
+                </h2>
                 <hr className="border-t border-gray-300" />
               </div>
 
@@ -256,9 +289,15 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
                   control={form.control}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs font-semibold">Full Name</FormLabel>
+                      <FormLabel className="text-xs font-semibold">
+                        Full Name
+                      </FormLabel>
                       <FormControl>
-                        <Input {...field} disabled style={{ backgroundColor: "white" }} />
+                        <Input
+                          {...field}
+                          disabled
+                          style={{ backgroundColor: "white" }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -273,7 +312,10 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
                         M-Pesa Number <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input {...field} style={{ backgroundColor: "white" }} />
+                        <Input
+                          {...field}
+                          style={{ backgroundColor: "white" }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -283,7 +325,9 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
 
               {/* BANK INFORMATION Section */}
               <div className="space-y-2">
-                <h2 className="text-[10px] font-semibold text-gray-400">BANK INFORMATION</h2>
+                <h2 className="text-[10px] font-semibold text-gray-400">
+                  BANK INFORMATION
+                </h2>
                 <hr className="border-t border-gray-300" />
               </div>
 
@@ -299,15 +343,19 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
                       </FormLabel>
                       <FormControl>
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="flex justify-between items-center w-full border border-gray-300 rounded-md p-2 bg-white text-xs">
+                          <DropdownMenuTrigger className="flex w-full items-center justify-between rounded-md border border-gray-300 bg-white p-2 text-xs">
                             <span>{field.value || "Select Bank"}</span>
                             <ChevronDownIcon className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => field.onChange("Bank A")}>
+                            <DropdownMenuItem
+                              onSelect={() => field.onChange("Bank A")}
+                            >
                               Bank A
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => field.onChange("Bank B")}>
+                            <DropdownMenuItem
+                              onSelect={() => field.onChange("Bank B")}
+                            >
                               Bank B
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -327,15 +375,19 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
                       </FormLabel>
                       <FormControl>
                         <DropdownMenu>
-                          <DropdownMenuTrigger className="flex justify-between items-center w-full border border-gray-300 rounded-md p-2 bg-white text-xs">
+                          <DropdownMenuTrigger className="flex w-full items-center justify-between rounded-md border border-gray-300 bg-white p-2 text-xs">
                             <span>{field.value || "Select Branch"}</span>
                             <ChevronDownIcon className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => field.onChange("Branch 1")}>
+                            <DropdownMenuItem
+                              onSelect={() => field.onChange("Branch 1")}
+                            >
                               Branch 1
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => field.onChange("Branch 2")}>
+                            <DropdownMenuItem
+                              onSelect={() => field.onChange("Branch 2")}
+                            >
                               Branch 2
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -347,12 +399,19 @@ export default function MyProfileDialog({ isOpen, setIsOpen }: MyProfileDialogPr
                 />
               </div>
 
-              <hr className="border-t border-gray-300 my-5" />
+              <hr className="my-5 border-t border-gray-300" />
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsOpen(false)}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" className="px-6 py-2 bg-blue-600 text-white font-semibold hover:bg-blue-700 text-xs">
+                <Button
+                  type="submit"
+                  className="bg-blue-600 px-6 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                >
                   Update & Save
                 </Button>
               </div>
