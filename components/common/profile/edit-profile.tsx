@@ -29,7 +29,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-//Zod schema matching 
+//Zod schema matching
 const profileSchema = z.object({
   supervisorEmail: z.string().email({ message: "Invalid email address" }),
   supervisorName: z.string().min(1, { message: "Supervisor Name is required" }),
@@ -132,20 +132,22 @@ export default function MyProfileDialog({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogPortal>
         <DialogContent className="w-full max-w-lg space-y-1 p-4">
-          
           <DialogHeader>
-            <h2 className="text-xl font-bold mb-">My Profile</h2>
-            <div className="flex items-center gap-1.5 font-figtree">
+            <h2 className="mb- text-xl font-bold">My Profile</h2>
+            <div className="font-figtree flex items-center gap-1.5">
               <div className="relative h-7 w-7">
                 <img
                   src={session?.user?.image || "/placeholder.png"}
                   alt="Profile"
-                  className="h-32px w-32px rounded-full object-cover border border-gray-10"
+                  className="h-32px w-32px border-gray-10 rounded-full border object-cover"
                 />
               </div>
               <p
-                className="font-figtree text-[20px] font-semibold leading-[28px] text-left text-gray-600"
-                style={{ textUnderlinePosition: "from-font", textDecorationSkipInk: "none" }}
+                className="font-figtree text-left text-[20px] font-semibold leading-[28px] text-gray-600"
+                style={{
+                  textUnderlinePosition: "from-font",
+                  textDecorationSkipInk: "none",
+                }}
               >
                 {form.getValues("supervisorName") || "N/A"}
               </p>
