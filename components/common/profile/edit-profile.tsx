@@ -29,7 +29,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-// Define the Zod schema matching your Prisma model
+//Zod schema matching 
 const profileSchema = z.object({
   supervisorEmail: z.string().email({ message: "Invalid email address" }),
   supervisorName: z.string().min(1, { message: "Supervisor Name is required" }),
@@ -59,10 +59,9 @@ export default function MyProfileDialog({
 }: MyProfileDialogProps) {
   const { data: session } = useSession();
 
-  // Set initial defaults from the session (for read-only fields) and empty values for others.
   const defaultProfile: ProfileFormData = {
-    supervisorEmail: session?.user?.email || "",
-    supervisorName: session?.user?.name || "",
+    supervisorEmail: "",
+    supervisorName: "",
     idNumber: "",
     cellNumber: "",
     mpesaNumber: "",
@@ -79,7 +78,7 @@ export default function MyProfileDialog({
     defaultValues: defaultProfile,
   });
 
-  // When the dialog opens, fetch the profile data from the API.
+  // Fetch Data from API
   useEffect(() => {
     if (isOpen) {
       (async () => {
@@ -89,14 +88,12 @@ export default function MyProfileDialog({
             throw new Error("Failed to fetch profile");
           }
           const data = await res.json();
-          // Reset the form while preserving supervisorEmail and supervisorName from the session.
           form.reset({
-            supervisorEmail: session?.user?.email || "",
-            supervisorName: session?.user?.name || "",
+            supervisorEmail: data.supervisorEmail || "",
+            supervisorName: data.supervisorName || "",
             idNumber: data.idNumber || "",
             cellNumber: data.cellNumber || "",
             mpesaNumber: data.mpesaNumber || "",
-            // Format the date as YYYY-MM-DD for the date input (if available)
             dateOfBirth: data.dateOfBirth
               ? new Date(data.dateOfBirth).toISOString().slice(0, 10)
               : "",
@@ -111,8 +108,7 @@ export default function MyProfileDialog({
         }
       })();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, session?.user]);
+  }, [isOpen, form]);
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
@@ -135,24 +131,34 @@ export default function MyProfileDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogPortal>
-        <DialogContent className="w-full max-w-lg space-y-4 p-8">
+        <DialogContent className="w-full max-w-lg space-y-1 p-4">
+          
           <DialogHeader>
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 overflow-hidden rounded-full bg-gray-200">
+            <h2 className="text-xl font-bold mb-">My Profile</h2>
+            <div className="flex items-center gap-1.5 font-figtree">
+              <div className="relative h-7 w-7">
                 <img
                   src={session?.user?.image || "/placeholder.png"}
                   alt="Profile"
-                  className="h-16 w-16 object-cover"
+                  className="h-32px w-32px rounded-full object-cover border border-gray-10"
                 />
               </div>
-              <div>
-                <h2 className="text-lg font-semibold">My Profile</h2>
-                <p className="text-xs text-gray-700">
-                  {form.getValues("supervisorName") || "N/A"}
-                </p>
-              </div>
+              <p
+                className="font-figtree text-[20px] font-semibold leading-[28px] text-left text-gray-600"
+                style={{ textUnderlinePosition: "from-font", textDecorationSkipInk: "none" }}
+              >
+                {form.getValues("supervisorName") || "N/A"}
+              </p>
             </div>
           </DialogHeader>
+
+          <div className="space-y-2">
+            <hr className="border-t border-gray-300" />
+            <h2 className="text-[12px] font-semibold text-gray-400">
+              PROFILE INFORMATION
+            </h2>
+            <hr className="border-t border-gray-300" />
+          </div>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -313,9 +319,9 @@ export default function MyProfileDialog({
               </div>
 
               {/* MPESA Section */}
-              <div className="space-y-2">
-                <h2 className="text-[10px] font-semibold text-gray-400">
-                  MPESA
+              <div className="space-y-1">
+                <h2 className="text-[12px] font-semibold text-gray-400">
+                  MPESA DETAILS
                 </h2>
                 <hr className="border-t border-gray-300" />
               </div>
@@ -362,8 +368,8 @@ export default function MyProfileDialog({
               </div>
 
               {/* BANK INFORMATION Section */}
-              <div className="space-y-2">
-                <h2 className="text-[10px] font-semibold text-gray-400">
+              <div className="space-y-1">
+                <h2 className="text-[12px] font-semibold text-gray-400">
                   BANK INFORMATION
                 </h2>
                 <hr className="border-t border-gray-300" />
