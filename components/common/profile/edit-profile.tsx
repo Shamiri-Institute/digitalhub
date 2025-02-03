@@ -25,21 +25,23 @@ import {
 } from "components/ui/form";
 import { Input } from "components/ui/input";
 import { useSession } from "next-auth/react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+// Define the Zod schema matching your Prisma model
 const profileSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }),
-  phoneNumber: z.string().min(1, { message: "Phone number is required" }),
-  nationalId: z.string().min(1, { message: "National ID is required" }),
+  supervisorEmail: z.string().email({ message: "Invalid email address" }),
+  supervisorName: z.string().min(1, { message: "Supervisor Name is required" }),
+  idNumber: z.string().min(1, { message: "ID Number is required" }),
+  cellNumber: z.string().min(1, { message: "Phone Number is required" }),
+  mpesaNumber: z.string().min(1, { message: "M-Pesa Number is required" }),
+  dateOfBirth: z.string().min(1, { message: "Date of Birth is required" }),
   gender: z.enum(["Male", "Female"], {
     errorMap: () => ({ message: "Gender is required" }),
   }),
-  dob: z.string().min(1, { message: "Date of Birth is required" }),
   county: z.string().min(1, { message: "County is required" }),
   subCounty: z.string().min(1, { message: "Sub-County is required" }),
-  fullName: z.string().min(1, { message: "Full Name is required" }),
-  mPesaNumber: z.string().min(1, { message: "M-Pesa number is required" }),
   bankName: z.string().min(1, { message: "Bank Name is required" }),
   bankBranch: z.string().min(1, { message: "Bank Branch is required" }),
 });
@@ -57,16 +59,17 @@ export default function MyProfileDialog({
 }: MyProfileDialogProps) {
   const { data: session } = useSession();
 
+  // Set initial defaults from the session (for read-only fields) and empty values for others.
   const defaultProfile: ProfileFormData = {
-    email: session?.user?.email || "",
-    phoneNumber: "",
-    nationalId: "",
+    supervisorEmail: session?.user?.email || "",
+    supervisorName: session?.user?.name || "",
+    idNumber: "",
+    cellNumber: "",
+    mpesaNumber: "",
+    dateOfBirth: "",
     gender: "Male",
-    dob: "",
     county: "",
     subCounty: "",
-    fullName: session?.user?.name || "",
-    mPesaNumber: "",
     bankName: "",
     bankBranch: "",
   };
@@ -75,6 +78,41 @@ export default function MyProfileDialog({
     resolver: zodResolver(profileSchema),
     defaultValues: defaultProfile,
   });
+
+  // When the dialog opens, fetch the profile data from the API.
+  useEffect(() => {
+    if (isOpen) {
+      (async () => {
+        try {
+          const res = await fetch("/api/get-profile");
+          if (!res.ok) {
+            throw new Error("Failed to fetch profile");
+          }
+          const data = await res.json();
+          // Reset the form while preserving supervisorEmail and supervisorName from the session.
+          form.reset({
+            supervisorEmail: session?.user?.email || "",
+            supervisorName: session?.user?.name || "",
+            idNumber: data.idNumber || "",
+            cellNumber: data.cellNumber || "",
+            mpesaNumber: data.mpesaNumber || "",
+            // Format the date as YYYY-MM-DD for the date input (if available)
+            dateOfBirth: data.dateOfBirth
+              ? new Date(data.dateOfBirth).toISOString().slice(0, 10)
+              : "",
+            gender: data.gender || "Male",
+            county: data.county || "",
+            subCounty: data.subCounty || "",
+            bankName: data.bankName || "",
+            bankBranch: data.bankBranch || "",
+          });
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, session?.user]);
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
@@ -89,7 +127,7 @@ export default function MyProfileDialog({
       alert("Profile updated successfully!");
       setIsOpen(false);
     } catch (error: any) {
-      console.error("Error in form submission:", error);
+      console.error("Error updating profile:", error);
       alert("An error occurred while updating your profile.");
     }
   };
@@ -110,7 +148,7 @@ export default function MyProfileDialog({
               <div>
                 <h2 className="text-lg font-semibold">My Profile</h2>
                 <p className="text-xs text-gray-700">
-                  {defaultProfile.fullName || "N/A"}
+                  {form.getValues("supervisorName") || "N/A"}
                 </p>
               </div>
             </div>
@@ -118,15 +156,15 @@ export default function MyProfileDialog({
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* Email and Phone Number */}
+              {/* Supervisor Email (read-only) and Phone Number */}
               <div className="grid grid-cols-2 gap-3">
                 <FormField
-                  name="email"
+                  name="supervisorEmail"
                   control={form.control}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-semibold">
-                        Email address
+                        Email Address
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -140,12 +178,12 @@ export default function MyProfileDialog({
                   )}
                 />
                 <FormField
-                  name="phoneNumber"
+                  name="cellNumber"
                   control={form.control}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-semibold">
-                        Phone number <span className="text-red-500">*</span>
+                        Phone Number <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -159,15 +197,15 @@ export default function MyProfileDialog({
                 />
               </div>
 
-              {/* National ID and Gender */}
+              {/* ID Number and Gender */}
               <div className="grid grid-cols-2 gap-3">
                 <FormField
-                  name="nationalId"
+                  name="idNumber"
                   control={form.control}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-semibold">
-                        National ID <span className="text-red-500">*</span>
+                        ID Number <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -215,7 +253,7 @@ export default function MyProfileDialog({
 
               {/* Date of Birth */}
               <FormField
-                name="dob"
+                name="dateOfBirth"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem>
@@ -282,15 +320,15 @@ export default function MyProfileDialog({
                 <hr className="border-t border-gray-300" />
               </div>
 
-              {/* Full Name and M-Pesa Number */}
+              {/* Supervisor Name (read-only) and M-Pesa Number */}
               <div className="grid grid-cols-2 gap-3">
                 <FormField
-                  name="fullName"
+                  name="supervisorName"
                   control={form.control}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-xs font-semibold">
-                        Full Name
+                        Supervisor Name
                       </FormLabel>
                       <FormControl>
                         <Input
@@ -304,7 +342,7 @@ export default function MyProfileDialog({
                   )}
                 />
                 <FormField
-                  name="mPesaNumber"
+                  name="mpesaNumber"
                   control={form.control}
                   render={({ field }) => (
                     <FormItem>
