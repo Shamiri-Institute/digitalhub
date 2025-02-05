@@ -1,9 +1,9 @@
 "use client";
 
-import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns";
 import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
+import { SchoolsTableData } from "#/components/common/schools/columns";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -44,8 +44,11 @@ import { usePathname } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { EditSchoolSchema } from "../../schemas";
-import { editSchoolInformation, revalidatePageAction } from "../actions";
+import { EditSchoolSchema } from "../../../app/(platform)/hc/schemas";
+import {
+  editSchoolInformation,
+  revalidatePageAction,
+} from "../../../app/(platform)/hc/schools/actions";
 
 export default function EditSchoolDetailsForm() {
   const context = useContext(SchoolInfoContext);

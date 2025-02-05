@@ -35,7 +35,7 @@ import { InfoIcon } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { DropoutSchoolSchema } from "../../schemas";
+import { DropoutSchoolSchema } from "../../../app/(platform)/hc/schemas";
 
 export function DropoutSchool() {
   const context = useContext(SchoolInfoContext);
