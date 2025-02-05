@@ -1,8 +1,8 @@
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
 import { MonthlySupervisorEvaluationSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { submitMonthlySupervisorEvaluation } from "#/app/(platform)/hc/supervisors/actions";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {

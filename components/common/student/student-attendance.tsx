@@ -1,6 +1,6 @@
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
 import {

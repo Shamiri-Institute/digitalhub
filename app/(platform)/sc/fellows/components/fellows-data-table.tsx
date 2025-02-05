@@ -1,5 +1,5 @@
 "use client";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-evaluation";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";

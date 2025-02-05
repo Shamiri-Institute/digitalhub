@@ -3,11 +3,12 @@
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import { Icons } from "#/components/icons";
 import { cn } from "#/lib/utils";
+import { ImplementerRole } from "@prisma/client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 
-export default function SchoolsBreadcrumb() {
+export default function SchoolsBreadcrumb({ role }: { role: ImplementerRole }) {
   const context = useContext(SchoolsDataContext);
   const pathname = usePathname();
   const router = useRouter();
@@ -41,7 +42,16 @@ export default function SchoolsBreadcrumb() {
           <Icons.arrowLeft className="h-4 w-4" />
         </div>
         <div className="flex items-center gap-2 text-gray-400">
-          <Link href="/hc/schools" className="hover:text-shamiri-new-blue">
+          <Link
+            href={
+              role === "HUB_COORDINATOR"
+                ? `/hc/schools`
+                : role === "SUPERVISOR"
+                  ? `/sc/schools`
+                  : "#"
+            }
+            className="hover:text-shamiri-new-blue"
+          >
             Schools
           </Link>
           <span>/</span>

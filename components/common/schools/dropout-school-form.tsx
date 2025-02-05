@@ -1,8 +1,8 @@
 "use client";
 import { dropoutSchool } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import {

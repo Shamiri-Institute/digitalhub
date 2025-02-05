@@ -1,5 +1,5 @@
 "use client";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import RatingStars from "#/components/rating-stars";
 import {
   Accordion,

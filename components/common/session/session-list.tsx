@@ -14,8 +14,8 @@ import { cn, sessionDisplayName } from "#/lib/utils";
 import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import SessionRatings from "#/components/common/session/session-ratings";
 import {
   DropdownMenu,
