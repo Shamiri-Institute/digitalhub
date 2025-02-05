@@ -21,7 +21,7 @@ import { ImplementerRole } from "@prisma/client";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SessionList } from "./session-list";
-import { useSessions } from "./sessions-provider";
+import { Session, useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -34,13 +34,16 @@ export function MonthView({
   weekdayStyle: CalendarGridProps["weekdayStyle"];
   role: ImplementerRole;
   dialogState: {
+    setSession: Dispatch<SetStateAction<Session | null>>;
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
+    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
+  supervisorId?: string;
 }) {
   const { locale } = useLocale();
   const { gridProps, headerProps, weekDays } = useCalendarGrid(props, state);
-
   const weeksInMonth = getWeeksInMonth(state.visibleRange.start, locale);
 
   const { setTitle } = useTitle();
@@ -145,8 +148,11 @@ export function MonthCalendarCell({
   weekend: boolean;
   role: ImplementerRole;
   dialogState: {
+    setSession: Dispatch<SetStateAction<Session | null>>;
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
+    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const ref = useRef<HTMLDivElement>(null);
