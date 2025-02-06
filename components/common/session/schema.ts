@@ -4,7 +4,8 @@ import { z } from "zod";
 
 export const SessionRatingsSchema = z.object({
   mode: z.enum(["add", "view"]),
-  sessionId: stringValidation("Please select a session"),
+  ratingId: z.string().optional(),
+  sessionId: stringValidation("Session ID required"),
   studentBehaviorRating: z
     .number({ required_error: "Please provide a rating" })
     .min(1)

@@ -1,26 +1,38 @@
 "use server";
 
 import { RescheduleSessionSchema } from "#/app/(platform)/hc/schemas";
-import { getCurrentUser } from "#/app/auth";
-import { ScheduleNewSessionSchema } from "#/components/common/session/schema";
+import {
+  currentHubCoordinator,
+  currentSupervisor,
+  getCurrentUser,
+} from "#/app/auth";
+import {
+  ScheduleNewSessionSchema,
+  SessionRatingsSchema,
+} from "#/components/common/session/schema";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
 import { addHours } from "date-fns";
 import { z } from "zod";
 
-function checkAuthorizedUser() {
-  const user = getCurrentUser();
-  if (user === null)
-    return { success: false, message: "Unauthenticated user." };
+async function checkAuth() {
+  const hubCoordinator = await currentHubCoordinator();
+  const supervisor = await currentSupervisor();
+
+  if (!hubCoordinator && !supervisor) {
+    throw new Error("The session has not been authenticated");
+  }
+
+  const user = await getCurrentUser();
+  return { hubCoordinator, supervisor, user };
 }
 
 export async function createNewSession(
   data: z.infer<typeof ScheduleNewSessionSchema>,
 ) {
-  checkAuthorizedUser();
-
   try {
+    await checkAuth();
     const parsedData = ScheduleNewSessionSchema.parse(data);
 
     const sessionEndTime = addHours(parsedData.sessionDate, 1);
@@ -69,8 +81,8 @@ export async function createNewSession(
 }
 
 export async function cancelSession(id: string) {
-  checkAuthorizedUser();
   try {
+    await checkAuth();
     await db.interventionSession.update({
       data: {
         status: "Cancelled",
@@ -94,8 +106,8 @@ export async function rescheduleSession(
   id: string,
   data: z.infer<typeof RescheduleSessionSchema>,
 ) {
-  checkAuthorizedUser();
   try {
+    await checkAuth();
     const parsedData = RescheduleSessionSchema.parse(data);
     const sessionEndTime = addHours(parsedData.sessionDate, 1);
 
@@ -128,9 +140,8 @@ export async function submitQualitativeFeedback({
   sessionId: string;
 }) {
   try {
-    const currentUser = await getCurrentUser();
-
-    if (!currentUser) {
+    const { user } = await checkAuth();
+    if (!user) {
       return { success: false, message: "User not found" };
     }
 
@@ -138,12 +149,71 @@ export async function submitQualitativeFeedback({
       data: {
         sessionId,
         content: notes,
-        userId: currentUser?.user.id,
+        userId: user.user.id,
       },
     });
     return { success: true, message: "Notes submitted successfully" };
   } catch (error) {
     console.error(error);
     return { success: false, message: "Something went wrong" };
+  }
+}
+
+export async function submitSessionRatings(
+  data: z.infer<typeof SessionRatingsSchema>,
+) {
+  try {
+    const { supervisor } = await checkAuth();
+    if (!supervisor) {
+      return { success: false, message: "Supervisor not found" };
+    }
+
+    const {
+      studentBehaviorRating,
+      workloadRating,
+      adminSupportRating,
+      positiveHighlights,
+      challenges,
+      recommendations,
+      sessionId,
+    } = SessionRatingsSchema.parse(data);
+
+    await db.interventionSessionRating.upsert({
+      where: {
+        ratingBySessionIdAndSupervisorId: {
+          sessionId,
+          supervisorId: supervisor.id,
+        },
+      },
+      create: {
+        id: objectId("isr"),
+        sessionId,
+        supervisorId: supervisor.id,
+        studentBehaviorRating,
+        workloadRating,
+        adminSupportRating,
+        positiveHighlights,
+        challenges,
+        recommendations,
+      },
+      update: {
+        sessionId,
+        supervisorId: supervisor.id,
+        studentBehaviorRating,
+        workloadRating,
+        adminSupportRating,
+        positiveHighlights,
+        challenges,
+        recommendations,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Successfully submitted session ratings.",
+    };
+  } catch (error: unknown) {
+    console.error(error);
+    return { error: "Something went wrong while submitting session ratings" };
   }
 }
