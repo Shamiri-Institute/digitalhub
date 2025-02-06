@@ -3,7 +3,6 @@ import { db } from "#/lib/db";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  // Retrieve the current supervisor (authenticated user)
   const supervisor = await currentSupervisor();
 
   if (!supervisor || !supervisor.id) {
@@ -11,7 +10,6 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Fetch the supervisor's profile using the id (NOT USING EMAIL) field.
     const profile = await db.supervisor.findUnique({
       where: { id: supervisor.id },
       select: {
@@ -32,7 +30,7 @@ export async function GET(request: Request) {
     if (!profile) {
       return NextResponse.json(
         { message: "Profile not found" },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -41,7 +39,7 @@ export async function GET(request: Request) {
     console.error("Error fetching profile:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
