@@ -1,7 +1,7 @@
 "use client";
 
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { StudentGroupEvaluationSchema } from "#/components/common/group/schema";
 import RatingStarsInput from "#/components/common/rating-stars-input";
 import { Button } from "#/components/ui/button";

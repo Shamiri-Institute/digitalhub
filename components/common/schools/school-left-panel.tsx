@@ -1,8 +1,8 @@
 "use client";
 
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
-import SessionsOccurredWidget from "#/app/(platform)/hc/schools/components/sessions-occurred-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
+import SessionsOccurredWidget from "#/components/common/schools/sessions-occurred-widget";
 import { Icons } from "#/components/icons";
 import {
   Accordion,

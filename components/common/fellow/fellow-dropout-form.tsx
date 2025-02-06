@@ -1,6 +1,6 @@
 import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { DropoutFellowSchema } from "#/components/common/fellow/schema";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";

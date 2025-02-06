@@ -1,11 +1,12 @@
 "use client";
 
-import { columns } from "#/app/(platform)/hc/schools/components/columns";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
+import { columns } from "#/components/common/schools/columns";
 import SchoolsDataTable from "#/components/data-table";
 import FileUploaderWithDataTable from "#/components/file-uploader-with-datatable";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
+import { ImplementerRole } from "@prisma/client";
 import { useContext } from "react";
 
 const schoolsCSVHeaders = [
@@ -37,35 +38,37 @@ export const handleSchoolsCSVTemplateDownload = () => {
   link.click();
 };
 
-export default function SchoolsDatatable() {
+export default function SchoolsDatatable({ role }: { role: ImplementerRole }) {
   const context = useContext(SchoolsDataContext);
 
   const renderTableActions = () => {
     return (
-      <div className="flex gap-3">
-        <Button
-          variant="outline"
-          className="flex gap-1 bg-white"
-          onClick={handleSchoolsCSVTemplateDownload}
-        >
-          <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
-          <span>Download schools CSV template</span>
-        </Button>
-        <FileUploaderWithDataTable
-          url="/api/csv-uploads/schools"
-          type="schools"
-          uploadVisibleMessage="Upload schools CSV"
-          metadata={{
-            urlPath: "/hc/schools",
-          }}
-        />
-      </div>
+      role === "HUB_COORDINATOR" && (
+        <div className="flex gap-3">
+          <Button
+            variant="outline"
+            className="flex gap-1 bg-white"
+            onClick={handleSchoolsCSVTemplateDownload}
+          >
+            <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
+            <span>Download schools CSV template</span>
+          </Button>
+          <FileUploaderWithDataTable
+            url="/api/csv-uploads/schools"
+            type="schools"
+            uploadVisibleMessage="Upload schools CSV"
+            metadata={{
+              urlPath: "/hc/schools",
+            }}
+          />
+        </div>
+      )
     );
   };
   return (
     <SchoolsDataTable
       data={context.schools}
-      columns={columns}
+      columns={columns({ role })}
       emptyStateMessage="No schools found for this hub"
       className="data-table mt-4 bg-white"
       columnVisibilityState={{
