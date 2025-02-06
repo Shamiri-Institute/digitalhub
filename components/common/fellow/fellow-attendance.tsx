@@ -1,5 +1,5 @@
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-menu";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";

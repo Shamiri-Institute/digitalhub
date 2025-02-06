@@ -1,6 +1,6 @@
 "use client";
 import { submitPaymentReversal } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown-me";
 import { Button } from "#/components/ui/button";
 import {
