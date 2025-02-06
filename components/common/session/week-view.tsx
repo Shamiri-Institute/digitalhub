@@ -14,20 +14,25 @@ import { useGSAP } from "@gsap/react";
 import { ImplementerRole } from "@prisma/client";
 import gsap from "gsap";
 import { SessionList } from "./session-list";
-import { useSessions } from "./sessions-provider";
+import { Session, useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
 export function WeekView({
   state,
   role,
   dialogState,
+  supervisorId,
 }: {
   state: CalendarState;
   role: ImplementerRole;
   dialogState: {
+    setSession: Dispatch<SetStateAction<Session | null>>;
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
+    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
+  supervisorId?: string;
 }) {
   const headerRowRef: any = useRef(null);
   const { gridProps, headerProps } = useCalendarGrid(
@@ -212,8 +217,11 @@ function WeekCalendarCell({
   state: CalendarState;
   role: ImplementerRole;
   dialogState: {
+    setSession: Dispatch<SetStateAction<Session | null>>;
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
+    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   const ref = useRef<HTMLDivElement>(null);

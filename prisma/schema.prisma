@@ -883,6 +883,9 @@ model InterventionSessionRating {
   studentBehaviorRating Int?                @map("student_behavior_rating")
   adminSupportRating    Int?                @map("admin_support_rating")
   workloadRating        Int?                @map("workload_rating")
+  recommendations       String?             @map("recommendations") @db.Text
+  challenges            String?             @map("challenges") @db.Text
+  positiveHighlights    String?             @map("positive_highlights") @db.Text
 
   @@unique([sessionId, supervisorId], name: "ratingBySessionIdAndSupervisorId")
   @@map("intervention_session_ratings")

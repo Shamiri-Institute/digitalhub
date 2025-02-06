@@ -40,7 +40,7 @@ export const columns = (state: {
   role: ImplementerRole;
   setRatingsDialog: Dispatch<SetStateAction<boolean>>;
   setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
-  setSession: Dispatch<SetStateAction<Session | undefined>>;
+  setSession: Dispatch<SetStateAction<Session | null>>;
 }): ColumnDef<SessionData>[] => [
   {
     id: "checkbox",

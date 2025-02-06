@@ -46,11 +46,11 @@ export function MarkSessionOccurrence({
   setIsOpen,
   defaultOccurrence,
 }: {
-  id: string;
+  id?: string;
   children: React.ReactNode;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  defaultOccurrence: boolean | null;
+  defaultOccurrence?: boolean | null;
 }) {
   const pathname = usePathname();
   const { sessions, setSessions } = useContext(SessionsContext);
