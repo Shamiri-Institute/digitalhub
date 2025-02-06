@@ -2,7 +2,10 @@
 
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { SessionDropDown } from "#/components/common/session/session-list";
-import { SessionsContext } from "#/components/common/session/sessions-provider";
+import {
+  Session,
+  SessionsContext,
+} from "#/components/common/session/sessions-provider";
 import { useTitle } from "#/components/common/session/title-provider";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -24,14 +27,19 @@ export function ListView({
   hubId,
   role,
   dialogState,
+  supervisorId,
 }: {
   state: CalendarState;
   hubId: string;
   role: ImplementerRole;
   dialogState: {
+    setSession: Dispatch<SetStateAction<Session | null>>;
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
+    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
+  supervisorId?: string;
 }) {
   const { sessions } = useContext(SessionsContext);
   const [sessionGroups, setSessionGroups] = useState<string[]>([]);
@@ -267,8 +275,12 @@ export function ListView({
                       <SessionDropDown
                         state={{
                           session,
+                          setSession: dialogState.setSession,
                           setFellowAttendanceDialog:
                             dialogState.setFellowAttendanceDialog,
+                          setStudentAttendanceDialog:
+                            dialogState.setStudentAttendanceDialog,
+                          setRatingsDialog: dialogState.setRatingsDialog,
                         }}
                         role={role}
                       >
