@@ -14,9 +14,6 @@ import { cn, sessionDisplayName } from "#/lib/utils";
 import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
-import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import SessionRatings from "#/components/common/session/session-ratings";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,84 +31,39 @@ export function SessionList({
   sessions,
   role,
   dialogState,
+  supervisorId,
 }: {
   sessions: Session[];
   role: ImplementerRole;
   dialogState: {
+    setSession: Dispatch<SetStateAction<Session | null>>;
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setRatingsDialog: Dispatch<SetStateAction<boolean>>;
+    setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
+  supervisorId?: string;
 }) {
-  const [activeSession, setActiveSession] = useState<Session | undefined>();
-  const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
-  const [sessionOccurrenceDialog, setSessionOccurrenceDialog] =
-    useState<boolean>(false);
-
   if (sessions.length === 0) {
     return null;
   }
 
-  const renderSessionDialogs = () => {
-    return (
-      activeSession && (
-        <>
-          {activeSession.session?.sessionType === "INTERVENTION" &&
-            activeSession.schoolId && (
-              <SessionRatings
-                schoolId={activeSession.schoolId}
-                open={ratingsDialog}
-                onOpenChange={setRatingsDialog}
-                ratings={activeSession.sessionRatings.map((rating) => {
-                  const { sessionRatings, ..._session } = activeSession;
-                  return {
-                    ...rating,
-                    session: _session,
-                  };
-                })}
-                mode="view"
-              >
-                <DialogAlertWidget label={activeSession.school?.schoolName} />
-              </SessionRatings>
-            )}
-          <MarkSessionOccurrence
-            id={activeSession.id}
-            defaultOccurrence={activeSession.occurred}
-            isOpen={sessionOccurrenceDialog}
-            setIsOpen={setSessionOccurrenceDialog}
-          >
-            {activeSession && (
-              <SessionDetail
-                state={{ session: activeSession }}
-                layout={"compact"}
-                withDropdown={false}
-                role={role}
-              />
-            )}
-          </MarkSessionOccurrence>
-        </>
-      )
-    );
-  };
   if (sessions.length === 1) {
     const [session] = sessions;
     return (
       session && (
-        <>
-          <SessionDetail
-            state={{
-              session,
-              setSession: setActiveSession,
-              setRatingsDialog,
-              setSessionOccurrenceDialog,
-              setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
-              setStudentAttendanceDialog:
-                dialogState.setStudentAttendanceDialog,
-            }}
-            role={role}
-            layout="expanded"
-          />
-          {renderSessionDialogs()}
-        </>
+        <SessionDetail
+          state={{
+            session,
+            setSession: dialogState.setSession,
+            setRatingsDialog: dialogState.setRatingsDialog,
+            setSessionOccurrenceDialog: dialogState.setSessionOccurrenceDialog,
+            setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
+            setStudentAttendanceDialog: dialogState.setStudentAttendanceDialog,
+          }}
+          role={role}
+          layout="expanded"
+        />
       )
     );
   }
@@ -123,9 +75,9 @@ export function SessionList({
         layout="compact"
         state={{
           session: sessions[0]!,
-          setSession: setActiveSession,
-          setRatingsDialog,
-          setSessionOccurrenceDialog,
+          setSession: dialogState.setSession,
+          setRatingsDialog: dialogState.setRatingsDialog,
+          setSessionOccurrenceDialog: dialogState.setSessionOccurrenceDialog,
           setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
           setStudentAttendanceDialog: dialogState.setStudentAttendanceDialog,
         }}
@@ -135,9 +87,9 @@ export function SessionList({
         layout="compact"
         state={{
           session: sessions[1]!,
-          setSession: setActiveSession,
-          setRatingsDialog,
-          setSessionOccurrenceDialog,
+          setSession: dialogState.setSession,
+          setRatingsDialog: dialogState.setRatingsDialog,
+          setSessionOccurrenceDialog: dialogState.setSessionOccurrenceDialog,
           setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
           setStudentAttendanceDialog: dialogState.setStudentAttendanceDialog,
         }}
@@ -160,9 +112,10 @@ export function SessionList({
                       layout="compact"
                       state={{
                         session: moreSessions[index]!,
-                        setSession: setActiveSession,
-                        setRatingsDialog,
-                        setSessionOccurrenceDialog,
+                        setSession: dialogState.setSession,
+                        setRatingsDialog: dialogState.setRatingsDialog,
+                        setSessionOccurrenceDialog:
+                          dialogState.setSessionOccurrenceDialog,
                         setFellowAttendanceDialog:
                           dialogState.setFellowAttendanceDialog,
                         setStudentAttendanceDialog:
@@ -177,7 +130,6 @@ export function SessionList({
           </DropdownMenu>
         )}
       </div>
-      {renderSessionDialogs()}
     </div>
   );
 }
@@ -190,7 +142,7 @@ export function SessionDetail({
 }: {
   state: {
     session: Session;
-    setSession?: Dispatch<SetStateAction<Session | undefined>>;
+    setSession?: Dispatch<SetStateAction<Session | null>>;
     setRatingsDialog?: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog?: Dispatch<SetStateAction<boolean>>;
     setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
@@ -331,7 +283,7 @@ export function SessionDropDown({
   children: React.ReactNode;
   state: {
     session: Session;
-    setSession?: Dispatch<SetStateAction<Session | undefined>>;
+    setSession?: Dispatch<SetStateAction<Session | null>>;
     setRatingsDialog?: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog?: Dispatch<SetStateAction<boolean>>;
     setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
@@ -343,24 +295,34 @@ export function SessionDropDown({
   const supervisorAttendanceContext = useContext(SupervisorAttendanceContext);
   const cancelSessionContext = useContext(CancelSessionContext);
   const rescheduleSessionContext = useContext(RescheduleSessionContext);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    state.setSession && state.setSession(session);
-  }, [session, state]);
+    if (open) {
+      state.setSession && state.setSession(session);
+      supervisorAttendanceContext.setSession(session);
+      cancelSessionContext.setSession(session);
+      rescheduleSessionContext.setSession(session);
+    }
+  }, [
+    session,
+    open,
+    state,
+    supervisorAttendanceContext,
+    cancelSessionContext,
+    rescheduleSessionContext,
+  ]);
+
+  useEffect(() => {
+    if (isOpen) {
+      state.setSession && state.setSession(session);
+    }
+  }, [isOpen, session, state]);
 
   return (
     <DropdownMenu
-      open={open}
-      onOpenChange={(open) => {
-        if (setOpen) {
-          setOpen(open);
-        }
-        if (open) {
-          supervisorAttendanceContext.setSession(session);
-          cancelSessionContext.setSession(session);
-          rescheduleSessionContext.setSession(session);
-        }
-      }}
+      open={open === undefined ? isOpen : open}
+      onOpenChange={open === undefined ? setIsOpen : setOpen}
     >
       <DropdownMenuTrigger className="w-full" asChild>
         {children}
@@ -375,8 +337,7 @@ export function SessionDropDown({
         {role === "HUB_COORDINATOR" && (
           <>
             <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={() => {
                 supervisorAttendanceContext.setIsOpen(true);
               }}
               disabled={session.status === "Cancelled"}
@@ -386,9 +347,7 @@ export function SessionDropDown({
                 : "Mark supervisor attendance"}
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                state.setSession && state.setSession(session);
+              onClick={() => {
                 state.setFellowAttendanceDialog &&
                   state.setFellowAttendanceDialog(true);
               }}
@@ -401,14 +360,8 @@ export function SessionDropDown({
                 session.status === "Cancelled" ||
                 session.sessionRatings.length === 0
               }
-              onClick={(e) => {
-                e.stopPropagation();
-                if (state.setSession) {
-                  state.setSession(session);
-                }
-                if (state.setRatingsDialog) {
-                  state.setRatingsDialog(true);
-                }
+              onClick={() => {
+                state.setRatingsDialog && state.setRatingsDialog(true);
               }}
             >
               Weekly session report
@@ -418,9 +371,7 @@ export function SessionDropDown({
         {role === "SUPERVISOR" && (
           <>
             <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                state.setSession && state.setSession(session);
+              onClick={() => {
                 state.setSessionOccurrenceDialog &&
                   state.setSessionOccurrenceDialog(true);
               }}
@@ -433,9 +384,7 @@ export function SessionDropDown({
               session.session?.sessionType === "DATA_COLLECTION") && (
               <>
                 <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    state.setSession && state.setSession(session);
+                  onClick={() => {
                     state.setStudentAttendanceDialog &&
                       state.setStudentAttendanceDialog(true);
                   }}
@@ -449,18 +398,9 @@ export function SessionDropDown({
                 </DropdownMenuItem>
                 {session.session?.sessionType === "INTERVENTION" && (
                   <DropdownMenuItem
-                    disabled={
-                      session.status === "Cancelled" ||
-                      session.sessionRatings.length === 0
-                    }
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (state.setSession) {
-                        state.setSession(session);
-                      }
-                      if (state.setRatingsDialog) {
-                        state.setRatingsDialog(true);
-                      }
+                    disabled={session.status === "Cancelled"}
+                    onClick={() => {
+                      state.setRatingsDialog && state.setRatingsDialog(true);
                     }}
                   >
                     Weekly session report
@@ -469,9 +409,7 @@ export function SessionDropDown({
               </>
             )}
             <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                state.setSession && state.setSession(session);
+              onClick={() => {
                 state.setFellowAttendanceDialog &&
                   state.setFellowAttendanceDialog(true);
               }}
@@ -487,8 +425,7 @@ export function SessionDropDown({
         )}
         {session.sessionDate > new Date() && (
           <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={() => {
               rescheduleSessionContext.setIsOpen(true);
             }}
             disabled={session.occurred}
@@ -499,8 +436,7 @@ export function SessionDropDown({
         {session.sessionDate > new Date() && (
           <DropdownMenuItem
             className="text-shamiri-light-red"
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={() => {
               cancelSessionContext.setIsOpen(true);
             }}
             disabled={session.status === "Cancelled" || session.occurred}
