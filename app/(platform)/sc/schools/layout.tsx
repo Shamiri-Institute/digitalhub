@@ -1,21 +1,27 @@
-import PageFooter from "#/components/ui/page-footer";
-import PageHeading from "#/components/ui/page-heading";
-import { Separator } from "#/components/ui/separator";
+import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
+import { currentSupervisor } from "#/app/auth";
+import SchoolsDataProvider from "#/components/common/schools/schools-data-provider";
+import { signOut } from "next-auth/react";
 import { ReactNode } from "react";
 
-export default function SupervisorSchoolData({
+export default async function SupervisorSchoolData({
   children,
 }: {
   children: ReactNode;
 }) {
+  const supervisor = await currentSupervisor();
+  if (supervisor === null) {
+    await signOut({ callbackUrl: "/login" });
+  }
+
+  if (!supervisor?.hubId) {
+    return <div>Supervisor has no assigned hub</div>;
+  }
+
+  const data = await fetchSchoolData(supervisor?.hubId as string);
   return (
-    <div className="flex h-full flex-col">
-      <div className="container w-full grow space-y-3 py-10">
-        <PageHeading title="Schools" />
-        <Separator />
-      </div>
-      {children}
-      <PageFooter />
+    <div className="w-full self-stretch">
+      <SchoolsDataProvider schools={data}>{children}</SchoolsDataProvider>
     </div>
   );
 }

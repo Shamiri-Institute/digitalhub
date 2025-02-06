@@ -1,5 +1,5 @@
 "use client";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { FellowComplaintsType } from "#/components/common/fellow-reports/complaints/actions";
 import {
   Dialog,

@@ -1,14 +1,15 @@
-import AssignPointSupervisor from "#/app/(platform)/hc/schools/components/assign-point-supervisor";
-import { DropoutSchool } from "#/app/(platform)/hc/schools/components/dropout-school-form";
-import EditSchoolDetailsForm from "#/app/(platform)/hc/schools/components/edit-school-details-form";
-import SchoolInfoProvider from "#/app/(platform)/hc/schools/components/school-info-provider";
-import SchoolsDatatable from "#/app/(platform)/hc/schools/components/schools-datatable";
-import { UndoDropoutSchool } from "#/app/(platform)/hc/schools/components/undo-dropout-school-form";
-import { currentHubCoordinator } from "#/app/auth";
+import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
+import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
+import EditSchoolDetailsForm from "#/components/common/schools/edit-school-details-form";
+import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
+import SchoolsDatatable from "#/components/common/schools/schools-datatable";
+import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
 import { SearchCommand } from "#/components/search-command";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
+import { signOut } from "next-auth/react";
 import {
   fetchDropoutReasons,
   fetchHubSupervisors,
@@ -30,34 +31,46 @@ export default async function SchoolsPage(props: {
   const queryAsSchoolId = searchParams?.query || "";
 
   const hubCoordinator = await currentHubCoordinator();
-  // TODO: convert this to Promise.all for concurrent fetch
+  if (hubCoordinator === null) {
+    await signOut({ callbackUrl: "/login" });
+  }
+  if (!hubCoordinator?.assignedHubId) {
+    return <div>Hub coordinator has no assigned hub</div>;
+  }
 
-  const data = await fetchSchoolData(hubCoordinator?.assignedHubId as string);
-  const dropoutData = await fetchDropoutReasons(
-    hubCoordinator?.assignedHubId as string,
-    queryAsSchoolId,
-  );
-  const schoolDataCompletenessPercentage =
+  const user = await getCurrentUser();
+
+  const [
+    data,
+    dropoutData,
+    schoolDataCompletenessPercentage,
+    sessionRatings,
+    schoolAttendanceData,
+    supervisors,
+  ] = await Promise.all([
+    await fetchSchoolData(hubCoordinator?.assignedHubId as string),
+    await fetchDropoutReasons(
+      hubCoordinator?.assignedHubId as string,
+      queryAsSchoolId,
+    ),
     await fetchSchoolDataCompletenessData(
       hubCoordinator?.assignedHubId as string,
       queryAsSchoolId,
-    );
-
-  const sessionRatings = await fetchSessionRatingAverages(
-    hubCoordinator?.assignedHubId as string,
-    queryAsSchoolId,
-  );
-
-  const schoolAttendanceData = await fetchSchoolAttendances(
-    hubCoordinator?.assignedHubId as string,
-    queryAsSchoolId,
-  );
-
-  const supervisors = await fetchHubSupervisors({
-    where: {
-      hubId: hubCoordinator?.assignedHubId as string,
-    },
-  });
+    ),
+    await fetchSessionRatingAverages(
+      hubCoordinator?.assignedHubId as string,
+      queryAsSchoolId,
+    ),
+    await fetchSchoolAttendances(
+      hubCoordinator?.assignedHubId as string,
+      queryAsSchoolId,
+    ),
+    await fetchHubSupervisors({
+      where: {
+        hubId: hubCoordinator?.assignedHubId as string,
+      },
+    }),
+  ]);
 
   return (
     <div className="flex h-full flex-col">
@@ -85,7 +98,7 @@ export default async function SchoolsPage(props: {
         />
         <Separator />
         <SchoolInfoProvider>
-          <SchoolsDatatable />
+          <SchoolsDatatable role={user?.membership.role!} />
           <EditSchoolDetailsForm />
           <AssignPointSupervisor supervisors={supervisors} />
           <DropoutSchool />

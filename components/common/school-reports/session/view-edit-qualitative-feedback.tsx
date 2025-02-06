@@ -1,7 +1,7 @@
 "use client";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,

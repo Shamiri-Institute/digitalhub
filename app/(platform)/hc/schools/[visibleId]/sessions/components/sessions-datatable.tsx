@@ -13,7 +13,7 @@ import {
   SessionData,
 } from "#/app/(platform)/hc/schools/[visibleId]/sessions/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import SessionRatings from "#/components/common/session/session-ratings";
 import { Session } from "#/components/common/session/sessions-provider";

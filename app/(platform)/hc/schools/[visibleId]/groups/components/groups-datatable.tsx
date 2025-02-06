@@ -4,7 +4,7 @@ import {
   columns,
   SchoolGroupDataTableData,
 } from "#/app/(platform)/hc/schools/[visibleId]/groups/components/columns";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import ArchiveGroup from "#/components/common/group/archive-group";
 import CreateGroup from "#/components/common/group/create-group";

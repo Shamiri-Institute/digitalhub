@@ -1,8 +1,8 @@
 "use client";
 import { dropoutSchool } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import {
@@ -35,7 +35,7 @@ import { InfoIcon } from "lucide-react";
 import React, { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { DropoutSchoolSchema } from "../../schemas";
+import { DropoutSchoolSchema } from "../../../app/(platform)/hc/schemas";
 
 export function DropoutSchool() {
   const context = useContext(SchoolInfoContext);

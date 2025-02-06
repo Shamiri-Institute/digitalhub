@@ -8,7 +8,7 @@ import FellowComplaints from "#/app/(platform)/hc/fellows/components/fellow-comp
 import UploadFellowContract from "#/app/(platform)/hc/fellows/components/upload-contract";
 import UploadFellowID from "#/app/(platform)/hc/fellows/components/upload-id";
 import UploadFellowQualification from "#/app/(platform)/hc/fellows/components/upload-qualification";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import FellowDropoutForm from "#/components/common/fellow/fellow-dropout-form";
 import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-evaluation";
