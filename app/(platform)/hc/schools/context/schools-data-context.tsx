@@ -1,4 +1,4 @@
-import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns";
+import { SchoolsTableData } from "#/components/common/schools/columns";
 import { createContext, Dispatch, SetStateAction } from "react";
 
 type SchoolsDataContextDataType = {

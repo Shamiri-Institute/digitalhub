@@ -1,7 +1,6 @@
 "use client";
 
 import { handleSupervisorCSVTemplateDownload } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/upload-csv";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import {
   columns,
   SupervisorsData,
@@ -12,6 +11,7 @@ import MonthlySupervisorEvaluation from "#/app/(platform)/hc/supervisors/compone
 import SubmitComplaint from "#/app/(platform)/hc/supervisors/components/submit-complaint";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
 import FileUploader from "#/components/file-uploader";
 import { Icons } from "#/components/icons";

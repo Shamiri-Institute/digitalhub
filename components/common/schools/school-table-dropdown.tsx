@@ -1,5 +1,5 @@
-import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
+import { SchoolsTableData } from "#/components/common/schools/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -9,13 +9,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { ImplementerRole } from "@prisma/client";
 import Link from "next/link";
 import { useContext } from "react";
 
 export default function SchoolTableDropdown({
   schoolRow,
+  role,
 }: {
   schoolRow: SchoolsTableData;
+  role: ImplementerRole;
 }) {
   const context = useContext(SchoolInfoContext);
   return (
@@ -46,7 +49,17 @@ export default function SchoolTableDropdown({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={`/hc/schools/${schoolRow.visibleId}`}>View school</Link>
+          <Link
+            href={
+              role === "HUB_COORDINATOR"
+                ? `/hc/schools/${schoolRow.visibleId}`
+                : role === "SUPERVISOR"
+                  ? `/sc/schools/${schoolRow.visibleId}`
+                  : "#"
+            }
+          >
+            View school
+          </Link>
         </DropdownMenuItem>
         {!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
           <div>
@@ -57,15 +70,35 @@ export default function SchoolTableDropdown({
             >
               Edit school information
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                context.setPointSupervisorDialog(true);
-              }}
-            >
-              {context.school?.assignedSupervisorId !== null
-                ? "Change point supervisor"
-                : "Assign point supervisor"}
-            </DropdownMenuItem>
+            {role === "HUB_COORDINATOR" && (
+              <DropdownMenuItem
+                onClick={() => {
+                  context.setPointSupervisorDialog(true);
+                }}
+              >
+                {context.school?.assignedSupervisorId !== null
+                  ? "Change point supervisor"
+                  : "Assign point supervisor"}
+              </DropdownMenuItem>
+            )}
+            {role === "SUPERVISOR" && (
+              <>
+                <DropdownMenuItem
+                  onClick={() => {
+                    // context.setPointSupervisorDialog(true);
+                  }}
+                >
+                  Submit school report
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    // context.setPointSupervisorDialog(true);
+                  }}
+                >
+                  Submit school feedback
+                </DropdownMenuItem>
+              </>
+            )}
             <DropdownMenuItem
               className="text-shamiri-red"
               onClick={() => {

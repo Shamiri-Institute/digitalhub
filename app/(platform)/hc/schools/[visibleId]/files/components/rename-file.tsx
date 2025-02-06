@@ -3,7 +3,7 @@
 import { updateUploadedSchoolFile } from "#/app/(platform)/hc/schools/[visibleId]/files/actions";
 import { SchoolFilesTableData } from "#/app/(platform)/hc/schools/[visibleId]/files/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,

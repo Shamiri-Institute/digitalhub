@@ -1,9 +1,9 @@
 "use client";
 
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
 import { updateSupervisorDetails } from "#/app/(platform)/hc/supervisors/actions";
 import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";

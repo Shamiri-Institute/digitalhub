@@ -1,9 +1,9 @@
 "use client";
 
-import SchoolTableDropdown from "#/app/(platform)/hc/schools/components/school-table-dropdown";
+import SchoolTableDropdown from "#/components/common/schools/school-table-dropdown";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
 
@@ -28,7 +28,11 @@ export type SchoolsTableData = Prisma.SchoolGetPayload<{
   };
 }>;
 
-export const columns: ColumnDef<SchoolsTableData>[] = [
+export const columns = ({
+  role,
+}: {
+  role: ImplementerRole;
+}): ColumnDef<SchoolsTableData>[] => [
   {
     id: "checkbox",
     header: ({ table }) => (
@@ -204,7 +208,9 @@ export const columns: ColumnDef<SchoolsTableData>[] = [
   },
   {
     id: "button",
-    cell: ({ row }) => <SchoolTableDropdown schoolRow={row.original} />,
+    cell: ({ row }) => (
+      <SchoolTableDropdown schoolRow={row.original} role={role} />
+    ),
     enableHiding: false,
   },
 ];
