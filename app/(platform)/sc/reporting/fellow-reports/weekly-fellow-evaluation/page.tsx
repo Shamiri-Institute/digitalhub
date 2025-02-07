@@ -1,6 +1,5 @@
-import { loadWeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/actions";
 import WeeklyFellowEvaluationTable from "#/components/common/fellow-reports/weekly-fellow-evaluation/weekly-fellow-evaluation-table";
-
+import { loadWeeklyFellowEvaluation } from "./action";
 export default async function WeeklyFellowEvaluationPage() {
   const weeklyFellowEvaluationData = await loadWeeklyFellowEvaluation();
 

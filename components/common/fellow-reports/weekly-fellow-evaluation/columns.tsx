@@ -1,7 +1,7 @@
 "use client";
 
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { WeeklyFellowEvaluationType } from "#/components/common/fellow-reports/weekly-fellow-evaluation/actions";
+import { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import WeeklyFellowEvaluationDropdownMenu from "#/components/common/fellow-reports/weekly-fellow-evaluation/weekly-fellow-evaluation-dropdown";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
@@ -9,7 +9,7 @@ import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 
-export const columns: ColumnDef<WeeklyFellowEvaluationType>[] = [
+export const columns: ColumnDef<WeeklyFellowEvaluation>[] = [
   {
     id: "button",
     cell: ({ row }) => {
@@ -76,9 +76,7 @@ export const columns: ColumnDef<WeeklyFellowEvaluationType>[] = [
   },
 ];
 
-export const subColumns: ColumnDef<
-  WeeklyFellowEvaluationType["week"][number]
->[] = [
+export const subColumns: ColumnDef<WeeklyFellowEvaluation["week"][number]>[] = [
   {
     id: "checkbox",
     header: ({ table }) => (
@@ -120,7 +118,7 @@ export const subColumns: ColumnDef<
     header: "Behaviour",
     cell: ({ row }) => {
       const behaviour = row.original.behaviour;
-      return <DataTableRatingStars rating={behaviour} />;
+      return <DataTableRatingStars rating={behaviour ?? 0} />;
     },
     id: "Behaviour",
   },
@@ -129,7 +127,7 @@ export const subColumns: ColumnDef<
     header: "Program delivery",
     cell: ({ row }) => {
       const programDelivery = row.original.programDelivery;
-      return <DataTableRatingStars rating={programDelivery} />;
+      return <DataTableRatingStars rating={programDelivery ?? 0} />;
     },
     id: "Program delivery",
   },
@@ -138,7 +136,7 @@ export const subColumns: ColumnDef<
     header: "Dressing & grooming",
     cell: ({ row }) => {
       const dressingGrooming = row.original.dressingGrooming;
-      return <DataTableRatingStars rating={dressingGrooming} />;
+      return <DataTableRatingStars rating={dressingGrooming ?? 0} />;
     },
     id: "Dressing & grooming",
   },
@@ -147,7 +145,7 @@ export const subColumns: ColumnDef<
     header: "Attendance & punctuality",
     cell: ({ row }) => {
       const attendancePunctuality = row.original.attendancePunctuality;
-      return <DataTableRatingStars rating={attendancePunctuality} />;
+      return <DataTableRatingStars rating={attendancePunctuality ?? 0} />;
     },
     id: "Attendance & punctuality",
   },
