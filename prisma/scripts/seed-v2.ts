@@ -276,7 +276,11 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
   });
 }
 
-async function createCoreUsers(implementers: Implementer[], hubs: Hub[]) {
+async function createCoreUsers(
+  implementers: Implementer[],
+  hubs: Hub[],
+  supervisors: Supervisor[],
+) {
   console.log("creating core users");
   const userData = [
     {
@@ -312,12 +316,14 @@ async function createCoreUsers(implementers: Implementer[], hubs: Hub[]) {
     })),
   });
 
-  const membershipData = users.map((user) => ({
-    userId: user.id,
-    implementerId: faker.helpers.arrayElement(implementers).id,
-    role: ImplementerRole.SUPERVISOR,
-    identifier: faker.string.alpha({ casing: "upper", length: 6 }),
-  }));
+  const membershipData = users.map((user) => {
+    return {
+      userId: user.id,
+      implementerId: faker.helpers.arrayElement(implementers).id,
+      role: ImplementerRole.SUPERVISOR,
+      identifier: faker.helpers.arrayElement(supervisors).id,
+    };
+  });
 
   await db.implementerMember.createMany({
     data: membershipData,
@@ -812,9 +818,9 @@ async function main() {
 
   await createProjectImplementers(projects, implementers);
   const hubs = await createHubs(projects, implementers);
-  await createCoreUsers(implementers, hubs); // AT THE MOMENT THESE ARE ALL SUPERVISORS
   await createHubCoordinators(hubs, implementers);
   const supervisors = await createSupervisors(hubs, 6, implementers);
+  await createCoreUsers(implementers, hubs, supervisors); // AT THE MOMENT THESE ARE ALL SUPERVISORS
 
   const fellows = await createFellows(supervisors);
   const schools = await createSchools(hubs, supervisors);
