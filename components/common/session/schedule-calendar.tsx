@@ -40,8 +40,12 @@ import {
   FiltersContext,
   statusFilterOptions,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
+import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import { ScheduleNewSession } from "#/components/common/session/schedule-new-session-form";
+import { SessionDetail } from "#/components/common/session/session-list";
+import SessionRatings from "#/components/common/session/session-ratings";
+import StudentAttendance from "#/components/common/student/student-attendance";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -64,6 +68,7 @@ import { ModeProvider, useMode, type Mode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
 import {
+  Session,
   SessionsContext,
   SessionsProvider,
   useSessions,
@@ -390,17 +395,19 @@ function CalendarView({
     React.useState(false);
   const [fellowAttendanceDialog, setFellowAttendanceDialog] =
     React.useState(false);
+  const [studentAttendanceDialog, setStudentAttendanceDialog] =
+    React.useState(false);
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
   const [rescheduleSessionDialog, setRescheduleSessionDialog] =
     React.useState(false);
+  const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
+  const [sessionOccurrenceDialog, setSessionOccurrenceDialog] =
+    useState<boolean>(false);
   const [markAttendanceDialog, setMarkAttendanceDialog] = React.useState(false);
   const [supervisorAttendance, setSupervisorAttendance] =
     React.useState<SupervisorAttendanceTableData | null>(null);
 
-  const [session, setSession] =
-    React.useState<Prisma.InterventionSessionGetPayload<{
-      include: { school: true; sessionRatings: true; session: true };
-    }> | null>(null);
+  const [session, setSession] = React.useState<Session | null>(null);
 
   const activeMode = () => {
     switch (mode) {
@@ -409,7 +416,14 @@ function CalendarView({
           <MonthView
             {...monthProps}
             role={role}
-            dialogState={{ setFellowAttendanceDialog }}
+            supervisorId={supervisorId}
+            dialogState={{
+              setSession,
+              setFellowAttendanceDialog,
+              setStudentAttendanceDialog,
+              setRatingsDialog,
+              setSessionOccurrenceDialog,
+            }}
           />
         );
       case "week":
@@ -417,7 +431,14 @@ function CalendarView({
           <WeekView
             {...weekProps}
             role={role}
-            dialogState={{ setFellowAttendanceDialog }}
+            supervisorId={supervisorId}
+            dialogState={{
+              setSession,
+              setFellowAttendanceDialog,
+              setStudentAttendanceDialog,
+              setRatingsDialog,
+              setSessionOccurrenceDialog,
+            }}
           />
         ) : (
           <div>Loading...</div>
@@ -427,7 +448,14 @@ function CalendarView({
           <DayView
             {...dayProps}
             role={role}
-            dialogState={{ setFellowAttendanceDialog }}
+            dialogState={{
+              setSession,
+              setFellowAttendanceDialog,
+              setStudentAttendanceDialog,
+              setRatingsDialog,
+              setSessionOccurrenceDialog,
+            }}
+            supervisorId={supervisorId}
           />
         ) : (
           <div>Loading...</div>
@@ -437,7 +465,14 @@ function CalendarView({
           <ListView
             {...listProps}
             role={role}
-            dialogState={{ setFellowAttendanceDialog }}
+            supervisorId={supervisorId}
+            dialogState={{
+              setSession,
+              setFellowAttendanceDialog,
+              setStudentAttendanceDialog,
+              setRatingsDialog,
+              setSessionOccurrenceDialog,
+            }}
           />
         );
       case "table":
@@ -533,6 +568,58 @@ function CalendarView({
           isOpen={fellowAttendanceDialog}
           setIsOpen={setFellowAttendanceDialog}
         />
+        <StudentAttendance
+          isOpen={studentAttendanceDialog}
+          setIsOpen={setStudentAttendanceDialog}
+          role={role}
+          session={session}
+          fellows={
+            supervisors.find((supervisor) => supervisor.id === supervisorId)
+              ?.fellows ?? []
+          }
+        />
+        {session?.session?.sessionType === "INTERVENTION" &&
+          session?.schoolId && (
+            <SessionRatings
+              selectedSessionId={session?.id}
+              supervisorId={supervisorId}
+              supervisors={supervisors}
+              open={ratingsDialog}
+              onOpenChange={setRatingsDialog}
+              mode={
+                role === "HUB_COORDINATOR"
+                  ? "view"
+                  : role === "SUPERVISOR"
+                    ? "add"
+                    : undefined
+              }
+              role={role}
+            >
+              {session && (
+                <SessionDetail
+                  state={{ session }}
+                  layout={"compact"}
+                  withDropdown={false}
+                  role={role}
+                />
+              )}
+            </SessionRatings>
+          )}
+        <MarkSessionOccurrence
+          id={session?.id}
+          defaultOccurrence={session?.occurred}
+          isOpen={sessionOccurrenceDialog}
+          setIsOpen={setSessionOccurrenceDialog}
+        >
+          {session && (
+            <SessionDetail
+              state={{ session }}
+              layout={"compact"}
+              withDropdown={false}
+              role={role}
+            />
+          )}
+        </MarkSessionOccurrence>
         <SupervisorAttendance supervisors={supervisors} role={role} />
       </SupervisorAttendanceContext.Provider>
     </div>

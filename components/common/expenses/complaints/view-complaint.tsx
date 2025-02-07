@@ -1,5 +1,5 @@
 "use client";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { ComplaintData } from "#/components/common/expenses/complaints/complaints-actions-dropdown";
 import { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
 import { FileUploaderWithDrop } from "#/components/file-uploader";

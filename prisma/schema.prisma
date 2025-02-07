@@ -30,6 +30,7 @@ model User {
   schoolDocuments       SchoolDocuments[]
   fellowDocuments       FellowDocuments[]
   payoutStatements      PayoutStatements[]
+  sessionComment        SessionComment[]
   schoolFeedbacks       SchoolFeedback[]
 
   @@map("users")
@@ -97,7 +98,6 @@ model Implementer {
   students            Student[]
   studentOutcomes     StudentOutcome[]
   projectImplementers ProjectImplementer[]
-  schoolImplementers  SchoolImplementer[]
 
   @@map("implementers")
 }
@@ -710,7 +710,6 @@ model School {
   supervisorAttendances SupervisorAttendance[]
   interventionSessions  InterventionSession[]
   interventionGroups    InterventionGroup[]
-  schoolImplementers    SchoolImplementer[]
 
   preSessionDate              DateTime?              @map("pre_session_date") // TODO: remove after data migration
   session1Date                DateTime?              @map("session_1_date") // TODO: remove after data migration
@@ -763,17 +762,6 @@ model SchoolDropoutHistory {
   school        School   @relation(fields: [schoolId], references: [id])
 
   @@map("school_dropout_history")
-}
-
-/// Join table for schools and implementers
-model SchoolImplementer {
-  schoolId      String
-  school        School      @relation(fields: [schoolId], references: [id])
-  implementerId String
-  implementer   Implementer @relation(fields: [implementerId], references: [id])
-
-  @@id([schoolId, implementerId])
-  @@map("school_implementers")
 }
 
 model Hub {
@@ -876,6 +864,7 @@ model InterventionSession {
   studentAttendances      StudentAttendance[]
   delayedPaymentRequests  DelayedPaymentRequest[]
   InterventionGroupReport InterventionGroupReport[]
+  sessionComments         SessionComment[]
 
   @@unique([schoolId, sessionType], name: "interventionBySchoolIdAndSessionType")
   @@unique([schoolId, sessionId], name: "interventionBySchoolIdAndSessionId")
@@ -894,6 +883,9 @@ model InterventionSessionRating {
   studentBehaviorRating Int?                @map("student_behavior_rating")
   adminSupportRating    Int?                @map("admin_support_rating")
   workloadRating        Int?                @map("workload_rating")
+  recommendations       String?             @map("recommendations") @db.Text
+  challenges            String?             @map("challenges") @db.Text
+  positiveHighlights    String?             @map("positive_highlights") @db.Text
 
   @@unique([sessionId, supervisorId], name: "ratingBySessionIdAndSupervisorId")
   @@map("intervention_session_ratings")
@@ -958,6 +950,19 @@ model InterventionGroupReport {
   isAllReport        Boolean?             @map("is_all_report")
 
   @@map("intervention_group_reports")
+}
+
+model SessionComment {
+  id        String              @id @default(cuid())
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+  content   String              @db.Text
+  userId    String              @map("user_id") @db.VarChar(255)
+  sessionId String              @map("session_id") @db.VarChar(255)
+  session   InterventionSession @relation(fields: [sessionId], references: [id])
+  user      User                @relation(fields: [userId], references: [id])
+
+  @@map("session_comments")
 }
 
 model ReimbursementRequest {

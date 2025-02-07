@@ -2,7 +2,7 @@
 
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { WeeklyFellowEvaluationSchema } from "#/components/common/fellow/schema";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";

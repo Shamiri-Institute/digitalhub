@@ -18,17 +18,36 @@ type SessionsContextType = {
   sessions: Session[];
   loading: boolean;
   setSessions: Dispatch<SetStateAction<Session[]>>;
+  refresh: () => void;
 };
 
 export const SessionsContext = createContext<SessionsContextType>({
   sessions: [],
   loading: false,
   setSessions: () => {},
+  refresh: () => {},
 });
 
 export type Session = Prisma.InterventionSessionGetPayload<{
   include: {
-    school: true;
+    school: {
+      include: {
+        interventionGroups: {
+          include: {
+            students: {
+              include: {
+                _count: {
+                  select: {
+                    clinicalCases: true;
+                  };
+                };
+                studentAttendances: true;
+              };
+            };
+          };
+        };
+      };
+    };
     sessionRatings: true;
     session: true;
   };
@@ -45,20 +64,27 @@ export function SessionsProvider({
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchSessions = async () => {
+    const fetchedSessions = await fetchInterventionSessions({
+      hubId,
+      filters,
+    });
+    setSessions(fetchedSessions);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchSessions = async () => {
-      const fetchedSessions = await fetchInterventionSessions({
-        hubId,
-        filters,
-      });
-      setSessions(fetchedSessions);
-      setLoading(false);
-    };
     fetchSessions();
   }, [hubId, filters]);
 
+  const refresh = () => {
+    fetchSessions();
+  };
+
   return (
-    <SessionsContext.Provider value={{ sessions, loading, setSessions }}>
+    <SessionsContext.Provider
+      value={{ sessions, loading, setSessions, refresh }}
+    >
       {children}
     </SessionsContext.Provider>
   );

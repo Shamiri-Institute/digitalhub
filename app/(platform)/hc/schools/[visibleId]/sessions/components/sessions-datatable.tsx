@@ -13,10 +13,10 @@ import {
   SessionData,
 } from "#/app/(platform)/hc/schools/[visibleId]/sessions/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import SessionRatings from "#/components/common/session/session-ratings";
-import type { Session } from "#/components/common/session/sessions-provider";
+import { Session } from "#/components/common/session/sessions-provider";
 import DataTable from "#/components/data-table";
 import { ImplementerRole, Prisma } from "@prisma/client";
 import { addHours } from "date-fns";
@@ -62,11 +62,7 @@ export default function SessionsDatatable({
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
   const [rescheduleSessionDialog, setRescheduleSessionDialog] =
     React.useState(false);
-  const [session, setSession] =
-    React.useState<Prisma.InterventionSessionGetPayload<{
-      include: { school: true; sessionRatings: true; session: true };
-    }> | null>(null);
-  const [activeSession, setActiveSession] = useState<Session | undefined>();
+  const [session, setSession] = React.useState<Session | null>(null);
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
   const [markAttendanceDialog, setMarkAttendanceDialog] = React.useState(false);
   const [supervisorAttendance, setSupervisorAttendance] =
@@ -141,7 +137,7 @@ export default function SessionsDatatable({
           <DataTable
             data={_sessions}
             columns={columns({
-              setSession: setActiveSession,
+              setSession,
               setRatingsDialog,
               setFellowAttendanceDialog,
               role,
@@ -149,23 +145,18 @@ export default function SessionsDatatable({
             className={"data-table data-table-action mt-4"}
             emptyStateMessage="No sessions found for this school"
           />
-          {activeSession && (
+          {session && (
             <>
-              {activeSession.schoolId !== null && activeSession.school && (
+              {session.schoolId !== null && session.school && (
                 <SessionRatings
-                  schoolId={activeSession.schoolId}
                   open={ratingsDialog}
                   onOpenChange={setRatingsDialog}
-                  ratings={activeSession.sessionRatings.map((rating) => {
-                    const { sessionRatings, ..._session } = activeSession;
-                    return {
-                      ...rating,
-                      session: _session,
-                    };
-                  })}
                   mode="view"
+                  selectedSessionId={session.id}
+                  role={role}
+                  supervisors={supervisors}
                 >
-                  <DialogAlertWidget label={activeSession.school.schoolName} />
+                  <DialogAlertWidget label={session.school.schoolName} />
                 </SessionRatings>
               )}
             </>

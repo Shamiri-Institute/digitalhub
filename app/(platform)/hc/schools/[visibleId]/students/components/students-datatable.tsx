@@ -6,7 +6,7 @@ import {
   SchoolStudentTableData,
 } from "#/app/(platform)/hc/schools/[visibleId]/students/components/columns";
 import GroupTransferHistory from "#/app/(platform)/hc/schools/[visibleId]/students/components/group-transfer-history";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { AddReportingNote } from "#/components/common/student/add-reporting-note";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
@@ -21,7 +21,7 @@ export default function StudentsDatatable({
   hubCoordinator,
 }: {
   data: Promise<SchoolStudentTableData[]>;
-  hubCoordinator: Prisma.HubCoordinatorGetPayload<{
+  hubCoordinator?: Prisma.HubCoordinatorGetPayload<{
     include: {
       assignedHub: true;
     };

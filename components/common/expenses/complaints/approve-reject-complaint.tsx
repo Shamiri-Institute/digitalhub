@@ -4,7 +4,7 @@ import {
   rejectComplaint,
 } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { ComplaintData } from "#/components/common/expenses/complaints/complaints-actions-dropdown";
 import { FileUploaderWithDrop } from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";

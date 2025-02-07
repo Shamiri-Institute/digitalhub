@@ -4,7 +4,7 @@ import {
   HubSupervisorExpensesType,
 } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/app/(platform)/hc/schools/components/dialog-alert-widget";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,

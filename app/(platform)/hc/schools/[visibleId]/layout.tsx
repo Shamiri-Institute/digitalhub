@@ -1,18 +1,19 @@
 import { fetchHubSupervisors } from "#/app/(platform)/hc/schools/actions";
-import AssignPointSupervisor from "#/app/(platform)/hc/schools/components/assign-point-supervisor";
-import { SchoolsTableData } from "#/app/(platform)/hc/schools/components/columns";
-import { DropoutSchool } from "#/app/(platform)/hc/schools/components/dropout-school-form";
-import EditSchoolDetailsForm from "#/app/(platform)/hc/schools/components/edit-school-details-form";
-import SchoolInfoProvider from "#/app/(platform)/hc/schools/components/school-info-provider";
-import SchoolLeftPanel from "#/app/(platform)/hc/schools/components/school-left-panel";
-import SchoolsBreadcrumb from "#/app/(platform)/hc/schools/components/schools-breadcrumb";
-import { UndoDropoutSchool } from "#/app/(platform)/hc/schools/components/undo-dropout-school-form";
-import { currentHubCoordinator } from "#/app/auth";
+import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
+import { SchoolsTableData } from "#/components/common/schools/columns";
+import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
+import EditSchoolDetailsForm from "#/components/common/schools/edit-school-details-form";
+import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
+import SchoolLeftPanel from "#/components/common/schools/school-left-panel";
+import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";
+import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import { signOut } from "next-auth/react";
 import React from "react";
-import SchoolsNav from "../components/schools-nav";
+import SchoolsNav from "../../../../../components/common/schools/schools-nav";
 
 export default async function SchoolViewLayout({
   children,
@@ -62,6 +63,13 @@ export default async function SchoolViewLayout({
   });
 
   const hubCoordinator = await currentHubCoordinator();
+  if (hubCoordinator === null) {
+    await signOut({ callbackUrl: "/login" });
+  }
+  if (!hubCoordinator?.assignedHubId) {
+    return <div>Hub coordinator has no assigned hub</div>;
+  }
+  const user = await getCurrentUser();
   const supervisors = await fetchHubSupervisors({
     where: {
       hubId: hubCoordinator?.assignedHubId as string,
@@ -74,8 +82,8 @@ export default async function SchoolViewLayout({
         <SchoolLeftPanel selectedSchool={school} />
         <div className="flex flex-1 flex-col">
           <div className="container w-full grow space-y-5 pb-6 pl-6 pr-8 pt-5">
-            <SchoolsBreadcrumb />
-            <SchoolsNav visibleId={visibleId} />
+            <SchoolsBreadcrumb role={user?.membership.role!} />
+            <SchoolsNav visibleId={visibleId} role={user?.membership.role!} />
             <Separator />
             {children}
           </div>

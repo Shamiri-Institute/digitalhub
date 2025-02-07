@@ -44,7 +44,24 @@ export async function fetchInterventionSessions({
       },
     },
     include: {
-      school: true,
+      school: {
+        include: {
+          interventionGroups: {
+            include: {
+              students: {
+                include: {
+                  _count: {
+                    select: {
+                      clinicalCases: true,
+                    },
+                  },
+                  studentAttendances: true,
+                },
+              },
+            },
+          },
+        },
+      },
       sessionRatings: true,
       session: true,
     },
