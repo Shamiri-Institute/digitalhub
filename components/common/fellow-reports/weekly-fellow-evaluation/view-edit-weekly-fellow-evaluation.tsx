@@ -106,7 +106,7 @@ export default function ViewEditWeeklyFellowEvaluation({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
-          <h2>{`${action === "view" ? "View" : "Edit"} Weekly Evaluation`}</h2>
+          <h2>{`${action === "view" ? "View" : "Edit"} Weekly fellow evaluation`}</h2>
         </DialogHeader>
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <Form {...form}>
@@ -116,7 +116,10 @@ export default function ViewEditWeeklyFellowEvaluation({
                 name="behaviourRating"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Behaviour Rating</FormLabel>
+                    <FormLabel>
+                      Rate behaviour (1-unacceptable, 5-outstanding){" "}
+                      <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
                     <FormControl>
                       <DataTableRatingStars rating={field.value} />
                     </FormControl>
@@ -130,7 +133,6 @@ export default function ViewEditWeeklyFellowEvaluation({
                 name="behaviourNotes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Behaviour Notes</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
@@ -148,7 +150,10 @@ export default function ViewEditWeeklyFellowEvaluation({
                 name="programDeliveryRating"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Program Delivery Rating</FormLabel>
+                    <FormLabel>
+                      Rate program delivery (1-unacceptable, 5-outstanding){" "}
+                      <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
                     <FormControl>
                       <DataTableRatingStars rating={field.value} />
                     </FormControl>
@@ -162,7 +167,6 @@ export default function ViewEditWeeklyFellowEvaluation({
                 name="programDeliveryNotes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Program Delivery Notes</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
@@ -180,7 +184,10 @@ export default function ViewEditWeeklyFellowEvaluation({
                 name="dressingAndGroomingRating"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Dressing & Grooming Rating</FormLabel>
+                    <FormLabel>
+                      Rate dressing & grooming (1-very bad, 5-very good){" "}
+                      <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
                     <FormControl>
                       <DataTableRatingStars rating={field.value} />
                     </FormControl>
@@ -194,7 +201,6 @@ export default function ViewEditWeeklyFellowEvaluation({
                 name="dressingAndGroomingNotes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Dressing & Grooming Notes</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
@@ -212,7 +218,10 @@ export default function ViewEditWeeklyFellowEvaluation({
                 name="punctualityRating"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Attendance & Punctuality Rating</FormLabel>
+                    <FormLabel>
+                      Rate Session attendance & punctuality (1-very bad, 5-very
+                      good) <span className="text-shamiri-light-red">*</span>
+                    </FormLabel>
                     <FormControl>
                       <DataTableRatingStars rating={field.value} />
                     </FormControl>
@@ -226,7 +235,6 @@ export default function ViewEditWeeklyFellowEvaluation({
                 name="punctualityNotes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Attendance & Punctuality Notes</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
