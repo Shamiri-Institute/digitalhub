@@ -1,14 +1,14 @@
 "use client";
 
+import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import {
   columns,
   SchoolFellowTableData,
-} from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/columns";
-import { BatchUploadDownloadFellow } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/upload-csv";
-import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+} from "#/components/common/fellow/columns";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
+import { BatchUploadDownloadFellow } from "#/components/common/fellow/upload-csv";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -20,13 +20,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { Dispatch, SetStateAction, useContext, useState } from "react";
 
 export default function FellowsDatatable({
   fellows,
   supervisors,
   schoolVisibleId,
+  role,
+  hideActions = false,
 }: {
   fellows: SchoolFellowTableData[];
   supervisors: Prisma.SupervisorGetPayload<{
@@ -35,35 +37,46 @@ export default function FellowsDatatable({
     };
   }>[];
   schoolVisibleId: string;
+  role: ImplementerRole;
+  hideActions?: boolean;
 }) {
   const [fellow, setFellow] = useState<SchoolFellowTableData | undefined>();
   const [detailsDialog, setDetailsDialog] = useState(false);
   const [replaceDialog, setReplaceDialog] = useState(false);
   const [studentsDialog, setStudentsDialog] = useState(false);
   const renderTableActions = () => {
-    return <BatchUploadDownloadFellow />;
+    return <BatchUploadDownloadFellow role={role} />;
   };
 
   return (
     <>
       <DataTable
         columns={columns({
-          setFellow,
-          setDetailsDialog,
-          setReplaceDialog,
-          setStudentsDialog,
+          state: {
+            setFellow,
+            setDetailsDialog,
+            setReplaceDialog,
+            setStudentsDialog,
+          },
+          role,
         })}
         data={fellows}
         className={"data-table data-table-action mt-4"}
         emptyStateMessage="No fellows associated with this school"
-        renderTableActions={renderTableActions()}
+        renderTableActions={!hideActions && renderTableActions()}
       />
       {fellow && (
         <>
           <FellowDetailsForm
             open={detailsDialog}
             onOpenChange={setDetailsDialog}
-            mode={"view"}
+            mode={
+              role === "HUB_COORDINATOR"
+                ? "view"
+                : role === "SUPERVISOR"
+                  ? "edit"
+                  : null
+            }
             fellow={fellow}
           />
           {fellow.groupId !== null ? (
@@ -111,6 +124,7 @@ export default function FellowsDatatable({
 export function FellowsDatatableMenu({
   fellow,
   state,
+  role,
 }: {
   fellow: SchoolFellowTableData;
   state: {
@@ -119,12 +133,13 @@ export function FellowsDatatableMenu({
     setReplaceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
   };
+  role: ImplementerRole;
 }) {
   const context = useContext(FellowInfoContext);
   return (
     <DropdownMenu
       onOpenChange={() => {
-        context.setFellow(fellow);
+        // context.setFellow(fellow);
       }}
     >
       <DropdownMenuTrigger asChild>
@@ -147,16 +162,22 @@ export function FellowsDatatableMenu({
             state.setDetailsDialog(true);
           }}
         >
-          View fellow information
+          {role === "HUB_COORDINATOR"
+            ? "View fellow information"
+            : role === "SUPERVISOR"
+              ? "Edit fellow information"
+              : null}
         </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={fellow.droppedOut ?? undefined}
-          onClick={() => {
-            context.setAssignSupervisor(true);
-          }}
-        >
-          Assign supervisor
-        </DropdownMenuItem>
+        {role === "HUB_COORDINATOR" && (
+          <DropdownMenuItem
+            disabled={fellow.droppedOut ?? undefined}
+            onClick={() => {
+              context.setAssignSupervisor(true);
+            }}
+          >
+            Assign supervisor
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           disabled={fellow.groupId === null}
           onClick={() => {

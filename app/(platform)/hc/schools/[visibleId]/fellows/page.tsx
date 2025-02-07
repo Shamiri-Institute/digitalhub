@@ -1,10 +1,10 @@
-import AssignFellowSupervisorDialog from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/assign-fellow-supervisor-dialog";
-import AttendanceHistory from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/attendance-history";
-import { SchoolFellowTableData } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/columns";
-import FellowInfoContextProvider from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellow-info-context-provider";
-import FellowsDatatable from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
 import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
-import { currentHubCoordinator } from "#/app/auth";
+import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
+import AttendanceHistory from "#/components/common/fellow/attendance-history";
+import { SchoolFellowTableData } from "#/components/common/fellow/columns";
+import FellowInfoContextProvider from "#/components/common/fellow/fellow-info-context-provider";
+import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
 import { Suspense } from "react";
@@ -18,6 +18,8 @@ export default async function FellowsPage({
   if (!hc) {
     return <InvalidPersonnelRole role="hub-coordinator" />;
   }
+
+  const user = await getCurrentUser();
 
   const school = await db.school.findFirstOrThrow({
     where: {
@@ -107,6 +109,8 @@ export default async function FellowsPage({
           fellows={data}
           supervisors={supervisors}
           schoolVisibleId={visibleId}
+          role={user?.membership.role!}
+          hideActions={true}
         />
       </Suspense>
       <AttendanceHistory attendances={school.fellowAttendances} />

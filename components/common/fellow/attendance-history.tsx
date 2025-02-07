@@ -51,7 +51,7 @@ export default function AttendanceHistory({
               (attendance) => attendance.fellowId === context.fellow?.id,
             )}
             emptyStateMessage={"No sessions found"}
-            className="data-table"
+            className="data-table mt-4"
           />
         </div>
         <DialogFooter className="flex justify-end gap-2">

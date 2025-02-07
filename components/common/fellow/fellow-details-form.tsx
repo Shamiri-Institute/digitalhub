@@ -52,7 +52,7 @@ export default function FellowDetailsForm({
   fellow?: MainFellowTableData;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
-  mode: "edit" | "add" | "view";
+  mode: "edit" | "add" | "view" | null;
   children?: React.ReactNode;
 }) {
   const counties = KENYAN_COUNTIES.map((county) => county.name);

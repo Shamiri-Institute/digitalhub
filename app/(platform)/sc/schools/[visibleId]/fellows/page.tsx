@@ -1,10 +1,10 @@
-import AssignFellowSupervisorDialog from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/assign-fellow-supervisor-dialog";
-import AttendanceHistory from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/attendance-history";
-import { SchoolFellowTableData } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/columns";
-import FellowInfoContextProvider from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellow-info-context-provider";
-import FellowsDatatable from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
-import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
+import Loading from "#/app/(platform)/sc/schools/[visibleId]/fellows/loading";
 import { currentSupervisor } from "#/app/auth";
+import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
+import AttendanceHistory from "#/components/common/fellow/attendance-history";
+import { SchoolFellowTableData } from "#/components/common/fellow/columns";
+import FellowInfoContextProvider from "#/components/common/fellow/fellow-info-context-provider";
+import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
 import { Suspense } from "react";
@@ -108,6 +108,7 @@ export default async function FellowsPage({
           fellows={data}
           supervisors={supervisors}
           schoolVisibleId={visibleId}
+          role={supervisor?.user.membership.role!}
         />
       </Suspense>
       <AttendanceHistory attendances={school.fellowAttendances} />
