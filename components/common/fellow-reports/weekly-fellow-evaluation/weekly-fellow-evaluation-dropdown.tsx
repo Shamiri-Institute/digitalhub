@@ -1,4 +1,4 @@
-import { WeeklyFellowEvaluationType } from "#/components/common/fellow-reports/weekly-fellow-evaluation/actions";
+import { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import ViewEditWeeklyFellowEvaluation from "#/components/common/fellow-reports/weekly-fellow-evaluation/view-edit-weekly-fellow-evaluation";
 import { Icons } from "#/components/icons";
 import {
@@ -13,7 +13,7 @@ import { cn } from "#/lib/utils";
 export default function WeeklyFellowEvaluationDropdownMenu({
   weeklyFellowEvaluation,
 }: {
-  weeklyFellowEvaluation: WeeklyFellowEvaluationType["week"][number];
+  weeklyFellowEvaluation: WeeklyFellowEvaluation["week"][number];
 }) {
   return (
     <DropdownMenu>
