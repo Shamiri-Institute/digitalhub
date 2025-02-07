@@ -1,8 +1,8 @@
-import { loadStudentGroupEvaluation } from "#/components/common/fellow-reports/student-group-evaluation/actions";
+import { loadStudentGroupEvaluations } from "#/components/common/fellow-reports/student-group-evaluation/actions";
 import StudentGroupEvaluationTable from "#/components/common/fellow-reports/student-group-evaluation/student-group-evaluation-table";
 
 export default async function StudentGroupEvaluationPage() {
-  const studentGroupEvaluationData = await loadStudentGroupEvaluation();
+  const studentGroupEvaluationData = await loadStudentGroupEvaluations();
 
   return (
     <div className="container w-full grow space-y-3">
