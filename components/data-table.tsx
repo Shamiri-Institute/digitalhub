@@ -55,6 +55,8 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   editColumns?: boolean;
+  disableSearch?: boolean;
+  disablePagination?: boolean;
   className?: string;
   onRowSelectionChange?: (rows: Row<TData>[]) => void;
   rowSelectionDescription?: string;
@@ -69,6 +71,8 @@ export default function DataTable<TData, TValue>({
   columns,
   data,
   editColumns = true,
+  disableSearch = false,
+  disablePagination = false,
   className,
   emptyStateMessage,
   onRowSelectionChange,
@@ -145,17 +149,19 @@ export default function DataTable<TData, TValue>({
           )}
         </div>
         <div className="min-w-2/3 flex flex-wrap-reverse justify-end gap-3">
-          <div className="relative">
-            <Icons.search
-              className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground"
-              strokeWidth={1.75}
-            />
-            <Input
-              onChange={(e) => table.setGlobalFilter(String(e.target.value))}
-              placeholder="Search..."
-              className="w-64 bg-white pl-10"
-            />
-          </div>
+          {!disableSearch && (
+            <div className="relative">
+              <Icons.search
+                className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground"
+                strokeWidth={1.75}
+              />
+              <Input
+                onChange={(e) => table.setGlobalFilter(String(e.target.value))}
+                placeholder="Search..."
+                className="w-64 bg-white pl-10"
+              />
+            </div>
+          )}
           {renderTableActions}
           {editColumns && (
             <DropdownMenu>
@@ -269,92 +275,94 @@ export default function DataTable<TData, TValue>({
           )}
         </TableBody>
       </Table>
-      <div className="flex items-center justify-between gap-2 py-3">
-        <div className="flex items-center gap-2">
+      {!disablePagination && (
+        <div className="flex items-center justify-between gap-2 py-3">
           <div className="flex items-center gap-2">
-            <button
-              className="pagination"
-              onClick={() => table.firstPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <Icons.chevronLeft className="h-5 w-5" />
-            </button>
-            {table.getState().pagination.pageIndex > 0 ? (
+            <div className="flex items-center gap-2">
               <button
                 className="pagination"
+                onClick={() => table.firstPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                <Icons.chevronLeft className="h-5 w-5" />
+              </button>
+              {table.getState().pagination.pageIndex > 0 ? (
+                <button
+                  className="pagination"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <span>{table.getState().pagination.pageIndex}</span>
+                </button>
+              ) : null}
+              <button
+                className="pagination bg-shamiri-new-blue text-white"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
               >
-                <span>{table.getState().pagination.pageIndex}</span>
+                <span>{table.getState().pagination.pageIndex + 1}</span>
               </button>
-            ) : null}
-            <button
-              className="pagination bg-shamiri-new-blue text-white"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              <span>{table.getState().pagination.pageIndex + 1}</span>
-            </button>
-            {table.getState().pagination.pageIndex + 2 <=
-            table.getPageCount() ? (
+              {table.getState().pagination.pageIndex + 2 <=
+              table.getPageCount() ? (
+                <button
+                  className="pagination"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <span>{table.getState().pagination.pageIndex + 2}</span>
+                </button>
+              ) : null}
               <button
                 className="pagination"
-                onClick={() => table.nextPage()}
+                onClick={() => table.lastPage()}
                 disabled={!table.getCanNextPage()}
               >
-                <span>{table.getState().pagination.pageIndex + 2}</span>
+                <Icons.chevronRight className="h-5 w-5" />
               </button>
-            ) : null}
-            <button
-              className="pagination"
-              onClick={() => table.lastPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              <Icons.chevronRight className="h-5 w-5" />
-            </button>
+            </div>
+            <span className="flex items-center gap-1 text-sm text-shamiri-text-dark-grey">
+              <div>Page</div>
+              <strong>
+                {table.getState().pagination.pageIndex + 1} of{" "}
+                {table.getPageCount().toLocaleString()}
+              </strong>
+            </span>
+            <span className="flex items-center gap-1 pl-4 text-sm text-shamiri-text-dark-grey">
+              Go to page:
+              <input
+                type="number"
+                min="1"
+                max={table.getPageCount()}
+                defaultValue={table.getState().pagination.pageIndex + 1}
+                onChange={(e) => {
+                  const page = e.target.value ? Number(e.target.value) - 1 : 0;
+                  table.setPageIndex(page);
+                }}
+                className="w-16 rounded border p-1"
+              />
+            </span>
           </div>
-          <span className="flex items-center gap-1 text-sm text-shamiri-text-dark-grey">
-            <div>Page</div>
-            <strong>
-              {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount().toLocaleString()}
-            </strong>
-          </span>
-          <span className="flex items-center gap-1 pl-4 text-sm text-shamiri-text-dark-grey">
-            Go to page:
-            <input
-              type="number"
-              min="1"
-              max={table.getPageCount()}
-              defaultValue={table.getState().pagination.pageIndex + 1}
-              onChange={(e) => {
-                const page = e.target.value ? Number(e.target.value) - 1 : 0;
-                table.setPageIndex(page);
+          <div className="flex items-center gap-2">
+            <Select
+              value={table.getState().pagination.pageSize.toString()}
+              onValueChange={(value) => {
+                table.setPageSize(Number(value));
               }}
-              className="w-16 rounded border p-1"
-            />
-          </span>
+            >
+              <SelectTrigger className="text-sm">
+                <SelectValue placeholder="Pick rows" />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                  <SelectItem key={pageSize} value={pageSize.toString()}>
+                    Show {pageSize}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Select
-            value={table.getState().pagination.pageSize.toString()}
-            onValueChange={(value) => {
-              table.setPageSize(Number(value));
-            }}
-          >
-            <SelectTrigger className="text-sm">
-              <SelectValue placeholder="Pick rows" />
-            </SelectTrigger>
-            <SelectContent>
-              {[5, 10, 20, 30, 40, 50].map((pageSize) => (
-                <SelectItem key={pageSize} value={pageSize.toString()}>
-                  Show {pageSize}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

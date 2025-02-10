@@ -1,5 +1,7 @@
 "use client";
+import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import type { FellowsData } from "#/app/(platform)/sc/actions";
+import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
@@ -51,16 +53,40 @@ export const columns = (state: {
     header: "Name",
   },
   {
+    header: "Average Rating",
+    cell: ({ row }) => {
+      const rating = row.original.averageRating;
+      return <DataTableRatingStars rating={rating} />;
+    },
+    id: "Average Rating",
+  },
+  {
+    cell: ({ row }) =>
+      row.original.droppedOut ? (
+        <Badge variant="destructive">Inactive</Badge>
+      ) : (
+        <Badge variant="shamiri-green">Active</Badge>
+      ),
+    header: "Active Status",
+    id: "Active Status",
+  },
+  {
+    id: "Sessions attended",
+    header: "Sessions attended",
+    cell: ({ row }) => {
+      const attendedSessions = row.original.attendances.filter(
+        (attendance) => attendance.attended,
+      );
+      const groupSessions = row.original.groups.reduce((total, group) => {
+        return total + group.school.interventionSessions.length;
+      }, 0);
+      return attendedSessions.length + "/" + groupSessions;
+    },
+    enableHiding: false,
+  },
+  {
     accessorKey: "mpesaNumber",
     header: "MPESA Number",
-  },
-  {
-    accessorKey: "county",
-    header: "County",
-  },
-  {
-    accessorKey: "subCounty",
-    header: "Sub County",
   },
   {
     id: "button",

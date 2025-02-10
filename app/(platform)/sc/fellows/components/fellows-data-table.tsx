@@ -47,11 +47,13 @@ export default function FellowsDataTable({
             data={row.original.sessions}
             editColumns={false}
             columns={subColumns}
+            disableSearch={true}
+            disablePagination={true}
             className={"data-table data-table-action border-0 bg-white"}
             emptyStateMessage="No groups assigned to this fellow"
           />
         )}
-        emptyStateMessage="No Fellows Assigned to you"
+        emptyStateMessage="No fellows assigned to you"
       />
       {fellow && (
         <WeeklyFellowEvaluation

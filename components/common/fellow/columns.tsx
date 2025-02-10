@@ -48,6 +48,7 @@ export const columns = ({
     setReplaceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
     setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
+    setAssignSupervisorDialog: Dispatch<SetStateAction<boolean>>;
   };
   role: ImplementerRole;
 }): ColumnDef<SchoolFellowTableData>[] => {

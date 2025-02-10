@@ -1,8 +1,8 @@
+import { loadFellowsData } from "#/app/(platform)/sc/actions";
 import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
-import { loadFellowsData } from "../actions";
 import FellowsDataTable from "./components/fellows-data-table";
 
 export default async function FellowsPage() {
@@ -12,7 +12,6 @@ export default async function FellowsPage() {
   }
 
   const fellows = await loadFellowsData();
-
   const weeklyFellowEvaluations = await db.weeklyFellowRatings.findMany({
     where: {
       fellow: {

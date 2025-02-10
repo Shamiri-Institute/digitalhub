@@ -91,6 +91,23 @@ export async function loadFellowsData() {
     },
   });
 
+  const fellowAverageRatings = await db.$queryRaw<
+    {
+      id: string;
+      averageRating: number;
+    }[]
+  >`
+      SELECT
+        f.id,
+        (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
+      FROM
+        fellows f
+          LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
+      WHERE f.hub_id =${supervisor.hubId}
+      GROUP BY
+        f.id
+  `;
+
   const supervisors = await db.supervisor.findMany({
     where: {
       hubId: supervisor.hubId,
@@ -128,6 +145,11 @@ export async function loadFellowsData() {
         numClinicalCases: student.clinicalCases.length,
       })),
     })),
+    attendances: fellow.fellowAttendances,
+    groups: fellow.groups,
+    averageRating:
+      fellowAverageRatings.find((rating) => rating.id === fellow.id)
+        ?.averageRating ?? 0,
   }));
 }
 

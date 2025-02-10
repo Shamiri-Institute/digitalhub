@@ -2,6 +2,7 @@
 
 import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import {
   columns,
@@ -54,6 +55,7 @@ export default function FellowsDatatable({
   const [replaceDialog, setReplaceDialog] = useState(false);
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
+  const [assignSupervisorDialog, setAssignSupervisorDialog] = useState(false);
   const renderTableActions = () => {
     return <BatchUploadDownloadFellow role={role} />;
   };
@@ -68,6 +70,7 @@ export default function FellowsDatatable({
             setReplaceDialog,
             setStudentsDialog,
             setAttendanceHistoryDialog,
+            setAssignSupervisorDialog,
           },
           role,
         })}
@@ -102,6 +105,14 @@ export default function FellowsDatatable({
               </div>
             </DialogAlertWidget>
           </AttendanceHistory>
+          <AssignFellowSupervisorDialog
+            supervisors={supervisors}
+            open={assignSupervisorDialog}
+            onOpenChange={setAssignSupervisorDialog}
+            fellow={fellow}
+          >
+            <DialogAlertWidget label={fellow.fellowName} />
+          </AssignFellowSupervisorDialog>
           {fellow.groupId !== null ? (
             <>
               <ReplaceFellow
@@ -156,6 +167,7 @@ export function FellowsDatatableMenu({
     setReplaceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
     setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
+    setAssignSupervisorDialog: Dispatch<SetStateAction<boolean>>;
   };
   role: ImplementerRole;
 }) {
@@ -192,7 +204,8 @@ export function FellowsDatatableMenu({
           <DropdownMenuItem
             disabled={fellow.droppedOut ?? undefined}
             onClick={() => {
-              context.setAssignSupervisor(true);
+              state.setFellow(fellow);
+              state.setAssignSupervisorDialog(true);
             }}
           >
             Assign supervisor
