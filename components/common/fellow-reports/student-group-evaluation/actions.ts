@@ -94,3 +94,20 @@ export async function loadStudentGroupEvaluations() {
     return [];
   }
 }
+
+export async function editStudentGroupEvaluation(
+  evaluationId: string,
+  data: any,
+) {
+  try {
+    await db.interventionGroupReport.update({
+      where: { id: evaluationId },
+      data,
+    });
+
+    return { success: true, message: "Evaluation updated successfully" };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Failed to update evaluation" };
+  }
+}

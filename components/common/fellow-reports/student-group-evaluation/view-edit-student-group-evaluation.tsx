@@ -1,6 +1,10 @@
 "use client";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { StudentGroupEvaluationType } from "#/components/common/fellow-reports/student-group-evaluation/actions";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import {
+  editStudentGroupEvaluation,
+  StudentGroupEvaluationType,
+} from "#/components/common/fellow-reports/student-group-evaluation/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -17,7 +21,15 @@ import {
   FormLabel,
   FormMessage,
 } from "#/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
+import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -54,33 +66,35 @@ export default function ViewEditStudentGroupEvaluation({
   });
 
   const onSubmit = async (data: StudentGroupEvaluationFormValues) => {
-    // try {
-    //   const response = await editStudentGroupEvaluation(
-    //     studentGroupEvaluation.evaluationId,
-    //     data
-    //   );
-    //   if (response.success) {
-    //     toast({
-    //       title: "Success",
-    //       description: "Student group evaluation updated successfully",
-    //     });
-    //     await revalidatePageAction("sc/reporting/fellow-reports/student-group-evaluation");
-    //     setDialogOpen(false);
-    //   } else {
-    //     toast({
-    //       title: "Error",
-    //       description: response.message || "Failed to update evaluation",
-    //       variant: "destructive",
-    //     });
-    //   }
-    // } catch (error) {
-    //   console.error(error);
-    //   toast({
-    //     title: "Error",
-    //     description: "Something went wrong",
-    //     variant: "destructive",
-    //   });
-    // }
+    try {
+      const response = await editStudentGroupEvaluation(
+        studentGroupEvaluation.sessionId,
+        data,
+      );
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Student group evaluation updated successfully",
+        });
+        await revalidatePageAction(
+          "sc/reporting/fellow-reports/student-group-evaluation",
+        );
+        setDialogOpen(false);
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to update evaluation",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Something went wrong",
+        variant: "destructive",
+      });
+    }
   };
 
   const isViewOnly = action === "view";
@@ -93,35 +107,44 @@ export default function ViewEditStudentGroupEvaluation({
           <h2>{`${action === "view" ? "View" : "Edit"} Student Group Evaluation`}</h2>
         </DialogHeader>
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
-          {/* <div className="mb-4">
-            <FormItem>
-              <FormLabel>Session</FormLabel>
-              <Select disabled defaultValue={studentGroupEvaluation.session}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select session" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={studentGroupEvaluation.session}>
-                    {studentGroupEvaluation.session}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </FormItem>
-          </div> */}
+          <div className="mb-2">
+            <label className="text-sm font-medium">Session</label>
+            <Select
+              disabled
+              value={studentGroupEvaluation.session?.toString() ?? ""}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Session" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  value={studentGroupEvaluation.session?.toString() ?? ""}
+                >
+                  {studentGroupEvaluation.session?.toString() ?? "No session"}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <div>
-            <label className="text-sm font-medium">Engagement Rating</label>
-            <div className="mt-1">
+            <label className="text-sm font-medium">
+              Rate cooperation (1-very bad to 5-very good){" "}
+              <span className="text-shamiri-light-red">*</span>
+            </label>
+            <div className="my-1">
               <DataTableRatingStars
-                rating={studentGroupEvaluation.engagement ?? 0}
+                rating={studentGroupEvaluation.cooperation ?? 0}
               />
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium">Cooperation Rating</label>
-            <div className="mt-1">
+            <label className="text-sm font-medium">
+              Rate engagement (1-very bad to 5-very good){" "}
+              <span className="text-shamiri-light-red">*</span>
+            </label>
+            <div className="my-1">
               <DataTableRatingStars
-                rating={studentGroupEvaluation.cooperation ?? 0}
+                rating={studentGroupEvaluation.engagement ?? 0}
               />
             </div>
           </div>
