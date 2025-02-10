@@ -3,6 +3,7 @@
 import SchoolTableDropdown from "#/components/common/schools/school-table-dropdown";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
+import { sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
@@ -13,6 +14,7 @@ export type SchoolsTableData = Prisma.SchoolGetPayload<{
     interventionSessions: {
       include: {
         sessionRatings: true;
+        session: true;
       };
     };
     students: {
@@ -126,24 +128,22 @@ export const columns = ({
     id: "Point supervisor email",
     accessorFn: (row) => row.assignedSupervisor?.supervisorEmail,
   },
-  // TODO: find a way to find the upcoming session
   {
     header: "Upcoming session",
     id: "Upcoming session",
     accessorFn: (row) => {
-      const upcomingSessions: Prisma.InterventionSessionGetPayload<{}>[] =
-        row.interventionSessions
-          .filter((session) => {
-            return isAfter(session.sessionDate, new Date());
-          })
-          .sort((a, b) => {
-            return a.sessionDate.getTime() - b.sessionDate.getTime();
-          });
+      const upcomingSessions = row.interventionSessions
+        .filter((session) => {
+          return isAfter(session.sessionDate, new Date());
+        })
+        .sort((a, b) => {
+          return a.sessionDate.getTime() - b.sessionDate.getTime();
+        });
 
       if (upcomingSessions.length > 0) {
+        console.log(upcomingSessions);
         return (
-          // TODO: Refactor string after adding session_names table
-          upcomingSessions[0]!.sessionType!.toUpperCase() +
+          sessionDisplayName(upcomingSessions[0]!.session?.sessionName) +
           " - " +
           format(upcomingSessions[0]!.sessionDate, "dd MMM yyyy")
         );
@@ -170,8 +170,9 @@ export const columns = ({
         if (recent && recent.sessionRatings.length > 0) {
           return (
             <Badge variant="shamiri-green">
-              {sessions[sessions.length - 1]?.sessionType?.toUpperCase() +
-                " - Report submitted"}
+              {sessionDisplayName(
+                sessions[sessions.length - 1]!.session?.sessionName,
+              ) + " - Report submitted"}
             </Badge>
           );
         } else {
