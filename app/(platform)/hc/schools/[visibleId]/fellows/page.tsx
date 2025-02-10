@@ -1,7 +1,6 @@
 import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
-import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowInfoContextProvider from "#/components/common/fellow/fellow-info-context-provider";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
@@ -113,9 +112,9 @@ export default async function FellowsPage({
           schoolVisibleId={visibleId}
           role={user?.membership.role!}
           hideActions={true}
+          attendances={school.fellowAttendances}
         />
       </Suspense>
-      <AttendanceHistory attendances={school.fellowAttendances} />
       <AssignFellowSupervisorDialog supervisors={supervisors} />
     </FellowInfoContextProvider>
   );
