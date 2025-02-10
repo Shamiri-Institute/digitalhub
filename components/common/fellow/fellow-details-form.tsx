@@ -20,7 +20,11 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { Popover, PopoverContent } from "#/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -34,7 +38,6 @@ import { submitFellowDetails } from "#/lib/actions/fellow";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { usePathname } from "next/navigation";
@@ -59,8 +62,25 @@ export default function FellowDetailsForm({
   const pathname = usePathname();
   const form = useForm<z.infer<typeof FellowDetailsSchema>>({
     resolver: zodResolver(FellowDetailsSchema),
+    defaultValues: getDefaultValues(),
   });
 
+  function getDefaultValues() {
+    return {
+      mode: mode ?? undefined,
+      id: fellow?.id,
+      fellowName: fellow?.fellowName ?? "",
+      fellowEmail: fellow?.fellowEmail ?? "",
+      cellNumber: fellow?.cellNumber ?? undefined,
+      idNumber: fellow?.idNumber ?? undefined,
+      gender: fellow?.gender ?? undefined,
+      dateOfBirth: (fellow?.dateOfBirth as unknown as Date) ?? undefined,
+      county: (fellow?.county as (typeof counties)[0]) ?? undefined,
+      subCounty: fellow?.subCounty ?? undefined,
+      mpesaName: fellow?.mpesaName ?? undefined,
+      mpesaNumber: fellow?.mpesaNumber ?? undefined,
+    };
+  }
   const countyWatcher = form.watch("county");
 
   useEffect(() => {
@@ -73,27 +93,12 @@ export default function FellowDetailsForm({
     if (open) {
       let defaultValues = {};
       if (mode !== "add" && fellow) {
-        defaultValues = {
-          mode,
-          id: fellow.id,
-          fellowName: fellow.fellowName ?? undefined,
-          fellowEmail: fellow.fellowEmail ?? undefined,
-          cellNumber: fellow.cellNumber ?? undefined,
-          idNumber: fellow.idNumber ?? undefined,
-          gender: fellow.gender ?? undefined,
-          dateOfBirth: fellow.dateOfBirth ?? undefined,
-          county: fellow.county ?? undefined,
-          subCounty: fellow.subCounty ?? undefined,
-          mpesaName: fellow.mpesaName ?? undefined,
-          mpesaNumber: fellow.mpesaNumber ?? undefined,
-        };
+        defaultValues = getDefaultValues();
       } else {
         defaultValues = {
           mode,
         };
       }
-      // TODO: fix TS issue with assigning string to enum type
-      // @ts-ignore
       form.reset(defaultValues);
     }
   }, [open, fellow, form, mode]);

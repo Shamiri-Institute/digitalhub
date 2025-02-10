@@ -1,7 +1,6 @@
 import Loading from "#/app/(platform)/sc/schools/[visibleId]/fellows/loading";
 import { currentSupervisor } from "#/app/auth";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
-import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowInfoContextProvider from "#/components/common/fellow/fellow-info-context-provider";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
@@ -61,6 +60,8 @@ export default async function FellowsPage({
         f.county as "county", 
         f.sub_county as "subCounty", 
         f.supervisor_id as "supervisorId",
+        f.date_of_birth as "dateOfBirth",
+        f.id_number as "idNumber",
         sup.supervisor_name as "supervisorName", 
         f.dropped_out as "droppedOut", 
         ig.group_name as "groupName",
@@ -109,9 +110,9 @@ export default async function FellowsPage({
           supervisors={supervisors}
           schoolVisibleId={visibleId}
           role={supervisor?.user.membership.role!}
+          attendances={school.fellowAttendances}
         />
       </Suspense>
-      <AttendanceHistory attendances={school.fellowAttendances} />
       <AssignFellowSupervisorDialog supervisors={supervisors} />
     </FellowInfoContextProvider>
   );

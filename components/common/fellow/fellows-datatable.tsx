@@ -2,6 +2,7 @@
 
 import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import {
   columns,
   SchoolFellowTableData,
@@ -22,6 +23,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { ImplementerRole, Prisma } from "@prisma/client";
 import { Dispatch, SetStateAction, useContext, useState } from "react";
+import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
 export default function FellowsDatatable({
   fellows,
@@ -29,6 +31,7 @@ export default function FellowsDatatable({
   schoolVisibleId,
   role,
   hideActions = false,
+  attendances,
 }: {
   fellows: SchoolFellowTableData[];
   supervisors: Prisma.SupervisorGetPayload<{
@@ -39,11 +42,18 @@ export default function FellowsDatatable({
   schoolVisibleId: string;
   role: ImplementerRole;
   hideActions?: boolean;
+  attendances: FellowAttendanceGetPayload<{
+    include: {
+      session: true;
+      group: true;
+    };
+  }>[];
 }) {
   const [fellow, setFellow] = useState<SchoolFellowTableData | undefined>();
   const [detailsDialog, setDetailsDialog] = useState(false);
   const [replaceDialog, setReplaceDialog] = useState(false);
   const [studentsDialog, setStudentsDialog] = useState(false);
+  const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
   const renderTableActions = () => {
     return <BatchUploadDownloadFellow role={role} />;
   };
@@ -57,6 +67,7 @@ export default function FellowsDatatable({
             setDetailsDialog,
             setReplaceDialog,
             setStudentsDialog,
+            setAttendanceHistoryDialog,
           },
           role,
         })}
@@ -79,6 +90,18 @@ export default function FellowsDatatable({
             }
             fellow={fellow}
           />
+          <AttendanceHistory
+            open={attendanceHistoryDialog}
+            onOpenChange={setAttendanceHistoryDialog}
+            attendances={attendances}
+            fellow={fellow}
+          >
+            <DialogAlertWidget>
+              <div className="flex items-center gap-2">
+                <span>{fellow.fellowName}</span>
+              </div>
+            </DialogAlertWidget>
+          </AttendanceHistory>
           {fellow.groupId !== null ? (
             <>
               <ReplaceFellow
@@ -132,16 +155,13 @@ export function FellowsDatatableMenu({
     setDetailsDialog: Dispatch<SetStateAction<boolean>>;
     setReplaceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
+    setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
   };
   role: ImplementerRole;
 }) {
   const context = useContext(FellowInfoContext);
   return (
-    <DropdownMenu
-      onOpenChange={() => {
-        // context.setFellow(fellow);
-      }}
-    >
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="absolute inset-0 border-l bg-white">
           <div className="flex h-full w-full items-center justify-center">
@@ -198,7 +218,8 @@ export function FellowsDatatableMenu({
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => {
-            context.setAttendanceHistoryDialog(true);
+            state.setFellow(fellow);
+            state.setAttendanceHistoryDialog(true);
           }}
         >
           Session attendance history

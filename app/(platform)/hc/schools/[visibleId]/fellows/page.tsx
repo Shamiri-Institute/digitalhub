@@ -53,6 +53,8 @@ export default async function FellowsPage({
         f.county as "county", 
         f.sub_county as "subCounty", 
         f.supervisor_id as "supervisorId",
+        f.date_of_birth as "dateOfBirth",
+        f.id_number as "idNumber",
         sup.supervisor_name as "supervisorName", 
         f.dropped_out as "droppedOut", 
         ig.group_name as "groupName",

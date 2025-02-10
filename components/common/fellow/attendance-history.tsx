@@ -1,7 +1,6 @@
 "use client";
 
-import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import DataTable from "#/components/data-table";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -14,41 +13,40 @@ import {
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { useContext } from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
 export default function AttendanceHistory({
   attendances,
+  children,
+  open,
+  onOpenChange,
+  fellow,
 }: {
+  children: React.ReactNode;
+  open: boolean;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
   attendances: FellowAttendanceGetPayload<{
     include: {
       session: true;
       group: true;
     };
   }>[];
+  fellow: SchoolFellowTableData | null;
 }) {
-  const context = useContext(FellowInfoContext);
-
   return (
-    <Dialog
-      open={context.attendanceHistoryDialog}
-      onOpenChange={context.setAttendanceHistoryDialog}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-3/5 max-w-none">
         <DialogHeader>
           <h2 className="text-xl font-bold">Session attendance history</h2>
         </DialogHeader>
-        <DialogAlertWidget>
-          <div className="flex items-center gap-2">
-            <span>{context.fellow?.fellowName}</span>
-          </div>
-        </DialogAlertWidget>
+        {children}
         <div>
           <DataTable
             columns={columns}
             editColumns={false}
             data={attendances.filter(
-              (attendance) => attendance.fellowId === context.fellow?.id,
+              (attendance) => attendance.fellowId === fellow?.id,
             )}
             emptyStateMessage={"No sessions found"}
             className="data-table mt-4"
@@ -58,7 +56,7 @@ export default function AttendanceHistory({
           <Button
             variant="brand"
             onClick={() => {
-              context.setAttendanceHistoryDialog(false);
+              onOpenChange(false);
             }}
             className="flex items-center gap-2"
           >
