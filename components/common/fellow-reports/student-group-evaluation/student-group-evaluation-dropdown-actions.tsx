@@ -40,7 +40,7 @@ export default function StudentGroupEvaluationDropdownMenu({
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
             )}
           >
-            View weekly evaluation
+            View student group evaluation
           </div>
         </ViewEditStudentGroupEvaluation>
         <ViewEditStudentGroupEvaluation
@@ -52,7 +52,7 @@ export default function StudentGroupEvaluationDropdownMenu({
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
             )}
           >
-            Edit weekly evaluation
+            Edit student group evaluation
           </div>
         </ViewEditStudentGroupEvaluation>
       </DropdownMenuContent>
