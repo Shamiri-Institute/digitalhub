@@ -30,6 +30,8 @@ export default async function FellowPage() {
         f.mpesa_number AS "mpesaNumber",
         f.cell_number AS "cellNumber",
         f.supervisor_id AS "supervisorId",
+        f.date_of_birth as "dateOfBirth",
+        f.id_number as "idNumber",
         f.dropped_out AS "droppedOut",
         COUNT(ig.*) AS "groupCount",
         (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"

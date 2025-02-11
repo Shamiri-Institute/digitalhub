@@ -1,10 +1,10 @@
 "use client";
 
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { FellowsDatatableMenu } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/fellows-datatable";
+import { FellowsDatatableMenu } from "#/components/common/fellow/fellows-datatable";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
 import { Dispatch, SetStateAction } from "react";
@@ -38,11 +38,19 @@ export type SchoolFellowTableData = {
   }>[];
 };
 
-export const columns = (state: {
-  setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
-  setDetailsDialog: Dispatch<SetStateAction<boolean>>;
-  setReplaceDialog: Dispatch<SetStateAction<boolean>>;
-  setStudentsDialog: Dispatch<SetStateAction<boolean>>;
+export const columns = ({
+  state,
+  role,
+}: {
+  state: {
+    setFellow: Dispatch<SetStateAction<SchoolFellowTableData | undefined>>;
+    setDetailsDialog: Dispatch<SetStateAction<boolean>>;
+    setReplaceDialog: Dispatch<SetStateAction<boolean>>;
+    setStudentsDialog: Dispatch<SetStateAction<boolean>>;
+    setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
+    setAssignSupervisorDialog: Dispatch<SetStateAction<boolean>>;
+  };
+  role: ImplementerRole;
 }): ColumnDef<SchoolFellowTableData>[] => {
   return [
     {
@@ -117,7 +125,7 @@ export const columns = (state: {
     {
       id: "button",
       cell: ({ row }) => (
-        <FellowsDatatableMenu fellow={row.original} state={state} />
+        <FellowsDatatableMenu fellow={row.original} state={state} role={role} />
       ),
       enableHiding: false,
     },
