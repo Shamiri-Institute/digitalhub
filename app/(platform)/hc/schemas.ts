@@ -453,7 +453,7 @@ export const WeeklyHubTeamMeetingSchema = z.object({
 
 export const FellowDetailsSchema = z
   .object({
-    mode: z.enum(["add", "edit"]),
+    mode: z.enum(["add", "edit", "view"]),
     fellowName: z.string({
       required_error: "Please enter the fellow's name",
     }),
@@ -478,9 +478,11 @@ export const FellowDetailsSchema = z
       .email({
         message: "Please enter a valid email.",
       }),
-    county: z.enum([counties[0]!, ...counties.slice(1)], {
-      errorMap: (issue, ctx) => ({ message: "Please pick a valid option" }),
-    }),
+    county: z
+      .enum([counties[0]!, ...counties.slice(1)], {
+        errorMap: (issue, ctx) => ({ message: "Please pick a valid option" }),
+      })
+      .optional(),
     subCounty: z
       .string({
         invalid_type_error: "Please pick a valid sub county.",
@@ -525,6 +527,17 @@ export const FellowDetailsSchema = z
         message: `Fellow Id is required.`,
         fatal: true,
         path: ["id"],
+      });
+
+      return z.NEVER;
+    }
+
+    if (val.county === undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Please pick a county.`,
+        fatal: true,
+        path: ["county"],
       });
 
       return z.NEVER;

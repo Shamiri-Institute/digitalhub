@@ -2,9 +2,8 @@
 
 import { AssignPointSupervisorSchema } from "#/app/(platform)/hc/schemas";
 import { assignFellowSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
-import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
 import {
@@ -26,37 +25,41 @@ import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
 import { usePathname } from "next/navigation";
-import { useContext, useEffect } from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 export default function AssignFellowSupervisorDialog({
   supervisors,
+  open,
+  onOpenChange,
+  children,
+  fellow,
 }: {
   supervisors: Prisma.SupervisorGetPayload<{
     include: {
       fellows: true;
     };
   }>[];
+  children: React.ReactNode;
+  open: boolean;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
+  fellow: SchoolFellowTableData | null;
 }) {
   const pathname = usePathname();
-  const context = useContext(FellowInfoContext);
   const form = useForm<z.infer<typeof AssignPointSupervisorSchema>>({
     resolver: zodResolver(AssignPointSupervisorSchema),
+    defaultValues: {
+      assignedSupervisorId: fellow?.supervisorId ?? undefined,
+    },
   });
-
-  useEffect(() => {
-    form.reset({
-      assignedSupervisorId: context.fellow?.supervisorId ?? undefined,
-    });
-  }, [context.assignSupervisor]);
 
   const onSubmit = async (
     data: z.infer<typeof AssignPointSupervisorSchema>, // re-used: similar schema
   ) => {
-    if (context.fellow) {
+    if (fellow) {
       const response = await assignFellowSupervisor({
-        fellowId: context.fellow.id,
+        fellowId: fellow.id,
         supervisorId: data.assignedSupervisorId,
       });
 
@@ -74,21 +77,23 @@ export default function AssignFellowSupervisorDialog({
           description: response.message,
         });
         form.reset();
-        context.setAssignSupervisor(false);
+        onOpenChange(false);
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        description: "Something went wrong. Fellow not found",
       });
     }
   };
 
   return (
-    <Dialog
-      open={context.assignSupervisor}
-      onOpenChange={context.setAssignSupervisor}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <span className="text-xl">Assign supervisor</span>
         </DialogHeader>
-        <DialogAlertWidget label={context.fellow?.fellowName} />
+        {children}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="space-y-6">
@@ -127,7 +132,7 @@ export default function AssignFellowSupervisorDialog({
                 variant="ghost"
                 type="button"
                 onClick={() => {
-                  context.setAssignSupervisor(false);
+                  onOpenChange(false);
                 }}
               >
                 Cancel
