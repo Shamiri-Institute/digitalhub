@@ -1,6 +1,7 @@
 import Loading from "#/app/(platform)/sc/schools/[visibleId]/fellows/loading";
 import { currentSupervisor } from "#/app/auth";
 import { SchoolFellowTableData } from "#/components/common/fellow/columns";
+import FellowInfoContextProvider from "#/components/common/fellow/fellow-info-context-provider";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
@@ -101,7 +102,7 @@ export default async function FellowsPage({
   });
 
   return (
-    <>
+    <FellowInfoContextProvider>
       <Suspense fallback={<Loading />}>
         <FellowsDatatable
           fellows={data}
@@ -111,6 +112,6 @@ export default async function FellowsPage({
           attendances={school.fellowAttendances}
         />
       </Suspense>
-    </>
+    </FellowInfoContextProvider>
   );
 }
