@@ -1,6 +1,5 @@
 import Loading from "#/app/(platform)/sc/schools/[visibleId]/fellows/loading";
 import { currentSupervisor } from "#/app/auth";
-import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
 import { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowInfoContextProvider from "#/components/common/fellow/fellow-info-context-provider";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
@@ -113,7 +112,6 @@ export default async function FellowsPage({
           attendances={school.fellowAttendances}
         />
       </Suspense>
-      <AssignFellowSupervisorDialog supervisors={supervisors} />
     </FellowInfoContextProvider>
   );
 }

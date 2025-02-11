@@ -22,6 +22,7 @@ export default function FellowsDatatableSkeleton({
       setReplaceDialog: () => {},
       setStudentsDialog: () => {},
       setAttendanceHistoryDialog: () => {},
+      setAssignSupervisorDialog: () => {},
     },
     role,
   })
