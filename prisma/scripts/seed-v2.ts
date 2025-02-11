@@ -298,7 +298,7 @@ async function createCoreUsers(
     {
       id: objectId("user"),
       email: "wambugu.davis@shamiri.institute",
-      role: ImplementerRole.SUPERVISOR,
+      role: ImplementerRole.HUB_COORDINATOR,
       roleByVisibleId: "SPV24_S_01",
     },
     {
@@ -320,7 +320,7 @@ async function createCoreUsers(
     return {
       userId: user.id,
       implementerId: faker.helpers.arrayElement(implementers).id,
-      role: ImplementerRole.SUPERVISOR,
+      role: userData.find((u) => u.id === user.id)?.role as ImplementerRole,
       identifier: faker.helpers.arrayElement(supervisors).id,
     };
   });
