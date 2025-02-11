@@ -23,6 +23,7 @@ export default function FileUploader({
   type,
   metadata,
   uploadVisibleMessage,
+  disabled,
 }: {
   url: string;
   type: string;
@@ -34,6 +35,7 @@ export default function FileUploader({
     urlPath?: string;
   };
   uploadVisibleMessage?: string;
+  disabled?: boolean;
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -110,8 +112,9 @@ export default function FileUploader({
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
+      <DialogTrigger asChild disabled={disabled}>
         <Button
+          disabled={disabled}
           variant="outline"
           className="flex items-center gap-2 bg-white text-sm font-semibold leading-5 text-shamiri-black"
         >

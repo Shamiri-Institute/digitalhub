@@ -1,6 +1,6 @@
 "use client";
 
-import { SchoolFellowTableData } from "#/app/(platform)/hc/schools/[visibleId]/fellows/components/columns";
+import { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import { createContext, Dispatch, SetStateAction } from "react";
 
 type FellowInfoContextData = {

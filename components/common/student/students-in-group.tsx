@@ -56,7 +56,7 @@ export default function StudentsInGroup({
               (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
             )}
             emptyStateMessage={"No students associated to this group"}
-            className="data-table"
+            className="data-table mt-4"
           />
           <DialogFooter className="flex justify-end gap-2">
             <Button
