@@ -1,52 +1,113 @@
 "use server";
 
-export type StudentGroupEvaluationType = Awaited<
-  ReturnType<typeof loadStudentGroupEvaluation>
->[number];
+import { db } from "#/lib/db";
 
-export async function loadStudentGroupEvaluation() {
-  return [
-    {
-      id: "eval_1",
-      fellowName: "John Doe",
-      groupName: "45_S56",
-      avgCooperation: 4,
-      avgEngagement: 5,
-      session: [
-        {
-          sessionId: "eval_1_1",
-          session: "S3",
-          cooperation: 4,
-          engagement: 5,
+export type StudentGroupEvaluationType = {
+  id: string;
+  fellowName: string;
+  groupName: string;
+  avgCooperation: number;
+  avgEngagement: number;
+  session: {
+    sessionId: string;
+    session: string;
+    cooperation: number;
+    engagement: number;
+    engagementComment: string;
+    cooperationComment: string;
+    contentComment: string;
+  }[];
+};
+
+const transformEvaluationData = (data: any[]): StudentGroupEvaluationType[] => {
+  const groupedByFellow = data.reduce<
+    Record<string, StudentGroupEvaluationType>
+  >((acc, item) => {
+    const fellowId = item.group.leader.id;
+    const groupName = item.group.groupName;
+
+    if (!acc[fellowId]) {
+      acc[fellowId] = {
+        id: fellowId,
+        fellowName: item.group.leader.fellowName,
+        groupName: groupName,
+        avgCooperation: 0,
+        avgEngagement: 0,
+        session: [],
+      };
+    }
+
+    const sessionData = {
+      sessionId: item.id,
+      session:
+        item?.session?.sessionType ??
+        item.sessionType ??
+        item.sessionType ??
+        "-",
+      cooperation:
+        item.cooperation1 ?? item.cooperation2 ?? item.cooperation3 ?? 0,
+      engagement: item.engagement1 ?? item.engagement2 ?? item.engagement3 ?? 0,
+      engagementComment: item.engagementComment ?? "",
+      cooperationComment: item.cooperationComment ?? "",
+      contentComment: item.contentComment ?? "",
+    };
+
+    acc[fellowId].session.push(sessionData);
+
+    const sessions = acc[fellowId].session;
+    acc[fellowId].avgCooperation = calculateAverage(
+      sessions.map((s) => s.cooperation),
+    );
+    acc[fellowId].avgEngagement = calculateAverage(
+      sessions.map((s) => s.engagement),
+    );
+
+    return acc;
+  }, {});
+
+  return Object.values(groupedByFellow);
+};
+
+const calculateAverage = (numbers: number[]): number => {
+  const validNumbers = numbers.filter((n) => n !== 0);
+  if (validNumbers.length === 0) return 0;
+  const sum = validNumbers.reduce((a, b) => a + b, 0);
+  return Number((sum / validNumbers.length).toFixed(1));
+};
+
+export async function loadStudentGroupEvaluations() {
+  try {
+    const evaluations = await db.interventionGroupReport.findMany({
+      include: {
+        group: {
+          include: {
+            leader: true,
+          },
         },
-        {
-          sessionId: "eval_1_2",
-          session: "S4",
-          cooperation: 4,
-          engagement: 5,
-        },
-      ],
-    },
-    {
-      id: "eval_2",
-      fellowName: "Jane Doe",
-      groupName: "21_6122",
-      avgCooperation: 4,
-      avgEngagement: 5,
-      session: [
-        {
-          sessionId: "eval_2_1",
-          session: "S3",
-          cooperation: 4,
-          engagement: 5,
-        },
-        {
-          sessionId: "eval_2_2",
-          session: "S4",
-          cooperation: 4,
-          engagement: 5,
-        },
-      ],
-    },
-  ];
+        session: true,
+      },
+    });
+
+    return transformEvaluationData(evaluations);
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+export async function editStudentGroupEvaluation(
+  evaluationId: string,
+  data: any,
+) {
+  try {
+    await db.interventionGroupReport.update({
+      where: { id: evaluationId },
+      data,
+    });
+
+    return { success: true, message: "Evaluation updated successfully" };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Failed to update evaluation" };
+  }
 }
