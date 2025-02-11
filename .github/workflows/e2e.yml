@@ -2,9 +2,9 @@ name: Playwright end-to-end tests
 
 on:
   push:
-  branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 env:
   GOOGLE_ID: mock-google-client-id
