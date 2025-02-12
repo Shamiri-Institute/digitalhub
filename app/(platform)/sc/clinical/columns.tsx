@@ -1,15 +1,17 @@
 "use client";
 
 import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
+import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import FellowExpenseTableDropdownMe from "#/components/common/expenses/fellows/fellow-expense-table-dropdown-me";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
+import { cn } from "#/lib/utils";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 
-export const columns: ColumnDef<HubFellowsAttendancesType>[] = [
+export const columns: ColumnDef<ClinicalCases>[] = [
   {
     id: "button",
     cell: ({ row }) => {
@@ -58,10 +60,12 @@ export const columns: ColumnDef<HubFellowsAttendancesType>[] = [
   {
     accessorKey: "caseStatus",
     header: "Case Status",
+    cell: ({ row }) => renderRiskOrCaseStatus(row.original.caseStatus),
   },
   {
     accessorKey: "risk",
     header: "Risk",
+    cell: ({ row }) => renderRiskOrCaseStatus(row.original.risk),
   },
   {
     accessorKey: "age",
@@ -158,4 +162,23 @@ function renderStatus(status: string) {
     return <Badge variant="destructive">Payment Deducted</Badge>;
   }
   return <Badge variant="default">Pending Payment</Badge>;
+}
+
+type Colors = {
+  [key: string]: string;
+};
+
+const colors: Colors = {
+  Active: "bg-muted-green",
+  FollowUp: "bg-muted-yellow",
+  Referred: "bg-muted-pink",
+  Terminated: "bg-muted-sky",
+  Low: "bg-muted-green",
+  Mid: "bg-muted-yellow",
+  High: "bg-shamiri-red",
+  Severe: "bg-shamiri-red",
+};
+
+function renderRiskOrCaseStatus(value: string) {
+  return <Badge className={cn(colors[value], "text-white")}>{value}</Badge>;
 }
