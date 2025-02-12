@@ -93,6 +93,7 @@ function LayoutV2({
   const fellowsActive = subRoute?.includes("fellow");
   const studentsActive = subRoute?.includes("student");
   const reportingActive = subRoute?.includes("reporting");
+  const clinicalActive = subRoute?.includes("clinical");
 
   const activeColor = "#0085FF";
   const inactiveColour = "#969696";
@@ -197,6 +198,12 @@ function LayoutV2({
               <GraduationCapIcon />
               <Link href={`/${mainRoute}/students`}>Students</Link>
             </div>
+            {mainRoute === "sc" && (
+              <div className={`tab-link ${cn(clinicalActive && "active")}`}>
+                <PeopleIcon />
+                <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
+              </div>
+            )}
             <div className={`tab-link ${reportingActive ? "active" : ""}`}>
               <ReportingDropdown
                 popoverOpen={popoverOpen}
