@@ -1,10 +1,12 @@
-"use client";
+import { getClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import ClinicalCasesStats from "#/app/(platform)/sc/clinical/components/cases-stats";
 import ClinicalCasesTable from "#/app/(platform)/sc/clinical/components/clinical-cases-table";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 
-export default function ClinicalPage() {
+export default async function ClinicalPage() {
+  const cases = await getClinicalCases();
+
   return (
     <div className="w-full self-stretch">
       <div className="flex h-full flex-col">
@@ -12,7 +14,7 @@ export default function ClinicalPage() {
           <div className="flex flex-col items-center  justify-between space-y-3">
             <ClinicalCasesStats />
             <Separator />
-            <ClinicalCasesTable />
+            <ClinicalCasesTable cases={cases} />
           </div>
         </div>
         <PageFooter />
