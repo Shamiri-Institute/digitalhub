@@ -13,9 +13,16 @@ test("Hub Coordinator can view the /schools page", async ({ page }) => {
   // then
   await hubCoordinatorSchoolsPage.isShown();
   await expect(page.getByRole('button', { name: 'Weekly Hub Report' })).toBeVisible();
-  // graphs
-  // table
-  // weekly hub report
+
+  const mainTag = page.getByRole('main');
+  await expect(page.locator('h2')).toContainText('Schools');
+  await expect(mainTag).toContainText('Session progress');
+  await expect(mainTag).toContainText('Drop out reasons');
+  await expect(mainTag).toContainText('School information completion');
+  await expect(mainTag).toContainText('Ratings');
+  await expect(mainTag).toContainText('Download schools CSV template');
+  await expect(mainTag).toContainText('Upload schools CSV');
+  await expect(page.locator('main')).toContainText('Edit columns');
 });
 
 test("Hub Coordinator can submit a weekly hub report", async ({ page }) => {
