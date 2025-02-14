@@ -1,10 +1,17 @@
 "use client";
 
-import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
 import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
-import FellowExpenseTableDropdownMe from "#/components/common/expenses/fellows/fellow-expense-table-dropdown-me";
+import ClinicalCaseActionsDropdownMenu from "#/app/(platform)/sc/clinical/components/clinical-case-actions-dropdown";
+import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
-import { Checkbox } from "#/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
@@ -75,110 +82,235 @@ export const columns: ColumnDef<ClinicalCases>[] = [
     accessorKey: "referralFrom",
     header: "Referral From",
   },
-];
-
-export const subColumns: ColumnDef<
-  HubFellowsAttendancesType["attendances"][number]
->[] = [
-  {
-    id: "checkbox",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
-        aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
-      />
-    ),
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(val) => row.toggleSelected(!!val)}
-            aria-label="Select row"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
-          />
-        </div>
-      );
-    },
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "session",
-    header: "Session",
-  },
-  {
-    accessorKey: "mpesaNo",
-    header: "Mpesa no.",
-  },
-  {
-    accessorKey: "schoolVenue",
-    header: "School/Venue",
-  },
-  {
-    accessorKey: "dateOfAttendance",
-    header: "Date of attendance",
-  },
-  {
-    accessorKey: "dateMarked",
-    header: "Date marked",
-  },
-  {
-    accessorKey: "group",
-    header: "Group",
-  },
-  {
-    accessorKey: "amount",
-    header: "Amount (KES)",
-  },
-  {
-    id: "status",
-    header: "Status",
-    accessorKey: "status",
-    cell: ({ row }) => renderStatus(row.original.status),
-  },
-
   {
     id: "button",
-    cell: ({ row }) => <FellowExpenseTableDropdownMe expense={row.original} />,
+    cell: ({ row }) => (
+      <ClinicalCaseActionsDropdownMenu clinicalCase={row.original} />
+    ),
     enableHiding: false,
   },
 ];
 
-function renderStatus(status: string) {
-  if (status === "inititiated") {
-    return <Badge variant="shamiri-green">Payment Initiated</Badge>;
-  }
-  if (status === "deducted") {
-    return <Badge variant="destructive">Payment Deducted</Badge>;
-  }
-  return <Badge variant="default">Pending Payment</Badge>;
-}
+type SubComponentData = {
+  emergencyPresentingIssues?: string;
+  generalPresentingIssues?: string;
+  sessionAttendanceHistory?: string;
+  lowRisk: boolean;
+  moderateRisk: boolean;
+  highRisk: boolean;
+  severeRisk: boolean;
+};
+
+type SessionAttendanceData = {
+  session: string;
+  sessionDate: string;
+  attendanceStatus: boolean | null;
+};
+
+const riskLevelColumns: ColumnDef<SubComponentData>[] = [
+  {
+    accessorKey: "lowRisk",
+    header: "Low Risk",
+    enableHiding: false,
+    cell: ({ getValue }: { getValue: () => unknown }) => (
+      <input
+        type="checkbox"
+        checked={getValue() as boolean}
+        onChange={() => {}}
+        className="h-4 w-4"
+      />
+    ),
+  },
+  {
+    accessorKey: "moderateRisk",
+    header: "Moderate Risk",
+    enableHiding: false,
+    cell: ({ getValue }: { getValue: () => unknown }) => (
+      <input
+        type="checkbox"
+        checked={getValue() as boolean}
+        onChange={() => {}}
+        className="h-4 w-4"
+      />
+    ),
+  },
+  {
+    accessorKey: "highRisk",
+    header: "High Risk",
+    enableHiding: false,
+    cell: ({ getValue }: { getValue: () => unknown }) => (
+      <input
+        type="checkbox"
+        checked={getValue() as boolean}
+        onChange={() => {}}
+        className="h-4 w-4"
+      />
+    ),
+  },
+  {
+    accessorKey: "severeRisk",
+    header: "Severe Risk",
+    enableHiding: false,
+    cell: ({ getValue }: { getValue: () => unknown }) => (
+      <input
+        type="checkbox"
+        checked={getValue() as boolean}
+        onChange={() => {}}
+        className="h-4 w-4"
+      />
+    ),
+  },
+].map((column) => ({
+  ...column,
+  enableSorting: false,
+}));
+
+export const subColumnsEmergency: ColumnDef<SubComponentData>[] = [
+  {
+    accessorKey: "emergencyPresentingIssues",
+    header: "Emergency presenting issues",
+    enableHiding: false,
+    enableSorting: false,
+  },
+  ...riskLevelColumns,
+];
+
+export const subColumnsGeneral: ColumnDef<SubComponentData>[] = [
+  {
+    accessorKey: "generalPresentingIssues",
+    header: "General presenting issues",
+    enableHiding: false,
+    enableSorting: false,
+  },
+  ...riskLevelColumns,
+];
+
+export const subColumnsSessionAttendanceHistory: ColumnDef<SessionAttendanceData>[] =
+  [
+    {
+      accessorKey: "session",
+      header: "Session",
+      enableHiding: false,
+      enableSorting: false,
+    },
+    {
+      accessorKey: "sessionDate",
+      header: "Session date",
+      enableHiding: false,
+      enableSorting: false,
+    },
+    {
+      header: "Session status",
+      cell: ({ row }) => {
+        const completed = row.original.attendanceStatus;
+        const cancelled = row.original.attendanceStatus === false;
+        return (
+          <div className="flex">
+            <div
+              className={cn(
+                "select-none rounded-[0.25rem] border px-1.5 py-0.5",
+                {
+                  "border-green-border": completed,
+                  "border-blue-border": !completed,
+                  "border-red-border": cancelled,
+                },
+                {
+                  "bg-green-bg": completed,
+                  "bg-blue-bg": !completed,
+                  "bg-red-bg": cancelled,
+                },
+              )}
+            >
+              <div
+                className={cn("text-[0.825rem] font-semibold", {
+                  "text-green-base": completed,
+                  "text-blue-base": !completed,
+                  "text-red-base": cancelled,
+                })}
+              >
+                <div className="flex items-center gap-1">
+                  {completed && !cancelled && (
+                    <div className="flex items-center gap-1">
+                      <Icons.checkCircle
+                        className="h-3.5 w-3.5"
+                        strokeWidth={2.5}
+                      />
+                      <span>Attended</span>
+                    </div>
+                  )}
+                  {!completed && !cancelled && (
+                    <div className="flex items-center gap-1">
+                      <Icons.helpCircle
+                        className="h-3.5 w-3.5"
+                        strokeWidth={2.5}
+                      />
+                      <span>Not marked</span>
+                    </div>
+                  )}
+                  {cancelled && (
+                    <div className="flex items-center gap-1">
+                      <Icons.crossCircleFilled
+                        className="h-3.5 w-3.5"
+                        strokeWidth={2.5}
+                      />
+                      <span>Cancelled</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      id: "button",
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild={true}>
+            <div className="absolute inset-0 border-l bg-white">
+              <div className="flex h-full w-full items-center justify-center">
+                <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
+              </div>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>
+              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
+                Actions
+              </span>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => {
+                // TODO: Implement mark session attendance
+              }}
+            >
+              Mark session attendance
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+      enableHiding: false,
+    },
+  ];
 
 type Colors = {
   [key: string]: string;
 };
 
 const colors: Colors = {
-  Active: "bg-muted-green",
-  FollowUp: "bg-muted-yellow",
-  Referred: "bg-muted-pink",
-  Terminated: "bg-muted-sky",
-  Low: "bg-muted-green",
-  Mid: "bg-muted-yellow",
-  High: "bg-shamiri-red",
+  Active: "bg-shamiri-green",
+  FollowUp: "bg-shamiri-light-orange",
+  Referred: "bg-shamiri-light-red",
+  Terminated: "bg-shamiri-red",
+  Low: "bg-shamiri-green",
+  Mid: "bg-shamiri-light-orange",
+  High: "bg-shamiri-light-red",
   Severe: "bg-shamiri-red",
 };
 
 function renderRiskOrCaseStatus(value: string) {
-  return <Badge className={cn(colors[value], "text-white")}>{value}</Badge>;
+  // return <Badge  className={cn(colors[value], "text-white")}>{value}</Badge>;
+  return <Badge variant="destructive">{value}</Badge>;
 }
