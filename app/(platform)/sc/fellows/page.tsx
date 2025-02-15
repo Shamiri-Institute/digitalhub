@@ -12,13 +12,6 @@ export default async function FellowsPage() {
   }
 
   const fellows = await loadFellowsData();
-  const weeklyFellowEvaluations = await db.weeklyFellowRatings.findMany({
-    where: {
-      fellow: {
-        hubId: supervisor?.hubId as string,
-      },
-    },
-  });
 
   const project = await db.project.findUnique({
     where: {
@@ -30,8 +23,8 @@ export default async function FellowsPage() {
     <div className="px-6 py-5">
       <FellowsDataTable
         fellows={fellows}
-        weeklyEvaluations={weeklyFellowEvaluations}
         project={project ?? undefined}
+        role={supervisor!.user.membership.role}
       />
     </div>
   );

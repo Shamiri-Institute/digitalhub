@@ -23,7 +23,7 @@ export type MainFellowTableData = {
   cellNumber: string | null;
   idNumber: string | null;
   gender: string | null;
-  dateOfBirth: string | null;
+  dateOfBirth: string | Date | null;
   county: string | null;
   subCounty: string | null;
   mpesaName: string | null;
@@ -35,7 +35,7 @@ export type MainFellowTableData = {
   averageRating: number | null;
   complaints?: Prisma.FellowComplaintsGetPayload<{
     include: {
-      supervisor: true;
+      user: true;
     };
   }>[];
 };

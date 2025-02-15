@@ -25,8 +25,14 @@ export default async function FellowsPage({
       include: {
         fellowAttendances: {
           include: {
-            session: true,
+            session: {
+              include: {
+                session: true,
+                school: true,
+              },
+            },
             group: true,
+            PayoutStatements: true,
           },
         },
         hub: {

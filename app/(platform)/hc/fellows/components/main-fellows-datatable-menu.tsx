@@ -63,7 +63,7 @@ export default function MainFellowsDatatableMenu({
             setViewComplaintsDialog(true);
           }}
         >
-          View complaints
+          Submit complaint
         </DropdownMenuItem>
         <DropdownMenuItem
           onSelect={(e) => {

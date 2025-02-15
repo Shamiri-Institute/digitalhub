@@ -18,6 +18,8 @@ const badgeVariants = cva(
         outline: "text-foreground",
         "shamiri-green":
           "bg-shamiri-light-green border-green-border text-shamiri-green",
+        warning:
+          "bg-shamiri-light-orange/[0.1] border-[#F98600]/[0.3] text-shamiri-light-orange",
       },
     },
     defaultVariants: {

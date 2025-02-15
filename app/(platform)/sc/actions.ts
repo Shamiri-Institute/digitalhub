@@ -1,58 +1,14 @@
 "use server";
 import { currentSupervisor } from "#/app/auth";
-import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { generateFellowVisibleID } from "#/lib/utils";
 import { Fellow } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
   DropoutFellowSchema,
-  FellowSchema,
   MarkSessionOccurrenceSchema,
   WeeklyFellowRatingSchema,
 } from "./schemas";
-
-export async function addNewFellow(fellowData: FellowSchema) {
-  try {
-    const supervisor = await currentSupervisor();
-
-    if (!supervisor) {
-      return {
-        success: false,
-        message: "User is not authorised",
-      };
-    }
-    const data = FellowSchema.parse(fellowData);
-    const fellowsCreatedThisYearCount = await db.fellow.count({
-      where: {
-        createdAt: {
-          gte: new Date(new Date().getFullYear(), 0, 1),
-        },
-      },
-    });
-
-    await db.fellow.create({
-      data: {
-        ...data,
-        id: objectId("fellow"),
-        visibleId: generateFellowVisibleID(fellowsCreatedThisYearCount),
-        supervisorId: supervisor.id,
-        hubId: supervisor.hubId,
-        implementerId: supervisor.implementerId,
-      },
-    });
-
-    return {
-      success: true,
-    };
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      return { success: false, message: error.message };
-    }
-    return { success: false };
-  }
-}
 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 
@@ -68,13 +24,33 @@ export async function loadFellowsData() {
       supervisorId: supervisor.id,
     },
     include: {
-      fellowAttendances: true,
+      fellowAttendances: {
+        include: {
+          session: {
+            include: {
+              session: true,
+              school: true,
+            },
+          },
+          group: true,
+          PayoutStatements: {
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
+        },
+      },
       weeklyFellowRatings: true,
       groups: {
         include: {
           students: {
             include: {
               clinicalCases: true,
+              _count: {
+                select: {
+                  clinicalCases: true,
+                },
+              },
             },
           },
           school: {
@@ -83,9 +59,17 @@ export async function loadFellowsData() {
                 orderBy: {
                   sessionDate: "asc",
                 },
+                include: {
+                  session: true,
+                },
               },
             },
           },
+        },
+      },
+      fellowComplaints: {
+        include: {
+          user: true,
         },
       },
     },
@@ -128,6 +112,13 @@ export async function loadFellowsData() {
     createdAt: fellow.createdAt,
     droppedOut: fellow.droppedOut,
     droppedOutAt: fellow.droppedOutAt,
+    idNumber: fellow.idNumber,
+    gender: fellow.gender,
+    dateOfBirth: fellow.dateOfBirth ?? null,
+    supervisorId: fellow.supervisorId,
+    supervisorName:
+      supervisors.find((supervisor) => supervisor.id === fellow.supervisorId)
+        ?.supervisorName ?? null,
     id: fellow.id,
     weeklyFellowRatings: fellow.weeklyFellowRatings,
     supervisors,
@@ -146,10 +137,20 @@ export async function loadFellowsData() {
       })),
     })),
     attendances: fellow.fellowAttendances,
-    groups: fellow.groups,
+    groups: fellow.groups.map((group) => {
+      return {
+        ...group,
+        attendances: fellow.fellowAttendances.filter((attendance) => {
+          return attendance.groupId === group.id;
+        }),
+      };
+    }),
+    complaints: fellow.fellowComplaints,
     averageRating:
-      fellowAverageRatings.find((rating) => rating.id === fellow.id)
-        ?.averageRating ?? 0,
+      Number(
+        fellowAverageRatings.find((rating) => rating.id === fellow.id)
+          ?.averageRating,
+      ) ?? 0,
   }));
 }
 

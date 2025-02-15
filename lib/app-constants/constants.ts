@@ -37,6 +37,13 @@ export const FELLOW_DROP_OUT_REASONS = [
   "Other",
 ] as const;
 
+// TODO: Confirm list of complaint types
+export const COMPLAINT_TYPES = [
+  "Dress Code",
+  "Prolonged Absence",
+  "Other",
+] as const;
+
 export const SCHOOL_DEMOGRAPHICS = ["Girls", "Boys", "Mixed"] as const;
 
 export const BOARDING_DAY_TYPES = ["Day", "Boarding", "Mixed"] as const;

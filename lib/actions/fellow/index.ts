@@ -13,6 +13,7 @@ import {
   DropoutFellowSchema,
   WeeklyFellowEvaluationSchema,
 } from "#/components/common/fellow/schema";
+import { SubmitComplaintSchema } from "#/components/common/schemas";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -380,8 +381,8 @@ export async function markFellowAttendance(
           throw new Error(
             "An error occurred while marking attendance for " +
               fellow.fellowName +
-              "Attendance already processed on " +
-              format(attendance.processedAt, "dd-MM-YYYY"),
+              ". Attendance already processed on " +
+              format(attendance.processedAt, "dd-MM-yyyy."),
           );
         }
 
@@ -703,6 +704,36 @@ export async function markManyFellowAttendance(
       message:
         (err as Error)?.message ??
         "An error occurred while marking attendances.",
+    };
+  }
+}
+
+export async function submitFellowComplaint(
+  data: z.infer<typeof SubmitComplaintSchema>,
+) {
+  try {
+    const { user } = await checkAuth();
+
+    const { id, complaint, comments } = SubmitComplaintSchema.parse(data);
+    const result = await db.fellowComplaints.create({
+      data: {
+        fellowId: id,
+        complaint,
+        comments,
+        createdBy: user!.user.id,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Complaint submitted successfully.",
+      data: result,
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      success: false,
+      message: "Something went wrong while trying to submit a complaint",
     };
   }
 }

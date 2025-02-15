@@ -1178,7 +1178,7 @@ model FellowComplaints {
   createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt    DateTime    @updatedAt @map("updated_at")
   complaint    String      @db.Text()
-  comments     String      @db.Text()
+  comments     String?      @db.Text()
   supervisorId String?     @map("supervisor_id") @db.VarChar(255)
   supervisor   Supervisor? @relation(fields: [supervisorId], references: [id])
   fellowId     String      @map("fellow_id") @db.VarChar(255)

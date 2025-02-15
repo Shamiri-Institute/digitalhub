@@ -20,7 +20,7 @@ export default function StudentsInGroup({
   open,
   onOpenChange,
   students,
-  schoolVisibleId,
+  schoolId,
   groupId,
   groupName,
 }: {
@@ -36,7 +36,7 @@ export default function StudentsInGroup({
       };
     };
   }>[];
-  schoolVisibleId: string;
+  schoolId: string;
   groupId: string;
   groupName: string | null;
 }) {
@@ -86,7 +86,7 @@ export default function StudentsInGroup({
         open={addStudentDialog}
         onOpenChange={setAddStudentDialog}
         mode="add"
-        schoolVisibleId={schoolVisibleId}
+        schoolId={schoolId}
         assignedGroupId={groupId}
         groupName={groupName ?? undefined}
       >

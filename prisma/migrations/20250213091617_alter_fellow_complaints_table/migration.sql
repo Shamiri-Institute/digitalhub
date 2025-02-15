@@ -1,14 +1,8 @@
-/*
-  Warnings:
-
-  - Added the required column `comments` to the `fellow_complaints` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- DropForeignKey
 ALTER TABLE "fellow_complaints" DROP CONSTRAINT "fellow_complaints_supervisor_id_fkey";
 
 -- AlterTable
-ALTER TABLE "fellow_complaints" ADD COLUMN     "comments" TEXT NOT NULL,
+ALTER TABLE "fellow_complaints" ADD COLUMN     "comments" TEXT,
 ADD COLUMN     "created_by" TEXT,
 ALTER COLUMN "supervisor_id" DROP NOT NULL;
 

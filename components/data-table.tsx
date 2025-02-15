@@ -201,7 +201,7 @@ export default function DataTable<TData, TValue>({
                   key={header.id}
                   id={header.id}
                   className={cn(
-                    "rounded bg-background-secondary/50 !px-4 text-sm font-semibold leading-5 text-shamiri-text-grey",
+                    "w-full rounded bg-background-secondary/50 !px-4 text-sm font-semibold leading-5 text-shamiri-text-grey",
                     header.column.columnDef.id !== "checkbox" && "truncate",
                     ["actions", "select"].includes(
                       //@ts-ignore

@@ -45,8 +45,14 @@ export default function FellowsDatatable({
   hideActions?: boolean;
   attendances: FellowAttendanceGetPayload<{
     include: {
-      session: true;
+      session: {
+        include: {
+          session: true;
+          school: true;
+        };
+      };
       group: true;
+      PayoutStatements: true;
     };
   }>[];
 }) {
