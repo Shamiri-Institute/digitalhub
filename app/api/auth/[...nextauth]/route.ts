@@ -43,7 +43,7 @@ const authOptions: AuthOptions = {
             where: { email: user.email },
             data: {
               name: profile?.name,
-              // @ts-ignore - this is a bug in the types, `picture` is a valid on the `Profile` type
+              // @ts-expect-error - this is a bug in the types, `picture` is a valid on the `Profile` type
               image: profile?.picture,
               accounts: {
                 create: {
