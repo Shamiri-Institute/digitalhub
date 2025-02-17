@@ -42,18 +42,6 @@ export default function FellowsGroupsTableDropdownMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {/*<StudentsInGroupTable*/}
-        {/*  students={sessionRow?.students ?? []}*/}
-        {/*  groupName={sessionRow?.groupName ?? "N/A"}*/}
-        {/*>*/}
-        {/*  <div*/}
-        {/*    className={cn(*/}
-        {/*      "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",*/}
-        {/*    )}*/}
-        {/*  >*/}
-        {/*    View Students*/}
-        {/*  </div>*/}
-        {/*</StudentsInGroupTable>*/}
         <DropdownMenuItem
           onClick={() => {
             state.setFellowGroup(group);
