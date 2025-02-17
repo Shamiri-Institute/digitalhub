@@ -32,6 +32,7 @@ async function checkAuth() {
 export async function submitStudentDetails(
   data: z.infer<typeof StudentDetailsSchema>,
 ) {
+  // TODO: Add db transactions
   try {
     const { hubCoordinator, supervisor } = await checkAuth();
 
@@ -46,7 +47,7 @@ export async function submitStudentDetails(
       phoneNumber,
       mode,
       assignedGroupId,
-      schoolVisibleId,
+      schoolId,
     } = StudentDetailsSchema.parse(data);
 
     if (mode === "edit") {
@@ -57,8 +58,8 @@ export async function submitStudentDetails(
         data: {
           studentName,
           gender,
-          yearOfBirth,
-          form,
+          yearOfBirth: Number(yearOfBirth),
+          form: Number(form),
           stream,
           phoneNumber,
         },
@@ -82,7 +83,7 @@ export async function submitStudentDetails(
       });
       const school = await db.school.findFirstOrThrow({
         where: {
-          visibleId: schoolVisibleId,
+          id: schoolId,
         },
       });
 
@@ -97,9 +98,9 @@ export async function submitStudentDetails(
           studentName,
           schoolId: school.id,
           admissionNumber,
-          yearOfBirth,
+          yearOfBirth: Number(yearOfBirth),
           gender,
-          form,
+          form: Number(form),
           stream,
           assignedGroupId,
           implementerId:
@@ -286,14 +287,14 @@ export async function submitStudentReportingNotes(
 
 export async function checkExistingStudents(
   admissionNumber: string,
-  schoolVisibleId: string,
+  schoolId: string,
 ) {
   await checkAuth();
   return await db.student.findMany({
     where: {
       admissionNumber: admissionNumber,
       school: {
-        visibleId: schoolVisibleId,
+        id: schoolId,
       },
     },
     include: {

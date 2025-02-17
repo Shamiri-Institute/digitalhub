@@ -1,6 +1,5 @@
 "use client";
 
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -20,7 +19,7 @@ export default function StudentsInGroup({
   open,
   onOpenChange,
   students,
-  schoolVisibleId,
+  schoolId,
   groupId,
   groupName,
 }: {
@@ -36,7 +35,7 @@ export default function StudentsInGroup({
       };
     };
   }>[];
-  schoolVisibleId: string;
+  schoolId: string;
   groupId: string;
   groupName: string | null;
 }) {
@@ -86,15 +85,11 @@ export default function StudentsInGroup({
         open={addStudentDialog}
         onOpenChange={setAddStudentDialog}
         mode="add"
-        schoolVisibleId={schoolVisibleId}
+        schoolId={schoolId}
         assignedGroupId={groupId}
         groupName={groupName ?? undefined}
       >
-        <DialogAlertWidget>
-          <div className="flex items-center gap-2">
-            <span>Group {groupName}</span>
-          </div>
-        </DialogAlertWidget>
+        {children}
       </StudentDetailsForm>
     </>
   );

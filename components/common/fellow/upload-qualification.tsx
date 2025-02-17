@@ -1,6 +1,6 @@
 import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
-import FellowFilesUploader from "#/app/(platform)/hc/fellows/components/file-uploader";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import FellowFilesUploader from "#/components/common/fellow/file-uploader";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
 import React, { Dispatch, SetStateAction } from "react";
 

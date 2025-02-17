@@ -1,5 +1,7 @@
 "use client";
 
+import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
+import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import DataTable from "#/components/data-table";
 import { Badge } from "#/components/ui/badge";
@@ -11,8 +13,9 @@ import {
   DialogHeader,
 } from "#/components/ui/dialog";
 import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import { format } from "date-fns";
+import parsePhoneNumberFromString from "libphonenumber-js";
 import React, { Dispatch, SetStateAction } from "react";
 import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
@@ -22,21 +25,29 @@ export default function AttendanceHistory({
   open,
   onOpenChange,
   fellow,
+  columnVisibilityState,
 }: {
   children: React.ReactNode;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   attendances: FellowAttendanceGetPayload<{
     include: {
-      session: true;
+      session: {
+        include: {
+          session: true;
+          school: true;
+        };
+      };
       group: true;
+      PayoutStatements: true;
     };
   }>[];
-  fellow: SchoolFellowTableData | null;
+  fellow: SchoolFellowTableData | MainFellowTableData | null;
+  columnVisibilityState?: VisibilityState;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-3/5 max-w-none">
+      <DialogContent className="w-3/4 max-w-none">
         <DialogHeader>
           <h2 className="text-xl font-bold">Session attendance history</h2>
         </DialogHeader>
@@ -44,11 +55,11 @@ export default function AttendanceHistory({
         <div>
           <DataTable
             columns={columns}
-            editColumns={false}
             data={attendances.filter(
               (attendance) => attendance.fellowId === fellow?.id,
             )}
             emptyStateMessage={"No sessions found"}
+            columnVisibilityState={columnVisibilityState}
             className="data-table mt-4"
           />
         </div>
@@ -71,8 +82,14 @@ export default function AttendanceHistory({
 const columns: ColumnDef<
   FellowAttendanceGetPayload<{
     include: {
-      session: true;
+      session: {
+        include: {
+          session: true;
+          school: true;
+        };
+      };
       group: true;
+      PayoutStatements: true;
     };
   }>
 >[] = [
@@ -80,15 +97,21 @@ const columns: ColumnDef<
     id: "Date of attendance",
     header: "Date of attendance",
     accessorFn: (row) => {
-      return row.session && format(row.session.sessionDate, "dd MMM yyyy");
+      return row.session && format(row.session.sessionDate, "dd-MM-yyyy");
     },
   },
-  // TODO: Replace with session number after session_types table is added
+  {
+    header: "School/Venue",
+    id: "School/Venue",
+    accessorFn: (row) => {
+      return row.session?.school?.schoolName ?? row.session?.venue;
+    },
+  },
   {
     header: "Session",
     id: "Session",
     accessorFn: (row) => {
-      return row.session && row.session.sessionName;
+      return row.session && row.session.session?.sessionLabel;
     },
   },
   {
@@ -96,12 +119,45 @@ const columns: ColumnDef<
     id: "Group",
     accessorKey: "group.groupName",
   },
-  // TODO: populate after adding relation with payouts
+  {
+    header: "Attendance",
+    id: "Attendance",
+    cell: ({ row }) => {
+      return (
+        <div className="flex">
+          <AttendanceStatusWidget attended={row.original.attended} />
+        </div>
+      );
+    },
+  },
+  {
+    header: "MPESA Number",
+    id: "MPESA Number",
+    cell: ({ row }) => {
+      const payouts = row.original.PayoutStatements;
+      return row.original.attended && payouts.length > 0
+        ? payouts[0]!.mpesaNumber &&
+            parsePhoneNumberFromString(
+              payouts[0]!.mpesaNumber,
+              "KE",
+            )?.formatNational()
+        : null;
+    },
+  },
   {
     header: "Status",
-    id: "status",
+    id: "Status",
     cell: ({ row }) => {
-      return <Badge variant="shamiri-green">Payment initiated</Badge>;
+      const payouts = row.original.PayoutStatements;
+      return row.original.attended && payouts.length > 0 ? (
+        <div className="flex">
+          {payouts[0]!.executedAt !== null ? (
+            <Badge variant="shamiri-green">Payment initiated</Badge>
+          ) : (
+            <Badge variant="warning">Payment pending</Badge>
+          )}
+        </div>
+      ) : null;
     },
   },
 ];

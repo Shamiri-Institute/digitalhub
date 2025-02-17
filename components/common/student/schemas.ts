@@ -9,19 +9,27 @@ export const StudentDetailsSchema = z
     studentName: z.string({
       required_error: "Please enter the student's name",
     }),
-    form: z.coerce.number({
-      required_error: "Please enter the student's class",
-      invalid_type_error: "Please enter the student's class",
-    }),
+    form: stringValidation("Please enter the student's class").refine(
+      (val) => {
+        return !isNaN(Number(val)) && val.trim() !== "";
+      },
+      {
+        message: "Please enter a valid value",
+      },
+    ),
     stream: stringValidation("Please enter the student's stream"),
     gender: stringValidation("Please select the student's gender"),
-    schoolVisibleId: z.string().optional(),
+    schoolId: z.string().optional(),
     assignedGroupId: z.string().optional(),
     admissionNumber: z.string().optional(),
-    yearOfBirth: z.coerce.number({
-      required_error: "Please enter year of birth",
-      invalid_type_error: "Please enter year of birth",
-    }),
+    yearOfBirth: stringValidation("Please enter year of birth").refine(
+      (val) => {
+        return !isNaN(Number(val)) && val.trim() !== "";
+      },
+      {
+        message: "Please enter a valid value",
+      },
+    ),
     phoneNumber: stringValidation("Please enter the student's contact").refine(
       (val) => isValidPhoneNumber(val, "KE"),
       {
@@ -52,7 +60,7 @@ export const StudentDetailsSchema = z
       return z.NEVER;
     }
 
-    if (val.mode === "add" && val.schoolVisibleId === undefined) {
+    if (val.mode === "add" && val.schoolId === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `School Id is required.`,
