@@ -1,6 +1,7 @@
 "use client";
 
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { StudentGroupEvaluationSchema } from "#/components/common/group/schema";
 import RatingStarsInput from "#/components/common/rating-stars-input";
@@ -28,10 +29,12 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
+import { toast } from "#/components/ui/use-toast";
+import { submitGroupEvaluation } from "#/lib/actions/group";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
-import { addDays, addHours, differenceInSeconds, format } from "date-fns";
+import { addDays, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -52,6 +55,7 @@ export default function StudentGroupEvaluation({
   open,
   onOpenChange,
   evaluations,
+  sessions,
   project,
   mode,
   children,
@@ -60,6 +64,11 @@ export default function StudentGroupEvaluation({
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   evaluations: Prisma.InterventionGroupReportGetPayload<{
+    include: {
+      session: true;
+    };
+  }>[];
+  sessions: Prisma.InterventionSessionGetPayload<{
     include: {
       session: true;
     };
@@ -118,13 +127,19 @@ export default function StudentGroupEvaluation({
           name: "content",
         },
       ],
-      commentsInputName: "cooperationComment",
+      commentsInputName: "contentComment",
     },
   ];
-  // TODO: use session date to sort
-  const _evaluation = evaluations.sort(
-    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-  )[0];
+  const _evaluation = evaluations
+    .filter(
+      (evaluation) =>
+        evaluation.session !== undefined && evaluation.session !== null,
+    )
+    .sort((a, b) => {
+      return (
+        b.session!.sessionDate.getTime() - a.session!.sessionDate.getTime()
+      );
+    })[0];
   const [existingEvaluation, setExistingEvaluation] = useState<
     | Prisma.InterventionGroupReportGetPayload<{
         include: {
@@ -138,43 +153,31 @@ export default function StudentGroupEvaluation({
 
   const form = useForm<z.infer<typeof StudentGroupEvaluationSchema>>({
     resolver: zodResolver(StudentGroupEvaluationSchema),
-    defaultValues: {
+    defaultValues: getDefaultValues(),
+  });
+
+  function getDefaultValues() {
+    return {
       mode,
       groupId,
       engagementComment: existingEvaluation?.engagementComment ?? "",
-      engagement1: existingEvaluation?.engagement1 ?? undefined,
-      engagement2: existingEvaluation?.engagement2 ?? undefined,
-      engagement3: existingEvaluation?.engagement3 ?? undefined,
+      engagement1: existingEvaluation?.engagement1 ?? 0,
+      engagement2: existingEvaluation?.engagement2 ?? 0,
+      engagement3: existingEvaluation?.engagement3 ?? 0,
       cooperationComment: existingEvaluation?.cooperationComment ?? "",
-      cooperation1: existingEvaluation?.cooperation1 ?? undefined,
-      cooperation2: existingEvaluation?.cooperation2 ?? undefined,
-      cooperation3: existingEvaluation?.cooperation3 ?? undefined,
+      cooperation1: existingEvaluation?.cooperation1 ?? 0,
+      cooperation2: existingEvaluation?.cooperation2 ?? 0,
+      cooperation3: existingEvaluation?.cooperation3 ?? 0,
       contentComment: existingEvaluation?.contentComment ?? "",
       content: existingEvaluation?.content ?? 0,
       sessionId: existingEvaluation?.sessionId ?? undefined,
-    },
-  });
+    };
+  }
 
   useEffect(() => {
-    const values = {
-      groupId,
-      mode,
-      engagementComment: existingEvaluation?.engagementComment ?? "",
-      engagement1: existingEvaluation?.engagement1 ?? undefined,
-      engagement2: existingEvaluation?.engagement2 ?? undefined,
-      engagement3: existingEvaluation?.engagement3 ?? undefined,
-      cooperationComment: existingEvaluation?.cooperationComment ?? "",
-      cooperation1: existingEvaluation?.cooperation1 ?? undefined,
-      cooperation2: existingEvaluation?.cooperation2 ?? undefined,
-      cooperation3: existingEvaluation?.cooperation3 ?? undefined,
-      contentComment: existingEvaluation?.contentComment ?? "",
-      content: existingEvaluation?.content ?? 0,
-      sessionId:
-        mode === "add" && existingEvaluation === undefined
-          ? form.getValues("sessionId")
-          : (existingEvaluation?.sessionId ?? undefined),
-    };
-    form.reset(values);
+    if (open) {
+      form.reset(getDefaultValues());
+    }
 
     if (existingEvaluation) {
       setUpdateWindowDuration(
@@ -184,20 +187,32 @@ export default function StudentGroupEvaluation({
         ),
       );
     }
-  }, [existingEvaluation]);
+  }, [existingEvaluation, open]);
 
   useEffect(() => {
-    if (!open) {
-      setExistingEvaluation(undefined);
-    } else {
-      setExistingEvaluation(_evaluation);
-    }
-  }, [groupId, open]);
+    setExistingEvaluation(_evaluation);
+  }, [_evaluation, open]);
 
   const onSubmit = async (
     data: z.infer<typeof StudentGroupEvaluationSchema>,
   ) => {
-    // TODO: add submit logic
+    const response = await submitGroupEvaluation(data);
+    if (!response.success) {
+      toast({
+        description:
+          response.message ??
+          "Something went wrong during submission, please try again",
+      });
+      return;
+    }
+
+    revalidatePageAction(pathname).then(() => {
+      toast({
+        description: response.message,
+      });
+      form.reset();
+      onOpenChange(false);
+    });
   };
 
   return (
@@ -260,44 +275,17 @@ export default function StudentGroupEvaluation({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="max-h-[200px]">
-                        {evaluations.map((evaluation) => {
+                        {sessions.map((session) => {
                           return (
-                            // TODO: make sessionId not nullable on db schema
-                            <SelectItem
-                              key={evaluation.id}
-                              value={evaluation.sessionId ?? " "}
-                            >
-                              {/*TODO: Refactor with new session_names table*/}
+                            <SelectItem key={session.id} value={session.id}>
+                              <span>{session.session?.sessionLabel}</span> -{" "}
                               <span>
-                                {evaluation.session?.sessionName}
-                              </span> -{" "}
-                              <span>
-                                {evaluation.session?.sessionDate &&
-                                  format(
-                                    evaluation.session?.sessionDate,
-                                    "dd MMM yyyy",
-                                  )}
+                                {format(session.sessionDate, "dd MMM yyyy")}
                               </span>{" "}
                               -{" "}
                               <span>
-                                {evaluation.session?.sessionDate &&
-                                  format(
-                                    evaluation.session?.sessionDate,
-                                    "h:mm a",
-                                  )}
+                                {format(session.sessionDate, "h:mm a")}
                               </span>{" "}
-                              -{" "}
-                              <span>
-                                {evaluation.session?.sessionDate &&
-                                  format(
-                                    evaluation.session?.sessionEndTime ??
-                                      addHours(
-                                        evaluation.session?.sessionDate,
-                                        1,
-                                      ),
-                                    "h:mm a",
-                                  )}
-                              </span>
                             </SelectItem>
                           );
                         })}
@@ -333,7 +321,9 @@ export default function StudentGroupEvaluation({
                       className="flex flex-col space-y-2 py-4"
                     >
                       <div className="label">
-                        <div className="text-bold text-lg">{input.section}</div>{" "}
+                        <span className="text-bold text-lg">
+                          {input.section}
+                        </span>{" "}
                         <span className="text-shamiri-light-red">*</span>
                       </div>
                       <span>{input.description}</span>
@@ -348,9 +338,9 @@ export default function StudentGroupEvaluation({
                             render={({ field }) => (
                               <FormItem className="flex flex-col space-y-2">
                                 <FormLabel>
-                                  <div className="text-shamiri-text-dark-grey">
+                                  <span className="text-shamiri-text-dark-grey">
                                     {inputField.label}
-                                  </div>{" "}
+                                  </span>{" "}
                                   {inputField.label && (
                                     <span className="text-shamiri-light-red">
                                       *

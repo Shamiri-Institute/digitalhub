@@ -39,7 +39,7 @@ export async function loadFellowComplaints() {
         acc[fellowId] = {
           id: fellowId,
           fellowName: item.fellow.fellowName ?? "",
-          supervisorName: item.supervisor.supervisorName ?? "",
+          supervisorName: item.supervisor?.supervisorName ?? "",
           complaints: [],
         };
       }

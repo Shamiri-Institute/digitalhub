@@ -90,7 +90,7 @@ export default function StudentsDatatable({
             open={editDialog}
             onOpenChange={setEditDialog}
             student={student}
-            schoolVisibleId={student.school?.visibleId ?? null}
+            schoolId={student.school?.id ?? null}
             assignedGroupId={student.assignedGroupId ?? undefined}
             groupName={student.assignedGroup?.groupName ?? undefined}
             mode="edit"

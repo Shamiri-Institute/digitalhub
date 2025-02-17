@@ -29,7 +29,7 @@ import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 export default function FellowsDatatable({
   fellows,
   supervisors,
-  schoolVisibleId,
+  schoolId,
   role,
   hideActions = false,
   attendances,
@@ -40,13 +40,19 @@ export default function FellowsDatatable({
       fellows: true;
     };
   }>[];
-  schoolVisibleId: string;
+  schoolId: string;
   role: ImplementerRole;
   hideActions?: boolean;
   attendances: FellowAttendanceGetPayload<{
     include: {
-      session: true;
+      session: {
+        include: {
+          session: true;
+          school: true;
+        };
+      };
       group: true;
+      PayoutStatements: true;
     };
   }>[];
 }) {
@@ -121,7 +127,7 @@ export default function FellowsDatatable({
                 fellowId={fellow.id}
                 groupId={fellow.groupId}
                 supervisors={supervisors}
-                schoolVisibleId={schoolVisibleId}
+                schoolId={schoolId}
               >
                 <DialogAlertWidget>
                   <div className="flex items-center gap-2">
@@ -137,7 +143,7 @@ export default function FellowsDatatable({
                 students={fellow.students}
                 groupId={fellow.groupId}
                 groupName={fellow.groupName}
-                schoolVisibleId={schoolVisibleId}
+                schoolId={schoolId}
                 open={studentsDialog}
                 onOpenChange={setStudentsDialog}
               >

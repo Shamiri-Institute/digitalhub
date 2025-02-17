@@ -39,7 +39,7 @@ export default function ReplaceFellow({
   onOpenChange,
   children,
   supervisors,
-  schoolVisibleId,
+  schoolId,
 }: {
   fellowId: string;
   groupId: string;
@@ -51,7 +51,7 @@ export default function ReplaceFellow({
       fellows: true;
     };
   }>[];
-  schoolVisibleId: string;
+  schoolId: string;
 }) {
   const pathname = usePathname();
   const form = useForm<z.infer<typeof ReplaceGroupLeaderSchema>>({
@@ -72,7 +72,7 @@ export default function ReplaceFellow({
     const response = await replaceGroupLeader({
       leaderId: data.newLeaderId,
       groupId,
-      schoolVisibleId,
+      schoolId,
     });
     if (!response.success) {
       toast({

@@ -249,7 +249,7 @@ export function MarkSessionOccurrence({
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <DialogContent className="w-1/3 max-w-none">
           <DialogHeader>
-            <span className="text-xl font-bold">Cancel session</span>
+            <span className="text-xl font-bold">Mark session occurrence</span>
           </DialogHeader>
           {children}
           <div className="flex flex-col gap-y-4">
