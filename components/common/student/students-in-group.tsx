@@ -1,6 +1,5 @@
 "use client";
 
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -90,11 +89,7 @@ export default function StudentsInGroup({
         assignedGroupId={groupId}
         groupName={groupName ?? undefined}
       >
-        <DialogAlertWidget>
-          <div className="flex items-center gap-2">
-            <span>Group {groupName}</span>
-          </div>
-        </DialogAlertWidget>
+        {children}
       </StudentDetailsForm>
     </>
   );

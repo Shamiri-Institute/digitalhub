@@ -113,7 +113,7 @@ export default async function FellowsPage({
         <FellowsDatatable
           fellows={data}
           supervisors={supervisors}
-          schoolVisibleId={visibleId}
+          schoolId={school.id}
           role={supervisor?.user.membership.role!}
           attendances={school.fellowAttendances}
         />

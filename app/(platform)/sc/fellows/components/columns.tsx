@@ -162,6 +162,7 @@ export const subColumns = ({
     setFellowGroup: Dispatch<SetStateAction<FellowGroupData | undefined>>;
     setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
+    setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
   };
 }): ColumnDef<FellowGroupData>[] => [
   {

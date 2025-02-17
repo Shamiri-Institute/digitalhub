@@ -43,6 +43,11 @@ export async function loadFellowsData() {
       weeklyFellowRatings: true,
       groups: {
         include: {
+          interventionGroupReports: {
+            include: {
+              session: true,
+            },
+          },
           students: {
             include: {
               clinicalCases: true,

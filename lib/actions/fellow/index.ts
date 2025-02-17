@@ -240,11 +240,11 @@ export async function submitWeeklyFellowEvaluation(
 export async function replaceGroupLeader({
   leaderId,
   groupId,
-  schoolVisibleId,
+  schoolId,
 }: {
   leaderId: string;
   groupId: string;
-  schoolVisibleId: string;
+  schoolId: string;
 }) {
   try {
     await checkAuth();
@@ -253,7 +253,7 @@ export async function replaceGroupLeader({
       where: {
         id: groupId,
         school: {
-          visibleId: schoolVisibleId,
+          id: schoolId,
         },
       },
       data: {
@@ -273,7 +273,7 @@ export async function replaceGroupLeader({
         const result = await db.interventionGroup.findFirst({
           where: {
             school: {
-              visibleId: schoolVisibleId,
+              id: schoolId,
             },
             leaderId,
           },

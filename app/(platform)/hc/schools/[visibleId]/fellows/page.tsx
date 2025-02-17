@@ -114,7 +114,7 @@ export default async function FellowsPage({
         <FellowsDatatable
           fellows={data}
           supervisors={supervisors}
-          schoolVisibleId={visibleId}
+          schoolId={school.id}
           role={user?.membership.role!}
           hideActions={true}
           attendances={school.fellowAttendances}

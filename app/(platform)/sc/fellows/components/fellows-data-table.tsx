@@ -8,6 +8,7 @@ import UploadFellowContract from "#/components/common/fellow/upload-contract";
 import UploadFellowID from "#/components/common/fellow/upload-id";
 import UploadFellowQualification from "#/components/common/fellow/upload-qualification";
 import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-evaluation";
+import StudentGroupEvaluation from "#/components/common/group/student-group-evaluation";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import SubmitComplaint from "#/components/common/submit-complaint";
@@ -47,6 +48,7 @@ export default function FellowsDataTable({
   const [dropOutDialog, setDropOutDialog] = useState(false);
   const [attendanceDialog, setAttendanceDialog] = useState(false);
   const [studentsDialog, setStudentsDialog] = useState(false);
+  const [evaluationDialog, setEvaluationDialog] = useState(false);
 
   function renderTableActions() {
     return (
@@ -77,6 +79,18 @@ export default function FellowsDataTable({
                 "KE",
               )?.formatNational()}
           </span>
+        </div>
+      </DialogAlertWidget>
+    );
+  }
+
+  function renderFellowGroupDialogAlert(fellowGroup: FellowGroupData) {
+    return (
+      <DialogAlertWidget>
+        <div className="flex items-center gap-2">
+          <span>Group {fellowGroup.groupName}</span>
+          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+          <span>{fellowGroup.school.schoolName}</span>
         </div>
       </DialogAlertWidget>
     );
@@ -136,6 +150,7 @@ export default function FellowsDataTable({
                 setFellowGroup,
                 setAttendanceDialog,
                 setStudentsDialog,
+                setEvaluationDialog,
               },
             })}
             disableSearch={true}
@@ -243,15 +258,7 @@ export default function FellowsDataTable({
             bulkMode={false}
           >
             <div className="flex flex-col gap-y-3">
-              <DialogAlertWidget>
-                <div className="flex items-center gap-2">
-                  <span>{fellow.fellowName}</span>
-                  <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                    {""}
-                  </span>
-                  <span>{fellowGroup.school.schoolName}</span>
-                </div>
-              </DialogAlertWidget>
+              {renderFellowGroupDialogAlert(fellowGroup)}
               <Alert variant="destructive">
                 <AlertTitle className="flex gap-2">
                   <InfoIcon className="mt-1 h-4 w-4 shrink-0" />
@@ -272,16 +279,18 @@ export default function FellowsDataTable({
             open={studentsDialog}
             onOpenChange={setStudentsDialog}
           >
-            <DialogAlertWidget>
-              <div className="flex items-center gap-2">
-                <span>Group {fellowGroup.groupName}</span>
-                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                  {""}
-                </span>
-                <span>{fellowGroup.school.schoolName}</span>
-              </div>
-            </DialogAlertWidget>
+            {renderFellowGroupDialogAlert(fellowGroup)}
           </StudentsInGroup>
+          <StudentGroupEvaluation
+            open={evaluationDialog}
+            onOpenChange={setEvaluationDialog}
+            mode="add"
+            groupId={fellowGroup.id}
+            evaluations={fellowGroup.interventionGroupReports}
+            sessions={fellowGroup.school.interventionSessions}
+          >
+            {renderFellowGroupDialogAlert(fellowGroup)}
+          </StudentGroupEvaluation>
         </>
       )}
     </>

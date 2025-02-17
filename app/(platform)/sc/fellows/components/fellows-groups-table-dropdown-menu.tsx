@@ -23,6 +23,7 @@ export default function FellowsGroupsTableDropdownMenu({
     >;
     setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
+    setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
   return (
@@ -69,7 +70,14 @@ export default function FellowsGroupsTableDropdownMenu({
         >
           View students in group
         </DropdownMenuItem>
-        <DropdownMenuItem>Weekly group evaluation</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            state.setFellowGroup(group);
+            state.setEvaluationDialog(true);
+          }}
+        >
+          Weekly group evaluation
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
