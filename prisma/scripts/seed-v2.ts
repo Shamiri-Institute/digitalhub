@@ -5,6 +5,7 @@ import { faker } from "@faker-js/faker";
 import {
   Fellow,
   Hub,
+  HubCoordinator,
   Implementer,
   ImplementerRole,
   Prisma,
@@ -280,6 +281,7 @@ async function createCoreUsers(
   implementers: Implementer[],
   hubs: Hub[],
   supervisors: Supervisor[],
+  hubCoordinators: HubCoordinator[],
 ) {
   console.log("creating core users");
   const userData = [
@@ -317,11 +319,18 @@ async function createCoreUsers(
   });
 
   const membershipData = users.map((user) => {
+    const role = userData.find((u) => u.id === user.id)
+      ?.role as ImplementerRole;
     return {
       userId: user.id,
       implementerId: faker.helpers.arrayElement(implementers).id,
-      role: userData.find((u) => u.id === user.id)?.role as ImplementerRole,
-      identifier: faker.helpers.arrayElement(supervisors).id,
+      role,
+      identifier:
+        role === "HUB_COORDINATOR"
+          ? faker.helpers.arrayElement(hubCoordinators).id
+          : role === "SUPERVISOR"
+            ? faker.helpers.arrayElement(supervisors).id
+            : null,
     };
   });
 
@@ -818,9 +827,9 @@ async function main() {
 
   await createProjectImplementers(projects, implementers);
   const hubs = await createHubs(projects, implementers);
-  await createHubCoordinators(hubs, implementers);
+  const hubCoordinators = await createHubCoordinators(hubs, implementers);
   const supervisors = await createSupervisors(hubs, 6, implementers);
-  await createCoreUsers(implementers, hubs, supervisors); // AT THE MOMENT THESE ARE ALL SUPERVISORS
+  await createCoreUsers(implementers, hubs, supervisors, hubCoordinators); // AT THE MOMENT THESE ARE ALL SUPERVISORS
 
   const fellows = await createFellows(supervisors);
   const schools = await createSchools(hubs, supervisors);
