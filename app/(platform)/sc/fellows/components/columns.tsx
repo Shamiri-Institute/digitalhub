@@ -1,17 +1,34 @@
 "use client";
+import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import type { FellowsData } from "#/app/(platform)/sc/actions";
+import FellowsGroupsTableDropdownMenu, {
+  FellowGroupData,
+} from "#/app/(platform)/sc/fellows/components/fellows-groups-table-dropdown-menu";
+import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
+import { sessionDisplayName } from "#/lib/utils";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
+import { format, isAfter } from "date-fns";
 import Image from "next/image";
 import { Dispatch, SetStateAction } from "react";
-import FellowsSessionsTableDropdownMenu from "./fellows-sessions-table-dropdown-menu";
 import FellowsTableDropdown from "./fellows-table-dropdown-menu";
 
-export const columns = (state: {
-  setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
-  setFellow: Dispatch<SetStateAction<FellowsData | null>>;
+export const columns = ({
+  state,
+}: {
+  state: {
+    setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+    setEditFellowDialog: Dispatch<SetStateAction<boolean>>;
+    setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
+    setDropOutDialog: Dispatch<SetStateAction<boolean>>;
+    setUploadContractDialog: Dispatch<SetStateAction<boolean>>;
+    setUploadIdDialog: Dispatch<SetStateAction<boolean>>;
+    setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>;
+    setComplaintsDialog: Dispatch<SetStateAction<boolean>>;
+    setFellow: Dispatch<SetStateAction<FellowsData | null>>;
+  };
 }): ColumnDef<FellowsData>[] => [
   {
     id: "checkbox",
@@ -49,18 +66,85 @@ export const columns = (state: {
   {
     accessorKey: "fellowName",
     header: "Name",
+    id: "Name",
+  },
+  {
+    header: "Average Rating",
+    cell: ({ row }) => {
+      const rating = row.original.averageRating;
+      return <DataTableRatingStars rating={rating} />;
+    },
+    id: "Average Rating",
+  },
+  {
+    cell: ({ row }) =>
+      row.original.droppedOut ? (
+        <Badge variant="destructive">Inactive</Badge>
+      ) : (
+        <Badge variant="shamiri-green">Active</Badge>
+      ),
+    header: "Active Status",
+    id: "Active Status",
+  },
+  {
+    id: "Sessions Attended",
+    header: "Sessions Attended",
+    cell: ({ row }) => {
+      const attendedSessions = row.original.attendances.filter(
+        (attendance) => attendance.attended,
+      );
+      const groupSessions = row.original.groups.reduce((total, group) => {
+        return total + group.school.interventionSessions.length;
+      }, 0);
+      return attendedSessions.length + "/" + groupSessions;
+    },
   },
   {
     accessorKey: "mpesaNumber",
     header: "MPESA Number",
+    id: "MPESA Number",
+  },
+  {
+    accessorKey: "mpesaName",
+    header: "MPESA Name",
+    id: "MPESA Name",
+  },
+  {
+    accessorKey: "fellowEmail",
+    header: "Fellow Email",
+    id: "Fellow Email",
+  },
+  {
+    accessorKey: "cellNumber",
+    header: "Phone Number",
+    id: "Phone Number",
   },
   {
     accessorKey: "county",
     header: "County",
+    id: "County",
   },
   {
     accessorKey: "subCounty",
-    header: "Sub County",
+    header: "Sub-county",
+    id: "Sub-county",
+  },
+  {
+    accessorKey: "gender",
+    header: "Gender",
+    id: "Gender",
+  },
+  {
+    accessorKey: "idNumber",
+    header: "ID Number",
+    id: "ID Number",
+  },
+  {
+    header: "Date of Birth",
+    id: "Date of Birth",
+    accessorFn: ({ dateOfBirth }) => {
+      return dateOfBirth !== null ? format(dateOfBirth, "dd-MM-yyyy") : null;
+    },
   },
   {
     id: "button",
@@ -71,7 +155,16 @@ export const columns = (state: {
   },
 ];
 
-export const subColumns: ColumnDef<FellowsData["sessions"][number]>[] = [
+export const subColumns = ({
+  state,
+}: {
+  state: {
+    setFellowGroup: Dispatch<SetStateAction<FellowGroupData | undefined>>;
+    setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setStudentsDialog: Dispatch<SetStateAction<boolean>>;
+    setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+  };
+}): ColumnDef<FellowGroupData>[] => [
   {
     id: "checkbox",
     header: ({ table }) => (
@@ -105,12 +198,31 @@ export const subColumns: ColumnDef<FellowsData["sessions"][number]>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "schoolName",
+    accessorKey: "school.schoolName",
     header: "School Name",
   },
   {
-    accessorKey: "sessionType",
-    header: "Session Type",
+    header: "Upcoming session",
+    id: "Upcoming session",
+    accessorFn: ({ school }) => {
+      const upcomingSessions = school.interventionSessions
+        .filter((session) => {
+          return isAfter(session.sessionDate, new Date());
+        })
+        .sort((a, b) => {
+          return a.sessionDate.getTime() - b.sessionDate.getTime();
+        });
+
+      if (upcomingSessions.length > 0) {
+        return (
+          sessionDisplayName(upcomingSessions[0]!.session?.sessionName) +
+          " - " +
+          format(upcomingSessions[0]!.sessionDate, "dd MMM yyyy")
+        );
+      } else {
+        return null;
+      }
+    },
   },
   {
     accessorKey: "groupName",
@@ -119,11 +231,14 @@ export const subColumns: ColumnDef<FellowsData["sessions"][number]>[] = [
   {
     accessorKey: "numberOfStudents",
     header: "Number of Students",
+    accessorFn: ({ students }) => {
+      return students.length;
+    },
   },
   {
     id: "button",
     cell: ({ row }) => (
-      <FellowsSessionsTableDropdownMenu sessionRow={row.original} />
+      <FellowsGroupsTableDropdownMenu group={row.original} state={state} />
     ),
     enableHiding: false,
   },

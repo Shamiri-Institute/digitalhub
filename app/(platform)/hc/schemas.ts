@@ -68,6 +68,7 @@ export const DropoutStudentSchema = z
     }
   });
 
+// TODO: Depreciate
 export const SubmitComplaintSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
   comments: stringValidation().optional(),
