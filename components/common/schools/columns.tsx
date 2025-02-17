@@ -141,7 +141,6 @@ export const columns = ({
         });
 
       if (upcomingSessions.length > 0) {
-        console.log(upcomingSessions);
         return (
           sessionDisplayName(upcomingSessions[0]!.session?.sessionName) +
           " - " +

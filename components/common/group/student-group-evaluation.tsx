@@ -247,7 +247,7 @@ export default function StudentGroupEvaluation({
               onSubmit={form.handleSubmit(onSubmit)}
               className={cn(
                 "space-y-5",
-                mode === "view" ? "form-view-mode2" : "",
+                mode === "view" ? "form-view-mode" : "",
               )}
             >
               <FormField
