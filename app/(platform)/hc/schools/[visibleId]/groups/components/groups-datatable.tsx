@@ -20,7 +20,15 @@ export default function GroupsDataTable({
   supervisors,
 }: {
   data: SchoolGroupDataTableData[];
-  school: Prisma.SchoolGetPayload<{}>;
+  school: Prisma.SchoolGetPayload<{
+    include: {
+      interventionSessions: {
+        include: {
+          session: true;
+        };
+      };
+    };
+  }>;
   supervisors: Prisma.SupervisorGetPayload<{
     include: {
       fellows: true;
@@ -74,7 +82,7 @@ export default function GroupsDataTable({
             students={group.students}
             groupId={group.id}
             groupName={group.groupName}
-            schoolVisibleId={school.visibleId}
+            schoolId={school.id}
             open={studentsDialog}
             onOpenChange={setStudentsDialog}
           >
@@ -90,6 +98,7 @@ export default function GroupsDataTable({
             mode="view"
             groupId={group.id}
             evaluations={group.reports}
+            sessions={school.interventionSessions}
           >
             <DialogAlertWidget>
               <div className="flex items-center gap-2">
@@ -103,7 +112,7 @@ export default function GroupsDataTable({
             fellowId={group.leaderId}
             groupId={group.id}
             supervisors={supervisors}
-            schoolVisibleId={school.visibleId}
+            schoolId={school.visibleId}
           >
             <DialogAlertWidget>
               <div className="flex items-center gap-2">

@@ -4,19 +4,19 @@ import {
   columns,
   MainFellowTableData,
 } from "#/app/(platform)/hc/fellows/components/columns";
-import FellowComplaints from "#/app/(platform)/hc/fellows/components/fellow-complaints";
-import UploadFellowContract from "#/app/(platform)/hc/fellows/components/upload-contract";
-import UploadFellowID from "#/app/(platform)/hc/fellows/components/upload-id";
-import UploadFellowQualification from "#/app/(platform)/hc/fellows/components/upload-qualification";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import FellowDropoutForm from "#/components/common/fellow/fellow-dropout-form";
+import UploadFellowContract from "#/components/common/fellow/upload-contract";
+import UploadFellowID from "#/components/common/fellow/upload-id";
+import UploadFellowQualification from "#/components/common/fellow/upload-qualification";
 import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-evaluation";
+import SubmitComplaint from "#/components/common/submit-complaint";
 import DataTable from "#/components/data-table";
 import FileUploader from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useState } from "react";
 
@@ -36,10 +36,12 @@ export default function MainFellowsDatatable({
   fellows,
   supervisors,
   weeklyEvaluations,
+  role,
 }: {
   fellows: MainFellowTableData[];
   supervisors: Prisma.SupervisorGetPayload<{}>[];
   weeklyEvaluations: Prisma.WeeklyFellowRatingsGetPayload<{}>[];
+  role: ImplementerRole;
 }) {
   const [fellow, setFellow] = useState<MainFellowTableData | null>(null);
   const [editDialog, setEditDialog] = useState<boolean>(false);
@@ -172,17 +174,27 @@ export default function MainFellowsDatatable({
             open={uploadQualificationDialog}
             onOpenChange={setUploadQualificationDialog}
           />
-          <FellowComplaints
-            complaints={fellow.complaints ?? []}
+          <SubmitComplaint
+            id={fellow.id}
             open={viewComplaintsDialog}
             onOpenChange={setViewComplaintsDialog}
+            role={role}
+            complaints={fellow.complaints?.map((complaint) => {
+              return {
+                id: complaint.id,
+                createdBy: complaint.user ?? undefined,
+                createdAt: complaint.createdAt,
+                complaint: complaint.complaint,
+                comments: complaint.comments ?? undefined,
+              };
+            })}
           >
             <DialogAlertWidget separator={true}>
               <div className="flex items-center gap-2">
                 <span>{fellow.fellowName}</span>
               </div>
             </DialogAlertWidget>
-          </FellowComplaints>
+          </SubmitComplaint>
           <FellowDropoutForm
             fellow={fellow}
             isOpen={dropOutDialog}

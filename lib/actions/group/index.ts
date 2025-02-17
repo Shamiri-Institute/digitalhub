@@ -5,7 +5,10 @@ import {
   currentSupervisor,
   getCurrentUser,
 } from "#/app/auth";
-import { CreateGroupSchema } from "#/components/common/group/schema";
+import {
+  CreateGroupSchema,
+  StudentGroupEvaluationSchema,
+} from "#/components/common/group/schema";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
@@ -107,6 +110,74 @@ export async function createInterventionGroup(
     return {
       success: false,
       message: (err as Error)?.message ?? "Sorry, could not create group.",
+    };
+  }
+}
+
+export async function submitGroupEvaluation(
+  data: z.infer<typeof StudentGroupEvaluationSchema>,
+) {
+  try {
+    await checkAuth();
+    const {
+      sessionId,
+      groupId,
+      contentComment,
+      content,
+      cooperationComment,
+      cooperation2,
+      cooperation3,
+      cooperation1,
+      engagementComment,
+      engagement2,
+      engagement3,
+      engagement1,
+    } = StudentGroupEvaluationSchema.parse(data);
+    const result = await db.interventionGroupReport.upsert({
+      where: {
+        groupId,
+        sessionId,
+      },
+      create: {
+        id: objectId("ige"),
+        sessionId,
+        groupId,
+        content,
+        contentComment,
+        cooperation1,
+        cooperation2,
+        cooperation3,
+        cooperationComment,
+        engagement1,
+        engagement2,
+        engagement3,
+        engagementComment,
+      },
+      update: {
+        content,
+        contentComment,
+        cooperation1,
+        cooperation2,
+        cooperation3,
+        cooperationComment,
+        engagement1,
+        engagement2,
+        engagement3,
+        engagementComment,
+      },
+      include: {
+        group: true,
+      },
+    });
+    return {
+      success: true,
+      message: `Successfully submitted evaluation for ${result.group.groupName}`,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message: (err as Error)?.message ?? "Something went wrong.",
     };
   }
 }

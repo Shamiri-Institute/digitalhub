@@ -2,7 +2,7 @@ import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-
 import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import FellowsChartsWrapper from "#/app/(platform)/hc/fellows/components/fellows-charts-wrapper";
 import MainFellowsDatatable from "#/app/(platform)/hc/fellows/components/main-fellows-datatable";
-import { currentHubCoordinator } from "#/app/auth";
+import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
@@ -12,6 +12,7 @@ import { Suspense } from "react";
 
 export default async function FellowPage() {
   const hc = await currentHubCoordinator();
+  const user = await getCurrentUser();
   if (!hc) {
     return <InvalidPersonnelRole role="hub-coordinator" />;
   }
@@ -54,7 +55,7 @@ export default async function FellowPage() {
         },
       },
       include: {
-        supervisor: true,
+        user: true,
       },
     }),
   ]).then((values) => {
@@ -95,6 +96,7 @@ export default async function FellowPage() {
           fellows={data}
           supervisors={supervisors}
           weeklyEvaluations={weeklyFellowEvaluations}
+          role={user?.membership.role!}
         />
       </div>
       <PageFooter />

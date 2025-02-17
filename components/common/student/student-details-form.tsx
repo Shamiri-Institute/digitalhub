@@ -50,7 +50,7 @@ export default function StudentDetailsForm({
   student,
   mode,
   children,
-  schoolVisibleId,
+  schoolId,
   assignedGroupId,
   groupName,
 }: {
@@ -59,7 +59,7 @@ export default function StudentDetailsForm({
   student?: SchoolStudentTableData;
   mode: "add" | "edit";
   children: React.ReactNode;
-  schoolVisibleId: string | null;
+  schoolId: string | null;
   assignedGroupId?: string;
   groupName?: string;
 }) {
@@ -81,26 +81,28 @@ export default function StudentDetailsForm({
 
   const form = useForm<z.infer<typeof StudentDetailsSchema>>({
     resolver: zodResolver(StudentDetailsSchema),
-    defaultValues: {
-      mode,
-      schoolVisibleId: schoolVisibleId ?? undefined,
-      assignedGroupId,
-    },
+    defaultValues: getDefaultValues(),
   });
+
+  function getDefaultValues() {
+    return {
+      mode,
+      schoolId: schoolId ?? undefined,
+      assignedGroupId,
+      id: student?.id,
+      studentName: student?.studentName ?? "",
+      admissionNumber: student?.admissionNumber ?? "",
+      gender: student?.gender ?? "",
+      yearOfBirth: student?.yearOfBirth?.toString() ?? "",
+      form: student?.form?.toString() ?? "",
+      stream: student?.stream ?? "",
+      phoneNumber: student?.phoneNumber ?? "",
+    };
+  }
 
   useEffect(() => {
     if (open && mode === "edit" && student !== undefined) {
-      form.reset({
-        mode,
-        id: student.id,
-        studentName: student.studentName ?? undefined,
-        admissionNumber: student.admissionNumber ?? undefined,
-        gender: student.gender ?? undefined,
-        yearOfBirth: student.yearOfBirth ?? undefined,
-        form: student.form ?? undefined,
-        stream: student.stream ?? undefined,
-        phoneNumber: student.phoneNumber ?? undefined,
-      });
+      form.reset(getDefaultValues());
     }
 
     if (!open) {
@@ -117,10 +119,10 @@ export default function StudentDetailsForm({
   const checkMatchingAdmissions = async (
     values: z.infer<typeof StudentDetailsSchema>,
   ) => {
-    if (schoolVisibleId !== null && values.admissionNumber !== undefined) {
+    if (schoolId !== null && values.admissionNumber !== undefined) {
       const students = await checkExistingStudents(
         values.admissionNumber,
-        schoolVisibleId,
+        schoolId,
       );
       if (students.length > 0) {
         setMatchedStudents(students);
@@ -292,9 +294,7 @@ export default function StudentDetailsForm({
                           <FormControl>
                             <Input
                               {...field}
-                              type="number"
-                              max={2099}
-                              min={1900}
+                              type="text"
                               placeholder={"Enter year of birth"}
                             />
                           </FormControl>
@@ -329,7 +329,7 @@ export default function StudentDetailsForm({
                             <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" />
+                            <Input {...field} type="text" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

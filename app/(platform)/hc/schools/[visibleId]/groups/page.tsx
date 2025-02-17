@@ -6,7 +6,7 @@ import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
 import { Suspense } from "react";
 
-export default async function FellowsPage({
+export default async function GroupsPage({
   params: { visibleId },
 }: {
   params: { visibleId: string };
@@ -94,6 +94,13 @@ export default async function FellowsPage({
   const school = await db.school.findFirstOrThrow({
     where: {
       visibleId,
+    },
+    include: {
+      interventionSessions: {
+        include: {
+          session: true,
+        },
+      },
     },
   });
 
