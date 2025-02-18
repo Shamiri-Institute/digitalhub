@@ -92,11 +92,12 @@ export async function getClinicalCases() {
           severeRisk: true,
         },
       ],
+      
       sessionAttendanceHistory: [
         {
-          session: "Clinical S1",
-          sessionDate: "2024-01-01",
-          attendanceStatus: true,
+            session: "Clinical S1",
+            sessionDate: "2024-01-01",
+            attendanceStatus: true,
         },
         {
           session: "Clinical S2",
