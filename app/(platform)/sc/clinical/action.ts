@@ -92,12 +92,12 @@ export async function getClinicalCases() {
           severeRisk: true,
         },
       ],
-      
+
       sessionAttendanceHistory: [
         {
-            session: "Clinical S1",
-            sessionDate: "2024-01-01",
-            attendanceStatus: true,
+          session: "Clinical S1",
+          sessionDate: "2024-01-01",
+          attendanceStatus: true,
         },
         {
           session: "Clinical S2",
@@ -122,3 +122,15 @@ export async function getClinicalCases() {
 export type ClinicalCases = Awaited<
   ReturnType<typeof getClinicalCases>
 >[number];
+
+export async function updateClinicalSessionAttendance(
+  session: string,
+  sessionDate: string,
+  attendanceStatus: boolean | null,
+) {
+  console.log(session, sessionDate, attendanceStatus);
+  return {
+    success: false,
+    message: "Attendance updated successfully",
+  };
+}

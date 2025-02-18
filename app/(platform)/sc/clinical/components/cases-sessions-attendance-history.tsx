@@ -77,14 +77,11 @@ export default function ClinicalCaseSessionsAttendanceHistory({
         <DialogHeader className="bg-white">
           <h2>Clinical attendance history</h2>
         </DialogHeader>
-        <DialogAlertWidget
-          label={`${clinicalCase.id}`}
-          separator={true}
-        />
-        <div className="max-w-full mt-1 overflow-x-auto overflow-y-scroll px-[0.4rem]">
+        <DialogAlertWidget label={`${clinicalCase.id}`} separator={true} />
+        <div className="mt-1 max-w-full overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <DataTable
             columns={attendanceColumns}
-            data={clinicalCase?.sessionAttendanceHistory || []}
+            data={clinicalCase.sessionAttendanceHistory || []}
             className={"data-table data-table-action mt-4 bg-white"}
             emptyStateMessage="No Clinical Case Attendance History"
           />
