@@ -1,4 +1,4 @@
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
@@ -8,12 +8,11 @@ export default async function SchoolSessionsPage({
 }: {
   params: { visibleId: string };
 }) {
-  const coordinator = await currentHubCoordinator();
-  if (coordinator === null) {
+  const supervisor = await currentSupervisor();
+  if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
   }
 
-  const user = await getCurrentUser();
   const data = await Promise.all([
     await db.interventionSession.findMany({
       where: {
@@ -47,7 +46,7 @@ export default async function SchoolSessionsPage({
     }),
     await db.supervisor.findMany({
       where: {
-        hubId: coordinator?.assignedHubId as string,
+        hubId: supervisor?.hubId as string,
       },
       include: {
         supervisorAttendances: {
@@ -75,7 +74,7 @@ export default async function SchoolSessionsPage({
     FROM
     fellows fel
     LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
-    WHERE fel.hub_id=${coordinator!.assignedHubId}
+    WHERE fel.hub_id=${supervisor!.hubId}
     GROUP BY fel.id`,
   ]);
 
@@ -84,7 +83,7 @@ export default async function SchoolSessionsPage({
       sessions={data[0]}
       supervisors={data[1]}
       fellowRatings={data[2]}
-      role={user?.membership.role!}
+      role={supervisor?.user?.membership.role!}
     />
   );
 }
