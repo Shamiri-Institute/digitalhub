@@ -10,6 +10,11 @@ const nextConfig = {
         destination: "/hc/schedule",
         permanent: false,
       },
+      {
+        source: "/sc",
+        destination: "/sc/schedule",
+        permanent: false,
+      },
     ];
   },
 };
