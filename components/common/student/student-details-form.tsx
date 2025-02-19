@@ -1,8 +1,8 @@
 "use client";
 
-import { SchoolStudentTableData } from "#/app/(platform)/hc/schools/[visibleId]/students/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import { SchoolStudentTableData } from "#/components/common/student/columns";
 import { StudentDetailsSchema } from "#/components/common/student/schemas";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
