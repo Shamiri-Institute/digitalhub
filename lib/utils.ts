@@ -18,6 +18,7 @@ export function getInitials(name: string): string {
 export function getSchoolInitials(name: string): string {
   return (
     name
+      .replace(/[^a-zA-Z0-9 ]/g, "")
       .split(" ")
       .filter((i) => i.toLowerCase() !== "school")
       .map((i) => i[0]?.toUpperCase())

@@ -8,13 +8,10 @@ import SupervisorAttendance, {
 import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
 import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
-import {
-  columns,
-  SessionData,
-} from "#/app/(platform)/hc/schools/[visibleId]/sessions/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
+import { columns, SessionData } from "#/components/common/session/columns";
 import SessionRatings from "#/components/common/session/session-ratings";
 import { Session } from "#/components/common/session/sessions-provider";
 import DataTable from "#/components/data-table";
