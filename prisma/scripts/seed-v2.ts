@@ -5,6 +5,7 @@ import { faker } from "@faker-js/faker";
 import {
   Fellow,
   Hub,
+  HubCoordinator,
   Implementer,
   ImplementerRole,
   Prisma,
@@ -13,6 +14,7 @@ import {
   sessionTypes,
   Supervisor,
 } from "@prisma/client";
+import { isBefore, startOfMonth } from "date-fns";
 
 // GETTING STARTED WITH SEEDING
 // ===========================
@@ -223,6 +225,8 @@ function createProjects() {
       id: objectId("proj"),
       visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
       name: faker.company.name(),
+      actualStartDate: startOfMonth(new Date()),
+      actualEndDate: startOfMonth(new Date()),
     });
   }
 
@@ -280,6 +284,7 @@ async function createCoreUsers(
   implementers: Implementer[],
   hubs: Hub[],
   supervisors: Supervisor[],
+  hubCoordinators: HubCoordinator[],
 ) {
   console.log("creating core users");
   const userData = [
@@ -317,11 +322,18 @@ async function createCoreUsers(
   });
 
   const membershipData = users.map((user) => {
+    const role = userData.find((u) => u.id === user.id)
+      ?.role as ImplementerRole;
     return {
       userId: user.id,
       implementerId: faker.helpers.arrayElement(implementers).id,
-      role: userData.find((u) => u.id === user.id)?.role as ImplementerRole,
-      identifier: faker.helpers.arrayElement(supervisors).id,
+      role,
+      identifier:
+        role === "HUB_COORDINATOR"
+          ? faker.helpers.arrayElement(hubCoordinators).id
+          : role === "SUPERVISOR"
+            ? faker.helpers.arrayElement(supervisors).id
+            : null,
     };
   });
 
@@ -422,27 +434,31 @@ async function createSupervisors(
   implementers: Implementer[],
 ) {
   console.log("creating supervisors");
-  const supervisors = [];
 
-  for (let i = 0; i < n; i++) {
-    supervisors.push({
-      id: objectId("user"),
-      email: faker.internet.email(),
-      role: ImplementerRole.SUPERVISOR,
-      roleByVisibleId: "SUPERVISOR",
-    });
-  }
+  const supervisors = hubs
+    .map((hub) => {
+      return Array.from(Array(n).keys()).map(() => ({
+        id: objectId("user"),
+        email: faker.internet.email(),
+        role: ImplementerRole.SUPERVISOR,
+        roleByVisibleId: "SUPERVISOR",
+        hubId: hub.id,
+        implementerId: hub.implementerId,
+      }));
+    })
+    .flat();
 
-  const createHubCoordinators = await db.user.createManyAndReturn({
+  const createSupervisors = await db.user.createManyAndReturn({
     data: supervisors.map(({ id, email }) => ({
       id,
       email,
     })),
   });
 
-  const membershipData = createHubCoordinators.map((user) => ({
+  const membershipData = createSupervisors.map((user) => ({
     userId: user.id,
-    implementerId: faker.helpers.arrayElement(implementers).id,
+    implementerId: supervisors.find((supervisor) => supervisor.id === user.id)
+      ?.implementerId!,
     role: ImplementerRole.SUPERVISOR,
     identifier: faker.string.alpha({ casing: "upper", length: 6 }),
   }));
@@ -457,13 +473,12 @@ async function createSupervisors(
 
     return {
       id: objectId("supervisor"),
-      implementerId: faker.helpers.arrayElement(implementers).id,
+      implementerId: _user.implementerId,
       visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
       supervisorName: faker.person.fullName(),
       supervisorEmail: faker.internet.email(),
       county: county.name,
       subCounty: subCounty,
-
       bankName: faker.company.name(),
       bankBranch: faker.location.county(),
       bankAccountNumber: faker.finance.accountNumber(),
@@ -471,7 +486,7 @@ async function createSupervisors(
       kra: faker.finance.accountNumber(),
       nhif: faker.finance.accountNumber(),
       dateOfBirth: faker.date.birthdate(),
-      hubId: faker.helpers.arrayElement(hubs).id,
+      hubId: _user.hubId,
     };
   });
 
@@ -485,7 +500,7 @@ async function createFellows(supervisors: Supervisor[]) {
   const fellows: Prisma.FellowCreateManyInput[] = [];
 
   supervisors.forEach((supervisor) => {
-    const numFellows = faker.number.int({ min: 3, max: 6 });
+    const numFellows = faker.number.int({ min: 10, max: 15 });
 
     for (let i = 0; i < numFellows; i++) {
       const fellowName = faker.person.fullName();
@@ -519,7 +534,13 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
   const schools: Prisma.SchoolCreateManyInput[] = [];
 
   hubs.forEach((hub) => {
-    const numSchools = faker.number.int({ min: supervisors.length, max: 6 });
+    const hubSupervisors = supervisors.filter(
+      (supervisor) => supervisor.hubId === hub.id,
+    );
+    const numSchools = faker.number.int({
+      min: hubSupervisors.length,
+      max: hubSupervisors.length * 1.5,
+    });
 
     for (let i = 0; i < numSchools; i++) {
       const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
@@ -757,7 +778,7 @@ async function createInterventionSessionsForSchools(
     const fellowIds = new Set(fellowsInSchool.map((f) => f.id));
 
     // Start from current date for this school
-    let currentDate = new Date();
+    let currentDate = startOfMonth(new Date());
     currentDate.setHours(9, 0, 0, 0); // Set to 9 AM
 
     for (const sessionName of hubSessionNames) {
@@ -775,13 +796,13 @@ async function createInterventionSessionsForSchools(
       // Create session for this school
       interventionSessions.push({
         id: objectId("session"),
-        sessionDate: currentDate,
+        sessionDate: new Date(currentDate),
         sessionEndTime: new Date(currentDate.getTime() + 3 * 60 * 60 * 1000), // 3 hours later
         status: "Scheduled",
         sessionType: sessionName.sessionName,
         sessionId: sessionName.sessionId,
         schoolId: school.id,
-        occurred: false,
+        occurred: isBefore(new Date(currentDate), new Date()),
         yearOfImplementation: new Date().getFullYear(),
         projectId: school.hub?.projectId || undefined,
       });
@@ -818,9 +839,9 @@ async function main() {
 
   await createProjectImplementers(projects, implementers);
   const hubs = await createHubs(projects, implementers);
-  await createHubCoordinators(hubs, implementers);
+  const hubCoordinators = await createHubCoordinators(hubs, implementers);
   const supervisors = await createSupervisors(hubs, 6, implementers);
-  await createCoreUsers(implementers, hubs, supervisors); // AT THE MOMENT THESE ARE ALL SUPERVISORS
+  await createCoreUsers(implementers, hubs, supervisors, hubCoordinators); // AT THE MOMENT THESE ARE ALL SUPERVISORS
 
   const fellows = await createFellows(supervisors);
   const schools = await createSchools(hubs, supervisors);
