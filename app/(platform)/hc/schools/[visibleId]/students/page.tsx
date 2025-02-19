@@ -1,6 +1,6 @@
 import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
-import StudentsDatatable from "#/components/common/student/students-datatable";
 import { currentHubCoordinator } from "#/app/auth";
+import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
 import { Suspense } from "react";
 
