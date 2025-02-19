@@ -13,7 +13,7 @@ import { ColumnDef } from "@tanstack/react-table";
 export default function GroupsDatatableSkeleton({
   role,
 }: {
-  role: ImplementerRole;
+  role?: ImplementerRole;
 }) {
   const loadingColumns = columns({
     setGroup: () => {},
