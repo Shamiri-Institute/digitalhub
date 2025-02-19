@@ -1,15 +1,17 @@
-import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
+import { currentSupervisor } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
-import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
-import { Suspense } from "react";
+import { signOut } from "next-auth/react";
 
 export default async function StudentsPage({
   params: { visibleId },
 }: {
   params: { visibleId: string };
 }) {
-  const hubCoordinator = await currentHubCoordinator();
+  const supervisor = await currentSupervisor();
+  if (supervisor === null) {
+    await signOut({ callbackUrl: "/login" });
+  }
 
   const students = db.student.findMany({
     where: {
@@ -51,9 +53,5 @@ export default async function StudentsPage({
     },
   });
 
-  return (
-    <Suspense fallback={<Loading />}>
-      <StudentsDatatable data={students} hubCoordinator={hubCoordinator} />
-    </Suspense>
-  );
+  return <StudentsDatatable data={students} />;
 }
