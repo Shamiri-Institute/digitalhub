@@ -1,4 +1,4 @@
-import { SchoolStudentTableData } from "#/app/(platform)/hc/schools/[visibleId]/students/components/columns";
+import { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
