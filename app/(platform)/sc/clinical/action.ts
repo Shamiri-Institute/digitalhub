@@ -1,5 +1,8 @@
 "use server";
 
+import { db } from "#/lib/db";
+import { revalidatePath } from "next/cache";
+
 export async function getClinicalCases() {
   return [
     {
@@ -94,21 +97,25 @@ export async function getClinicalCases() {
       ],
       sessionAttendanceHistory: [
         {
+          sessionId: "1",
           session: "Clinical S1",
           sessionDate: "2024-01-01",
           attendanceStatus: true,
         },
         {
+          sessionId: "2",
           session: "Clinical S2",
           sessionDate: "2024-01-02",
           attendanceStatus: false,
         },
         {
+          sessionId: "3",
           session: "Clinical S3",
           sessionDate: "2024-01-03",
           attendanceStatus: null,
         },
         {
+          sessionId: "4",
           session: "Clinical S4",
           sessionDate: "2024-01-04",
           attendanceStatus: true,
@@ -121,3 +128,51 @@ export async function getClinicalCases() {
 export type ClinicalCases = Awaited<
   ReturnType<typeof getClinicalCases>
 >[number];
+
+export async function referClinicalCaseAsSupervisor(data: {
+  referTo: string;
+  referralReason: string;
+  message: string;
+  caseId: string;
+  referredFrom: string;
+  referredFromSpecified: string;
+  referredTo: string;
+  referredToPerson: string | null;
+  externalCare: string | null;
+  referralNotes: string;
+  supervisorName: string;
+}) {
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: {
+        referredFrom: data.referredFrom,
+        referredFromSpecified: data.supervisorName,
+        referredTo: data.referredTo,
+        referredToSpecified: data.referredToPerson ?? data.externalCare,
+        referralNotes: data.referralNotes,
+        referredToSupervisorId: data.referredToPerson ?? null,
+        referralStatus: "Pending",
+        caseTransferTrail: {
+          create: {
+            from: data.referredFromSpecified ?? "",
+            fromRole: data.referredFrom,
+            to: data.supervisorName,
+            toRole: data.referredTo,
+            date: new Date(),
+            referralStatus: "Pending",
+          },
+        },
+        acceptCase: false,
+      },
+    });
+
+    revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
