@@ -1,14 +1,14 @@
 "use client";
 
-import AttendanceHistory from "#/app/(platform)/hc/schools/[visibleId]/students/components/attendance-history";
-import {
-  columns,
-  SchoolStudentTableData,
-} from "#/app/(platform)/hc/schools/[visibleId]/students/components/columns";
-import GroupTransferHistory from "#/app/(platform)/hc/schools/[visibleId]/students/components/group-transfer-history";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { AddReportingNote } from "#/components/common/student/add-reporting-note";
+import AttendanceHistory from "#/components/common/student/attendance-history";
+import {
+  columns,
+  SchoolStudentTableData,
+} from "#/components/common/student/columns";
+import GroupTransferHistory from "#/components/common/student/group-transfer-history";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import StudentDropoutForm from "#/components/common/student/student-dropout-form";
 import DataTable from "#/components/data-table";

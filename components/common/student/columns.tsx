@@ -1,6 +1,6 @@
 "use client";
 
-import StudentsDataTableMenu from "#/app/(platform)/hc/schools/[visibleId]/students/components/students-datatable-menu";
+import StudentsDataTableMenu from "#/components/common/student/students-datatable-menu";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Prisma } from "@prisma/client";
