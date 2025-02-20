@@ -1,7 +1,7 @@
 "use client";
 
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { GroupsDatatableMenu } from "#/app/(platform)/hc/schools/[visibleId]/groups/components/groups-datatable-menu";
+import { GroupsDatatableMenu } from "#/components/common/group/groups-datatable-menu";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Prisma } from "@prisma/client";
