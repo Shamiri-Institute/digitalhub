@@ -1,9 +1,8 @@
 "use client";
 
-import { updateUploadedSchoolFile } from "#/app/(platform)/hc/schools/[visibleId]/files/actions";
-import { SchoolFilesTableData } from "#/app/(platform)/hc/schools/[visibleId]/files/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import { SchoolFilesTableData } from "#/components/common/files/columns";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -20,6 +19,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
+import { updateUploadedSchoolFile } from "#/lib/actions/file";
 
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";

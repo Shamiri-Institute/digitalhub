@@ -1,18 +1,16 @@
-import { currentHubCoordinator } from "#/app/auth";
+import { currentSupervisor } from "#/app/auth";
 import { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
-import GroupsTableSkeleton from "#/components/common/group/groups-datatable-skeleton";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
-import { Suspense } from "react";
 
 export default async function GroupsPage({
   params: { visibleId },
 }: {
   params: { visibleId: string };
 }) {
-  const hc = await currentHubCoordinator();
-  if (!hc) {
+  const supervisor = await currentSupervisor();
+  if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
   }
 
@@ -84,7 +82,7 @@ export default async function GroupsPage({
 
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: hc?.assignedHubId as string,
+      hubId: supervisor?.hubId as string,
     },
     include: {
       fellows: true,
@@ -105,8 +103,6 @@ export default async function GroupsPage({
   });
 
   return (
-    <Suspense fallback={<GroupsTableSkeleton />}>
-      <GroupsDataTable data={data} school={school} supervisors={supervisors} />
-    </Suspense>
+    <GroupsDataTable data={data} school={school} supervisors={supervisors} />
   );
 }

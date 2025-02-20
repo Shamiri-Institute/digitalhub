@@ -1,12 +1,12 @@
 "use client";
 
 import {
-  filescolumns,
+  fileColumns,
   SchoolFilesTableData,
-} from "#/app/(platform)/hc/schools/[visibleId]/files/components/columns";
-import { RemoveUploadedFile } from "#/app/(platform)/hc/schools/[visibleId]/files/components/delete-file-modal";
-import UploadFileDialogue from "#/app/(platform)/hc/schools/[visibleId]/files/components/files-upload-dialogue";
-import RenameUploadedFile from "#/app/(platform)/hc/schools/[visibleId]/files/components/rename-file";
+} from "#/components/common/files/columns";
+import { RemoveUploadedFile } from "#/components/common/files/delete-file-modal";
+import UploadFileDialogue from "#/components/common/files/files-upload-dialogue";
+import RenameUploadedFile from "#/components/common/files/rename-file";
 
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -28,7 +28,7 @@ export default function SchoolFilesDatatable({
 
   const renderTableActions = () => {
     return (
-      <Button onClick={() => setUploadDialog(true)}>
+      <Button onClick={() => setUploadDialog(true)} className="gap-1">
         <Icons.plusCircle className="h-4 w-4" />
         <span>Upload file</span>
       </Button>
@@ -39,7 +39,7 @@ export default function SchoolFilesDatatable({
     <div>
       <DataTable
         data={schoolFiles}
-        columns={filescolumns({
+        columns={fileColumns({
           setRenameDialog,
           setFile,
           setDeleteDialog,
