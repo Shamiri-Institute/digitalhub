@@ -139,7 +139,6 @@ export async function updateClinicalSessionAttendance(
         id: sessionId,
       },
       data: {
-        // @ts-ignore
         attendanceStatus: attendanceStatus,
       },
     });
