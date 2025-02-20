@@ -1,5 +1,7 @@
 "use server";
 
+import { db } from "#/lib/db";
+
 export async function getClinicalCases() {
   return [
     {
@@ -95,21 +97,25 @@ export async function getClinicalCases() {
 
       sessionAttendanceHistory: [
         {
+          sessionId: "1",
           session: "Clinical S1",
           sessionDate: "2024-01-01",
           attendanceStatus: true,
         },
         {
+          sessionId: "2",
           session: "Clinical S2",
           sessionDate: "2024-01-02",
           attendanceStatus: false,
         },
         {
+          sessionId: "3",
           session: "Clinical S3",
           sessionDate: "2024-01-03",
           attendanceStatus: null,
         },
         {
+          sessionId: "4",
           session: "Clinical S4",
           sessionDate: "2024-01-04",
           attendanceStatus: true,
@@ -124,13 +130,29 @@ export type ClinicalCases = Awaited<
 >[number];
 
 export async function updateClinicalSessionAttendance(
-  session: string,
-  sessionDate: string,
+  sessionId: string,
   attendanceStatus: boolean | null,
 ) {
-  console.log(session, sessionDate, attendanceStatus);
-  return {
-    success: false,
-    message: "Attendance updated successfully",
-  };
+  try {
+    await db.clinicalSessionAttendance.update({
+      where: {
+        id: sessionId,
+      },
+      data: {
+        // @ts-ignore
+        attendanceStatus: attendanceStatus,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Attendance updated successfully",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to update attendance",
+    };
+  }
 }

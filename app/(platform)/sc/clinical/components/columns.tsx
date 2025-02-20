@@ -21,9 +21,11 @@ import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
+import { revalidatePath } from "next/cache";
 import { useState } from "react";
 
 type AttendanceRecord = {
+  sessionId: string;
   session: string;
   sessionDate: string;
   attendanceStatus: boolean | null;
@@ -100,12 +102,12 @@ export const attendanceColumns: ColumnDef<AttendanceRecord>[] = [
       const handleAttendanceUpdate = async (status: boolean | null) => {
         try {
           const response = await updateClinicalSessionAttendance(
-            row.original.session,
-            row.original.sessionDate,
+            row.original.sessionId,
             status,
           );
           if (response.success) {
             toast({ description: response.message });
+            revalidatePath("/sc/clinical");
             setIsOpen(false);
           } else {
             toast({ variant: "destructive", description: response.message });
