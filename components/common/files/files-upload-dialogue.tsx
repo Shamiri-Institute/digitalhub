@@ -1,4 +1,4 @@
-import SchoolFilesUploader from "#/app/(platform)/hc/schools/[visibleId]/files/components/upload-file";
+import SchoolFilesUploader from "#/components/common/files/upload-file";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
 import React, { Dispatch, SetStateAction } from "react";
 

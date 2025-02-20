@@ -40,6 +40,7 @@ export default function CreateGroup({
   supervisors,
   school,
   groupCount,
+  disabled,
 }: {
   supervisors: Prisma.SupervisorGetPayload<{
     include: {
@@ -48,6 +49,7 @@ export default function CreateGroup({
   }>[];
   school: Prisma.SchoolGetPayload<{}>;
   groupCount: number;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
@@ -90,7 +92,7 @@ export default function CreateGroup({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <div className="flex items-center gap-2">
-          <Button variant="brand" className="flex gap-1">
+          <Button variant="brand" className="flex gap-1" disabled={disabled}>
             <Icons.plusCircle className="h-4 w-4" />
             <span>New group</span>
           </Button>
