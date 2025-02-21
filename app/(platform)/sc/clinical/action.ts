@@ -5,7 +5,6 @@ import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
 
-
 export async function getClinicalCases() {
   const supervisor = await currentSupervisor();
   return [
@@ -134,7 +133,6 @@ export async function getClinicalCases() {
 export type ClinicalCases = Awaited<
   ReturnType<typeof getClinicalCases>
 >[number];
-
 
 export async function supSubmitConsultClinicalexpert(data: {
   caseId: string;
