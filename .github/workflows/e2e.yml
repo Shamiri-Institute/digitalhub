@@ -69,6 +69,9 @@ jobs:
         # env:
         #   PGPASSWORD: thriving
 
+      - name: Create production build
+        run: npm run build
+
       - name: Run playwright tests
         run: npm run test:ci
 

@@ -10,7 +10,7 @@ const showServerLogs = process.env.LOG ? "pipe" : undefined;
 export default defineConfig({
   testDir: "./tests/e2e",
   webServer: {
-    command: process.env.CI ? "npm run build; npm start" : "npm run dev",
+    command: process.env.CI ? "npm start" : "npm run dev",
     timeout: 120000,
     port: 3000,
     stdout: "pipe",
