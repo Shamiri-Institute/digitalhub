@@ -1,6 +1,6 @@
 "use client";
 
-import SchoolFilesDataTableMenu from "#/app/(platform)/hc/schools/[visibleId]/files/components/files-datatable-menu";
+import SchoolFilesDataTableMenu from "#/components/common/files/files-datatable-menu";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
@@ -8,7 +8,7 @@ import { Dispatch, SetStateAction } from "react";
 
 export type SchoolFilesTableData = Prisma.SchoolDocumentsGetPayload<{}>;
 
-export const filescolumns = (state: {
+export const fileColumns = (state: {
   setRenameDialog: Dispatch<SetStateAction<boolean>>;
   setDeleteDialog: Dispatch<SetStateAction<boolean>>;
   setFile: Dispatch<SetStateAction<SchoolFilesTableData | null>>;
