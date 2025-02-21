@@ -539,7 +539,7 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
     );
     const numSchools = faker.number.int({
       min: hubSupervisors.length,
-      max: hubSupervisors.length * 1.5,
+      max: hubSupervisors.length * 2,
     });
 
     for (let i = 0; i < numSchools; i++) {
@@ -598,8 +598,13 @@ async function createInterventionGroups(
 ) {
   console.log("creating intervention groups");
   const interventionGroups: Prisma.InterventionGroupCreateManyInput[] = [];
+  const schoolFellowAssignments = new Map<string, Set<string>>(); // Maps schoolId -> Set<fellowId>
+  const fellowSchoolCount = new Map<string, number>(); // Track how many schools each fellow is assigned to
 
-  const schoolFellowAssignments = new Map<string, Set<string>>();
+  // Initialize fellowSchoolCount with all fellows
+  for (const fellow of fellows) {
+    fellowSchoolCount.set(fellow.id, 0);
+  }
 
   for (const school of schools) {
     const numGroups = school.numbersExpected
@@ -610,24 +615,40 @@ async function createInterventionGroups(
 
     for (let i = 0; i < numGroups; i++) {
       const availableFellows = fellows.filter(
-        (fellow) => !schoolFellowAssignments.get(school.id)?.has(fellow.id),
+        (fellow) =>
+          fellow.hubId === school.hubId &&
+          !schoolFellowAssignments.get(school.id)?.has(fellow.id),
       );
 
       if (!availableFellows.length) {
-        console.warn(
-          `No available fellows for school ${school.schoolName}. Groups will be created without an assigned fellow`,
-        );
+        console.warn(`No available fellows for school ${school.schoolName}.`);
         break;
       }
 
-      const leader = faker.helpers.arrayElement(availableFellows);
-      schoolFellowAssignments.get(school.id)?.add(leader.id);
+      // Sort fellows by how many schools they have been assigned to (ascending)
+      const sortedFellows = availableFellows
+        .map((fellow) => ({
+          id: fellow.id,
+          count: fellowSchoolCount.get(fellow.id) ?? 0,
+        }))
+        .sort((a, b) => a.count - b.count);
+
+      const leader = sortedFellows[0]?.id; // Pick the fellow with the least assignments
+
+      if (!leader) {
+        console.warn(`No fellows assigned for school ${school.schoolName}`);
+        continue;
+      }
+
+      // Assign the fellow to the school and update the tracking maps
+      schoolFellowAssignments.get(school.id)?.add(leader);
+      fellowSchoolCount.set(leader, (fellowSchoolCount.get(leader) ?? 0) + 1);
 
       interventionGroups.push({
         id: objectId("group"),
         groupName: faker.company.name(),
         schoolId: school.id,
-        leaderId: leader.id,
+        leaderId: leader,
         projectId: school.hub?.projectId as string,
       });
     }
