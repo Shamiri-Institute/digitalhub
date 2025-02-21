@@ -3,7 +3,7 @@
 export async function getClinicalCases() {
   return [
     {
-      id: 1,
+      id: "clinical-case-1",
       school: "Olympic Secondary School",
       pseudonym: "Ben Tendo",
       dateAdded: "2024-01-01",
