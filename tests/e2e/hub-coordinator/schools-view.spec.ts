@@ -47,7 +47,7 @@ test("Hub Coordinator can submit a weekly hub report", async ({ page }) => {
   };
 
   // when
-  await page.getByRole("button", { name: "Add icon circle outlined" }).click();
+  await page.getByRole("button", { name: "Weekly Hub Report" }).click();
   await page.getByRole("combobox", { name: "Select week" }).click();
   await page.getByRole("option", { name: "Week 1" }).click();
   await page
