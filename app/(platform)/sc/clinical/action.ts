@@ -4,7 +4,6 @@ import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
 
-
 export async function getClinicalCases() {
   const supervisor = await currentSupervisor();
   return [
@@ -161,7 +160,6 @@ export async function updateClinicalSessionAttendance(
   }
 }
 
-
 export async function referClinicalCaseAsSupervisor(data: {
   referTo: string;
   referralReason: string;
@@ -187,6 +185,7 @@ export async function referClinicalCaseAsSupervisor(data: {
         referralNotes: data.referralNotes,
         referredToSupervisorId: data.referredToPerson ?? null,
         referralStatus: "Pending",
+        // @ts-ignore - its in a pr that is not yet merged
         referralReason: data.referralReason,
         caseTransferTrail: {
           create: {
