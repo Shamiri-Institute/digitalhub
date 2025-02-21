@@ -2,6 +2,7 @@
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
   ClinicalCases,
+  getSupervisorsInHub,
   referClinicalCaseAsSupervisor,
 } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -32,7 +33,7 @@ import {
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -40,6 +41,7 @@ const ComplaintSchema = z.object({
   referTo: z.string().min(1, "Refer to is required"),
   referralReason: z.string().min(1, "Referral reason is required"),
   message: z.string(),
+  supervisorId: z.string().optional(),
 });
 
 type ComplaintFormValues = z.infer<typeof ComplaintSchema>;
@@ -62,30 +64,46 @@ export default function ReferClinicalCase({
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [selectedReferTo, setSelectedReferTo] = useState<string>("");
+  const [supervisorsInHub, setSupervisorsInHub] = useState<
+    { id: string; name: string | null }[]
+  >([]);
+  const [currentSupervisor, setCurrentSupervisor] = useState<{
+    id: string | undefined;
+    name?: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchSupervisorsInHub = async () => {
+      const data = await getSupervisorsInHub();
+      setSupervisorsInHub(data?.allSupervisors ?? []);
+      setCurrentSupervisor(data?.currentSupervisor ?? null);
+    };
+    fetchSupervisorsInHub();
+  }, [selectedReferTo]);
 
   const form = useForm<ComplaintFormValues>({
     resolver: zodResolver(ComplaintSchema),
     defaultValues: {
       referTo: "",
       referralReason: "",
-      message: clinicalCase.referralFrom || "",
+      message: "",
     },
   });
 
   const onSubmit = async (data: ComplaintFormValues) => {
     try {
       const response = await referClinicalCaseAsSupervisor({
-        caseId: clinicalCase.id.toString(),
+        caseId: clinicalCase.id,
+        supervisorName: currentSupervisor?.name ?? "",
+        referralNotes: data.message,
+        referredFromSpecified: currentSupervisor?.name ?? "",
+        referredFrom: currentSupervisor?.id ?? "",
+        referredToPerson:
+          data.referTo === "Clinical Lead" ? null : data.supervisorId || null,
+        externalCare: null,
         referTo: data.referTo,
         referralReason: data.referralReason,
-        message: data.message,
-        referredFrom: clinicalCase.referralFrom,
-        referredFromSpecified: clinicalCase.referralFromSpecified,
         referredTo: data.referTo,
-        referredToPerson: null,
-        externalCare: null,
-        referralNotes: data.referralReason,
-        supervisorName: clinicalCase.referredFromSpecified,
       });
 
       if (response.success) {
@@ -93,12 +111,13 @@ export default function ReferClinicalCase({
           title: "Success",
           description: "Clinical case referred successfully",
         });
-        await revalidatePageAction("hc/reporting/fellow-reports/complaints");
         setDialogOpen(false);
+        await revalidatePageAction("hc/reporting/fellow-reports/complaints");
+        form.reset();
       } else {
         toast({
           title: "Error",
-          description: response.message || "Failed to refer clinical case",
+          description: "Something went wrong, please try again",
           variant: "destructive",
         });
       }
@@ -161,6 +180,42 @@ export default function ReferClinicalCase({
                 )}
               />
 
+              {selectedReferTo === "Supervisor" && (
+                <FormField
+                  control={form.control}
+                  name="supervisorId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center">
+                        Select Supervisor
+                        <span className="ml-1 text-red-500">*</span>
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select supervisor..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {supervisorsInHub.map((supervisor) => (
+                            <SelectItem
+                              key={supervisor.id}
+                              value={supervisor.id}
+                            >
+                              {supervisor.name || "Unknown"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <FormField
                 control={form.control}
                 name="referralReason"
@@ -203,10 +258,7 @@ export default function ReferClinicalCase({
                   <FormItem>
                     <FormLabel>Message</FormLabel>
                     <FormControl>
-                      <Textarea
-                        {...field}
-                        className="min-h-[150px] resize-none"
-                      />
+                      <Textarea {...field} className="min-h-[150px]" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -1,12 +1,14 @@
 "use server";
 
+import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
 
 export async function getClinicalCases() {
+  const supervisor = await currentSupervisor();
   return [
     {
-      id: 1,
+      id: "special-case-id",
       school: "Olympic Secondary School",
       pseudonym: "Ben Tendo",
       dateAdded: "2024-01-01",
@@ -14,6 +16,7 @@ export async function getClinicalCases() {
       risk: "High",
       age: "20 yrs",
       referralFrom: "Fellow",
+      hubId: supervisor?.hubId,
       emergencyPresentingIssues: [
         {
           emergencyPresentingIssues: "Bullying",
@@ -132,7 +135,6 @@ export type ClinicalCases = Awaited<
 export async function referClinicalCaseAsSupervisor(data: {
   referTo: string;
   referralReason: string;
-  message: string;
   caseId: string;
   referredFrom: string;
   referredFromSpecified: string;
@@ -155,6 +157,7 @@ export async function referClinicalCaseAsSupervisor(data: {
         referralNotes: data.referralNotes,
         referredToSupervisorId: data.referredToPerson ?? null,
         referralStatus: "Pending",
+        referralReason: data.referralReason,
         caseTransferTrail: {
           create: {
             from: data.referredFromSpecified ?? "",
@@ -173,6 +176,38 @@ export async function referClinicalCaseAsSupervisor(data: {
     return { success: true };
   } catch (error) {
     console.error(error);
-    return { error: "Something went wrong" };
+    return { success: false };
+  }
+}
+
+export async function getSupervisorsInHub() {
+  try {
+    const supervisor = await currentSupervisor();
+    const supervisors = await db.supervisor.findMany({
+      where: {
+        hubId: supervisor?.hubId,
+        id: {
+          not: supervisor?.id,
+        },
+      },
+    });
+    const allSupervisors =
+      supervisors.map((supervisor) => ({
+        id: supervisor.id,
+        name: supervisor.supervisorName,
+      })) || [];
+    return {
+      currentSupervisor: {
+        id: supervisor?.id,
+        name: supervisor?.supervisorName,
+      },
+      allSupervisors: allSupervisors,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      currentSupervisor: null,
+      allSupervisors: [],
+    };
   }
 }
