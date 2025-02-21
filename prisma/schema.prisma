@@ -1114,6 +1114,7 @@ model ClinicalScreeningInfo {
   referredFromSpecified     String?                     @map("referred_from_specified") @db.VarChar(255)
   referredTo                String?                     @map("referred_to") @db.VarChar(255)
   referredToSpecified       String?                     @map("referred_to_specified") @db.VarChar(255)
+  referralReason            String?                     @map("referral_reason")
   referralNotes             String?                     @map("referral_notes") @db.Text()
   caseTransferTrail         ClinicalCaseTransferTrail[]
   consultingClinicalExpert  ClinicalExpertCaseNotes[]
@@ -1167,6 +1168,7 @@ model ClinicalSessionAttendance {
   date         DateTime              @default(now()) @map("date") @db.Timestamptz()
   supervisorId String                @map("supervisor_id") @db.VarChar(255)
   session      String                @map("session") @db.VarChar(255)
+  attendanceStatus Boolean?          @map("attendance_status")
   caseId       String
   case         ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
 
