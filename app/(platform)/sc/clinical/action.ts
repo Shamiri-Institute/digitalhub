@@ -98,6 +98,7 @@ export async function getClinicalCases() {
           severeRisk: true,
         },
       ],
+
       sessionAttendanceHistory: [
         {
           sessionId: "1",
@@ -132,6 +133,33 @@ export type ClinicalCases = Awaited<
   ReturnType<typeof getClinicalCases>
 >[number];
 
+export async function updateClinicalSessionAttendance(
+  sessionId: string,
+  attendanceStatus: boolean | null,
+) {
+  try {
+    await db.clinicalSessionAttendance.update({
+      where: {
+        id: sessionId,
+      },
+      data: {
+        attendanceStatus: attendanceStatus,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Attendance updated successfully",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to update attendance",
+    };
+  }
+}
+
 export async function referClinicalCaseAsSupervisor(data: {
   referTo: string;
   referralReason: string;
@@ -157,6 +185,7 @@ export async function referClinicalCaseAsSupervisor(data: {
         referralNotes: data.referralNotes,
         referredToSupervisorId: data.referredToPerson ?? null,
         referralStatus: "Pending",
+        // @ts-ignore - its in a pr that is not yet merged
         referralReason: data.referralReason,
         caseTransferTrail: {
           create: {
