@@ -9,6 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "vercel:build": "prisma generate && prisma migrate deploy && next build",
+    "vercel:testing:build": "prisma generate && prisma migrate deploy && npm run db:seed && next build",
     "start": "next start",
     "format": "prettier --write .",
     "stylecheck": "prettier --check .",
