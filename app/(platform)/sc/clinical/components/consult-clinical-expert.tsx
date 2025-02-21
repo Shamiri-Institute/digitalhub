@@ -1,7 +1,9 @@
 "use client";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
-import { supConsultClinicalexpert } from "#/app/actions";
+import {
+  ClinicalCases,
+  supSubmitConsultClinicalexpert,
+} from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 
 import { Button } from "#/components/ui/button";
@@ -62,7 +64,7 @@ export default function ConsultClinicalExpert({
 
   const onSubmit = async (data: ComplaintFormValues) => {
     try {
-      const response = await supConsultClinicalexpert({
+      const response = await supSubmitConsultClinicalexpert({
         caseId: clinicalCase.id,
         name: data.consultant,
         comment: data.message,
