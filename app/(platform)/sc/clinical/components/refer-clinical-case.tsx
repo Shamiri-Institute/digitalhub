@@ -112,7 +112,7 @@ export default function ReferClinicalCase({
           description: "Clinical case referred successfully",
         });
         setDialogOpen(false);
-        await revalidatePageAction("hc/reporting/fellow-reports/complaints");
+        await revalidatePageAction("sc/clinical");
         form.reset();
       } else {
         toast({
