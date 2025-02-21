@@ -1,9 +1,14 @@
 "use server";
 
+import { currentSupervisor } from "#/app/auth";
+import { db } from "#/lib/db";
+import { revalidatePath } from "next/cache";
+
 export async function getClinicalCases() {
+  const supervisor = await currentSupervisor();
   return [
     {
-      id: 1,
+      id: "special-case-id",
       school: "Olympic Secondary School",
       pseudonym: "Ben Tendo",
       dateAdded: "2024-01-01",
@@ -11,6 +16,7 @@ export async function getClinicalCases() {
       risk: "High",
       age: "20 yrs",
       referralFrom: "Fellow",
+      hubId: supervisor?.hubId,
       emergencyPresentingIssues: [
         {
           emergencyPresentingIssues: "Bullying",
@@ -94,21 +100,25 @@ export async function getClinicalCases() {
       ],
       sessionAttendanceHistory: [
         {
+          sessionId: "1",
           session: "Clinical S1",
           sessionDate: "2024-01-01",
           attendanceStatus: true,
         },
         {
+          sessionId: "2",
           session: "Clinical S2",
           sessionDate: "2024-01-02",
           attendanceStatus: false,
         },
         {
+          sessionId: "3",
           session: "Clinical S3",
           sessionDate: "2024-01-03",
           attendanceStatus: null,
         },
         {
+          sessionId: "4",
           session: "Clinical S4",
           sessionDate: "2024-01-04",
           attendanceStatus: true,
@@ -121,3 +131,83 @@ export async function getClinicalCases() {
 export type ClinicalCases = Awaited<
   ReturnType<typeof getClinicalCases>
 >[number];
+
+export async function referClinicalCaseAsSupervisor(data: {
+  referTo: string;
+  referralReason: string;
+  caseId: string;
+  referredFrom: string;
+  referredFromSpecified: string;
+  referredTo: string;
+  referredToPerson: string | null;
+  externalCare: string | null;
+  referralNotes: string;
+  supervisorName: string;
+}) {
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: {
+        referredFrom: data.referredFrom,
+        referredFromSpecified: data.supervisorName,
+        referredTo: data.referredTo,
+        referredToSpecified: data.referredToPerson ?? data.externalCare,
+        referralNotes: data.referralNotes,
+        referredToSupervisorId: data.referredToPerson ?? null,
+        referralStatus: "Pending",
+        referralReason: data.referralReason,
+        caseTransferTrail: {
+          create: {
+            from: data.referredFromSpecified ?? "",
+            fromRole: data.referredFrom,
+            to: data.supervisorName,
+            toRole: data.referredTo,
+            date: new Date(),
+            referralStatus: "Pending",
+          },
+        },
+        acceptCase: false,
+      },
+    });
+
+    revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
+
+export async function getSupervisorsInHub() {
+  try {
+    const supervisor = await currentSupervisor();
+    const supervisors = await db.supervisor.findMany({
+      where: {
+        hubId: supervisor?.hubId,
+        id: {
+          not: supervisor?.id,
+        },
+      },
+    });
+    const allSupervisors =
+      supervisors.map((supervisor) => ({
+        id: supervisor.id,
+        name: supervisor.supervisorName,
+      })) || [];
+    return {
+      currentSupervisor: {
+        id: supervisor?.id,
+        name: supervisor?.supervisorName,
+      },
+      allSupervisors: allSupervisors,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      currentSupervisor: null,
+      allSupervisors: [],
+    };
+  }
+}
