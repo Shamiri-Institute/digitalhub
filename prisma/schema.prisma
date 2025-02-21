@@ -1168,6 +1168,7 @@ model ClinicalSessionAttendance {
   date         DateTime              @default(now()) @map("date") @db.Timestamptz()
   supervisorId String                @map("supervisor_id") @db.VarChar(255)
   session      String                @map("session") @db.VarChar(255)
+  attendanceStatus Boolean?          @map("attendance_status")
   caseId       String
   case         ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
 
