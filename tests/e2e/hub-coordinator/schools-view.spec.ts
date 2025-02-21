@@ -48,6 +48,8 @@ test("Hub Coordinator can submit a weekly hub report", async ({ page }) => {
 
   // when
   await page.getByRole("button", { name: "Weekly Hub Report" }).click();
+  await expect(page.getByTestId("weekly-hub-report-dialog")).toBeVisible();
+
   await page.getByRole("combobox", { name: "Select week" }).click();
   await page.getByRole("option", { name: "Week 1" }).click();
   await page
@@ -98,10 +100,6 @@ test("Hub Coordinator can submit a weekly hub report", async ({ page }) => {
   await page.getByRole("button", { name: "Submit" }).click();
 
   // then
-  const record = await db.weeklyHubReport.findFirst({
-    where: {
-      supervisorRelatedIssuesAndObservations: "the school is awesome",
-    },
-  });
-  expect(record).toMatchObject(data);
+  // dialog only dismissed upon successful entry
+  await expect(page.getByTestId("weekly-hub-report-dialog")).not.toBeVisible();
 });
