@@ -1,25 +1,15 @@
 "use client";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
+import { attendanceColumns } from "#/app/(platform)/sc/clinical/components/columns";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-
-import { Button } from "#/components/ui/button";
+import DataTable from "#/components/data-table";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "#/components/ui/form";
-import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
@@ -83,53 +73,18 @@ export default function ClinicalCaseSessionsAttendanceHistory({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
+      <DialogContent className="z-10 max-h-[90%] max-w-[90vw] overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
           <h2>Clinical attendance history</h2>
         </DialogHeader>
-        <DialogAlertWidget
-          label={`${clinicalCase.pseudonym}`}
-          separator={true}
-        />
-        <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="complaint"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Complaint</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        className="min-h-[150px] resize-none"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <DialogFooter>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={() => setDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="brand"
-                  type="submit"
-                  loading={form.formState.isSubmitting}
-                  disabled={form.formState.isSubmitting}
-                >
-                  Save Changes
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+        <DialogAlertWidget label={`${clinicalCase.id}`} separator={true} />
+        <div className="mt-1 max-w-full overflow-x-auto overflow-y-scroll px-[0.4rem]">
+          <DataTable
+            columns={attendanceColumns}
+            data={clinicalCase.sessionAttendanceHistory || []}
+            className={"data-table data-table-action mt-4 bg-white"}
+            emptyStateMessage="No Clinical Case Attendance History"
+          />
         </div>
       </DialogContent>
     </Dialog>

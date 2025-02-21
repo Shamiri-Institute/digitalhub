@@ -378,7 +378,7 @@ export function MarkAttendance({
   );
 }
 
-function CustomIndicator({
+export function CustomIndicator({
   className,
   label,
 }: {
