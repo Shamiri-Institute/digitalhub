@@ -1,6 +1,7 @@
 "use server";
 
 import { currentSupervisor } from "#/app/auth";
+
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
 
@@ -132,6 +133,33 @@ export async function getClinicalCases() {
 export type ClinicalCases = Awaited<
   ReturnType<typeof getClinicalCases>
 >[number];
+
+export async function supSubmitConsultClinicalexpert(data: {
+  caseId: string;
+  name: string;
+  comment: string;
+}) {
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: {
+        consultingClinicalExpert: {
+          create: {
+            comment: data.comment,
+            name: data.name,
+          },
+        },
+      },
+    });
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
 
 export async function updateClinicalSessionAttendance(
   sessionId: string,
