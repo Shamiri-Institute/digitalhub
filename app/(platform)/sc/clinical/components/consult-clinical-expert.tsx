@@ -1,6 +1,9 @@
 "use client";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
+import {
+  ClinicalCases,
+  supSubmitConsultClinicalexpert,
+} from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 
 import { Button } from "#/components/ui/button";
@@ -19,6 +22,13 @@ import {
   FormLabel,
   FormMessage,
 } from "#/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,6 +38,8 @@ import { z } from "zod";
 
 const ComplaintSchema = z.object({
   referral: z.string().min(1, "Referral is required"),
+  consultant: z.string().min(1, "Consultant is required"),
+  message: z.string(),
 });
 
 type ComplaintFormValues = z.infer<typeof ComplaintSchema>;
@@ -45,27 +57,30 @@ export default function ConsultClinicalExpert({
     resolver: zodResolver(ComplaintSchema),
     defaultValues: {
       referral: clinicalCase.referralFrom,
+      consultant: "",
+      message: "",
     },
   });
 
   const onSubmit = async (data: ComplaintFormValues) => {
     try {
-      const response = {
-        success: true,
-        message: "Clinical case referred successfully",
-      };
+      const response = await supSubmitConsultClinicalexpert({
+        caseId: clinicalCase.id,
+        name: data.consultant,
+        comment: data.message,
+      });
 
       if (response.success) {
         toast({
           title: "Success",
           description: "Clinical case referred successfully",
         });
-        await revalidatePageAction("hc/reporting/fellow-reports/complaints");
+        await revalidatePageAction("sc/clinical");
         setDialogOpen(false);
       } else {
         toast({
           title: "Error",
-          description: response.message || "Failed to refer clinical case",
+          description: "Failed to refer clinical case",
           variant: "destructive",
         });
       }
@@ -91,24 +106,47 @@ export default function ConsultClinicalExpert({
           separator={true}
         />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
-          <div className="mb-4 grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Date of Complaint</label>
-              <p className="text-gray-600">{clinicalCase.dateAdded}</p>
-            </div>
-          </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="referral"
+                name="consultant"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Referral</FormLabel>
+                    <FormLabel>
+                      Select Consultant
+                      <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a consultant" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="dr-sara">
+                            Clinical Expert
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="message"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Message</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
-                        className="min-h-[150px] resize-none"
+                        className="min-h-[100px] resize-none"
                       />
                     </FormControl>
                     <FormMessage />
@@ -130,7 +168,7 @@ export default function ConsultClinicalExpert({
                   loading={form.formState.isSubmitting}
                   disabled={form.formState.isSubmitting}
                 >
-                  Save Changes
+                  Submit
                 </Button>
               </DialogFooter>
             </form>
