@@ -10,7 +10,7 @@ jobs:
   wait-for-vercel-deployment:
     runs-on: ubuntu-latest
     steps:
-      - run: sleep 30
+      - run: sleep 360
       - name: vercel-preview-url
         uses: zentered/vercel-preview-url@v1.1.9
         id: vercel_preview_url
