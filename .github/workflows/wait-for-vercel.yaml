@@ -1,18 +1,22 @@
+name: Get deployment url
 on:
   pull_request:
+    types:
+      - opened
+      - synchronize # Triggered when the PR branch is updated
+
 
 jobs:
   wait-for-vercel-deployment:
     runs-on: ubuntu-latest
     steps:
-      - uses: UnlyEd/github-action-await-vercel@v1 # TODO best practices recommend to use a fixed version instead of @v1 for production usage (i.e: @v1.2.32)
-        id: await-vercel
+      - run: sleep 30
+      - name: vercel-preview-url
+        uses: zentered/vercel-preview-url@v1.1.9
+        id: vercel_preview_url
         env:
           VERCEL_TOKEN: wpNgD5yXygHl4aT700JKq3lX
         with:
-          deployment-url: hub.shamiri.institute # TODO Replace by the domain you want to test
-          timeout: 10 # Wait for 10 seconds before failing
-          poll-interval: 1 # Wait for 1 second before each retry
-
-      - name: Display deployment status
-        run: "echo The deployment at ${{ fromJson(steps.await-vercel.outputs.deploymentDetails).url }} is ${{ fromJson(steps.await-vercel.outputs.deploymentDetails).readyState }}"
+          vercel_project_id: 'prj_dqyXyjUF6y4biivZFImL1VuDOAfX'
+      - name: Get URL
+        run: echo "https://${{ steps.vercel_preview_url.outputs.preview_url }}"
