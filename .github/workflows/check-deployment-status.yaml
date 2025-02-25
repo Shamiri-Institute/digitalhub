@@ -1,0 +1,19 @@
+name: Check deployment url
+
+on:
+  deployment_status:
+jobs:
+  run-e2es:
+    if: github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print out deployment URL
+        run: echo ${{ github.event.deployment_status.environment_url }}
+
+      # - name: Install dependencies
+      #   run: npm ci && npx playwright install --with-deps
+      # - name: Run tests
+      #   run: npx playwright test
+      #   env:
+      #     BASE_URL: ${{ github.event.deployment_status.environment_url }}
