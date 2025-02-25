@@ -27,6 +27,8 @@ export type Personnel = {
   id: string;
   role: ImplementerRole;
   label: string;
+  hub?: string;
+  project?: string;
 };
 
 export function PersonnelSwitcher({
@@ -79,7 +81,7 @@ export function PersonnelSwitcher({
               <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[360px] p-0 md:w-64">
+          <PopoverContent className="p-0 md:w-72">
             <Command
               filter={(value: string, search: string) => {
                 const person = personnel.find((person) => person.id === value);
@@ -102,15 +104,22 @@ export function PersonnelSwitcher({
                       onSelectPersonnel(person.id, person.role);
                       setOpen(false);
                     }}
+                    className="rounded-none"
                   >
                     <div className="flex flex-col gap-0.5">
                       <div className="text-[8px] font-medium uppercase tracking-widest">
-                        {person.role === ImplementerRole.SUPERVISOR
-                          ? "Supervisor"
-                          : "Hub Coordinator"}
+                        <span className="capitalize text-shamiri-new-blue">
+                          {person.role.replace("_", " ")}{" "}
+                        </span>
+                        <span className="truncate text-nowrap text-muted-foreground">
+                          ({person.hub})
+                        </span>
                       </div>
                       <span className="truncate text-ellipsis text-sm">
                         {person.label}
+                      </span>
+                      <span className="text-[8px] uppercase tracking-widest text-muted-foreground">
+                        {person.project}
                       </span>
                     </div>
                     <CheckIcon
