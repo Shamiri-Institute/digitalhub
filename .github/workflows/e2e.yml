@@ -66,11 +66,6 @@ jobs:
       # ideally we might want to create a different seed script for these tests so that we have deterministic data
       - name: Load test database dump
         run: npm run db:seed
-        # env:
-        #   PGPASSWORD: thriving
-
-      - name: Create production build
-        run: npm run build
 
       - name: Run playwright tests
         run: npm run test:ci
