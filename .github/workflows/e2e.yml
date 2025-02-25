@@ -2,9 +2,9 @@ name: Playwright end-to-end tests
 
 on:
   push:
-  branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 env:
   GOOGLE_ID: mock-google-client-id
@@ -63,16 +63,15 @@ jobs:
 
       - name: Migrate database
         run: npm run db:dev:migrate
+      # ideally we might want to create a different seed script for these tests so that we have deterministic data
       - name: Load test database dump
-        run: npm run test:db:load
-        env:
-          PGPASSWORD: thriving
+        run: npm run db:seed
 
       - name: Run playwright tests
         run: npm run test:ci
 
       - uses: actions/upload-artifact@v4
-        if: always()
+        if: ${{ !cancelled() }}
         with:
           name: playwright-artifacts
           path: .artifacts
