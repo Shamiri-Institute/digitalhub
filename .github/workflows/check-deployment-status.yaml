@@ -9,11 +9,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Print out deployment URL
+        id: grep_url_check
+        run: |
+          if echo "${{github.event.deployment_status.environment_url}}" | grep -q "shamiridigitalhub-testing"; then
+            echo "::set-output name=found::true"
+          else
+            echo "::set-output name="found::false"
+          fi
+      - name: Print testing URL if pattern is found
+        if: steps.grep_url_check.outputs.found == 'true'
         run: echo ${{ github.event.deployment_status.environment_url }}
-
-      # - name: Install dependencies
-      #   run: npm ci && npx playwright install --with-deps
-      # - name: Run tests
-      #   run: npx playwright test
-      #   env:
-      #     BASE_URL: ${{ github.event.deployment_status.environment_url }}
+      - name: Print false if pattern is found
+        if: steps.grep_url_check.outputs.found == 'false'
+        run: echo ${{ steps.grep_url_check.outputs.found }}
