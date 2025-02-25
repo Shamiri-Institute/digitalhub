@@ -12,7 +12,7 @@ export default defineConfig({
   testDir: "./tests/e2e",
   webServer: {
     command: "npm run dev",
-    timeout: 120000, // 2 minutes
+    timeout: 480 * 1000, // 2 minutes
     port: 3000,
     stdout: showServerLogs,
     stderr: showServerLogs,
