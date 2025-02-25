@@ -3,6 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 const isCI = !!process.env.CI;
 const slowMo = process.env.SLOW ? parseInt(process.env.SLOW) : undefined;
 const showServerLogs = process.env.LOG ? "pipe" : undefined;
+const useHeadless = process.env.CI ? { headless: true } : devices['Desktop Chrome'];
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -13,8 +14,8 @@ export default defineConfig({
     command: "npm run dev",
     timeout: 120000, // 2 minutes
     port: 3000,
-    stdout: "pipe",
-    stderr: "pipe",
+    stdout: showServerLogs,
+    stderr: showServerLogs,
   },
   fullyParallel: true,
   forbidOnly: isCI,
@@ -25,7 +26,7 @@ export default defineConfig({
     {
       name: "chromium",
       use: {
-        ...devices["Desktop Chrome"],
+        ...useHeadless,
         launchOptions: {
           slowMo,
         },
