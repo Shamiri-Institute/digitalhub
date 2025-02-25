@@ -9,7 +9,7 @@ export const PersonnelFixtures = {
     stateFile: path.join(__dirname, `./fixtures/supervisor-state.json`),
   },
   hubCoordinator: {
-    email: "edmund@shamiri.institute",
+    email: "wambugu.davis@shamiri.institute",
     stateFile: path.join(__dirname, `./fixtures/hub-coordinator-state.json`),
   },
   operations: {

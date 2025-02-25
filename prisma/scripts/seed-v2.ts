@@ -341,7 +341,7 @@ async function createCoreUsers(
     data: membershipData,
   });
 
-  const supervisorRecords = users.map((user) => {
+  const supervisorRecords = users.map(() => {
     const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
     const subCounty = faker.helpers.arrayElement(county.sub_counties);
 
@@ -862,7 +862,7 @@ async function main() {
   const hubs = await createHubs(projects, implementers);
   const hubCoordinators = await createHubCoordinators(hubs, implementers);
   const supervisors = await createSupervisors(hubs, 6, implementers);
-  await createCoreUsers(implementers, hubs, supervisors, hubCoordinators); // AT THE MOMENT THESE ARE ALL SUPERVISORS
+  await createCoreUsers(implementers, hubs, supervisors, hubCoordinators);
 
   const fellows = await createFellows(supervisors);
   const schools = await createSchools(hubs, supervisors);

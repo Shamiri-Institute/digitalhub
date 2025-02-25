@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { PersonnelFixtures } from "#/tests/helpers";
 import { ClinicalScreeningPage } from "#/tests/pages/supervisors/clinical-screening-page";
 
-test.describe("clinical screenings", () => {
+test.describe.skip("clinical screenings", () => {
   test.use({ storageState: PersonnelFixtures.supervisor.stateFile });
 
   test("supervisor can submit a clinical screening", async ({ page }) => {

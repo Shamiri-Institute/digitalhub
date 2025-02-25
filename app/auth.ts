@@ -12,9 +12,10 @@ export async function currentHubCoordinator() {
   if (!user) {
     return null;
   }
-  const { membership } = user;
+  const {
+    membership: { identifier },
+  } = user;
 
-  const { identifier } = membership;
   if (!identifier) {
     return null;
   }

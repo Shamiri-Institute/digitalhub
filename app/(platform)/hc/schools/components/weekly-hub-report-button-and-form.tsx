@@ -129,7 +129,10 @@ export default function WeeklyHubReportButtonAndForm({
           Weekly Hub Report
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-h-[90vh] overflow-y-auto"
+        data-testid="weekly-hub-report-dialog"
+      >
         <DialogHeader className="text-xl font-semibold leading-7">
           Submit weekly hub report
         </DialogHeader>
