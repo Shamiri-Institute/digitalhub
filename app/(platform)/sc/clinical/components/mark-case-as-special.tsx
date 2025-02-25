@@ -1,141 +1,123 @@
 "use client";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 
+import { flagClinicalCaseForFollowUp } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "#/components/ui/form";
+import { Form, FormField } from "#/components/ui/form";
+import { Label } from "#/components/ui/label";
+import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
-import { toast } from "#/components/ui/use-toast";
+import { useToast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const ComplaintSchema = z.object({
-  referral: z.string().min(1, "Referral is required"),
+const FormSchema = z.object({
+  reason: z.string({
+    required_error: "Please enter the drop out reason",
+  }),
 });
 
-type ComplaintFormValues = z.infer<typeof ComplaintSchema>;
-
 export default function MarkCaseAsSpecial({
+  caseId,
+  reason,
   children,
-  clinicalCase,
 }: {
+  caseId: string;
+  reason: string | null;
   children: React.ReactNode;
-  clinicalCase: ClinicalCases;
 }) {
-  const [open, setDialogOpen] = useState<boolean>(false);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const { toast } = useToast();
 
-  const form = useForm<ComplaintFormValues>({
-    resolver: zodResolver(ComplaintSchema),
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
     defaultValues: {
-      referral: clinicalCase.referralFrom,
+      reason: reason || "",
     },
   });
 
-  const onSubmit = async (data: ComplaintFormValues) => {
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
-      const response = {
-        success: true,
-        message: "Clinical case referred successfully",
-      };
+      await flagClinicalCaseForFollowUp({
+        caseId,
+        reason: data.reason,
+      });
 
-      if (response.success) {
-        toast({
-          title: "Success",
-          description: "Clinical case referred successfully",
-        });
-        await revalidatePageAction("hc/reporting/fellow-reports/complaints");
-        setDialogOpen(false);
-      } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to refer clinical case",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error(error);
       toast({
-        title: "Error",
-        description: "Something went wrong",
+        variant: "default",
+        title: "Case flagged for follow up",
+      });
+      form.reset();
+      setDialogOpen(false);
+    } catch (error) {
+      toast({
         variant: "destructive",
+        title: "Error flagging case for follow up. Please try again",
       });
     }
-  };
+  }
 
   return (
-    <Dialog open={open} onOpenChange={setDialogOpen}>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
-        <DialogHeader className="bg-white">
-          <h2>Mark case as special</h2>
-        </DialogHeader>
-        <DialogAlertWidget
-          label={`${clinicalCase.pseudonym}`}
-          separator={true}
-        />
-        <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
-          <div className="mb-4 grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Date of Complaint</label>
-              <p className="text-gray-600">{clinicalCase.dateAdded}</p>
-            </div>
-          </div>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="referral"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Referral</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        className="min-h-[150px] resize-none"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <DialogContent className="gap-0 p-0">
+        <Form {...form}>
+          <form
+            id="modifyFlagAction"
+            onSubmit={form.handleSubmit(onSubmit, (errors) => {
+              console.error({ errors });
+            })}
+            className="overflow-hidden text-ellipsis"
+          >
+            <DialogHeader className="space-y-0 px-6 py-4">
+              <div className="flex items-center gap-2">
+                <span className="text-base font-medium">
+                  Reason for Flagging Clinical Case
+                </span>
+              </div>
+            </DialogHeader>
+            <Separator />
 
-              <DialogFooter>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={() => setDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="brand"
-                  type="submit"
-                  loading={form.formState.isSubmitting}
-                  disabled={form.formState.isSubmitting}
-                >
-                  Save Changes
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </div>
+            <div className="my-6 space-y-6">
+              <div className="px-6">
+                <FormField
+                  control={form.control}
+                  name="reason"
+                  render={({ field }) => (
+                    <div className="mt-3 grid w-full gap-1.5">
+                      <Label htmlFor="reason">Reason</Label>
+                      <Textarea
+                        id="reason"
+                        name="reason"
+                        onChange={field.onChange}
+                        defaultValue={reason ?? field.value}
+                        placeholder="e.g. This case needs the police because..."
+                        className="mt-1.5 resize-none bg-card"
+                      />
+                    </div>
+                  )}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end px-6 pb-6">
+              <Button
+                form="modifyFlagAction"
+                variant="brand"
+                type="submit"
+                className="w-full"
+              >
+                Submit
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

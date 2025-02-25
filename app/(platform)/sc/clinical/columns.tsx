@@ -16,6 +16,7 @@ import { cn } from "#/lib/utils";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
 import Image from "next/image";
 
 export const columns: ColumnDef<ClinicalCases>[] = [
@@ -59,10 +60,25 @@ export const columns: ColumnDef<ClinicalCases>[] = [
   {
     accessorKey: "pseudonym",
     header: "Pseudonym",
+    cell: ({ row }) => {
+      const flagged = row.original.flagged;
+      return (
+        <div className="flex items-center gap-1">
+          <span>{row.original.pseudonym}</span>
+          {flagged && (
+            <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
+          )}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "dateAdded",
     header: "Date added",
+    cell: ({ row }) => {
+      const date = new Date(row.original.dateAdded || "");
+      return format(date, "dd MMM yyyy");
+    },
   },
   {
     accessorKey: "caseStatus",
