@@ -1124,11 +1124,11 @@ model ClinicalScreeningInfo {
   flagged                   Boolean                     @default(false)
   flaggedReason             String?                     @map("flagged_reason") @db.Text()
 
-  initialCaseHistoryId      String? @map("initial_case_history_id") @db.VarChar(255)
-  initialCaseHistoryOwnerId String? @map("initial_case_history_owner_id") @db.VarChar(255)
-
-  initialReferredFrom          String? @map("initial_referred_from") @db.VarChar(255)
-  initialReferredFromSpecified String? @map("initial_referred_from_specified") @db.VarChar(255)
+  initialCaseHistoryId         String?                        @map("initial_case_history_id") @db.VarChar(255)
+  initialCaseHistoryOwnerId    String?                        @map("initial_case_history_owner_id") @db.VarChar(255)
+  initialReferredFrom          String?                        @map("initial_referred_from") @db.VarChar(255)
+  initialReferredFromSpecified String?                        @map("initial_referred_from_specified") @db.VarChar(255)
+  followUptreatmentPlan        ClinicalFollowUpTreatmentPlan?
 
   @@map("clinical_screening_info")
 }
@@ -1162,15 +1162,15 @@ model ClinicalExpertCaseNotes {
 }
 
 model ClinicalSessionAttendance {
-  id           String                @id @default(cuid())
-  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt    DateTime              @updatedAt @map("updated_at") @db.Timestamptz()
-  date         DateTime              @default(now()) @map("date") @db.Timestamptz()
-  supervisorId String                @map("supervisor_id") @db.VarChar(255)
-  session      String                @map("session") @db.VarChar(255)
-  attendanceStatus Boolean?          @map("attendance_status")
-  caseId       String
-  case         ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
+  id               String                @id @default(cuid())
+  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime              @updatedAt @map("updated_at") @db.Timestamptz()
+  date             DateTime              @default(now()) @map("date") @db.Timestamptz()
+  supervisorId     String                @map("supervisor_id") @db.VarChar(255)
+  session          String                @map("session") @db.VarChar(255)
+  attendanceStatus Boolean?              @map("attendance_status")
+  caseId           String
+  case             ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
 
   @@map("clinical_session_attendance")
 }
@@ -1180,7 +1180,7 @@ model FellowComplaints {
   createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt    DateTime    @updatedAt @map("updated_at")
   complaint    String      @db.Text()
-  comments     String?      @db.Text()
+  comments     String?     @db.Text()
   supervisorId String?     @map("supervisor_id") @db.VarChar(255)
   supervisor   Supervisor? @relation(fields: [supervisorId], references: [id])
   fellowId     String      @map("fellow_id") @db.VarChar(255)
@@ -1459,4 +1459,25 @@ model FellowPaymentComplaints {
   fellowAttendance        FellowAttendance @relation(fields: [fellowAttendanceId], references: [id])
 
   @@map("fellow_payment_complaints")
+}
+
+enum CLINICAL_FOLLOW_UP_SESSION_FREQUENCY {
+  ONCE_A_WEEK
+  TWICE_A_WEEK
+  ONCE_EVERY_TWO_WEEKS
+}
+
+model ClinicalFollowUpTreatmentPlan {
+  id                                      String                @id @default(cuid())
+  createdAt                               DateTime              @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt                               DateTime              @updatedAt @map("updated_at") @db.Timestamptz()
+  currentORSScore                         String                @map("current_ors_score") @db.Text()
+  plannedSessions                         Int                   @map("planned_sessions")
+  sessionFrequency                        CLINICAL_FOLLOW_UP_SESSION_FREQUENCY     @map("session_frequency")
+  plannedTreatmentIntervention            String                @map("planned_treatment_intervention") @db.Text()
+  plannedTreatmentInterventionExplanation String                @map("planned_treatment_intervention_explanation") @db.Text()
+  case                                    ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
+  caseId                                  String                @unique @map("case_id")
+
+  @@map("clinical_follow_up_treatment_plan")
 }
