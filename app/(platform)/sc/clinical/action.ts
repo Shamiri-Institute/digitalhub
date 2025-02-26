@@ -67,7 +67,7 @@ export async function getClinicalCases() {
     return {
       id: caseInfo.id,
       school: caseInfo.student?.school?.schoolName,
-      pseudonym: "Anonymous",
+      pseudonym: caseInfo.pseudonym || "Anonymous",
       dateAdded: caseInfo.createdAt.toLocaleDateString(),
       caseStatus: caseInfo.caseStatus,
       risk: caseInfo.riskStatus,
@@ -204,7 +204,6 @@ export async function referClinicalCaseAsSupervisor(data: {
         referralNotes: data.referralNotes,
         referredToSupervisorId: data.referredToPerson ?? null,
         referralStatus: "Pending",
-        // @ts-ignore - its in a pr that is not yet merged
         referralReason: data.referralReason,
         caseTransferTrail: {
           create: {
