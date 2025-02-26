@@ -1129,6 +1129,7 @@ model ClinicalScreeningInfo {
 
   initialReferredFrom          String? @map("initial_referred_from") @db.VarChar(255)
   initialReferredFromSpecified String? @map("initial_referred_from_specified") @db.VarChar(255)
+  pseudonym                   String? @map("pseudonym") @db.VarChar(255)
 
   @@map("clinical_screening_info")
 }
