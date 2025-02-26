@@ -11,7 +11,7 @@ export default async function ClinicalPage() {
     <div className="w-full self-stretch">
       <div className="flex h-full flex-col">
         <div className="container w-full grow space-y-4 py-10">
-          <div className="flex flex-col items-center  justify-between space-y-3">
+          <div className="flex flex-col items-center justify-between space-y-3">
             <ClinicalCasesStats />
             <Separator />
             <ClinicalCasesTable cases={cases} />

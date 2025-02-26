@@ -6,18 +6,39 @@ import {
   subColumnsGeneral,
   subColumnsSessionAttendanceHistory,
 } from "#/app/(platform)/sc/clinical/columns";
+import { AddNewClinicalCaseForm } from "#/app/(platform)/sc/clinical/components/add-new-clinical-case-form";
 import DataTable from "#/components/data-table";
+import { Button } from "#/components/ui/button";
+import { DialogTrigger } from "#/components/ui/dialog";
+import { useState } from "react";
 
 export default async function ClinicalCasesTable({
   cases,
 }: {
   cases: ClinicalCases[];
 }) {
+  const [addClinicalCaseDialog, setAddClinicalCaseDialog] = useState(false);
+  function renderTableActions() {
+    return (
+      <div>
+        <AddNewClinicalCaseForm
+          open={addClinicalCaseDialog}
+          onOpenChange={setAddClinicalCaseDialog}
+        >
+          <DialogTrigger asChild={true}>
+            <Button variant="brand">New case</Button>
+          </DialogTrigger>
+        </AddNewClinicalCaseForm>
+      </div>
+    );
+  }
+
   return (
     <DataTable
       data={cases}
       columns={columns}
       className="data-table data-table-action mt-4 bg-white"
+      renderTableActions={renderTableActions()}
       renderSubComponent={({ row }) => (
         <div className="space-y-6 p-4">
           {/* Emergency Section */}
