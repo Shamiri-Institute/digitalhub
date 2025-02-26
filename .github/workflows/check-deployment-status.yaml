@@ -1,0 +1,24 @@
+name: Check deployment url
+
+on:
+  deployment_status:
+jobs:
+  deployment_status_check:
+    if: github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print out deployment URL
+        id: grep_url_check
+        run: |
+          if echo "${{github.event.deployment_status.environment_url}}" | grep -q "shamiridigitalhub-testing"; then
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "found=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Print testing URL if pattern is found
+        if: steps.grep_url_check.outputs.found == 'true'
+        run: echo ${{ github.event.deployment_status.environment_url }}
+      - name: Print false if pattern is not found
+        if: steps.grep_url_check.outputs.found == 'false'
+        run: echo ${{ steps.grep_url_check.outputs.found }}
