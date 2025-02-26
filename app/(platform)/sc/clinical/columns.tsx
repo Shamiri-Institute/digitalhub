@@ -324,9 +324,10 @@ const colors: Colors = {
   Mid: "bg-shamiri-light-orange",
   High: "bg-shamiri-light-red",
   Severe: "bg-shamiri-red",
+  No: "bg-shamiri-green",
+  Medium: "bg-shamiri-light-orange",
 };
 
 function renderRiskOrCaseStatus(value: string) {
-  // return <Badge  className={cn(colors[value], "text-white")}>{value}</Badge>;
-  return <Badge variant="destructive">{value}</Badge>;
+  return <Badge className={cn(colors[value], "text-white")}>{value}</Badge>;
 }
