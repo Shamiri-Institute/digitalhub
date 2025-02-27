@@ -72,7 +72,10 @@ export async function getClinicalCases() {
       caseStatus: caseInfo.caseStatus,
       risk: caseInfo.riskStatus,
       age,
-      referralFrom: caseInfo.referredFrom || "Unknown",
+      referralFrom:
+        caseInfo.referredFrom ||
+        caseInfo.initialReferredFromSpecified ||
+        "Unknown",
       hubId: supervisor?.hubId,
       emergencyPresentingIssues: formattedEmergencyIssues,
       flagged: caseInfo.flagged,
@@ -204,7 +207,7 @@ export async function referClinicalCaseAsSupervisor(data: {
         referralNotes: data.referralNotes,
         referredToSupervisorId: data.referredToPerson ?? null,
         referralStatus: "Pending",
-        referralReason: data.referralReason,
+        // referralReason: data.referralReason,
         caseTransferTrail: {
           create: {
             from: data.referredFromSpecified ?? "",
@@ -256,5 +259,96 @@ export async function getSupervisorsInHub() {
       currentSupervisor: null,
       allSupervisors: [],
     };
+  }
+}
+
+export async function getSchoolsInHub() {
+  const supervisor = await currentSupervisor();
+
+  const schools = await db.school.findMany({
+    where: {
+      hubId: supervisor?.hubId,
+    },
+    include: {
+      students: true,
+      interventionSessions: {
+        select: {
+          id: true,
+          session: {
+            select: {
+              sessionName: true,
+              sessionLabel: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const supervisorsInHub = await db.supervisor.findMany({
+    where: {
+      hubId: supervisor?.hubId,
+    },
+  });
+
+  const fellowsInHub = await db.fellow.findMany({
+    where: {
+      hubId: supervisor?.hubId,
+    },
+  });
+
+  return {
+    schools,
+    supervisorsInHub,
+    fellowsInHub,
+    currentSupervisorId: supervisor?.id,
+  };
+}
+
+export async function createClinicalCaseBySupervisor(data: {
+  studentId: string;
+  schoolId: string;
+  currentSupervisorId: string;
+  pseudonym: string;
+  stream: string;
+  classForm: string;
+  age: number;
+  gender: string;
+  initialContact: string;
+  supervisorId?: string;
+  fellowId?: string;
+  sessionId: string;
+}) {
+  try {
+    await db.clinicalScreeningInfo.create({
+      data: {
+        studentId: data.studentId,
+        schoolId: data.schoolId,
+        currentSupervisorId: data.currentSupervisorId,
+        pseudonym: data.pseudonym,
+        initialReferredFromSpecified: data.initialContact,
+        initialReferredFrom: data.fellowId ?? data.supervisorId,
+        flagged: false,
+        riskStatus: "No",
+        caseStatus: "Active",
+      },
+    });
+
+    await db.student.update({
+      where: {
+        id: data.studentId,
+      },
+      data: {
+        form: parseInt(data.classForm),
+        stream: data.stream,
+        age: data.age,
+        gender: data.gender,
+      },
+    });
+    revalidatePath("/sc/clinical");
+    return { success: true, message: "Clinical case created successfully" };
+  } catch (error) {
+    console.error(error);
+    return { success: false, message: "Something went wrong" };
   }
 }

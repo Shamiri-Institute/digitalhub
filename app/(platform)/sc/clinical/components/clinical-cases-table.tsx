@@ -10,12 +10,36 @@ import { AddNewClinicalCaseForm } from "#/app/(platform)/sc/clinical/components/
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
+import { Prisma } from "@prisma/client";
 import { useState } from "react";
 
 export default async function ClinicalCasesTable({
   cases,
+  schools,
+  fellowsInHub,
+  supervisorsInHub,
+  currentSupervisorId,
 }: {
   cases: ClinicalCases[];
+  schools: Prisma.SchoolGetPayload<{
+    include: {
+      students: true;
+      interventionSessions: {
+        select: {
+          id: true;
+          session: {
+            select: {
+              sessionName: true;
+              sessionLabel: true;
+            };
+          };
+        };
+      };
+    };
+  }>[];
+  fellowsInHub: Prisma.FellowGetPayload<{}>[];
+  supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
+  currentSupervisorId: string;
 }) {
   const [addClinicalCaseDialog, setAddClinicalCaseDialog] = useState(false);
   function renderTableActions() {
@@ -24,6 +48,10 @@ export default async function ClinicalCasesTable({
         <AddNewClinicalCaseForm
           open={addClinicalCaseDialog}
           onOpenChange={setAddClinicalCaseDialog}
+          schools={schools}
+          fellowsInHub={fellowsInHub}
+          supervisorsInHub={supervisorsInHub}
+          currentSupervisorId={currentSupervisorId}
         >
           <DialogTrigger asChild={true}>
             <Button variant="brand">New case</Button>
