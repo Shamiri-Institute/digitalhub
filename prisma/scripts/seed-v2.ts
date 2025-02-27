@@ -288,7 +288,6 @@ async function createCoreUsers(
   fellows: Fellow[],
 ) {
   console.log("creating core users");
-
   const userData = [
     {
       id: objectId("user"),
