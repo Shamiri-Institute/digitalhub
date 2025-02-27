@@ -16,6 +16,10 @@ const sessionFixtures = [
     userEmail: PersonnelFixtures.operations.email,
     stateFile: PersonnelFixtures.operations.stateFile,
   },
+  {
+    userEmail: PersonnelFixtures.fellow.email,
+    stateFile: PersonnelFixtures.fellow.stateFile,
+  },
 ];
 
 async function globalSetup() {

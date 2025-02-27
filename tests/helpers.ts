@@ -16,6 +16,10 @@ export const PersonnelFixtures = {
     email: "benny@shamiri.institute",
     stateFile: path.join(__dirname, `./fixtures/operations-state.json`),
   },
+  fellow: {
+    email: "stanley.george@shamiri.institute",
+    stateFile: path.join(__dirname, `./fixtures/fellow-state.json`),
+  },
 };
 
 export async function generateSessionToken(email: string) {
