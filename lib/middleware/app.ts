@@ -30,6 +30,10 @@ export default async function AppMiddleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/sc", req.url));
       }
 
+      if (ifFellowUserAndUnprefixedPath(session, path)) {
+        return NextResponse.redirect(new URL("/fel", req.url));
+      }
+
       return NextResponse.redirect(new URL("/", req.url));
     }
 
