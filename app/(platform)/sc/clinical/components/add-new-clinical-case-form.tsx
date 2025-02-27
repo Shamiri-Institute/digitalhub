@@ -1,5 +1,10 @@
 "use client";
 
+import { createClinicalCaseBySupervisor } from "#/app/(platform)/sc/clinical/action";
+import {
+  SchoolSelector,
+  StudentSelector,
+} from "#/app/(platform)/screenings/[caseId]/components/create-clinical-case";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
 import {
@@ -18,7 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
+import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Prisma } from "@prisma/client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -41,15 +48,41 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export function AddNewClinicalCaseForm({
-  open,
-  onOpenChange,
   children,
+  schools = [],
+  fellowsInHub = [],
+  supervisorsInHub = [],
+  currentSupervisorId,
 }: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   children?: React.ReactNode;
+  schools: Prisma.SchoolGetPayload<{
+    include: {
+      students: true;
+      interventionSessions: {
+        select: {
+          id: true;
+          session: {
+            select: {
+              sessionName: true;
+              sessionLabel: true;
+            };
+          };
+        };
+      };
+    };
+  }>[];
+  fellowsInHub: Prisma.FellowGetPayload<{}>[];
+  supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
+  currentSupervisorId: string;
 }) {
+  const [open, setOpen] = useState(false);
   const [initialContactType, setInitialContactType] = useState<string>("");
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [students, setStudents] = useState<Prisma.StudentGetPayload<{}>[]>([]);
+  const [availableSessions, setAvailableSessions] = useState<
+    Array<{ id: string; sessionLabel: string }>
+  >([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -61,13 +94,103 @@ export function AddNewClinicalCaseForm({
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    console.log(data);
-    // Handle form submission
+  const handleSchoolSelect = (schoolId: string) => {
+    setSelectedSchoolId(schoolId);
+    form.setValue("school", schoolId);
+
+    const selectedSchool = schools?.find((school) => school.id === schoolId);
+    if (selectedSchool?.students) {
+      setStudents(selectedSchool.students);
+    }
+
+    if (selectedSchool?.interventionSessions) {
+      setAvailableSessions(
+        selectedSchool.interventionSessions.map(({ id, session }) => ({
+          id,
+          sessionLabel: session?.sessionLabel || "",
+        })),
+      );
+    }
+  };
+
+  const handleStudentSelect = (studentId: string) => {
+    setSelectedStudentId(studentId);
+    form.setValue("studentName", studentId);
+
+    const selectedStudent = students.find(
+      (student) => student.id === studentId,
+    );
+    if (selectedStudent) {
+      form.setValue("studentName", selectedStudent.studentName || "");
+      form.setValue("admissionNumber", Number(selectedStudent.admissionNumber));
+      form.setValue(
+        "yearOfBirth",
+        selectedStudent.yearOfBirth?.toString() || "",
+      );
+      form.setValue(
+        "gender",
+        (selectedStudent.gender?.toLowerCase() as any) || "",
+      );
+      form.setValue("classForm", selectedStudent.form?.toString() || "");
+      form.setValue("stream", selectedStudent.stream || "");
+    }
+  };
+
+  const onSubmit = async (data: FormValues) => {
+    if (!selectedSchoolId || !selectedStudentId) {
+      toast({
+        title: "Missing required fields",
+        description: "Please select both a school and a student",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await createClinicalCaseBySupervisor({
+        schoolId: selectedSchoolId,
+        currentSupervisorId,
+        studentId: selectedStudentId,
+        pseudonym: data.pseudonym,
+        stream: data.stream || "",
+        classForm: data.classForm,
+        age: new Date().getFullYear() - parseInt(data.yearOfBirth),
+        gender: data.gender,
+        initialContact: data.initialContact,
+        supervisorId: data.supervisor,
+        fellowId: data.fellow,
+        sessionId: data.session,
+      });
+
+      if (response.success) {
+        toast({
+          title: "Clinical case created successfully",
+        });
+        form.reset();
+        setSelectedSchoolId("");
+        setSelectedStudentId("");
+        setAvailableSessions([]);
+        setInitialContactType("");
+        setOpen(false);
+      } else {
+        toast({
+          title: "Error creating clinical case",
+          description: response.message || "Failed to create clinical case",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error creating clinical case:", error);
+      toast({
+        title: "Error creating clinical case",
+        description: "Something went wrong while creating the case",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       {children}
       <DialogContent className="w-2/5 max-w-none">
         <Form {...form}>
@@ -75,49 +198,30 @@ export function AddNewClinicalCaseForm({
             <DialogHeader>
               <span className="text-xl">Add clinical case</span>
             </DialogHeader>
-            <FormField
-              control={form.control}
-              name="school"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    School
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select school" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {/* Add school options here */}
-                      <SelectItem value="school1">School 1</SelectItem>
-                      <SelectItem value="school2">School 2</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            <FormField
-              control={form.control}
-              name="studentName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Student Name
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <FormLabel>
+                School
+                <span className="text-red-500">*</span>
+              </FormLabel>
+              <SchoolSelector
+                schools={schools}
+                activeSchoolId={selectedSchoolId}
+                onSelectSchool={handleSchoolSelect}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <FormLabel>
+                Student
+                <span className="text-red-500">*</span>
+              </FormLabel>
+              <StudentSelector
+                students={students}
+                activeStudentId={selectedStudentId}
+                onSelectStudent={handleStudentSelect}
+              />
+            </div>
 
             <FormField
               control={form.control}
@@ -281,13 +385,13 @@ export function AddNewClinicalCaseForm({
               )}
             />
 
-            <div className="flex w-full flex-1 flex-row gap-4 bg-red-500">
+            <div className="flex w-full flex-1 flex-row gap-4">
               {initialContactType === "supervisor" && (
                 <FormField
                   control={form.control}
                   name="supervisor"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex-1">
                       <FormLabel>
                         Select Supervisor
                         <span className="text-red-500">*</span>
@@ -300,13 +404,14 @@ export function AddNewClinicalCaseForm({
                           <SelectValue placeholder="Select supervisor" />
                         </SelectTrigger>
                         <SelectContent>
-                          {/* Add supervisor options here */}
-                          <SelectItem value="supervisor1">
-                            Supervisor 1
-                          </SelectItem>
-                          <SelectItem value="supervisor2">
-                            Supervisor 2
-                          </SelectItem>
+                          {supervisorsInHub.map((supervisor) => (
+                            <SelectItem
+                              key={supervisor.id}
+                              value={supervisor.id}
+                            >
+                              {supervisor.supervisorName}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -320,7 +425,7 @@ export function AddNewClinicalCaseForm({
                   control={form.control}
                   name="fellow"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex-1">
                       <FormLabel>
                         Select Fellow
                         <span className="text-red-500">*</span>
@@ -333,9 +438,11 @@ export function AddNewClinicalCaseForm({
                           <SelectValue placeholder="Select fellow" />
                         </SelectTrigger>
                         <SelectContent>
-                          {/* Add fellow options here */}
-                          <SelectItem value="fellow1">Fellow 1</SelectItem>
-                          <SelectItem value="fellow2">Fellow 2</SelectItem>
+                          {fellowsInHub.map((fellow) => (
+                            <SelectItem key={fellow.id} value={fellow.id}>
+                              {fellow.fellowName}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -362,9 +469,11 @@ export function AddNewClinicalCaseForm({
                       <SelectValue placeholder="Select session" />
                     </SelectTrigger>
                     <SelectContent>
-                      {/* Add session options here */}
-                      <SelectItem value="session1">Session 1</SelectItem>
-                      <SelectItem value="session2">Session 2</SelectItem>
+                      {availableSessions.map((session) => (
+                        <SelectItem key={session.id} value={session.id}>
+                          {session.sessionLabel}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -376,7 +485,7 @@ export function AddNewClinicalCaseForm({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => setOpen(false)}
               >
                 Dismiss
               </Button>

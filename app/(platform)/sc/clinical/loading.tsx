@@ -60,6 +60,7 @@ export default function ClinicalTableSkeleton() {
       <CasesStatsSkeleton />
       <Separator />
       <DataTable
+        key="skeleton-clinical-cases-table"
         columns={loadingColumns}
         data={Array.from(Array(10).keys()).map(() => ({}))}
         className="data-table data-table-action mt-4"
