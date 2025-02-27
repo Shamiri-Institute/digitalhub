@@ -14,7 +14,7 @@ export const sendEmail = async ({
   subject: string;
   react: React.ReactElement;
 }) => {
-  const html = render(react);
+  const html = await render(react);
 
   if (
     process.env.SEND_EMAILS === "1" ||
