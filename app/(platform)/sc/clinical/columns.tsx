@@ -331,6 +331,5 @@ const colors: Record<string, BadgeVariant> = {
 };
 
 function renderRiskOrCaseStatus(value: string) {
-  const variant = colors[value] || "shamiri-green";
-  return <Badge variant={variant}>{value}</Badge>;
+  return <Badge variant={colors[value] || "shamiri-green"}>{value}</Badge>;
 }
