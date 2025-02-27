@@ -285,32 +285,30 @@ async function createCoreUsers(
   hubs: Hub[],
   supervisors: Supervisor[],
   hubCoordinators: HubCoordinator[],
+  fellows: Fellow[],
 ) {
   console.log("creating core users");
+
   const userData = [
     {
       id: objectId("user"),
       email: "benny@shamiri.institute",
-      role: ImplementerRole.SUPERVISOR,
-      roleByVisibleId: "SPV24_S_01",
+      role: ImplementerRole.HUB_COORDINATOR,
     },
     {
       id: objectId("user"),
       email: "shadrack.lilan@shamiri.institute",
       role: ImplementerRole.SUPERVISOR,
-      roleByVisibleId: "SPV24_S_01",
     },
     {
       id: objectId("user"),
       email: "wambugu.davis@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
-      roleByVisibleId: "SPV24_S_01",
+      role: ImplementerRole.FELLOW,
     },
     {
       id: objectId("user"),
       email: "stanley.george@shamiri.institute",
       role: ImplementerRole.SUPERVISOR,
-      roleByVisibleId: "SPV24_S_01",
     },
   ];
 
@@ -333,7 +331,9 @@ async function createCoreUsers(
           ? faker.helpers.arrayElement(hubCoordinators).id
           : role === "SUPERVISOR"
             ? faker.helpers.arrayElement(supervisors).id
-            : null,
+            : role === "FELLOW"
+              ? faker.helpers.arrayElement(fellows).id
+              : null,
     };
   });
 
@@ -341,32 +341,69 @@ async function createCoreUsers(
     data: membershipData,
   });
 
-  const supervisorRecords = users.map((user) => {
-    const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
-    const subCounty = faker.helpers.arrayElement(county.sub_counties);
+  const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
+  const subCounty = faker.helpers.arrayElement(county.sub_counties);
 
-    return {
-      id: objectId("supervisor"),
-      implementerId: faker.helpers.arrayElement(implementers).id,
-      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
-      supervisorName: faker.person.fullName(),
-      supervisorEmail: faker.internet.email(),
-      county: county.name,
-      subCounty: subCounty,
-      bankName: faker.company.name(),
-      bankBranch: faker.location.county(),
-      bankAccountNumber: faker.finance.accountNumber(),
-      bankAccountName: faker.person.fullName(),
-      kra: faker.finance.accountNumber(),
-      nhif: faker.finance.accountNumber(),
-      dateOfBirth: faker.date.birthdate(),
-      hubId: faker.helpers.arrayElement(hubs).id,
-    };
-  });
+  const supervisorRecords = userData
+    .filter((user) => user.role === "SUPERVISOR")
+    .map((user) => {
+      return {
+        id: objectId("supervisor"),
+        implementerId: faker.helpers.arrayElement(implementers).id,
+        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+        supervisorName: faker.person.fullName(),
+        supervisorEmail: faker.internet.email(),
+        county: county.name,
+        subCounty: subCounty,
+        bankName: faker.company.name(),
+        bankBranch: faker.location.county(),
+        bankAccountNumber: faker.finance.accountNumber(),
+        bankAccountName: faker.person.fullName(),
+        kra: faker.finance.accountNumber(),
+        nhif: faker.finance.accountNumber(),
+        dateOfBirth: faker.date.birthdate(),
+        cellNumber: faker.phone.number({ style: "international" }),
+        mpesaNumber: faker.phone.number({ style: "international" }),
+        gender: faker.person.sex(),
+        idNumber: faker.string.alpha({ casing: "upper", length: 8 }),
+        hubId: faker.helpers.arrayElement(hubs).id,
+      };
+    });
 
-  return db.supervisor.createManyAndReturn({
-    data: supervisorRecords,
-  });
+  const hubCoordinatorRecords = userData
+    .filter((user) => user.role === "HUB_COORDINATOR")
+    .map((user) => {
+      return {
+        id: objectId("hubcoordinator"),
+        implementerId: faker.helpers.arrayElement(implementers).id,
+        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+        coordinatorName: faker.person.fullName(),
+        coordinatorEmail: user.email,
+        county: county.name,
+        subCounty: subCounty,
+        bankName: faker.company.name(),
+        bankBranch: faker.location.county(),
+        bankAccountNumber: faker.finance.accountNumber(),
+        bankAccountName: faker.person.fullName(),
+        kra: faker.finance.accountNumber(),
+        nhif: faker.finance.accountNumber(),
+        dateOfBirth: faker.date.birthdate(),
+        cellNumber: faker.phone.number({ style: "international" }),
+        mpesaNumber: faker.phone.number({ style: "international" }),
+        gender: faker.person.sex(),
+        idNumber: faker.string.alpha({ casing: "upper", length: 8 }),
+        assignedHubId: faker.helpers.arrayElement(hubs).id,
+      };
+    });
+
+  return Promise.all([
+    db.hubCoordinator.createManyAndReturn({
+      data: hubCoordinatorRecords,
+    }),
+    db.supervisor.createManyAndReturn({
+      data: supervisorRecords,
+    }),
+  ]);
 }
 
 async function createHubCoordinators(hubs: Hub[], implementers: Implementer[]) {
@@ -378,7 +415,6 @@ async function createHubCoordinators(hubs: Hub[], implementers: Implementer[]) {
       id: objectId("user"),
       email: faker.internet.email(),
       role: ImplementerRole.HUB_COORDINATOR,
-      roleByVisibleId: `HUB_COORDINATOR_${i + 1}`,
     });
   }
 
@@ -393,7 +429,7 @@ async function createHubCoordinators(hubs: Hub[], implementers: Implementer[]) {
     userId: user.id,
     implementerId: faker.helpers.arrayElement(implementers).id,
     role: ImplementerRole.HUB_COORDINATOR,
-    identifier: faker.string.alpha({ casing: "upper", length: 6 }),
+    identifier: objectId("hubcoordinator"),
   }));
 
   await db.implementerMember.createMany({
@@ -403,9 +439,10 @@ async function createHubCoordinators(hubs: Hub[], implementers: Implementer[]) {
   const hubCoordinatorRecords = hubCoordinators.map((_user) => {
     const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
     const subCounty = faker.helpers.arrayElement(county.sub_counties);
+    const gender = faker.person.sexType();
 
     return {
-      id: objectId("hubcoordinator"),
+      id: membershipData.find((x) => x.userId === _user.id)?.identifier!,
       implementerId: faker.helpers.arrayElement(implementers).id,
       visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
       coordinatorName: faker.person.fullName(),
@@ -419,6 +456,13 @@ async function createHubCoordinators(hubs: Hub[], implementers: Implementer[]) {
       kra: faker.finance.accountNumber(),
       nhif: faker.finance.accountNumber(),
       dateOfBirth: faker.date.birthdate(),
+      cellNumber: faker.phone.number({ style: "international" }),
+      mpesaNumber: faker.phone.number({ style: "international" }),
+      gender:
+        Math.random() > 0.9
+          ? "Other"
+          : gender[0]?.toUpperCase() + gender.substring(1),
+      idNumber: faker.string.numeric({ length: 8 }),
       assignedHubId: faker.helpers.arrayElement(hubs).id,
     };
   });
@@ -441,7 +485,6 @@ async function createSupervisors(
         id: objectId("user"),
         email: faker.internet.email(),
         role: ImplementerRole.SUPERVISOR,
-        roleByVisibleId: "SUPERVISOR",
         hubId: hub.id,
         implementerId: hub.implementerId,
       }));
@@ -460,7 +503,7 @@ async function createSupervisors(
     implementerId: supervisors.find((supervisor) => supervisor.id === user.id)
       ?.implementerId!,
     role: ImplementerRole.SUPERVISOR,
-    identifier: faker.string.alpha({ casing: "upper", length: 6 }),
+    identifier: objectId("supervisor"),
   }));
 
   await db.implementerMember.createMany({
@@ -470,9 +513,10 @@ async function createSupervisors(
   const supervisorRecords = supervisors.map((_user) => {
     const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
     const subCounty = faker.helpers.arrayElement(county.sub_counties);
+    const gender = faker.person.sexType();
 
     return {
-      id: objectId("supervisor"),
+      id: membershipData.find((x) => x.userId === _user.id)?.identifier!,
       implementerId: _user.implementerId,
       visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
       supervisorName: faker.person.fullName(),
@@ -486,6 +530,13 @@ async function createSupervisors(
       kra: faker.finance.accountNumber(),
       nhif: faker.finance.accountNumber(),
       dateOfBirth: faker.date.birthdate(),
+      cellNumber: faker.phone.number({ style: "international" }),
+      mpesaNumber: faker.phone.number({ style: "international" }),
+      gender:
+        Math.random() > 0.9
+          ? "Other"
+          : gender[0]?.toUpperCase() + gender.substring(1),
+      idNumber: faker.string.numeric({ length: 8 }),
       hubId: _user.hubId,
     };
   });
@@ -498,14 +549,23 @@ async function createSupervisors(
 async function createFellows(supervisors: Supervisor[]) {
   console.log("creating fellows");
   const fellows: Prisma.FellowCreateManyInput[] = [];
+  const counties = KENYAN_COUNTIES.map((county) => {
+    const { name, sub_counties } = county;
+    return { name, sub_counties };
+  });
 
   supervisors.forEach((supervisor) => {
     const numFellows = faker.number.int({ min: 10, max: 15 });
+    const subCounties = counties.find(
+      (county) => county.name === supervisor.county,
+    )?.sub_counties;
 
     for (let i = 0; i < numFellows; i++) {
-      const fellowName = faker.person.fullName();
+      const gender = faker.person.sexType();
+      const fellowName = faker.person.fullName({ sex: gender });
+
       fellows.push({
-        id: objectId("fellow"),
+        id: objectId("user"),
         visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
         fellowName,
         fellowEmail: faker.internet.email().toLowerCase(),
@@ -517,14 +577,47 @@ async function createFellows(supervisors: Supervisor[]) {
         hubId: supervisor.hubId,
         implementerId: supervisor.implementerId,
         county: supervisor.county,
-        subCounty: supervisor.subCounty,
+        subCounty: subCounties
+          ? faker.helpers.arrayElement(subCounties)
+          : supervisor.subCounty,
         dateOfBirth: faker.date.birthdate(),
+        cellNumber: faker.phone.number({ style: "international" }),
+        gender:
+          Math.random() > 0.9
+            ? "Other"
+            : gender[0]?.toUpperCase() + gender.substring(1),
+        idNumber: faker.string.numeric({ length: 8 }),
       });
     }
   });
 
+  const createFellows = await db.user.createManyAndReturn({
+    data: fellows.map(({ id, fellowEmail }) => ({
+      id,
+      email: fellowEmail,
+    })),
+  });
+
+  const membershipData = createFellows.map((user) => ({
+    userId: user.id,
+    implementerId: fellows.find((fellow) => fellow.id === user.id)
+      ?.implementerId!,
+    role: ImplementerRole.FELLOW,
+    identifier: objectId("fellow"),
+  }));
+
+  await db.implementerMember.createMany({
+    data: membershipData,
+  });
+
   return db.fellow.createManyAndReturn({
-    data: fellows,
+    data: fellows.map((fellow) => {
+      const { id, ..._fellow } = fellow;
+      return {
+        id: membershipData.find((fellow) => fellow.userId === id)?.identifier!,
+        ..._fellow,
+      };
+    }),
   });
 }
 
@@ -862,9 +955,16 @@ async function main() {
   const hubs = await createHubs(projects, implementers);
   const hubCoordinators = await createHubCoordinators(hubs, implementers);
   const supervisors = await createSupervisors(hubs, 6, implementers);
-  await createCoreUsers(implementers, hubs, supervisors, hubCoordinators); // AT THE MOMENT THESE ARE ALL SUPERVISORS
-
   const fellows = await createFellows(supervisors);
+
+  await createCoreUsers(
+    implementers,
+    hubs,
+    supervisors,
+    hubCoordinators,
+    fellows,
+  );
+
   const schools = await createSchools(hubs, supervisors);
   await createInterventionGroups(schools, fellows);
   const schoolsWithGroupsAndFellows = await db.school.findMany({

@@ -84,17 +84,26 @@ export default async function SupervisorSchedulePage() {
     <div className="flex h-full w-full flex-col">
       <div className="container w-full grow bg-white py-10">
         <ScheduleHeader
-          sessions={Number(schoolStats[0]?.session_count) || 0}
-          fellows={Number(schoolStats[0]?.fellow_count) || 0}
-          cases={Number(schoolStats[0]?.clinical_case_count) || 0}
+          stats={[
+            {
+              title: "Sessions",
+              count: Number(schoolStats[0]?.session_count) || 0,
+            },
+            {
+              title: "Fellows",
+              count: Number(schoolStats[0]?.fellow_count) || 0,
+            },
+            {
+              title: "Cases",
+              count: Number(schoolStats[0]?.clinical_case_count) || 0,
+            },
+          ]}
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
         <ScheduleCalendar
           hubId={supervisor?.hubId!}
           aria-label="Session schedule"
-          schools={schools.filter(
-            (school) => school.assignedSupervisorId === supervisor?.id,
-          )}
+          schools={schools}
           supervisors={supervisors}
           fellowRatings={fellowRatings}
           role={supervisor?.user.membership.role!}

@@ -80,7 +80,7 @@ import { WeekView } from "./week-view";
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
   hubId: string;
   schools: Prisma.SchoolGetPayload<{}>[];
-  supervisors: Prisma.SupervisorGetPayload<{
+  supervisors?: Prisma.SupervisorGetPayload<{
     include: {
       supervisorAttendances: {
         include: {
@@ -96,13 +96,13 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
       assignedSchools: true;
     };
   }>[];
-  fellowRatings: {
+  fellowRatings?: {
     id: string;
     averageRating: number;
   }[];
   role: ImplementerRole;
   supervisorId?: string;
-  hubSessionTypes: Prisma.SessionNameGetPayload<{}>[];
+  hubSessionTypes?: Prisma.SessionNameGetPayload<{}>[];
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
@@ -112,7 +112,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const mode = searchParams.get("mode") ?? "month";
 
   const sessionTypes: { [key: string]: boolean } = {};
-  props.hubSessionTypes.map((sessionType) => {
+  props.hubSessionTypes?.map((sessionType) => {
     sessionTypes[sessionType.sessionName] = true;
   });
   const [filters, setFilters] = useState<Filters>({
@@ -224,18 +224,23 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 <ScheduleModeToggle role={props.role} />
               </div>
               <FiltersContext.Provider value={{ filters, setFilters }}>
-                <ScheduleFilterToggle sessionFilters={props.hubSessionTypes} />
+                <ScheduleFilterToggle
+                  sessionFilters={props.hubSessionTypes ?? []}
+                />
               </FiltersContext.Provider>
             </div>
-            <SessionsLoader>
-              <CreateSessionButton
-                open={newScheduleDialog}
-                setDialogOpen={setNewScheduleDialog}
-                schools={schools}
-                hubId={hubId}
-                hubSessionTypes={props.hubSessionTypes}
-              />
-            </SessionsLoader>
+            {(props.role === "HUB_COORDINATOR" ||
+              props.role === "SUPERVISOR") && (
+              <SessionsLoader>
+                <CreateSessionButton
+                  open={newScheduleDialog}
+                  setDialogOpen={setNewScheduleDialog}
+                  schools={schools}
+                  hubId={hubId}
+                  hubSessionTypes={props.hubSessionTypes}
+                />
+              </SessionsLoader>
+            )}
           </div>
           <div className="mt-4 w-full">
             <FiltersContext.Provider value={{ filters, setFilters }}>
@@ -269,7 +274,7 @@ function CreateSessionButton({
   setDialogOpen: Dispatch<SetStateAction<boolean>>;
   hubId: string;
   schools: Prisma.SchoolGetPayload<{}>[];
-  hubSessionTypes: Prisma.SessionNameGetPayload<{}>[];
+  hubSessionTypes?: Prisma.SessionNameGetPayload<{}>[];
 }) {
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -288,7 +293,7 @@ function CreateSessionButton({
             toggleDialog={setDialogOpen}
             schools={schools}
             hubId={hubId}
-            hubSessionTypes={hubSessionTypes}
+            hubSessionTypes={hubSessionTypes ?? []}
           />
         </DialogContent>
       </DialogPortal>
@@ -366,7 +371,7 @@ function CalendarView({
     state: CalendarState;
     hubId: string;
   };
-  supervisors: Prisma.SupervisorGetPayload<{
+  supervisors?: Prisma.SupervisorGetPayload<{
     include: {
       supervisorAttendances: {
         include: {
@@ -382,7 +387,7 @@ function CalendarView({
       assignedSchools: true;
     };
   }>[];
-  fellowRatings: {
+  fellowRatings?: {
     id: string;
     averageRating: number;
   }[];
@@ -562,7 +567,7 @@ function CalendarView({
         <FellowAttendance
           supervisors={supervisors}
           supervisorId={role === "SUPERVISOR" ? supervisorId : undefined}
-          fellowRatings={fellowRatings}
+          fellowRatings={fellowRatings ?? []}
           role={role}
           session={session}
           isOpen={fellowAttendanceDialog}
@@ -574,7 +579,7 @@ function CalendarView({
           role={role}
           session={session}
           fellows={
-            supervisors.find((supervisor) => supervisor.id === supervisorId)
+            supervisors?.find((supervisor) => supervisor.id === supervisorId)
               ?.fellows ?? []
           }
         />

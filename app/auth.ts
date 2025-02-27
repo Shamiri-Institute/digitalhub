@@ -136,6 +136,95 @@ export async function currentSupervisor() {
   return { ...supervisor, user, fellows: newFellowsData };
 }
 
+export async function currentFellow() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { membership } = user;
+
+  const { identifier } = membership;
+  if (!identifier) {
+    return null;
+  }
+
+  const fellow = await db.fellow.findFirst({
+    where: { id: identifier },
+    include: {
+      hub: {
+        include: {
+          schools: {
+            include: {
+              assignedSupervisor: true,
+              interventionSessions: {
+                include: {
+                  sessionRatings: true,
+                  session: true,
+                },
+              },
+              interventionGroups: {
+                include: {
+                  leader: true,
+                },
+              },
+              students: {
+                include: {
+                  assignedGroup: true,
+                  _count: {
+                    select: {
+                      clinicalCases: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          sessions: true,
+        },
+      },
+      fellowAttendances: {
+        include: {
+          repaymentRequests: true,
+        },
+      },
+      repaymentRequests: {
+        include: {
+          fellowAttendance: {
+            include: {
+              group: true,
+              school: true,
+            },
+          },
+        },
+      },
+      groups: {
+        include: {
+          _count: {
+            select: {
+              students: true,
+            },
+          },
+          school: {
+            include: {
+              _count: {
+                select: {
+                  interventionSessions: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!fellow) {
+    return null;
+  }
+
+  return { ...fellow, user };
+}
+
 export type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>;
 
 export async function getCurrentUser() {

@@ -46,7 +46,7 @@ export default function SupervisorAttendance({
   supervisors,
   role,
 }: {
-  supervisors: Prisma.SupervisorGetPayload<{
+  supervisors?: Prisma.SupervisorGetPayload<{
     include: {
       supervisorAttendances: {
         include: {
@@ -70,40 +70,42 @@ export default function SupervisorAttendance({
   >([]);
 
   useEffect(() => {
-    const tableData = supervisors.map((supervisor) => {
-      const totalAttendedFellows = supervisor.fellows.filter((fellow) => {
-        const attended = fellow.fellowAttendances.find(
-          (attendance) => attendance.sessionId === context.session?.id,
+    const tableData =
+      supervisors?.map((supervisor) => {
+        const totalAttendedFellows = supervisor.fellows.filter((fellow) => {
+          const attended = fellow.fellowAttendances.find(
+            (attendance) => attendance.sessionId === context.session?.id,
+          );
+          if (attended) {
+            return fellow;
+          }
+        });
+        const attendance = supervisor.supervisorAttendances.find(
+          (_attendance) => _attendance.sessionId === context.session?.id,
         );
-        if (attended) {
-          return fellow;
-        }
-      });
-      const attendance = supervisor.supervisorAttendances.find(
-        (_attendance) => _attendance.sessionId === context.session?.id,
-      );
-      return {
-        id: attendance?.id,
-        supervisorId: supervisor.id,
-        supervisorName: supervisor.supervisorName ?? "",
-        pointSchools: supervisor.assignedSchools.map(
-          (school) => school.schoolName,
-        ),
-        attendance: attendance?.attended,
-        phoneNumber: supervisor.cellNumber ?? "",
-        fellows: totalAttendedFellows.length + "/" + supervisor.fellows.length,
-        sessionId: attendance?.sessionId,
-        schoolId: attendance?.schoolId,
-        absenceReason: attendance?.absenceReason ?? "",
-        absenceComments: attendance?.absenceComments ?? "",
-        schoolName:
-          context.session?.school?.schoolName ??
-          context.session?.venue ??
-          undefined,
-        sessionType: context.session?.sessionType ?? undefined,
-        sessionStatus: context.session?.status,
-      };
-    });
+        return {
+          id: attendance?.id,
+          supervisorId: supervisor.id,
+          supervisorName: supervisor.supervisorName ?? "",
+          pointSchools: supervisor.assignedSchools.map(
+            (school) => school.schoolName,
+          ),
+          attendance: attendance?.attended,
+          phoneNumber: supervisor.cellNumber ?? "",
+          fellows:
+            totalAttendedFellows.length + "/" + supervisor.fellows.length,
+          sessionId: attendance?.sessionId,
+          schoolId: attendance?.schoolId,
+          absenceReason: attendance?.absenceReason ?? "",
+          absenceComments: attendance?.absenceComments ?? "",
+          schoolName:
+            context.session?.school?.schoolName ??
+            context.session?.venue ??
+            undefined,
+          sessionType: context.session?.sessionType ?? undefined,
+          sessionStatus: context.session?.status,
+        };
+      }) ?? [];
     setAttendances(tableData);
   }, [context.isOpen, context.session, supervisors]);
 
