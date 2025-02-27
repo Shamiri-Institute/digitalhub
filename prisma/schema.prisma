@@ -866,6 +866,7 @@ model InterventionSession {
   delayedPaymentRequests  DelayedPaymentRequest[]
   InterventionGroupReport InterventionGroupReport[]
   sessionComments         SessionComment[]
+  clinicalCases           ClinicalScreeningInfo[]
 
   @@unique([schoolId, sessionType], name: "interventionBySchoolIdAndSessionType")
   @@unique([schoolId, sessionId], name: "interventionBySchoolIdAndSessionId")
@@ -1127,9 +1128,11 @@ model ClinicalScreeningInfo {
   initialCaseHistoryId      String? @map("initial_case_history_id") @db.VarChar(255)
   initialCaseHistoryOwnerId String? @map("initial_case_history_owner_id") @db.VarChar(255)
 
-  initialReferredFrom          String? @map("initial_referred_from") @db.VarChar(255)
-  initialReferredFromSpecified String? @map("initial_referred_from_specified") @db.VarChar(255)
-  pseudonym                   String? @map("pseudonym") @db.VarChar(255)
+  initialReferredFrom          String?              @map("initial_referred_from") @db.VarChar(255)
+  initialReferredFromSpecified String?              @map("initial_referred_from_specified") @db.VarChar(255)
+  pseudonym                    String?              @map("pseudonym") @db.VarChar(255)
+  sessionWhenCaseIsFlaggedId   String?              @map("session_when_case_is_flagged_id") @db.VarChar(255)
+  sessionWhenCaseIsFlagged     InterventionSession? @relation(fields: [sessionWhenCaseIsFlaggedId], references: [id])
 
   @@map("clinical_screening_info")
 }
@@ -1163,15 +1166,15 @@ model ClinicalExpertCaseNotes {
 }
 
 model ClinicalSessionAttendance {
-  id           String                @id @default(cuid())
-  createdAt    DateTime              @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt    DateTime              @updatedAt @map("updated_at") @db.Timestamptz()
-  date         DateTime              @default(now()) @map("date") @db.Timestamptz()
-  supervisorId String                @map("supervisor_id") @db.VarChar(255)
-  session      String                @map("session") @db.VarChar(255)
-  attendanceStatus Boolean?          @map("attendance_status")
-  caseId       String
-  case         ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
+  id               String                @id @default(cuid())
+  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime              @updatedAt @map("updated_at") @db.Timestamptz()
+  date             DateTime              @default(now()) @map("date") @db.Timestamptz()
+  supervisorId     String                @map("supervisor_id") @db.VarChar(255)
+  session          String                @map("session") @db.VarChar(255)
+  attendanceStatus Boolean?              @map("attendance_status")
+  caseId           String
+  case             ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
 
   @@map("clinical_session_attendance")
 }
@@ -1181,7 +1184,7 @@ model FellowComplaints {
   createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt    DateTime    @updatedAt @map("updated_at")
   complaint    String      @db.Text()
-  comments     String?      @db.Text()
+  comments     String?     @db.Text()
   supervisorId String?     @map("supervisor_id") @db.VarChar(255)
   supervisor   Supervisor? @relation(fields: [supervisorId], references: [id])
   fellowId     String      @map("fellow_id") @db.VarChar(255)
