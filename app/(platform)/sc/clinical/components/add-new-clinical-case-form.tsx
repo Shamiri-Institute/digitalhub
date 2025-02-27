@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
+import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
 import { useState } from "react";
@@ -31,18 +32,18 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 const formSchema = z.object({
-  school: z.string().min(1, "School is required"),
-  studentName: z.string().min(1, "Student name is required"),
-  pseudonym: z.string().min(1, "Pseudonym is required"),
+  school: stringValidation("School"),
+  studentName: stringValidation("Student name is required"),
+  pseudonym: stringValidation("Pseudonym is required"),
   admissionNumber: z.number().min(1, "Admission number is required"),
-  yearOfBirth: z.string().min(1, "Year of birth is required"),
+  yearOfBirth: stringValidation("Year of birth is required"),
   gender: z.enum(["male", "female", "other"]),
-  classForm: z.string().min(1, "Class/Form is required"),
+  classForm: stringValidation("Class/Form is required"),
   stream: z.string().optional(),
   initialContact: z.enum(["student", "fellow", "supervisor", "teacher"]),
   supervisor: z.string().optional(),
   fellow: z.string().optional(),
-  session: z.string().min(1, "Session is required"),
+  session: stringValidation("Session is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;

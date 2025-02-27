@@ -65,9 +65,9 @@ export const columns: ColumnDef<ClinicalCases>[] = [
       return (
         <div className="flex items-center gap-1">
           <span>{row.original.pseudonym}</span>
-          {flagged && (
+          {flagged ? (
             <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
-          )}
+          ) : null}
         </div>
       );
     },
@@ -75,10 +75,8 @@ export const columns: ColumnDef<ClinicalCases>[] = [
   {
     accessorKey: "dateAdded",
     header: "Date added",
-    cell: ({ row }) => {
-      const date = new Date(row.original.dateAdded || "");
-      return format(date, "dd MMM yyyy");
-    },
+    cell: ({ row }) =>
+      format(new Date(row.original.dateAdded || ""), "dd MMM yyyy"),
   },
   {
     accessorKey: "caseStatus",
