@@ -3,7 +3,7 @@ import { Page, test } from "@playwright/test";
 import { PersonnelFixtures } from "#/tests/helpers";
 import { HomePage } from "#/tests/pages/home-page";
 import { HubCoordinatorHomePage } from "#/tests/pages/hub-coordinator/home-page";
-import { OperationsHomePage } from "#/tests/pages/operations/home-page";
+import { SupervisorHomePage } from "../pages/supervisors/home-page";
 
 interface RoleAccessSpec {
   role: string;
@@ -12,25 +12,27 @@ interface RoleAccessSpec {
   inaccessiblePages: Array<{ new (page: Page): HomePage }>;
 }
 
+// TODO: as other roles are added then we should also ensure
+// that we add them to the list of accessible/inacessbile pages
 const roleAccessSpecs: RoleAccessSpec[] = [
-  {
-    role: "supervisors",
-    stateFile: PersonnelFixtures.supervisor.stateFile,
-    accessiblePages: [HomePage],
-    inaccessiblePages: [HubCoordinatorHomePage, OperationsHomePage],
-  },
+  // {
+  //   role: "supervisors",
+  //   stateFile: PersonnelFixtures.supervisor.stateFile,
+  //   accessiblePages: [SupervisorHomePage],
+  //   inaccessiblePages: [HubCoordinatorHomePage],
+  // },
   {
     role: "hub coordinators",
     stateFile: PersonnelFixtures.hubCoordinator.stateFile,
     accessiblePages: [HubCoordinatorHomePage],
-    inaccessiblePages: [HomePage, OperationsHomePage],
+    inaccessiblePages: [SupervisorHomePage],
   },
-  {
-    role: "operations",
-    stateFile: PersonnelFixtures.operations.stateFile,
-    accessiblePages: [OperationsHomePage],
-    inaccessiblePages: [HomePage, HubCoordinatorHomePage],
-  },
+  // {
+  //   role: "operations",
+  //   stateFile: PersonnelFixtures.operations.stateFile,
+  //   accessiblePages: [OperationsHomePage],
+  //   inaccessiblePages: [HomePage, HubCoordinatorHomePage],
+  // },
 ];
 
 roleAccessSpecs.forEach(

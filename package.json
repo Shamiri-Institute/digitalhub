@@ -18,8 +18,10 @@
     "lint": "next lint",
     "test:ci": "playwright test",
     "test:dev": "dotenv -c development -- playwright test",
+    "test:dev:only": "dotenv -c development -- playwright test --ui tests/e2e/hub-coordinator/schools-view.spec.ts",
+    "test:dev:ui": "dotenv -c development -- playwright test --ui",
     "test:db:dump": "docker-compose exec db pg_dump --data-only -U youth -d shamiri_db -f /var/lib/postgresql/data/dump.sql && docker cp $(docker-compose ps -q db):/var/lib/postgresql/data/dump.sql ./tests/fixtures/dump.sql",
-    "test:db:load": "psql -U youth -d shamiri_db -h localhost -p 5432 -f ./tests/fixtures/dump.sql",
+    "test:db:load": "psql -d shamiri_db -h localhost -p 5432 -f ./tests/fixtures/dump.sql",
     "test:unit": "dotenv -c development -- vitest",
     "next-auth:session": "dotenv -c development -- tsx scripts/auth/get-next-session.ts",
     "db:dev:up": "docker-compose down && docker-compose up db",
@@ -127,6 +129,6 @@
     "tailwindcss": "^3.4.14",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.6.3",
-    "vitest": "^1.0.4"
+    "vitest": "^1.6.1"
   }
 }
