@@ -207,7 +207,7 @@ export async function referClinicalCaseAsSupervisor(data: {
         referralNotes: data.referralNotes,
         referredToSupervisorId: data.referredToPerson ?? null,
         referralStatus: "Pending",
-        // referralReason: data.referralReason,
+        referralReason: data.referralReason,
         caseTransferTrail: {
           create: {
             from: data.referredFromSpecified ?? "",
