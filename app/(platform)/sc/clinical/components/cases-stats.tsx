@@ -1,15 +1,15 @@
 import { getClinicalCasesStats } from "../action";
 
 export default async function ClinicalCasesStats() {
-  const casesStats = await getClinicalCasesStats();
-  const totalCases = casesStats.totalCases;
-  const completedCases = casesStats.completedCases;
-  const followUpCases = casesStats.followUpCases;
-  const activeCases = casesStats.activeCases;
-
-  const activeCasesPercentage = (activeCases / totalCases) * 100;
-  const followUpCasesPercentage = (followUpCases / totalCases) * 100;
-  const completedCasesPercentage = (completedCases / totalCases) * 100;
+  const {
+    totalCases,
+    completedCases,
+    followUpCases,
+    activeCases,
+    activeCasesPercentage,
+    followUpCasesPercentage,
+    completedCasesPercentage,
+  } = await getClinicalCasesStats();
 
   return (
     <div className="flex w-full flex-1 flex-col gap-2">
