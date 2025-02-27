@@ -311,23 +311,28 @@ export const subColumnsSessionAttendanceHistory: ColumnDef<SessionAttendanceData
     },
   ];
 
-type Colors = {
-  [key: string]: string;
-};
+type BadgeVariant =
+  | "destructive"
+  | "warning"
+  | "shamiri-green"
+  | "default"
+  | "secondary"
+  | "outline";
 
-const colors: Colors = {
-  Active: "bg-shamiri-green",
-  FollowUp: "bg-shamiri-light-orange",
-  Referred: "bg-shamiri-light-red",
-  Terminated: "bg-shamiri-red",
-  Low: "bg-shamiri-green",
-  Mid: "bg-shamiri-light-orange",
-  High: "bg-shamiri-light-red",
-  Severe: "bg-shamiri-red",
-  No: "bg-shamiri-green",
-  Medium: "bg-shamiri-light-orange",
+const colors: Record<string, BadgeVariant> = {
+  Active: "shamiri-green",
+  FollowUp: "warning",
+  Referred: "destructive",
+  Terminated: "destructive",
+  Low: "shamiri-green",
+  Mid: "warning",
+  High: "destructive",
+  Severe: "destructive",
+  No: "shamiri-green",
+  Medium: "warning",
 };
 
 function renderRiskOrCaseStatus(value: string) {
-  return <Badge className={cn(colors[value], "text-white")}>{value}</Badge>;
+  const variant = colors[value] || "shamiri-green";
+  return <Badge variant={variant}>{value}</Badge>;
 }

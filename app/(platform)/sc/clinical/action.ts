@@ -331,6 +331,7 @@ export async function createClinicalCaseBySupervisor(data: {
         flagged: false,
         riskStatus: "No",
         caseStatus: "Active",
+        sessionWhenCaseIsFlaggedId: data.sessionId,
       },
     });
 
