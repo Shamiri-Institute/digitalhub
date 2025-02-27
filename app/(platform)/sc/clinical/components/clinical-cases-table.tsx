@@ -11,9 +11,8 @@ import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { Prisma } from "@prisma/client";
-import { useState } from "react";
 
-export default async function ClinicalCasesTable({
+export default function ClinicalCasesTable({
   cases,
   schools,
   fellowsInHub,
@@ -41,32 +40,27 @@ export default async function ClinicalCasesTable({
   supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
   currentSupervisorId: string;
 }) {
-  const [addClinicalCaseDialog, setAddClinicalCaseDialog] = useState(false);
-  function renderTableActions() {
-    return (
-      <div>
-        <AddNewClinicalCaseForm
-          open={addClinicalCaseDialog}
-          onOpenChange={setAddClinicalCaseDialog}
-          schools={schools}
-          fellowsInHub={fellowsInHub}
-          supervisorsInHub={supervisorsInHub}
-          currentSupervisorId={currentSupervisorId}
-        >
-          <DialogTrigger asChild={true}>
-            <Button variant="brand">New case</Button>
-          </DialogTrigger>
-        </AddNewClinicalCaseForm>
-      </div>
-    );
-  }
+  const renderTableActions = (
+    <div>
+      <AddNewClinicalCaseForm
+        schools={schools}
+        fellowsInHub={fellowsInHub}
+        supervisorsInHub={supervisorsInHub}
+        currentSupervisorId={currentSupervisorId}
+      >
+        <DialogTrigger asChild={true}>
+          <Button variant="brand">New case</Button>
+        </DialogTrigger>
+      </AddNewClinicalCaseForm>
+    </div>
+  );
 
   return (
     <DataTable
       data={cases}
       columns={columns}
       className="data-table data-table-action mt-4 bg-white"
-      renderTableActions={renderTableActions()}
+      renderTableActions={renderTableActions}
       renderSubComponent={({ row }) => (
         <div className="space-y-6 p-4">
           {/* Emergency Section */}

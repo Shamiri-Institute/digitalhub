@@ -77,7 +77,10 @@ export default function ClinicalCaseSessionsAttendanceHistory({
         <DialogHeader className="bg-white">
           <h2>Clinical attendance history</h2>
         </DialogHeader>
-        <DialogAlertWidget label={`${clinicalCase.id}`} separator={true} />
+        <DialogAlertWidget
+          label={`${clinicalCase.pseudonym}`}
+          separator={true}
+        />
         <div className="mt-1 max-w-full overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <DataTable
             columns={attendanceColumns}
