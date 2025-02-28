@@ -1,9 +1,9 @@
 "use server";
 
 import { currentSupervisor } from "#/app/auth";
-import { SupervisorSchema } from "./schema";
 import { db } from "#/lib/db";
 import { z } from "zod";
+import { SupervisorSchema } from "./schema";
 
 export async function getSupervisorProfileData() {
   try {

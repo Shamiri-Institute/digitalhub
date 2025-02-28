@@ -44,8 +44,7 @@ import { SupervisorSchema, SupervisorType } from "./schema";
 
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
-export default function ProfileForm({}: {
-}) {
+export default function ProfileForm({}: {}) {
   const { data: session } = useSession();
   const [loaded, setLoaded] = useState(false);
   const form = useForm<SupervisorType>({

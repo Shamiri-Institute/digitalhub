@@ -7,5 +7,10 @@ export default async function SupervisorLayout({
   children: React.ReactNode;
   profileModal: React.ReactNode;
 }) {
-  return <div className="w-full self-stretch bg-white">THis is just a test of the profile {profileModal}{children}</div>;
+  return (
+    <div className="w-full self-stretch bg-white">
+      THis is just a test of the profile {profileModal}
+      {children}
+    </div>
+  );
 }
