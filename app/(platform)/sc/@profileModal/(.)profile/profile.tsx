@@ -1,7 +1,7 @@
 "use client";
 
 import { Icons } from "#/components/icons";
-import { getSupervisorProfileData, updateSupervisorProfile } from "./actions";
+import { updateSupervisorProfile } from "./actions";
 
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -38,15 +38,18 @@ import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { SupervisorSchema, SupervisorType } from "./schema";
 
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
+import { useRouter } from "next/navigation";
+
 export default function ProfileForm({}: {}) {
   const { data: session } = useSession();
-  const [loaded, setLoaded] = useState(false);
+  const router = useRouter();
+
   const form = useForm<SupervisorType>({
     resolver: zodResolver(SupervisorSchema),
     defaultValues: {
@@ -63,33 +66,9 @@ export default function ProfileForm({}: {}) {
       bankBranch: "",
     },
   });
-  useEffect(() => {
-    (async () => {
-      const profile = await getSupervisorProfileData();
-      if (profile) {
-        const dateValue = profile.dateOfBirth
-          ? new Date(profile.dateOfBirth).toISOString().split("T")[0]
-          : "";
-
-        form.reset({
-          supervisorEmail: profile.supervisorEmail || "",
-          supervisorName: profile.supervisorName || "",
-          idNumber: profile.idNumber || "",
-          cellNumber: profile.cellNumber || "",
-          mpesaNumber: profile.mpesaNumber || "",
-          dateOfBirth: dateValue,
-          gender: profile.gender === "Female" ? "Female" : "Male",
-          county: profile.county || "",
-          subCounty: profile.subCounty || "",
-          bankName: profile.bankName || "",
-          bankBranch: profile.bankBranch || "",
-        });
-      }
-      setLoaded(true);
-    })();
-  }, [form]);
 
   const countyWatcher = form.watch("county");
+
   useEffect(() => {
     if (form.formState.dirtyFields.county) {
       form.setValue("subCounty", "");
@@ -115,12 +94,15 @@ export default function ProfileForm({}: {}) {
     }
   }
 
-  if (!loaded) {
-    return null;
-  }
-
   return (
-    <Dialog>
+    <Dialog
+      open={true}
+      onOpenChange={(open) => {
+        if (!open) {
+          router.back();
+        }
+      }}
+    >
       <DialogContent className="p-5">
         <DialogHeader>
           <DialogTitle>My Profile</DialogTitle>
@@ -296,7 +278,7 @@ export default function ProfileForm({}: {}) {
                               <SelectValue placeholder="Select county" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="max-h-[200px]">
                             {counties.map((c) => (
                               <SelectItem key={c} value={c}>
                                 {c}
@@ -440,7 +422,9 @@ export default function ProfileForm({}: {}) {
               </div>
             </div>
             <DialogFooter className="pt-4">
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" onClick={() => router.back()}>
+                Cancel
+              </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? "Updating..." : "Update & Save"}
               </Button>

@@ -9,7 +9,7 @@ export default async function SupervisorLayout({
 }) {
   return (
     <div className="w-full self-stretch bg-white">
-      THis is just a test of the profile {profileModal}
+      {profileModal}
       {children}
     </div>
   );
