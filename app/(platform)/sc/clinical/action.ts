@@ -268,3 +268,35 @@ export async function getSupervisorsInHub() {
     };
   }
 }
+
+export async function updateTreatmentPlan(data: {
+  caseId: string;
+  currentOrsScore: number;
+  plannedSessions: number;
+  sessionFrequency: string;
+  treatmentInterventions: string[];
+  otherIntervention?: string;
+  interventionExplanation: string;
+}) {
+  try {
+    await db.clinicalFollowUpTreatmentPlan.update({
+      where: {
+        id: data.caseId,
+      },
+      data: {
+        currentORSScore: data.currentOrsScore,
+        plannedSessions: data.plannedSessions,
+        sessionFrequency: data.sessionFrequency,
+        plannedTreatmentIntervention: data.treatmentInterventions.join(", "),
+        otherTreatmentIntervention: data.otherIntervention,
+        plannedTreatmentInterventionExplanation: data.interventionExplanation,
+        caseId: data.caseId,
+      },
+    });
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
