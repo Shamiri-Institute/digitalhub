@@ -30,7 +30,14 @@ import {
   SchoolIcon,
 } from "./ui/layout-icons";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
@@ -98,6 +105,7 @@ function LayoutV2({
   const activeColor = "#0085FF";
   const inactiveColour = "#969696";
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setPopoverOpen(false);
@@ -130,8 +138,8 @@ function LayoutV2({
                 {/*TODO: notification counter */}
               </div>
               <div className="nav-link">
-                <Popover>
-                  <PopoverTrigger>
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
                     <div className="flex items-center space-x-2">
                       <Avatar className="h-8 w-8">
                         {avatarUrl ? (
@@ -147,10 +155,19 @@ function LayoutV2({
                         alt="Profile/Setting arrow drop down icon"
                       />
                     </div>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <button
-                      className="flex items-center gap-3"
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-40 max-w-none divide-y">
+                    <DropdownMenuItem
+                      className="flex items-center gap-2"
+                      onClick={() => {
+                        router.push("/sc/profile");
+                      }}
+                    >
+                      <PeopleIcon fill="#969696" />
+                      <span>My Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="flex items-center gap-2"
                       onClick={() => signOut({ callbackUrl: "/login" })}
                     >
                       <svg
@@ -168,9 +185,9 @@ function LayoutV2({
                         />
                       </svg>
                       <p>Sign out</p>
-                    </button>
-                  </PopoverContent>
-                </Popover>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>
