@@ -3,6 +3,7 @@ import ClinicalCaseSessionsAttendanceHistory from "#/app/(platform)/sc/clinical/
 import ConsultClinicalExpert from "#/app/(platform)/sc/clinical/components/consult-clinical-expert";
 import MarkCaseAsSpecial from "#/app/(platform)/sc/clinical/components/mark-case-as-special";
 import ReferClinicalCase from "#/app/(platform)/sc/clinical/components/refer-clinical-case";
+import TreatmentPlanForm from "#/app/(platform)/sc/clinical/components/treatment-plan-form";
 import ViewEditClinicalCaseStudentInfo from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { Icons } from "#/components/icons";
 import {
@@ -80,20 +81,15 @@ export default function ClinicalCaseActionsDropdownMenu({
             View attendance history
           </div>
         </ClinicalCaseSessionsAttendanceHistory>
-        <div
-          className={cn(
-            "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-          )}
-        >
-          Progress notes
-        </div>
-        <div
-          className={cn(
-            "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-          )}
-        >
-          Treatment plan upload
-        </div>
+        <TreatmentPlanForm clinicalCase={clinicalCase}>
+          <div
+            className={cn(
+              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
+            )}
+          >
+            Treatment plan upload
+          </div>
+        </TreatmentPlanForm>
         <div
           className={cn(
             "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
