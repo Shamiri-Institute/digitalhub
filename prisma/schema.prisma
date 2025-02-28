@@ -1461,19 +1461,13 @@ model FellowPaymentComplaints {
   @@map("fellow_payment_complaints")
 }
 
-enum CLINICAL_FOLLOW_UP_SESSION_FREQUENCY {
-  ONCE_A_WEEK
-  TWICE_A_WEEK
-  ONCE_EVERY_TWO_WEEKS
-}
-
 model ClinicalFollowUpTreatmentPlan {
   id                                      String                @id @default(cuid())
   createdAt                               DateTime              @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt                               DateTime              @updatedAt @map("updated_at") @db.Timestamptz()
-  currentORSScore                         String                @map("current_ors_score") @db.Text()
+  currentORSScore                         Int                   @map("current_ors_score")
   plannedSessions                         Int                   @map("planned_sessions")
-  sessionFrequency                        CLINICAL_FOLLOW_UP_SESSION_FREQUENCY     @map("session_frequency")
+  sessionFrequency                        String                @map("session_frequency")
   plannedTreatmentIntervention            String                @map("planned_treatment_intervention") @db.Text()
   plannedTreatmentInterventionExplanation String                @map("planned_treatment_intervention_explanation") @db.Text()
   case                                    ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
