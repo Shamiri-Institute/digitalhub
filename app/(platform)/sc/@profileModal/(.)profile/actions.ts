@@ -27,7 +27,16 @@ export async function getSupervisorProfileData() {
       },
     });
 
-    return profile;
+    if (!profile) return null;
+
+    const dateString = profile.dateOfBirth
+      ? profile.dateOfBirth.toISOString()
+      : "";
+
+    return {
+      ...profile,
+      dateOfBirth: dateString,
+    };
   } catch (error) {
     console.error("Error fetching supervisor profile:", error);
     throw new Error("Failed to fetch supervisor profile");

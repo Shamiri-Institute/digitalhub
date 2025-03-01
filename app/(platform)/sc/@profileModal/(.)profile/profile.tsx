@@ -46,13 +46,17 @@ import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
 import { useRouter } from "next/navigation";
 
-export default function ProfileForm({}: {}) {
+export default function ProfileForm({
+  initialData,
+}: {
+  initialData?: SupervisorType | null;
+}) {
   const { data: session } = useSession();
   const router = useRouter();
 
   const form = useForm<SupervisorType>({
     resolver: zodResolver(SupervisorSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       supervisorEmail: "",
       supervisorName: "",
       idNumber: "",
@@ -67,8 +71,13 @@ export default function ProfileForm({}: {}) {
     },
   });
 
-  const countyWatcher = form.watch("county");
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData);
+    }
+  }, [initialData]);
 
+  const countyWatcher = form.watch("county");
   useEffect(() => {
     if (form.formState.dirtyFields.county) {
       form.setValue("subCounty", "");
@@ -85,6 +94,7 @@ export default function ProfileForm({}: {}) {
         variant: "default",
         description: "Profile updated successfully!",
       });
+      router.refresh();
     } else {
       toast({
         title: "Update Failed",
@@ -421,6 +431,7 @@ export default function ProfileForm({}: {}) {
                 </div>
               </div>
             </div>
+
             <DialogFooter className="pt-4">
               <Button variant="outline" onClick={() => router.back()}>
                 Cancel

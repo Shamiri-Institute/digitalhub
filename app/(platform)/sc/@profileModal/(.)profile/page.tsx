@@ -1,5 +1,7 @@
-import ProfileForm from "#/app/(platform)/sc/@profileModal/(.)profile/profile";
+import { getSupervisorProfileData } from "./actions";
+import ProfileForm from "./profile";
 
-export default function ProfilePage() {
-  return <ProfileForm></ProfileForm>;
+export default async function Page() {
+  const profile = await getSupervisorProfileData();
+  return <ProfileForm initialData={profile} />;
 }
