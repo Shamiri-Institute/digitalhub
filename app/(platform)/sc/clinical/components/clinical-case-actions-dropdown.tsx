@@ -87,7 +87,7 @@ export default function ClinicalCaseActionsDropdownMenu({
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
             )}
           >
-            Treatment plan upload
+            Treatment plan
           </div>
         </TreatmentPlanForm>
         <div
