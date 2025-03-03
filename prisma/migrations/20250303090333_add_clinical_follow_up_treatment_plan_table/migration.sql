@@ -6,7 +6,7 @@ CREATE TABLE "clinical_follow_up_treatment_plan" (
     "current_ors_score" INTEGER NOT NULL,
     "planned_sessions" INTEGER NOT NULL,
     "session_frequency" TEXT NOT NULL,
-    "planned_treatment_intervention" TEXT NOT NULL,
+    "planned_treatment_intervention" TEXT[],
     "other_treatment_intervention" TEXT,
     "planned_treatment_intervention_explanation" TEXT NOT NULL,
     "case_id" TEXT NOT NULL,

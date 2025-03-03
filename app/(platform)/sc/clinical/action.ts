@@ -287,7 +287,7 @@ export async function updateTreatmentPlan(data: {
         currentORSScore: data.currentOrsScore,
         plannedSessions: data.plannedSessions,
         sessionFrequency: data.sessionFrequency,
-        plannedTreatmentIntervention: data.treatmentInterventions.join(", "),
+        plannedTreatmentIntervention: data.treatmentInterventions,
         otherTreatmentIntervention: data.otherIntervention,
         plannedTreatmentInterventionExplanation: data.interventionExplanation,
         caseId: data.caseId,

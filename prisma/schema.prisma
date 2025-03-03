@@ -1468,7 +1468,7 @@ model ClinicalFollowUpTreatmentPlan {
   currentORSScore                         Int                   @map("current_ors_score")
   plannedSessions                         Int                   @map("planned_sessions")
   sessionFrequency                        String                @map("session_frequency")
-  plannedTreatmentIntervention            String                @map("planned_treatment_intervention") @db.Text()
+  plannedTreatmentIntervention            String[]              @map("planned_treatment_intervention")
   otherTreatmentIntervention              String?               @map("other_treatment_intervention") @db.Text()
   plannedTreatmentInterventionExplanation String                @map("planned_treatment_intervention_explanation") @db.Text()
   case                                    ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
