@@ -73,7 +73,7 @@
     "@web-std/file": "^3.0.3",
     "aws-crt": "^1.19.0",
     "class-variance-authority": "^0.7.0",
-    "clsx": "^2.0.0",
+    "clsx": "^2.1.1",
     "cmdk": "^0.2.0",
     "csv-parse": "^5.5.3",
     "date-fns": "^2.30.0",
