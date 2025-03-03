@@ -37,64 +37,43 @@ export default function ClinicalCaseActionsDropdownMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ViewEditClinicalCaseStudentInfo clinicalCase={clinicalCase}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             Edit student information
           </div>
         </ViewEditClinicalCaseStudentInfo>
         <ReferClinicalCase clinicalCase={clinicalCase}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             Refer case
           </div>
         </ReferClinicalCase>
         <ConsultClinicalExpert clinicalCase={clinicalCase}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             Consult clinical expert
           </div>
         </ConsultClinicalExpert>
         <MarkCaseAsSpecial clinicalCase={clinicalCase}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             Mark as special/ambiguous
           </div>
         </MarkCaseAsSpecial>
         <ClinicalCaseSessionsAttendanceHistory clinicalCase={clinicalCase}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             View attendance history
           </div>
         </ClinicalCaseSessionsAttendanceHistory>
         <TreatmentPlanForm clinicalCase={clinicalCase}>
           <div
             className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
+              "px-2 py-1.5 text-sm",
+              clinicalCase.caseStatus === "Follow-up"
+                ? "cursor-pointer text-shamiri-black"
+                : "pointer-events-none  cursor-not-allowed text-gray-400",
             )}
           >
             Treatment plan
           </div>
         </TreatmentPlanForm>
-        <div
-          className={cn(
-            "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-          )}
-        >
+        <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
           Case reports uplod
         </div>
       </DropdownMenuContent>
