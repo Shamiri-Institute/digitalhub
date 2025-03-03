@@ -17,22 +17,23 @@ model User {
   emailVerified DateTime? @map("email_verified")
   image         String?
 
-  accounts              Account[]
-  sessions              Session[]
-  avatar                UserAvatar?
-  memberships           ImplementerMember[]
-  recentOpens           UserRecentOpen[]
-  schoolDropoutHistory  SchoolDropoutHistory[]
-  studentAttendance     StudentAttendance[]
-  supervisorAttendance  SupervisorAttendance[]
-  fellowAttendance      FellowAttendance[]
-  studentReportingNotes StudentReportingNotes[]
-  schoolDocuments       SchoolDocuments[]
-  fellowDocuments       FellowDocuments[]
-  payoutStatements      PayoutStatements[]
-  sessionComment        SessionComment[]
-  schoolFeedbacks       SchoolFeedback[]
-  FellowComplaints      FellowComplaints[]
+  accounts                                Account[]
+  sessions                                Session[]
+  avatar                                  UserAvatar?
+  memberships                             ImplementerMember[]
+  recentOpens                             UserRecentOpen[]
+  schoolDropoutHistory                    SchoolDropoutHistory[]
+  studentAttendance                       StudentAttendance[]
+  supervisorAttendance                    SupervisorAttendance[]
+  fellowAttendance                        FellowAttendance[]
+  studentReportingNotes                   StudentReportingNotes[]
+  schoolDocuments                         SchoolDocuments[]
+  fellowDocuments                         FellowDocuments[]
+  payoutStatements                        PayoutStatements[]
+  sessionComment                          SessionComment[]
+  schoolFeedbacks                         SchoolFeedback[]
+  FellowComplaints                        FellowComplaints[]
+  clinicalFollowUpTreatmentPlanAuditTrail ClinicalFollowUpTreatmentPlanAuditTrail[]
 
   @@map("users")
 }
@@ -1124,11 +1125,12 @@ model ClinicalScreeningInfo {
   flagged                   Boolean                     @default(false)
   flaggedReason             String?                     @map("flagged_reason") @db.Text()
 
-  initialCaseHistoryId         String?                        @map("initial_case_history_id") @db.VarChar(255)
-  initialCaseHistoryOwnerId    String?                        @map("initial_case_history_owner_id") @db.VarChar(255)
-  initialReferredFrom          String?                        @map("initial_referred_from") @db.VarChar(255)
-  initialReferredFromSpecified String?                        @map("initial_referred_from_specified") @db.VarChar(255)
-  followUptreatmentPlan        ClinicalFollowUpTreatmentPlan?
+  initialCaseHistoryId                    String?                                   @map("initial_case_history_id") @db.VarChar(255)
+  initialCaseHistoryOwnerId               String?                                   @map("initial_case_history_owner_id") @db.VarChar(255)
+  initialReferredFrom                     String?                                   @map("initial_referred_from") @db.VarChar(255)
+  initialReferredFromSpecified            String?                                   @map("initial_referred_from_specified") @db.VarChar(255)
+  followUptreatmentPlan                   ClinicalFollowUpTreatmentPlan?
+  clinicalFollowUpTreatmentPlanAuditTrail ClinicalFollowUpTreatmentPlanAuditTrail[]
 
   @@map("clinical_screening_info")
 }
@@ -1475,4 +1477,17 @@ model ClinicalFollowUpTreatmentPlan {
   caseId                                  String                @unique @map("case_id")
 
   @@map("clinical_follow_up_treatment_plan")
+}
+
+model ClinicalFollowUpTreatmentPlanAuditTrail {
+  id        String                @id @default(cuid())
+  createdAt DateTime              @default(now()) @map("created_at") @db.Timestamptz()
+  action    String                @map("action")
+  userId    String                @map("user_id")
+  data      Json
+  user      User                  @relation(fields: [userId], references: [id])
+  caseId    String                @map("case_id")
+  case      ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
+
+  @@map("clinical_follow_up_treatment_plan_audit_trail")
 }

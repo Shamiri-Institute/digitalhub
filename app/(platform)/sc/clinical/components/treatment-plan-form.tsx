@@ -7,7 +7,7 @@ import { z } from "zod";
 
 import {
   ClinicalCases,
-  updateTreatmentPlan,
+  createTreatmentPlan,
 } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
@@ -90,7 +90,7 @@ export default function TreatmentPlanForm({
 
   const onSubmit = async (data: TreatmentPlanFormValues) => {
     try {
-      const responese = await updateTreatmentPlan({
+      const responese = await createTreatmentPlan({
         caseId: clinicalCase.id,
         currentOrsScore: parseInt(data.currentOrsScore),
         plannedSessions: parseInt(data.plannedSessions),
