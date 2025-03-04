@@ -65,9 +65,9 @@ export default function ClinicalCaseActionsDropdownMenu({
           <div
             className={cn(
               "px-2 py-1.5 text-sm",
-              // clinicalCase.caseStatus === "Follow-up"
-              //   ? "cursor-pointer text-shamiri-black"
-              //   : "pointer-events-none  cursor-not-allowed text-gray-400",
+              clinicalCase.caseStatus === "Follow-up"
+                ? "cursor-pointer text-shamiri-black"
+                : "pointer-events-none  cursor-not-allowed text-gray-400",
             )}
           >
             Treatment plan
