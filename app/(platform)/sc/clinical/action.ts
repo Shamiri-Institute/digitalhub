@@ -269,7 +269,7 @@ export async function getSupervisorsInHub() {
   }
 }
 
-export async function updateTreatmentPlan(data: {
+type TreatmentPlanData = {
   caseId: string;
   currentOrsScore: number;
   plannedSessions: number;
@@ -277,7 +277,11 @@ export async function updateTreatmentPlan(data: {
   treatmentInterventions: string[];
   otherIntervention?: string;
   interventionExplanation: string;
-}) {
+};
+
+export async function updateTreatmentPlan(
+  data: TreatmentPlanData & { beforeData: TreatmentPlanData },
+) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -305,7 +309,8 @@ export async function updateTreatmentPlan(data: {
           caseId: data.caseId,
           action: "Update",
           userId: currentUser.user.id,
-          data: treatmentPlan,
+          afterData: treatmentPlan,
+          beforeData: data.beforeData,
         },
       });
     });
@@ -318,15 +323,7 @@ export async function updateTreatmentPlan(data: {
   }
 }
 
-export async function createTreatmentPlan(data: {
-  caseId: string;
-  currentOrsScore: number;
-  plannedSessions: number;
-  sessionFrequency: string;
-  treatmentInterventions: string[];
-  interventionExplanation: string;
-  otherIntervention?: string;
-}) {
+export async function createTreatmentPlan(data: TreatmentPlanData) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -351,7 +348,7 @@ export async function createTreatmentPlan(data: {
           caseId: data.caseId,
           action: "Create",
           userId: currentUser.user.id,
-          data: treatmentPlan,
+          afterData: treatmentPlan,
         },
       });
     });
