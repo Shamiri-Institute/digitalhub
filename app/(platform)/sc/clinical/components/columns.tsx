@@ -4,6 +4,7 @@ import HandleSessionAttendanceUpdate from "#/app/(platform)/sc/clinical/componen
 import { Icons } from "#/components/icons";
 import { cn } from "#/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
 
 export type AttendanceRecord = {
   sessionId: string;
@@ -20,6 +21,8 @@ export const attendanceColumns: ColumnDef<AttendanceRecord>[] = [
   {
     accessorKey: "sessionDate",
     header: "Date",
+    cell: ({ row }) =>
+      format(new Date(row.original.sessionDate), "dd MMM yyyy"),
   },
   {
     accessorKey: "attendanceStatus",
