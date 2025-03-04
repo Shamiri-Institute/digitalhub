@@ -4,7 +4,8 @@ CREATE TABLE "clinical_follow_up_treatment_plan_audit_trail" (
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "action" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
-    "data" JSONB NOT NULL,
+    "before_data" JSONB,
+    "after_data" JSONB,
     "case_id" TEXT NOT NULL,
 
     CONSTRAINT "clinical_follow_up_treatment_plan_audit_trail_pkey" PRIMARY KEY ("id")
