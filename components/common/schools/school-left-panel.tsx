@@ -120,9 +120,20 @@ export default function SchoolLeftPanel({
       />
       <div className="flex justify-center px-4">
         <CountWidget
-          sessions={selectedSchool?._count.interventionSessions}
-          fellows={selectedSchool?._count.interventionGroups}
-          cases={selectedSchool?._count.students}
+          stats={[
+            {
+              title: "Sessions",
+              count: selectedSchool?._count.interventionSessions || 0,
+            },
+            {
+              title: "Groups",
+              count: selectedSchool?._count.interventionGroups || 0,
+            },
+            {
+              title: "Students",
+              count: selectedSchool?._count.students || 0,
+            },
+          ]}
         />
       </div>
       <div>

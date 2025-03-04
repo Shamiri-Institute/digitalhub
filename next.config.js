@@ -15,6 +15,11 @@ const nextConfig = {
         destination: "/sc/schedule",
         permanent: false,
       },
+      {
+        source: "/fel",
+        destination: "/fel/schedule",
+        permanent: false,
+      },
     ];
   },
 };

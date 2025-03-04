@@ -4,6 +4,7 @@ import type { FellowsData } from "#/app/(platform)/sc/actions";
 import FellowsGroupsTableDropdownMenu, {
   FellowGroupData,
 } from "#/app/(platform)/sc/fellows/components/fellows-groups-table-dropdown-menu";
+import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { sessionDisplayName } from "#/lib/utils";
@@ -103,6 +104,9 @@ export const columns = ({
     accessorKey: "mpesaNumber",
     header: "MPESA Number",
     id: "MPESA Number",
+    cell: ({ row }) => {
+      return RenderParsedPhoneNumber(row.original.mpesaNumber ?? undefined);
+    },
   },
   {
     accessorKey: "mpesaName",
