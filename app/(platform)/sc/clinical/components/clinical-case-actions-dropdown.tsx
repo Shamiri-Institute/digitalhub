@@ -3,6 +3,7 @@ import ClinicalCaseSessionsAttendanceHistory from "#/app/(platform)/sc/clinical/
 import ConsultClinicalExpert from "#/app/(platform)/sc/clinical/components/consult-clinical-expert";
 import MarkCaseAsSpecial from "#/app/(platform)/sc/clinical/components/mark-case-as-special";
 import ReferClinicalCase from "#/app/(platform)/sc/clinical/components/refer-clinical-case";
+import TreatmentPlanForm from "#/app/(platform)/sc/clinical/components/treatment-plan-form";
 import ViewEditClinicalCaseStudentInfo from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { Icons } from "#/components/icons";
 import {
@@ -36,33 +37,24 @@ export default function ClinicalCaseActionsDropdownMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ViewEditClinicalCaseStudentInfo clinicalCase={clinicalCase}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             Edit student information
           </div>
         </ViewEditClinicalCaseStudentInfo>
         <ReferClinicalCase clinicalCase={clinicalCase}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             Refer case
           </div>
         </ReferClinicalCase>
         <ConsultClinicalExpert clinicalCase={clinicalCase}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             Consult clinical expert
           </div>
         </ConsultClinicalExpert>
-        <MarkCaseAsSpecial clinicalCase={clinicalCase}>
+        <MarkCaseAsSpecial
+          caseId={clinicalCase.id}
+          reason={clinicalCase.flaggedReason}
+        >
           <div
             className={cn(
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
@@ -72,33 +64,23 @@ export default function ClinicalCaseActionsDropdownMenu({
           </div>
         </MarkCaseAsSpecial>
         <ClinicalCaseSessionsAttendanceHistory clinicalCase={clinicalCase}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             View attendance history
           </div>
         </ClinicalCaseSessionsAttendanceHistory>
-        <div
-          className={cn(
-            "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-          )}
-        >
-          Progress notes
-        </div>
-        <div
-          className={cn(
-            "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-          )}
-        >
-          Treatment plan upload
-        </div>
-        <div
-          className={cn(
-            "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-          )}
-        >
+        <TreatmentPlanForm clinicalCase={clinicalCase}>
+          <div
+            className={cn(
+              "px-2 py-1.5 text-sm",
+              clinicalCase.caseStatus === "FollowUp"
+                ? "cursor-pointer text-shamiri-black"
+                : "pointer-events-none  cursor-not-allowed text-gray-400",
+            )}
+          >
+            Treatment plan
+          </div>
+        </TreatmentPlanForm>
+        <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
           Case reports uplod
         </div>
       </DropdownMenuContent>
