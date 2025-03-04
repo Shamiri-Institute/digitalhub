@@ -309,6 +309,16 @@ async function createCoreUsers(
       email: "stanley.george@shamiri.institute",
       role: ImplementerRole.SUPERVISOR,
     },
+    {
+      id: objectId("user"),
+      email: "ichami.etyang@shamiri.institute",
+      role: ImplementerRole.HUB_COORDINATOR,
+    },
+    {
+      id: objectId("user"),
+      email: "mmbone@shamiri.institute",
+      role: ImplementerRole.SUPERVISOR,
+    },
   ];
 
   const users = await db.user.createManyAndReturn({
