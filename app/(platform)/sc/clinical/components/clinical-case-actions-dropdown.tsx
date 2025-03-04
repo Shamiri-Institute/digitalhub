@@ -51,8 +51,15 @@ export default function ClinicalCaseActionsDropdownMenu({
             Consult clinical expert
           </div>
         </ConsultClinicalExpert>
-        <MarkCaseAsSpecial clinicalCase={clinicalCase}>
-          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+      <MarkCaseAsSpecial
+          caseId={clinicalCase.id}
+          reason={clinicalCase.flaggedReason}
+        >
+          <div
+            className={cn(
+              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
+            )}
+          >
             Mark as special/ambiguous
           </div>
         </MarkCaseAsSpecial>
