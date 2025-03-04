@@ -51,7 +51,7 @@ export default function ClinicalCaseActionsDropdownMenu({
             Consult clinical expert
           </div>
         </ConsultClinicalExpert>
-      <MarkCaseAsSpecial
+        <MarkCaseAsSpecial
           caseId={clinicalCase.id}
           reason={clinicalCase.flaggedReason}
         >
@@ -72,7 +72,7 @@ export default function ClinicalCaseActionsDropdownMenu({
           <div
             className={cn(
               "px-2 py-1.5 text-sm",
-              clinicalCase.caseStatus === "Follow-up"
+              clinicalCase.caseStatus === "FollowUp"
                 ? "cursor-pointer text-shamiri-black"
                 : "pointer-events-none  cursor-not-allowed text-gray-400",
             )}

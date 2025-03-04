@@ -273,7 +273,6 @@ export async function getSupervisorsInHub() {
   }
 }
 
-
 export async function getSchoolsInHub() {
   const supervisor = await currentSupervisor();
 
