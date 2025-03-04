@@ -1,4 +1,5 @@
 import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
+import CaseNotesForm from "#/app/(platform)/sc/clinical/components/case-notes-form";
 import ClinicalCaseSessionsAttendanceHistory from "#/app/(platform)/sc/clinical/components/cases-sessions-attendance-history";
 import ConsultClinicalExpert from "#/app/(platform)/sc/clinical/components/consult-clinical-expert";
 import MarkCaseAsSpecial from "#/app/(platform)/sc/clinical/components/mark-case-as-special";
@@ -80,9 +81,11 @@ export default function ClinicalCaseActionsDropdownMenu({
             Treatment plan
           </div>
         </TreatmentPlanForm>
-        <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-          Case reports uplod
-        </div>
+        <CaseNotesForm clinicalCase={clinicalCase}>
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+            Case reports
+          </div>
+        </CaseNotesForm>
       </DropdownMenuContent>
     </DropdownMenu>
   );
