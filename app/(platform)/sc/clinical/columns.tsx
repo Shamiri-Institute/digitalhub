@@ -16,6 +16,7 @@ import { cn } from "#/lib/utils";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
 import Image from "next/image";
 
 export const columns: ColumnDef<ClinicalCases>[] = [
@@ -59,10 +60,23 @@ export const columns: ColumnDef<ClinicalCases>[] = [
   {
     accessorKey: "pseudonym",
     header: "Pseudonym",
+    cell: ({ row }) => {
+      const flagged = row.original.flagged;
+      return (
+        <div className="flex items-center gap-1">
+          <span>{row.original.pseudonym}</span>
+          {flagged ? (
+            <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
+          ) : null}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "dateAdded",
     header: "Date added",
+    cell: ({ row }) =>
+      format(new Date(row.original.dateAdded || ""), "dd MMM yyyy"),
   },
   {
     accessorKey: "caseStatus",
@@ -295,22 +309,27 @@ export const subColumnsSessionAttendanceHistory: ColumnDef<SessionAttendanceData
     },
   ];
 
-type Colors = {
-  [key: string]: string;
-};
+type BadgeVariant =
+  | "destructive"
+  | "warning"
+  | "shamiri-green"
+  | "default"
+  | "secondary"
+  | "outline";
 
-const colors: Colors = {
-  Active: "bg-shamiri-green",
-  FollowUp: "bg-shamiri-light-orange",
-  Referred: "bg-shamiri-light-red",
-  Terminated: "bg-shamiri-red",
-  Low: "bg-shamiri-green",
-  Mid: "bg-shamiri-light-orange",
-  High: "bg-shamiri-light-red",
-  Severe: "bg-shamiri-red",
+const colors: Record<string, BadgeVariant> = {
+  Active: "shamiri-green",
+  FollowUp: "warning",
+  Referred: "destructive",
+  Terminated: "destructive",
+  Low: "shamiri-green",
+  Mid: "warning",
+  High: "destructive",
+  Severe: "destructive",
+  No: "shamiri-green",
+  Medium: "warning",
 };
 
 function renderRiskOrCaseStatus(value: string) {
-  // return <Badge  className={cn(colors[value], "text-white")}>{value}</Badge>;
-  return <Badge variant="destructive">{value}</Badge>;
+  return <Badge variant={colors[value] || "shamiri-green"}>{value}</Badge>;
 }
