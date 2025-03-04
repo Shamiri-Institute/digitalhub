@@ -59,9 +59,20 @@ export default async function SchoolsPage() {
         <div className="flex items-center justify-between">
           <PageHeading title="Schools" />
           <CountWidget
-            sessions={Number(schoolsStats[0]?.session_count) || 0}
-            fellows={Number(schoolsStats[0]?.fellow_count) || 0}
-            cases={Number(schoolsStats[0]?.clinical_case_count) || 0}
+            stats={[
+              {
+                title: "Sessions",
+                count: Number(schoolsStats[0]?.session_count) || 0,
+              },
+              {
+                title: "Fellows",
+                count: Number(schoolsStats[0]?.fellow_count) || 0,
+              },
+              {
+                title: "Cases",
+                count: Number(schoolsStats[0]?.clinical_case_count) || 0,
+              },
+            ]}
           />
         </div>
         <Separator />

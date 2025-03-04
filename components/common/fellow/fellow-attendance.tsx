@@ -76,7 +76,7 @@ export default function FellowAttendance({
   isOpen,
   setIsOpen,
 }: {
-  supervisors: SupervisorData[];
+  supervisors?: SupervisorData[];
   supervisorId?: string;
   session: Session | null;
   fellowRatings: {
@@ -98,7 +98,7 @@ export default function FellowAttendance({
   const watcher = form.watch("supervisor");
 
   useEffect(() => {
-    const supervisor = supervisors.find(
+    const supervisor = supervisors?.find(
       (supervisor) => supervisor.id === watcher,
     );
     if (supervisor) {
@@ -185,7 +185,7 @@ export default function FellowAttendance({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {supervisors.map((supervisor) => (
+                          {supervisors?.map((supervisor) => (
                             <SelectItem
                               key={supervisor.id}
                               value={supervisor.id}
