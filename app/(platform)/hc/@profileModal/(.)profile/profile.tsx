@@ -1,7 +1,7 @@
 "use client";
 
 import { Icons } from "#/components/icons";
-import { updateSupervisorProfile } from "./actions";
+import { updateHubCoordinatorProfile } from "./actions";
 
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -40,7 +40,7 @@ import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { SupervisorSchema, SupervisorType } from "./schema";
+import { HubCoordinatorSchema, HubCoordinatorType } from "./schema";
 
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
@@ -49,16 +49,16 @@ import { useRouter } from "next/navigation";
 export default function ProfileForm({
   initialData,
 }: {
-  initialData?: SupervisorType | null;
+  initialData?: HubCoordinatorType | null;
 }) {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const form = useForm<SupervisorType>({
-    resolver: zodResolver(SupervisorSchema),
+  const form = useForm<HubCoordinatorType>({
+    resolver: zodResolver(HubCoordinatorSchema),
     defaultValues: initialData || {
-      supervisorEmail: "",
-      supervisorName: "",
+      coordinatorEmail: "",
+      coordinatorName: "",
       idNumber: "",
       cellNumber: "",
       mpesaNumber: "",
@@ -86,8 +86,8 @@ export default function ProfileForm({
 
   const counties = KENYAN_COUNTIES.map((c) => c.name);
 
-  async function onSubmit(data: SupervisorType) {
-    const response = await updateSupervisorProfile(data);
+  async function onSubmit(data: HubCoordinatorType) {
+    const response = await updateHubCoordinatorProfile(data);
     if (response?.success) {
       toast({
         title: "Success",
@@ -125,7 +125,7 @@ export default function ProfileForm({
               />
             </div>
             <p className="font-figtree text-left text-[20px] font-semibold leading-[28px] text-gray-600">
-              {form.watch("supervisorName") || "N/A"}
+              {form.watch("coordinatorName") || "N/A"}
             </p>
           </div>
         </DialogHeader>
@@ -143,7 +143,7 @@ export default function ProfileForm({
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="supervisorEmail"
+                    name="coordinatorEmail"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
@@ -168,7 +168,7 @@ export default function ProfileForm({
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel"/>
+                          <Input {...field} type="tel" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -353,7 +353,7 @@ export default function ProfileForm({
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="supervisorName"
+                    name="coordinatorName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
