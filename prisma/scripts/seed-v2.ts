@@ -377,7 +377,7 @@ async function createCoreUsers(
         implementerId: faker.helpers.arrayElement(implementers).id,
         visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
         coordinatorName: faker.person.fullName(),
-        coordinatorEmail: user.email,
+        coordinatorEmail: faker.internet.email(),
         county: county.name,
         subCounty: subCounty,
         bankName: faker.company.name(),

@@ -1,6 +1,6 @@
 import React from "react";
 
-export default async function SupervisorLayout({
+export default async function FellowLayout({
   children,
 }: {
   children: React.ReactNode;
