@@ -74,7 +74,7 @@ export default function SessionRatings({
   children: React.ReactNode;
   supervisorId?: string;
   role: ImplementerRole;
-  supervisors: Prisma.SupervisorGetPayload<{
+  supervisors?: Prisma.SupervisorGetPayload<{
     include: {
       supervisorAttendances: {
         include: {
@@ -264,7 +264,7 @@ export default function SessionRatings({
                                     {" "}
                                     -{" "}
                                     {
-                                      supervisors.find(
+                                      supervisors?.find(
                                         (supervisor) =>
                                           supervisor.id ===
                                           _rating?.supervisorId,

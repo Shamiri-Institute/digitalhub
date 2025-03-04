@@ -158,6 +158,7 @@ enum ImplementerRole {
   HUB_COORDINATOR
   SUPERVISOR
   OPERATIONS
+  FELLOW
 
   @@map("implementer_roles")
 }

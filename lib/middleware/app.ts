@@ -30,14 +30,19 @@ export default async function AppMiddleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/sc", req.url));
       }
 
+      if (ifFellowUserAndUnprefixedPath(session, path)) {
+        return NextResponse.redirect(new URL("/fel", req.url));
+      }
+
       return NextResponse.redirect(new URL("/", req.url));
     }
 
-    // TODO: update this to also check for supervisor role once we have finished the sc flows
     if (ifHcUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/hc", req.url));
     } else if (ifSupervisorUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/sc", req.url));
+    } else if (ifFellowUserAndUnprefixedPath(session, path)) {
+      return NextResponse.redirect(new URL("/fel", req.url));
     } else if (ifSupervisorAndHcRoute(session, path)) {
       return NextResponse.redirect(new URL("/", req.url));
     }
@@ -55,6 +60,13 @@ function ifSupervisorUserAndUnprefixedPath(session: JWT | null, path: string) {
   return (
     session?.activeMembership?.role === ImplementerRole.SUPERVISOR &&
     !path.startsWith("/sc")
+  );
+}
+
+function ifFellowUserAndUnprefixedPath(session: JWT | null, path: string) {
+  return (
+    session?.activeMembership?.role === ImplementerRole.FELLOW &&
+    !path.startsWith("/fel")
   );
 }
 
