@@ -39,7 +39,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const session = useSession();
 
   // TODO: this logic should be made more straightforward
-  if (pathname.startsWith("/hc/") || pathname.startsWith("/sc/")) {
+  if (
+    pathname.startsWith("/hc/") ||
+    pathname.startsWith("/sc/") ||
+    pathname.startsWith("/fel/")
+  ) {
     return (
       <LayoutV2
         userName={session.data?.user.name ?? "N/A"}
@@ -190,14 +194,24 @@ function LayoutV2({
                 <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
               </div>
             ) : null}
-            <div className={`tab-link ${cn(fellowsActive && "active")}`}>
-              <PeopleIconAlternate />
-              <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
-            </div>
-            <div className={`tab-link ${cn(studentsActive && "active")}`}>
-              <GraduationCapIcon />
-              <Link href={`/${mainRoute}/students`}>Students</Link>
-            </div>
+            {(mainRoute === "hc" || mainRoute === "sc") && (
+              <>
+                <div className={`tab-link ${cn(fellowsActive && "active")}`}>
+                  <PeopleIconAlternate />
+                  <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
+                </div>
+                <div className={`tab-link ${cn(studentsActive && "active")}`}>
+                  <GraduationCapIcon />
+                  <Link href={`/${mainRoute}/students`}>Students</Link>
+                </div>
+              </>
+            )}
+            {mainRoute === "fel" && (
+              <div className={`tab-link ${cn(studentsActive && "active")}`}>
+                <PeopleIconAlternate />
+                <Link href={`/${mainRoute}/fellow-portal`}>Fellow portal</Link>
+              </div>
+            )}
             {mainRoute === "sc" && (
               <div className={`tab-link ${cn(clinicalActive && "active")}`}>
                 <PeopleIcon />
