@@ -176,11 +176,17 @@ export async function markStudentAttendance(
         };
       } else {
         if (student.assignedGroup) {
+          const session = await db.interventionSession.findFirst({
+            where: {
+              id: sessionId,
+            },
+          });
+
           await db.studentAttendance.create({
             data: {
               studentId: id!,
               schoolId: student.schoolId,
-              projectId: CURRENT_PROJECT_ID,
+              projectId: session?.projectId ?? CURRENT_PROJECT_ID,
               absenceReason,
               comments,
               sessionId,
