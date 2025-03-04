@@ -44,17 +44,24 @@ export default function MarkCaseAsSpecial({
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     try {
-      await flagClinicalCaseForFollowUp({
+      const response = await flagClinicalCaseForFollowUp({
         caseId,
         reason: data.reason,
       });
 
-      toast({
-        variant: "default",
-        title: "Case flagged for follow up",
-      });
-      form.reset();
-      setDialogOpen(false);
+      if (response.success) {
+        toast({
+          variant: "default",
+          title: "Case flagged for follow up",
+        });
+        form.reset();
+        setDialogOpen(false);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error flagging case for follow up. Please try again",
+        });
+      }
     } catch (error) {
       toast({
         variant: "destructive",
