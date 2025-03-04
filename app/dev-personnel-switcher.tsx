@@ -81,7 +81,7 @@ export function PersonnelSwitcher({
               <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="p-0 md:w-72">
+          <PopoverContent className="rounded-t-none p-0 md:w-72">
             <Command
               filter={(value: string, search: string) => {
                 const person = personnel.find((person) => person.id === value);
@@ -104,20 +104,16 @@ export function PersonnelSwitcher({
                       onSelectPersonnel(person.id, person.role);
                       setOpen(false);
                     }}
-                    className="rounded-none"
+                    className="rounded-none border-b last:border-b-0"
                   >
                     <div className="flex flex-col gap-0.5">
-                      <div className="text-[8px] font-medium uppercase tracking-widest">
+                      <div className="text-[8px] font-medium uppercase leading-4 tracking-widest">
                         <span className="capitalize text-shamiri-new-blue">
                           {person.role.replace("_", " ")}{" "}
                         </span>
-                        <span className="truncate text-nowrap text-muted-foreground">
-                          ({person.hub})
-                        </span>
+                        <span className="text-nowrap">({person.hub})</span>
                       </div>
-                      <span className="truncate text-ellipsis text-sm">
-                        {person.label}
-                      </span>
+                      <span className="text-sm">{person.label}</span>
                       <span className="text-[8px] uppercase tracking-widest text-muted-foreground">
                         {person.project}
                       </span>

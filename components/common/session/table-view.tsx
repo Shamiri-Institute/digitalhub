@@ -380,7 +380,7 @@ export function TableView({
 }: {
   state: CalendarState;
   hubId: string;
-  supervisors: Prisma.SupervisorGetPayload<{
+  supervisors?: Prisma.SupervisorGetPayload<{
     include: {
       supervisorAttendances: {
         include: {
@@ -444,7 +444,7 @@ export function TableView({
           return;
         }
       }
-      return supervisors.map((supervisor) => {
+      return supervisors?.map((supervisor) => {
         const totalAttendedFellows = supervisor.fellows.filter((fellow) => {
           const attended = fellow.fellowAttendances.find(
             (attendance) => attendance.sessionId === session?.id,
