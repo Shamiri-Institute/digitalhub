@@ -276,37 +276,37 @@ export async function getSupervisorsInHub() {
 export async function getSchoolsInHub() {
   const supervisor = await currentSupervisor();
 
-  const schools = await db.school.findMany({
-    where: {
-      hubId: supervisor?.hubId,
-    },
-    include: {
-      students: true,
-      interventionSessions: {
-        select: {
-          id: true,
-          session: {
-            select: {
-              sessionName: true,
-              sessionLabel: true,
+  const [schools, supervisorsInHub, fellowsInHub] = await Promise.all([
+    db.school.findMany({
+      where: {
+        hubId: supervisor?.hubId,
+      },
+      include: {
+        students: true,
+        interventionSessions: {
+          select: {
+            id: true,
+            session: {
+              select: {
+                sessionName: true,
+                sessionLabel: true,
+              },
             },
           },
         },
       },
-    },
-  });
-
-  const supervisorsInHub = await db.supervisor.findMany({
-    where: {
-      hubId: supervisor?.hubId,
-    },
-  });
-
-  const fellowsInHub = await db.fellow.findMany({
-    where: {
-      hubId: supervisor?.hubId,
-    },
-  });
+    }),
+    db.supervisor.findMany({
+      where: {
+        hubId: supervisor?.hubId,
+      },
+    }),
+    db.fellow.findMany({
+      where: {
+        hubId: supervisor?.hubId,
+      },
+    }),
+  ]);
 
   return {
     schools,
@@ -331,32 +331,35 @@ export async function createClinicalCaseBySupervisor(data: {
   sessionId: string;
 }) {
   try {
-    await db.clinicalScreeningInfo.create({
-      data: {
-        studentId: data.studentId,
-        schoolId: data.schoolId,
-        currentSupervisorId: data.currentSupervisorId,
-        pseudonym: data.pseudonym,
-        initialReferredFromSpecified: data.initialContact,
-        initialReferredFrom: data.fellowId ?? data.supervisorId,
-        flagged: false,
-        riskStatus: "No",
-        caseStatus: "Active",
-        sessionWhenCaseIsFlaggedId: data.sessionId,
-      },
+    await db.$transaction(async (tx) => {
+      await tx.clinicalScreeningInfo.create({
+        data: {
+          studentId: data.studentId,
+          schoolId: data.schoolId,
+          currentSupervisorId: data.currentSupervisorId,
+          pseudonym: data.pseudonym,
+          initialReferredFromSpecified: data.initialContact,
+          initialReferredFrom: data.fellowId ?? data.supervisorId,
+          flagged: false,
+          riskStatus: "No",
+          caseStatus: "Active",
+          sessionWhenCaseIsFlaggedId: data.sessionId,
+        },
+      });
+
+      await tx.student.update({
+        where: {
+          id: data.studentId,
+        },
+        data: {
+          form: parseInt(data.classForm),
+          stream: data.stream,
+          age: data.age,
+          gender: data.gender,
+        },
+      });
     });
 
-    await db.student.update({
-      where: {
-        id: data.studentId,
-      },
-      data: {
-        form: parseInt(data.classForm),
-        stream: data.stream,
-        age: data.age,
-        gender: data.gender,
-      },
-    });
     revalidatePath("/sc/clinical");
     return { success: true, message: "Clinical case created successfully" };
   } catch (error) {
