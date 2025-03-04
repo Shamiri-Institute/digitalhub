@@ -138,10 +138,7 @@ export default function ReferClinicalCase({
         <DialogHeader className="bg-white">
           <h2>Refer clinical case</h2>
         </DialogHeader>
-        <DialogAlertWidget
-          label={`${clinicalCase.pseudonym}`}
-          separator={true}
-        />
+        <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

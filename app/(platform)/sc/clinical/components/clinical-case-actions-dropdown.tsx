@@ -62,7 +62,10 @@ export default function ClinicalCaseActionsDropdownMenu({
             Consult clinical expert
           </div>
         </ConsultClinicalExpert>
-        <MarkCaseAsSpecial clinicalCase={clinicalCase}>
+        <MarkCaseAsSpecial
+          caseId={clinicalCase.id}
+          reason={clinicalCase.flaggedReason}
+        >
           <div
             className={cn(
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
