@@ -1,6 +1,6 @@
 "use server";
 
-import { currentSupervisor } from "#/app/auth";
+import { currentSupervisor, getCurrentUser } from "#/app/auth";
 
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
@@ -365,5 +365,97 @@ export async function createClinicalCaseBySupervisor(data: {
   } catch (error) {
     console.error(error);
     return { success: false, message: "Something went wrong" };
+  }
+}
+
+type TreatmentPlanData = {
+  caseId: string;
+  currentOrsScore: number;
+  plannedSessions: number;
+  sessionFrequency: string;
+  treatmentInterventions: string[];
+  otherIntervention?: string;
+  interventionExplanation: string;
+};
+
+export async function updateTreatmentPlan(
+  data: TreatmentPlanData & { beforeData: TreatmentPlanData },
+) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    await db.$transaction(async (tx) => {
+      const treatmentPlan = await tx.clinicalFollowUpTreatmentPlan.update({
+        where: {
+          id: data.caseId,
+        },
+        data: {
+          currentORSScore: data.currentOrsScore,
+          plannedSessions: data.plannedSessions,
+          sessionFrequency: data.sessionFrequency,
+          plannedTreatmentIntervention: data.treatmentInterventions,
+          otherTreatmentIntervention: data.otherIntervention,
+          plannedTreatmentInterventionExplanation: data.interventionExplanation,
+          caseId: data.caseId,
+        },
+      });
+
+      await tx.clinicalFollowUpTreatmentPlanAuditTrail.create({
+        data: {
+          caseId: data.caseId,
+          action: "Update",
+          userId: currentUser.user.id,
+          afterData: treatmentPlan,
+          beforeData: data.beforeData,
+        },
+      });
+    });
+
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
+
+export async function createTreatmentPlan(data: TreatmentPlanData) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    await db.$transaction(async (tx) => {
+      const treatmentPlan = await tx.clinicalFollowUpTreatmentPlan.create({
+        data: {
+          caseId: data.caseId,
+          currentORSScore: data.currentOrsScore,
+          plannedSessions: data.plannedSessions,
+          sessionFrequency: data.sessionFrequency,
+          plannedTreatmentIntervention: data.treatmentInterventions,
+          plannedTreatmentInterventionExplanation: data.interventionExplanation,
+          otherTreatmentIntervention: data.otherIntervention,
+        },
+      });
+
+      await tx.clinicalFollowUpTreatmentPlanAuditTrail.create({
+        data: {
+          caseId: data.caseId,
+          action: "Create",
+          userId: currentUser.user.id,
+          afterData: treatmentPlan,
+        },
+      });
+    });
+
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
   }
 }
