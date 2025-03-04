@@ -13,15 +13,14 @@ import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { useToast } from "#/components/ui/use-toast";
+import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const FormSchema = z.object({
-  reason: z.string({
-    required_error: "Please enter the drop out reason",
-  }),
+  reason: stringValidation("Please enter the reason for flagging the case"),
 });
 
 export default function MarkCaseAsSpecial({

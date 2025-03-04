@@ -21,10 +21,8 @@ export const attendanceColumns: ColumnDef<AttendanceRecord>[] = [
   {
     accessorKey: "sessionDate",
     header: "Date",
-    cell: ({ row }) => {
-      const date = new Date(row.original.sessionDate);
-      return format(date, "dd MMM yyyy");
-    },
+    cell: ({ row }) =>
+      format(new Date(row.original.sessionDate), "dd MMM yyyy"),
   },
   {
     accessorKey: "attendanceStatus",

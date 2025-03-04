@@ -41,7 +41,7 @@ export default function ClinicalCasesTable({
   currentSupervisorId: string;
 }) {
   const renderTableActions = (
-    <div>
+    <>
       <AddNewClinicalCaseForm
         schools={schools}
         fellowsInHub={fellowsInHub}
@@ -52,7 +52,7 @@ export default function ClinicalCasesTable({
           <Button variant="brand">New case</Button>
         </DialogTrigger>
       </AddNewClinicalCaseForm>
-    </div>
+    </>
   );
 
   return (
@@ -64,34 +64,34 @@ export default function ClinicalCasesTable({
       renderSubComponent={({ row }) => (
         <div className="space-y-6 p-4">
           {/* Emergency Section */}
-          <div>
+          <>
             <DataTable
               data={row.original.emergencyPresentingIssues || []}
               columns={subColumnsEmergency}
               className="data-table data-table-action border-0 bg-white"
               emptyStateMessage="No emergency contacts found"
             />
-          </div>
+          </>
 
           {/* General Section */}
-          <div>
+          <>
             <DataTable
               data={row.original.generalPresentingIssues || []}
               columns={subColumnsGeneral}
               className="data-table data-table-action border-0 bg-white"
               emptyStateMessage="No general information found"
             />
-          </div>
+          </>
 
           {/* Clinical Session Attendance History Section */}
-          <div>
+          <>
             <DataTable
               data={row.original.sessionAttendanceHistory || []}
               columns={subColumnsSessionAttendanceHistory}
               className="data-table data-table-action border-0 bg-white"
               emptyStateMessage="No clinical session attendance history found"
             />
-          </div>
+          </>
         </div>
       )}
       emptyStateMessage="No clinical cases found"
