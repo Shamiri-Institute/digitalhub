@@ -378,7 +378,7 @@ export default function ProfileForm({
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" />
+                          <Input {...field} type="tel" disabled/>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
