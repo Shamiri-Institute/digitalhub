@@ -429,10 +429,11 @@ async function createHubCoordinators(
   const hubCoordinators = [];
 
   for (let i = 0; i < hubs.length; i++) {
-    let uniqueEmail;
-    while (uniqueEmail === undefined || emails.has(uniqueEmail)) {
+    let uniqueEmail = faker.internet.email().toLowerCase();
+    while (emails.has(uniqueEmail)) {
       uniqueEmail = faker.internet.email().toLowerCase();
     }
+    emails.add(uniqueEmail);
 
     hubCoordinators.push({
       id: objectId("user"),
@@ -506,10 +507,11 @@ async function createSupervisors(
   const supervisors = hubs
     .map((hub) => {
       return Array.from(Array(n).keys()).map(() => {
-        let uniqueEmail;
-        while (uniqueEmail === undefined || emails.has(uniqueEmail)) {
+        let uniqueEmail = faker.internet.email().toLowerCase();
+        while (emails.has(uniqueEmail)) {
           uniqueEmail = faker.internet.email().toLowerCase();
         }
+        emails.add(uniqueEmail);
 
         return {
           id: objectId("user"),
@@ -595,10 +597,11 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
       const gender = faker.person.sexType();
       const fellowName = faker.person.fullName({ sex: gender });
 
-      let uniqueEmail;
-      while (uniqueEmail === undefined || emails.has(uniqueEmail)) {
+      let uniqueEmail = faker.internet.email().toLowerCase();
+      while (emails.has(uniqueEmail)) {
         uniqueEmail = faker.internet.email().toLowerCase();
       }
+      emails.add(uniqueEmail);
 
       fellows.push({
         id: objectId("user"),
