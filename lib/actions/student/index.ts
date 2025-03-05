@@ -176,29 +176,42 @@ export async function markStudentAttendance(
         };
       } else {
         if (student.assignedGroup) {
-          await db.studentAttendance.create({
-            data: {
-              studentId: id!,
-              schoolId: student.schoolId,
-              projectId: CURRENT_PROJECT_ID,
-              absenceReason,
-              comments,
-              sessionId,
-              groupId: student.assignedGroupId,
-              fellowId: student.assignedGroup.leaderId,
-              markedBy: auth.user!.user.id,
-              attended:
-                attended === "attended"
-                  ? true
-                  : attended === "missed"
-                    ? false
-                    : null,
+          const session = await db.interventionSession.findFirst({
+            where: {
+              id: sessionId,
             },
           });
-          return {
-            success: true,
-            message: `Successfully marked attendance for ${student.studentName}`,
-          };
+
+          if (session) {
+            await db.studentAttendance.create({
+              data: {
+                studentId: id!,
+                schoolId: student.schoolId,
+                projectId: CURRENT_PROJECT_ID ?? session.projectId,
+                absenceReason,
+                comments,
+                sessionId,
+                groupId: student.assignedGroupId,
+                fellowId: student.assignedGroup.leaderId,
+                markedBy: auth.user!.user.id,
+                attended:
+                  attended === "attended"
+                    ? true
+                    : attended === "missed"
+                      ? false
+                      : null,
+              },
+            });
+            return {
+              success: true,
+              message: `Successfully marked attendance for ${student.studentName}`,
+            };
+          } else {
+            return {
+              success: false,
+              message: `Session details not found.`,
+            };
+          }
         } else {
           return {
             success: false,
