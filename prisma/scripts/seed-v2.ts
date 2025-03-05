@@ -153,7 +153,8 @@ import { isBefore, startOfMonth } from "date-fns";
 // 7. Test edge cases (e.g., dropouts, transfers)
 
 // Set faker seed
-faker.seed([20, 25]);
+// TODO: Set seed value as an ENV variable for e2e testing
+faker.seed(7634912);
 
 async function truncateTables() {
   console.log("Truncating tables");
