@@ -178,11 +178,7 @@ export function PersonnelTool() {
     fetchData();
   }, []);
 
-  // allows testing on non-production environments or on the testing URL
-  const visible =
-    constants.NEXT_PUBLIC_ENV !== "production" ||
-    window.location.hostname ===
-      "shamiridigitalhub-testing-shamiri-institute.vercel.app";
+  const visible = constants.NEXT_PUBLIC_ENV !== "production";
 
   return (
     <>
