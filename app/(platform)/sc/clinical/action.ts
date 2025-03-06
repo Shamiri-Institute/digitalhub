@@ -82,6 +82,7 @@ export async function getClinicalCases() {
       flaggedReason: caseInfo.flaggedReason,
       sessionAttendanceHistory: formattedSessions,
       generalPresentingIssues: [],
+      student: caseInfo.student,
     };
   });
 }

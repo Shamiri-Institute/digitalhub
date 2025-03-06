@@ -19,15 +19,31 @@ import {
   FormLabel,
   FormMessage,
 } from "#/components/ui/form";
-import { Textarea } from "#/components/ui/textarea";
+import { Input } from "#/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
+import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 const ComplaintSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
+  studentName: stringValidation("Student name is required"),
+  pseudonym: stringValidation("Pseudonym is required"),
+  school: stringValidation("School is required"),
+  gender: stringValidation("Gender is required"),
+  shamiriId: stringValidation("Shamiri ID is required"),
+  admissionNumber: stringValidation("Admission number is required"),
+  classForm: stringValidation("Class/Form is required"),
+  stream: stringValidation("Stream is required"),
+  group: stringValidation("Group is required"),
 });
 
 type ComplaintFormValues = z.infer<typeof ComplaintSchema>;
@@ -44,11 +60,20 @@ export default function ViewEditClinicalCaseStudentInfo({
   const form = useForm<ComplaintFormValues>({
     resolver: zodResolver(ComplaintSchema),
     defaultValues: {
-      firstName: clinicalCase.pseudonym,
+      studentName: clinicalCase.student.studentName || "",
+      pseudonym: clinicalCase.pseudonym,
+      school: clinicalCase.school,
+      gender: clinicalCase.student.gender || "",
+      shamiriId: clinicalCase.student.visibleId,
+      admissionNumber: clinicalCase.student.admissionNumber || "",
+      classForm: clinicalCase.student.form?.toString() || "",
+      stream: clinicalCase.student.stream || "",
+      group: clinicalCase.student.assignedGroupId || "",
     },
   });
 
   const onSubmit = async (data: ComplaintFormValues) => {
+    console.log({ data });
     try {
       const response = {
         success: true,
@@ -86,31 +111,146 @@ export default function ViewEditClinicalCaseStudentInfo({
         <DialogHeader className="bg-white">
           <h2>View/edit student information</h2>
         </DialogHeader>
-        <DialogAlertWidget
-          label={`${clinicalCase.pseudonym}`}
-          separator={true}
-        />
+        <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
-          <div className="mb-4 grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Date of Complaint</label>
-              <p className="text-gray-600">{clinicalCase.dateAdded}</p>
-            </div>
-          </div>
-
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="firstName"
+                name="studentName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First name</FormLabel>
+                    <FormLabel>Student Name</FormLabel>
                     <FormControl>
-                      <Textarea
-                        {...field}
-                        className="min-h-[150px] resize-none"
-                      />
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="pseudonym"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pseudonym</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="school"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>School</FormLabel>
+                      <FormControl>
+                        <Input {...field} disabled className="bg-gray-100" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gender</FormLabel>
+                      <FormControl>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Male">Male</SelectItem>
+                            <SelectItem value="Female">Female</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <FormField
+                  control={form.control}
+                  name="shamiriId"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Shamiri ID</FormLabel>
+                      <FormControl>
+                        <Input {...field} disabled className="bg-gray-100" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="admissionNumber"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>School Admission Number</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="classForm"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Class/Form</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="number" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="stream"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stream</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="group"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Group</FormLabel>
+                    <FormControl>
+                      <Input {...field} disabled className="bg-gray-100" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
