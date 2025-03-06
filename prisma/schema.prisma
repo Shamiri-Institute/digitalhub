@@ -34,6 +34,7 @@ model User {
   schoolFeedbacks                         SchoolFeedback[]
   FellowComplaints                        FellowComplaints[]
   clinicalFollowUpTreatmentPlanAuditTrail ClinicalFollowUpTreatmentPlanAuditTrail[]
+  clinicalCaseNotes                       ClinicalCaseNotes[]
 
   @@map("users")
 }
@@ -1136,6 +1137,7 @@ model ClinicalScreeningInfo {
   sessionWhenCaseIsFlagged                InterventionSession?                      @relation(fields: [sessionWhenCaseIsFlaggedId], references: [id])
   followUptreatmentPlan                   ClinicalFollowUpTreatmentPlan?
   clinicalFollowUpTreatmentPlanAuditTrail ClinicalFollowUpTreatmentPlanAuditTrail[]
+  clinicalCaseNotes                       ClinicalCaseNotes[]
 
   @@map("clinical_screening_info")
 }
@@ -1169,15 +1171,16 @@ model ClinicalExpertCaseNotes {
 }
 
 model ClinicalSessionAttendance {
-  id               String                @id @default(cuid())
-  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt        DateTime              @updatedAt @map("updated_at") @db.Timestamptz()
-  date             DateTime              @default(now()) @map("date") @db.Timestamptz()
-  supervisorId     String                @map("supervisor_id") @db.VarChar(255)
-  session          String                @map("session") @db.VarChar(255)
-  attendanceStatus Boolean?              @map("attendance_status")
-  caseId           String
-  case             ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
+  id                String                @id @default(cuid())
+  createdAt         DateTime              @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt         DateTime              @updatedAt @map("updated_at") @db.Timestamptz()
+  date              DateTime              @default(now()) @map("date") @db.Timestamptz()
+  supervisorId      String                @map("supervisor_id") @db.VarChar(255)
+  session           String                @map("session") @db.VarChar(255)
+  attendanceStatus  Boolean?              @map("attendance_status")
+  caseId            String
+  case              ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
+  clinicalCaseNotes ClinicalCaseNotes[]
 
   @@map("clinical_session_attendance")
 }
@@ -1496,4 +1499,38 @@ model ClinicalFollowUpTreatmentPlanAuditTrail {
   case       ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
 
   @@map("clinical_follow_up_treatment_plan_audit_trail")
+}
+
+enum FollowUpPlanOptions {
+  GROUP
+  INDIVIDUAL
+}
+
+model ClinicalCaseNotes {
+  id                      String              @id @default(cuid())
+  createdAt               DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt               DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
+  presentingIssues        String              @map("presenting_issues")
+  orsAssessment           Int                 @map("ors_assessment")
+  riskLevel               String              @map("risk_level")
+  necessaryConditions     String              @map("necessary_conditions")
+  treatmentInterventions  String[]            @map("treatment_interventions")
+  otherIntervention       String              @map("other_intervention")
+  interventionExplanation String              @map("intervention_explanation")
+  emotionalResponse       String              @map("emotional_response")
+  behavioralResponse      String              @map("behavioral_response")
+  overallFeedback         String              @map("overall_feedback")
+  followUpPlan            FollowUpPlanOptions @map("follow_up_plan")
+  terminationReason       String              @map("termination_reason")
+  followUpPlanExplanation String              @map("follow_up_plan_explanation")
+
+  caseId    String                    @map("case_id")
+  case      ClinicalScreeningInfo     @relation(fields: [caseId], references: [id])
+  sessionId String                    @map("session_id")
+  session   ClinicalSessionAttendance @relation(fields: [sessionId], references: [id])
+  createdBy String                    @map("created_by")
+  user      User                      @relation(fields: [createdBy], references: [id])
+
+  @@unique([caseId, sessionId])
+  @@map("clinical_case_notes")
 }
