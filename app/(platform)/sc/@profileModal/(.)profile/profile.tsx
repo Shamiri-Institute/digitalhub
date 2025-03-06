@@ -1,7 +1,7 @@
 "use client";
 
 import { Icons } from "#/components/icons";
-import { updateSupervisorProfile } from "./actions";
+import { updateSupervisorProfile } from "../../actions";
 
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -40,7 +40,7 @@ import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { SupervisorSchema, SupervisorType } from "./schema";
+import { SupervisorSchema, SupervisorType } from "../../schemas";
 
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
@@ -168,7 +168,7 @@ export default function ProfileForm({
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" disabled/>
+                          <Input {...field} type="tel" disabled />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

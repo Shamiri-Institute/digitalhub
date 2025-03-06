@@ -1,7 +1,7 @@
 import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
-import ProfileForm from "./profile"; 
-import { SupervisorType } from "./schema";
+import { SupervisorType } from "../../schemas";
+import ProfileForm from "./profile";
 
 export default async function Page() {
   const supervisor = await currentSupervisor();
@@ -23,10 +23,10 @@ export default async function Page() {
     bankBranch: supervisor.bankBranch ?? "",
     dateOfBirth: supervisor.dateOfBirth
       ? new Date(supervisor.dateOfBirth).toISOString().split("T")[0]
-      : "", 
+      : "",
     gender: allowedGenders.includes(supervisor.gender ?? "")
       ? (supervisor.gender as "Male" | "Female")
-      : "Male", 
+      : "Male",
   };
 
   return <ProfileForm initialData={profile} />;

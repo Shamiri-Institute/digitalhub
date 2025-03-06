@@ -1,7 +1,7 @@
 "use client";
 
 import { Icons } from "#/components/icons";
-import { updateHubCoordinatorProfile } from "./actions";
+import { updateHubCoordinatorProfile } from "../../actions";
 
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -40,7 +40,7 @@ import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { HubCoordinatorSchema, HubCoordinatorType } from "./schema";
+import { HubCoordinatorSchema, HubCoordinatorType } from "../../schemas";
 
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
@@ -168,7 +168,7 @@ export default function ProfileForm({
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" />
+                          <Input {...field} type="tel" disabled />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -378,7 +378,7 @@ export default function ProfileForm({
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" disabled/>
+                          <Input {...field} type="tel" disabled />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

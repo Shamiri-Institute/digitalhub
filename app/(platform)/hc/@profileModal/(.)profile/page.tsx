@@ -1,7 +1,7 @@
 import { currentHubCoordinator } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
-import ProfileForm from "./profile"; 
-import { HubCoordinatorType } from "./schema";
+import { HubCoordinatorType } from "../../schemas";
+import ProfileForm from "./profile";
 
 export default async function Page() {
   const hubCoordinator = await currentHubCoordinator();
