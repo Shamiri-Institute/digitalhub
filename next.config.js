@@ -3,6 +3,9 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
+  env: {
+    APP_ENV: process.env.APP_ENV,
+  },
   async redirects() {
     return [
       {
