@@ -66,7 +66,17 @@ const terminationReasons = [
   "Mutual termination after referral",
 ] as const;
 
+const sessions = [
+  "Session 1 - Initial Assessment",
+  "Session 2 - Treatment Planning",
+  "Session 3 - Progress Review",
+  "Session 4 - Mid-Term Evaluation",
+  "Session 5 - Treatment Continuation",
+  "Final Session - Termination",
+] 
+
 const CaseReportSchema = z.object({
+  sessionId: stringValidation("Session ID is required"),
   presentingIssues: stringValidation("Presenting issues are required"),
   orsAssessment: stringValidation("ORS assessment is required"),
   riskLevel: z.enum(riskLevels, {
@@ -129,6 +139,7 @@ export default function CaseNotesForm({
         explanation: "",
       },
       terminationReason: "Student no-show",
+      sessionId: "",
     },
   });
 
@@ -168,8 +179,39 @@ export default function CaseNotesForm({
           <h2>Case Notes</h2>
         </DialogHeader>
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
+        {JSON.stringify(clinicalCase)}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+              control={form.control}
+              name="sessionId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Select session
+                    <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select session" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {sessions.map((session) => (
+                        <SelectItem key={session} value={session}>
+                          {session}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="presentingIssues"
