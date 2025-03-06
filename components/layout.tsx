@@ -13,7 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "#/components/ui/popover";
-import { constants } from "#/lib/constants";
+import { APP_ENV, constants } from "#/lib/constants";
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -236,7 +236,7 @@ function LayoutV2({
 }
 
 function PersonnelToolPopover({ children }: { children: React.ReactNode }) {
-  if (constants.NEXT_PUBLIC_ENV === "production") {
+  if (APP_ENV !== "testing" && constants.NEXT_PUBLIC_ENV === "production") {
     return null;
   }
 
