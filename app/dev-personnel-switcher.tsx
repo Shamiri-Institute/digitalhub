@@ -20,7 +20,7 @@ import {
   PopoverTrigger,
 } from "#/components/ui/popover";
 import { fetchPersonnel } from "#/lib/actions/fetch-personnel";
-import { constants } from "#/lib/constants";
+import { APP_ENV, constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 
 export type Personnel = {
@@ -178,7 +178,8 @@ export function PersonnelTool() {
     fetchData();
   }, []);
 
-  const visible = constants.NEXT_PUBLIC_ENV !== "production";
+  const visible =
+    constants.NEXT_PUBLIC_ENV !== "production" || APP_ENV === "testing";
 
   return (
     <>
