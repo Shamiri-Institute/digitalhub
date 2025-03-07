@@ -41,6 +41,7 @@ export function MonthView({
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
+  fellowId?: string;
 }) {
   const { locale } = useLocale();
   const { gridProps, headerProps, weekDays } = useCalendarGrid(props, state);
@@ -123,6 +124,7 @@ export function MonthView({
                       weekend={isWeekend(date, "en-US")}
                       role={props.role}
                       dialogState={props.dialogState}
+                      fellowId={props.fellowId}
                     />
                   ) : (
                     <td key={i} />
@@ -142,6 +144,7 @@ export function MonthCalendarCell({
   weekend,
   role,
   dialogState,
+  fellowId,
 }: {
   state: CalendarState;
   date: CalendarDate;
@@ -154,6 +157,7 @@ export function MonthCalendarCell({
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
+  fellowId?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -221,6 +225,7 @@ export function MonthCalendarCell({
             sessions={sessions}
             role={role}
             dialogState={dialogState}
+            fellowId={fellowId}
           />
         </div>
       </div>
