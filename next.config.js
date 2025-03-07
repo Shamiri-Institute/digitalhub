@@ -48,5 +48,5 @@ module.exports = withSentryConfig(
     hideSourceMaps: true,
     disableLogger: true,
     automaticVercelMonitors: true,
-  }
+  },
 );
