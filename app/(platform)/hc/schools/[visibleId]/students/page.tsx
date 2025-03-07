@@ -53,7 +53,7 @@ export default async function StudentsPage({
 
   return (
     <Suspense fallback={<Loading />}>
-      <StudentsDatatable data={students} hubCoordinator={hubCoordinator} />
+      <StudentsDatatable data={students} />
     </Suspense>
   );
 }

@@ -24,6 +24,7 @@ export function DayView({
   role,
   dialogState,
   supervisorId,
+  fellowId,
 }: {
   state: CalendarState;
   role: ImplementerRole;
@@ -35,6 +36,7 @@ export function DayView({
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
+  fellowId?: string;
 }) {
   const headerRowRef: any = useRef(null);
   const dayFormatter = useDateFormatter({ weekday: "long" });
@@ -141,6 +143,7 @@ export function DayView({
                 state={state}
                 role={role}
                 dialogState={dialogState}
+                fellowId={fellowId}
               />
             </tr>
           ))}
@@ -157,6 +160,7 @@ function DayCalendarCell({
   state,
   role,
   dialogState,
+  fellowId,
 }: {
   rowIdx: number;
   hour: number;
@@ -170,6 +174,7 @@ function DayCalendarCell({
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
+  fellowId?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const { cellProps, buttonProps, isSelected, isDisabled, isUnavailable } =
@@ -202,6 +207,7 @@ function DayCalendarCell({
             sessions={sessions}
             role={role}
             dialogState={dialogState}
+            fellowId={fellowId}
           />
         </div>
       </div>
