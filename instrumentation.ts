@@ -8,13 +8,13 @@ export function register() {
     const databaseHost = url.hostname;
     const databaseName = url.pathname.slice(1);
 
-    let color = "\x1b[0m"; 
+    let color = "\x1b[0m";
     if (databaseHost === "localhost") {
-      color = "\x1b[32m"; 
+      color = "\x1b[32m";
     } else if (databaseName === "shamiri_db_preview") {
-      color = "\x1b[33m"; 
+      color = "\x1b[33m";
     } else if (databaseName === "shamiri_db") {
-      color = "\x1b[31m"; 
+      color = "\x1b[31m";
     }
 
     const leftPad = " ".repeat(3);
