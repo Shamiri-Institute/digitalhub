@@ -28,6 +28,7 @@ export function ListView({
   role,
   dialogState,
   supervisorId,
+  fellowId,
 }: {
   state: CalendarState;
   hubId: string;
@@ -40,6 +41,7 @@ export function ListView({
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
+  fellowId?: string;
 }) {
   const { sessions } = useContext(SessionsContext);
   const [sessionGroups, setSessionGroups] = useState<string[]>([]);
@@ -283,6 +285,7 @@ export function ListView({
                           setRatingsDialog: dialogState.setRatingsDialog,
                         }}
                         role={role}
+                        fellowId={fellowId}
                       >
                         <div className="absolute inset-0 bg-white">
                           <div className="flex h-full w-full items-center justify-center">

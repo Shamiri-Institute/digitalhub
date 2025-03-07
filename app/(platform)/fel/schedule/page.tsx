@@ -40,6 +40,7 @@ export default async function FellowSchedulePage() {
           schools={fellow?.hub?.schools ?? []}
           role={fellow?.user.membership.role!}
           hubSessionTypes={fellow?.hub?.sessions}
+          fellow={fellow}
         />
       </div>
       <PageFooter />

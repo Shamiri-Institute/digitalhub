@@ -22,6 +22,7 @@ export function WeekView({
   role,
   dialogState,
   supervisorId,
+  fellowId,
 }: {
   state: CalendarState;
   role: ImplementerRole;
@@ -33,6 +34,7 @@ export function WeekView({
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
+  fellowId?: string;
 }) {
   const headerRowRef: any = useRef(null);
   const { gridProps, headerProps } = useCalendarGrid(
@@ -151,6 +153,7 @@ export function WeekView({
                       state={state}
                       role={role}
                       dialogState={dialogState}
+                      fellowId={fellowId}
                     />
                   ) : (
                     <td key={colIdx} />
@@ -209,6 +212,7 @@ function WeekCalendarCell({
   state,
   role,
   dialogState,
+  fellowId,
 }: {
   rowIdx: number;
   colIdx: number;
@@ -223,6 +227,7 @@ function WeekCalendarCell({
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
+  fellowId?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -263,6 +268,7 @@ function WeekCalendarCell({
             sessions={sessions}
             role={role}
             dialogState={dialogState}
+            fellowId={fellowId}
           />
         </div>
       </div>

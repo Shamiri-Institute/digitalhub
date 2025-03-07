@@ -151,7 +151,7 @@ export async function submitSupervisorComplaint(
         supervisorId: parsedData.supervisorId,
         complaint: parsedData.complaint,
         comments: parsedData.comments,
-        hubCoordinatorId: hubCoordinator.id,
+        hubCoordinatorId: hubCoordinator.id!,
         projectId: CURRENT_PROJECT_ID,
       },
     });
@@ -425,7 +425,7 @@ export async function submitMonthlySupervisorEvaluation(
       await db.monthlySupervisorEvaluation.create({
         data: {
           supervisorId,
-          hubCoordinatorId: hc.id,
+          hubCoordinatorId: hc.id!,
           projectId: CURRENT_PROJECT_ID,
           month,
           respectfulness,

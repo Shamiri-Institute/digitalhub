@@ -52,14 +52,16 @@ export default async function SupervisorsPage() {
           <div className="flex items-center gap-3">
             <AddNewSupervisor />
             <WeeklyHubTeamMeetingForm
-              hubCoordinatorId={coordinator?.id}
+              hubCoordinatorId={coordinator?.id!}
               hubId={coordinator?.assignedHubId}
             />
           </div>
         </div>
 
         <Suspense fallback={<GraphLoadingIndicator />}>
-          <SupervisorChartsWrapper coordinator={coordinator} />
+          <SupervisorChartsWrapper
+            coordinator={{ assignedHubId: coordinator?.assignedHubId }}
+          />
         </Suspense>
 
         <Separator />
@@ -68,7 +70,7 @@ export default async function SupervisorsPage() {
           <MainSupervisorsDataTable
             supervisors={supervisors}
             hubId={coordinator.assignedHubId}
-            implementerId={coordinator.implementerId}
+            implementerId={coordinator.implementerId!}
             projectId={coordinator.assignedHub?.projectId!}
           />
         </SupervisorProvider>
