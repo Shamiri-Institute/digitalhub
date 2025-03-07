@@ -1,8 +1,6 @@
 "use client";
 
 import { Icons } from "#/components/icons";
-import { updateSupervisorProfile } from "../../actions";
-
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
 import {
@@ -35,47 +33,47 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { useSession } from "next-auth/react";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { SupervisorSchema, SupervisorType } from "../../schemas";
-
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
+import { format } from "date-fns";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 
-export default function ProfileForm({
+export type GenericFormData = {
+  email: string;
+  name: string;
+  idNumber: string;
+  cellNumber: string;
+  mpesaNumber: string;
+  dateOfBirth?: string;
+  gender: "Male" | "Female";
+  county: string;
+  subCounty: string;
+  bankName: string;
+  bankBranch: string;
+};
+
+type GenericProfileFormProps = {
+  initialData: GenericFormData;
+  onSubmit: (data: GenericFormData) => Promise<void>;
+};
+
+export default function GenericProfileForm({
   initialData,
-}: {
-  initialData?: SupervisorType | null;
-}) {
+  onSubmit,
+}: GenericProfileFormProps) {
   const { data: session } = useSession();
   const router = useRouter();
 
-  const form = useForm<SupervisorType>({
-    resolver: zodResolver(SupervisorSchema),
-    defaultValues: initialData || {
-      supervisorEmail: "",
-      supervisorName: "",
-      idNumber: "",
-      cellNumber: "",
-      mpesaNumber: "",
-      dateOfBirth: "",
-      gender: "Male",
-      county: "",
-      subCounty: "",
-      bankName: "",
-      bankBranch: "",
-    },
+  const form = useForm<GenericFormData>({
+    defaultValues: initialData,
   });
 
   useEffect(() => {
-    if (initialData) {
-      form.reset(initialData);
-    }
-  }, [initialData]);
+    form.reset(initialData);
+  }, [initialData, form]);
 
   const countyWatcher = form.watch("county");
   useEffect(() => {
@@ -86,20 +84,20 @@ export default function ProfileForm({
 
   const counties = KENYAN_COUNTIES.map((c) => c.name);
 
-  async function onSubmit(data: SupervisorType) {
-    const response = await updateSupervisorProfile(data);
-    if (response?.success) {
+  async function handleSubmit(data: GenericFormData) {
+    try {
+      await onSubmit(data);
       toast({
         title: "Success",
         variant: "default",
         description: "Profile updated successfully!",
       });
       router.refresh();
-    } else {
+    } catch (error: any) {
       toast({
         title: "Update Failed",
         variant: "destructive",
-        description: response?.message ?? "An error occurred.",
+        description: error?.message ?? "An error occurred.",
       });
     }
   }
@@ -116,26 +114,25 @@ export default function ProfileForm({
       <DialogContent className="p-5">
         <DialogHeader>
           <DialogTitle>My Profile</DialogTitle>
-          <div className="font-figtree flex items-center gap-4">
+          <div className="flex items-center gap-4">
             <div className="relative h-7 w-7">
               <img
                 src={session?.user?.image || "/placeholder.png"}
                 alt="Profile"
-                className="border-gray-10 h-7 w-7 rounded-full border object-cover"
+                className="h-7 w-7 rounded-full border object-cover"
               />
             </div>
-            <p className="font-figtree text-left text-[20px] font-semibold leading-[28px] text-gray-600">
-              {form.watch("supervisorName") || "N/A"}
+            <p className="text-[20px] font-semibold text-gray-600">
+              {form.watch("name") || "N/A"}
             </p>
           </div>
         </DialogHeader>
-
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
             <div className="space-y-6">
               <div className="flex flex-col">
-                <div className="col-span-2 py-2">
-                  <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                <div className="py-2">
+                  <span className="pb-2 text-xs uppercase text-gray-500">
                     Personal Information
                   </span>
                   <Separator />
@@ -143,13 +140,10 @@ export default function ProfileForm({
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="supervisorEmail"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          Email Address{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                        <FormLabel>Email Address</FormLabel>
                         <FormControl>
                           <Input {...field} disabled />
                         </FormControl>
@@ -157,16 +151,12 @@ export default function ProfileForm({
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="cellNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          Phone Number{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                        <FormLabel>Phone Number</FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" disabled />
                         </FormControl>
@@ -174,16 +164,12 @@ export default function ProfileForm({
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="idNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          National ID{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                        <FormLabel>National ID</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -191,16 +177,12 @@ export default function ProfileForm({
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="gender"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          Gender{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                        <FormLabel>Gender</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -211,18 +193,14 @@ export default function ProfileForm({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {["Male", "Female"].map((g) => (
-                              <SelectItem key={g} value={g}>
-                                {g}
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="Male">Male</SelectItem>
+                            <SelectItem value="Female">Female</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="dateOfBirth"
@@ -233,13 +211,13 @@ export default function ProfileForm({
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
-                                variant={"outline"}
+                                variant="outline"
                                 className={cn(
                                   "mt-1.5 w-full justify-start px-3 text-left font-normal",
                                   !field.value && "text-muted-foreground",
                                 )}
                               >
-                                <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <Icons.calendar className="mr-2 h-4 w-4" />
                                 {field.value
                                   ? format(new Date(field.value), "dd/MM/yyyy")
                                   : "Pick a date"}
@@ -344,8 +322,8 @@ export default function ProfileForm({
               </div>
 
               <div className="flex flex-col">
-                <div className="col-span-2 py-2">
-                  <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                <div className="py-2">
+                  <span className="pb-2 text-xs uppercase text-gray-500">
                     M-PESA Information
                   </span>
                   <Separator />
@@ -353,13 +331,10 @@ export default function ProfileForm({
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
-                    name="supervisorName"
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          Full Name{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                        <FormLabel>Full Name</FormLabel>
                         <FormControl>
                           <Input {...field} disabled />
                         </FormControl>
@@ -367,16 +342,12 @@ export default function ProfileForm({
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="mpesaNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          M-Pesa number{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                        <FormLabel>M-Pesa number</FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" disabled />
                         </FormControl>
@@ -388,8 +359,8 @@ export default function ProfileForm({
               </div>
 
               <div className="flex flex-col">
-                <div className="col-span-2 py-2">
-                  <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                <div className="py-2">
+                  <span className="pb-2 text-xs uppercase text-gray-500">
                     Bank Details
                   </span>
                   <Separator />
@@ -400,10 +371,7 @@ export default function ProfileForm({
                     name="bankName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          Bank Name{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                        <FormLabel>Bank Name</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -411,16 +379,12 @@ export default function ProfileForm({
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="bankBranch"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          Bank Branch{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                        <FormLabel>Bank Branch</FormLabel>
                         <FormControl>
                           <Input {...field} type="text" />
                         </FormControl>
@@ -431,7 +395,6 @@ export default function ProfileForm({
                 </div>
               </div>
             </div>
-
             <DialogFooter className="pt-4">
               <Button variant="outline" onClick={() => router.back()}>
                 Cancel

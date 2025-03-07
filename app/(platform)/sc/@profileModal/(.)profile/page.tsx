@@ -1,33 +1,35 @@
 import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
-import { SupervisorType } from "../../schemas";
-import ProfileForm from "./profile";
+import ProfileFormWrapper from "app/(platform)/new-edit-profile/components/ProfileFormWrapper";
+import { GenericFormData } from "app/(platform)/new-edit-profile/components/genericProfile";
 
 export default async function Page() {
   const supervisor = await currentSupervisor();
   if (!supervisor) {
     return <InvalidPersonnelRole role="supervisor" />;
   }
-
   const allowedGenders = ["Male", "Female"];
+  const genderValue: "Male" | "Female" = allowedGenders.includes(
+    supervisor.gender ?? "",
+  )
+    ? (supervisor.gender as "Male" | "Female")
+    : "Male";
 
-  const profile: SupervisorType = {
-    supervisorEmail: supervisor.supervisorEmail ?? "",
-    supervisorName: supervisor.supervisorName ?? "",
+  const initialData: GenericFormData = {
+    email: supervisor.supervisorEmail ?? "",
+    name: supervisor.supervisorName ?? "",
     idNumber: supervisor.idNumber ?? "",
     cellNumber: supervisor.cellNumber ?? "",
     mpesaNumber: supervisor.mpesaNumber ?? "",
+    dateOfBirth: supervisor.dateOfBirth
+      ? new Date(supervisor.dateOfBirth).toISOString().split("T")[0]
+      : "",
+    gender: genderValue,
     county: supervisor.county ?? "",
     subCounty: supervisor.subCounty ?? "",
     bankName: supervisor.bankName ?? "",
     bankBranch: supervisor.bankBranch ?? "",
-    dateOfBirth: supervisor.dateOfBirth
-      ? new Date(supervisor.dateOfBirth).toISOString().split("T")[0]
-      : "",
-    gender: allowedGenders.includes(supervisor.gender ?? "")
-      ? (supervisor.gender as "Male" | "Female")
-      : "Male",
   };
 
-  return <ProfileForm initialData={profile} />;
+  return <ProfileFormWrapper initialData={initialData} role="supervisor" />;
 }
