@@ -1,6 +1,9 @@
 "use client";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
+import {
+  ClinicalCases,
+  updateStudentInfo,
+} from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 
 import { Button } from "#/components/ui/button";
@@ -34,7 +37,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const ComplaintSchema = z.object({
+const EditStudentSchema = z.object({
   studentName: stringValidation("Student name is required"),
   pseudonym: stringValidation("Pseudonym is required"),
   school: stringValidation("School is required"),
@@ -44,9 +47,11 @@ const ComplaintSchema = z.object({
   classForm: stringValidation("Class/Form is required"),
   stream: stringValidation("Stream is required"),
   group: stringValidation("Group is required"),
+  caseId: stringValidation("Case ID is required"),
+  studentId: stringValidation("Student ID is required"),
 });
 
-type ComplaintFormValues = z.infer<typeof ComplaintSchema>;
+export type EditStudentInfoFormValues = z.infer<typeof EditStudentSchema>;
 
 export default function ViewEditClinicalCaseStudentInfo({
   children,
@@ -57,8 +62,8 @@ export default function ViewEditClinicalCaseStudentInfo({
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
-  const form = useForm<ComplaintFormValues>({
-    resolver: zodResolver(ComplaintSchema),
+  const form = useForm<EditStudentInfoFormValues>({
+    resolver: zodResolver(EditStudentSchema),
     defaultValues: {
       studentName: clinicalCase.student.studentName || "",
       pseudonym: clinicalCase.pseudonym,
@@ -69,28 +74,26 @@ export default function ViewEditClinicalCaseStudentInfo({
       classForm: clinicalCase.student.form?.toString() || "",
       stream: clinicalCase.student.stream || "",
       group: clinicalCase.student.assignedGroupId || "",
+      caseId: clinicalCase.id,
+      studentId: clinicalCase.student.id,
     },
   });
 
-  const onSubmit = async (data: ComplaintFormValues) => {
-    console.log({ data });
+  const onSubmit = async (data: EditStudentInfoFormValues) => {
     try {
-      const response = {
-        success: true,
-        message: "Student information updated successfully",
-      };
+      const response = await updateStudentInfo(data);
 
       if (response.success) {
         toast({
           title: "Success",
-          description: "Complaint updated successfully",
+          description: response.message,
         });
-        await revalidatePageAction("hc/reporting/fellow-reports/complaints");
+        await revalidatePageAction("sc/clinical");
         setDialogOpen(false);
       } else {
         toast({
           title: "Error",
-          description: response.message || "Failed to update complaint",
+          description: response.message,
           variant: "destructive",
         });
       }
