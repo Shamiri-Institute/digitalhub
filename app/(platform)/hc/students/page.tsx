@@ -186,7 +186,7 @@ export default async function StudentsPage() {
 
       <Separator />
 
-      <StudentsFilterTab hubCoordinatorId={hubCoordinator.id} />
+      <StudentsFilterTab hubCoordinatorId={hubCoordinator.id!} />
 
       <StudentsStats
         totalNumberOfStudentsInHub={totalNumberOfStudentsInHub}

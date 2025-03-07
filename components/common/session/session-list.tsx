@@ -32,6 +32,7 @@ export function SessionList({
   role,
   dialogState,
   supervisorId,
+  fellowId,
 }: {
   sessions: Session[];
   role: ImplementerRole;
@@ -43,6 +44,7 @@ export function SessionList({
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
+  fellowId?: string;
 }) {
   if (sessions.length === 0) {
     return null;
@@ -63,6 +65,7 @@ export function SessionList({
           }}
           role={role}
           layout="expanded"
+          fellowId={fellowId}
         />
       )
     );
@@ -82,6 +85,7 @@ export function SessionList({
           setStudentAttendanceDialog: dialogState.setStudentAttendanceDialog,
         }}
         role={role}
+        fellowId={fellowId}
       />
       <SessionDetail
         layout="compact"
@@ -94,6 +98,7 @@ export function SessionList({
           setStudentAttendanceDialog: dialogState.setStudentAttendanceDialog,
         }}
         role={role}
+        fellowId={fellowId}
       />
       <div className="w-full">
         {moreSessions.length > 0 && (
@@ -122,6 +127,7 @@ export function SessionList({
                           dialogState.setStudentAttendanceDialog,
                       }}
                       role={role}
+                      fellowId={fellowId}
                     />
                   );
                 })}
@@ -139,6 +145,7 @@ export function SessionDetail({
   layout,
   withDropdown = true,
   role,
+  fellowId,
 }: {
   state: {
     session: Session;
@@ -151,6 +158,7 @@ export function SessionDetail({
   layout: "compact" | "expanded";
   withDropdown?: boolean;
   role: ImplementerRole;
+  fellowId?: string;
 }) {
   const [timeLabels, setTimeLabels] = useState({
     startTimeLabel: "",
@@ -262,7 +270,13 @@ export function SessionDetail({
 
   return withDropdown ? (
     <div>
-      <SessionDropDown open={open} setOpen={setOpen} state={state} role={role}>
+      <SessionDropDown
+        open={open}
+        setOpen={setOpen}
+        state={state}
+        role={role}
+        fellowId={fellowId}
+      >
         {renderSessionDetails()}
       </SessionDropDown>
     </div>
@@ -277,6 +291,7 @@ export function SessionDropDown({
   children,
   state,
   role,
+  fellowId,
 }: {
   open?: boolean;
   setOpen?: Dispatch<SetStateAction<boolean>>;
@@ -290,6 +305,7 @@ export function SessionDropDown({
     setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
   };
   role: ImplementerRole;
+  fellowId?: string;
 }) {
   const { session } = state;
   const supervisorAttendanceContext = useContext(SupervisorAttendanceContext);
@@ -423,27 +439,51 @@ export function SessionDropDown({
             </DropdownMenuItem>
           </>
         )}
-        {session.sessionDate > new Date() && (
-          <DropdownMenuItem
-            onClick={() => {
-              rescheduleSessionContext.setIsOpen(true);
-            }}
-            disabled={session.occurred}
-          >
-            Reschedule session
-          </DropdownMenuItem>
-        )}
-        {session.sessionDate > new Date() && (
-          <DropdownMenuItem
-            className="text-shamiri-light-red"
-            onClick={() => {
-              cancelSessionContext.setIsOpen(true);
-            }}
-            disabled={session.status === "Cancelled" || session.occurred}
-          >
-            Cancel session
-          </DropdownMenuItem>
-        )}
+        {role === "HUB_COORDINATOR" || role === "SUPERVISOR" ? (
+          <>
+            {session.sessionDate > new Date() && (
+              <DropdownMenuItem
+                onClick={() => {
+                  rescheduleSessionContext.setIsOpen(true);
+                }}
+                disabled={session.occurred}
+              >
+                Reschedule session
+              </DropdownMenuItem>
+            )}
+            {session.sessionDate > new Date() && (
+              <DropdownMenuItem
+                className="text-shamiri-light-red"
+                onClick={() => {
+                  cancelSessionContext.setIsOpen(true);
+                }}
+                disabled={session.status === "Cancelled" || session.occurred}
+              >
+                Cancel session
+              </DropdownMenuItem>
+            )}
+          </>
+        ) : null}
+        {role === "FELLOW" ? (
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setStudentAttendanceDialog &&
+                  state.setStudentAttendanceDialog(true);
+              }}
+              disabled={
+                session.status === "Cancelled" ||
+                session.session?.sessionType === "DATA_COLLECTION" ||
+                !session.occurred ||
+                !session.school?.interventionGroups.find((group) => {
+                  return group.leaderId === fellowId;
+                })
+              }
+            >
+              Mark student attendance
+            </DropdownMenuItem>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );
