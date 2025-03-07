@@ -41,6 +41,7 @@ import {
   statusFilterOptions,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
+import { CurrentFellow } from "#/app/auth";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import { ScheduleNewSession } from "#/components/common/session/schedule-new-session-form";
 import { SessionDetail } from "#/components/common/session/session-list";
@@ -102,6 +103,7 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
   }[];
   role: ImplementerRole;
   supervisorId?: string;
+  fellow?: CurrentFellow;
   hubSessionTypes?: Prisma.SessionNameGetPayload<{}>[];
 };
 
@@ -254,6 +256,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 fellowRatings={props.fellowRatings}
                 role={props.role}
                 supervisorId={props.supervisorId}
+                fellow={props.fellow}
               />
             </FiltersContext.Provider>
           </div>
@@ -352,6 +355,7 @@ function CalendarView({
   fellowRatings,
   role,
   supervisorId,
+  fellow,
 }: {
   monthProps: {
     state: CalendarState;
@@ -393,6 +397,7 @@ function CalendarView({
   }[];
   role: ImplementerRole;
   supervisorId?: string;
+  fellow?: CurrentFellow;
 }) {
   const { mode } = useMode();
   const { sessions, setSessions } = useContext(SessionsContext);
@@ -429,6 +434,7 @@ function CalendarView({
               setRatingsDialog,
               setSessionOccurrenceDialog,
             }}
+            fellowId={fellow?.id}
           />
         );
       case "week":
@@ -444,6 +450,7 @@ function CalendarView({
               setRatingsDialog,
               setSessionOccurrenceDialog,
             }}
+            fellowId={fellow?.id}
           />
         ) : (
           <div>Loading...</div>
@@ -461,6 +468,7 @@ function CalendarView({
               setSessionOccurrenceDialog,
             }}
             supervisorId={supervisorId}
+            fellowId={fellow?.id}
           />
         ) : (
           <div>Loading...</div>
@@ -478,6 +486,7 @@ function CalendarView({
               setRatingsDialog,
               setSessionOccurrenceDialog,
             }}
+            fellowId={fellow?.id}
           />
         );
       case "table":
@@ -582,6 +591,7 @@ function CalendarView({
             supervisors?.find((supervisor) => supervisor.id === supervisorId)
               ?.fellows ?? []
           }
+          fellowId={fellow?.id}
         />
         {session?.session?.sessionType === "INTERVENTION" &&
           session?.schoolId && (

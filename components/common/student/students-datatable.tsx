@@ -13,19 +13,12 @@ import StudentDetailsForm from "#/components/common/student/student-details-form
 import StudentDropoutForm from "#/components/common/student/student-dropout-form";
 import DataTable from "#/components/data-table";
 import { markStudentAttendance } from "#/lib/actions/student";
-import { Prisma } from "@prisma/client";
 import { use, useState } from "react";
 
 export default function StudentsDatatable({
   data,
-  hubCoordinator,
 }: {
   data: Promise<SchoolStudentTableData[]>;
-  hubCoordinator?: Prisma.HubCoordinatorGetPayload<{
-    include: {
-      assignedHub: true;
-    };
-  }> | null;
 }) {
   const students = use(data);
   const [editDialog, setEditDialog] = useState<boolean>(false);
