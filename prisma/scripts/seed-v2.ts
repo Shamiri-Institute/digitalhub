@@ -191,7 +191,7 @@ function generateImplementers(n: number) {
       implementerType: "NGO",
       implementerAddress: faker.location.secondaryAddress(),
       pointPersonName: faker.person.fullName(),
-      pointPersonPhone: faker.phone.number({ style: "international" }),
+      pointPersonPhone: faker.helpers.fromRegExp("254[1-9]{9}").toLowerCase(),
       pointPersonEmail: faker.internet.email().toLowerCase(),
       countyOfOperation: "Nairobi",
     });
@@ -376,8 +376,8 @@ async function createCoreUsers(
         kra: faker.finance.accountNumber(),
         nhif: faker.finance.accountNumber(),
         dateOfBirth: faker.date.birthdate(),
-        cellNumber: faker.phone.number({ style: "international" }),
-        mpesaNumber: faker.phone.number({ style: "international" }),
+        cellNumber: faker.helpers.fromRegExp("254[1-9]{9}").toLowerCase(),
+        mpesaNumber: faker.helpers.fromRegExp("254[1-9]{9}").toLowerCase(),
         gender: faker.person.sex(),
         idNumber: faker.string.alpha({ casing: "upper", length: 8 }),
         hubId: faker.helpers.arrayElement(hubs).id,
@@ -402,8 +402,8 @@ async function createCoreUsers(
         kra: faker.finance.accountNumber(),
         nhif: faker.finance.accountNumber(),
         dateOfBirth: faker.date.birthdate(),
-        cellNumber: faker.phone.number({ style: "international" }),
-        mpesaNumber: faker.phone.number({ style: "international" }),
+        cellNumber: faker.helpers.fromRegExp("254[1-9]{9}").toLowerCase(),
+        mpesaNumber: faker.helpers.fromRegExp("254[1-9]{9}").toLowerCase(),
         gender: faker.person.sex(),
         idNumber: faker.string.alpha({ casing: "upper", length: 8 }),
         assignedHubId: faker.helpers.arrayElement(hubs).id,
@@ -480,8 +480,8 @@ async function createHubCoordinators(
       kra: faker.finance.accountNumber(),
       nhif: faker.finance.accountNumber(),
       dateOfBirth: faker.date.birthdate(),
-      cellNumber: faker.phone.number({ style: "international" }),
-      mpesaNumber: faker.phone.number({ style: "international" }),
+      cellNumber: faker.helpers.fromRegExp("254[1-9]{9}").toLowerCase(),
+      mpesaNumber: faker.helpers.fromRegExp("254[1-9]{9}").toLowerCase(),
       gender:
         Math.random() > 0.9
           ? "Other"
@@ -563,8 +563,8 @@ async function createSupervisors(
       kra: faker.finance.accountNumber(),
       nhif: faker.finance.accountNumber(),
       dateOfBirth: faker.date.birthdate(),
-      cellNumber: faker.phone.number({ style: "international" }),
-      mpesaNumber: faker.phone.number({ style: "international" }),
+      cellNumber: faker.helpers.fromRegExp("254[1-9]{9}").toLowerCase(),
+      mpesaNumber: faker.helpers.fromRegExp("254[1-9]{9}").toLowerCase(),
       gender:
         Math.random() > 0.9
           ? "Other"
@@ -610,7 +610,7 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
         fellowEmail: uniqueEmail,
         mpesaName: Math.random() > 0.5 ? fellowName : faker.person.fullName(),
         // NOTE: if we ever need to make this real, we would have to control the formatting
-        mpesaNumber: faker.phone.number({ style: "international" }),
+        mpesaNumber: faker.helpers.fromRegExp("254[1-9]{9}").toLowerCase(),
         // TODO: should we allow some fellows to have no supervisor?
         supervisorId: supervisor.id,
         hubId: supervisor.hubId,
@@ -620,7 +620,7 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
           ? faker.helpers.arrayElement(subCounties)
           : supervisor.subCounty,
         dateOfBirth: faker.date.birthdate(),
-        cellNumber: faker.phone.number({ style: "international" }),
+        cellNumber: faker.helpers.fromRegExp("254[1-9]{9}").toLowerCase(),
         gender:
           Math.random() > 0.9
             ? "Other"
@@ -698,7 +698,7 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
         ]),
         pointPersonId: faker.string.alpha({ casing: "upper", length: 6 }),
         pointPersonName: faker.person.fullName(),
-        pointPersonPhone: faker.phone.number({ style: "international" }),
+        pointPersonPhone: faker.helpers.fromRegExp("254[1-9]{9}").toLowerCase(),
         numbersExpected: faker.number.int({ min: 200, max: 600 }),
         principalName: faker.person.fullName(),
         droppedOut: false,
