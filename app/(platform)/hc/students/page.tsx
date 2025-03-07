@@ -20,67 +20,118 @@ export default async function StudentsPage() {
     );
   }
 
-  const totalNumberOfStudentsInHub = await db.student.count({
-    where: {
-      school: {
-        hubId: hubCoordinator?.assignedHubId,
-      },
-    },
-  });
-
-  const totalGroupSessions = await db.interventionSession.count({
-    where: {
-      school: {
-        hubId: hubCoordinator?.assignedHubId,
-      },
-    },
-  });
-
-  const hubClinicalCases = await db.clinicalScreeningInfo.findMany({
-    where: {
-      currentSupervisor: {
-        hubId: hubCoordinator?.assignedHubId,
-      },
-    },
-  });
-
-  const hubClinicalSessions = await db.clinicalSessionAttendance.findMany({
-    where: {
-      case: {
-        currentSupervisor: {
-          hubId: hubCoordinator?.assignedHubId,
+  const [
+    totalNumberOfStudentsInHub,
+    totalGroupSessions,
+    hubClinicalCases,
+    hubClinicalSessions,
+    hubClinicalSessionsBySession,
+    hubClinicalSessionsBySupervisor,
+    hubClinicalSessionsByInitialReferredFrom,
+    studentAggregations,
+    studentsAttendanceGroupedBySession,
+    studentsDropOutReasonsGroupedByReason,
+  ] = await Promise.all([
+    db.student.count({
+      where: {
+        school: {
+          hubId: hubCoordinator.assignedHubId,
         },
       },
-    },
-  });
-
-  const hubClinicalSessionsBySession =
-    await db.clinicalSessionAttendance.groupBy({
+    }),
+    db.interventionSession.count({
+      where: {
+        school: {
+          hubId: hubCoordinator.assignedHubId,
+        },
+      },
+    }),
+    db.clinicalScreeningInfo.findMany({
+      where: {
+        currentSupervisor: {
+          hubId: hubCoordinator.assignedHubId,
+        },
+      },
+    }),
+    db.clinicalSessionAttendance.findMany({
+      where: {
+        case: {
+          currentSupervisor: {
+            hubId: hubCoordinator.assignedHubId,
+          },
+        },
+      },
+    }),
+    db.clinicalSessionAttendance.groupBy({
       by: ["session"],
       where: {
         case: {
           currentSupervisor: {
-            hubId: hubCoordinator?.assignedHubId,
+            hubId: hubCoordinator.assignedHubId,
           },
         },
       },
       _count: {
         session: true,
       },
-    });
-
-  const hubClinicalSessionsBySupervisor =
-    await db.clinicalScreeningInfo.groupBy({
+    }),
+    db.clinicalScreeningInfo.groupBy({
       by: ["currentSupervisorId"],
       where: {
         currentSupervisor: {
-          hubId: hubCoordinator?.assignedHubId,
+          hubId: hubCoordinator.assignedHubId,
         },
       },
       _count: {
         currentSupervisorId: true,
       },
-    });
+    }),
+    db.clinicalScreeningInfo.groupBy({
+      by: ["initialReferredFrom"],
+      where: {
+        currentSupervisor: {
+          hubId: hubCoordinator.assignedHubId,
+        },
+      },
+      _count: {
+        initialReferredFrom: true,
+      },
+    }),
+    db.student.groupBy({
+      by: ["age", "gender", "form"],
+      where: {
+        school: {
+          hubId: hubCoordinator.assignedHubId,
+        },
+      },
+      _count: {
+        id: true,
+      },
+    }),
+    db.interventionSession.groupBy({
+      by: ["sessionType"],
+      where: {
+        school: {
+          hubId: hubCoordinator.assignedHubId,
+        },
+      },
+      _count: {
+        sessionType: true,
+      },
+    }),
+    db.student.groupBy({
+      by: ["dropOutReason"],
+      where: {
+        school: {
+          hubId: hubCoordinator.assignedHubId,
+        },
+        droppedOut: true,
+      },
+      _count: {
+        dropOutReason: true,
+      },
+    }),
+  ]);
 
   const supervisorIds = hubClinicalSessionsBySupervisor.map(
     (item) => item.currentSupervisorId,
@@ -109,31 +160,6 @@ export default async function StudentsPage() {
     }),
   );
 
-  const hubClinicalSessionsByInitialReferredFrom =
-    await db.clinicalScreeningInfo.groupBy({
-      by: ["initialReferredFrom"],
-      where: {
-        currentSupervisor: {
-          hubId: hubCoordinator?.assignedHubId,
-        },
-      },
-      _count: {
-        initialReferredFrom: true,
-      },
-    });
-
-  const studentAggregations = await db.student.groupBy({
-    by: ["age", "gender", "form"],
-    where: {
-      school: {
-        hubId: hubCoordinator?.assignedHubId,
-      },
-    },
-    _count: {
-      id: true,
-    },
-  });
-
   const studentsGroupedByAge: Record<string, number> = {};
   const studentsGroupedByGender: Record<string, number> = {};
   const studentsGroupedByForm: Record<string, number> = {};
@@ -148,32 +174,6 @@ export default async function StudentsPage() {
     if (form)
       studentsGroupedByForm[form] =
         (_count.id || 0) + (studentsGroupedByForm[form] || 0);
-  });
-
-  const studentsAttendanceGroupedBySession =
-    await db.interventionSession.groupBy({
-      by: ["sessionType"],
-      where: {
-        school: {
-          hubId: hubCoordinator?.assignedHubId,
-        },
-      },
-      _count: {
-        sessionType: true,
-      },
-    });
-
-  const studentsDropOutReasonsGroupedByReason = await db.student.groupBy({
-    by: ["dropOutReason"],
-    where: {
-      school: {
-        hubId: hubCoordinator?.assignedHubId,
-      },
-      droppedOut: true,
-    },
-    _count: {
-      dropOutReason: true,
-    },
   });
 
   /**
