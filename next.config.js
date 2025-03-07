@@ -15,6 +15,14 @@ const nextConfig = {
         destination: "/sc/schedule",
         permanent: false,
       },
+<<<<<<< Updated upstream
+=======
+      {
+        source: "/fel",
+        destination: "/fel/schedule",
+        permanent: false,
+      },
+>>>>>>> Stashed changes
     ];
   },
 };
