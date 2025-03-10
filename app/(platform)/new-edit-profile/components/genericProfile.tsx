@@ -34,26 +34,39 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
-import { cn } from "#/lib/utils";
+import { cn, stringValidation } from "#/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
-export type GenericFormData = {
-  email: string;
-  name: string;
-  idNumber: string;
-  cellNumber: string;
-  mpesaNumber: string;
-  dateOfBirth?: string;
-  gender: "Male" | "Female";
-  county: string;
-  subCounty: string;
-  bankName: string;
-  bankBranch: string;
-};
+const counties = KENYAN_COUNTIES.map((c) => c.name);
+
+export const GenericFormSchema = z.object({
+  name: stringValidation("Please enter your name"),
+  email: stringValidation("Please enter your email"),
+  idNumber: stringValidation("Please enter your ID Number"),
+  cellNumber: z
+    .string({ required_error: "Please enter the phone number" })
+    .refine((val) => isValidPhoneNumber(val, "KE"), {
+      message: "Please enter a valid Kenyan phone number",
+    }),
+  mpesaNumber: stringValidation("Please enter your mpesa number"),
+  dateOfBirth: stringValidation("Please enter your date of birth").optional(),
+  gender: stringValidation("Please select your gender"),
+  county: z.enum([...counties] as [string, ...string[]], {
+    errorMap: () => ({ message: "Please pick a valid county" }),
+  }),
+  subCounty: stringValidation("Please enter your sub-county"),
+  bankName: stringValidation("Please enter your Bank Name"),
+  bankBranch: stringValidation("Please enter your Bank Branch"),
+});
+
+export type GenericFormData = z.infer<typeof GenericFormSchema>;
 
 type GenericProfileFormProps = {
   initialData: GenericFormData;
@@ -68,6 +81,7 @@ export default function GenericProfileForm({
   const router = useRouter();
 
   const form = useForm<GenericFormData>({
+    resolver: zodResolver(GenericFormSchema),
     defaultValues: initialData,
   });
 
@@ -82,20 +96,16 @@ export default function GenericProfileForm({
     }
   }, [countyWatcher, form]);
 
-  const counties = KENYAN_COUNTIES.map((c) => c.name);
-
   async function handleSubmit(data: GenericFormData) {
     try {
       await onSubmit(data);
       toast({
-        title: "Success",
         variant: "default",
         description: "Profile updated successfully!",
       });
       router.refresh();
     } catch (error: any) {
       toast({
-        title: "Update Failed",
         variant: "destructive",
         description: error?.message ?? "An error occurred.",
       });
@@ -123,7 +133,7 @@ export default function GenericProfileForm({
               />
             </div>
             <p className="text-[20px] font-semibold text-gray-600">
-              {form.watch("name") || "N/A"}
+              {form.getValues("name")}
             </p>
           </div>
         </DialogHeader>
@@ -151,6 +161,7 @@ export default function GenericProfileForm({
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="cellNumber"
@@ -158,12 +169,13 @@ export default function GenericProfileForm({
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" disabled />
+                          <Input {...field} type="tel" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="idNumber"
@@ -177,6 +189,7 @@ export default function GenericProfileForm({
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="gender"
@@ -201,6 +214,7 @@ export default function GenericProfileForm({
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="dateOfBirth"
@@ -297,7 +311,7 @@ export default function GenericProfileForm({
                               <SelectValue placeholder="Select sub-county" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="max-h-[200px]">
                             {form.getValues("county") ? (
                               KENYAN_COUNTIES.find(
                                 (county) =>
@@ -329,6 +343,7 @@ export default function GenericProfileForm({
                   <Separator />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
+                  {/* FULL NAME */}
                   <FormField
                     control={form.control}
                     name="name"
@@ -342,6 +357,7 @@ export default function GenericProfileForm({
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="mpesaNumber"
@@ -379,6 +395,7 @@ export default function GenericProfileForm({
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
                     name="bankBranch"

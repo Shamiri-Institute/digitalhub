@@ -22,12 +22,13 @@ export default function ProfileFormWrapper({
         cellNumber: data.cellNumber,
         mpesaNumber: data.mpesaNumber,
         dateOfBirth: data.dateOfBirth,
-        gender: data.gender,
+        gender: data.gender as "Male" | "Female",
         county: data.county,
         subCounty: data.subCounty,
         bankName: data.bankName,
         bankBranch: data.bankBranch,
       };
+
       const result = await updateSupervisorProfile(transformedData);
       if (!result?.success) {
         throw new Error(result?.message ?? "Profile update failed");
@@ -40,12 +41,13 @@ export default function ProfileFormWrapper({
         cellNumber: data.cellNumber,
         mpesaNumber: data.mpesaNumber,
         dateOfBirth: data.dateOfBirth,
-        gender: data.gender,
+        gender: data.gender as "Male" | "Female",
         county: data.county,
         subCounty: data.subCounty,
         bankName: data.bankName,
         bankBranch: data.bankBranch,
       };
+
       const result = await updateHubCoordinatorProfile(transformedData);
       if (!result?.success) {
         throw new Error(result?.message ?? "Profile update failed");

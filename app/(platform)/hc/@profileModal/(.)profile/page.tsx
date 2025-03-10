@@ -8,12 +8,17 @@ export default async function Page() {
   if (!coordinator) {
     return <InvalidPersonnelRole role="hub-coordinator" />;
   }
-  const allowedGenders = ["Male", "Female"];
+
+  const allowedGenders = ["Male", "Female"] as const;
   const genderValue: "Male" | "Female" = allowedGenders.includes(
-    coordinator.gender ?? "",
+    coordinator.gender as "Male" | "Female",
   )
     ? (coordinator.gender as "Male" | "Female")
     : "Male";
+
+  const dateOfBirthString = coordinator.dateOfBirth
+    ? new Date(coordinator.dateOfBirth).toISOString().split("T")[0]
+    : "";
 
   const initialData: GenericFormData = {
     email: coordinator.coordinatorEmail ?? "",
@@ -21,11 +26,9 @@ export default async function Page() {
     idNumber: coordinator.idNumber ?? "",
     cellNumber: coordinator.cellNumber ?? "",
     mpesaNumber: coordinator.mpesaNumber ?? "",
-    dateOfBirth: coordinator.dateOfBirth
-      ? new Date(coordinator.dateOfBirth).toISOString().split("T")[0]
-      : "",
+    dateOfBirth: dateOfBirthString,
     gender: genderValue,
-    county: coordinator.county ?? "",
+    county: (coordinator.county ?? "Baringo") as GenericFormData["county"],
     subCounty: coordinator.subCounty ?? "",
     bankName: coordinator.bankName ?? "",
     bankBranch: coordinator.bankBranch ?? "",

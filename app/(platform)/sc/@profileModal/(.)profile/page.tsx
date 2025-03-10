@@ -8,12 +8,17 @@ export default async function Page() {
   if (!supervisor) {
     return <InvalidPersonnelRole role="supervisor" />;
   }
-  const allowedGenders = ["Male", "Female"];
+
+  const allowedGenders = ["Male", "Female"] as const;
   const genderValue: "Male" | "Female" = allowedGenders.includes(
-    supervisor.gender ?? "",
+    supervisor.gender as "Male" | "Female",
   )
     ? (supervisor.gender as "Male" | "Female")
     : "Male";
+
+  const dateOfBirth: string | undefined = supervisor.dateOfBirth
+    ? new Date(supervisor.dateOfBirth).toISOString().split("T")[0]
+    : undefined;
 
   const initialData: GenericFormData = {
     email: supervisor.supervisorEmail ?? "",
@@ -21,11 +26,9 @@ export default async function Page() {
     idNumber: supervisor.idNumber ?? "",
     cellNumber: supervisor.cellNumber ?? "",
     mpesaNumber: supervisor.mpesaNumber ?? "",
-    dateOfBirth: supervisor.dateOfBirth
-      ? new Date(supervisor.dateOfBirth).toISOString().split("T")[0]
-      : "",
+    dateOfBirth: dateOfBirth,
     gender: genderValue,
-    county: supervisor.county ?? "",
+    county: (supervisor.county ?? "Baringo") as GenericFormData["county"],
     subCounty: supervisor.subCounty ?? "",
     bankName: supervisor.bankName ?? "",
     bankBranch: supervisor.bankBranch ?? "",
