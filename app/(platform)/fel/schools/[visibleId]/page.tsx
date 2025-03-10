@@ -5,5 +5,5 @@ export default function SchoolsPage({
 }: {
   params: { visibleId: string };
 }) {
-  redirect(`/sc/schools/${visibleId}/fellows`);
+  redirect(`/fel/schools/${visibleId}/sessions`);
 }

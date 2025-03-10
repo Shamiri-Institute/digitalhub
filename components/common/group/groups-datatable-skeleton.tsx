@@ -12,8 +12,10 @@ import { ColumnDef } from "@tanstack/react-table";
 
 export default function GroupsDatatableSkeleton({
   role,
+  rows = 10,
 }: {
   role?: ImplementerRole;
+  rows?: number;
 }) {
   const loadingColumns = columns({
     setGroup: () => {},
@@ -55,7 +57,7 @@ export default function GroupsDatatableSkeleton({
     <DataTable
       columns={loadingColumns as ColumnDef<SchoolGroupDataTableData>[]}
       data={
-        Array.from(Array(10).keys()).map(() => {
+        Array.from(Array(rows).keys()).map(() => {
           return {};
         }) as SchoolGroupDataTableData[]
       }

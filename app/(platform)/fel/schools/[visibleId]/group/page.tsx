@@ -1,4 +1,4 @@
-import { currentSupervisor } from "#/app/auth";
+import { currentFellow } from "#/app/auth";
 import { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
 import { db } from "#/lib/db";
@@ -9,8 +9,8 @@ export default async function GroupsPage({
 }: {
   params: { visibleId: string };
 }) {
-  const supervisor = await currentSupervisor();
-  if (supervisor === null) {
+  const fellow = await currentFellow();
+  if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }
 
@@ -33,7 +33,7 @@ export default async function GroupsPage({
       LEFT JOIN supervisors sup ON fel.supervisor_id = sup.id
       LEFT JOIN intervention_group_reports intgr ON intg.id = intgr.group_id
   WHERE
-      sch.visible_id = ${visibleId}
+      sch.visible_id = ${visibleId} AND fel.id = ${fellow?.id}
   GROUP BY
       intg.id,
       fel.fellow_name,
@@ -80,15 +80,6 @@ export default async function GroupsPage({
     });
   });
 
-  const supervisors = await db.supervisor.findMany({
-    where: {
-      hubId: supervisor?.hubId as string,
-    },
-    include: {
-      fellows: true,
-    },
-  });
-
   const school = await db.school.findFirstOrThrow({
     where: {
       visibleId,
@@ -103,6 +94,10 @@ export default async function GroupsPage({
   });
 
   return (
-    <GroupsDataTable data={data} school={school} supervisors={supervisors} />
+    <GroupsDataTable
+      data={data}
+      school={school}
+      role={fellow?.user?.membership.role!}
+    />
   );
 }

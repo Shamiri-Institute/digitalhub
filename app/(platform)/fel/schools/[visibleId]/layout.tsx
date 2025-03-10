@@ -1,13 +1,8 @@
-import { fetchHubSupervisors } from "#/app/(platform)/hc/schools/actions";
-import { currentSupervisor } from "#/app/auth";
-import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
+import { currentFellow } from "#/app/auth";
 import { SchoolsTableData } from "#/components/common/schools/columns";
-import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
-import EditSchoolDetailsForm from "#/components/common/schools/edit-school-details-form";
 import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
 import SchoolLeftPanel from "#/components/common/schools/school-left-panel";
 import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";
-import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
@@ -61,15 +56,10 @@ export default async function SchoolViewLayout({
       hub: true,
     },
   });
-  const supervisor = await currentSupervisor();
-  if (supervisor === null) {
+  const fellow = await currentFellow();
+  if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }
-  const supervisors = await fetchHubSupervisors({
-    where: {
-      hubId: supervisor?.hubId as string,
-    },
-  });
 
   return (
     <SchoolInfoProvider school={school as unknown as SchoolsTableData}>
@@ -77,10 +67,10 @@ export default async function SchoolViewLayout({
         <SchoolLeftPanel selectedSchool={school} />
         <div className="flex flex-1 flex-col">
           <div className="container w-full grow space-y-5 pb-6 pl-6 pr-8 pt-5">
-            <SchoolsBreadcrumb role={supervisor!.user.membership.role} />
+            <SchoolsBreadcrumb role={fellow!.user.membership.role} />
             <SchoolsNav
               visibleId={visibleId}
-              role={supervisor!.user.membership.role}
+              role={fellow!.user.membership.role}
             />
             <Separator />
             {children}
@@ -88,10 +78,6 @@ export default async function SchoolViewLayout({
           <PageFooter />
         </div>
       </div>
-      <EditSchoolDetailsForm />
-      <AssignPointSupervisor supervisors={supervisors} />
-      <DropoutSchool />
-      <UndoDropoutSchool />
     </SchoolInfoProvider>
   );
 }

@@ -1,5 +1,5 @@
 import { getCurrentUser } from "#/app/auth";
-import FellowsDatatableSkeleton from "#/components/common/fellow/fellows-datatable-skeleton";
+import GroupsDatatableSkeleton from "#/components/common/group/groups-datatable-skeleton";
 import { signOut } from "next-auth/react";
 
 export default async function Loading() {
@@ -7,5 +7,5 @@ export default async function Loading() {
   if (!user) {
     await signOut({ callbackUrl: "/login" });
   }
-  return <FellowsDatatableSkeleton role={user?.membership.role!} />;
+  return <GroupsDatatableSkeleton role={user?.membership.role!} rows={1} />;
 }
