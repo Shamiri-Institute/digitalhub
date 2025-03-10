@@ -215,7 +215,7 @@ function LayoutV2({
             {mainRoute === "fel" && (
               <div className={`tab-link ${cn(studentsActive && "active")}`}>
                 <PeopleIconAlternate />
-                <Link href={`/${mainRoute}/fellow-portal`}>Fellow portal</Link>
+                <Link href={`/${mainRoute}/portal`}>Fellow portal</Link>
               </div>
             )}
             {mainRoute === "sc" && (
