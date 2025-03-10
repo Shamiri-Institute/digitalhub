@@ -18,14 +18,14 @@ type SessionsContextType = {
   sessions: Session[];
   loading: boolean;
   setSessions: Dispatch<SetStateAction<Session[]>>;
-  refresh: () => void;
+  refresh: () => Promise<void>;
 };
 
 export const SessionsContext = createContext<SessionsContextType>({
   sessions: [],
   loading: false,
   setSessions: () => {},
-  refresh: () => {},
+  refresh: () => Promise.resolve(),
 });
 
 export type Session = Prisma.InterventionSessionGetPayload<{
@@ -78,7 +78,7 @@ export function SessionsProvider({
   }, [hubId, filters]);
 
   const refresh = () => {
-    fetchSessions();
+    return fetchSessions();
   };
 
   return (
