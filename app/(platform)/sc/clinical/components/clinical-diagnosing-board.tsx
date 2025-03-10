@@ -4,7 +4,6 @@ import {
   updateClinicalCaseGeneralPresentingIssue,
 } from "#/app/(platform)/sc/clinical/action";
 import { Button } from "#/components/ui/button";
-import { Card } from "#/components/ui/card";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
   Table,
@@ -17,7 +16,6 @@ import {
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
 import { useState } from "react";
 
 const emergency_presenting_issues = [
@@ -46,6 +44,24 @@ const general_presenting_issues = [
 
 type Severity = "Low risk" | "Moderate risk" | "High risk" | "Severe risk";
 
+const initializeIssues = (
+  issues: typeof emergency_presenting_issues | typeof general_presenting_issues,
+  presentingIssues: any,
+): Record<string, Severity> => {
+  const initialState: Record<string, Severity> = {};
+
+  if (presentingIssues) {
+    issues.forEach((issue) => {
+      const value = (presentingIssues as Record<string, Severity>)[issue.name];
+      if (value) {
+        initialState[issue.id.toString()] = value as Severity;
+      }
+    });
+  }
+
+  return initialState;
+};
+
 export function ClinicalDiagnosingBoard({
   currentcase,
 }: {
@@ -53,14 +69,13 @@ export function ClinicalDiagnosingBoard({
 }) {
   const isBaseline = currentcase.caseStatus === "Active";
 
-  // Track initial states for comparison based on case status
   const initialEmergencyState = isBaseline
-    ? currentcase.emergencyPresentingIssuesBaseline || {}
-    : currentcase.emergencyPresentingIssuesEndpoint || {};
+    ? currentcase.emergencyPresentingIssuesBaseline
+    : currentcase.emergencyPresentingIssuesEndpoint;
 
   const initialGeneralState = isBaseline
-    ? currentcase.generalPresentingIssuesBaseline || {}
-    : currentcase.generalPresentingIssuesEndpoint || {};
+    ? currentcase.generalPresentingIssuesBaseline
+    : currentcase.generalPresentingIssuesEndpoint;
 
   const initialOtherIssues = isBaseline
     ? currentcase.generalPresentingIssuesOtherSpecifiedBaseline || ""
@@ -68,51 +83,27 @@ export function ClinicalDiagnosingBoard({
 
   const [emergencyIssues, setEmergencyIssues] = useState<
     Record<string, Severity>
-  >(() => {
-    const initialState: Record<string, Severity> = {};
-    if (
+  >(() =>
+    initializeIssues(
+      emergency_presenting_issues,
       isBaseline
         ? currentcase.emergencyPresentingIssuesBaseline
-        : currentcase.emergencyPresentingIssuesEndpoint
-    ) {
-      emergency_presenting_issues.forEach((issue) => {
-        const value = isBaseline
-          ? currentcase.emergencyPresentingIssuesBaseline
-          : currentcase.emergencyPresentingIssuesEndpoint;
-        if (value && value[issue.name]) {
-          initialState[issue.id.toString()] = value[issue.name];
-        }
-      });
-    }
-    return initialState;
-  });
+        : currentcase.emergencyPresentingIssuesEndpoint,
+    ),
+  );
 
   const [generalIssues, setGeneralIssues] = useState<Record<string, Severity>>(
-    () => {
-      const initialState: Record<string, Severity> = {};
-      if (
+    () =>
+      initializeIssues(
+        general_presenting_issues,
         isBaseline
           ? currentcase.generalPresentingIssuesBaseline
-          : currentcase.generalPresentingIssuesEndpoint
-      ) {
-        general_presenting_issues.forEach((issue) => {
-          const value = (
-            isBaseline
-              ? currentcase.generalPresentingIssuesBaseline
-              : currentcase.generalPresentingIssuesEndpoint
-          ) as Record<string, Severity>;
-          if (value && value[issue.name]) {
-            initialState[issue.id.toString()] = value[issue.name];
-          }
-        });
-      }
-      return initialState;
-    },
+          : currentcase.generalPresentingIssuesEndpoint,
+      ),
   );
 
   const [otherIssues, setOtherIssues] = useState(initialOtherIssues);
 
-  // Update hasChanges to compare with correct initial state
   const hasChanges = () => {
     const currentEmergencyData = Object.entries(emergencyIssues).reduce(
       (acc, [id, severity]) => {
@@ -151,7 +142,6 @@ export function ClinicalDiagnosingBoard({
     return emergencyChanged || generalChanged || otherIssuesChanged;
   };
 
-  // Update handleSaveAll to include caseStatus
   const handleSaveAll = async () => {
     try {
       const emergencyData = Object.entries(emergencyIssues).reduce(
@@ -211,9 +201,29 @@ export function ClinicalDiagnosingBoard({
   };
 
   const handleClearAll = () => {
-    setEmergencyIssues(initialEmergencyState as Record<string, Severity>);
-    setGeneralIssues(initialGeneralState as Record<string, Severity>);
-    setOtherIssues(initialOtherIssues);
+    setEmergencyIssues(
+      initializeIssues(
+        emergency_presenting_issues,
+        isBaseline
+          ? currentcase.emergencyPresentingIssuesBaseline
+          : currentcase.emergencyPresentingIssuesEndpoint,
+      ),
+    );
+
+    setGeneralIssues(
+      initializeIssues(
+        general_presenting_issues,
+        isBaseline
+          ? currentcase.generalPresentingIssuesBaseline
+          : currentcase.generalPresentingIssuesEndpoint,
+      ),
+    );
+
+    setOtherIssues(
+      isBaseline
+        ? currentcase.generalPresentingIssuesOtherSpecifiedBaseline || ""
+        : currentcase.generalPresentingIssuesOtherSpecifiedEndpoint || "",
+    );
   };
 
   return (
@@ -256,7 +266,7 @@ export function ClinicalDiagnosingBoard({
               onClick={handleSaveAll}
               disabled={!hasChanges()}
             >
-              Save Baseline
+              {isBaseline ? "Save Baseline" : "Save Endpoint"}
             </Button>
           </div>
         </div>
@@ -270,10 +280,12 @@ function EmergencyPresentingIssues({
   setSelectedSeverities,
 }: {
   selectedSeverities: Record<string, Severity>;
-  setSelectedSeverities: (severities: Record<string, Severity>) => void;
+  setSelectedSeverities: React.Dispatch<
+    React.SetStateAction<Record<string, Severity>>
+  >;
 }) {
   const handleSelect = (issueId: string, severity: Severity) => {
-    setSelectedSeverities((prev) => ({
+    setSelectedSeverities((prev: Record<string, Severity>) => ({
       ...prev,
       [issueId]: severity,
     }));
@@ -307,7 +319,7 @@ function EmergencyPresentingIssues({
                         handleSelect(issue.id.toString(), severity as Severity)
                       }
                       className={cn(
-                        "h-6 w-6 border-2",
+                        "h-6 w-6 border",
                         selectedSeverities[issue.id] === severity
                           ? "text-white data-[state=checked]:border-brand data-[state=checked]:bg-brand"
                           : "border-gray-200",
@@ -324,108 +336,17 @@ function EmergencyPresentingIssues({
   );
 }
 
-function SingleIssueOption({
-  onSelect = (f) => f,
-  selected,
-  option,
-}: {
-  selected: string;
-  onSelect: (option: string) => void;
-  option: string;
-}) {
-  return (
-    <div className="flex">
-      <Checkbox
-        checked={selected === option}
-        onCheckedChange={() => onSelect(option)}
-        className={cn(
-          "h-6 w-6",
-          selected === option &&
-            "bg-shamiri-new-blue text-white shadow hover:shadow-lg dark:bg-card-foreground dark:font-semibold dark:text-card",
-        )}
-      />
-    </div>
-  );
-}
-
-function IssueOptions({
-  name,
-  caseId,
-  emergency_options = {},
-}: {
-  name: string;
-  caseId: string;
-  emergency_options: { [key: string]: string } | Prisma.JsonValue | null;
-}) {
-  if (!emergency_options) {
-    emergency_options = {};
-  }
-  const [selected, setSelected] = useState<string>(
-    (emergency_options as { [key: string]: string })[name] ?? "",
-  );
-
-  const handlePresentingIssue = async (option: string) => {
-    let valueSelected = { name, option };
-
-    let result = { [valueSelected.name]: valueSelected.option };
-    try {
-      if (option === selected) {
-        setSelected("");
-
-        await updateClinicalCaseEmergencyPresentingIssue({
-          caseId: caseId,
-          presentingIssues: {
-            ...result,
-            [valueSelected.name]: "",
-          },
-        });
-        return;
-      } else {
-        setSelected(option);
-        await updateClinicalCaseEmergencyPresentingIssue({
-          caseId: caseId,
-          presentingIssues: {
-            ...result,
-          },
-        });
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  return (
-    <div className="mt-2 flex justify-between">
-      <div className="flex-1">
-        <Card className="w-fit rounded-sm px-4 py-2 text-center shadow-none">
-          <p className="min-w-[8.5rem] text-xs font-medium text-shamiri-new-blue">
-            {name}
-          </p>
-        </Card>
-      </div>
-      <div className="flex flex-1 justify-between">
-        {emergency_presenting_issues_scale.map((option, i) => (
-          <SingleIssueOption
-            key={i}
-            selected={selected}
-            onSelect={handlePresentingIssue}
-            option={option}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function GeneralPresentingIssues({
   selectedSeverities,
   setSelectedSeverities,
 }: {
   selectedSeverities: Record<string, Severity>;
-  setSelectedSeverities: (severities: Record<string, Severity>) => void;
+  setSelectedSeverities: React.Dispatch<
+    React.SetStateAction<Record<string, Severity>>
+  >;
 }) {
   const handleSelect = (issueId: string, severity: Severity) => {
-    setSelectedSeverities((prev) => ({
+    setSelectedSeverities((prev: Record<string, Severity>) => ({
       ...prev,
       [issueId]: severity,
     }));
@@ -459,7 +380,7 @@ function GeneralPresentingIssues({
                         handleSelect(issue.id.toString(), severity as Severity)
                       }
                       className={cn(
-                        "h-6 w-6 border-2",
+                        "h-6 w-6 border",
                         selectedSeverities[issue.id] === severity
                           ? "text-white data-[state=checked]:border-brand data-[state=checked]:bg-brand"
                           : "border-gray-200",
