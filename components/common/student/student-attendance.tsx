@@ -1,3 +1,4 @@
+import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -35,6 +36,7 @@ import {
 import { sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma } from "@prisma/client";
 import { ColumnDef, Row } from "@tanstack/react-table";
+import { usePathname } from "next/navigation";
 import {
   Dispatch,
   SetStateAction,
@@ -60,6 +62,7 @@ export default function StudentAttendance({
   fellows: Prisma.FellowGetPayload<{}>[];
   fellowId?: string;
 }) {
+  const pathname = usePathname();
   const [selectedGroup, setSelectedGroup] = useState<string>();
   const [attendance, setAttendance] = useState<StudentAttendanceData>();
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState(false);
@@ -112,6 +115,7 @@ export default function StudentAttendance({
   const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
     const [res] = await Promise.all([
       await markStudentAttendance(data),
+      await revalidatePageAction(pathname),
       await refresh(),
     ]);
     return res;
@@ -123,6 +127,7 @@ export default function StudentAttendance({
   ) => {
     const [res] = await Promise.all([
       await markManyStudentsAttendance(ids, data),
+      await revalidatePageAction(pathname),
       await refresh(),
     ]);
     return res;
@@ -227,6 +232,9 @@ export default function StudentAttendance({
               ?.school?.interventionGroups.find(
                 (group) => group.leaderId === fellowId,
               )?.students ??
+            session?.school?.interventionGroups.find(
+              (group) => group.leaderId === fellowId,
+            )?.students ??
             []
           }
           columnVisibilityState={{

@@ -15,6 +15,7 @@ export default function SessionsDatatableSkeleton({
     setSession: () => {},
     setRatingsDialog: () => {},
     setFellowAttendanceDialog: () => {},
+    setStudentAttendanceDialog: () => {},
     role,
   })
     .map((column) => column.id ?? column.header)

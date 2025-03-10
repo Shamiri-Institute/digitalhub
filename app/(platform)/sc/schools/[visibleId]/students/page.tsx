@@ -13,7 +13,7 @@ export default async function StudentsPage({
     await signOut({ callbackUrl: "/login" });
   }
 
-  const students = db.student.findMany({
+  const students = await db.student.findMany({
     where: {
       school: {
         visibleId,
@@ -38,7 +38,9 @@ export default async function StudentsPage({
       },
       school: {
         include: {
-          interventionSessions: true,
+          interventionSessions: {
+            include: { session: true },
+          },
         },
       },
       studentGroupTransferTrail: {
@@ -53,5 +55,10 @@ export default async function StudentsPage({
     },
   });
 
-  return <StudentsDatatable data={students} />;
+  return (
+    <StudentsDatatable
+      students={students}
+      role={supervisor?.user.membership.role!}
+    />
+  );
 }
