@@ -51,7 +51,7 @@ export default function FellowSchoolsDatatable({
   const [evaluationDialog, setEvaluationDialog] = useState(false);
 
   function renderTableActions() {
-    return (
+    return role !== "FELLOW" ? (
       <div>
         <FellowDetailsForm
           open={addFellowDialog}
@@ -63,7 +63,7 @@ export default function FellowSchoolsDatatable({
           </DialogTrigger>
         </FellowDetailsForm>
       </div>
-    );
+    ) : null;
   }
 
   function renderFellowDialogAlert(fellow: FellowsData) {
