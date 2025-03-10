@@ -55,69 +55,75 @@ export default function SchoolTableDropdown({
                 ? `/hc/schools/${schoolRow.visibleId}`
                 : role === "SUPERVISOR"
                   ? `/sc/schools/${schoolRow.visibleId}`
-                  : "#"
+                  : role === "FELLOW"
+                    ? `/fel/schools/${schoolRow.visibleId}`
+                    : "#"
             }
           >
             View school
           </Link>
         </DropdownMenuItem>
-        {!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
-          <div>
-            <DropdownMenuItem
-              onClick={() => {
-                context.setEditDialog(true);
-              }}
-            >
-              Edit school information
-            </DropdownMenuItem>
-            {role === "HUB_COORDINATOR" && (
+        {role === "HUB_COORDINATOR" || role === "SUPERVISOR" ? (
+          <>
+            {!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
+              <div>
+                <DropdownMenuItem
+                  onClick={() => {
+                    context.setEditDialog(true);
+                  }}
+                >
+                  Edit school information
+                </DropdownMenuItem>
+                {role === "HUB_COORDINATOR" && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      context.setPointSupervisorDialog(true);
+                    }}
+                  >
+                    {context.school?.assignedSupervisorId !== null
+                      ? "Change point supervisor"
+                      : "Assign point supervisor"}
+                  </DropdownMenuItem>
+                )}
+                {role === "SUPERVISOR" && (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        // context.setPointSupervisorDialog(true);
+                      }}
+                    >
+                      Submit school report
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        // context.setPointSupervisorDialog(true);
+                      }}
+                    >
+                      Submit school feedback
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuItem
+                  className="text-shamiri-red"
+                  onClick={() => {
+                    context.setSchoolDropOutDialog(true);
+                  }}
+                >
+                  Dropout school
+                </DropdownMenuItem>
+              </div>
+            ) : (
               <DropdownMenuItem
+                className="text-shamiri-red"
                 onClick={() => {
-                  context.setPointSupervisorDialog(true);
+                  context.setUndoDropOutDialog(true);
                 }}
               >
-                {context.school?.assignedSupervisorId !== null
-                  ? "Change point supervisor"
-                  : "Assign point supervisor"}
+                Undo dropout
               </DropdownMenuItem>
             )}
-            {role === "SUPERVISOR" && (
-              <>
-                <DropdownMenuItem
-                  onClick={() => {
-                    // context.setPointSupervisorDialog(true);
-                  }}
-                >
-                  Submit school report
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    // context.setPointSupervisorDialog(true);
-                  }}
-                >
-                  Submit school feedback
-                </DropdownMenuItem>
-              </>
-            )}
-            <DropdownMenuItem
-              className="text-shamiri-red"
-              onClick={() => {
-                context.setSchoolDropOutDialog(true);
-              }}
-            >
-              Dropout school
-            </DropdownMenuItem>
-          </div>
-        ) : (
-          <DropdownMenuItem
-            className="text-shamiri-red"
-            onClick={() => {
-              context.setUndoDropOutDialog(true);
-            }}
-          >
-            Undo dropout
-          </DropdownMenuItem>
-        )}
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -40,7 +40,9 @@ export const columns = (state: {
   role: ImplementerRole;
   setRatingsDialog: Dispatch<SetStateAction<boolean>>;
   setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   setSession: Dispatch<SetStateAction<Session | null>>;
+  fellowId?: string;
 }): ColumnDef<SessionData>[] => [
   {
     id: "checkbox",
@@ -172,8 +174,10 @@ export const columns = (state: {
           setRatingsDialog: state.setRatingsDialog,
           setSession: state.setSession,
           setFellowAttendanceDialog: state.setFellowAttendanceDialog,
+          setStudentAttendanceDialog: state.setStudentAttendanceDialog,
         }}
         role={state.role}
+        fellowId={state.fellowId}
       >
         <div className="absolute inset-0 border-l bg-white">
           <div className="flex h-full w-full items-center justify-center">

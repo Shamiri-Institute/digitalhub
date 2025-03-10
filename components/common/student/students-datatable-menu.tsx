@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { ImplementerRole } from "@prisma/client";
 import { Dispatch, SetStateAction } from "react";
 
 export default function StudentsDataTableMenu({
@@ -22,6 +23,7 @@ export default function StudentsDataTableMenu({
     setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
     setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
     setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
+    role: ImplementerRole;
   };
   student: SchoolStudentTableData;
 }) {

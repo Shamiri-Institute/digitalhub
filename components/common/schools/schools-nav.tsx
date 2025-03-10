@@ -38,7 +38,14 @@ export default function SchoolsNav({
             { name: "Referrals", href: `/sc/schools/${visibleId}/referrals` },
             { name: "Consulting", href: `/sc/schools/${visibleId}/consulting` },
           ]
-        : [];
+        : role === "FELLOW"
+          ? [
+              { name: "Sessions", href: `/fel/schools/${visibleId}/sessions` },
+              { name: "Group", href: `/fel/schools/${visibleId}/group` },
+              { name: "Students", href: `/fel/schools/${visibleId}/students` },
+              { name: "Files", href: `/fel/schools/${visibleId}/files` },
+            ]
+          : [];
 
   return (
     <div className="flex">
