@@ -11,13 +11,14 @@ import CreateGroup from "#/components/common/group/create-group";
 import StudentGroupEvaluation from "#/components/common/group/student-group-evaluation";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { useEffect, useState } from "react";
 
 export default function GroupsDataTable({
   data,
   school,
   supervisors,
+  role,
 }: {
   data: SchoolGroupDataTableData[];
   school: Prisma.SchoolGetPayload<{
@@ -29,11 +30,12 @@ export default function GroupsDataTable({
       };
     };
   }>;
-  supervisors: Prisma.SupervisorGetPayload<{
+  supervisors?: Prisma.SupervisorGetPayload<{
     include: {
       fellows: true;
     };
   }>[];
+  role: ImplementerRole;
 }) {
   const [group, setGroup] = useState<SchoolGroupDataTableData>();
   const [studentsDialog, setStudentsDialog] = useState(false);
@@ -52,11 +54,14 @@ export default function GroupsDataTable({
 
   const renderTableActions = () => {
     return (
-      <CreateGroup
-        supervisors={supervisors}
-        school={school}
-        groupCount={data.length}
-      ></CreateGroup>
+      role !== "FELLOW" &&
+      supervisors && (
+        <CreateGroup
+          supervisors={supervisors}
+          school={school}
+          groupCount={data.length}
+        ></CreateGroup>
+      )
     );
   };
 
@@ -69,6 +74,7 @@ export default function GroupsDataTable({
           setEvaluationDialog,
           setLeaderDialog,
           setArchiveDialog,
+          role,
         })}
         data={data}
         className="data-table data-table-action mt-4"
@@ -106,24 +112,26 @@ export default function GroupsDataTable({
               </div>
             </DialogAlertWidget>
           </StudentGroupEvaluation>
-          <ReplaceFellow
-            open={leaderDialog}
-            onOpenChange={setLeaderDialog}
-            fellowId={group.leaderId}
-            groupId={group.id}
-            supervisors={supervisors}
-            schoolId={school.visibleId}
-          >
-            <DialogAlertWidget>
-              <div className="flex items-center gap-2">
-                <span>{group.fellowName}</span>
-                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                  {""}
-                </span>
-                <span>{group.groupName}</span>
-              </div>
-            </DialogAlertWidget>
-          </ReplaceFellow>
+          {role !== "FELLOW" && supervisors && (
+            <ReplaceFellow
+              open={leaderDialog}
+              onOpenChange={setLeaderDialog}
+              fellowId={group.leaderId}
+              groupId={group.id}
+              supervisors={supervisors}
+              schoolId={school.visibleId}
+            >
+              <DialogAlertWidget>
+                <div className="flex items-center gap-2">
+                  <span>{group.fellowName}</span>
+                  <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+                    {""}
+                  </span>
+                  <span>{group.groupName}</span>
+                </div>
+              </DialogAlertWidget>
+            </ReplaceFellow>
+          )}
           <ArchiveGroup
             groupId={group.id}
             open={archiveDialog}

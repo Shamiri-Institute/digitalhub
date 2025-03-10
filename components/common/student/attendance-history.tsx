@@ -19,10 +19,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { cn } from "#/lib/utils";
+import { cn, sessionDisplayName } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
+import { format, isBefore } from "date-fns";
 import { Dispatch, SetStateAction, useEffect } from "react";
 
 export default function AttendanceHistory({
@@ -63,11 +63,15 @@ export default function AttendanceHistory({
         </DialogAlertWidget>
         <div>
           <DataTable
-            columns={columns(markAttendance, setSelectedSessionId)}
+            columns={columns(
+              markAttendance,
+              setSelectedSessionId,
+              student.school?.interventionSessions ?? [],
+            )}
             editColumns={false}
-            data={student.studentAttendances ? student.studentAttendances : []}
+            data={student.studentAttendances ?? []}
             emptyStateMessage={"No attendance records found"}
-            className="data-table"
+            className="data-table mt-4"
           />
         </div>
         <DialogFooter className="flex justify-end gap-2">
@@ -89,6 +93,11 @@ export default function AttendanceHistory({
 const columns = (
   markAttendance: Dispatch<SetStateAction<boolean>>,
   setSelectedSessionId: Dispatch<SetStateAction<string | undefined>>,
+  sessions: Prisma.InterventionSessionGetPayload<{
+    include: {
+      session: true;
+    };
+  }>[],
 ): ColumnDef<
   Prisma.StudentAttendanceGetPayload<{
     include: {
@@ -104,12 +113,17 @@ const columns = (
       return row.session && format(row.session.sessionDate, "dd MMM yyyy");
     },
   },
-  // TODO: Replace with session number after session_types table is added
   {
     header: "Session",
-    id: "Session",
-    accessorFn: (row) => {
-      return row.session && row.session.sessionName;
+    id: "session",
+    cell: (props) => {
+      const previousSessions = sessions
+        .filter((session) => {
+          return isBefore(session.sessionDate, props.row.original.createdAt);
+        })
+        .sort((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
+      const session = previousSessions[0];
+      return <span>{sessionDisplayName(session?.session?.sessionName)}</span>;
     },
   },
   {

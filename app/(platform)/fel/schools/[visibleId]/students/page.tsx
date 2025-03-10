@@ -1,17 +1,15 @@
-import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
-import { currentHubCoordinator } from "#/app/auth";
+import { currentFellow } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
-import { Suspense } from "react";
 
 export default async function StudentsPage({
   params: { visibleId },
 }: {
   params: { visibleId: string };
 }) {
-  const hc = await currentHubCoordinator();
-  if (!hc) {
+  const fellow = await currentFellow();
+  if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }
 
@@ -19,6 +17,12 @@ export default async function StudentsPage({
     where: {
       school: {
         visibleId,
+      },
+      assignedGroup: {
+        leaderId: fellow?.id,
+        school: {
+          visibleId,
+        },
       },
     },
     include: {
@@ -60,8 +64,10 @@ export default async function StudentsPage({
   });
 
   return (
-    <Suspense fallback={<Loading />}>
-      <StudentsDatatable students={students} role={hc?.user.membership.role!} />
-    </Suspense>
+    <StudentsDatatable
+      students={students}
+      role={fellow?.user.membership.role!}
+      fellowId={fellow?.id}
+    />
   );
 }
