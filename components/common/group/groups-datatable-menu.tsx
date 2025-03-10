@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { ImplementerRole } from "@prisma/client";
 import { Dispatch, SetStateAction } from "react";
 
 export function GroupsDatatableMenu({
@@ -21,6 +22,7 @@ export function GroupsDatatableMenu({
     setLeaderDialog: Dispatch<SetStateAction<boolean>>;
     setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
     setArchiveDialog: Dispatch<SetStateAction<boolean>>;
+    role: ImplementerRole;
   };
 }) {
   return (
@@ -39,14 +41,16 @@ export function GroupsDatatableMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => {
-            state.setGroup(group);
-            state.setLeaderDialog(true);
-          }}
-        >
-          Replace fellow
-        </DropdownMenuItem>
+        {state.role !== "FELLOW" && (
+          <DropdownMenuItem
+            onClick={() => {
+              state.setGroup(group);
+              state.setLeaderDialog(true);
+            }}
+          >
+            Replace fellow
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onClick={() => {
             state.setGroup(group);
@@ -63,15 +67,17 @@ export function GroupsDatatableMenu({
         >
           View student group evaluation
         </DropdownMenuItem>
-        <DropdownMenuItem
-          className="text-shamiri-red"
-          onClick={() => {
-            state.setGroup(group);
-            state.setArchiveDialog(true);
-          }}
-        >
-          Archive group
-        </DropdownMenuItem>
+        {state.role !== "FELLOW" && (
+          <DropdownMenuItem
+            className="text-shamiri-red"
+            onClick={() => {
+              state.setGroup(group);
+              state.setArchiveDialog(true);
+            }}
+          >
+            Archive group
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
