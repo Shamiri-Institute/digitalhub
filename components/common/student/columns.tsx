@@ -3,7 +3,7 @@
 import StudentsDataTableMenu from "#/components/common/student/students-datatable-menu";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import format from "date-fns/format";
 import { parsePhoneNumber } from "libphonenumber-js";
@@ -29,7 +29,11 @@ export type SchoolStudentTableData = Prisma.StudentGetPayload<{
     };
     school: {
       include: {
-        interventionSessions: true;
+        interventionSessions: {
+          include: {
+            session: true;
+          };
+        };
       };
     };
     studentGroupTransferTrail: {
@@ -52,6 +56,7 @@ export const columns = (state: {
   setReportingNotesDialog: Dispatch<SetStateAction<boolean>>;
   setStudent: Dispatch<SetStateAction<SchoolStudentTableData | null>>;
   setGroupTransferHistory: Dispatch<SetStateAction<boolean>>;
+  role: ImplementerRole;
 }): ColumnDef<SchoolStudentTableData>[] => [
   {
     id: "checkbox",

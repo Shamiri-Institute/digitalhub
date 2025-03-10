@@ -1,4 +1,4 @@
-import { currentSupervisor } from "#/app/auth";
+import { currentFellow } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
@@ -8,15 +8,21 @@ export default async function StudentsPage({
 }: {
   params: { visibleId: string };
 }) {
-  const supervisor = await currentSupervisor();
-  if (supervisor === null) {
+  const fellow = await currentFellow();
+  if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
   }
 
-  const students = db.student.findMany({
+  const students = await db.student.findMany({
     where: {
       school: {
         visibleId,
+      },
+      assignedGroup: {
+        leaderId: fellow?.id,
+        school: {
+          visibleId,
+        },
       },
     },
     include: {
@@ -38,7 +44,11 @@ export default async function StudentsPage({
       },
       school: {
         include: {
-          interventionSessions: true,
+          interventionSessions: {
+            include: {
+              session: true,
+            },
+          },
         },
       },
       studentGroupTransferTrail: {
@@ -53,5 +63,11 @@ export default async function StudentsPage({
     },
   });
 
-  return <StudentsDatatable data={students} />;
+  return (
+    <StudentsDatatable
+      students={students}
+      role={fellow?.user.membership.role!}
+      fellowId={fellow?.id}
+    />
+  );
 }
