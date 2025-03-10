@@ -168,6 +168,11 @@ export async function currentFellow() {
               interventionGroups: {
                 include: {
                   leader: true,
+                  students: {
+                    include: {
+                      studentAttendances: true,
+                    },
+                  },
                 },
               },
               students: {
