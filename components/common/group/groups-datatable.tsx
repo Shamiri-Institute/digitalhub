@@ -74,6 +74,7 @@ export default function GroupsDataTable({
           setEvaluationDialog,
           setLeaderDialog,
           setArchiveDialog,
+          role,
         })}
         data={data}
         className="data-table data-table-action mt-4"

@@ -14,7 +14,7 @@ export default function GroupsDatatableSkeleton({
   role,
   rows = 10,
 }: {
-  role?: ImplementerRole;
+  role: ImplementerRole;
   rows?: number;
 }) {
   const loadingColumns = columns({
@@ -23,6 +23,7 @@ export default function GroupsDatatableSkeleton({
     setEvaluationDialog: () => {},
     setLeaderDialog: () => {},
     setArchiveDialog: () => {},
+    role,
   })
     .map((column) => column.id ?? column.header)
     .map((column) => {
