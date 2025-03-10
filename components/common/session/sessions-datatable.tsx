@@ -14,6 +14,7 @@ import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import { columns, SessionData } from "#/components/common/session/columns";
 import SessionRatings from "#/components/common/session/session-ratings";
 import { Session } from "#/components/common/session/sessions-provider";
+import StudentAttendance from "#/components/common/student/student-attendance";
 import DataTable from "#/components/data-table";
 import { ImplementerRole, Prisma } from "@prisma/client";
 import { addHours } from "date-fns";
@@ -26,9 +27,11 @@ export default function SessionsDatatable({
   supervisors,
   fellowRatings,
   role,
+  fellowId,
+  supervisorId,
 }: {
   sessions: SessionData[];
-  supervisors: Prisma.SupervisorGetPayload<{
+  supervisors?: Prisma.SupervisorGetPayload<{
     include: {
       supervisorAttendances: {
         include: {
@@ -44,11 +47,13 @@ export default function SessionsDatatable({
       assignedSchools: true;
     };
   }>[];
-  fellowRatings: {
+  fellowRatings?: {
     id: string;
     averageRating: number;
   }[];
   role: ImplementerRole;
+  fellowId?: string;
+  supervisorId?: string;
 }) {
   const pathname = usePathname();
   const [_sessions, setSessions] = useState(sessions);
@@ -64,6 +69,8 @@ export default function SessionsDatatable({
   const [markAttendanceDialog, setMarkAttendanceDialog] = React.useState(false);
   const [supervisorAttendance, setSupervisorAttendance] =
     React.useState<SupervisorAttendanceTableData | null>(null);
+  const [studentAttendanceDialog, setStudentAttendanceDialog] =
+    React.useState(false);
 
   function updateRescheduledSessionState(sessionDate: Date) {
     const sessionIndex =
@@ -137,13 +144,27 @@ export default function SessionsDatatable({
               setSession,
               setRatingsDialog,
               setFellowAttendanceDialog,
+              setStudentAttendanceDialog,
               role,
+              fellowId,
             })}
             className={"data-table data-table-action mt-4"}
             emptyStateMessage="No sessions found for this school"
           />
           {session && (
             <>
+              <StudentAttendance
+                isOpen={studentAttendanceDialog}
+                setIsOpen={setStudentAttendanceDialog}
+                role={role}
+                session={sessions.find((x) => x.id === session.id)!}
+                fellows={
+                  supervisors?.find(
+                    (supervisor) => supervisor.id === supervisorId,
+                  )?.fellows ?? []
+                }
+                fellowId={fellowId}
+              />
               {session.schoolId !== null && session.school && (
                 <SessionRatings
                   open={ratingsDialog}
@@ -168,14 +189,16 @@ export default function SessionsDatatable({
           role={role}
         />
       </CancelSessionContext.Provider>
-      <FellowAttendance
-        supervisors={supervisors}
-        fellowRatings={fellowRatings}
-        role={role}
-        session={session}
-        isOpen={fellowAttendanceDialog}
-        setIsOpen={setFellowAttendanceDialog}
-      />
+      {fellowRatings ? (
+        <FellowAttendance
+          supervisors={supervisors}
+          fellowRatings={fellowRatings}
+          role={role}
+          session={session}
+          isOpen={fellowAttendanceDialog}
+          setIsOpen={setFellowAttendanceDialog}
+        />
+      ) : null}
       <SupervisorAttendance supervisors={supervisors} role={role} />
     </SupervisorAttendanceContext.Provider>
   );
