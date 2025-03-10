@@ -1,5 +1,6 @@
 "use server";
 
+import { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentUser } from "#/app/auth";
 
 import { db } from "#/lib/db";
@@ -82,6 +83,7 @@ export async function getClinicalCases() {
       flaggedReason: caseInfo.flaggedReason,
       sessionAttendanceHistory: formattedSessions,
       generalPresentingIssues: [],
+      student: caseInfo.student,
     };
   });
 }
@@ -457,5 +459,44 @@ export async function createTreatmentPlan(data: TreatmentPlanData) {
   } catch (error) {
     console.error(error);
     return { success: false };
+  }
+}
+
+export async function updateStudentInfo(data: EditStudentInfoFormValues) {
+  try {
+    await db.$transaction(async (tx) => {
+      await tx.student.update({
+        where: {
+          id: data.studentId,
+        },
+        data: {
+          studentName: data.studentName,
+          gender: data.gender,
+          admissionNumber: data.admissionNumber,
+          form: parseInt(data.classForm),
+          stream: data.stream,
+        },
+      });
+
+      await tx.clinicalScreeningInfo.update({
+        where: {
+          id: data.caseId,
+        },
+        data: {
+          pseudonym: data.pseudonym,
+        },
+      });
+    });
+
+    return {
+      success: true,
+      message: "Student information updated successfully",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to update student information",
+    };
   }
 }
