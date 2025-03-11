@@ -51,7 +51,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     pathname.startsWith("/hc/") ||
     pathname.startsWith("/sc/") ||
     pathname.startsWith("/fel/") ||
-    pathname.startsWith("/cl/")
+    pathname.startsWith("/cl/") ||
+    pathname.startsWith("/ops/")
   ) {
     return (
       <LayoutV2
