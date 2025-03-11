@@ -22,6 +22,7 @@ export default function StudentsDatatableSkeleton({
     setReportingNotesDialog: () => {},
     setGroupTransferHistory: () => {},
     setDropoutDialog: () => {},
+    role,
   })
     .map((column) => column.id ?? column.header)
     .map((column) => {
