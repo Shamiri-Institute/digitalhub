@@ -3,6 +3,7 @@ import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { faker } from "@faker-js/faker";
 import {
+  ClinicalLead,
   Fellow,
   Hub,
   HubCoordinator,
@@ -291,13 +292,14 @@ async function createCoreUsers(
   supervisors: Supervisor[],
   hubCoordinators: HubCoordinator[],
   fellows: Fellow[],
+  clinicalLeads: ClinicalLead[],
 ) {
   console.log("creating core users");
   const userData = [
     {
       id: objectId("user"),
       email: "benny@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
+      role: ImplementerRole.CLINICAL_LEAD,
     },
     {
       id: objectId("user"),
@@ -347,7 +349,9 @@ async function createCoreUsers(
             ? faker.helpers.arrayElement(supervisors).id
             : role === "FELLOW"
               ? faker.helpers.arrayElement(fellows).id
-              : null,
+              : role === "CLINICAL_LEAD"
+                ? faker.helpers.arrayElement(clinicalLeads).id
+                : null,
     };
   });
 
@@ -576,6 +580,56 @@ async function createSupervisors(
 
   return db.supervisor.createManyAndReturn({
     data: supervisorRecords,
+  });
+}
+
+async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
+  console.log("creating clinical leads");
+  const clinicalLeads: Prisma.ClinicalLeadCreateManyInput[] = [];
+
+  for (const hub of hubs) {
+    let uniqueEmail = faker.internet.email().toLowerCase();
+    while (emails.has(uniqueEmail)) {
+      uniqueEmail = faker.internet.email().toLowerCase();
+    }
+    emails.add(uniqueEmail);
+
+    const clinicalLead = {
+      id: objectId("user"),
+      clinicalLeadEmail: uniqueEmail,
+      clinicalLeadName: faker.person.fullName(),
+      implementerId: hub.implementerId,
+      assignedHubId: hub.id,
+    };
+
+    clinicalLeads.push(clinicalLead);
+  }
+
+  const createClinicalLeads = await db.user.createManyAndReturn({
+    data: clinicalLeads.map(({ id, clinicalLeadEmail }) => ({
+      id,
+      email: clinicalLeadEmail,
+    })),
+  });
+
+  const membershipData = createClinicalLeads.map((user) => ({
+    userId: user.id,
+    implementerId: clinicalLeads.find(
+      (clinicalLead) => clinicalLead.id === user.id,
+    )?.implementerId!,
+    role: ImplementerRole.CLINICAL_LEAD,
+    identifier: objectId("clinicallead"),
+  }));
+
+  await db.implementerMember.createMany({
+    data: membershipData,
+  });
+
+  return db.clinicalLead.createManyAndReturn({
+    data: clinicalLeads.map((clinicalLead) => ({
+      id: membershipData.find((x) => x.userId === clinicalLead.id)?.identifier!,
+      ...clinicalLead,
+    })),
   });
 }
 
@@ -1006,6 +1060,8 @@ async function main() {
     implementers,
     userEmailSet,
   );
+
+  const clinicalLeads = await createClinicalLeads(hubs, userEmailSet);
   const fellows = await createFellows(supervisors, userEmailSet);
 
   await createCoreUsers(
@@ -1014,6 +1070,7 @@ async function main() {
     supervisors,
     hubCoordinators,
     fellows,
+    clinicalLeads,
   );
 
   const schools = await createSchools(hubs, supervisors);
