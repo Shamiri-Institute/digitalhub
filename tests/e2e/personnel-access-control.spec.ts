@@ -1,7 +1,6 @@
 import { Page, test } from "@playwright/test";
 
 import { PersonnelFixtures } from "#/tests/helpers";
-import { ClinicalHomePage } from "#/tests/pages/clinical/home-page";
 import { HomePage } from "#/tests/pages/home-page";
 import { HubCoordinatorHomePage } from "#/tests/pages/hub-coordinator/home-page";
 import { SupervisorHomePage } from "../pages/supervisors/home-page";
