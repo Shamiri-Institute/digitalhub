@@ -21,25 +21,41 @@ const roleAccessSpecs: RoleAccessSpec[] = [
     role: "supervisors",
     stateFile: PersonnelFixtures.supervisor.stateFile,
     accessiblePages: [SupervisorHomePage],
-    inaccessiblePages: [HubCoordinatorHomePage],
+    inaccessiblePages: [
+      HubCoordinatorHomePage,
+      ClinicalHomePage,
+      OperationsHomePage,
+    ],
   },
   {
     role: "hub coordinators",
     stateFile: PersonnelFixtures.hubCoordinator.stateFile,
     accessiblePages: [HubCoordinatorHomePage],
-    inaccessiblePages: [SupervisorHomePage],
+    inaccessiblePages: [
+      SupervisorHomePage,
+      ClinicalHomePage,
+      OperationsHomePage,
+    ],
   },
   {
     role: "clinical leads",
     stateFile: PersonnelFixtures.clinicalLead.stateFile,
     accessiblePages: [ClinicalHomePage],
-    inaccessiblePages: [SupervisorHomePage, HubCoordinatorHomePage],
+    inaccessiblePages: [
+      SupervisorHomePage,
+      HubCoordinatorHomePage,
+      OperationsHomePage,
+    ],
   },
   {
     role: "operations",
     stateFile: PersonnelFixtures.opsUser.stateFile,
     accessiblePages: [OperationsHomePage],
-    inaccessiblePages: [HomePage, HubCoordinatorHomePage],
+    inaccessiblePages: [
+      SupervisorHomePage,
+      HubCoordinatorHomePage,
+      ClinicalHomePage,
+    ],
   },
 ];
 
