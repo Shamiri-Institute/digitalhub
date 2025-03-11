@@ -23,6 +23,11 @@ const nextConfig = {
         destination: "/fel/schedule",
         permanent: false,
       },
+      {
+        source: "/cl",
+        destination: "/cl/clinical",
+        permanent: false,
+      },
     ];
   },
 };
