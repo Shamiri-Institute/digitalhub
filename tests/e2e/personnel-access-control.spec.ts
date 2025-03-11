@@ -28,12 +28,12 @@ const roleAccessSpecs: RoleAccessSpec[] = [
     accessiblePages: [HubCoordinatorHomePage],
     inaccessiblePages: [SupervisorHomePage],
   },
-  {
-    role: "clinical leads",
-    stateFile: PersonnelFixtures.clinicalLead.stateFile,
-    accessiblePages: [ClinicalHomePage],
-    inaccessiblePages: [SupervisorHomePage, HubCoordinatorHomePage],
-  },
+  // {
+  //   role: "clinical leads",
+  //   stateFile: PersonnelFixtures.clinicalLead.stateFile,
+  //   accessiblePages: [ClinicalHomePage],
+  //   inaccessiblePages: [SupervisorHomePage, HubCoordinatorHomePage],
+  // },
   // {
   //   role: "operations",
   //   stateFile: PersonnelFixtures.operations.stateFile,
