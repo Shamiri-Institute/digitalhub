@@ -4,7 +4,7 @@ import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-ratin
 import { GroupsDatatableMenu } from "#/components/common/group/groups-datatable-menu";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { Dispatch, SetStateAction } from "react";
 
@@ -40,6 +40,7 @@ export const columns = (state: {
   setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
   setLeaderDialog: Dispatch<SetStateAction<boolean>>;
   setArchiveDialog: Dispatch<SetStateAction<boolean>>;
+  role: ImplementerRole;
 }): ColumnDef<SchoolGroupDataTableData>[] => {
   return [
     {

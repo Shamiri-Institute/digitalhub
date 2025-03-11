@@ -10,6 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from "#/components/ui/dialog";
+import { sessionDisplayName } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format, isBefore } from "date-fns";
@@ -90,7 +91,7 @@ export default function GroupTransferHistory({
               student.createdAt,
             )}
             emptyStateMessage={"No transfer records found"}
-            className="data-table"
+            className="data-table mt-4"
           />
         </div>
         <DialogFooter className="flex justify-end gap-2">
@@ -110,7 +111,11 @@ export default function GroupTransferHistory({
 }
 
 const columns = (
-  sessions: Prisma.InterventionSessionGetPayload<{}>[],
+  sessions: Prisma.InterventionSessionGetPayload<{
+    include: {
+      session: true;
+    };
+  }>[],
 ): ColumnDef<
   Prisma.StudentGroupTransferTrailGetPayload<{
     include: {
@@ -139,7 +144,7 @@ const columns = (
         })
         .sort((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
       const session = previousSessions[0];
-      return <span>{session?.sessionName}</span>;
+      return <span>{sessionDisplayName(session?.session?.sessionName)}</span>;
     },
   },
   {
