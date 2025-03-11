@@ -66,7 +66,31 @@ export async function fetchPersonnel() {
     project: fellow.hub?.project?.name,
   }));
 
-  const personnel = [...hubCoordinators, ...supervisors, ...fellows];
+  const clinicalLeads: Personnel[] = (
+    await db.clinicalLead.findMany({
+      orderBy: { clinicalLeadName: "asc" },
+      include: {
+        assignedHub: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    })
+  ).map((cl) => ({
+    id: cl.id,
+    role: ImplementerRole.CLINICAL_LEAD,
+    label: `${cl.clinicalLeadName}`,
+    hub: cl.assignedHub?.hubName,
+    project: cl.assignedHub?.project?.name,
+  }));
+
+  const personnel = [
+    ...hubCoordinators,
+    ...supervisors,
+    ...fellows,
+    ...clinicalLeads,
+  ];
 
   const user = await getCurrentUser();
   if (!user) {
