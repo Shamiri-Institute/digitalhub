@@ -5,7 +5,7 @@ import { updateSupervisorProfile } from "app/(platform)/sc/actions";
 import GenericProfileForm, { GenericFormData } from "./genericProfile";
 
 type ProfileFormWrapperProps = {
-  role: "supervisor" | "hub-coordinator";
+  role: "supervisor" | "hub-coordinator" | "fellow";
   initialData: GenericFormData;
 };
 
