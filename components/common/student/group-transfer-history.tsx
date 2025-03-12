@@ -1,6 +1,5 @@
 "use client";
 
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { SchoolStudentTableData } from "#/components/common/student/columns";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
@@ -20,10 +19,12 @@ export default function GroupTransferHistory({
   open,
   onOpenChange,
   student,
+  children,
 }: {
   student: SchoolStudentTableData;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
+  children: React.ReactNode;
 }) {
   let transferHistoryData = student.studentGroupTransferTrail
     ? [
@@ -64,36 +65,18 @@ export default function GroupTransferHistory({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-3/5 max-w-none">
+      <DialogContent className="lg:w-3/5 lg:max-w-none">
         <DialogHeader>
           <h2 className="text-xl font-bold">View group transfer history</h2>
         </DialogHeader>
-        <DialogAlertWidget>
-          <div className="flex items-center gap-2">
-            <span>{student.studentName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
-            <span>{student.assignedGroup?.groupName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
-            <span>{student.form}</span>
-            <span>{student.stream}</span>
-          </div>
-        </DialogAlertWidget>
-        <div>
-          <DataTable
-            columns={columns(student.school?.interventionSessions ?? [])}
-            editColumns={false}
-            data={mapTransferHistoryData(
-              transferHistoryData,
-              student.createdAt,
-            )}
-            emptyStateMessage={"No transfer records found"}
-            className="data-table lg:mt-4"
-          />
-        </div>
+        {children}
+        <DataTable
+          columns={columns(student.school?.interventionSessions ?? [])}
+          editColumns={false}
+          data={mapTransferHistoryData(transferHistoryData, student.createdAt)}
+          emptyStateMessage={"No transfer records found"}
+          className="data-table lg:mt-4"
+        />
         <DialogFooter className="flex justify-end gap-2">
           <Button
             variant="brand"

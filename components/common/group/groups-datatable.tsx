@@ -101,7 +101,7 @@ export default function GroupsDataTable({
           <StudentGroupEvaluation
             open={evaluationDialog}
             onOpenChange={setEvaluationDialog}
-            mode="view"
+            mode={role === "FELLOW" ? "add" : "view"}
             groupId={group.id}
             evaluations={group.reports}
             sessions={school.interventionSessions}

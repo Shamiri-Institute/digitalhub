@@ -68,6 +68,22 @@ export default function StudentsDatatable({
     return res;
   };
 
+  const renderDialogAlert = () => {
+    return (
+      <DialogAlertWidget>
+        <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
+          <span className="capitalize">
+            {student?.studentName?.toLowerCase()}
+          </span>
+          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+          <span>{student?.assignedGroup?.groupName}</span>
+          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+          <span>{student?.admissionNumber}</span>
+        </div>
+      </DialogAlertWidget>
+    );
+  };
+
   return (
     <div>
       <DataTable
@@ -107,17 +123,7 @@ export default function StudentsDatatable({
             groupName={student.assignedGroup?.groupName ?? undefined}
             mode="edit"
           >
-            <DialogAlertWidget>
-              <div className="flex items-center gap-2">
-                <span className="capitalize">
-                  {student.studentName?.toLowerCase()}
-                </span>
-                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
-                <span>{student.admissionNumber}</span>
-                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
-                <span>{student.assignedGroup?.groupName}</span>
-              </div>
-            </DialogAlertWidget>
+            {renderDialogAlert()}
           </StudentDetailsForm>
           <MarkAttendance
             title={"Mark student attendance"}
@@ -147,15 +153,7 @@ export default function StudentsDatatable({
             setIsOpen={setMarkAttendanceDialog}
             markAttendanceAction={markAttendance}
           >
-            <DialogAlertWidget>
-              <div className="flex items-center gap-2">
-                <span>{student.studentName}</span>
-                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                  {""}
-                </span>
-                <span>{student.assignedGroup?.groupName}</span>
-              </div>
-            </DialogAlertWidget>
+            {renderDialogAlert()}
           </MarkAttendance>
           {student && (
             <AttendanceHistory
@@ -164,23 +162,31 @@ export default function StudentsDatatable({
               onOpenChange={setAttendanceHistoryDialog}
               markAttendance={setMarkAttendanceDialog}
               setSelectedSessionId={setSelectedSession}
-            />
+            >
+              {renderDialogAlert()}
+            </AttendanceHistory>
           )}
           <AddReportingNote
             student={student}
             isOpen={reportingNotesDialog}
             setIsOpen={setReportingNotesDialog}
-          />
+          >
+            {renderDialogAlert()}
+          </AddReportingNote>
           <GroupTransferHistory
             student={student}
             open={groupTransferHistory}
             onOpenChange={setGroupTransferHistory}
-          />
+          >
+            {renderDialogAlert()}
+          </GroupTransferHistory>
           <StudentDropoutForm
             student={student}
             isOpen={dropoutDialog}
             setIsOpen={setDropoutDialog}
-          />
+          >
+            {renderDialogAlert()}
+          </StudentDropoutForm>
         </div>
       )}
     </div>
