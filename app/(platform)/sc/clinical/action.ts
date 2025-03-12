@@ -554,7 +554,6 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
   }
 }
 
-
 export async function terminateClinicalCase(data: {
   caseId: string;
   terminationReason: string;
@@ -648,4 +647,3 @@ export async function createClinicalCaseNotes(data: {
     return { success: false };
   }
 }
-
