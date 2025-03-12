@@ -207,7 +207,7 @@ export default function DataTable<TData, TValue>({
         )}
       >
         {!isSubComponent ? (
-          <div className="shadow-inner-2 pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-lg lg:hidden"></div>
+          <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-lg shadow-inner-2 lg:hidden"></div>
         ) : null}
         <Table
           className={cn(

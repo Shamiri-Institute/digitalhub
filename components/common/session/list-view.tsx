@@ -119,7 +119,7 @@ export function ListView({
 
   return (
     <div className="relative">
-      <div className="shadow-inner-2 pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-[0.4375rem] lg:hidden"></div>
+      <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden"></div>
       <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
         <table
           className={cn(
