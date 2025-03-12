@@ -235,6 +235,37 @@ export async function currentFellow() {
 
 export type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>;
 
+export type CurrentClinicalLead = Awaited<
+  ReturnType<typeof currentClinicalLead>
+>;
+
+export async function currentClinicalLead() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { membership } = user;
+
+  const { identifier } = membership;
+  if (!identifier) {
+    return null;
+  }
+
+  const clinicalLead = await db.clinicalLead.findFirst({
+    where: { id: identifier },
+    include: {
+      assignedHub: true,
+      clinicalScreeningCases: true,
+    },
+  });
+
+  if (!clinicalLead) {
+    return null;
+  }
+
+  return { ...clinicalLead, user };
+}
+
 export async function getCurrentUser() {
   const session = await getServerSession();
   if (!session) {
@@ -265,7 +296,11 @@ export async function getCurrentUser() {
 }
 
 export async function getCurrentPersonnel(): Promise<
-  CurrentSupervisor | CurrentHubCoordinator | CurrentFellow | null
+  | CurrentSupervisor
+  | CurrentHubCoordinator
+  | CurrentFellow
+  | CurrentClinicalLead
+  | null
 > {
   const user = await getCurrentUser();
   if (!user) {
@@ -283,6 +318,10 @@ export async function getCurrentPersonnel(): Promise<
 
   if (role === "FELLOW") {
     return await currentFellow();
+  }
+
+  if (role === "CLINICAL_LEAD") {
+    return await currentClinicalLead();
   }
 
   return null;
