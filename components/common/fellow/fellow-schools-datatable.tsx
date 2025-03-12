@@ -87,7 +87,7 @@ export default function FellowSchoolsDatatable({
   function renderFellowGroupDialogAlert(fellowGroup: FellowGroupData) {
     return (
       <DialogAlertWidget>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
           <span>Group {fellowGroup.groupName}</span>
           <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
           <span>{fellowGroup.school.schoolName}</span>
