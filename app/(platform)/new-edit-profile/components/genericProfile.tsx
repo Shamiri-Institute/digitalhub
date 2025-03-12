@@ -32,6 +32,11 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
 import { toast } from "#/components/ui/use-toast";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { cn, stringValidation } from "#/lib/utils";
@@ -71,14 +76,33 @@ export type GenericFormData = z.infer<typeof GenericFormSchema>;
 type GenericProfileFormProps = {
   initialData: GenericFormData;
   onSubmit: (data: GenericFormData) => Promise<void>;
+  role?: "supervisor" | "hub-coordinator" | "fellow";
 };
 
 export default function GenericProfileForm({
   initialData,
   onSubmit,
+  role = "supervisor",
 }: GenericProfileFormProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const isFellow = role === "fellow";
+  const isReadOnlyForSupervisors =
+    role === "supervisor" || role === "hub-coordinator";
+
+  function maybeWrapWithTooltip(child: JSX.Element) {
+    if (!isFellow) return child;
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="w-full bg-white">{child}</div>
+        </TooltipTrigger>
+        <TooltipContent>
+          Contact your hub-coordinator to make changes
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
 
   const form = useForm<GenericFormData>({
     resolver: zodResolver(GenericFormSchema),
@@ -103,7 +127,7 @@ export default function GenericProfileForm({
         variant: "default",
         description: "Profile updated successfully!",
       });
-      router.refresh();
+      router.back();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -155,13 +179,17 @@ export default function GenericProfileForm({
                       <FormItem>
                         <FormLabel>Email Address</FormLabel>
                         <FormControl>
-                          <Input {...field} disabled />
+                          {maybeWrapWithTooltip(
+                            <Input
+                              {...field}
+                              disabled={isFellow || isReadOnlyForSupervisors}
+                            />,
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="cellNumber"
@@ -169,13 +197,18 @@ export default function GenericProfileForm({
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" />
+                          {maybeWrapWithTooltip(
+                            <Input
+                              {...field}
+                              type="tel"
+                              disabled={isFellow || isReadOnlyForSupervisors}
+                            />,
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="idNumber"
@@ -183,85 +216,128 @@ export default function GenericProfileForm({
                       <FormItem>
                         <FormLabel>National ID</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          {maybeWrapWithTooltip(
+                            <Input {...field} disabled={isFellow} />,
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="gender"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Gender</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select gender" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Male">Male</SelectItem>
-                            <SelectItem value="Female">Female</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {isFellow ? (
+                          maybeWrapWithTooltip(
+                            <Select value={field.value} disabled>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select gender" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="Male">Male</SelectItem>
+                                <SelectItem value="Female">Female</SelectItem>
+                              </SelectContent>
+                            </Select>,
+                          )
+                        ) : (
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select gender" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Male">Male</SelectItem>
+                              <SelectItem value="Female">Female</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="dateOfBirth"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
                         <FormLabel>Date of Birth</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "mt-1.5 w-full justify-start px-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground",
-                                )}
-                              >
-                                <Icons.calendar className="mr-2 h-4 w-4" />
-                                {field.value
-                                  ? format(new Date(field.value), "dd/MM/yyyy")
-                                  : "Pick a date"}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={
-                                field.value ? new Date(field.value) : undefined
-                              }
-                              onSelect={(date) =>
-                                field.onChange(
-                                  date ? date.toISOString().split("T")[0] : "",
-                                )
-                              }
-                              disabled={(date) =>
-                                date > new Date() ||
-                                date < new Date("1900-01-01")
-                              }
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
+                        {isFellow ? (
+                          maybeWrapWithTooltip(
+                            <Button
+                              variant="outline"
+                              disabled
+                              className={cn(
+                                "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                                !field.value && "text-muted-foreground",
+                              )}
+                            >
+                              <Icons.calendar className="mr-2 h-4 w-4" />
+                              {field.value
+                                ? format(new Date(field.value), "dd/MM/yyyy")
+                                : "Pick a date"}
+                            </Button>,
+                          )
+                        ) : (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant="outline"
+                                  className={cn(
+                                    "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground",
+                                  )}
+                                >
+                                  <Icons.calendar className="mr-2 h-4 w-4" />
+                                  {field.value
+                                    ? format(
+                                        new Date(field.value),
+                                        "dd/MM/yyyy",
+                                      )
+                                    : "Pick a date"}
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto p-0"
+                              align="start"
+                            >
+                              <Calendar
+                                mode="single"
+                                selected={
+                                  field.value
+                                    ? new Date(field.value)
+                                    : undefined
+                                }
+                                onSelect={(date) =>
+                                  field.onChange(
+                                    date
+                                      ? date.toISOString().split("T")[0]
+                                      : "",
+                                  )
+                                }
+                                disabled={(date) =>
+                                  date > new Date() ||
+                                  date < new Date("1900-01-01")
+                                }
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="county"
@@ -271,28 +347,46 @@ export default function GenericProfileForm({
                           County{" "}
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select county" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-[200px]">
-                            {counties.map((c) => (
-                              <SelectItem key={c} value={c}>
-                                {c}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {isFellow ? (
+                          maybeWrapWithTooltip(
+                            <Select value={field.value} disabled>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select county" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="max-h-[200px]">
+                                {counties.map((c) => (
+                                  <SelectItem key={c} value={c}>
+                                    {c}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>,
+                          )
+                        ) : (
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select county" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="max-h-[200px]">
+                              {counties.map((c) => (
+                                <SelectItem key={c} value={c}>
+                                  {c}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="subCounty"
@@ -302,39 +396,69 @@ export default function GenericProfileForm({
                           Sub-county{" "}
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select sub-county" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="max-h-[200px]">
-                            {form.getValues("county") ? (
-                              KENYAN_COUNTIES.find(
-                                (county) =>
-                                  county.name === form.getValues("county"),
-                              )?.sub_counties.map((subCounty) => (
-                                <SelectItem key={subCounty} value={subCounty}>
-                                  {subCounty}
+                        {isFellow ? (
+                          maybeWrapWithTooltip(
+                            <Select value={field.value} disabled>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select sub-county" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="max-h-[200px]">
+                                {form.getValues("county") ? (
+                                  KENYAN_COUNTIES.find(
+                                    (county) =>
+                                      county.name === form.getValues("county"),
+                                  )?.sub_counties.map((subCounty) => (
+                                    <SelectItem
+                                      key={subCounty}
+                                      value={subCounty}
+                                    >
+                                      {subCounty}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value={" "}>
+                                    Please pick a county first
+                                  </SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>,
+                          )
+                        ) : (
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select sub-county" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="max-h-[200px]">
+                              {form.getValues("county") ? (
+                                KENYAN_COUNTIES.find(
+                                  (county) =>
+                                    county.name === form.getValues("county"),
+                                )?.sub_counties.map((subCounty) => (
+                                  <SelectItem key={subCounty} value={subCounty}>
+                                    {subCounty}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value={" "}>
+                                  Please pick a county first
                                 </SelectItem>
-                              ))
-                            ) : (
-                              <SelectItem value={" "}>
-                                Please pick a county first
-                              </SelectItem>
-                            )}
-                          </SelectContent>
-                        </Select>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
               </div>
-
               <div className="flex flex-col">
                 <div className="py-2">
                   <span className="pb-2 text-xs uppercase text-gray-500">
@@ -343,7 +467,6 @@ export default function GenericProfileForm({
                   <Separator />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  {/* FULL NAME */}
                   <FormField
                     control={form.control}
                     name="name"
@@ -351,13 +474,17 @@ export default function GenericProfileForm({
                       <FormItem>
                         <FormLabel>Full Name</FormLabel>
                         <FormControl>
-                          <Input {...field} disabled />
+                          {maybeWrapWithTooltip(
+                            <Input
+                              {...field}
+                              disabled={isFellow || isReadOnlyForSupervisors}
+                            />,
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="mpesaNumber"
@@ -365,7 +492,13 @@ export default function GenericProfileForm({
                       <FormItem>
                         <FormLabel>M-Pesa number</FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" disabled />
+                          {maybeWrapWithTooltip(
+                            <Input
+                              {...field}
+                              type="tel"
+                              disabled={isFellow || isReadOnlyForSupervisors}
+                            />,
+                          )}
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -373,52 +506,62 @@ export default function GenericProfileForm({
                   />
                 </div>
               </div>
-
-              <div className="flex flex-col">
-                <div className="py-2">
-                  <span className="pb-2 text-xs uppercase text-gray-500">
-                    Bank Details
-                  </span>
-                  <Separator />
+              {!isFellow && (
+                <div className="flex flex-col">
+                  <div className="py-2">
+                    <span className="pb-2 text-xs uppercase text-gray-500">
+                      Bank Details
+                    </span>
+                    <Separator />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="bankName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bank Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="bankBranch"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bank Branch</FormLabel>
+                          <FormControl>
+                            <Input {...field} type="text" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="bankName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bank Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="bankBranch"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bank Branch</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="text" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
+              )}
             </div>
             <DialogFooter className="pt-4">
-              <Button variant="outline" onClick={() => router.back()}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Updating..." : "Update & Save"}
-              </Button>
+              {isFellow ? (
+                <Button variant="outline" onClick={() => router.back()}>
+                  Close Profile
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => router.back()}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting
+                      ? "Updating..."
+                      : "Update & Save"}
+                  </Button>
+                </>
+              )}
             </DialogFooter>
           </form>
         </Form>
