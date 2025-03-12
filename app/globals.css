@@ -174,7 +174,7 @@
   }
 
   .data-table {
-    @apply table-fixed border-separate border-spacing-0 rounded border border-grey-border;
+    @apply lg:table-fixed border-separate border-spacing-0 rounded border border-grey-border;
   }
 
   .data-table tbody tr,
@@ -187,7 +187,7 @@
   }
 
   .action-cell {
-    @apply w-[50px] min-w-[40px] max-w-[50px] !important;
+    @apply w-[50px] min-w-[50px] max-w-[60px] !important;
   }
 
   .form-toggle {

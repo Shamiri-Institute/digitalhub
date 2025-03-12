@@ -128,11 +128,11 @@ export default function DataTable<TData, TValue>({
   }, [data, table]);
 
   return (
-    <div>
-      <div className="flex items-end justify-between">
+    <div className="no-scrollbar overflow-hidden">
+      <div className="flex flex-col-reverse lg:flex-row lg:items-end lg:justify-between">
         <div className="shrink-0">
           {table.getSelectedRowModel().rows.length > 0 && (
-            <div className="flex items-center gap-4">
+            <div className="flex w-full items-center justify-between gap-4 lg:w-auto">
               <span className="text-sm">
                 {table.getSelectedRowModel().rows.length}{" "}
                 {rowSelectionDescription} selected
@@ -148,9 +148,9 @@ export default function DataTable<TData, TValue>({
             </div>
           )}
         </div>
-        <div className="min-w-2/3 flex flex-wrap-reverse justify-end gap-3">
+        <div className="lg:min-w-2/3 flex flex-wrap justify-end gap-3 py-2 lg:flex-wrap-reverse lg:py-0">
           {!disableSearch && (
-            <div className="relative">
+            <div className="relative mr-1 lg:mr-0">
               <Icons.search
                 className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground"
                 strokeWidth={1.75}
@@ -192,92 +192,100 @@ export default function DataTable<TData, TValue>({
           )}
         </div>
       </div>
-      <Table className={cn("rounded-lg border border-solid", className)}>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} id={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead
-                  key={header.id}
-                  id={header.id}
-                  className={cn(
-                    "w-full rounded bg-background-secondary/50 !px-4 text-sm font-semibold leading-5 text-shamiri-text-grey",
-                    header.column.columnDef.id !== "checkbox" && "truncate",
-                    ["actions", "select"].includes(
-                      //@ts-ignore
-                      header.column.columnDef.header,
-                    )
-                      ? "py-3"
-                      : "py-2",
-                    header.column.columnDef.id === "button" ||
-                      header.column.columnDef.id === "checkbox"
-                      ? "action-cell"
-                      : null,
-                  )}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <Fragment key={row.id}>
-                <TableRow
-                  id={row.id}
-                  className="text-sm font-medium leading-5 text-shamiri-text-dark-grey data-[state=Selected]:bg-blue-bg"
-                  data-state={row.getIsSelected() && "Selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      id={cell.id}
-                      className={cn(
-                        "truncate border-y border-l",
-                        cell.column.columnDef.id === "button" ||
-                          cell.column.columnDef.id === "checkbox"
-                          ? "relative cursor-pointer border-l-0 !p-0"
-                          : "!px-4 py-2",
-                      )}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-                {row.getIsExpanded() && renderSubComponent ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="p-0">
-                      {renderSubComponent({ row })}
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </Fragment>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell
-                colSpan={columns.length}
-                className="text-center text-shamiri-text-dark-grey"
-              >
-                {emptyStateMessage}
-              </TableCell>
-            </TableRow>
+      <div className="no-scrollbar relative mt-4 overflow-hidden rounded-lg border lg:mt-2 lg:border-none">
+        <div className="shadow-inner-2 pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-lg lg:hidden"></div>
+        <Table
+          className={cn(
+            "overflow-x-scroll rounded-lg lg:border lg:border-solid",
+            className,
           )}
-        </TableBody>
-      </Table>
+        >
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id} id={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    id={header.id}
+                    className={cn(
+                      "min-w-[80px] rounded bg-background-secondary/50 !px-4 text-sm font-semibold leading-5 text-shamiri-text-grey lg:w-full",
+                      header.column.columnDef.id !== "checkbox" && "truncate",
+                      ["actions", "select"].includes(
+                        //@ts-ignore
+                        header.column.columnDef.header,
+                      )
+                        ? "py-3"
+                        : "py-2",
+                      header.column.columnDef.id === "button" ||
+                        header.column.columnDef.id === "checkbox"
+                        ? "action-cell"
+                        : null,
+                    )}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <Fragment key={row.id}>
+                  <TableRow
+                    id={row.id}
+                    className="text-sm font-medium leading-5 text-shamiri-text-dark-grey data-[state=Selected]:bg-blue-bg"
+                    data-state={row.getIsSelected() && "Selected"}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        id={cell.id}
+                        className={cn(
+                          "truncate border-y border-l",
+                          cell.column.columnDef.id === "button" ||
+                            cell.column.columnDef.id === "checkbox"
+                            ? "relative cursor-pointer border-l-0 !p-0"
+                            : "!px-4 py-2",
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {row.getIsExpanded() && renderSubComponent ? (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} className="p-0">
+                        {renderSubComponent({ row })}
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+                </Fragment>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="text-center text-shamiri-text-dark-grey"
+                >
+                  {emptyStateMessage}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
       {!disablePagination && (
-        <div className="flex items-center justify-between gap-2 py-3">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-4 py-3 lg:flex-row lg:items-center lg:justify-between lg:gap-2">
+          <div className="flex flex-col items-center gap-2 lg:flex-row">
             <div className="flex items-center gap-2">
               <button
                 className="pagination"
@@ -320,46 +328,52 @@ export default function DataTable<TData, TValue>({
                 <Icons.chevronRight className="h-5 w-5" />
               </button>
             </div>
-            <span className="flex items-center gap-1 text-sm text-shamiri-text-dark-grey">
-              <div>Page</div>
-              <strong>
-                {table.getState().pagination.pageIndex + 1} of{" "}
-                {table.getPageCount().toLocaleString()}
-              </strong>
-            </span>
-            <span className="flex items-center gap-1 pl-4 text-sm text-shamiri-text-dark-grey">
-              Go to page:
-              <input
-                type="number"
-                min="1"
-                max={table.getPageCount()}
-                defaultValue={table.getState().pagination.pageIndex + 1}
-                onChange={(e) => {
-                  const page = e.target.value ? Number(e.target.value) - 1 : 0;
-                  table.setPageIndex(page);
-                }}
-                className="w-16 rounded border p-1"
-              />
-            </span>
+            <div className="flex w-full items-center justify-between gap-2">
+              <span className="flex items-center gap-1 text-sm text-shamiri-text-dark-grey">
+                <div>Page</div>
+                <strong>
+                  {table.getState().pagination.pageIndex + 1} of{" "}
+                  {table.getPageCount().toLocaleString()}
+                </strong>
+              </span>
+              <span className="flex items-center gap-1 pl-4 text-sm text-shamiri-text-dark-grey">
+                Go to page:
+                <input
+                  type="number"
+                  min="1"
+                  max={table.getPageCount()}
+                  defaultValue={table.getState().pagination.pageIndex + 1}
+                  onChange={(e) => {
+                    const page = e.target.value
+                      ? Number(e.target.value) - 1
+                      : 0;
+                    table.setPageIndex(page);
+                  }}
+                  className="w-16 rounded border p-1"
+                />
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Select
-              value={table.getState().pagination.pageSize.toString()}
-              onValueChange={(value) => {
-                table.setPageSize(Number(value));
-              }}
-            >
-              <SelectTrigger className="text-sm">
-                <SelectValue placeholder="Pick rows" />
-              </SelectTrigger>
-              <SelectContent>
-                {[5, 10, 20, 30, 40, 50].map((pageSize) => (
-                  <SelectItem key={pageSize} value={pageSize.toString()}>
-                    Show {pageSize}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex">
+            <div className="flex w-32 items-center gap-2 lg:w-auto">
+              <Select
+                value={table.getState().pagination.pageSize.toString()}
+                onValueChange={(value) => {
+                  table.setPageSize(Number(value));
+                }}
+              >
+                <SelectTrigger className="text-sm">
+                  <SelectValue placeholder="Pick rows" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[5, 10, 20, 30, 40, 50].map((pageSize) => (
+                    <SelectItem key={pageSize} value={pageSize.toString()}>
+                      Show {pageSize}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       )}

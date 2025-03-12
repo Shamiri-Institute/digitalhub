@@ -179,7 +179,7 @@ export function MarkAttendance({
   return (
     <Form {...form}>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="w-2/5 max-w-none">
+        <DialogContent className="lg:w-2/5 lg:max-w-none">
           <DialogHeader>
             <h2 className="text-lg font-bold">{title}</h2>
           </DialogHeader>
@@ -249,7 +249,7 @@ export function MarkAttendance({
                     onValueChange={(value) => {
                       field.onChange(value);
                     }}
-                    className="grid grid-cols-3 gap-2"
+                    className="grid grid-cols-2 gap-2 lg:grid-cols-3"
                   >
                     <div className="relative">
                       <CustomIndicator className="green" label={"Attended"} />
@@ -299,7 +299,7 @@ export function MarkAttendance({
                             <SelectValue placeholder="Select a reason" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent>
+                        <SelectContent className="max-h-[200px]">
                           {[
                             "School fees",
                             "Sickness",
