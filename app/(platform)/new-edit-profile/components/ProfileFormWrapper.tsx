@@ -2,10 +2,11 @@
 
 import { updateHubCoordinatorProfile } from "app/(platform)/hc/actions";
 import { updateSupervisorProfile } from "app/(platform)/sc/actions";
+import { useRouter } from "next/navigation";
 import GenericProfileForm, { GenericFormData } from "./genericProfile";
 
 type ProfileFormWrapperProps = {
-  role: "supervisor" | "hub-coordinator";
+  role: "supervisor" | "hub-coordinator" | "fellow";
   initialData: GenericFormData;
 };
 
@@ -13,6 +14,8 @@ export default function ProfileFormWrapper({
   initialData,
   role,
 }: ProfileFormWrapperProps) {
+  const router = useRouter();
+
   async function onSubmit(data: GenericFormData) {
     if (role === "supervisor") {
       const transformedData = {
@@ -52,8 +55,16 @@ export default function ProfileFormWrapper({
       if (!result?.success) {
         throw new Error(result?.message ?? "Profile update failed");
       }
+    } else if (role === "fellow") {
+      router.back();
     }
   }
 
-  return <GenericProfileForm initialData={initialData} onSubmit={onSubmit} />;
+  return (
+    <GenericProfileForm
+      initialData={initialData}
+      onSubmit={onSubmit}
+      role={role}
+    />
+  );
 }
