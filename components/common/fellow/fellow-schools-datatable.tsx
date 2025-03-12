@@ -1,9 +1,9 @@
 "use client";
-import { FellowGroupData } from "#/app/(platform)/sc/fellows/components/fellows-groups-table-dropdown-menu";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import FellowDropoutForm from "#/components/common/fellow/fellow-dropout-form";
+import { FellowGroupData } from "#/components/common/fellow/fellow-school-datatable-dropdown-menu";
 import UploadFellowContract from "#/components/common/fellow/upload-contract";
 import UploadFellowID from "#/components/common/fellow/upload-id";
 import UploadFellowQualification from "#/components/common/fellow/upload-qualification";
@@ -22,10 +22,10 @@ import { ImplementerRole, Prisma } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { FellowsData } from "../../actions";
-import { columns, subColumns } from "./columns";
+import { FellowsData } from "../../../app/(platform)/sc/actions";
+import { fellowSchoolsColumns, subColumns } from "./fellow-schools-columns";
 
-export default function FellowsDataTable({
+export default function FellowSchoolsDatatable({
   fellows,
   project,
   role,
@@ -51,7 +51,7 @@ export default function FellowsDataTable({
   const [evaluationDialog, setEvaluationDialog] = useState(false);
 
   function renderTableActions() {
-    return (
+    return role !== "FELLOW" ? (
       <div>
         <FellowDetailsForm
           open={addFellowDialog}
@@ -63,7 +63,7 @@ export default function FellowsDataTable({
           </DialogTrigger>
         </FellowDetailsForm>
       </div>
-    );
+    ) : null;
   }
 
   function renderFellowDialogAlert(fellow: FellowsData) {
@@ -113,7 +113,7 @@ export default function FellowsDataTable({
     <>
       <DataTable
         data={fellows}
-        columns={columns({
+        columns={fellowSchoolsColumns({
           state: {
             setFellow,
             setWeeklyEvaluationDialog,
@@ -124,6 +124,7 @@ export default function FellowsDataTable({
             setUploadQualificationDialog,
             setComplaintsDialog,
             setDropOutDialog,
+            role,
           },
         })}
         className={"data-table data-table-action mt-4 bg-white"}
@@ -151,6 +152,7 @@ export default function FellowsDataTable({
                 setAttendanceDialog,
                 setStudentsDialog,
                 setEvaluationDialog,
+                role,
               },
             })}
             disableSearch={true}
