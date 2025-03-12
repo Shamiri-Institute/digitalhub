@@ -113,7 +113,7 @@
 
 @layer components {
   .nav-link {
-    @apply flex cursor-pointer gap-2 transition ease-in-out;
+    @apply flex cursor-pointer gap-2 transition ease-in-out py-3 lg:py-0 px-4 lg:px-0;
   }
 
   .nav-link svg {
@@ -127,11 +127,11 @@
 
   .tab-link {
     border-bottom-width: 3px;
-    @apply flex gap-2 border-transparent py-2 transition ease-in-out;
+    @apply flex gap-2 border-transparent py-2 transition ease-in-out whitespace-nowrap;
   }
 
   .tab-link svg {
-    @apply text-shamiri-text-grey transition ease-in-out;
+    @apply shrink-0 text-shamiri-text-grey transition ease-in-out;
   }
 
   .tab-link.active,
@@ -153,11 +153,11 @@
   }
 
   .schedule-table th {
-    @apply px-4 py-3 text-left;
+    @apply px-4 py-3 text-left w-[150px] lg:w-full;
   }
 
   .schedule-table td {
-    @apply table-cell border-t border-grey-border p-0;
+    @apply border-t border-grey-border p-0 w-[150px] h-[150px] lg:w-full lg:h-full;
   }
 
   .schedule-table.padded td {
