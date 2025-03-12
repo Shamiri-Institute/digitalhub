@@ -11,15 +11,20 @@ export default async function Page() {
   }
 
   const allowedGenders = ["Male", "Female"] as const;
-  const genderValue: "Male" | "Female" = allowedGenders.includes(
-    fellow.gender as "Male" | "Female",
+  type AllowedGender = (typeof allowedGenders)[number];
+
+  const genderValue: AllowedGender = allowedGenders.includes(
+    fellow.gender as AllowedGender
   )
-    ? (fellow.gender as "Male" | "Female")
+    ? (fellow.gender as AllowedGender)
     : "Male";
 
   const dateOfBirth: string | undefined = fellow.dateOfBirth
     ? new Date(fellow.dateOfBirth).toISOString().split("T")[0]
     : undefined;
+
+  const countyValue = fellow.county ?? "";
+  const subCountyValue = fellow.subCounty ?? "";
 
   const initialData: GenericFormData = {
     email: fellow.fellowEmail ?? "",
@@ -29,11 +34,20 @@ export default async function Page() {
     mpesaNumber: fellow.mpesaNumber ?? "",
     dateOfBirth,
     gender: genderValue,
-    county: (fellow.county ?? "Baringo") as GenericFormData["county"],
-    subCounty: fellow.subCounty ?? "",
+    county: countyValue as GenericFormData["county"],
+    subCounty: subCountyValue,
     bankName: "",
     bankBranch: "",
   };
 
-  return <ProfileFormWrapper initialData={initialData} role="fellow" />;
+  return (
+    <>
+      {!fellow.county && (
+        <p style={{ color: "red" }}>
+          No county was provided. Please pick the nearest county from the list.
+        </p>
+      )}
+      <ProfileFormWrapper initialData={initialData} role="fellow" />
+    </>
+  );
 }
