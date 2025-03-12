@@ -555,44 +555,6 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
 }
 
 
-export async function createTreatmentPlan(data: TreatmentPlanData) {
-  try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      throw new Error("User not found");
-    }
-
-    await db.$transaction(async (tx) => {
-      const treatmentPlan = await tx.clinicalFollowUpTreatmentPlan.create({
-        data: {
-          caseId: data.caseId,
-          currentORSScore: data.currentOrsScore,
-          plannedSessions: data.plannedSessions,
-          sessionFrequency: data.sessionFrequency,
-          plannedTreatmentIntervention: data.treatmentInterventions,
-          plannedTreatmentInterventionExplanation: data.interventionExplanation,
-          otherTreatmentIntervention: data.otherIntervention,
-        },
-      });
-
-      await tx.clinicalFollowUpTreatmentPlanAuditTrail.create({
-        data: {
-          caseId: data.caseId,
-          action: "Create",
-          userId: currentUser.user.id,
-          afterData: treatmentPlan,
-        },
-      });
-    });
-
-    revalidatePath("/sc/clinical");
-    return { success: true };
-  } catch (error) {
-    console.error(error);
-    return { success: false };
-  }
-}
-
 export async function terminateClinicalCase(data: {
   caseId: string;
   terminationReason: string;

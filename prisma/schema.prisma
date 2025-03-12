@@ -1515,20 +1515,6 @@ model ClinicalFollowUpTreatmentPlanAuditTrail {
   @@map("clinical_follow_up_treatment_plan_audit_trail")
 }
 
-model ClinicalFollowUpTreatmentPlanAuditTrail {
-  id         String                @id @default(cuid())
-  createdAt  DateTime              @default(now()) @map("created_at") @db.Timestamptz()
-  action     String
-  userId     String                @map("user_id")
-  beforeData Json?                 @map("before_data")
-  afterData  Json?                 @map("after_data")
-  user       User                  @relation(fields: [userId], references: [id])
-  caseId     String                @map("case_id")
-  case       ClinicalScreeningInfo @relation(fields: [caseId], references: [id])
-
-  @@map("clinical_follow_up_treatment_plan_audit_trail")
-}
-
 model ClinicalLead {
   id                     String                  @id @default(cuid())
   createdAt              DateTime                @default(now()) @map("created_at") @db.Timestamptz()
@@ -1556,7 +1542,6 @@ model ClinicalLead {
 
   @@map("clinical_leads")
 }
-
 
 enum FollowUpPlanOptions {
   GROUP
