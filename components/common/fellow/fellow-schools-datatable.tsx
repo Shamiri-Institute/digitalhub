@@ -157,8 +157,9 @@ export default function FellowSchoolsDatatable({
             })}
             disableSearch={true}
             disablePagination={true}
-            className={"data-table data-table-action border-0 bg-white"}
+            className={"data-table data-table-action mt-0 border-0 bg-white"}
             emptyStateMessage="No groups assigned to this fellow"
+            isSubComponent={true}
           />
         )}
       />

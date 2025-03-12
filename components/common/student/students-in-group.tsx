@@ -43,7 +43,7 @@ export default function StudentsInGroup({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-2/3 max-w-none">
+        <DialogContent className="lg:w-2/3 lg:max-w-none">
           <DialogHeader>
             <h2 className="text-xl font-bold">Students in group</h2>
           </DialogHeader>

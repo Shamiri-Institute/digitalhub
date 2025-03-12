@@ -27,26 +27,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { parsePhoneNumber } from "libphonenumber-js";
 import Image from "next/image";
 import Link from "next/link";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useRef } from "react";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
-
-function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < breakpoint);
-    };
-
-    checkScreenSize(); // Initial check
-    window.addEventListener("resize", checkScreenSize);
-
-    return () => window.removeEventListener("resize", checkScreenSize);
-  }, [breakpoint]);
-
-  return isMobile;
-}
 
 export default function SchoolLeftPanel({
   selectedSchool,
@@ -91,8 +74,6 @@ export default function SchoolLeftPanel({
   const schoolContext = useContext(SchoolInfoContext);
   const { school } = schoolContext;
   const panelRef: any = useRef(null);
-  const isMobile = useIsMobile();
-  console.log(isMobile);
 
   useGSAP(
     () => {

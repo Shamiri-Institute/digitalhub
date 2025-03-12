@@ -47,22 +47,20 @@ export default function AttendanceHistory({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-3/4 max-w-none">
+      <DialogContent className="lg:w-3/4 lg:max-w-none">
         <DialogHeader>
           <h2 className="text-xl font-bold">Session attendance history</h2>
         </DialogHeader>
         {children}
-        <div>
-          <DataTable
-            columns={columns}
-            data={attendances.filter(
-              (attendance) => attendance.fellowId === fellow?.id,
-            )}
-            emptyStateMessage={"No sessions found"}
-            columnVisibilityState={columnVisibilityState}
-            className="data-table lg:mt-4"
-          />
-        </div>
+        <DataTable
+          columns={columns}
+          data={attendances.filter(
+            (attendance) => attendance.fellowId === fellow?.id,
+          )}
+          emptyStateMessage={"No sessions found"}
+          columnVisibilityState={columnVisibilityState}
+          className="data-table lg:mt-4"
+        />
         <DialogFooter className="flex justify-end gap-2">
           <Button
             variant="brand"

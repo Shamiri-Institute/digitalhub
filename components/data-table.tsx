@@ -57,6 +57,7 @@ interface DataTableProps<TData, TValue> {
   editColumns?: boolean;
   disableSearch?: boolean;
   disablePagination?: boolean;
+  isSubComponent?: boolean;
   className?: string;
   onRowSelectionChange?: (rows: Row<TData>[]) => void;
   rowSelectionDescription?: string;
@@ -73,6 +74,7 @@ export default function DataTable<TData, TValue>({
   editColumns = true,
   disableSearch = false,
   disablePagination = false,
+  isSubComponent = false,
   className,
   emptyStateMessage,
   onRowSelectionChange,
@@ -148,55 +150,69 @@ export default function DataTable<TData, TValue>({
             </div>
           )}
         </div>
-        <div className="lg:min-w-2/3 flex flex-wrap justify-end gap-3 py-2 lg:flex-wrap-reverse lg:py-0">
-          {!disableSearch && (
-            <div className="relative mr-1 lg:mr-0">
-              <Icons.search
-                className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground"
-                strokeWidth={1.75}
-              />
-              <Input
-                onChange={(e) => table.setGlobalFilter(String(e.target.value))}
-                placeholder="Search..."
-                className="w-64 bg-white pl-10"
-              />
-            </div>
-          )}
-          {renderTableActions}
-          {editColumns && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex gap-1 bg-white">
-                  <Icons.settings className="h-4 w-4 text-shamiri-text-grey" />
-                  <span>Edit columns</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align={"end"}>
-                {table
-                  .getAllColumns()
-                  .filter((col) => col.getCanHide())
-                  .map((col) => (
-                    <DropdownMenuCheckboxItem
-                      key={col.id}
-                      checked={col.getIsVisible()}
-                      onCheckedChange={(val) => col.toggleVisibility(!!val)}
-                      onSelect={(e) => {
-                        e.preventDefault();
-                      }}
-                    >
-                      {col.id}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
+        {!isSubComponent && (
+          <div className="lg:min-w-2/3 flex flex-wrap justify-end gap-3 py-2 lg:flex-wrap-reverse lg:py-0">
+            {!disableSearch && (
+              <div className="relative mr-1 pt-1 lg:mr-0">
+                <Icons.search
+                  className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground"
+                  strokeWidth={1.75}
+                />
+                <Input
+                  onChange={(e) =>
+                    table.setGlobalFilter(String(e.target.value))
+                  }
+                  placeholder="Search..."
+                  className="w-64 bg-white pl-10"
+                />
+              </div>
+            )}
+            {renderTableActions}
+            {editColumns && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex gap-1 bg-white">
+                    <Icons.settings className="h-4 w-4 text-shamiri-text-grey" />
+                    <span>Edit columns</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align={"end"}>
+                  {table
+                    .getAllColumns()
+                    .filter((col) => col.getCanHide())
+                    .map((col) => (
+                      <DropdownMenuCheckboxItem
+                        key={col.id}
+                        checked={col.getIsVisible()}
+                        onCheckedChange={(val) => col.toggleVisibility(!!val)}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                        }}
+                      >
+                        {col.id}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        )}
       </div>
-      <div className="no-scrollbar relative mt-4 overflow-hidden rounded-lg border lg:mt-2 lg:border-none">
-        <div className="shadow-inner-2 pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-lg lg:hidden"></div>
+      <div
+        className={cn(
+          "",
+          !isSubComponent
+            ? "no-scrollbar relative mt-4 overflow-hidden rounded-lg border lg:mt-0 lg:border-none"
+            : "",
+        )}
+      >
+        {!isSubComponent ? (
+          <div className="shadow-inner-2 pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-lg lg:hidden"></div>
+        ) : null}
         <Table
           className={cn(
-            "overflow-x-scroll rounded-lg lg:border lg:border-solid",
+            !isSubComponent ? "rounded-lg lg:border lg:border-solid" : "",
+            "overflow-x-scroll",
             className,
           )}
         >
@@ -208,7 +224,7 @@ export default function DataTable<TData, TValue>({
                     key={header.id}
                     id={header.id}
                     className={cn(
-                      "min-w-[80px] rounded bg-background-secondary/50 !px-4 text-sm font-semibold leading-5 text-shamiri-text-grey lg:w-full",
+                      "min-w-[80px] bg-background-secondary/50 !px-4 text-sm font-semibold leading-5 text-shamiri-text-grey lg:w-full",
                       header.column.columnDef.id !== "checkbox" && "truncate",
                       ["actions", "select"].includes(
                         //@ts-ignore
@@ -239,7 +255,7 @@ export default function DataTable<TData, TValue>({
                 <Fragment key={row.id}>
                   <TableRow
                     id={row.id}
-                    className="text-sm font-medium leading-5 text-shamiri-text-dark-grey data-[state=Selected]:bg-blue-bg"
+                    className="text-sm font-medium leading-5 text-shamiri-text-dark-grey transition ease-in-out hover:bg-gray-100 data-[state=Selected]:bg-blue-bg"
                     data-state={row.getIsSelected() && "Selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
