@@ -88,7 +88,7 @@ export default function ClinicalCaseActionsDropdownMenu({
               "px-2 py-1.5 text-sm",
               clinicalCase.caseStatus === "Terminated"
                 ? "pointer-events-none cursor-not-allowed text-gray-400"
-                : "cursor-pointer text-shamiri-black"
+                : "cursor-pointer text-shamiri-black",
             )}
           >
             Case notes

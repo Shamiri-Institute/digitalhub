@@ -5,7 +5,10 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { ClinicalCases, createClinicalCaseNotes } from "#/app/(platform)/sc/clinical/action";
+import {
+  ClinicalCases,
+  createClinicalCaseNotes,
+} from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -65,7 +68,7 @@ const sessions = [
   "Session 4 - Mid-Term Evaluation",
   "Session 5 - Treatment Continuation",
   "Final Session - Termination",
-] 
+];
 
 const CaseReportSchema = z.object({
   sessionId: stringValidation("Session ID is required"),
@@ -91,7 +94,9 @@ const CaseReportSchema = z.object({
   overallFeedback: z.enum(overallFeedback, {
     required_error: "Overall feedback is required",
   }),
-  studentResponseExplanation: stringValidation("Student response explanation is required"),
+  studentResponseExplanation: stringValidation(
+    "Student response explanation is required",
+  ),
   followUpPlan: z.object({
     isGroupSession: z.boolean(),
     explanation: stringValidation("Follow-up plan explanation is required"),
@@ -188,7 +193,7 @@ export default function CaseNotesForm({
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
+            <FormField
               control={form.control}
               name="sessionId"
               render={({ field }) => (
@@ -530,7 +535,11 @@ export default function CaseNotesForm({
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={4} placeholder="Explain the student's response to the session..." />
+                    <Textarea
+                      {...field}
+                      rows={4}
+                      placeholder="Explain the student's response to the session..."
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
