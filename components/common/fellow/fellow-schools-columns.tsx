@@ -1,22 +1,23 @@
 "use client";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import type { FellowsData } from "#/app/(platform)/sc/actions";
-import FellowsGroupsTableDropdownMenu, {
+import FellowSchoolDatatableDropdownMenu, {
   FellowGroupData,
-} from "#/app/(platform)/sc/fellows/components/fellows-groups-table-dropdown-menu";
+} from "#/components/common/fellow/fellow-school-datatable-dropdown-menu";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { sessionDisplayName } from "#/lib/utils";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
+import { ImplementerRole } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
 import Image from "next/image";
 import { Dispatch, SetStateAction } from "react";
-import FellowsTableDropdown from "./fellows-table-dropdown-menu";
+import FellowsTableDropdown from "./fellow-schools-datatable-dropdown-menu";
 
-export const columns = ({
+export const fellowSchoolsColumns = ({
   state,
 }: {
   state: {
@@ -29,6 +30,7 @@ export const columns = ({
     setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>;
     setComplaintsDialog: Dispatch<SetStateAction<boolean>>;
     setFellow: Dispatch<SetStateAction<FellowsData | null>>;
+    role: ImplementerRole;
   };
 }): ColumnDef<FellowsData>[] => [
   {
@@ -167,12 +169,14 @@ export const subColumns = ({
     setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
     setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+    role: ImplementerRole;
   };
 }): ColumnDef<FellowGroupData>[] => [
   {
     id: "checkbox",
     header: ({ table }) => (
       <Checkbox
+        disabled={true}
         checked={
           table.getIsAllPageRowsSelected() ||
           (table.getIsSomePageRowsSelected() && "indeterminate")
@@ -189,6 +193,7 @@ export const subColumns = ({
         <div className="flex items-center justify-center">
           <Checkbox
             checked={row.getIsSelected()}
+            disabled={true}
             onCheckedChange={(val) => row.toggleSelected(!!val)}
             aria-label="Select row"
             className={
@@ -242,7 +247,7 @@ export const subColumns = ({
   {
     id: "button",
     cell: ({ row }) => (
-      <FellowsGroupsTableDropdownMenu group={row.original} state={state} />
+      <FellowSchoolDatatableDropdownMenu group={row.original} state={state} />
     ),
     enableHiding: false,
   },
