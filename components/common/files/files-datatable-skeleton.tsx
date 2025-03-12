@@ -52,7 +52,7 @@ export default function FilesDatatableSkeleton({
           return {};
         }) as SchoolFilesTableData[]
       }
-      className="data-table data-table-action mt-4"
+      className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
       renderTableActions={renderTableActions()}
     />

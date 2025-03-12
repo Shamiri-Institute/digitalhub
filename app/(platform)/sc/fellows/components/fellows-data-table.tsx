@@ -126,7 +126,7 @@ export default function FellowsDataTable({
             setDropOutDialog,
           },
         })}
-        className={"data-table data-table-action mt-4 bg-white"}
+        className={"data-table data-table-action bg-white lg:mt-4"}
         renderTableActions={renderTableActions()}
         emptyStateMessage="No fellows assigned to you"
         columnVisibilityState={{

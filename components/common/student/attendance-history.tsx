@@ -71,7 +71,7 @@ export default function AttendanceHistory({
             editColumns={false}
             data={student.studentAttendances ?? []}
             emptyStateMessage={"No attendance records found"}
-            className="data-table mt-4"
+            className="data-table lg:mt-4"
           />
         </div>
         <DialogFooter className="flex justify-end gap-2">

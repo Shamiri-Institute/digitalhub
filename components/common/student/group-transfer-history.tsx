@@ -91,7 +91,7 @@ export default function GroupTransferHistory({
               student.createdAt,
             )}
             emptyStateMessage={"No transfer records found"}
-            className="data-table mt-4"
+            className="data-table lg:mt-4"
           />
         </div>
         <DialogFooter className="flex justify-end gap-2">

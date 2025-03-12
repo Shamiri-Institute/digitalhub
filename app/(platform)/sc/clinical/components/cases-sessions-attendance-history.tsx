@@ -82,7 +82,7 @@ export default function ClinicalCaseSessionsAttendanceHistory({
           <DataTable
             columns={attendanceColumns}
             data={clinicalCase.sessionAttendanceHistory || []}
-            className={"data-table data-table-action mt-4 bg-white"}
+            className={"data-table data-table-action bg-white lg:mt-4"}
             emptyStateMessage="No Clinical Case Attendance History"
           />
         </div>

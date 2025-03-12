@@ -60,7 +60,7 @@ export default function AttendanceHistory({
             )}
             emptyStateMessage={"No sessions found"}
             columnVisibilityState={columnVisibilityState}
-            className="data-table mt-4"
+            className="data-table lg:mt-4"
           />
         </div>
         <DialogFooter className="flex justify-end gap-2">

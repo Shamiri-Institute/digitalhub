@@ -57,7 +57,7 @@ export default function StudentsDatatable({
     //     />
     //   )
     // );
-    return <div></div>;
+    return null;
   };
 
   const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
@@ -83,7 +83,7 @@ export default function StudentsDatatable({
           role,
         })}
         emptyStateMessage="No students found"
-        className="data-table data-table-action mt-4"
+        className="data-table data-table-action lg:mt-4"
         renderTableActions={renderTableActions()}
         columnVisibilityState={{
           Gender: false,
