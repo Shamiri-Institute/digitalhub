@@ -586,3 +586,19 @@ export const StudentReportingNotesSchema = z.object({
   studentId: stringValidation("Student ID is required"),
   notes: stringValidation("Please add your note"),
 });
+
+export const HubCoordinatorSchema = z.object({
+  coordinatorEmail: z.string().email(),
+  coordinatorName: z.string(),
+  idNumber: z.string(),
+  cellNumber: z.string(),
+  mpesaNumber: z.string(),
+  dateOfBirth: z.string().optional(),
+  gender: z.string(),
+  county: z.string(),
+  subCounty: z.string(),
+  bankName: z.string(),
+  bankBranch: z.string(),
+});
+
+export type HubCoordinatorType = z.infer<typeof HubCoordinatorSchema>;

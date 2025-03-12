@@ -5,28 +5,29 @@ import {
   MarkAttendanceSchema,
   StudentReportingNotesSchema,
 } from "#/app/(platform)/hc/schemas";
-import {
-  currentHubCoordinator,
-  currentSupervisor,
-  getCurrentUser,
-} from "#/app/auth";
+import { getCurrentPersonnel } from "#/app/auth";
 import { StudentDetailsSchema } from "#/components/common/student/schemas";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateStudentVisibleID } from "#/lib/utils";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 async function checkAuth() {
-  const hubCoordinator = await currentHubCoordinator();
-  const supervisor = await currentSupervisor();
-
-  if (!hubCoordinator && !supervisor) {
+  const user = await getCurrentPersonnel();
+  if (user === null) {
     throw new Error("The session has not been authenticated");
   }
-
-  const user = await getCurrentUser();
-  return { hubCoordinator, supervisor, user };
+  return user;
+  // const hubCoordinator = await currentHubCoordinator();
+  // const supervisor = await currentSupervisor();
+  // const fellow = await currentFellow();
+  //
+  // if (!hubCoordinator && !supervisor && !fellow) {
+  //   throw new Error("The session has not been authenticated");
+  // }
+  //
+  // return { hubCoordinator, supervisor, fellow, user };
 }
 
 export async function submitStudentDetails(
@@ -34,7 +35,7 @@ export async function submitStudentDetails(
 ) {
   // TODO: Add db transactions
   try {
-    const { hubCoordinator, supervisor } = await checkAuth();
+    const user = await checkAuth();
 
     const {
       id,
@@ -103,8 +104,7 @@ export async function submitStudentDetails(
           form: Number(form),
           stream,
           assignedGroupId,
-          implementerId:
-            hubCoordinator?.implementerId ?? supervisor?.implementerId,
+          implementerId: user.implementerId,
           fellowId: group.leader.id,
           supervisorId: group.leader.supervisor?.id,
         },
@@ -145,67 +145,54 @@ export async function markStudentAttendance(
     });
 
     if (student) {
-      const attendance = await db.studentAttendance.findFirst({
+      if (!student.assignedGroup) {
+        return {
+          success: false,
+          message: `${student.studentName} has not been assigned to a group.`,
+        };
+      }
+
+      await db.studentAttendance.upsert({
         where: {
-          studentId: id,
+          studentId_sessionId: {
+            studentId: student.id,
+            sessionId,
+          },
+        },
+        create: {
+          studentId: student.id,
+          schoolId: student.schoolId,
+          projectId: student.assignedGroup.projectId,
+          absenceReason,
+          comments,
           sessionId,
+          groupId: student.assignedGroup.id,
+          fellowId: student.assignedGroup.leaderId,
+          markedBy: auth.user.user.id,
+          attended:
+            attended === "attended"
+              ? true
+              : attended === "missed"
+                ? false
+                : null,
+        },
+        update: {
+          markedBy: auth.user.user.id,
+          studentId: student.id,
+          absenceReason,
+          comments,
+          attended:
+            attended === "attended"
+              ? true
+              : attended === "missed"
+                ? false
+                : null,
         },
       });
-
-      if (attendance) {
-        await db.studentAttendance.update({
-          where: {
-            id: attendance.id,
-          },
-          data: {
-            markedBy: auth.user!.user.id,
-            studentId: id,
-            absenceReason,
-            comments,
-            attended:
-              attended === "attended"
-                ? true
-                : attended === "missed"
-                  ? false
-                  : null,
-          },
-        });
-        return {
-          success: true,
-          message: `Successfully updated attendance for ${student.studentName}`,
-        };
-      } else {
-        if (student.assignedGroup) {
-          await db.studentAttendance.create({
-            data: {
-              studentId: id!,
-              schoolId: student.schoolId,
-              projectId: CURRENT_PROJECT_ID,
-              absenceReason,
-              comments,
-              sessionId,
-              groupId: student.assignedGroupId,
-              fellowId: student.assignedGroup.leaderId,
-              markedBy: auth.user!.user.id,
-              attended:
-                attended === "attended"
-                  ? true
-                  : attended === "missed"
-                    ? false
-                    : null,
-            },
-          });
-          return {
-            success: true,
-            message: `Successfully marked attendance for ${student.studentName}`,
-          };
-        } else {
-          return {
-            success: false,
-            message: `${student.studentName} has not been assigned to a group.`,
-          };
-        }
-      }
+      return {
+        success: true,
+        message: `Successfully marked attendance for ${student.studentName}`,
+      };
     } else {
       return {
         success: false,
@@ -217,7 +204,106 @@ export async function markStudentAttendance(
     return {
       success: false,
       message:
-        (err as Error)?.message ?? "Sorry, could not mark student attendance.",
+        (err as Error)?.message ??
+        "Sorry, an error occurred while marking student attendance.",
+    };
+  }
+}
+
+export async function markManyStudentsAttendance(
+  ids: string[],
+  data: z.infer<typeof MarkAttendanceSchema>,
+) {
+  try {
+    const auth = await checkAuth();
+    const { sessionId, absenceReason, attended, comments } =
+      MarkAttendanceSchema.parse(data);
+    const status =
+      attended === "attended" ? true : attended === "missed" ? false : null;
+
+    await db.$transaction(async (tx) => {
+      // Create new attendance records
+      const attendances = await tx.studentAttendance.findMany({
+        where: {
+          studentId: {
+            in: ids,
+          },
+          sessionId,
+        },
+        include: {
+          student: true,
+        },
+      });
+
+      const studentIds = ids.filter((id) => {
+        return !attendances.map((x) => x.studentId).includes(id);
+      });
+
+      const students = await tx.student.findMany({
+        where: {
+          id: {
+            in: studentIds,
+          },
+        },
+        include: {
+          assignedGroup: true,
+        },
+      });
+
+      let createRecords: Prisma.StudentAttendanceCreateManyInput[] = [];
+
+      students.forEach((student) => {
+        if (!student.assignedGroup) {
+          throw new Error(
+            `${student.studentName} has not been assigned to a group.`,
+          );
+        }
+
+        createRecords.push({
+          studentId: student.id,
+          schoolId: student.schoolId,
+          projectId: student.assignedGroup.projectId,
+          absenceReason,
+          comments,
+          sessionId,
+          groupId: student.assignedGroup.id,
+          fellowId: student.assignedGroup.leaderId,
+          markedBy: auth.user.user.id,
+          attended: status,
+        });
+      });
+
+      await tx.studentAttendance.createMany({
+        data: createRecords,
+      });
+
+      // Update existing attendances
+      await tx.studentAttendance.updateMany({
+        where: {
+          studentId: {
+            in: ids,
+          },
+          sessionId,
+        },
+        data: {
+          markedBy: auth.user.user.id,
+          absenceReason: status === null || status ? null : absenceReason,
+          comments: status === null || status ? null : comments,
+          attended: status,
+        },
+      });
+    });
+    return {
+      success: true,
+      message: `Successfully marked attendance for ${ids.length} students`,
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      success: false,
+      message:
+        (err as Error)?.message ??
+        "Sorry, an error occurred while marking student attendance.",
     };
   }
 }

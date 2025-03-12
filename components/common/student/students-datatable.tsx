@@ -1,5 +1,7 @@
 "use client";
 
+import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
+import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { AddReportingNote } from "#/components/common/student/add-reporting-note";
@@ -13,21 +15,21 @@ import StudentDetailsForm from "#/components/common/student/student-details-form
 import StudentDropoutForm from "#/components/common/student/student-dropout-form";
 import DataTable from "#/components/data-table";
 import { markStudentAttendance } from "#/lib/actions/student";
-import { Prisma } from "@prisma/client";
-import { use, useState } from "react";
+import { ImplementerRole } from "@prisma/client";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { z } from "zod";
 
 export default function StudentsDatatable({
-  data,
-  hubCoordinator,
+  students,
+  role,
+  fellowId,
 }: {
-  data: Promise<SchoolStudentTableData[]>;
-  hubCoordinator?: Prisma.HubCoordinatorGetPayload<{
-    include: {
-      assignedHub: true;
-    };
-  }> | null;
+  students: SchoolStudentTableData[];
+  role: ImplementerRole;
+  fellowId?: string;
 }) {
-  const students = use(data);
+  const pathname = usePathname();
   const [editDialog, setEditDialog] = useState<boolean>(false);
   const [markAttendanceDialog, setMarkAttendanceDialog] =
     useState<boolean>(false);
@@ -58,6 +60,14 @@ export default function StudentsDatatable({
     return <div></div>;
   };
 
+  const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
+    const [res] = await Promise.all([
+      await markStudentAttendance(data),
+      await revalidatePageAction(pathname),
+    ]);
+    return res;
+  };
+
   return (
     <div>
       <DataTable
@@ -70,6 +80,7 @@ export default function StudentsDatatable({
           setReportingNotesDialog,
           setGroupTransferHistory,
           setDropoutDialog,
+          role,
         })}
         emptyStateMessage="No students found"
         className="data-table data-table-action mt-4"
@@ -77,6 +88,7 @@ export default function StudentsDatatable({
         columnVisibilityState={{
           Gender: false,
           "Contact no.": false,
+          "Shamiri ID": false,
           "Admission number": false,
           Stream: false,
           "Class/Form": false,
@@ -101,7 +113,9 @@ export default function StudentsDatatable({
                   {student.studentName?.toLowerCase()}
                 </span>
                 <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
-                <span>{student.visibleId}</span>
+                <span>{student.admissionNumber}</span>
+                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+                <span>{student.assignedGroup?.groupName}</span>
               </div>
             </DialogAlertWidget>
           </StudentDetailsForm>
@@ -131,7 +145,7 @@ export default function StudentsDatatable({
             id={student.id}
             isOpen={markAttendanceDialog}
             setIsOpen={setMarkAttendanceDialog}
-            markAttendanceAction={markStudentAttendance}
+            markAttendanceAction={markAttendance}
           >
             <DialogAlertWidget>
               <div className="flex items-center gap-2">
@@ -139,17 +153,19 @@ export default function StudentsDatatable({
                 <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
                   {""}
                 </span>
-                <span>{student.assignedGroupId}</span>
+                <span>{student.assignedGroup?.groupName}</span>
               </div>
             </DialogAlertWidget>
           </MarkAttendance>
-          <AttendanceHistory
-            student={student}
-            open={attendanceHistoryDialog}
-            onOpenChange={setAttendanceHistoryDialog}
-            markAttendance={setMarkAttendanceDialog}
-            setSelectedSessionId={setSelectedSession}
-          />
+          {student && (
+            <AttendanceHistory
+              student={students.find((x) => x.id === student.id)!}
+              open={attendanceHistoryDialog}
+              onOpenChange={setAttendanceHistoryDialog}
+              markAttendance={setMarkAttendanceDialog}
+              setSelectedSessionId={setSelectedSession}
+            />
+          )}
           <AddReportingNote
             student={student}
             isOpen={reportingNotesDialog}

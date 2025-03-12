@@ -1,5 +1,6 @@
 "use server";
 
+import { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentUser } from "#/app/auth";
 
 import { db } from "#/lib/db";
@@ -39,24 +40,6 @@ export async function getClinicalCases() {
   return cases.map((caseInfo) => {
     const age = caseInfo.student?.age ? `${caseInfo.student.age} yrs` : "N/A";
 
-    // Parse emergency presenting issues from JSON
-    const emergencyIssues = caseInfo.emergencyPresentingIssues as Record<
-      string,
-      {
-        lowRisk: boolean;
-        moderateRisk: boolean;
-        highRisk: boolean;
-        severeRisk: boolean;
-      }
-    > | null;
-
-    const formattedEmergencyIssues = emergencyIssues
-      ? Object.entries(emergencyIssues).map(([issue, risks]) => ({
-          emergencyPresentingIssues: issue,
-          ...risks,
-        }))
-      : [];
-
     const formattedSessions = caseInfo.sessions.map((session) => ({
       sessionId: session.id,
       session: session.session,
@@ -77,11 +60,20 @@ export async function getClinicalCases() {
         caseInfo.initialReferredFromSpecified ||
         "Unknown",
       hubId: supervisor?.hubId,
-      emergencyPresentingIssues: formattedEmergencyIssues,
       flagged: caseInfo.flagged,
       flaggedReason: caseInfo.flaggedReason,
       sessionAttendanceHistory: formattedSessions,
-      generalPresentingIssues: [],
+      student: caseInfo.student,
+      emergencyPresentingIssuesBaseline:
+        caseInfo.emergencyPresentingIssuesBaseline,
+      generalPresentingIssuesBaseline: caseInfo.generalPresentingIssuesBaseline,
+      emergencyPresentingIssuesEndpoint:
+        caseInfo.emergencyPresentingIssuesEndpoint,
+      generalPresentingIssuesEndpoint: caseInfo.generalPresentingIssuesEndpoint,
+      generalPresentingIssuesOtherSpecifiedBaseline:
+        caseInfo.generalPresentingIssuesOtherSpecifiedBaseline,
+      generalPresentingIssuesOtherSpecifiedEndpoint:
+        caseInfo.generalPresentingIssuesOtherSpecifiedEndpoint,
     };
   });
 }
@@ -460,6 +452,147 @@ export async function createTreatmentPlan(data: TreatmentPlanData) {
   }
 }
 
+export async function updateStudentInfo(data: EditStudentInfoFormValues) {
+  try {
+    await db.$transaction(async (tx) => {
+      await tx.student.update({
+        where: {
+          id: data.studentId,
+        },
+        data: {
+          studentName: data.studentName,
+          gender: data.gender,
+          admissionNumber: data.admissionNumber,
+          form: parseInt(data.classForm),
+          stream: data.stream,
+        },
+      });
+
+      await tx.clinicalScreeningInfo.update({
+        where: {
+          id: data.caseId,
+        },
+        data: {
+          pseudonym: data.pseudonym,
+        },
+      });
+    });
+
+    return {
+      success: true,
+      message: "Student information updated successfully",
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "Failed to update student information",
+    };
+  }
+}
+
+export async function updateClinicalCaseGeneralPresentingIssue(data: {
+  caseId: string;
+  generalPresentingIssues: { [k: string]: string };
+  otherIssues: string;
+  caseStatus: string;
+}) {
+  try {
+    const updateData =
+      data.caseStatus === "Active"
+        ? {
+            generalPresentingIssuesBaseline: data.generalPresentingIssues,
+            generalPresentingIssuesOtherSpecifiedBaseline: data.otherIssues,
+          }
+        : {
+            generalPresentingIssuesEndpoint: data.generalPresentingIssues,
+            generalPresentingIssuesOtherSpecifiedEndpoint: data.otherIssues,
+          };
+
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: updateData,
+    });
+
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function updateClinicalCaseEmergencyPresentingIssue(data: {
+  caseId: string;
+  presentingIssues: { [k: string]: string };
+  caseStatus: string;
+}) {
+  try {
+    const updateData =
+      data.caseStatus === "Active"
+        ? {
+            emergencyPresentingIssuesBaseline: data.presentingIssues,
+          }
+        : {
+            emergencyPresentingIssuesEndpoint: data.presentingIssues,
+          };
+
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: updateData,
+    });
+
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+
+export async function createTreatmentPlan(data: TreatmentPlanData) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    await db.$transaction(async (tx) => {
+      const treatmentPlan = await tx.clinicalFollowUpTreatmentPlan.create({
+        data: {
+          caseId: data.caseId,
+          currentORSScore: data.currentOrsScore,
+          plannedSessions: data.plannedSessions,
+          sessionFrequency: data.sessionFrequency,
+          plannedTreatmentIntervention: data.treatmentInterventions,
+          plannedTreatmentInterventionExplanation: data.interventionExplanation,
+          otherTreatmentIntervention: data.otherIntervention,
+        },
+      });
+
+      await tx.clinicalFollowUpTreatmentPlanAuditTrail.create({
+        data: {
+          caseId: data.caseId,
+          action: "Create",
+          userId: currentUser.user.id,
+          afterData: treatmentPlan,
+        },
+      });
+    });
+
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
+
 export async function terminateClinicalCase(data: {
   caseId: string;
   terminationReason: string;
@@ -553,3 +686,4 @@ export async function createClinicalCaseNotes(data: {
     return { success: false };
   }
 }
+

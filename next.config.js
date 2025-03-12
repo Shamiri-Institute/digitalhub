@@ -3,6 +3,9 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
+  env: {
+    APP_ENV: process.env.APP_ENV,
+  },
   async redirects() {
     return [
       {
@@ -18,6 +21,11 @@ const nextConfig = {
       {
         source: "/fel",
         destination: "/fel/schedule",
+        permanent: false,
+      },
+      {
+        source: "/cl",
+        destination: "/cl/clinical",
         permanent: false,
       },
     ];

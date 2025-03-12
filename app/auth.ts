@@ -31,7 +31,7 @@ export async function currentHubCoordinator() {
     },
   });
 
-  return hubCoordinator;
+  return { ...hubCoordinator, user };
 }
 
 export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
@@ -137,6 +137,8 @@ export async function currentSupervisor() {
   return { ...supervisor, user, fellows: newFellowsData };
 }
 
+export type CurrentFellow = Awaited<ReturnType<typeof currentFellow>>;
+
 export async function currentFellow() {
   const user = await getCurrentUser();
   if (!user) {
@@ -166,6 +168,11 @@ export async function currentFellow() {
               interventionGroups: {
                 include: {
                   leader: true,
+                  students: {
+                    include: {
+                      studentAttendances: true,
+                    },
+                  },
                 },
               },
               students: {
@@ -228,6 +235,37 @@ export async function currentFellow() {
 
 export type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>;
 
+export type CurrentClinicalLead = Awaited<
+  ReturnType<typeof currentClinicalLead>
+>;
+
+export async function currentClinicalLead() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  const { membership } = user;
+
+  const { identifier } = membership;
+  if (!identifier) {
+    return null;
+  }
+
+  const clinicalLead = await db.clinicalLead.findFirst({
+    where: { id: identifier },
+    include: {
+      assignedHub: true,
+      clinicalScreeningCases: true,
+    },
+  });
+
+  if (!clinicalLead) {
+    return null;
+  }
+
+  return { ...clinicalLead, user };
+}
+
 export async function getCurrentUser() {
   const session = await getServerSession();
   if (!session) {
@@ -258,24 +296,32 @@ export async function getCurrentUser() {
 }
 
 export async function getCurrentPersonnel(): Promise<
-  CurrentSupervisor | CurrentHubCoordinator | null
+  | CurrentSupervisor
+  | CurrentHubCoordinator
+  | CurrentFellow
+  | CurrentClinicalLead
+  | null
 > {
   const user = await getCurrentUser();
   if (!user) {
     return null;
   }
-  const { personnelRole } = user;
+  const { role } = user.membership;
 
-  if (!personnelRole) {
-    return null;
-  }
-
-  if (personnelRole === "supervisor") {
+  if (role === "SUPERVISOR") {
     return await currentSupervisor();
   }
 
-  if (personnelRole === "hc") {
+  if (role === "HUB_COORDINATOR") {
     return await currentHubCoordinator();
+  }
+
+  if (role === "FELLOW") {
+    return await currentFellow();
+  }
+
+  if (role === "CLINICAL_LEAD") {
+    return await currentClinicalLead();
   }
 
   return null;

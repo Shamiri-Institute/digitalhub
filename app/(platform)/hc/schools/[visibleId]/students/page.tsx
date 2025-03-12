@@ -2,6 +2,7 @@ import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
 import { currentHubCoordinator } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
+import { signOut } from "next-auth/react";
 import { Suspense } from "react";
 
 export default async function StudentsPage({
@@ -9,9 +10,12 @@ export default async function StudentsPage({
 }: {
   params: { visibleId: string };
 }) {
-  const hubCoordinator = await currentHubCoordinator();
+  const hc = await currentHubCoordinator();
+  if (!hc) {
+    await signOut({ callbackUrl: "/login" });
+  }
 
-  const students = db.student.findMany({
+  const students = await db.student.findMany({
     where: {
       school: {
         visibleId,
@@ -36,7 +40,11 @@ export default async function StudentsPage({
       },
       school: {
         include: {
-          interventionSessions: true,
+          interventionSessions: {
+            include: {
+              session: true,
+            },
+          },
         },
       },
       studentGroupTransferTrail: {
@@ -53,7 +61,7 @@ export default async function StudentsPage({
 
   return (
     <Suspense fallback={<Loading />}>
-      <StudentsDatatable data={students} hubCoordinator={hubCoordinator} />
+      <StudentsDatatable students={students} role={hc?.user.membership.role!} />
     </Suspense>
   );
 }
