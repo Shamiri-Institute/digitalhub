@@ -14,7 +14,7 @@ export default async function Page() {
   type AllowedGender = (typeof allowedGenders)[number];
 
   const genderValue: AllowedGender = allowedGenders.includes(
-    fellow.gender as AllowedGender
+    fellow.gender as AllowedGender,
   )
     ? (fellow.gender as AllowedGender)
     : "Male";
