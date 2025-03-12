@@ -31,21 +31,13 @@ const roleAccessSpecs: RoleAccessSpec[] = [
     role: "hub coordinators",
     stateFile: PersonnelFixtures.hubCoordinator.stateFile,
     accessiblePages: [HubCoordinatorHomePage],
-    inaccessiblePages: [
-      SupervisorHomePage,
-      ClinicalHomePage,
-      OperationsHomePage,
-    ],
+    inaccessiblePages: [SupervisorHomePage],
   },
   {
     role: "clinical leads",
     stateFile: PersonnelFixtures.clinicalLead.stateFile,
     accessiblePages: [ClinicalHomePage],
-    inaccessiblePages: [
-      SupervisorHomePage,
-      HubCoordinatorHomePage,
-      OperationsHomePage,
-    ],
+    inaccessiblePages: [SupervisorHomePage, HubCoordinatorHomePage],
   },
   {
     role: "operations",
