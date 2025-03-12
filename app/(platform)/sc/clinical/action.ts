@@ -553,3 +553,105 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
     return { error: "Something went wrong" };
   }
 }
+
+export async function terminateClinicalCase(data: {
+  caseId: string;
+  terminationReason: string;
+  terminationReasonExplanation: string;
+  sessionId: string;
+}) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    if (currentUser.personnelRole !== "supervisor") {
+      throw new Error("You are not authorized to terminate this case");
+    }
+
+    await db.$transaction(async (tx) => {
+      await tx.clinicalScreeningInfo.update({
+        where: {
+          id: data.caseId,
+        },
+        data: {
+          caseStatus: "Terminated",
+        },
+      });
+
+      await tx.clinicalCaseTermination.create({
+        data: {
+          caseId: data.caseId,
+          terminationDate: new Date(),
+          terminationReason: data.terminationReason,
+          terminationReasonExplanation: data.terminationReasonExplanation,
+          sessionId: data.sessionId,
+          createdBy: currentUser.user.id,
+        },
+      });
+    });
+
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
+
+export async function createClinicalCaseNotes(data: {
+  caseId: string;
+  sessionId: string;
+  presentingIssues: string;
+  orsAssessment: number;
+  riskLevel: string;
+  necessaryConditions: string;
+  treatmentInterventions: string[];
+  otherIntervention: string;
+  interventionExplanation: string;
+  emotionalResponse: string;
+  behavioralResponse: string;
+  overallFeedback: string;
+  studentResponseExplanation: string;
+  followUpPlan: "GROUP" | "INDIVIDUAL";
+  followUpPlanExplanation: string;
+}) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    if (currentUser.personnelRole !== "supervisor") {
+      throw new Error("You are not authorized to create clinical case notes");
+    }
+
+    await db.clinicalCaseNotes.create({
+      data: {
+        caseId: data.caseId,
+        sessionId: data.sessionId,
+        createdBy: currentUser.user.id,
+        presentingIssues: data.presentingIssues,
+        orsAssessment: data.orsAssessment,
+        riskLevel: data.riskLevel,
+        necessaryConditions: data.necessaryConditions,
+        treatmentInterventions: data.treatmentInterventions,
+        otherIntervention: data.otherIntervention,
+        interventionExplanation: data.interventionExplanation,
+        emotionalResponse: data.emotionalResponse,
+        behavioralResponse: data.behavioralResponse,
+        overallFeedback: data.overallFeedback,
+        studentResponseExplanations: data.studentResponseExplanation,
+        followUpPlan: data.followUpPlan,
+        followUpPlanExplanation: data.followUpPlanExplanation,
+      },
+    });
+
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
