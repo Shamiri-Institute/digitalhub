@@ -1,5 +1,6 @@
 import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import CaseNotesForm from "#/app/(platform)/sc/clinical/components/case-notes-form";
+import CaseTerminationForm from "#/app/(platform)/sc/clinical/components/case-termination-form";
 import ClinicalCaseSessionsAttendanceHistory from "#/app/(platform)/sc/clinical/components/cases-sessions-attendance-history";
 import ConsultClinicalExpert from "#/app/(platform)/sc/clinical/components/consult-clinical-expert";
 import MarkCaseAsSpecial from "#/app/(platform)/sc/clinical/components/mark-case-as-special";
@@ -82,10 +83,22 @@ export default function ClinicalCaseActionsDropdownMenu({
           </div>
         </TreatmentPlanForm>
         <CaseNotesForm clinicalCase={clinicalCase}>
-          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-            Case reports
+          <div
+            className={cn(
+              "px-2 py-1.5 text-sm",
+              clinicalCase.caseStatus === "Terminated"
+                ? "pointer-events-none cursor-not-allowed text-gray-400"
+                : "cursor-pointer text-shamiri-black"
+            )}
+          >
+            Case notes
           </div>
         </CaseNotesForm>
+        <CaseTerminationForm clinicalCase={clinicalCase}>
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+            Terminate case
+          </div>
+        </CaseTerminationForm>
       </DropdownMenuContent>
     </DropdownMenu>
   );
