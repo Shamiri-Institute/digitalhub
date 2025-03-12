@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
+import { ClinicalCases, createClinicalCaseNotes } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -58,14 +58,6 @@ const behavioralResponses = [
 ] as const;
 const overallFeedback = ["Positive", "Negative", "Neutral"] as const;
 
-const terminationReasons = [
-  "Student no-show",
-  "Student refused to return to sessions",
-  "Student absence (suspension, expulsion, fees issue etc)",
-  "Mutual termination after outcome achievement",
-  "Mutual termination after referral",
-] as const;
-
 const sessions = [
   "Session 1 - Initial Assessment",
   "Session 2 - Treatment Planning",
@@ -99,12 +91,10 @@ const CaseReportSchema = z.object({
   overallFeedback: z.enum(overallFeedback, {
     required_error: "Overall feedback is required",
   }),
+  studentResponseExplanation: stringValidation("Student response explanation is required"),
   followUpPlan: z.object({
     isGroupSession: z.boolean(),
     explanation: stringValidation("Follow-up plan explanation is required"),
-  }),
-  terminationReason: z.enum(terminationReasons, {
-    required_error: "Termination reason is required",
   }),
 });
 
@@ -134,18 +124,34 @@ export default function CaseNotesForm({
       emotionalResponse: "Positive",
       behavioralResponse: "Commitment to Change",
       overallFeedback: "Positive",
+      studentResponseExplanation: "",
       followUpPlan: {
         isGroupSession: false,
         explanation: "",
       },
-      terminationReason: "Student no-show",
       sessionId: "",
     },
   });
 
   const onSubmit = async (data: CaseReportFormValues) => {
     try {
-      const response = { success: true };
+      const response = await createClinicalCaseNotes({
+        caseId: clinicalCase.id,
+        sessionId: data.sessionId,
+        followUpPlanExplanation: data.followUpPlan.explanation,
+        followUpPlan: data.followUpPlan.isGroupSession ? "GROUP" : "INDIVIDUAL",
+        orsAssessment: parseInt(data.orsAssessment),
+        interventionExplanation: data.interventionExplanation,
+        emotionalResponse: data.emotionalResponse,
+        behavioralResponse: data.behavioralResponse,
+        overallFeedback: data.overallFeedback,
+        studentResponseExplanation: data.studentResponseExplanation,
+        presentingIssues: data.presentingIssues,
+        riskLevel: data.riskLevel,
+        necessaryConditions: data.necessaryConditions || "",
+        treatmentInterventions: data.treatmentInterventions,
+        otherIntervention: data.otherIntervention || "",
+      });
       if (response.success) {
         toast({
           title: "Case report updated successfully",
@@ -167,6 +173,7 @@ export default function CaseNotesForm({
   };
 
   const watchRiskLevel = form.watch("riskLevel");
+
   useEffect(() => {
     setShowNecessaryConditions(watchRiskLevel !== "no");
   }, [watchRiskLevel]);
@@ -179,7 +186,6 @@ export default function CaseNotesForm({
           <h2>Case Notes</h2>
         </DialogHeader>
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
-        {JSON.stringify(clinicalCase)}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -514,6 +520,23 @@ export default function CaseNotesForm({
               </div>
             </div>
 
+            <FormField
+              control={form.control}
+              name="studentResponseExplanation"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Student Response Explanation
+                    <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea {...field} rows={4} placeholder="Explain the student's response to the session..." />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="space-y-4">
               <FormField
                 control={form.control}
@@ -579,37 +602,6 @@ export default function CaseNotesForm({
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="terminationReason"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Termination Reason
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select termination reason" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {terminationReasons.map((reason) => (
-                        <SelectItem key={reason} value={reason}>
-                          {reason}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <div className="flex justify-end space-x-4">
               <Button
