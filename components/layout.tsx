@@ -55,7 +55,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   if (
     pathname.startsWith("/hc/") ||
     pathname.startsWith("/sc/") ||
-    pathname.startsWith("/fel/")
+    pathname.startsWith("/fel/") ||
+    pathname.startsWith("/cl/")
   ) {
     return (
       <LayoutV2
@@ -295,10 +296,10 @@ function LayoutV2({
             {mainRoute === "fel" && (
               <div className={`tab-link ${cn(studentsActive && "active")}`}>
                 <PeopleIconAlternate />
-                <Link href={`/${mainRoute}/fellow-portal`}>Fellow portal</Link>
+                <Link href={`/${mainRoute}/portal`}>Fellow portal</Link>
               </div>
             )}
-            {mainRoute === "sc" && (
+            {(mainRoute === "sc" || mainRoute === "cl") && (
               <div className={`tab-link ${cn(clinicalActive && "active")}`}>
                 <PeopleIcon />
                 <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
