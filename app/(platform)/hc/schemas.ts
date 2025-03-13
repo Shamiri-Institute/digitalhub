@@ -231,7 +231,6 @@ export const EditSchoolSchema = z.object({
     })
     .nullable()
     .superRefine((val, ctx) => {
-      console.log(val);
       if (val !== null) {
         val.split("/").forEach((phone: string) => {
           if (!isValidPhoneNumber(phone, "KE") && phone !== " ") {

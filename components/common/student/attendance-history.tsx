@@ -1,6 +1,5 @@
 "use client";
 
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { SchoolStudentTableData } from "#/components/common/student/columns";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -31,12 +30,14 @@ export default function AttendanceHistory({
   student,
   markAttendance,
   setSelectedSessionId,
+  children,
 }: {
   student: SchoolStudentTableData;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   markAttendance: Dispatch<SetStateAction<boolean>>;
   setSelectedSessionId: Dispatch<SetStateAction<string | undefined>>;
+  children: React.ReactNode;
 }) {
   useEffect(() => {
     if (!open) {
@@ -46,34 +47,24 @@ export default function AttendanceHistory({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-3/5 max-w-none">
+      <DialogContent className="lg:w-3/5 lg:max-w-none">
         <DialogHeader>
           <h2 className="text-xl font-bold">
             Student session attendance history
           </h2>
         </DialogHeader>
-        <DialogAlertWidget>
-          <div className="flex items-center gap-2">
-            <span>{student.studentName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
-            <span>{student.school?.schoolName}</span>
-          </div>
-        </DialogAlertWidget>
-        <div>
-          <DataTable
-            columns={columns(
-              markAttendance,
-              setSelectedSessionId,
-              student.school?.interventionSessions ?? [],
-            )}
-            editColumns={false}
-            data={student.studentAttendances ?? []}
-            emptyStateMessage={"No attendance records found"}
-            className="data-table mt-4"
-          />
-        </div>
+        {children}
+        <DataTable
+          columns={columns(
+            markAttendance,
+            setSelectedSessionId,
+            student.school?.interventionSessions ?? [],
+          )}
+          editColumns={false}
+          data={student.studentAttendances ?? []}
+          emptyStateMessage={"No attendance records found"}
+          className="data-table lg:mt-4"
+        />
         <DialogFooter className="flex justify-end gap-2">
           <Button
             variant="brand"

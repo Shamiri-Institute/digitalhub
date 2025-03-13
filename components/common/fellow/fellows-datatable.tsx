@@ -81,7 +81,7 @@ export default function FellowsDatatable({
           role,
         })}
         data={fellows}
-        className={"data-table data-table-action mt-4"}
+        className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage="No fellows associated with this school"
         renderTableActions={!hideActions && renderTableActions()}
       />
