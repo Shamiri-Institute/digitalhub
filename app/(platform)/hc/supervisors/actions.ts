@@ -145,7 +145,6 @@ export async function submitSupervisorComplaint(
     }
 
     const parsedData = SubmitComplaintSchema.parse(data);
-    console.log(parsedData);
     const result = await db.supervisorComplaints.create({
       data: {
         supervisorId: parsedData.supervisorId,

@@ -48,7 +48,9 @@ export default function SchoolsBreadcrumb({ role }: { role: ImplementerRole }) {
                 ? `/hc/schools`
                 : role === "SUPERVISOR"
                   ? `/sc/schools`
-                  : "#"
+                  : role === "FELLOW"
+                    ? `/fel/schools`
+                    : "#"
             }
             className="hover:text-shamiri-new-blue"
           >
@@ -62,7 +64,7 @@ export default function SchoolsBreadcrumb({ role }: { role: ImplementerRole }) {
             <Icons.hourglass className="h-3.5 w-3.5 animate-bounce text-shamiri-new-blue" />
           )}
         </div>
-        <div className="flex">
+        <div className="hidden lg:flex">
           <div
             className={cn(
               "arrow-button rounded-l-lg",

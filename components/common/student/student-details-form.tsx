@@ -309,7 +309,7 @@ export default function StudentDetailsForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            School admission number{" "}
+                            Admission number{" "}
                             <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
@@ -390,7 +390,7 @@ export default function StudentDetailsForm({
         </DialogContent>
       </Dialog>
       <Dialog open={transferDialog} onOpenChange={setTransferDialog}>
-        <DialogContent className="w-3/5 max-w-none">
+        <DialogContent className="lg:w-3/5 lg:max-w-none">
           <DialogHeader>
             <h2 className="text-xl font-bold">Confirm transfer student</h2>
           </DialogHeader>
@@ -430,25 +430,33 @@ export default function StudentDetailsForm({
                 <label
                   key={student.id}
                   htmlFor={student.id}
-                  className="flex items-center space-x-3 rounded-lg border bg-background-secondary px-4 py-3"
+                  className="flex space-x-3 rounded-lg border bg-background-secondary px-4 py-3 lg:items-center"
                 >
                   <RadioGroupItem
                     value={index.toString()}
                     id={student.id}
                     className="h-5 w-5 rounded border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue data-[state=checked]:text-white"
                   />
-                  <span className="capitalize">
-                    {student.studentName?.toLowerCase()}
-                  </span>
-                  <span className="h-1 w-1 rounded-full bg-gray-900">{""}</span>
-                  <span>Admission no. {student.admissionNumber}</span>
-                  <span className="h-1 w-1 rounded-full bg-gray-900">{""}</span>
-                  <div className="flex gap-1">
-                    <span>Form {student.form}</span>
-                    <span>{student.stream}</span>
+                  <div className="flex flex-col gap-0 lg:flex-row lg:items-center">
+                    <span className="capitalize">
+                      {student.studentName?.toLowerCase()}
+                    </span>
+                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">
+                      {""}
+                    </span>
+                    <span>Admission no. {student.admissionNumber}</span>
+                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">
+                      {""}
+                    </span>
+                    <div className="flex gap-1">
+                      <span>Form {student.form}</span>
+                      <span>{student.stream}</span>
+                    </div>
+                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">
+                      {""}
+                    </span>
+                    <span>Group {student.assignedGroup?.groupName}</span>
                   </div>
-                  <span className="h-1 w-1 rounded-full bg-gray-900">{""}</span>
-                  <span>Group {student.assignedGroup?.groupName}</span>
                 </label>
               );
             })}

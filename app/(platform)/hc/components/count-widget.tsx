@@ -12,7 +12,7 @@ export default function CountWidget({
         return (
           <div
             key={stat.title}
-            className="flex w-28 flex-col items-center justify-center py-2"
+            className="flex flex-col items-center justify-center px-4 py-2"
           >
             <div className="text-sm text-gray-500">{stat.title}</div>
             <div className="text-xl text-black">{stat.count}</div>

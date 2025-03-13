@@ -70,7 +70,7 @@ export default function SchoolsDatatable({ role }: { role: ImplementerRole }) {
       data={context.schools}
       columns={columns({ role })}
       emptyStateMessage="No schools found for this hub"
-      className="data-table mt-4 bg-white"
+      className="data-table bg-white lg:mt-4"
       columnVisibilityState={{
         "School ID": false,
         "Sub - county": false,

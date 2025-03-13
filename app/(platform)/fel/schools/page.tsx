@@ -17,7 +17,7 @@ export default async function SchoolsPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="container w-full grow space-y-3 py-10">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <PageHeading title="Schools" />
           <CountWidget
             stats={[

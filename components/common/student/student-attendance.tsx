@@ -154,7 +154,7 @@ export default function StudentAttendance({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
-      <DialogContent className="w-3/4 max-w-none">
+      <DialogContent className="lg:w-3/4 lg:max-w-none">
         <DialogHeader>
           <span className="text-xl font-bold">
             {role === "HUB_COORDINATOR"
@@ -243,7 +243,7 @@ export default function StudentAttendance({
             Age: false,
           }}
           emptyStateMessage={"No students associated to this group"}
-          className="data-table data-table-action mt-4"
+          className="data-table data-table-action lg:mt-4"
           renderTableActions={renderTableActions()}
           onRowSelectionChange={setSelectedRows}
         />
