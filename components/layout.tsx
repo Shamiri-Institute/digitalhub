@@ -14,6 +14,7 @@ import {
   PopoverTrigger,
 } from "#/components/ui/popover";
 import { APP_ENV, constants } from "#/lib/constants";
+import { Menu } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -27,14 +28,18 @@ import {
   NotificationIcon,
   PeopleIcon,
   PeopleIconAlternate,
+  RoleIcon,
   SchoolIcon,
   SignOutIcon,
 } from "./ui/layout-icons";
 
+import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
@@ -118,72 +123,147 @@ function LayoutV2({
     setPopoverOpen(false);
   }, [pathname]);
 
+  const renderNavigationLinks = (className?: string) => {
+    return (
+      <div className={className}>
+        <div className="nav-link">
+          <PersonnelToolPopover>
+            <div className="flex items-center gap-2">
+              <RoleIcon fill="#0085FF" />
+              <div className="text-shamiri-new-blue">Switch Role</div>
+            </div>
+          </PersonnelToolPopover>
+        </div>
+        <div className="nav-link">
+          <FeedbackIcon />
+          <Link href="#">Feedback</Link>
+        </div>
+        <div className="nav-link">
+          <HelpIcon />
+          <Link href="#">Help</Link>
+        </div>
+        <div className="nav-link hidden lg:flex">
+          <NotificationIcon />
+          {/*TODO: notification counter */}
+        </div>
+        <div className="nav-link hidden w-full lg:flex lg:w-auto">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex w-full items-center justify-between space-x-2">
+                <div className="flex items-center space-x-2">
+                  <Avatar className="h-8 w-8">
+                    {avatarUrl ? (
+                      <AvatarImage src={avatarUrl} width={32} height={32} />
+                    ) : null}
+                    <AvatarFallback>{getInitials(userName)}</AvatarFallback>
+                  </Avatar>
+                  <p>{userName}</p>
+                </div>
+                <Image
+                  unoptimized
+                  priority
+                  src={ArrowDropdown}
+                  alt="Profile/Setting arrow drop down icon"
+                />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-40 max-w-none divide-y">
+              <DropdownMenuItem
+                className="flex items-center gap-2"
+                onClick={() => {
+                  router.push(`/${mainRoute}/profile`);
+                }}
+              >
+                <PeopleIcon fill="#969696" />
+                <span>My Profile</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                className="flex items-center gap-2"
+                onClick={() => signOut({ callbackUrl: "/login" })}
+              >
+                <SignOutIcon fill="#969696" />
+                <p>Sign out</p>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div
+          className="nav-link lg:hidden"
+          onClick={() => {
+            router.push(`/${mainRoute}/profile`);
+          }}
+        >
+          <PeopleIcon fill="#969696" />
+          <span>My profile</span>
+        </div>
+
+        <div
+          className="nav-link lg:hidden"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+        >
+          <SignOutIcon fill="#969696" />
+          <p>Sign out</p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b bg-background-secondary">
-        <div className="container space-y-4 pt-2">
-          <div className="flex items-center justify-between">
-            <div className="px-3">
+        <div className="container space-y-4 px-4 pt-2 lg:px-8">
+          <div className="flex flex-col items-center justify-between lg:flex-row">
+            <div className="flex w-full flex-row items-center justify-between px-3 py-2 lg:py-0">
               <Link href="#" className="text-2xl text-shamiri-new-blue">
                 Shamiri Hub
               </Link>
-            </div>
-            <div className="flex items-center gap-8 py-2">
-              <PersonnelToolPopover>
-                <div className="text-shamiri-new-blue">Switch Role</div>
-              </PersonnelToolPopover>
-              <div className="nav-link">
-                <FeedbackIcon />
-                <Link href="#">Feedback</Link>
-              </div>
-              <div className="nav-link">
-                <HelpIcon />
-                <Link href="#">Help</Link>
-              </div>
-              <div className="nav-link">
-                <NotificationIcon />
-                {/*TODO: notification counter */}
-              </div>
-              <div className="nav-link">
+              <div className="relative lg:hidden">
                 <DropdownMenu>
-                  <DropdownMenuTrigger>
-                    <div className="flex items-center space-x-2">
-                      <Avatar className="h-8 w-8">
-                        {avatarUrl ? (
-                          <AvatarImage src={avatarUrl} width={32} height={32} />
-                        ) : null}
-                        <AvatarFallback>{getInitials(userName)}</AvatarFallback>
-                      </Avatar>
-                      <p>{userName}</p>
-                      <Image
-                        unoptimized
-                        priority
-                        src={ArrowDropdown}
-                        alt="Profile/Setting arrow drop down icon"
-                      />
-                    </div>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      aria-label="Toggle navigation"
+                      className="bg-white"
+                    >
+                      <Menu className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-40 max-w-none divide-y">
-                    <DropdownMenuItem
-                      className="flex items-center gap-2"
-                      onClick={() => {
-                        router.push(`/${mainRoute}/profile`);
-                      }}
-                    >
-                      <PeopleIcon fill="#969696" />
-                      <span>My Profile</span>
-                    </DropdownMenuItem>
-
-                    <DropdownMenuItem
-                      className="flex items-center gap-2"
-                      onClick={() => signOut({ callbackUrl: "/login" })}
-                    >
-                      <SignOutIcon fill="#969696" />
-                      <p>Sign out</p>
-                    </DropdownMenuItem>
+                  <DropdownMenuContent align="end" className="w-[80vw]">
+                    <DropdownMenuLabel>
+                      <div className="flex justify-between px-2">
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-8 w-8">
+                            {avatarUrl ? (
+                              <AvatarImage
+                                src={avatarUrl}
+                                width={32}
+                                height={32}
+                              />
+                            ) : null}
+                            <AvatarFallback>
+                              {getInitials(userName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <p className="text-base text-muted-foreground">
+                            {userName}
+                          </p>
+                        </div>
+                        <div className="nav-link">
+                          <NotificationIcon />
+                          {/*TODO: notification counter */}
+                        </div>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {renderNavigationLinks("flex flex-col py-2")}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
+            </div>
+            <div className="hidden shrink-0 py-2 lg:flex">
+              {renderNavigationLinks("flex flex-row items-center gap-8")}
             </div>
           </div>
           <div className="no-scrollbar flex items-center gap-8 overflow-x-auto px-2">
@@ -236,7 +316,7 @@ function LayoutV2({
           </div>
         </div>
       </header>
-      <main className="flex grow items-stretch bg-background-secondary">
+      <main className="flex grow items-stretch overflow-x-hidden bg-background-secondary">
         {children}
       </main>
     </div>
@@ -251,7 +331,7 @@ function PersonnelToolPopover({ children }: { children: React.ReactNode }) {
   return (
     <Popover>
       <PopoverTrigger>{children}</PopoverTrigger>
-      <PopoverContent className="-m-px p-0 shadow-none">
+      <PopoverContent className="-m-px p-0 shadow-none" align="start">
         <PersonnelTool />
       </PopoverContent>
     </Popover>

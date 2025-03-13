@@ -118,188 +118,212 @@ export function ListView({
   ]);
 
   return (
-    <table
-      className={cn(
-        "z-10 mt-10 table-auto bg-white",
-        sessionGroups.length != 0
-          ? "schedule-table padded rounded-t-[0.4375rem]"
-          : null,
-      )}
-    >
-      {sessionGroups.length == 0 ? (
-        <tbody>
-          <tr>
-            <td colSpan={3}>
-              <div className="px-4 py-3 opacity-80">
-                No sessions within this period.
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      ) : null}
-      {sessionGroups.map((groupDate) => {
-        return (
-          <tbody key={groupDate}>
-            <tr className="bg-background-secondary">
-              <td
-                className={cn(
-                  groupDate === today
-                    ? "border-b !border-b-shamiri-new-blue"
-                    : "",
-                )}
-                colSpan={3}
-              >
-                <div
-                  className={cn(
-                    "flex items-center gap-2 text-lg",
-                    groupDate === today ? "text-shamiri-new-blue" : "",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-full p-2",
-                      groupDate === today
-                        ? "bg-shamiri-new-blue text-white"
-                        : "bg-transparent",
-                    )}
-                  >
-                    <span>{format(new Date(groupDate), "dd")}</span>
-                  </div>
-                  <span className={cn(groupDate !== today ? "opacity-50" : "")}>
-                    {format(new Date(groupDate), "EEEE")}
-                  </span>
-                  <span className={cn(groupDate !== today ? "opacity-50" : "")}>
-                    {format(new Date(groupDate), "LLLL")}
-                  </span>
-                </div>
-              </td>
-            </tr>
-            {sessions.filter((session) => {
-              return format(session.sessionDate, "yyyy-MM-dd") === groupDate;
-            }).length === 0 ? (
+    <div className="relative">
+      <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden"></div>
+      <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
+        <table
+          className={cn(
+            "z-10 table-auto bg-white",
+            sessionGroups.length != 0
+              ? "schedule-table padded rounded-t-[0.4375rem]"
+              : null,
+          )}
+        >
+          {sessionGroups.length == 0 ? (
+            <tbody>
               <tr>
-                <td colSpan={3} className="action-cell">
-                  <span className="opacity-50">No sessions today.</span>
+                <td colSpan={3}>
+                  <div className="px-4 py-3 opacity-80">
+                    No sessions within this period.
+                  </div>
                 </td>
               </tr>
-            ) : null}
-            {sessions
-              .filter((session) => {
-                return format(session.sessionDate, "yyyy-MM-dd") === groupDate;
-              })
-              .map((session) => {
-                const time = `${format(session.sessionDate, "h:mm")} - ${format(
-                  session.sessionEndTime ?? addHours(session.sessionDate, 1.5),
-                  "h:mm a",
-                )}`;
-                const completed = session.occurred;
-                const cancelled = session.status === SessionStatus.Cancelled;
-
-                return (
-                  <tr key={session.id}>
-                    <td className="action-cell">
-                      <div className="flex items-center justify-center">
-                        <Checkbox
-                          checked={undefined}
-                          onCheckedChange={() => {}}
-                          aria-label="Select row"
-                          className={
-                            "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-                          }
-                        />
-                      </div>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-5">
-                        <span className="opacity-70">{time}</span>
-                        <span className="">
-                          {sessionDisplayName(session.sessionType!)}
-                        </span>
-                        <span className="opacity-50">
-                          {session.school?.schoolName}
-                        </span>
-                        <div
-                          className={cn(
-                            "select-none rounded-[0.25rem] border px-1.5 py-0.5",
-                            {
-                              "border-green-border": completed,
-                              "border-blue-border": !completed,
-                              "border-red-border": cancelled,
-                            },
-                            {
-                              "bg-green-bg": completed,
-                              "bg-blue-bg": !completed,
-                              "bg-red-bg": cancelled,
-                            },
-                          )}
-                        >
-                          <div
-                            className={cn("text-[0.825rem] font-semibold", {
-                              "text-green-base": completed,
-                              "text-blue-base": !completed,
-                              "text-red-base": cancelled,
-                            })}
-                          >
-                            <div className="flex items-center gap-1">
-                              {completed && !cancelled && (
-                                <div className="flex items-center gap-1">
-                                  <Icons.checkCircle
-                                    className="h-3.5 w-3.5"
-                                    strokeWidth={2.5}
-                                  />
-                                  <span>Attended</span>
-                                </div>
-                              )}
-                              {!completed && !cancelled && (
-                                <div className="flex items-center gap-1">
-                                  <Icons.helpCircle
-                                    className="h-3.5 w-3.5"
-                                    strokeWidth={2.5}
-                                  />
-                                  <span>Not marked</span>
-                                </div>
-                              )}
-                              {cancelled && (
-                                <div className="flex items-center gap-1">
-                                  <Icons.crossCircleFilled
-                                    className="h-3.5 w-3.5"
-                                    strokeWidth={2.5}
-                                  />
-                                  <span>Cancelled</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="action-cell relative cursor-pointer">
-                      <SessionDropDown
-                        state={{
-                          session,
-                          setSession: dialogState.setSession,
-                          setFellowAttendanceDialog:
-                            dialogState.setFellowAttendanceDialog,
-                          setStudentAttendanceDialog:
-                            dialogState.setStudentAttendanceDialog,
-                          setRatingsDialog: dialogState.setRatingsDialog,
-                        }}
-                        role={role}
-                        fellowId={fellowId}
+            </tbody>
+          ) : null}
+          {sessionGroups.map((groupDate) => {
+            return (
+              <tbody key={groupDate}>
+                <tr className="bg-background-secondary">
+                  <td
+                    className={cn(
+                      "!h-auto",
+                      groupDate === today
+                        ? "border-b !border-b-shamiri-new-blue"
+                        : "",
+                    )}
+                    colSpan={3}
+                  >
+                    <div
+                      className={cn(
+                        "flex items-center gap-2 text-lg",
+                        groupDate === today ? "text-shamiri-new-blue" : "",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "flex h-8 w-8 items-center justify-center rounded-full p-2",
+                          groupDate === today
+                            ? "bg-shamiri-new-blue text-white"
+                            : "bg-transparent",
+                        )}
                       >
-                        <div className="absolute inset-0 bg-white">
-                          <div className="flex h-full w-full items-center justify-center">
-                            <Icons.moreHorizontal className="h-5 w-5" />
-                          </div>
-                        </div>
-                      </SessionDropDown>
+                        <span>{format(new Date(groupDate), "dd")}</span>
+                      </div>
+                      <span
+                        className={cn(groupDate !== today ? "opacity-50" : "")}
+                      >
+                        {format(new Date(groupDate), "EEEE")}
+                      </span>
+                      <span
+                        className={cn(groupDate !== today ? "opacity-50" : "")}
+                      >
+                        {format(new Date(groupDate), "LLLL")}
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+                {sessions.filter((session) => {
+                  return (
+                    format(session.sessionDate, "yyyy-MM-dd") === groupDate
+                  );
+                }).length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="action-cell">
+                      <span className="opacity-50">No sessions today.</span>
                     </td>
                   </tr>
-                );
-              })}
-          </tbody>
-        );
-      })}
-    </table>
+                ) : null}
+                {sessions
+                  .filter((session) => {
+                    return (
+                      format(session.sessionDate, "yyyy-MM-dd") === groupDate
+                    );
+                  })
+                  .map((session) => {
+                    const time = `${format(session.sessionDate, "h:mm")} - ${format(
+                      session.sessionEndTime ??
+                        addHours(session.sessionDate, 1.5),
+                      "h:mm a",
+                    )}`;
+                    const completed = session.occurred;
+                    const cancelled =
+                      session.status === SessionStatus.Cancelled;
+
+                    return (
+                      <tr key={session.id}>
+                        <td className="action-cell !h-auto">
+                          <div className="flex items-center justify-center">
+                            <Checkbox
+                              checked={undefined}
+                              onCheckedChange={() => {}}
+                              aria-label="Select row"
+                              className={
+                                "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
+                              }
+                            />
+                          </div>
+                        </td>
+                        <td className="!h-auto">
+                          <div className="flex items-center gap-5">
+                            <span className="whitespace-nowrap opacity-70">
+                              {time}
+                            </span>
+                            <span className="">
+                              {sessionDisplayName(session.sessionType!)}
+                            </span>
+                            <span className="whitespace-nowrap opacity-50">
+                              {session.school?.schoolName}
+                            </span>
+                            <div
+                              className={cn(
+                                "shrink-0 select-none rounded-[0.25rem] border px-1.5 py-0.5",
+                                {
+                                  "border-green-border": completed,
+                                  "border-blue-border": !completed,
+                                  "border-red-border": cancelled,
+                                },
+                                {
+                                  "bg-green-bg": completed,
+                                  "bg-blue-bg": !completed,
+                                  "bg-red-bg": cancelled,
+                                },
+                              )}
+                            >
+                              <div
+                                className={cn("text-[0.825rem] font-semibold", {
+                                  "text-green-base": completed,
+                                  "text-blue-base": !completed,
+                                  "text-red-base": cancelled,
+                                })}
+                              >
+                                <div className="flex items-center gap-1">
+                                  {completed && !cancelled && (
+                                    <div className="flex items-center gap-1">
+                                      <Icons.checkCircle
+                                        className="h-3.5 w-3.5"
+                                        strokeWidth={2.5}
+                                      />
+                                      <span className="hidden lg:block">
+                                        Attended
+                                      </span>
+                                    </div>
+                                  )}
+                                  {!completed && !cancelled && (
+                                    <div className="flex items-center gap-1">
+                                      <Icons.helpCircle
+                                        className="h-3.5 w-3.5"
+                                        strokeWidth={2.5}
+                                      />
+                                      <span className="hidden lg:block">
+                                        Not marked
+                                      </span>
+                                    </div>
+                                  )}
+                                  {cancelled && (
+                                    <div className="flex items-center gap-1">
+                                      <Icons.crossCircleFilled
+                                        className="h-3.5 w-3.5"
+                                        strokeWidth={2.5}
+                                      />
+                                      <span className="hidden lg:block">
+                                        Cancelled
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="action-cell relative !h-auto cursor-pointer">
+                          <SessionDropDown
+                            state={{
+                              session,
+                              setSession: dialogState.setSession,
+                              setFellowAttendanceDialog:
+                                dialogState.setFellowAttendanceDialog,
+                              setStudentAttendanceDialog:
+                                dialogState.setStudentAttendanceDialog,
+                              setRatingsDialog: dialogState.setRatingsDialog,
+                            }}
+                            role={role}
+                            fellowId={fellowId}
+                          >
+                            <div className="absolute inset-0 bg-white">
+                              <div className="flex h-full w-full items-center justify-center">
+                                <Icons.moreHorizontal className="h-5 w-5" />
+                              </div>
+                            </div>
+                          </SessionDropDown>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            );
+          })}
+        </table>
+      </div>
+    </div>
   );
 }

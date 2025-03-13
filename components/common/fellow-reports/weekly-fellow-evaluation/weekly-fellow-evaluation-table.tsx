@@ -13,7 +13,7 @@ export default function WeeklyFellowEvaluationTable({
       <DataTable
         data={weeklyFellowEvaluation}
         columns={columns}
-        className="data-table data-table-action mt-4 bg-white"
+        className="data-table data-table-action bg-white lg:mt-4"
         emptyStateMessage="No fellow evaluation data found"
         renderSubComponent={({ row }) => (
           <DataTable

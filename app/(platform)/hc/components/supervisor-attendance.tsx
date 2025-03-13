@@ -205,7 +205,7 @@ export function SupervisorAttendanceDataTable({
         }
         data={data}
         editColumns={false}
-        className={"data-table data-table-action mt-4"}
+        className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage={emptyStateMessage}
         onRowSelectionChange={setSelectedRows}
         enableRowSelection={(row: Row<SupervisorAttendanceTableData>) =>

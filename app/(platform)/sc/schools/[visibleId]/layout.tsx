@@ -37,7 +37,11 @@ export default async function SchoolViewLayout({
           },
         },
       },
-      interventionSessions: true,
+      interventionSessions: {
+        include: {
+          session: true,
+        },
+      },
       schoolDropoutHistory: {
         include: {
           user: true,
@@ -58,7 +62,11 @@ export default async function SchoolViewLayout({
           },
         },
       },
-      hub: true,
+      hub: {
+        include: {
+          sessions: true,
+        },
+      },
     },
   });
   const supervisor = await currentSupervisor();

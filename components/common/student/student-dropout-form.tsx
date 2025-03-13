@@ -1,6 +1,5 @@
 import { DropoutStudentSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
@@ -41,10 +40,12 @@ export default function StudentDropoutForm({
   student,
   isOpen,
   setIsOpen,
+  children,
 }: {
   student: SchoolStudentTableData;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
+  children: React.ReactNode;
 }) {
   const [loading, setLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(false);
@@ -101,17 +102,6 @@ export default function StudentDropoutForm({
     }
   };
 
-  function renderAlertWidget() {
-    return (
-      <DialogAlertWidget separator={student.droppedOut ?? undefined}>
-        <div className="flex items-center gap-2">
-          <span>{student.studentName}</span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
-          <span>{student.visibleId}</span>
-        </div>
-      </DialogAlertWidget>
-    );
-  }
   return (
     <Form {...form}>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -123,7 +113,7 @@ export default function StudentDropoutForm({
               <h2 className="text-lg font-bold">Drop out student</h2>
             )}
           </DialogHeader>
-          {renderAlertWidget()}
+          {children}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             {!student.droppedOut && (
               <FormField
@@ -154,7 +144,7 @@ export default function StudentDropoutForm({
                 )}
               />
             )}
-            <Separator />
+            {!student.droppedOut && <Separator />}
             <DialogFooter className="flex justify-end">
               <Button
                 className={cn(
@@ -192,7 +182,7 @@ export default function StudentDropoutForm({
           <DialogHeader>
             <h2 className="text-lg font-bold">Confirm drop out</h2>
           </DialogHeader>
-          {renderAlertWidget()}
+          {children}
           <div className="space-y-4">
             <h3>Are you sure?</h3>
             <Alert variant="destructive">

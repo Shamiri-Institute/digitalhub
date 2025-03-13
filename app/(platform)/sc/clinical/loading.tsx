@@ -63,7 +63,7 @@ export default function ClinicalTableSkeleton() {
         key="skeleton-clinical-cases-table"
         columns={loadingColumns}
         data={Array.from(Array(10).keys()).map(() => ({}))}
-        className="data-table data-table-action mt-4"
+        className="data-table data-table-action lg:mt-4"
         emptyStateMessage=""
         renderTableActions={renderTableActions()}
       />

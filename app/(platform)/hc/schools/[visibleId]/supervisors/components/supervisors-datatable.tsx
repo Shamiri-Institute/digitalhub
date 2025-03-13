@@ -98,7 +98,7 @@ export default function SupervisorsDataTable({
           setMarkAttendanceDialog,
           sessions: schoolContext.school?.interventionSessions ?? [],
         })}
-        className={"data-table data-table-action mt-4"}
+        className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage="No supervisors found for this hub"
         columnVisibilityState={{
           Gender: false,

@@ -53,7 +53,7 @@ export default function FellowSchoolsDatatableSkeleton({
           return {};
         }) as FellowsData[]
       }
-      className="data-table data-table-action mt-4"
+      className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
       renderTableActions={renderTableActions()}
       columnVisibilityState={{

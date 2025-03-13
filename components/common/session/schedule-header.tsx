@@ -10,7 +10,7 @@ export function ScheduleHeader({
   }[];
 }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
       <PageHeading title="Schedule" />
       <CountWidget stats={stats} />
     </div>

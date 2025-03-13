@@ -1,32 +1,33 @@
 "use client";
 
 import { Icons } from "#/components/icons";
-import { SESSION_TYPES } from "#/lib/app-constants/constants";
-import { cn } from "#/lib/utils";
+import { cn, sessionDisplayName } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 
 export default function SessionsOccurredWidget({
   sessions,
+  types,
 }: {
   sessions: Prisma.InterventionSessionGetPayload<{}>[];
+  types?: Prisma.SessionNameGetPayload<{}>[];
 }) {
   return (
     <div className="flex justify-center gap-2">
-      {SESSION_TYPES.map((sessionType) => {
+      {types?.map((sessionType) => {
         const occurredStatus = sessions.find((session) => {
-          return session.sessionType === sessionType.name;
+          return session.sessionType === sessionType.sessionName;
         })?.occurred;
         const cancelledStatus =
           sessions.find((session) => {
-            return session.sessionType === sessionType.name;
+            return session.sessionType === sessionType.sessionName;
           })?.status === "Cancelled";
         const rescheduledStatus =
           sessions.find((session) => {
-            return session.sessionType === sessionType.name;
+            return session.sessionType === sessionType.sessionName;
           })?.status === "Rescheduled";
         return (
           <div
-            key={sessionType.name}
+            key={sessionType.sessionName}
             className={cn(
               "select-none rounded-[0.25rem] border px-1.5 py-0.5",
               {
@@ -74,7 +75,7 @@ export default function SessionsOccurredWidget({
                   />
                 )}
               </div>
-              {sessionType.name}
+              {sessionDisplayName(sessionType.sessionName)}
             </div>
           </div>
         );

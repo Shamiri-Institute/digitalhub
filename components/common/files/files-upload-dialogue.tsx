@@ -20,7 +20,7 @@ export default function UploadFileDialogue({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {children}
-      <DialogContent className="w-2/5 max-w-none">
+      <DialogContent className="lg:w-2/5 lg:max-w-none">
         <DialogHeader>
           <span className="text-xl">Upload file</span>
         </DialogHeader>

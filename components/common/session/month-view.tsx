@@ -71,69 +71,78 @@ export function MonthView({
 
   useGSAP(
     () => {
-      if (headerRowRef !== null) {
-        gsap.timeline({
-          scrollTrigger: {
-            trigger: headerRowRef.current,
-            start: () => "top top",
-            end: () => "+=100%",
-            scrub: true,
-            pin: true,
-            pinSpacing: false,
-            // markers: true,
-          },
-        });
-      }
+      let mm = gsap.matchMedia();
+
+      mm.add("(min-width: 768px)", () => {
+        if (headerRowRef?.current) {
+          gsap.timeline({
+            scrollTrigger: {
+              trigger: headerRowRef.current,
+              start: "top top",
+              end: "+=100%",
+              scrub: true,
+              pin: true,
+              pinSpacing: false,
+              // markers: true,
+            },
+          });
+        }
+      });
+
+      return () => mm.revert(); // Clean up on unmount
     },
     { scope: headerRowRef },
   );
 
   return (
-    <div>
-      <table
-        ref={headerRowRef}
-        className="schedule-table z-10 rounded-t-[0.4375rem] bg-white"
-      >
-        <thead {...headerProps}>
-          <tr>
-            {weekDays.map((day, index) => (
-              <th
-                key={index}
-                className={cn({
-                  "bg-background-secondary": index === 0 || index === 6,
-                })}
-              >
-                {day}
-              </th>
-            ))}
-          </tr>
-        </thead>
-      </table>
-      <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
-        <tbody>
-          {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
-            <tr key={weekIndex}>
-              {state
-                .getDatesInWeek(weekIndex)
-                .map((date, i) =>
-                  date ? (
-                    <MonthCalendarCell
-                      key={i}
-                      state={state}
-                      date={date}
-                      weekend={isWeekend(date, "en-US")}
-                      role={props.role}
-                      dialogState={props.dialogState}
-                      fellowId={props.fellowId}
-                    />
-                  ) : (
-                    <td key={i} />
-                  ),
-                )}
+    <div className="relative">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden"></div>
+      <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
+        <table
+          ref={headerRowRef}
+          className="schedule-table z-20 rounded-t-[0.4375rem] bg-white"
+        >
+          <thead {...headerProps}>
+            <tr>
+              {weekDays.map((day, index) => (
+                <th
+                  key={index}
+                  className={cn({
+                    "bg-background-secondary": index === 0 || index === 6,
+                  })}
+                >
+                  {day}
+                </th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+        </table>
+        <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
+          <tbody>
+            {Array.from(new Array(weeksInMonth).keys()).map((weekIndex) => (
+              <tr key={weekIndex}>
+                {state
+                  .getDatesInWeek(weekIndex)
+                  .map((date, i) =>
+                    date ? (
+                      <MonthCalendarCell
+                        key={i}
+                        state={state}
+                        date={date}
+                        weekend={isWeekend(date, "en-US")}
+                        role={props.role}
+                        dialogState={props.dialogState}
+                        fellowId={props.fellowId}
+                      />
+                    ) : (
+                      <td key={i} />
+                    ),
+                  )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -182,7 +191,7 @@ export function MonthCalendarCell({
       <div
         {...buttonProps}
         ref={ref}
-        className={cn("cell w-full transition ease-in-out", {
+        className={cn("h-full w-full transition ease-in-out", {
           "outline outline-2 outline-shamiri-new-blue": isSameDay(
             date,
             state.focusedDate,
@@ -199,7 +208,7 @@ export function MonthCalendarCell({
           className={cn(
             "flex flex-col gap-[8px] overflow-y-auto",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
-            "h-[120px] xl:h-[144px]",
+            "h-full lg:h-[120px] xl:h-[144px]",
           )}
         >
           <div
