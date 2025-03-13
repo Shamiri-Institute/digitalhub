@@ -12,18 +12,17 @@ export const PersonnelFixtures = {
     email: "ichami.etyang@shamiri.institute",
     stateFile: path.join(__dirname, `./fixtures/hub-coordinator-state.json`),
   },
-  //   TODO: Setup OPERATIONS role
-  // operations: {
-  //   email: "stanley.george@shamiri.institute",
-  //   stateFile: path.join(__dirname, `./fixtures/operations-state.json`),
-  // },
   fellow: {
     email: "wambugu.davis@shamiri.institute",
     stateFile: path.join(__dirname, `./fixtures/fellow-state.json`),
   },
   clinicalLead: {
-    email: "benny@shamiri.institute",
+    email: "stanley.george@shamiri.institute",
     stateFile: path.join(__dirname, `./fixtures/clinical-lead-state.json`),
+  },
+  opsUser: {
+    email: "benny@shamiri.institute",
+    stateFile: path.join(__dirname, `./fixtures/operations-state.json`),
   },
 };
 

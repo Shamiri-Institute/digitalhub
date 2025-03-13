@@ -12,11 +12,10 @@ const sessionFixtures = [
     userEmail: PersonnelFixtures.hubCoordinator.email,
     stateFile: PersonnelFixtures.hubCoordinator.stateFile,
   },
-  //   TODO: Setup OPERATIONS role
-  // {
-  //   userEmail: PersonnelFixtures.operations.email,
-  //   stateFile: PersonnelFixtures.operations.stateFile,
-  // },
+  {
+    userEmail: PersonnelFixtures.opsUser.email,
+    stateFile: PersonnelFixtures.opsUser.stateFile,
+  },
   {
     userEmail: PersonnelFixtures.fellow.email,
     stateFile: PersonnelFixtures.fellow.stateFile,
