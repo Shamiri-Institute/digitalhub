@@ -9,6 +9,7 @@ import {
   HubCoordinator,
   Implementer,
   ImplementerRole,
+  OpsUser,
   Prisma,
   Project,
   SessionName,
@@ -293,13 +294,14 @@ async function createCoreUsers(
   hubCoordinators: HubCoordinator[],
   fellows: Fellow[],
   clinicalLeads: ClinicalLead[],
+  operations: OpsUser[],
 ) {
   console.log("creating core users");
   const userData = [
     {
       id: objectId("user"),
       email: "benny@shamiri.institute",
-      role: ImplementerRole.CLINICAL_LEAD,
+      role: ImplementerRole.OPERATIONS,
     },
     {
       id: objectId("user"),
@@ -314,7 +316,7 @@ async function createCoreUsers(
     {
       id: objectId("user"),
       email: "stanley.george@shamiri.institute",
-      role: ImplementerRole.SUPERVISOR,
+      role: ImplementerRole.CLINICAL_LEAD,
     },
     {
       id: objectId("user"),
@@ -351,7 +353,9 @@ async function createCoreUsers(
               ? faker.helpers.arrayElement(fellows).id
               : role === "CLINICAL_LEAD"
                 ? faker.helpers.arrayElement(clinicalLeads).id
-                : null,
+                : role === "OPERATIONS"
+                  ? faker.helpers.arrayElement(operations).id
+                  : null,
     };
   });
 
@@ -580,6 +584,59 @@ async function createSupervisors(
 
   return db.supervisor.createManyAndReturn({
     data: supervisorRecords,
+  });
+}
+
+async function createOperations(hubs: Hub[], emails: Set<string>) {
+  console.log("creating operations users");
+  const operations: Prisma.OpsUserCreateManyInput[] = [];
+
+  // Only create 3 ops users for now
+  // NOTE: If we want each hub to have its own ops person, remove the slice
+  // and let the loop run for all hubs
+  const selectedHubs = hubs.slice(0, 3);
+
+  for (const hub of selectedHubs) {
+    let uniqueEmail = faker.internet.email().toLowerCase();
+    while (emails.has(uniqueEmail)) {
+      uniqueEmail = faker.internet.email().toLowerCase();
+    }
+    emails.add(uniqueEmail);
+
+    const opsUser = {
+      id: objectId("user"),
+      email: uniqueEmail,
+      implementerId: hub.implementerId,
+      name: faker.person.fullName(),
+      cellPhone: faker.helpers.fromRegExp("2547[1-9]{8}"),
+    };
+
+    operations.push(opsUser);
+  }
+
+  const createdOperations = await db.user.createManyAndReturn({
+    data: operations.map(({ id, email }) => ({
+      id,
+      email,
+    })),
+  });
+
+  const membershipData = createdOperations.map((ops) => ({
+    userId: ops.id,
+    implementerId: operations.find((x) => x.id === ops.id)?.implementerId!,
+    role: ImplementerRole.OPERATIONS,
+    identifier: objectId("opsuser"),
+  }));
+
+  await db.implementerMember.createMany({
+    data: membershipData,
+  });
+
+  return db.opsUser.createManyAndReturn({
+    data: operations.map((ops) => ({
+      id: membershipData.find((x) => x.userId === ops.id)?.identifier!,
+      ...ops,
+    })),
   });
 }
 
@@ -1062,6 +1119,7 @@ async function main() {
   );
 
   const clinicalLeads = await createClinicalLeads(hubs, userEmailSet);
+  const operations = await createOperations(hubs, userEmailSet);
   const fellows = await createFellows(supervisors, userEmailSet);
 
   await createCoreUsers(
@@ -1071,6 +1129,7 @@ async function main() {
     hubCoordinators,
     fellows,
     clinicalLeads,
+    operations,
   );
 
   const schools = await createSchools(hubs, supervisors);
