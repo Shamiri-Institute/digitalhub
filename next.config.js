@@ -28,6 +28,11 @@ const nextConfig = {
         destination: "/cl/clinical",
         permanent: false,
       },
+      {
+        source: "/ops",
+        destination: "/ops/reporting",
+        permanent: false,
+      },
     ];
   },
 };

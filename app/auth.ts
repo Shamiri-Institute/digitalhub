@@ -266,6 +266,36 @@ export async function currentClinicalLead() {
   return { ...clinicalLead, user };
 }
 
+export type CurrentOpsUser = Awaited<ReturnType<typeof currentOpsUser>>;
+
+export async function currentOpsUser() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+
+  const { membership } = user;
+
+  const { identifier } = membership;
+  if (!identifier) {
+    return null;
+  }
+
+  const opsUser = await db.opsUser.findFirst({
+    where: { id: identifier },
+    include: {
+      implementer: true,
+      assignedHub: true,
+    },
+  });
+
+  if (!opsUser) {
+    return null;
+  }
+
+  return { ...opsUser, user };
+}
+
 export async function getCurrentUser() {
   const session = await getServerSession();
   if (!session) {
@@ -300,6 +330,7 @@ export async function getCurrentPersonnel(): Promise<
   | CurrentHubCoordinator
   | CurrentFellow
   | CurrentClinicalLead
+  | CurrentOpsUser
   | null
 > {
   const user = await getCurrentUser();
@@ -322,6 +353,10 @@ export async function getCurrentPersonnel(): Promise<
 
   if (role === "CLINICAL_LEAD") {
     return await currentClinicalLead();
+  }
+
+  if (role === "OPERATIONS") {
+    return await currentOpsUser();
   }
 
   return null;
