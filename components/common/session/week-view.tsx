@@ -79,90 +79,99 @@ export function WeekView({
 
   useGSAP(
     () => {
-      if (headerRowRef !== null) {
-        gsap.timeline({
-          scrollTrigger: {
-            trigger: headerRowRef.current,
-            start: () => "top top",
-            end: () => "+=150%",
-            scrub: true,
-            pin: true,
-            pinSpacing: false,
-            // markers: true,
-          },
-        });
-      }
+      let mm = gsap.matchMedia();
+
+      mm.add("(min-width: 768px)", () => {
+        if (headerRowRef?.current) {
+          gsap.timeline({
+            scrollTrigger: {
+              trigger: headerRowRef.current,
+              start: "top top",
+              end: "+=100%",
+              scrub: true,
+              pin: true,
+              pinSpacing: false,
+              // markers: true,
+            },
+          });
+        }
+      });
+
+      return () => mm.revert(); // Clean up on unmount
     },
     { scope: headerRowRef },
   );
 
   return (
-    <div>
-      <table
-        ref={headerRowRef}
-        className="schedule-table z-10 rounded-t-[0.4375rem]"
-      >
-        <thead {...headerProps}>
-          <tr className="border-b border-grey-border">
-            <th className="time-cell"></th>
-            {state
-              .getDatesInWeek(0)
-              .map((date, i) =>
-                date ? (
-                  <WeekCalendarHeaderCell
-                    key={i}
-                    colIdx={i}
-                    date={date}
-                    state={state}
-                    dayFormatter={dayFormatter}
-                  />
-                ) : (
-                  <td key={i} />
-                ),
-              )}
-          </tr>
-        </thead>
-      </table>
-      <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
-        <tbody className="w-full">
-          {hours.map((hour, rowIdx) => (
-            <tr
-              key={rowIdx}
-              className="table-row w-full divide-x divide-grey-border"
-            >
-              <td
-                className={cn(
-                  "time-cell truncate",
-                  "h-[85px] xl:h-[112px]",
-                  "w-[103px]",
-                  "bg-background-secondary text-sm",
-                )}
-              >
-                <div className="flex">{formatHour(hour)}</div>
-              </td>
+    <div className="relative">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden"></div>
+      <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
+        <table
+          ref={headerRowRef}
+          className="schedule-table z-10 rounded-t-[0.4375rem]"
+        >
+          <thead {...headerProps}>
+            <tr className="border-b border-grey-border">
+              <th className="time-cell"></th>
               {state
                 .getDatesInWeek(0)
-                .map((date, colIdx) =>
+                .map((date, i) =>
                   date ? (
-                    <WeekCalendarCell
-                      key={colIdx}
-                      colIdx={colIdx}
-                      rowIdx={rowIdx}
-                      hour={hour}
+                    <WeekCalendarHeaderCell
+                      key={i}
+                      colIdx={i}
                       date={date}
                       state={state}
-                      role={role}
-                      dialogState={dialogState}
-                      fellowId={fellowId}
+                      dayFormatter={dayFormatter}
                     />
                   ) : (
-                    <td key={colIdx} />
+                    <td key={i} />
                   ),
                 )}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+        </table>
+        <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
+          <tbody className="w-full">
+            {hours.map((hour, rowIdx) => (
+              <tr
+                key={rowIdx}
+                className="table-row w-full divide-x divide-grey-border"
+              >
+                <td
+                  className={cn(
+                    "time-cell truncate",
+                    "h-[85px] xl:h-[112px]",
+                    "w-[103px]",
+                    "bg-background-secondary text-sm",
+                  )}
+                >
+                  <div className="flex">{formatHour(hour)}</div>
+                </td>
+                {state
+                  .getDatesInWeek(0)
+                  .map((date, colIdx) =>
+                    date ? (
+                      <WeekCalendarCell
+                        key={colIdx}
+                        colIdx={colIdx}
+                        rowIdx={rowIdx}
+                        hour={hour}
+                        date={date}
+                        state={state}
+                        role={role}
+                        dialogState={dialogState}
+                        fellowId={fellowId}
+                      />
+                    ) : (
+                      <td key={colIdx} />
+                    ),
+                  )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -182,7 +191,7 @@ function WeekCalendarHeaderCell({
   const hasSessions = sessions.length > 0;
   return date ? (
     <th
-      className={cn("table-cell", "relative px-4 py-3 text-left", {
+      className={cn("relative px-4 py-3 text-left", {
         "text-blue-base": isToday(date, state.timeZone),
         "bg-background-secondary": colIdx === 0 || colIdx === 6,
       })}
@@ -247,7 +256,7 @@ function WeekCalendarCell({
       <div
         {...buttonProps}
         ref={ref}
-        className={cn("cell w-full transition ease-in-out", {
+        className={cn("h-full w-full transition ease-in-out", {
           selected: isSelected,
           disabled: isDisabled,
           unavailable: isUnavailable,
@@ -257,7 +266,7 @@ function WeekCalendarCell({
           className={cn(
             "flex flex-col gap-[8px] overflow-y-auto",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
-            "h-[85px] xl:h-[112px]",
+            "h-full lg:h-[85px] xl:h-[112px]",
             "border-t border-grey-border",
             {
               "bg-background-secondary": colIdx === 0 || colIdx === 6,

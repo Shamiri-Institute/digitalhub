@@ -11,7 +11,7 @@ export const config: Config = {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1.5rem",
       screens: {
         // DEFAULT: '0.5rem',
         // "2xl": "1400px",
@@ -135,6 +135,10 @@ export const config: Config = {
       },
       screens: {
         xs: "375px",
+      },
+      boxShadow: {
+        "inner-2":
+          "6px 0 6px 0 rgba(0, 0, 0, 0.06) inset, -6px 0 6px 0 rgba(0, 0, 0, 0.1) inset",
       },
     },
   },

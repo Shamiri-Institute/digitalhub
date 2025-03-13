@@ -19,7 +19,7 @@ export default function HCSupervisorsDataTable({
       <DataTable
         data={supervisorExpenses}
         columns={columns}
-        className="data-table data-table-action mt-4 bg-white"
+        className="data-table data-table-action bg-white lg:mt-4"
         emptyStateMessage="No supervisor expenses found"
       />
     </div>

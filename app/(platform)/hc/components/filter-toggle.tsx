@@ -5,7 +5,6 @@ import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuPortal,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import * as React from "react";
@@ -39,9 +38,12 @@ export default function FilterToggle({
             </div>
           </div>
         </DropdownMenuTrigger>
-        <DropdownMenuPortal>
-          <DropdownMenuContent className="p-2">{children}</DropdownMenuContent>
-        </DropdownMenuPortal>
+        <DropdownMenuContent
+          align="start"
+          className="max-h-[200px] overflow-y-scroll p-2 lg:max-h-none"
+        >
+          {children}
+        </DropdownMenuContent>
       </DropdownMenu>
       {filterIsActive && (
         <Button

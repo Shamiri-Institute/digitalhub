@@ -350,7 +350,7 @@ export function DataTableDialog({
             data={data}
             emptyStateMessage="No data to display"
             editColumns={false}
-            className="data-table data-table-action mt-4"
+            className="data-table data-table-action lg:mt-4"
           />
         </div>
       </DialogContent>

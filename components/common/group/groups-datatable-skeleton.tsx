@@ -40,7 +40,7 @@ export default function GroupsDatatableSkeleton({
     });
 
   const renderTableActions = () => {
-    return (
+    return role !== "FELLOW" ? (
       <CreateGroup
         supervisors={[]}
         school={
@@ -51,7 +51,7 @@ export default function GroupsDatatableSkeleton({
         groupCount={0}
         disabled={true}
       ></CreateGroup>
-    );
+    ) : null;
   };
 
   return (
@@ -62,7 +62,7 @@ export default function GroupsDatatableSkeleton({
           return {};
         }) as SchoolGroupDataTableData[]
       }
-      className="data-table data-table-action mt-4"
+      className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
       renderTableActions={renderTableActions()}
     />

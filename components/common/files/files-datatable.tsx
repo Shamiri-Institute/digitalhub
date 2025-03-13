@@ -45,7 +45,7 @@ export default function SchoolFilesDatatable({
           setDeleteDialog,
         })}
         emptyStateMessage="No files found"
-        className="data-table data-table-action mt-4"
+        className="data-table data-table-action lg:mt-4"
         renderTableActions={renderTableActions()}
         columnVisibilityState={{}}
         rowSelectionDescription={"files"}

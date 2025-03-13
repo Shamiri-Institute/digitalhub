@@ -116,7 +116,7 @@ export default function MainFellowsDatatable({
           setDropOutDialog,
         )}
         data={fellows}
-        className={"data-table data-table-action mt-4 bg-white"}
+        className={"data-table data-table-action bg-white lg:mt-4"}
         emptyStateMessage="No fellows associated with this hub"
         renderTableActions={renderTableActions()}
         columnVisibilityState={{

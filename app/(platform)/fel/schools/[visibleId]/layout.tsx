@@ -32,7 +32,11 @@ export default async function SchoolViewLayout({
           },
         },
       },
-      interventionSessions: true,
+      interventionSessions: {
+        include: {
+          session: true,
+        },
+      },
       schoolDropoutHistory: {
         include: {
           user: true,
@@ -53,7 +57,11 @@ export default async function SchoolViewLayout({
           },
         },
       },
-      hub: true,
+      hub: {
+        include: {
+          sessions: true,
+        },
+      },
     },
   });
   const fellow = await currentFellow();
@@ -64,10 +72,15 @@ export default async function SchoolViewLayout({
   return (
     <SchoolInfoProvider school={school as unknown as SchoolsTableData}>
       <div className="flex h-full bg-white">
-        <SchoolLeftPanel selectedSchool={school} />
-        <div className="flex flex-1 flex-col">
+        <div className="hidden lg:flex lg:w-1/4">
+          <SchoolLeftPanel selectedSchool={school} open={true} />
+        </div>
+        <div className="flex flex-1 flex-col overflow-hidden">
           <div className="container w-full grow space-y-5 pb-6 pl-6 pr-8 pt-5">
             <SchoolsBreadcrumb role={fellow!.user.membership.role} />
+            <div className="flex flex-col gap-4 lg:hidden">
+              <SchoolLeftPanel selectedSchool={school} />
+            </div>
             <SchoolsNav
               visibleId={visibleId}
               role={fellow!.user.membership.role}
