@@ -31,7 +31,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitGroupEvaluation } from "#/lib/actions/group";
-import { cn } from "#/lib/utils";
+import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
 import { addDays, differenceInSeconds, format } from "date-fns";
@@ -218,7 +218,7 @@ export default function StudentGroupEvaluation({
   return (
     <Form {...form}>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-2/5 max-w-none p-5 text-base font-medium leading-6">
+        <DialogContent className="p-5 text-base font-medium leading-6 lg:w-2/5 lg:max-w-none">
           <DialogHeader>
             <h2 className="text-xl font-bold">Student group evaluation</h2>
           </DialogHeader>
@@ -278,7 +278,12 @@ export default function StudentGroupEvaluation({
                         {sessions.map((session) => {
                           return (
                             <SelectItem key={session.id} value={session.id}>
-                              <span>{session.session?.sessionLabel}</span> -{" "}
+                              <span>
+                                {sessionDisplayName(
+                                  session.session?.sessionName,
+                                )}
+                              </span>{" "}
+                              -{" "}
                               <span>
                                 {format(session.sessionDate, "dd MMM yyyy")}
                               </span>{" "}

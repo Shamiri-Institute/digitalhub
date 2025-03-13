@@ -2,7 +2,6 @@
 
 import { StudentReportingNotesSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Button } from "#/components/ui/button";
 import {
@@ -34,10 +33,12 @@ export function AddReportingNote({
   isOpen,
   setIsOpen,
   student,
+  children,
 }: {
   student: SchoolStudentTableData;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
+  children: React.ReactNode;
 }) {
   const pathname = usePathname();
 
@@ -76,19 +77,11 @@ export function AddReportingNote({
   return (
     <Form {...form}>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="w-2/5 max-w-none">
+        <DialogContent className="lg:w-2/5 lg:max-w-none">
           <DialogHeader>
             <h2 className="text-lg font-bold">Add reporting note</h2>
           </DialogHeader>
-          <DialogAlertWidget>
-            <div className="flex items-center gap-2">
-              <span>{student.studentName}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
-              <span>{student.school?.schoolName}</span>
-            </div>
-          </DialogAlertWidget>
+          {children}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}

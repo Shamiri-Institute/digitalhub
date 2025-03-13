@@ -87,7 +87,7 @@ export default function FellowSchoolsDatatable({
   function renderFellowGroupDialogAlert(fellowGroup: FellowGroupData) {
     return (
       <DialogAlertWidget>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
           <span>Group {fellowGroup.groupName}</span>
           <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
           <span>{fellowGroup.school.schoolName}</span>
@@ -127,7 +127,7 @@ export default function FellowSchoolsDatatable({
             role,
           },
         })}
-        className={"data-table data-table-action mt-4 bg-white"}
+        className={"data-table data-table-action bg-white lg:mt-4"}
         renderTableActions={renderTableActions()}
         emptyStateMessage="No fellows assigned to you"
         columnVisibilityState={{
@@ -157,8 +157,9 @@ export default function FellowSchoolsDatatable({
             })}
             disableSearch={true}
             disablePagination={true}
-            className={"data-table data-table-action border-0 bg-white"}
+            className={"data-table data-table-action mt-0 border-0 bg-white"}
             emptyStateMessage="No groups assigned to this fellow"
+            isSubComponent={true}
           />
         )}
       />

@@ -13,7 +13,7 @@ export default function FellowsReportingDataTable({
     <DataTable
       data={fellowAttendanceExpenses}
       columns={columns}
-      className="data-table data-table-action mt-4 bg-white"
+      className="data-table data-table-action bg-white lg:mt-4"
       renderSubComponent={({ row }) => (
         <DataTable
           data={row.original?.attendances}

@@ -19,7 +19,7 @@ export default function FellowComplaintsDataTable({
       <DataTable
         data={complaints}
         columns={columns}
-        className="data-table data-table-action mt-4 bg-white"
+        className="data-table data-table-action bg-white lg:mt-4"
         emptyStateMessage="No complaints found"
         renderSubComponent={({ row }) => (
           <DataTable

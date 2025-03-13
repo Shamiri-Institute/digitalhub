@@ -148,7 +148,7 @@ export default function SessionsDatatable({
               role,
               fellowId,
             })}
-            className={"data-table data-table-action mt-4"}
+            className={"data-table data-table-action lg:mt-4"}
             emptyStateMessage="No sessions found for this school"
           />
           {session && (

@@ -6,7 +6,7 @@ export default function PageHeading({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex justify-between">
+    <div className="flex flex-col justify-between lg:flex-row">
       <h2 className="text-4xl font-semibold leading-[48px] text-black">
         {title}
       </h2>
