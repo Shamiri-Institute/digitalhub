@@ -85,11 +85,31 @@ export async function fetchPersonnel() {
     project: cl.assignedHub?.project?.name,
   }));
 
+  const opsUsers: Personnel[] = (
+    await db.opsUser.findMany({
+      orderBy: { name: "asc" },
+      include: {
+        assignedHub: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    })
+  ).map((ops) => ({
+    id: ops.id,
+    role: ImplementerRole.OPERATIONS,
+    label: `${ops.name}`,
+    hub: ops.assignedHub?.hubName,
+    project: ops.assignedHub?.project?.name,
+  }));
+
   const personnel = [
     ...hubCoordinators,
     ...supervisors,
     ...fellows,
     ...clinicalLeads,
+    ...opsUsers,
   ];
 
   const user = await getCurrentUser();
