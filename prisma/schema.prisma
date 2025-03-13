@@ -103,6 +103,7 @@ model Implementer {
   studentOutcomes     StudentOutcome[]
   projectImplementers ProjectImplementer[]
   clinicalLeads       ClinicalLead[]
+  opsUser             OpsUser[]
 
   @@map("implementers")
 }
@@ -793,6 +794,7 @@ model Hub {
   WeeklyTeamMeetingReport WeeklyTeamMeetingReport[]
   sessions                SessionName[]
   clinicalLeads           ClinicalLead[]
+  opsUser                 OpsUser[]
 
   @@map("hubs")
 }
