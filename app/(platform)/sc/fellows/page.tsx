@@ -1,14 +1,18 @@
 import { loadFellowsData } from "#/app/(platform)/sc/actions";
 import { currentSupervisor } from "#/app/auth";
-import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
-import FellowsDataTable from "./components/fellows-data-table";
+import { signOut } from "next-auth/react";
+import FellowSchoolsDatatable from "../../../../components/common/fellow/fellow-schools-datatable";
 
 export default async function FellowsPage() {
   const supervisor = await currentSupervisor();
-  if (!supervisor) {
-    return <InvalidPersonnelRole role="supervisor" />;
+  if (supervisor === null) {
+    await signOut({ callbackUrl: "/login" });
+  }
+
+  if (!supervisor?.hubId) {
+    return <div>Supervisor has no assigned hub</div>;
   }
 
   const fellows = await loadFellowsData();
@@ -21,7 +25,7 @@ export default async function FellowsPage() {
 
   return (
     <div className="px-6 py-5">
-      <FellowsDataTable
+      <FellowSchoolsDatatable
         fellows={fellows}
         project={project ?? undefined}
         role={supervisor!.user.membership.role}

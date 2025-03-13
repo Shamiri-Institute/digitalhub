@@ -40,24 +40,6 @@ export async function getClinicalCases() {
   return cases.map((caseInfo) => {
     const age = caseInfo.student?.age ? `${caseInfo.student.age} yrs` : "N/A";
 
-    // Parse emergency presenting issues from JSON
-    const emergencyIssues = caseInfo.emergencyPresentingIssues as Record<
-      string,
-      {
-        lowRisk: boolean;
-        moderateRisk: boolean;
-        highRisk: boolean;
-        severeRisk: boolean;
-      }
-    > | null;
-
-    const formattedEmergencyIssues = emergencyIssues
-      ? Object.entries(emergencyIssues).map(([issue, risks]) => ({
-          emergencyPresentingIssues: issue,
-          ...risks,
-        }))
-      : [];
-
     const formattedSessions = caseInfo.sessions.map((session) => ({
       sessionId: session.id,
       session: session.session,
@@ -78,12 +60,20 @@ export async function getClinicalCases() {
         caseInfo.initialReferredFromSpecified ||
         "Unknown",
       hubId: supervisor?.hubId,
-      emergencyPresentingIssues: formattedEmergencyIssues,
       flagged: caseInfo.flagged,
       flaggedReason: caseInfo.flaggedReason,
       sessionAttendanceHistory: formattedSessions,
-      generalPresentingIssues: [],
       student: caseInfo.student,
+      emergencyPresentingIssuesBaseline:
+        caseInfo.emergencyPresentingIssuesBaseline,
+      generalPresentingIssuesBaseline: caseInfo.generalPresentingIssuesBaseline,
+      emergencyPresentingIssuesEndpoint:
+        caseInfo.emergencyPresentingIssuesEndpoint,
+      generalPresentingIssuesEndpoint: caseInfo.generalPresentingIssuesEndpoint,
+      generalPresentingIssuesOtherSpecifiedBaseline:
+        caseInfo.generalPresentingIssuesOtherSpecifiedBaseline,
+      generalPresentingIssuesOtherSpecifiedEndpoint:
+        caseInfo.generalPresentingIssuesOtherSpecifiedEndpoint,
     };
   });
 }
@@ -498,5 +488,170 @@ export async function updateStudentInfo(data: EditStudentInfoFormValues) {
       success: false,
       message: "Failed to update student information",
     };
+  }
+}
+
+export async function updateClinicalCaseGeneralPresentingIssue(data: {
+  caseId: string;
+  generalPresentingIssues: { [k: string]: string };
+  otherIssues: string;
+  caseStatus: string;
+}) {
+  try {
+    const updateData =
+      data.caseStatus === "Active"
+        ? {
+            generalPresentingIssuesBaseline: data.generalPresentingIssues,
+            generalPresentingIssuesOtherSpecifiedBaseline: data.otherIssues,
+          }
+        : {
+            generalPresentingIssuesEndpoint: data.generalPresentingIssues,
+            generalPresentingIssuesOtherSpecifiedEndpoint: data.otherIssues,
+          };
+
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: updateData,
+    });
+
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function updateClinicalCaseEmergencyPresentingIssue(data: {
+  caseId: string;
+  presentingIssues: { [k: string]: string };
+  caseStatus: string;
+}) {
+  try {
+    const updateData =
+      data.caseStatus === "Active"
+        ? {
+            emergencyPresentingIssuesBaseline: data.presentingIssues,
+          }
+        : {
+            emergencyPresentingIssuesEndpoint: data.presentingIssues,
+          };
+
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: updateData,
+    });
+
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
+  }
+}
+
+export async function terminateClinicalCase(data: {
+  caseId: string;
+  terminationReason: string;
+  terminationReasonExplanation: string;
+  sessionId: string;
+}) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    if (currentUser.personnelRole !== "supervisor") {
+      throw new Error("You are not authorized to terminate this case");
+    }
+
+    await db.$transaction(async (tx) => {
+      await tx.clinicalScreeningInfo.update({
+        where: {
+          id: data.caseId,
+        },
+        data: {
+          caseStatus: "Terminated",
+        },
+      });
+
+      await tx.clinicalCaseTermination.create({
+        data: {
+          caseId: data.caseId,
+          terminationDate: new Date(),
+          terminationReason: data.terminationReason,
+          terminationReasonExplanation: data.terminationReasonExplanation,
+          sessionId: data.sessionId,
+          createdBy: currentUser.user.id,
+        },
+      });
+    });
+
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
+
+export async function createClinicalCaseNotes(data: {
+  caseId: string;
+  sessionId: string;
+  presentingIssues: string;
+  orsAssessment: number;
+  riskLevel: string;
+  necessaryConditions: string;
+  treatmentInterventions: string[];
+  otherIntervention: string;
+  interventionExplanation: string;
+  emotionalResponse: string;
+  behavioralResponse: string;
+  overallFeedback: string;
+  studentResponseExplanation: string;
+  followUpPlan: "GROUP" | "INDIVIDUAL";
+  followUpPlanExplanation: string;
+}) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    if (currentUser.personnelRole !== "supervisor") {
+      throw new Error("You are not authorized to create clinical case notes");
+    }
+
+    await db.clinicalCaseNotes.create({
+      data: {
+        caseId: data.caseId,
+        sessionId: data.sessionId,
+        createdBy: currentUser.user.id,
+        presentingIssues: data.presentingIssues,
+        orsAssessment: data.orsAssessment,
+        riskLevel: data.riskLevel,
+        necessaryConditions: data.necessaryConditions,
+        treatmentInterventions: data.treatmentInterventions,
+        otherIntervention: data.otherIntervention,
+        interventionExplanation: data.interventionExplanation,
+        emotionalResponse: data.emotionalResponse,
+        behavioralResponse: data.behavioralResponse,
+        overallFeedback: data.overallFeedback,
+        studentResponseExplanations: data.studentResponseExplanation,
+        followUpPlan: data.followUpPlan,
+        followUpPlanExplanation: data.followUpPlanExplanation,
+      },
+    });
+
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
   }
 }

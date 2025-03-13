@@ -7,12 +7,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { ImplementerRole } from "@prisma/client";
 import { Dispatch, SetStateAction } from "react";
-import type { FellowsData } from "../../actions";
+import type { FellowsData } from "../../../app/(platform)/sc/actions";
 
 export type FellowGroupData = FellowsData["groups"][number];
 
-export default function FellowsGroupsTableDropdownMenu({
+export default function FellowSchoolDatatableDropdownMenu({
   group,
   state,
 }: {
@@ -24,6 +25,7 @@ export default function FellowsGroupsTableDropdownMenu({
     setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
     setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
+    role: ImplementerRole;
   };
 }) {
   return (
@@ -42,14 +44,16 @@ export default function FellowsGroupsTableDropdownMenu({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => {
-            state.setFellowGroup(group);
-            state.setAttendanceDialog(true);
-          }}
-        >
-          Mark attendance
-        </DropdownMenuItem>
+        {state.role === "SUPERVISOR" ? (
+          <DropdownMenuItem
+            onClick={() => {
+              state.setFellowGroup(group);
+              state.setAttendanceDialog(true);
+            }}
+          >
+            Mark attendance
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem
           onClick={() => {
             state.setFellowGroup(group);
