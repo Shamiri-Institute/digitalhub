@@ -3,6 +3,8 @@ import { ImplementerRole, Prisma } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
 import NextAuth, { type AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
+import CredentialsProvider from "next-auth/providers/credentials";
+
 import { z } from "zod";
 
 import { db } from "#/lib/db";
@@ -14,19 +16,46 @@ const config = z
   })
   .parse(process.env);
 
+const providers: AuthOptions['providers'] = process.env.NODE_ENV === 'production' ? [
+  [
+    GoogleProvider({
+      clientId: config.GOOGLE_ID,
+      clientSecret: config.GOOGLE_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    }),
+  ]
+] : [
+  GoogleProvider({
+    clientId: config.GOOGLE_ID,
+    clientSecret: config.GOOGLE_SECRET,
+    allowDangerousEmailAccountLinking: true,
+  }),
+  CredentialsProvider({
+    name: "Credentials",
+    credentials: {
+      email: { label: "Email", type: "email", placeholder: "username@example.com" },
+      password: { label: "Password", type: "password" }
+    },
+    async authorize(credentials, req) {
+      const user = await db.user.findUnique({
+        where: { email: credentials?.email }
+      })
+
+      if (!user) {
+        return false
+      }
+
+    }
+  })
+]
+
 const authOptions: AuthOptions = {
   debug: process.env.DEBUG === "1",
   session: {
     strategy: "jwt",
     maxAge: 7 * 24 * 60 * 60, // 7 days
   },
-  providers: [
-    GoogleProvider({
-      clientId: config.GOOGLE_ID,
-      clientSecret: config.GOOGLE_SECRET,
-      allowDangerousEmailAccountLinking: true,
-    }),
-  ],
+  providers,
   adapter: PrismaAdapter(db),
   callbacks: {
     signIn: async ({ user, account, profile }) => {

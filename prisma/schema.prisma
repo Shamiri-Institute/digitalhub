@@ -8,15 +8,15 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  archivedAt    DateTime? @map("archived_at")
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime? @map("email_verified")
-  image         String?
-
+  id                                      String                                    @id @default(cuid())
+  createdAt                               DateTime                                  @default(now()) @map("created_at")
+  updatedAt                               DateTime                                  @updatedAt @map("updated_at")
+  archivedAt                              DateTime?                                 @map("archived_at")
+  name                                    String?
+  email                                   String?                                   @unique
+  emailVerified                           DateTime?                                 @map("email_verified")
+  image                                   String?
+  password                                String? // only for local testing and preview URLs. SHOULD not be used in production
   accounts                                Account[]
   sessions                                Session[]
   avatar                                  UserAvatar?
