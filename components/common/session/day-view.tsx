@@ -91,14 +91,14 @@ export function DayView({
   );
 
   return (
-    <div>
+    <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
       <table
         ref={headerRowRef}
         className="schedule-table z-10 rounded-t-[0.4375rem] bg-white"
       >
         <thead>
           <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
-            <th className="time-cell"></th>
+            <th className="time-cell hidden lg:block"></th>
             <th
               className={cn(
                 "relative flex shrink-0 items-center justify-between gap-2",
@@ -187,7 +187,7 @@ function DayCalendarCell({
       <div
         {...buttonProps}
         ref={ref}
-        className={cn("cell w-full", {
+        className={cn("h-full w-full", {
           selected: isSelected,
           disabled: isDisabled,
           unavailable: isUnavailable,
@@ -197,7 +197,7 @@ function DayCalendarCell({
           className={cn(
             "flex flex-col gap-[8px] overflow-y-auto",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
-            "h-[85px] xl:h-[112px]",
+            "h-full lg:h-[85px] xl:h-[112px]",
             "w-full",
             "border-t border-grey-border",
             { "border-t-0": rowIdx === 0 },

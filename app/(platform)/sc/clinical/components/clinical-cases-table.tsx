@@ -58,7 +58,7 @@ export default function ClinicalCasesTable({
     <DataTable
       data={cases}
       columns={columns}
-      className="data-table data-table-action mt-4 bg-white"
+      className="data-table data-table-action bg-white lg:mt-4"
       renderTableActions={renderTableActions}
       renderSubComponent={({ row }) => (
         <div className="space-y-6 p-4">

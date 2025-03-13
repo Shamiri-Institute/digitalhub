@@ -213,16 +213,16 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     <SessionsProvider hubId={hubId} filters={filters}>
       <ModeProvider defaultMode={mode as Mode}>
         <TitleProvider>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+              <div className="flex items-start justify-between gap-6 lg:items-center">
                 <ScheduleTitle fallbackTitle={title} />
                 <NavigationButtons
                   prevProps={prevButtonProps}
                   nextProps={nextButtonProps}
                 />
               </div>
-              <div className="mx-2">
+              <div className="flex lg:mx-2">
                 <ScheduleModeToggle role={props.role} />
               </div>
               <FiltersContext.Provider value={{ filters, setFilters }}>
@@ -650,7 +650,7 @@ function NavigationButtons({
 }) {
   return (
     <div
-      className="inline-flex divide-x divide-gray-300 overflow-auto rounded-xl border border-gray-300 shadow-sm"
+      className="inline-flex shrink-0 divide-x divide-gray-300 overflow-auto rounded-xl border border-gray-300 shadow-sm"
       role="group"
     >
       <NavigationButton aria-label="Previous Month" {...prevProps}>
@@ -743,21 +743,21 @@ function ScheduleFilterToggle({
   }, [filters]);
 
   return (
-    <div className="flex items-center gap-3 p-2">
+    <div className="flex items-center gap-3 lg:p-2">
       <FilterToggle
         filterIsActive={filterIsActive}
         setDefaultFilters={() => setFilters(defaultFilterSettings)}
         open={open}
         setOpen={setOpen}
       >
-        <div className="grid grid-cols-7 gap-x-4 gap-y-2">
-          <div className="col-span-5">
+        <div className="flex flex-col gap-x-4 gap-y-2 lg:grid lg:grid-cols-5">
+          <div className="lg:col-span-5">
             <DropdownMenuLabel>
               <span className="text-xs font-medium uppercase text-shamiri-text-grey">
                 SESSION TYPE
               </span>
             </DropdownMenuLabel>
-            <div className="grid grid-cols-5 gap-x-4">
+            <div className="gap-x-4 lg:grid lg:grid-cols-5">
               <div>
                 {sessionFilters
                   .filter(
@@ -946,7 +946,7 @@ function ScheduleFilterToggle({
             })}
           </div>
         </div>
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end gap-4 pt-4">
           <Button variant="ghost" onClick={() => setOpen(false)}>
             Cancel
           </Button>

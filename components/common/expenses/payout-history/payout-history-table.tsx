@@ -16,7 +16,7 @@ export default function FellowPayoutHistoryDataTable({
       <DataTable
         data={payoutHistory}
         columns={columns}
-        className="data-table data-table-action mt-4 bg-white"
+        className="data-table data-table-action bg-white lg:mt-4"
         emptyStateMessage="No payout history found"
       />
     </div>
