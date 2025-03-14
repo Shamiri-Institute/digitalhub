@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -60,15 +61,6 @@ const behavioralResponses = [
   "Requests for further Support",
 ] as const;
 const overallFeedback = ["Positive", "Negative", "Neutral"] as const;
-
-const sessions = [
-  "Session 1 - Initial Assessment",
-  "Session 2 - Treatment Planning",
-  "Session 3 - Progress Review",
-  "Session 4 - Mid-Term Evaluation",
-  "Session 5 - Treatment Continuation",
-  "Final Session - Termination",
-];
 
 const CaseReportSchema = z.object({
   sessionId: stringValidation("Session ID is required"),
@@ -212,11 +204,14 @@ export default function CaseNotesForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {sessions.map((session) => (
-                        <SelectItem key={session} value={session}>
-                          {session}
-                        </SelectItem>
-                      ))}
+                      {clinicalCase.clinicalSessionAttendance?.map(
+                        (session) => (
+                          <SelectItem key={session.id} value={session.id}>
+                            {session.session} -{" "}
+                            {format(new Date(session.date), "dd MMM yyyy")}
+                          </SelectItem>
+                        ),
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />

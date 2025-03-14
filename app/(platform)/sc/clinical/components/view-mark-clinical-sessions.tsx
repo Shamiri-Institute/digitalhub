@@ -25,11 +25,11 @@ import { Calendar as CalendarIcon, Check, X } from "lucide-react";
 import { useState } from "react";
 
 const SESSION_TYPES = [
-  { key: "Pre", value: "Pre" },
-  { key: "S1", value: "S1" },
-  { key: "S2", value: "S2" },
-  { key: "S3", value: "S3" },
-  { key: "S4", value: "S4" },
+  { key: "Pre", value: "Pre-session" },
+  { key: "S1", value: "Clinical S1" },
+  { key: "S2", value: "Clinical S2" },
+  { key: "S3", value: "Clinical S3" },
+  { key: "S4", value: "Clinical S4" },
   { key: "F1", value: "Follow-Up 1" },
   { key: "F2", value: "Follow-Up 2" },
   // { key: 'F3', value: 'Follow-Up 3' },
@@ -39,19 +39,6 @@ const SESSION_TYPES = [
   // { key: 'F7', value: 'Follow-Up 7' },
   // { key: 'F8', value: 'Follow-Up 8' },
 ] as const;
-
-type SessionType = (typeof SESSION_TYPES)[number]["key"];
-
-interface AttendanceRecord {
-  date: Date;
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  session: string;
-  supervisorId: string;
-  attendanceStatus: boolean | null;
-  caseId: string;
-}
 
 export default function ViewMarkClinicalSessions({
   currentcase,
