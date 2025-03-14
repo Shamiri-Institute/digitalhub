@@ -24,6 +24,7 @@ export async function getClinicalCases() {
         },
       },
       sessions: true,
+      clinicalCaseNotes: true,
     },
   });
 
@@ -66,6 +67,7 @@ export async function getClinicalCases() {
         caseInfo.generalPresentingIssuesOtherSpecifiedEndpoint,
       clinicalSessionAttendance: caseInfo.sessions,
       currentSupervisorId: caseInfo.currentSupervisorId,
+      clinicalCaseNotes: caseInfo.clinicalCaseNotes,
     };
   });
 }
