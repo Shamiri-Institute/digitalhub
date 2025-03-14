@@ -23,17 +23,7 @@ export async function getClinicalCases() {
           },
         },
       },
-      sessions: {
-        select: {
-          id: true,
-          session: true,
-          date: true,
-          attendanceStatus: true,
-        },
-        orderBy: {
-          date: "asc",
-        },
-      },
+      sessions: true,
     },
   });
 
@@ -74,6 +64,8 @@ export async function getClinicalCases() {
         caseInfo.generalPresentingIssuesOtherSpecifiedBaseline,
       generalPresentingIssuesOtherSpecifiedEndpoint:
         caseInfo.generalPresentingIssuesOtherSpecifiedEndpoint,
+      clinicalSessionAttendance: caseInfo.sessions,
+      currentSupervisorId: caseInfo.currentSupervisorId,
     };
   });
 }
@@ -653,5 +645,46 @@ export async function createClinicalCaseNotes(data: {
   } catch (error) {
     console.error(error);
     return { success: false };
+  }
+}
+
+export async function updateClinicalCaseAttendance(data: {
+  caseId: string;
+  session: string;
+  supervisorId: string;
+  dateOfSession: Date;
+  attendanceStatus: boolean;
+}) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    if (currentUser.personnelRole !== "supervisor") {
+      throw new Error("You are not authorized to create clinical case notes");
+    }
+
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: {
+        sessions: {
+          create: {
+            date: data.dateOfSession,
+            session: data.session,
+            supervisorId: data.supervisorId,
+            attendanceStatus: data.attendanceStatus,
+          },
+        },
+      },
+    });
+
+    revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { error: "Something went wrong" };
   }
 }
