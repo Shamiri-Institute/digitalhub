@@ -1,4 +1,5 @@
 import { currentFellow } from "#/app/auth";
+import { fetchFellowDocuments } from "app/(platform)/fel/actions";
 import ProfileFormWrapper from "app/(platform)/new-edit-profile/components/ProfileFormWrapper";
 import { GenericFormData } from "app/(platform)/new-edit-profile/components/genericProfile";
 import { signOut } from "next-auth/react";
@@ -12,7 +13,6 @@ export default async function Page() {
 
   const allowedGenders = ["Male", "Female"] as const;
   type AllowedGender = (typeof allowedGenders)[number];
-
   const genderValue: AllowedGender = allowedGenders.includes(
     fellow.gender as AllowedGender,
   )
@@ -23,9 +23,6 @@ export default async function Page() {
     ? new Date(fellow.dateOfBirth).toISOString().split("T")[0]
     : undefined;
 
-  const countyValue = fellow.county ?? "";
-  const subCountyValue = fellow.subCounty ?? "";
-
   const initialData: GenericFormData = {
     email: fellow.fellowEmail ?? "",
     name: fellow.fellowName ?? "",
@@ -34,11 +31,13 @@ export default async function Page() {
     mpesaNumber: fellow.mpesaNumber ?? "",
     dateOfBirth,
     gender: genderValue,
-    county: countyValue as GenericFormData["county"],
-    subCounty: subCountyValue,
+    county: (fellow.county ?? "") as GenericFormData["county"],
+    subCounty: fellow.subCounty ?? "",
     bankName: "",
     bankBranch: "",
   };
+
+  const fellowDocuments = await fetchFellowDocuments();
 
   return (
     <>
@@ -47,7 +46,11 @@ export default async function Page() {
           No county was provided. Please pick the nearest county from the list.
         </p>
       )}
-      <ProfileFormWrapper initialData={initialData} role="fellow" />
+      <ProfileFormWrapper
+        initialData={initialData}
+        role="fellow"
+        fellowDocuments={fellowDocuments}
+      />
     </>
   );
 }

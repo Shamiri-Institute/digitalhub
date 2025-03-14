@@ -1,6 +1,7 @@
 "use client";
 
 import { Icons } from "#/components/icons";
+import { Avatar, AvatarImage } from "#/components/ui/avatar";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
 import {
@@ -19,6 +20,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
+import { DownloadIcon } from "#/components/ui/layout-icons";
 import {
   Popover,
   PopoverContent,
@@ -49,11 +51,9 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const counties = KENYAN_COUNTIES.map((c) => c.name);
-
 export const GenericFormSchema = z.object({
-  name: stringValidation("Please enter your name"),
   email: stringValidation("Please enter your email"),
+  name: stringValidation("Please enter your name"),
   idNumber: stringValidation("Please enter your ID Number"),
   cellNumber: z
     .string({ required_error: "Please enter the phone number" })
@@ -63,7 +63,7 @@ export const GenericFormSchema = z.object({
   mpesaNumber: stringValidation("Please enter your mpesa number"),
   dateOfBirth: stringValidation("Please enter your date of birth").optional(),
   gender: stringValidation("Please select your gender"),
-  county: z.enum([...counties] as [string, ...string[]], {
+  county: z.enum(KENYAN_COUNTIES.map((c) => c.name) as [string, ...string[]], {
     errorMap: () => ({ message: "Please pick a valid county" }),
   }),
   subCounty: stringValidation("Please enter your sub-county"),
@@ -73,36 +73,33 @@ export const GenericFormSchema = z.object({
 
 export type GenericFormData = z.infer<typeof GenericFormSchema>;
 
+export type FellowDocument = {
+  id: string;
+  fileName: string;
+  link: string;
+  type: string;
+  uploadedBy: string;
+  createdAt: Date;
+};
+
 type GenericProfileFormProps = {
   initialData: GenericFormData;
   onSubmit: (data: GenericFormData) => Promise<void>;
   role?: "supervisor" | "hub-coordinator" | "fellow";
+  fellowDocuments?: FellowDocument[];
 };
 
 export default function GenericProfileForm({
   initialData,
   onSubmit,
   role = "supervisor",
+  fellowDocuments = [],
 }: GenericProfileFormProps) {
-  const { data: session } = useSession();
   const router = useRouter();
+  const { data: session } = useSession();
   const isFellow = role === "fellow";
   const isReadOnlyForSupervisors =
     role === "supervisor" || role === "hub-coordinator";
-
-  function maybeWrapWithTooltip(child: JSX.Element) {
-    if (!isFellow) return child;
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="w-full bg-white">{child}</div>
-        </TooltipTrigger>
-        <TooltipContent>
-          Contact your hub-coordinator to make changes
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
 
   const form = useForm<GenericFormData>({
     resolver: zodResolver(GenericFormSchema),
@@ -120,6 +117,18 @@ export default function GenericProfileForm({
     }
   }, [countyWatcher, form]);
 
+  function maybeWrapWithTooltip(child: JSX.Element) {
+    if (!isFellow) return child;
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="w-full bg-white">{child}</div>
+        </TooltipTrigger>
+        <TooltipContent>Contact Coordinator to edit</TooltipContent>
+      </Tooltip>
+    );
+  }
+
   async function handleSubmit(data: GenericFormData) {
     try {
       await onSubmit(data);
@@ -136,31 +145,68 @@ export default function GenericProfileForm({
     }
   }
 
+  function renderDocumentSection(
+    title: string,
+    docType: "contract" | "identity" | "qualification",
+  ) {
+    const docs = fellowDocuments.filter((doc) => doc.type === docType);
+    return (
+      <div className="mb-4">
+        <div className="py-2">
+          <span className="pb-2 text-xs uppercase text-gray-500">{title}</span>
+          <Separator />
+        </div>
+        {docs.length > 0 ? (
+          docs.map((doc) => (
+            <div
+              key={doc.id}
+              className="mb-2 flex items-center justify-between rounded-md border border-dashed border-gray-200 p-1"
+            >
+              <div className="flex items-center gap-2">
+                <Icons.checkCircle className="h-5 w-5 text-green-500" />
+                <p>{doc.fileName}</p>
+              </div>
+              <Button variant="ghost" size="icon">
+                <a
+                  href={doc.link}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <DownloadIcon />
+                </a>
+              </Button>
+            </div>
+          ))
+        ) : (
+          <div className="pointer-events-none mb-2 flex items-center justify-between rounded-md border border-dashed border-gray-200 p-1 opacity-50">
+            <p className="text-sm text-gray-500">
+              No {title}. Contact Coordinator.
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <Dialog
-      open={true}
-      onOpenChange={(open) => {
-        if (!open) {
-          router.back();
-        }
-      }}
-    >
+    <Dialog open={true} onOpenChange={(open) => !open && router.back()}>
       <DialogContent className="p-5">
         <DialogHeader>
           <DialogTitle>My Profile</DialogTitle>
           <div className="flex items-center gap-4">
-            <div className="relative h-7 w-7">
-              <img
-                src={session?.user?.image || "/placeholder.png"}
-                alt="Profile"
-                className="h-7 w-7 rounded-full border object-cover"
+            <Avatar className="h-7 w-7">
+              <AvatarImage
+                src={session?.user?.image ?? ""}
+                alt={form.getValues("name")}
               />
-            </div>
+            </Avatar>
             <p className="text-[20px] font-semibold text-gray-600">
               {form.getValues("name")}
             </p>
           </div>
         </DialogHeader>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
             <div className="space-y-6">
@@ -343,10 +389,7 @@ export default function GenericProfileForm({
                     name="county"
                     render={({ field }) => (
                       <FormItem className="w-full">
-                        <FormLabel>
-                          County{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                        <FormLabel>County *</FormLabel>
                         {isFellow ? (
                           maybeWrapWithTooltip(
                             <Select value={field.value} disabled>
@@ -356,9 +399,9 @@ export default function GenericProfileForm({
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent className="max-h-[200px]">
-                                {counties.map((c) => (
-                                  <SelectItem key={c} value={c}>
-                                    {c}
+                                {KENYAN_COUNTIES.map((c) => (
+                                  <SelectItem key={c.name} value={c.name}>
+                                    {c.name}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
@@ -375,9 +418,9 @@ export default function GenericProfileForm({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="max-h-[200px]">
-                              {counties.map((c) => (
-                                <SelectItem key={c} value={c}>
-                                  {c}
+                              {KENYAN_COUNTIES.map((c) => (
+                                <SelectItem key={c.name} value={c.name}>
+                                  {c.name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -392,10 +435,7 @@ export default function GenericProfileForm({
                     name="subCounty"
                     render={({ field }) => (
                       <FormItem className="w-full">
-                        <FormLabel>
-                          Sub-county{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
+                        <FormLabel>Sub-county *</FormLabel>
                         {isFellow ? (
                           maybeWrapWithTooltip(
                             <Select value={field.value} disabled>
@@ -459,6 +499,7 @@ export default function GenericProfileForm({
                   />
                 </div>
               </div>
+
               <div className="flex flex-col">
                 <div className="py-2">
                   <span className="pb-2 text-xs uppercase text-gray-500">
@@ -506,6 +547,18 @@ export default function GenericProfileForm({
                   />
                 </div>
               </div>
+
+              {isFellow && (
+                <div className="mt-6">
+                  {renderDocumentSection("Contract Information", "contract")}
+                  {renderDocumentSection("Identity Information", "identity")}
+                  {renderDocumentSection(
+                    "Qualification Information",
+                    "qualification",
+                  )}
+                </div>
+              )}
+
               {!isFellow && (
                 <div className="flex flex-col">
                   <div className="py-2">
@@ -545,17 +598,27 @@ export default function GenericProfileForm({
                 </div>
               )}
             </div>
+
             <DialogFooter className="pt-4">
               {isFellow ? (
-                <Button variant="outline" onClick={() => router.back()}>
-                  Close Profile
+                <Button
+                  variant="default"
+                  onClick={() => router.back()}
+                  className="bg-shamiri-new-blue text-white hover:bg-shamiri-new-blue/90"
+                >
+                  Done
                 </Button>
               ) : (
                 <>
                   <Button variant="outline" onClick={() => router.back()}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={form.formState.isSubmitting}>
+                  <Button
+                    variant="default"
+                    type="submit"
+                    disabled={form.formState.isSubmitting}
+                    className="bg-shamiri-new-blue text-white hover:bg-shamiri-new-blue/90"
+                  >
                     {form.formState.isSubmitting
                       ? "Updating..."
                       : "Update & Save"}

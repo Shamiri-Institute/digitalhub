@@ -3,16 +3,21 @@
 import { updateHubCoordinatorProfile } from "app/(platform)/hc/actions";
 import { updateSupervisorProfile } from "app/(platform)/sc/actions";
 import { useRouter } from "next/navigation";
-import GenericProfileForm, { GenericFormData } from "./genericProfile";
+import GenericProfileForm, {
+  FellowDocument,
+  GenericFormData,
+} from "./genericProfile";
 
 type ProfileFormWrapperProps = {
   role: "supervisor" | "hub-coordinator" | "fellow";
   initialData: GenericFormData;
+  fellowDocuments?: FellowDocument[];
 };
 
 export default function ProfileFormWrapper({
   initialData,
   role,
+  fellowDocuments,
 }: ProfileFormWrapperProps) {
   const router = useRouter();
 
@@ -31,7 +36,6 @@ export default function ProfileFormWrapper({
         bankName: data.bankName,
         bankBranch: data.bankBranch,
       };
-
       const result = await updateSupervisorProfile(transformedData);
       if (!result?.success) {
         throw new Error(result?.message ?? "Profile update failed");
@@ -50,7 +54,6 @@ export default function ProfileFormWrapper({
         bankName: data.bankName,
         bankBranch: data.bankBranch,
       };
-
       const result = await updateHubCoordinatorProfile(transformedData);
       if (!result?.success) {
         throw new Error(result?.message ?? "Profile update failed");
@@ -65,6 +68,7 @@ export default function ProfileFormWrapper({
       initialData={initialData}
       onSubmit={onSubmit}
       role={role}
+      fellowDocuments={fellowDocuments}
     />
   );
 }
