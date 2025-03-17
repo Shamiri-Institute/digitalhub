@@ -9,6 +9,19 @@ import { Button } from "#/components/ui/button";
 import { useToast } from "#/components/ui/use-toast";
 import EmailPasswordLoginForm from "./email-password-form";
 
+function showEmailPasswordForm() {
+  return process.env.NEXT_PUBLIC_ENV === "production" ? null : (
+    <>
+      <EmailPasswordLoginForm />
+      <div className="flex items-center py-5">
+        <div className="flex-grow border-t border-gray-400"></div>
+        <span className="mx-4 flex-shrink text-gray-400">Or</span>
+        <div className="flex-grow border-t border-gray-400"></div>
+      </div>
+    </>
+  );
+}
+
 export function LoginForm() {
   const searchParams = useSearchParams();
   const [clickedGoogle, setClickedGoogle] = useState(false);
@@ -19,23 +32,22 @@ export function LoginForm() {
     error && toast({ title: error });
   }, [searchParams, toast]);
 
-  if (process.env.NEXT_PUBLIC_ENV !== "production") {
-    return <EmailPasswordLoginForm />;
-  }
-
   return (
-    <Button
-      variant="brand"
-      disabled={clickedGoogle}
-      onClick={() => {
-        setClickedGoogle(true);
-        signIn("google", { callbackUrl: "/?login=1" });
-      }}
-      className="flex gap-2"
-      data-testid="google-login"
-    >
-      <Icons.google className="h-4 w-4" />
-      Continue with Google
-    </Button>
+    <>
+      {showEmailPasswordForm()}
+      <Button
+        variant="brand"
+        disabled={clickedGoogle}
+        onClick={() => {
+          setClickedGoogle(true);
+          signIn("google", { callbackUrl: "/?login=1" });
+        }}
+        className="flex gap-2"
+        data-testid="google-login"
+      >
+        <Icons.google className="h-4 w-4" />
+        Continue with Google
+      </Button>
+    </>
   );
 }
