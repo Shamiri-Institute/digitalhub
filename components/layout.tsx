@@ -6,7 +6,20 @@ import Link from "next/link";
 import { PersonnelTool } from "#/app/dev-personnel-switcher";
 import { Footer } from "#/components/footer";
 import { Header } from "#/components/header";
-import { Icons } from "#/components/icons";
+import {
+  BarChartIcon,
+  CalendarIcon,
+  FeedbackIcon,
+  GraduationCapIcon,
+  HelpIcon,
+  Icons,
+  NotificationIcon,
+  PeopleIcon,
+  PeopleIconAlternate,
+  RoleIcon,
+  SchoolIcon,
+  SignOutIcon,
+} from "#/components/icons";
 import { Navigation } from "#/components/navigation";
 import {
   Popover,
@@ -19,19 +32,6 @@ import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
-import {
-  BarChartIcon,
-  CalendarIcon,
-  FeedbackIcon,
-  GraduationCapIcon,
-  HelpIcon,
-  NotificationIcon,
-  PeopleIcon,
-  PeopleIconAlternate,
-  RoleIcon,
-  SchoolIcon,
-  SignOutIcon,
-} from "./ui/layout-icons";
 
 import { Button } from "#/components/ui/button";
 import {
