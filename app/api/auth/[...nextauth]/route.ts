@@ -82,6 +82,7 @@ const authOptions: AuthOptions = {
       if (account?.provider === "credentials") {
         return true;
       }
+
       if (account?.provider === "google") {
         const userExists = await db.user.findUnique({
           where: { email: user.email },

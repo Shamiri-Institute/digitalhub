@@ -303,6 +303,8 @@ async function createCoreUsers(
       id: objectId("user"),
       email: "benny@shamiri.institute",
       role: ImplementerRole.OPERATIONS,
+      password: await hash("123456", 8),
+      name: "Benny Otieno",
     },
     {
       id: objectId("user"),
@@ -315,21 +317,29 @@ async function createCoreUsers(
       id: objectId("user"),
       email: "wambugu.davis@shamiri.institute",
       role: ImplementerRole.FELLOW,
+      password: await hash("123456", 8),
+      name: "Davis Wambugu",
     },
     {
       id: objectId("user"),
       email: "stanley.george@shamiri.institute",
       role: ImplementerRole.CLINICAL_LEAD,
+      password: await hash("123456", 8),
+      name: "Stanley George",
     },
     {
       id: objectId("user"),
       email: "ichami.etyang@shamiri.institute",
       role: ImplementerRole.HUB_COORDINATOR,
+      password: await hash("123456", 8),
+      name: "Ichami Etyang",
     },
     {
       id: objectId("user"),
       email: "mmbone@shamiri.institute",
       role: ImplementerRole.SUPERVISOR,
+      password: await hash("123456", 8),
+      name: "Wendy Mmbone",
     },
   ];
 
