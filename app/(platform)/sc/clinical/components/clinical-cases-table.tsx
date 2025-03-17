@@ -1,11 +1,9 @@
 "use client";
 import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
-import {
-  columns,
-  subColumnsSessionAttendanceHistory,
-} from "#/app/(platform)/sc/clinical/columns";
+import { columns } from "#/app/(platform)/sc/clinical/columns";
 import { AddNewClinicalCaseForm } from "#/app/(platform)/sc/clinical/components/add-new-clinical-case-form";
 import { ClinicalDiagnosingBoard } from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
+import ViewMarkClinicalSessions from "#/app/(platform)/sc/clinical/components/view-mark-clinical-sessions";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
@@ -63,14 +61,7 @@ export default function ClinicalCasesTable({
       renderSubComponent={({ row }) => (
         <div className="space-y-6 p-4">
           <ClinicalDiagnosingBoard currentcase={row.original} />
-          <>
-            <DataTable
-              data={row.original.sessionAttendanceHistory || []}
-              columns={subColumnsSessionAttendanceHistory}
-              className="data-table data-table-action border-0 bg-white"
-              emptyStateMessage="No clinical session attendance history found"
-            />
-          </>
+          <ViewMarkClinicalSessions currentcase={row.original} />
         </div>
       )}
       emptyStateMessage="No clinical cases found"
