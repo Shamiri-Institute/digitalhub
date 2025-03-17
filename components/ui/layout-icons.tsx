@@ -163,8 +163,8 @@ export const RoleIcon = ({ fill }: { fill?: string }) => (
     fill={fill || "currentColor"}
   >
     <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
+      fillRule="evenodd"
+      clipRule="evenodd"
       d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM20 9H15V21C15 21.55 14.55 22 14 22C13.45 22 13 21.55 13 21V16H11V21C11 21.55 10.55 22 10 22C9.45 22 9 21.55 9 21V9H4C3.45 9 3 8.55 3 8C3 7.45 3.45 7 4 7H20C20.55 7 21 7.45 21 8C21 8.55 20.55 9 20 9Z"
     />
   </svg>
