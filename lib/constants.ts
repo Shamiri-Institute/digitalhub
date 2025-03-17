@@ -21,7 +21,12 @@ export const CURRENT_PROJECT_ID = "2024P2_Project_1";
 export const constants = z
   .object({
     NEXT_PUBLIC_APP_URL: z.string(),
-    NEXT_PUBLIC_ENV: z.enum(["development", "preview", "production"]),
+    NEXT_PUBLIC_ENV: z.enum([
+      "development",
+      "preview",
+      "production",
+      "training",
+    ]),
   })
   .parse({
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,

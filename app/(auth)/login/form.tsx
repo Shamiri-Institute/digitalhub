@@ -32,8 +32,6 @@ export function LoginForm() {
     error && toast({ title: error });
   }, [searchParams, toast]);
 
-  console.log('dummmy test')
-
   return (
     <>
       {showEmailPasswordForm()}
