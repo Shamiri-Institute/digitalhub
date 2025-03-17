@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -42,15 +43,6 @@ const terminationReasons = [
   "Student absence (suspension, expulsion, fees issue etc)",
   "Mutual termination after outcome achievement",
   "Mutual termination after referral",
-] as const;
-
-const sessions = [
-  "Session 1 - Initial Assessment",
-  "Session 2 - Treatment Planning",
-  "Session 3 - Progress Review",
-  "Session 4 - Mid-Term Evaluation",
-  "Session 5 - Treatment Continuation",
-  "Final Session - Termination",
 ] as const;
 
 const CaseTerminationSchema = z.object({
@@ -141,11 +133,14 @@ export default function CaseTerminationForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {sessions.map((session) => (
-                        <SelectItem key={session} value={session}>
-                          {session}
-                        </SelectItem>
-                      ))}
+                      {clinicalCase.clinicalSessionAttendance?.map(
+                        (session) => (
+                          <SelectItem key={session.id} value={session.id}>
+                            {session.session} -{" "}
+                            {format(new Date(session.date), "dd MMM yyyy")}
+                          </SelectItem>
+                        ),
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
