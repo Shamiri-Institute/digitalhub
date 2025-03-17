@@ -16,6 +16,7 @@ import {
   sessionTypes,
   Supervisor,
 } from "@prisma/client";
+import { hash } from "bcryptjs";
 import { isBefore, startOfMonth } from "date-fns";
 
 // GETTING STARTED WITH SEEDING
@@ -307,6 +308,7 @@ async function createCoreUsers(
       id: objectId("user"),
       email: "shadrack.lilan@shamiri.institute",
       role: ImplementerRole.SUPERVISOR,
+      password: await hash('123456', 8),
     },
     {
       id: objectId("user"),
@@ -331,9 +333,10 @@ async function createCoreUsers(
   ];
 
   const users = await db.user.createManyAndReturn({
-    data: userData.map(({ id, email }) => ({
+    data: userData.map(({ id, email, password = null }) => ({
       id,
       email,
+      password
     })),
   });
 

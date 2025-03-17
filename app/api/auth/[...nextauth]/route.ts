@@ -1,5 +1,5 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { compare } from "@node-rs/bcrypt";
+import { compare } from 'bcryptjs'
 import { ImplementerRole, Prisma } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
 import NextAuth, { type AuthOptions } from "next-auth";
@@ -15,55 +15,58 @@ const config = z
     GOOGLE_ID: z.string(),
     GOOGLE_SECRET: z.string(),
   })
-  .parse(process.env);
+  .parse({ GOOGLE_ID: 'testing', GOOGLE_SECRET: 'testing ' })
+//.parse(process.env);
+//
+console.log({ env_type: process.env.nODE_ENV })
 
 const providers: AuthOptions["providers"] =
   process.env.NODE_ENV === "production"
     ? [
-        GoogleProvider({
-          clientId: config.GOOGLE_ID,
-          clientSecret: config.GOOGLE_SECRET,
-          allowDangerousEmailAccountLinking: true,
-        }),
-      ]
+      GoogleProvider({
+        clientId: config.GOOGLE_ID,
+        clientSecret: config.GOOGLE_SECRET,
+        allowDangerousEmailAccountLinking: true,
+      }),
+    ]
     : [
-        GoogleProvider({
-          clientId: config.GOOGLE_ID,
-          clientSecret: config.GOOGLE_SECRET,
-          allowDangerousEmailAccountLinking: true,
-        }),
-        CredentialsProvider({
-          name: "Credentials",
-          credentials: {
-            email: {
-              label: "Email",
-              type: "email",
-              placeholder: "username@example.com",
-            },
-            password: { label: "Password", type: "password" },
+      GoogleProvider({
+        clientId: config.GOOGLE_ID,
+        clientSecret: config.GOOGLE_SECRET,
+        allowDangerousEmailAccountLinking: true,
+      }),
+      CredentialsProvider({
+        name: "Credentials",
+        credentials: {
+          email: {
+            label: "Email",
+            type: "email",
+            placeholder: "username@example.com",
           },
-          async authorize(credentials, _req) {
-            const user = await db.user.findUnique({
-              where: { email: credentials?.email },
-            });
+          password: { label: "Password", type: "password" },
+        },
+        async authorize(credentials, _req) {
+          const user = await db.user.findUnique({
+            where: { email: credentials?.email },
+          });
 
-            if (!user) {
-              return null;
-            }
+          if (!user) {
+            return null;
+          }
 
-            if (!user.password) {
-              return null;
-            }
+          if (!user.password) {
+            return null;
+          }
 
-            const validPassword = await compare(
-              credentials?.password!,
-              user.password,
-            );
+          const validPassword = await compare(
+            credentials?.password!,
+            user.password,
+          );
 
-            return validPassword ? user : null;
-          },
-        }),
-      ];
+          return validPassword ? user : null;
+        },
+      }),
+    ];
 
 const authOptions: AuthOptions = {
   debug: process.env.DEBUG === "1",
@@ -77,6 +80,10 @@ const authOptions: AuthOptions = {
     signIn: async ({ user, account, profile }) => {
       if (!user.email) {
         return false;
+      }
+
+      if (account?.provider === 'credentials') {
+        return true;
       }
       if (account?.provider === "google") {
         const userExists = await db.user.findUnique({
@@ -112,6 +119,9 @@ const authOptions: AuthOptions = {
       return false;
     },
     session: async ({ session, token }) => {
+      console.log('here in session callback')
+      console.log({ session })
+      console.log({ token })
       const user = await db.user.findUnique({
         where: {
           id: token.sub,
