@@ -15,13 +15,11 @@ const config = z
     GOOGLE_ID: z.string(),
     GOOGLE_SECRET: z.string(),
   })
-  .parse({ GOOGLE_ID: 'testing', GOOGLE_SECRET: 'testing ' })
-//.parse(process.env);
-//
-console.log({ env_type: process.env.nODE_ENV })
+  .parse(process.env);
+
 
 const providers: AuthOptions["providers"] =
-  process.env.NODE_ENV === "production"
+  process.env.ENV === "production"
     ? [
       GoogleProvider({
         clientId: config.GOOGLE_ID,
@@ -119,9 +117,6 @@ const authOptions: AuthOptions = {
       return false;
     },
     session: async ({ session, token }) => {
-      console.log('here in session callback')
-      console.log({ session })
-      console.log({ token })
       const user = await db.user.findUnique({
         where: {
           id: token.sub,
@@ -170,7 +165,7 @@ const authOptions: AuthOptions = {
       session.user = sessionUser;
       return session;
     },
-    jwt: async ({ token, user, account, trigger }) => {
+    jwt: async ({ token, user, trigger }) => {
       if (trigger === "signIn") {
         if (user.email) {
           const currentUser = await db.user.findUnique({
