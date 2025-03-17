@@ -10,7 +10,7 @@ import { useToast } from "#/components/ui/use-toast";
 import EmailPasswordLoginForm from "./email-password-form";
 
 function showEmailPasswordForm() {
-  console.log({ loginStuff: process.env })
+  console.log({ loginStuff: process.env });
   return process.env.NEXT_PUBLIC_ENV === "production" ? null : (
     <>
       <EmailPasswordLoginForm />

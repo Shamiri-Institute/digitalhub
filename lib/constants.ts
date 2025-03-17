@@ -25,7 +25,8 @@ export const constants = z
       "development",
       "preview",
       "production",
-      "training",
+      "training", // TODO: THIS AND TESTING NEED TO BE EVALUATED WITH REGARDS TO OUR VERCEL SETUPS
+      "testing",
     ]),
   })
   .parse({
