@@ -1,7 +1,7 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { compare } from 'bcryptjs'
 import { ImplementerRole, Prisma } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
+import { compare } from "bcryptjs";
 import NextAuth, { type AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -17,54 +17,53 @@ const config = z
   })
   .parse(process.env);
 
-
 const providers: AuthOptions["providers"] =
   process.env.ENV === "production"
     ? [
-      GoogleProvider({
-        clientId: config.GOOGLE_ID,
-        clientSecret: config.GOOGLE_SECRET,
-        allowDangerousEmailAccountLinking: true,
-      }),
-    ]
+        GoogleProvider({
+          clientId: config.GOOGLE_ID,
+          clientSecret: config.GOOGLE_SECRET,
+          allowDangerousEmailAccountLinking: true,
+        }),
+      ]
     : [
-      GoogleProvider({
-        clientId: config.GOOGLE_ID,
-        clientSecret: config.GOOGLE_SECRET,
-        allowDangerousEmailAccountLinking: true,
-      }),
-      CredentialsProvider({
-        name: "Credentials",
-        credentials: {
-          email: {
-            label: "Email",
-            type: "email",
-            placeholder: "username@example.com",
+        GoogleProvider({
+          clientId: config.GOOGLE_ID,
+          clientSecret: config.GOOGLE_SECRET,
+          allowDangerousEmailAccountLinking: true,
+        }),
+        CredentialsProvider({
+          name: "Credentials",
+          credentials: {
+            email: {
+              label: "Email",
+              type: "email",
+              placeholder: "username@example.com",
+            },
+            password: { label: "Password", type: "password" },
           },
-          password: { label: "Password", type: "password" },
-        },
-        async authorize(credentials, _req) {
-          const user = await db.user.findUnique({
-            where: { email: credentials?.email },
-          });
+          async authorize(credentials, _req) {
+            const user = await db.user.findUnique({
+              where: { email: credentials?.email },
+            });
 
-          if (!user) {
-            return null;
-          }
+            if (!user) {
+              return null;
+            }
 
-          if (!user.password) {
-            return null;
-          }
+            if (!user.password) {
+              return null;
+            }
 
-          const validPassword = await compare(
-            credentials?.password!,
-            user.password,
-          );
+            const validPassword = await compare(
+              credentials?.password!,
+              user.password,
+            );
 
-          return validPassword ? user : null;
-        },
-      }),
-    ];
+            return validPassword ? user : null;
+          },
+        }),
+      ];
 
 const authOptions: AuthOptions = {
   debug: process.env.DEBUG === "1",
@@ -80,7 +79,7 @@ const authOptions: AuthOptions = {
         return false;
       }
 
-      if (account?.provider === 'credentials') {
+      if (account?.provider === "credentials") {
         return true;
       }
       if (account?.provider === "google") {

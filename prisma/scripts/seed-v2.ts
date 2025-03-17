@@ -308,8 +308,8 @@ async function createCoreUsers(
       id: objectId("user"),
       email: "shadrack.lilan@shamiri.institute",
       role: ImplementerRole.SUPERVISOR,
-      password: await hash('123456', 8),
-      name: "Shadrack Lilan"
+      password: await hash("123456", 8),
+      name: "Shadrack Lilan",
     },
     {
       id: objectId("user"),
@@ -338,7 +338,7 @@ async function createCoreUsers(
       id,
       email,
       password,
-      name
+      name,
     })),
   });
 
