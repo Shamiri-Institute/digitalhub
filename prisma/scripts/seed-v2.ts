@@ -309,6 +309,7 @@ async function createCoreUsers(
       email: "shadrack.lilan@shamiri.institute",
       role: ImplementerRole.SUPERVISOR,
       password: await hash('123456', 8),
+      name: "Shadrack Lilan"
     },
     {
       id: objectId("user"),
@@ -333,10 +334,11 @@ async function createCoreUsers(
   ];
 
   const users = await db.user.createManyAndReturn({
-    data: userData.map(({ id, email, password = null }) => ({
+    data: userData.map(({ id, email, password, name }) => ({
       id,
       email,
-      password
+      password,
+      name
     })),
   });
 
