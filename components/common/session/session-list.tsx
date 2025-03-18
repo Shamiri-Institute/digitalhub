@@ -213,6 +213,7 @@ export function SessionDetail({
             "bg-shamiri-light-grey/60": rescheduled,
           },
         )}
+        data-testid="session-item"
       >
         <div
           className={cn("font-semibold", {

@@ -143,7 +143,10 @@ export default function FellowAttendance({
     <div>
       <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
         <DialogPortal>
-          <DialogContent className="w-3/4 max-w-none">
+          <DialogContent
+            className="w-3/4 max-w-none"
+            data-testid="fellow-attendance-dialog"
+          >
             <DialogHeader>
               <span className="text-xl font-bold">
                 {role === "HUB_COORDINATOR"

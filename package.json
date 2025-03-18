@@ -18,6 +18,7 @@
     "lint": "next lint",
     "test:ci": "playwright test",
     "test:dev": "dotenv -c development -- playwright test",
+    "test:dev:attendance": "dotenv -c development -- playwright test --ui tests/e2e/fellow-attendance.spec.ts",
     "test:dev:only": "dotenv -c development -- playwright test --ui tests/e2e/hub-coordinator/schools-view.spec.ts",
     "test:dev:ui": "dotenv -c development -- playwright test --ui",
     "test:db:dump": "docker-compose exec db pg_dump --data-only -U youth -d shamiri_db -f /var/lib/postgresql/data/dump.sql && docker cp $(docker-compose ps -q db):/var/lib/postgresql/data/dump.sql ./tests/fixtures/dump.sql",
