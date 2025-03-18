@@ -1218,7 +1218,14 @@ async function createInterventionSessionsForSchools(
   // Start from a fixed date for static sessions
   let staticDate = new Date(2024, 0, 1, 9, 0); // January 1, 2024, 9 AM
 
+  // Create a Set to track used session types for the static school
+  const usedStaticSessionTypes = new Set<string>();
+
   for (const sessionName of staticSessionNames) {
+    // Skip if we've already used this session type for this school
+    if (usedStaticSessionTypes.has(sessionName.sessionName)) continue;
+    usedStaticSessionTypes.add(sessionName.sessionName);
+
     interventionSessions.push({
       id: objectId("session"),
       sessionDate: new Date(staticDate),
@@ -1238,6 +1245,17 @@ async function createInterventionSessionsForSchools(
 
   // Continue with dynamic sessions for other schools
   for (const school of schools.slice(1)) {
+    // Skip if school has no hub
+    if (!school.hubId) continue;
+
+    // Get session names for this school's hub
+    const schoolSessionNames = interventionSessionNames.filter(
+      (sn) => sn.hubId === school.hub?.id,
+    );
+
+    // Create a Set to track used session types for this school
+    const usedSessionTypes = new Set<string>();
+
     // Get all fellows who lead groups in this school
     const fellowsInSchool = school.interventionGroups.map(
       (group) => group.leader,
@@ -1248,7 +1266,11 @@ async function createInterventionSessionsForSchools(
     let currentDate = startOfMonth(new Date());
     currentDate.setHours(9, 0, 0, 0); // Set to 9 AM
 
-    for (const sessionName of interventionSessionNames) {
+    for (const sessionName of schoolSessionNames) {
+      // Skip if we've already used this session type for this school
+      if (usedSessionTypes.has(sessionName.sessionName)) continue;
+      usedSessionTypes.add(sessionName.sessionName);
+
       // Check if any fellow in this school has a session on this date
       while (
         Array.from(fellowIds).some((fellowId) => {
@@ -1264,7 +1286,7 @@ async function createInterventionSessionsForSchools(
       interventionSessions.push({
         id: objectId("session"),
         sessionDate: new Date(currentDate),
-        sessionEndTime: new Date(currentDate.getTime() + 3 * 60 * 60 * 1000), // 3 hours later
+        sessionEndTime: new Date(currentDate.getTime() + 3 * 60 * 60 * 1000),
         status: "Scheduled",
         sessionType: sessionName.sessionName,
         sessionId: sessionName.id,
