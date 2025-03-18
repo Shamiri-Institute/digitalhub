@@ -29,7 +29,7 @@ export default function SchoolTableDropdown({
         }
       }}
     >
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger asChild data-testid="school-table-dropdown">
         <div className="absolute inset-0 border-l bg-white">
           <div className="flex h-full w-full items-center justify-center">
             <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
@@ -54,7 +54,7 @@ export default function SchoolTableDropdown({
               role === "HUB_COORDINATOR"
                 ? `/hc/schools/${schoolRow.visibleId}`
                 : role === "SUPERVISOR"
-                  ? `/sc/schools/${schoolRow.visibleId}`
+                  ? `/sc/schools/${schoolRow.visibleId}/fellows`
                   : role === "FELLOW"
                     ? `/fel/schools/${schoolRow.visibleId}`
                     : "#"

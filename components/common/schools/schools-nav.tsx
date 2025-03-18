@@ -67,6 +67,7 @@ export default function SchoolsNav({
               value={option.name}
               aria-label={`Select ${option.name}`}
               className="form-toggle-button"
+              data-testid={`school-${option.name.toLowerCase()}-tab`}
             >
               <span className="text-nowrap">{option.name}</span>
             </ToggleGroupItem>
