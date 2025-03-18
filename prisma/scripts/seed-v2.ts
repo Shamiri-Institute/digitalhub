@@ -271,8 +271,8 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
   // Add static hub first
   const staticHub = {
     id: objectId("hub"),
-    visibleId: "STATIC1",
-    hubName: "Static Test Hub",
+    visibleId: "ARSENAL1",
+    hubName: "Arsenal Hub",
     projectId: projects[0]?.id as string,
     implementerId: implementers[0]?.id as string,
   };
@@ -423,7 +423,7 @@ async function createCoreUsers(
         dateOfBirth: faker.date.birthdate(),
         cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
         mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-        gender: faker.person.sex(),
+        gender: faker.person.sexType(),
         idNumber: faker.string.alpha({ casing: "upper", length: 8 }),
         assignedHubId: faker.helpers.arrayElement(hubs).id,
       };
@@ -452,17 +452,19 @@ async function createHubCoordinators(
   const staticCoordinators = [
     {
       id: objectId("user"),
-      email: "static.coordinator1@test.com",
+      email: "mikel.arteta@test.com",
       role: ImplementerRole.HUB_COORDINATOR,
       hubId: staticHub!.id,
       implementerId: staticHub!.implementerId,
+      coordinatorName: "Mikel Arteta",
     },
     {
       id: objectId("user"),
-      email: "static.coordinator2@test.com",
+      email: "edu.gaspar@test.com",
       role: ImplementerRole.HUB_COORDINATOR,
       hubId: staticHub!.id,
       implementerId: staticHub!.implementerId,
+      coordinatorName: "Edu Gaspar",
     },
   ];
   hubCoordinators.push(...staticCoordinators);
@@ -551,27 +553,30 @@ async function createSupervisors(
   const staticSupervisors = [
     {
       id: objectId("user"),
-      email: "static.supervisor1@test.com",
+      email: "martin.odegaard@test.com",
       role: ImplementerRole.SUPERVISOR,
       hubId: staticHub!.id,
       implementerId: staticHub!.implementerId,
       visibleId: "SUPERVISOR1",
+      supervisorName: "Martin Ødegaard",
     },
     {
       id: objectId("user"),
-      email: "static.supervisor2@test.com",
+      email: "declan.rice@test.com",
       role: ImplementerRole.SUPERVISOR,
       hubId: staticHub!.id,
       implementerId: staticHub!.implementerId,
       visibleId: "SUPERVISOR2",
+      supervisorName: "Declan Rice",
     },
     {
       id: objectId("user"),
-      email: "static.supervisor3@test.com",
+      email: "william.saliba@test.com",
       role: ImplementerRole.SUPERVISOR,
       hubId: staticHub!.id,
       implementerId: staticHub!.implementerId,
       visibleId: "SUPERVISOR3",
+      supervisorName: "William Saliba",
     },
   ];
   supervisors.push(...staticSupervisors);
@@ -666,9 +671,9 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
   const staticHub = hubs[0];
   const staticOps = {
     id: objectId("user"),
-    email: "static.ops@test.com",
+    email: "kai.havertz@test.com",
     implementerId: staticHub!.implementerId,
-    name: "Static Ops User",
+    name: "Kai Havertz",
     cellPhone: "254712345678",
   };
   operations.push(staticOps);
@@ -729,8 +734,8 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
   const staticHub = hubs[0];
   const staticClinicalLead = {
     id: objectId("user"),
-    clinicalLeadEmail: "static.clinical@test.com",
-    clinicalLeadName: "Static Clinical Lead",
+    clinicalLeadEmail: "ben.white@test.com",
+    clinicalLeadName: "Ben White",
     implementerId: staticHub!.implementerId,
     assignedHubId: staticHub!.id,
   };
@@ -794,29 +799,53 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
     {
       id: objectId("user"),
       visibleId: "FELLOW1",
-      fellowName: "Static Fellow One",
-      fellowEmail: "static.fellow1@test.com",
+      fellowName: "Bukayo Saka",
+      fellowEmail: "bukayo.saka@test.com",
       supervisorId: staticSupervisors[0]!.id,
       hubId: staticSupervisors[0]!.hubId,
       implementerId: staticSupervisors[0]!.implementerId,
+      mpesaName: "Bukayo Saka",
+      mpesaNumber: "254712345678",
+      cellNumber: "254712345678",
+      gender: "Male",
+      dateOfBirth: new Date(2001, 8, 5),
+      idNumber: "12345678",
+      county: "Nairobi",
+      subCounty: "Westlands",
     },
     {
       id: objectId("user"),
       visibleId: "FELLOW2",
-      fellowName: "Static Fellow Two",
-      fellowEmail: "static.fellow2@test.com",
+      fellowName: "Gabriel Martinelli",
+      fellowEmail: "gabriel.martinelli@test.com",
       supervisorId: staticSupervisors[1]!.id,
       hubId: staticSupervisors[1]!.hubId,
       implementerId: staticSupervisors[1]!.implementerId,
+      mpesaName: "Gabriel Martinelli",
+      mpesaNumber: "254723456789",
+      cellNumber: "254723456789",
+      gender: "Male",
+      dateOfBirth: new Date(2001, 5, 18),
+      idNumber: "23456789",
+      county: "Nairobi",
+      subCounty: "Westlands",
     },
     {
       id: objectId("user"),
       visibleId: "FELLOW3",
-      fellowName: "Static Fellow Three",
-      fellowEmail: "static.fellow3@test.com",
+      fellowName: "Gabriel Jesus",
+      fellowEmail: "gabriel.jesus@test.com",
       supervisorId: staticSupervisors[2]!.id,
       hubId: staticSupervisors[2]!.hubId,
       implementerId: staticSupervisors[2]!.implementerId,
+      mpesaName: "Gabriel Jesus",
+      mpesaNumber: "254734567890",
+      cellNumber: "254734567890",
+      gender: "Male",
+      dateOfBirth: new Date(1997, 3, 3),
+      idNumber: "34567890",
+      county: "Nairobi",
+      subCounty: "Westlands",
     },
   ];
   fellows.push(...staticFellows);
@@ -910,23 +939,23 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
   const staticHub = hubs[0];
   const staticSchool = {
     id: objectId("sch"),
-    visibleId: "STATIC_SCH",
-    schoolName: "Static Test School",
+    visibleId: "ARSENAL_SCH",
+    schoolName: "Emirates Academy",
     hubId: staticHub!.id,
     schoolType: "National",
-    schoolEmail: "static.school@test.com",
+    schoolEmail: "emirates.academy@test.com",
     schoolCounty: "Nairobi",
     schoolSubCounty: "Westlands",
     schoolDemographics: "Mixed",
-    pointPersonId: "STATIC_PP",
-    pointPersonName: "Static Point Person",
+    pointPersonId: "ARSENAL_PP",
+    pointPersonName: "Thomas Partey",
     pointPersonPhone: "254700000000",
     numbersExpected: 300,
-    principalName: "Static Principal",
+    principalName: "David Raya",
     droppedOut: false,
     dropoutReason: null,
     droppedOutAt: null,
-    assignedSupervisorId: supervisors[0]!.id, // First static supervisor
+    assignedSupervisorId: supervisors[0]!.id,
   };
   schools.push(staticSchool);
 
