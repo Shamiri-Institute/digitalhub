@@ -3,9 +3,10 @@
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
 
-export default function ComplaintsTableSkeleton() {
+export default function FellowsTableSkeleton() {
   const loadingColumns = [
     { header: "Fellow Name", id: "fellowName" },
+    { header: "Hub", id: "hub" },
     { header: "Supervisor Name", id: "supervisorName" },
     { header: "Special Session", id: "specialSession" },
     { header: "Pre Vs Main", id: "preVsMain" },
@@ -21,7 +22,7 @@ export default function ComplaintsTableSkeleton() {
   return (
     <div className="space-y-3 px-6 py-10">
       <DataTable
-        key="skeleton-complaints-table"
+        key="skeleton-fellows-table"
         columns={loadingColumns}
         data={Array.from(Array(10).keys()).map(() => ({}))}
         className="data-table data-table-action lg:mt-4"

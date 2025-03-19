@@ -1,23 +1,23 @@
 "use server";
 
-import { currentHubCoordinator } from "#/app/auth";
+import { currentHubCoordinator, currentOpsUser } from "#/app/auth";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
 
 export type HubFellowsAttendancesType = Awaited<
-  ReturnType<typeof loadHubFellowAttendance>
+  ReturnType<typeof loadHubsFellowAttendance>
 >[number];
 
-export async function loadHubFellowAttendance() {
-  const hubCoordinator = await currentHubCoordinator();
+export async function loadHubsFellowAttendance() {
+  const opsUser = await currentOpsUser();
 
-  if (!hubCoordinator) {
+  if (!opsUser) {
     throw new Error("Unauthorised user");
   }
 
   const fellows = await db.fellow.findMany({
     where: {
-      hubId: hubCoordinator.assignedHubId,
+      implementerId: opsUser.implementerId,
     },
     include: {
       hub: {

@@ -1,16 +1,16 @@
-import { loadHubPayoutHistory } from "#/app/(platform)/hc/reporting/expenses/payout-history/actions";
-import { currentHubCoordinator } from "#/app/auth";
+import { loadOpsHubsPayoutHistory } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
+import { currentOpsUser } from "#/app/auth";
 import FellowPayoutHistoryDataTable from "#/components/common/expenses/payout-history/payout-history-table";
-import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
+import { signOut } from "next-auth/react";
 
 export default async function PayoutHistoryPage() {
-  const hubPayoutHistory = await loadHubPayoutHistory();
+  const opsHubsPayoutHistory = await loadOpsHubsPayoutHistory();
 
-  const hubCoordinator = await currentHubCoordinator();
+  const opsUser = await currentOpsUser();
 
-  if (!hubCoordinator) {
-    return <InvalidPersonnelRole role="hub-coordinator" />;
+  if (!opsUser) {
+    return signOut({ callbackUrl: "/login" });
   }
 
-  return <FellowPayoutHistoryDataTable payoutHistory={hubPayoutHistory} />;
+  return <FellowPayoutHistoryDataTable payoutHistory={opsHubsPayoutHistory} />;
 }

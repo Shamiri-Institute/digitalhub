@@ -1,18 +1,18 @@
 "use server";
 
-import { currentHubCoordinator } from "#/app/auth";
+import { currentOpsUser } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
 
 export type HubSupervisorExpensesType = Awaited<
-  ReturnType<typeof loadHubSupervisorExpenses>
+  ReturnType<typeof loadHubsSupervisorExpenses>
 >[number];
 
-export async function loadHubSupervisorExpenses() {
-  const hubCoordinator = await currentHubCoordinator();
+export async function loadHubsSupervisorExpenses() {
+  const opsUser = await currentOpsUser();
 
-  if (!hubCoordinator) {
+  if (!opsUser) {
     await signOut({ callbackUrl: "/login" });
     throw new Error("Unauthorised user");
   }
@@ -20,7 +20,7 @@ export async function loadHubSupervisorExpenses() {
   const supervisorsExpenses = await db.reimbursementRequest.findMany({
     where: {
       supervisor: {
-        hubId: hubCoordinator.assignedHubId,
+        implementerId: opsUser.implementerId,
       },
     },
     include: {
@@ -28,6 +28,11 @@ export async function loadHubSupervisorExpenses() {
         select: {
           id: true,
           supervisorName: true,
+        },
+      },
+      hub: {
+        select: {
+          hubName: true,
         },
       },
     },
@@ -53,7 +58,7 @@ export async function loadHubSupervisorExpenses() {
       destination: "N/A",
       amount: expense.amount,
       status: expense.status,
-      hubCoordinatorName: hubCoordinator.coordinatorName,
+      hubCoordinatorName: expense.hub.hubName,
       mpesaName: expense.mpesaName,
       mpesaNumber: expense.mpesaNumber,
     };
@@ -68,13 +73,13 @@ export async function deleteSupervisorExpenseRequest({
   name: string;
 }) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
+    const opsUser = await currentOpsUser();
 
-    if (!hubCoordinator) {
+    if (!opsUser) {
       await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
-    if (name !== hubCoordinator.coordinatorName) {
+    if (name !== opsUser.name) {
       return {
         success: false,
         message: "Please enter the correct name",
@@ -98,20 +103,21 @@ export async function deleteSupervisorExpenseRequest({
   }
 }
 
-export async function getSupervisorsInHub() {
-  const hubCoordinator = await currentHubCoordinator();
+export async function getSupervisorsInImplementation() {
+  const opsUser = await currentOpsUser();
+
   return await db.supervisor.findMany({
     where: {
-      hubId: hubCoordinator?.assignedHubId!,
+      implementerId: opsUser?.implementerId,
     },
   });
 }
 
 export async function approveSupervisorExpense({ id }: { id: string }) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
+    const opsUser = await currentOpsUser();
 
-    if (!hubCoordinator) {
+    if (!opsUser) {
       await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
@@ -151,9 +157,9 @@ export async function addSupervisorExpense({
   };
 }) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
+    const opsUser = await currentOpsUser();
 
-    if (!hubCoordinator) {
+    if (!opsUser) {
       await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
@@ -162,8 +168,8 @@ export async function addSupervisorExpense({
       data: {
         id: objectId("reimb"),
         supervisorId: data.supervisor,
-        hubId: hubCoordinator.assignedHubId!,
-        hubCoordinatorId: hubCoordinator.id,
+        hubId: opsUser.assignedHubId!,
+        hubCoordinatorId: opsUser.id,
         incurredAt: new Date(data.week),
         amount: parseInt(data.totalAmount),
         kind: data.expenseType,
@@ -206,9 +212,9 @@ export async function updateSupervisorExpense({
   };
 }) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
+    const opsUser = await currentOpsUser();
 
-    if (!hubCoordinator) {
+    if (!opsUser) {
       await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
