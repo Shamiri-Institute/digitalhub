@@ -308,6 +308,7 @@ export function ListView({
                             }}
                             role={role}
                             fellowId={fellowId}
+                            supervisorId={supervisorId}
                           >
                             <div className="absolute inset-0 bg-white">
                               <div className="flex h-full w-full items-center justify-center">

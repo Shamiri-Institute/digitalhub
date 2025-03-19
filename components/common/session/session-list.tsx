@@ -66,6 +66,7 @@ export function SessionList({
           role={role}
           layout="expanded"
           fellowId={fellowId}
+          supervisorId={supervisorId}
         />
       )
     );
@@ -86,6 +87,7 @@ export function SessionList({
         }}
         role={role}
         fellowId={fellowId}
+        supervisorId={supervisorId}
       />
       <SessionDetail
         layout="compact"
@@ -99,6 +101,7 @@ export function SessionList({
         }}
         role={role}
         fellowId={fellowId}
+        supervisorId={supervisorId}
       />
       <div className="w-full">
         {moreSessions.length > 0 && (
@@ -128,6 +131,7 @@ export function SessionList({
                       }}
                       role={role}
                       fellowId={fellowId}
+                      supervisorId={supervisorId}
                     />
                   );
                 })}
@@ -146,6 +150,7 @@ export function SessionDetail({
   withDropdown = true,
   role,
   fellowId,
+  supervisorId,
 }: {
   state: {
     session: Session;
@@ -159,6 +164,7 @@ export function SessionDetail({
   withDropdown?: boolean;
   role: ImplementerRole;
   fellowId?: string;
+  supervisorId?: string;
 }) {
   const [timeLabels, setTimeLabels] = useState({
     startTimeLabel: "",
@@ -269,7 +275,12 @@ export function SessionDetail({
 
   return withDropdown ? (
     <div>
-      <SessionDropDown state={state} role={role} fellowId={fellowId}>
+      <SessionDropDown
+        state={state}
+        role={role}
+        fellowId={fellowId}
+        supervisorId={supervisorId}
+      >
         {renderSessionDetails()}
       </SessionDropDown>
     </div>
@@ -283,6 +294,7 @@ export function SessionDropDown({
   state,
   role,
   fellowId,
+  supervisorId,
 }: {
   children: React.ReactNode;
   state: {
@@ -295,6 +307,7 @@ export function SessionDropDown({
   };
   role: ImplementerRole;
   fellowId?: string;
+  supervisorId?: string;
 }) {
   const { session } = state;
   const supervisorAttendanceContext = useContext(SupervisorAttendanceContext);
@@ -358,7 +371,11 @@ export function SessionDropDown({
                 state.setSessionOccurrenceDialog &&
                   state.setSessionOccurrenceDialog(true);
               }}
-              disabled={session.status === "Cancelled" || session.occurred}
+              disabled={
+                session.status === "Cancelled" ||
+                session.occurred ||
+                session.school?.assignedSupervisorId !== supervisorId
+              }
             >
               Mark session occurrence
             </DropdownMenuItem>

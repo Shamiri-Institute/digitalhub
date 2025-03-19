@@ -147,6 +147,7 @@ export default function SessionsDatatable({
               setStudentAttendanceDialog,
               role,
               fellowId,
+              supervisorId,
             })}
             className={"data-table data-table-action lg:mt-4"}
             emptyStateMessage="No sessions found for this school"

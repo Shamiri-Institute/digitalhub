@@ -162,6 +162,7 @@ export function WeekView({
                         role={role}
                         dialogState={dialogState}
                         fellowId={fellowId}
+                        supervisorId={supervisorId}
                       />
                     ) : (
                       <td key={colIdx} />
@@ -222,6 +223,7 @@ function WeekCalendarCell({
   role,
   dialogState,
   fellowId,
+  supervisorId,
 }: {
   rowIdx: number;
   colIdx: number;
@@ -237,6 +239,7 @@ function WeekCalendarCell({
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
   fellowId?: string;
+  supervisorId?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -278,6 +281,7 @@ function WeekCalendarCell({
             role={role}
             dialogState={dialogState}
             fellowId={fellowId}
+            supervisorId={supervisorId}
           />
         </div>
       </div>

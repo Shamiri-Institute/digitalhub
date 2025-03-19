@@ -26,7 +26,7 @@ type SessionType = {
   amount: number;
 };
 
-const sessionTypes: SessionType[] = [
+export const hubSessionTypes: SessionType[] = [
   {
     name: "s0",
     label: "Pre-session",
@@ -210,7 +210,7 @@ async function main() {
     },
   });
   const sessions = hubs.map((hub) => {
-    return sessionTypes.map((sessionType) => {
+    return hubSessionTypes.map((sessionType) => {
       return {
         sessionType: sessionType.type,
         sessionName: sessionType.name,

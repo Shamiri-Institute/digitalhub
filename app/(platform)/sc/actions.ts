@@ -288,15 +288,31 @@ export async function markSessionOccurrence(
     const supervisor = await currentSupervisor();
 
     if (!supervisor) {
-      return {
-        success: false,
-        message: "User is not authorised",
-      };
+      throw new Error("User is not authorized.");
     }
 
     const parsedData = MarkSessionOccurrenceSchema.parse(data);
 
-    const session = await db.interventionSession.update({
+    const session = await db.interventionSession.findFirstOrThrow({
+      where: { id: parsedData.sessionId },
+      include: {
+        school: {
+          include: {
+            assignedSupervisor: true,
+          },
+        },
+      },
+    });
+
+    // TODO: Who should mark occurrence for venue sessions?
+    if (session.school?.assignedSupervisorId !== supervisor.id) {
+      throw new Error(
+        "User not assigned to school. Session can be updated by " +
+          session.school?.assignedSupervisor?.supervisorName,
+      );
+    }
+
+    await db.interventionSession.update({
       where: { id: parsedData.sessionId },
       data: {
         occurred: parsedData.occurrence === "attended",
@@ -306,17 +322,15 @@ export async function markSessionOccurrence(
     return {
       success: true,
       message: "Successfully updated session occurrence",
-      data: session,
     };
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error(error.message);
-      return {
-        error: error.message,
-      };
-    }
     console.error(error);
-    return { error: "Something went wrong" };
+    return {
+      success: false,
+      message:
+        (error as Error)?.message ??
+        "An error occurred while marking attendance.",
+    };
   }
 }
 

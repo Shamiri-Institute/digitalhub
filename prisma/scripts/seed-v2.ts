@@ -1,6 +1,7 @@
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { hubSessionTypes } from "#/prisma/generate-session-names";
 import { faker } from "@faker-js/faker";
 import {
   ClinicalLead,
@@ -815,7 +816,7 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
         droppedOut: false,
         dropoutReason: null,
         droppedOutAt: null,
-        assignedSupervisorId: faker.helpers.arrayElement(supervisors).id,
+        assignedSupervisorId: faker.helpers.arrayElement(hubSupervisors).id,
       });
     }
   });
@@ -943,34 +944,20 @@ async function createStudentsForSchools(
 async function createSessionNames(hubs: Hub[]) {
   console.log("creating session names");
   const sessionNamesRecords: Prisma.SessionNameCreateManyInput[] = [];
-  const interventionSessionNames = ["s0", "s1", "s2", "s3", "s4"];
-  const followUpSessionNames = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"];
 
   for (const hub of hubs) {
-    for (const sessionName of interventionSessionNames) {
+    // TODO: Modify to create sessionTypes per project per hub
+    for (const sessionType of hubSessionTypes) {
       sessionNamesRecords.push({
         id: objectId("sessionname"),
-        sessionName,
-        sessionType: sessionTypes.INTERVENTION,
-        sessionLabel: sessionName,
-        // TODO: ensure amount maps to the correct session type
-        amount: faker.number.int({ min: 500, max: 1000 }),
-        currency: "KES",
+        sessionType: sessionType.type,
+        sessionName: sessionType.name,
+        sessionLabel: sessionType.label,
         hubId: hub.id,
+        currency: "KES",
+        amount: sessionType.amount,
       });
     }
-  }
-
-  for (const sessionName of followUpSessionNames) {
-    sessionNamesRecords.push({
-      id: objectId("sessionname"),
-      sessionName,
-      sessionType: sessionTypes.CLINICAL,
-      sessionLabel: sessionName,
-      amount: faker.number.int({ min: 500, max: 1000 }),
-      currency: "KES",
-      hubId: faker.helpers.arrayElement(hubs).id,
-    });
   }
 
   const sessions = await db.sessionName.createManyAndReturn({

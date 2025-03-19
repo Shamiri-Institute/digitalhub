@@ -133,6 +133,7 @@ export function MonthView({
                         role={props.role}
                         dialogState={props.dialogState}
                         fellowId={props.fellowId}
+                        supervisorId={props.supervisorId}
                       />
                     ) : (
                       <td key={i} />
@@ -154,6 +155,7 @@ export function MonthCalendarCell({
   role,
   dialogState,
   fellowId,
+  supervisorId,
 }: {
   state: CalendarState;
   date: CalendarDate;
@@ -167,6 +169,7 @@ export function MonthCalendarCell({
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   };
   fellowId?: string;
+  supervisorId?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -235,6 +238,7 @@ export function MonthCalendarCell({
             role={role}
             dialogState={dialogState}
             fellowId={fellowId}
+            supervisorId={supervisorId}
           />
         </div>
       </div>
