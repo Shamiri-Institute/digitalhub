@@ -12,7 +12,7 @@ export default function SessionsOccurredWidget({
   types?: Prisma.SessionNameGetPayload<{}>[];
 }) {
   return (
-    <div className="flex justify-center gap-2">
+    <div className="flex flex-wrap justify-center gap-2">
       {types?.map((sessionType) => {
         const occurredStatus = sessions.find((session) => {
           return session.sessionType === sessionType.sessionName;
