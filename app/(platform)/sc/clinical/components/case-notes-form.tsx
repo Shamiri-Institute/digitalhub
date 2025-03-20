@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -61,15 +62,6 @@ const behavioralResponses = [
 ] as const;
 const overallFeedback = ["Positive", "Negative", "Neutral"] as const;
 
-const sessions = [
-  "Session 1 - Initial Assessment",
-  "Session 2 - Treatment Planning",
-  "Session 3 - Progress Review",
-  "Session 4 - Mid-Term Evaluation",
-  "Session 5 - Treatment Continuation",
-  "Final Session - Termination",
-];
-
 const CaseReportSchema = z.object({
   sessionId: stringValidation("Session ID is required"),
   presentingIssues: stringValidation("Presenting issues are required"),
@@ -115,6 +107,7 @@ export default function CaseNotesForm({
   const [open, setDialogOpen] = useState<boolean>(false);
   const [showOtherInput, setShowOtherInput] = useState(false);
   const [showNecessaryConditions, setShowNecessaryConditions] = useState(false);
+  const [hasExistingNotes, setHasExistingNotes] = useState(false);
 
   const form = useForm<CaseReportFormValues>({
     resolver: zodResolver(CaseReportSchema),
@@ -137,6 +130,65 @@ export default function CaseNotesForm({
       sessionId: "",
     },
   });
+
+  useEffect(() => {
+    const sessionId = form.watch("sessionId");
+    if (!sessionId) return;
+
+    const existingNote = clinicalCase.clinicalCaseNotes?.find(
+      (note) => note.sessionId === sessionId,
+    );
+
+    setHasExistingNotes(!!existingNote);
+
+    if (existingNote) {
+      form.reset({
+        sessionId,
+        presentingIssues: existingNote.presentingIssues,
+        orsAssessment: existingNote.orsAssessment.toString(),
+        riskLevel: existingNote.riskLevel as (typeof riskLevels)[number],
+        necessaryConditions: existingNote.necessaryConditions,
+        treatmentInterventions: existingNote.treatmentInterventions,
+        otherIntervention: existingNote.otherIntervention,
+        interventionExplanation: existingNote.interventionExplanation,
+        emotionalResponse:
+          existingNote.emotionalResponse as (typeof emotionalResponses)[number],
+        behavioralResponse:
+          existingNote.behavioralResponse as (typeof behavioralResponses)[number],
+        overallFeedback:
+          existingNote.overallFeedback as (typeof overallFeedback)[number],
+        studentResponseExplanation: existingNote.studentResponseExplanations,
+        followUpPlan: {
+          isGroupSession: existingNote.followUpPlan === "GROUP",
+          explanation: existingNote.followUpPlanExplanation,
+        },
+      });
+
+      setShowOtherInput(existingNote.treatmentInterventions.includes("Other"));
+      setShowNecessaryConditions(existingNote.riskLevel !== "no");
+    } else {
+      form.reset({
+        sessionId,
+        presentingIssues: "",
+        orsAssessment: "",
+        riskLevel: "no",
+        necessaryConditions: "",
+        treatmentInterventions: [],
+        otherIntervention: "",
+        interventionExplanation: "",
+        emotionalResponse: "Positive",
+        behavioralResponse: "Commitment to Change",
+        overallFeedback: "Positive",
+        studentResponseExplanation: "",
+        followUpPlan: {
+          isGroupSession: false,
+          explanation: "",
+        },
+      });
+      setShowOtherInput(false);
+      setShowNecessaryConditions(false);
+    }
+  }, [form.watch("sessionId"), clinicalCase.clinicalCaseNotes]);
 
   const onSubmit = async (data: CaseReportFormValues) => {
     try {
@@ -189,6 +241,11 @@ export default function CaseNotesForm({
       <DialogContent className="z-10 max-h-[90%] max-w-[60vw] overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
           <h2>Case Notes</h2>
+          {hasExistingNotes && (
+            <p className="text-sm text-muted-foreground">
+              This session already has notes and cannot be edited
+            </p>
+          )}
         </DialogHeader>
         <DialogAlertWidget label={clinicalCase.pseudonym} separator={true} />
         <Form {...form}>
@@ -212,11 +269,31 @@ export default function CaseNotesForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {sessions.map((session) => (
-                        <SelectItem key={session} value={session}>
-                          {session}
-                        </SelectItem>
-                      ))}
+                      {clinicalCase.clinicalSessionAttendance?.map(
+                        (session) => {
+                          const hasNotes = clinicalCase.clinicalCaseNotes?.some(
+                            (note) => note.sessionId === session.id,
+                          );
+                          return (
+                            <SelectItem key={session.id} value={session.id}>
+                              <div className="flex w-full items-center justify-between">
+                                <span>
+                                  {session.session} -{" "}
+                                  {format(
+                                    new Date(session.date),
+                                    "dd MMM yyyy",
+                                  )}
+                                </span>
+                                {hasNotes && (
+                                  <span className="ml-2 text-sm text-muted-foreground">
+                                    (View only)
+                                  </span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          );
+                        },
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -233,7 +310,12 @@ export default function CaseNotesForm({
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={4} />
+                    <Textarea
+                      {...field}
+                      rows={4}
+                      disabled={hasExistingNotes}
+                      className={hasExistingNotes ? "bg-muted" : ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -618,16 +700,18 @@ export default function CaseNotesForm({
                 type="button"
                 onClick={() => setDialogOpen(false)}
               >
-                Cancel
+                {hasExistingNotes ? "Close" : "Cancel"}
               </Button>
-              <Button
-                variant="brand"
-                type="submit"
-                loading={form.formState.isSubmitting}
-                disabled={form.formState.isSubmitting}
-              >
-                Submit
-              </Button>
+              {!hasExistingNotes && (
+                <Button
+                  variant="brand"
+                  type="submit"
+                  loading={form.formState.isSubmitting}
+                  disabled={form.formState.isSubmitting}
+                >
+                  Submit
+                </Button>
+              )}
             </div>
           </form>
         </Form>
