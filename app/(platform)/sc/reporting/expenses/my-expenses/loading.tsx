@@ -1,30 +1,55 @@
 "use client";
 
+import { SupervisorExpensesType } from "#/app/(platform)/sc/reporting/expenses/my-expenses/actions";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
+import { ColumnDef } from "@tanstack/react-table";
+import { columns } from "./components/columns";
 
 export default function SupervisorsTableSkeleton() {
-  const loadingColumns = [
-    { header: "Date Created", id: "dateCreated" },
-    { header: "Date of Expense", id: "dateOfExpense" },
-    { header: "Supervisor Name", id: "supervisorName" },
-    { header: "Type of Expense", id: "typeOfExpense" },
-    { header: "Session", id: "session" },
-    { header: "Destination", id: "destination" },
-    { header: "Amount", id: "amount" },
-    { header: "Status", id: "status" },
-  ].map((column) => ({
-    header: column.header,
-    id: column.id,
-    cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
-  }));
+  const loadingColumns: ColumnDef<SupervisorExpensesType>[] = columns.map(
+    (column) => {
+      const columnId =
+        typeof column.header === "string"
+          ? column.header
+          : (column.id ?? "unknown");
+      return {
+        accessorFn: () => null,
+        header:
+          columnId !== "checkbox" && columnId !== "button" ? columnId : "",
+        id: columnId,
+        cell: () => {
+          return columnId !== "checkbox" && columnId !== "button" ? (
+            <Skeleton className="h-5 w-full bg-gray-200" />
+          ) : null;
+        },
+      };
+    },
+  );
+
+  const emptyData: SupervisorExpensesType[] = Array.from(Array(10).keys()).map(
+    () => ({
+      id: "",
+      supervisorName: "",
+      dateCreated: new Date(),
+      dateOfExpense: new Date(),
+      typeOfExpense: "",
+      session: "",
+      destination: "",
+      amount: 0,
+      status: "",
+      mpesaNumber: "",
+      mpesaName: "",
+      hubCoordinatorName: "",
+    }),
+  );
 
   return (
     <div className="space-y-3 px-6 py-10">
       <DataTable
-        key="skeleton-supervisors-table"
+        key="skeleton-supervisor-expenses-table"
         columns={loadingColumns}
-        data={Array.from(Array(10).keys()).map(() => ({}))}
+        data={emptyData}
         className="data-table data-table-action lg:mt-4"
         emptyStateMessage=""
       />

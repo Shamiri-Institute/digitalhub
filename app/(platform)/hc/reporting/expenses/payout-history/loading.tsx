@@ -1,18 +1,37 @@
 "use client";
 
+import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
+import { HubPayoutHistoryType } from "#/app/(platform)/hc/reporting/expenses/payout-history/actions";
+import { columns } from "#/components/common/expenses/payout-history/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
+import { ColumnDef } from "@tanstack/react-table";
 
 export default function PayoutHistoryTableSkeleton() {
-  const loadingColumns = [
-    { header: "Date Created", id: "dateCreated" },
-    { header: "Duration", id: "duration" },
-    { header: "Total Payout Amount(KES)", id: "totalPayoutAmount" },
-    { header: "Action", id: "action" },
-  ].map((column) => ({
-    header: column.header,
-    id: column.id,
-    cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
+  const loadingColumns: ColumnDef<HubPayoutHistoryType>[] = columns.map(
+    (column) => {
+      const columnId =
+        typeof column.header === "string"
+          ? column.header
+          : (column.id ?? "unknown");
+      return {
+        accessorFn: () => null,
+        header:
+          columnId !== "checkbox" && columnId !== "button" ? columnId : "",
+        id: columnId,
+        cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
+      };
+    },
+  );
+
+  const emptyData: HubPayoutHistoryType[] = Array.from(
+    Array(10).keys(),
+  ).map(() => ({
+    id: "",
+    dateAdded: new Date(),
+    duration: "",
+    totalPayoutAmount: 0,
+    downloadLink: "",
   }));
 
   return (
@@ -20,7 +39,7 @@ export default function PayoutHistoryTableSkeleton() {
       <DataTable
         key="skeleton-payout-history-table"
         columns={loadingColumns}
-        data={Array.from(Array(10).keys()).map(() => ({}))}
+        data={emptyData}
         className="data-table data-table-action lg:mt-4"
         emptyStateMessage=""
       />

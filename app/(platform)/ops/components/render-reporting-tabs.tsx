@@ -10,9 +10,5 @@ export default function RenderOpsReportingTabs() {
     { name: "Payout history", href: `/ops/reporting/expenses/payout-history` },
     { name: "Complaints", href: `/ops/reporting/expenses/complaints` },
   ];
-  return (
-    <>
-      <TabToggleNavigation options={expensesReportOptions} />
-    </>
-  );
+  return <TabToggleNavigation options={expensesReportOptions} />;
 }

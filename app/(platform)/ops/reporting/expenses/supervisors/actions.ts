@@ -3,7 +3,6 @@
 import { currentOpsUser } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
 
 export type HubSupervisorExpensesType = Awaited<
   ReturnType<typeof loadHubsSupervisorExpenses>
@@ -13,7 +12,6 @@ export async function loadHubsSupervisorExpenses() {
   const opsUser = await currentOpsUser();
 
   if (!opsUser) {
-    await signOut({ callbackUrl: "/login" });
     throw new Error("Unauthorised user");
   }
 
@@ -76,9 +74,9 @@ export async function deleteSupervisorExpenseRequest({
     const opsUser = await currentOpsUser();
 
     if (!opsUser) {
-      await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
+
     if (name !== opsUser.name) {
       return {
         success: false,
@@ -118,7 +116,6 @@ export async function approveSupervisorExpense({ id }: { id: string }) {
     const opsUser = await currentOpsUser();
 
     if (!opsUser) {
-      await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
 
@@ -160,7 +157,6 @@ export async function addSupervisorExpense({
     const opsUser = await currentOpsUser();
 
     if (!opsUser) {
-      await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
 
@@ -215,7 +211,6 @@ export async function updateSupervisorExpense({
     const opsUser = await currentOpsUser();
 
     if (!opsUser) {
-      await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
 

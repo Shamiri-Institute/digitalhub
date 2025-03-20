@@ -1,26 +1,47 @@
 "use client";
 
+import { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
+import { columns } from "#/components/common/expenses/payout-history/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
+import { ColumnDef } from "@tanstack/react-table";
 
 export default function PayoutHistoryTableSkeleton() {
-  const loadingColumns = [
-    { header: "Date Created", id: "dateCreated" },
-    { header: "Duration", id: "duration" },
-    { header: "Total Payout Amount(KES)", id: "totalPayoutAmount" },
-    { header: "Action", id: "action" },
-  ].map((column) => ({
-    header: column.header,
-    id: column.id,
-    cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
+  const loadingColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = columns.map(
+    (column) => {
+      const columnId =
+        typeof column.header === "string"
+          ? column.header
+          : (column.id ?? "unknown");
+      return {
+        accessorFn: () => null,
+        header:
+          columnId !== "checkbox" && columnId !== "button" ? columnId : "",
+        id: columnId,
+        cell: () => {
+          return columnId !== "checkbox" && columnId !== "button" ? (
+            <Skeleton className="h-5 w-full bg-gray-200" />
+          ) : null;
+        },
+      };
+    },
+  );
+
+  const emptyData: OpsHubsPayoutHistoryType[] = Array.from(
+    Array(10).keys(),
+  ).map(() => ({
+    dateAdded: new Date(),
+    duration: "",
+    totalPayoutAmount: 0,
+    downloadLink: "",
   }));
 
   return (
     <div className="space-y-3 px-6 py-10">
       <DataTable
-        key="skeleton-payout-history-table"
+        key="skeleton-complaints-table"
         columns={loadingColumns}
-        data={Array.from(Array(10).keys()).map(() => ({}))}
+        data={emptyData}
         className="data-table data-table-action lg:mt-4"
         emptyStateMessage=""
       />

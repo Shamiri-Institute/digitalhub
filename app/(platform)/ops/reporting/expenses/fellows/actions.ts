@@ -1,6 +1,6 @@
 "use server";
 
-import { currentHubCoordinator, currentOpsUser } from "#/app/auth";
+import { currentOpsUser } from "#/app/auth";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
 
@@ -147,8 +147,8 @@ export async function submitPaymentReversal(data: {
   id: number;
   name: string;
 }) {
-  const hubCoordinator = await currentHubCoordinator();
-  if (!hubCoordinator) {
+  const opsUser = await currentOpsUser();
+  if (!opsUser) {
     throw new Error("Unauthorised user");
   }
   // will be in a separate PR for actions
@@ -163,8 +163,8 @@ export async function submitRequestRepayment(data: {
   name: string;
   mpesaNumber: string;
 }) {
-  const hubCoordinator = await currentHubCoordinator();
-  if (!hubCoordinator) {
+  const opsUser = await currentOpsUser();
+  if (!opsUser) {
     throw new Error("Unauthorised user");
   }
   // will be in a separate PR for actions

@@ -8,12 +8,6 @@ export default async function ReportingViewLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // const hubCoordinator = await currentHubCoordinator();
-
-  // if (!hubCoordinator) {
-  //   await signOut({ callbackUrl: "/login" });
-  // }
-
   return (
     <div className="flex h-full bg-white">
       <div className="flex flex-1 flex-col">

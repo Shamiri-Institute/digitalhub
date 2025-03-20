@@ -1,22 +1,45 @@
 "use client";
 
+import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
+import { columns } from "#/components/common/expenses/fellows/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
+import { ColumnDef } from "@tanstack/react-table";
 
 export default function FellowsTableSkeleton() {
-  const loadingColumns = [
-    { header: "Fellow Name", id: "fellowName" },
-    { header: "Hub", id: "hub" },
-    { header: "Supervisor Name", id: "supervisorName" },
-    { header: "Special Session", id: "specialSession" },
-    { header: "Pre Vs Main", id: "preVsMain" },
-    { header: "Training Supervision", id: "trainingSupervision" },
-    { header: "Paid Amount", id: "paidAmount" },
-    { header: "Total Amount", id: "totalAmount" },
-  ].map((column) => ({
-    header: column.header,
-    id: column.id,
-    cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
+  const loadingColumns: ColumnDef<HubFellowsAttendancesType>[] = columns.map(
+    (column) => {
+      const columnId =
+        typeof column.header === "string"
+          ? column.header
+          : (column.id ?? "unknown");
+      return {
+        accessorFn: () => null,
+        header:
+          columnId !== "checkbox" && columnId !== "button" ? columnId : "",
+        id: columnId,
+        cell: () => {
+          return columnId !== "checkbox" && columnId !== "button" ? (
+            <Skeleton className="h-5 w-full bg-gray-200" />
+          ) : null;
+        },
+      };
+    },
+  );
+
+  const emptyData: HubFellowsAttendancesType[] = Array.from(
+    Array(10).keys(),
+  ).map(() => ({
+    id: "",
+    fellowName: "",
+    hub: "",
+    supervisorName: "",
+    specialSession: 0,
+    preVsMain: "",
+    trainingSupervision: "",
+    paidAmount: 0,
+    totalAmount: 0,
+    attendances: [],
   }));
 
   return (
@@ -24,7 +47,7 @@ export default function FellowsTableSkeleton() {
       <DataTable
         key="skeleton-fellows-table"
         columns={loadingColumns}
-        data={Array.from(Array(10).keys()).map(() => ({}))}
+        data={emptyData}
         className="data-table data-table-action lg:mt-4"
         emptyStateMessage=""
       />
