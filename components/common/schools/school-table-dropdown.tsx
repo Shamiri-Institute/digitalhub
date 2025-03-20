@@ -52,11 +52,11 @@ export default function SchoolTableDropdown({
           <Link
             href={
               role === "HUB_COORDINATOR"
-                ? `/hc/schools/${schoolRow.visibleId}`
+                ? `/hc/schools/${schoolRow.visibleId}/supervisors`
                 : role === "SUPERVISOR"
                   ? `/sc/schools/${schoolRow.visibleId}/fellows`
                   : role === "FELLOW"
-                    ? `/fel/schools/${schoolRow.visibleId}`
+                    ? `/fel/schools/${schoolRow.visibleId}/group`
                     : "#"
             }
           >
