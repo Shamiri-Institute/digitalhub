@@ -1,21 +1,45 @@
 "use client";
 
+import { FellowReportComplaintsType } from "#/app/(platform)/sc/reporting/expenses/complaints/actions";
+import { columns } from "#/components/common/expenses/complaints/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
+import { ColumnDef } from "@tanstack/react-table";
 
 export default function ComplaintsTableSkeleton() {
-  const loadingColumns = [
-    { header: "Fellow Name", id: "fellowName" },
-    { header: "Supervisor Name", id: "supervisorName" },
-    { header: "Special Session", id: "specialSession" },
-    { header: "Pre Vs Main", id: "preVsMain" },
-    { header: "Training Supervision", id: "trainingSupervision" },
-    { header: "Paid Amount", id: "paidAmount" },
-    { header: "Total Amount", id: "totalAmount" },
-  ].map((column) => ({
-    header: column.header,
-    id: column.id,
-    cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
+  const loadingColumns: ColumnDef<FellowReportComplaintsType>[] = columns.map(
+    (column) => {
+      const columnId =
+        typeof column.header === "string"
+          ? column.header
+          : (column.id ?? "unknown");
+      return {
+        accessorFn: () => null,
+        header:
+          columnId !== "checkbox" && columnId !== "button" ? columnId : "",
+        id: columnId,
+        cell: () => {
+          return columnId !== "checkbox" && columnId !== "button" ? (
+            <Skeleton className="h-5 w-full bg-gray-200" />
+          ) : null;
+        },
+      };
+    },
+  );
+
+  const emptyData: FellowReportComplaintsType[] = Array.from(
+    Array(10).keys(),
+  ).map(() => ({
+    id: "",
+    fellowName: "",
+    hub: "",
+    supervisorName: "",
+    specialSession: 0,
+    preVsMain: "",
+    trainingSupervision: "",
+    paidAmount: 0,
+    totalAmount: 0,
+    complaints: [],
   }));
 
   return (
@@ -23,7 +47,7 @@ export default function ComplaintsTableSkeleton() {
       <DataTable
         key="skeleton-complaints-table"
         columns={loadingColumns}
-        data={Array.from(Array(10).keys()).map(() => ({}))}
+        data={emptyData}
         className="data-table data-table-action lg:mt-4"
         emptyStateMessage=""
       />
