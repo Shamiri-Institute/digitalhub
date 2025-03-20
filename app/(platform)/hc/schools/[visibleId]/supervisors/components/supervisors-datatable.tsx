@@ -198,7 +198,7 @@ export default function SupervisorsDataTable({
         )}
       >
         <DialogAlertWidget>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {batchMode ? (
               <span>{selectedRows.length} supervisors</span>
             ) : (

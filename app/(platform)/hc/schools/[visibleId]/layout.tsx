@@ -87,7 +87,9 @@ export default async function SchoolViewLayout({
   return (
     <SchoolInfoProvider school={school as unknown as SchoolsTableData}>
       <div className="flex h-full bg-white">
-        <SchoolLeftPanel selectedSchool={school} />
+        <div className="hidden lg:flex lg:w-1/4">
+          <SchoolLeftPanel selectedSchool={school} open={true} />
+        </div>
         <div className="flex flex-1 flex-col">
           <div className="container w-full grow space-y-5 pb-6 pl-6 pr-8 pt-5">
             <SchoolsBreadcrumb role={user?.membership.role!} />
