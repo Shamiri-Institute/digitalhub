@@ -84,6 +84,7 @@ export default async function SchoolSessionsPage({
       supervisors={data[1]}
       fellowRatings={data[2]}
       role={supervisor?.user?.membership.role!}
+      supervisorId={supervisor?.id}
     />
   );
 }
