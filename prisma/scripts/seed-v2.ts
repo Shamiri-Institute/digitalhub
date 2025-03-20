@@ -1245,7 +1245,8 @@ async function createInterventionSessionsForSchools(
   );
 
   // Start from a fixed date for static sessions
-  let staticDate = new Date(2024, 0, 1, 9, 0); // January 1, 2024, 9 AM
+  let staticDate = new Date();
+  staticDate.setHours(16, 0, 0, 0); // Set to 4 PM today
 
   // Create a Set to track used session types for the static school
   const usedStaticSessionTypes = new Set<string>();
