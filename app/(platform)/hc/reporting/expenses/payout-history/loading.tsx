@@ -1,6 +1,5 @@
 "use client";
 
-import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
 import { HubPayoutHistoryType } from "#/app/(platform)/hc/reporting/expenses/payout-history/actions";
 import { columns } from "#/components/common/expenses/payout-history/columns";
 import DataTable from "#/components/data-table";
@@ -24,15 +23,15 @@ export default function PayoutHistoryTableSkeleton() {
     },
   );
 
-  const emptyData: HubPayoutHistoryType[] = Array.from(
-    Array(10).keys(),
-  ).map(() => ({
-    id: "",
-    dateAdded: new Date(),
-    duration: "",
-    totalPayoutAmount: 0,
-    downloadLink: "",
-  }));
+  const emptyData: HubPayoutHistoryType[] = Array.from(Array(10).keys()).map(
+    () => ({
+      id: "",
+      dateAdded: new Date(),
+      duration: "",
+      totalPayoutAmount: 0,
+      downloadLink: "",
+    }),
+  );
 
   return (
     <div className="space-y-3 px-6 py-10">
