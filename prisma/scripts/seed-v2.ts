@@ -457,6 +457,7 @@ async function createHubCoordinators(
       hubId: staticHub!.id,
       implementerId: staticHub!.implementerId,
       coordinatorName: "Mikel Arteta",
+      assignedHubId: staticHub!.id,
     },
     {
       id: objectId("user"),
@@ -465,6 +466,7 @@ async function createHubCoordinators(
       hubId: staticHub!.id,
       implementerId: staticHub!.implementerId,
       coordinatorName: "Edu Gaspar",
+      assignedHubId: staticHub!.id,
     },
   ];
   hubCoordinators.push(...staticCoordinators);
@@ -552,35 +554,72 @@ async function createSupervisors(
   const staticHub = hubs[0];
   const staticSupervisors = [
     {
-      id: objectId("user"),
-      email: "martin.odegaard@test.com",
-      role: ImplementerRole.SUPERVISOR,
-      hubId: staticHub!.id,
-      implementerId: staticHub!.implementerId,
+      id: objectId("supervisor"),
       visibleId: "SUPERVISOR1",
       supervisorName: "Martin Ødegaard",
-    },
-    {
-      id: objectId("user"),
-      email: "declan.rice@test.com",
-      role: ImplementerRole.SUPERVISOR,
+      supervisorEmail: "martin.odegaard@test.com",
       hubId: staticHub!.id,
       implementerId: staticHub!.implementerId,
+      county: "Nairobi",
+      subCounty: "Westlands",
+      bankName: "Arsenal Bank",
+      bankBranch: "Emirates Branch",
+      bankAccountNumber: "12345678",
+      bankAccountName: "Martin Ødegaard",
+      kra: "A123456789B",
+      nhif: "12345678",
+      dateOfBirth: new Date(1998, 11, 17),
+      cellNumber: "254712345678",
+      mpesaNumber: "254712345678",
+      gender: "Male",
+      idNumber: "12345678",
+    },
+    {
+      id: objectId("supervisor"),
       visibleId: "SUPERVISOR2",
       supervisorName: "Declan Rice",
-    },
-    {
-      id: objectId("user"),
-      email: "william.saliba@test.com",
-      role: ImplementerRole.SUPERVISOR,
+      supervisorEmail: "declan.rice@test.com",
       hubId: staticHub!.id,
       implementerId: staticHub!.implementerId,
+      county: "Nairobi",
+      subCounty: "Westlands",
+      bankName: "Arsenal Bank",
+      bankBranch: "Emirates Branch",
+      bankAccountNumber: "23456789",
+      bankAccountName: "Declan Rice",
+      kra: "B234567890C",
+      nhif: "23456789",
+      dateOfBirth: new Date(1999, 0, 14),
+      cellNumber: "254723456789",
+      mpesaNumber: "254723456789",
+      gender: "Male",
+      idNumber: "23456789",
+    },
+    {
+      id: objectId("supervisor"),
       visibleId: "SUPERVISOR3",
       supervisorName: "William Saliba",
+      supervisorEmail: "william.saliba@test.com",
+      hubId: staticHub!.id,
+      implementerId: staticHub!.implementerId,
+      county: "Nairobi",
+      subCounty: "Westlands",
+      bankName: "Arsenal Bank",
+      bankBranch: "Emirates Branch",
+      bankAccountNumber: "34567890",
+      bankAccountName: "William Saliba",
+      kra: "C345678901D",
+      nhif: "34567890",
+      dateOfBirth: new Date(2001, 2, 24),
+      cellNumber: "254734567890",
+      mpesaNumber: "254734567890",
+      gender: "Male",
+      idNumber: "34567890",
     },
   ];
+
   supervisors.push(...staticSupervisors);
-  staticSupervisors.forEach((sup) => emails.add(sup.email));
+  staticSupervisors.forEach((sup) => emails.add(sup.supervisorEmail));
 
   // Continue with dynamic supervisors
   const hubsWithoutStatic = hubs.slice(1);
@@ -627,6 +666,18 @@ async function createSupervisors(
   });
 
   const supervisorRecords = supervisors.map((_user) => {
+    // Check if this is a static supervisor
+    const isStaticSupervisor = _user.visibleId?.startsWith("SUPERVISOR");
+    if (isStaticSupervisor) {
+      // Return the static supervisor data as-is
+      const { id: _id, ...rest } = _user;
+      return {
+        id: membershipData.find((x) => x.userId === _user.id)?.identifier!,
+        ...rest,
+      };
+    }
+
+    // For dynamic supervisors, generate random data
     const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
     const subCounty = faker.helpers.arrayElement(county.sub_counties);
     const gender = faker.person.sexType();
@@ -937,6 +988,9 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
 
   // Add static school for static hub
   const staticHub = hubs[0];
+  const staticSupervisor = supervisors.find(
+    (s) => s.visibleId === "SUPERVISOR1",
+  );
   const staticSchool = {
     id: objectId("sch"),
     visibleId: "ARSENAL_SCH",
@@ -955,7 +1009,7 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
     droppedOut: false,
     dropoutReason: null,
     droppedOutAt: null,
-    assignedSupervisorId: supervisors[0]!.id,
+    assignedSupervisorId: staticSupervisor!.id,
   };
   schools.push(staticSchool);
 
@@ -1028,7 +1082,9 @@ async function createInterventionGroups(
 
   // Add static intervention groups for static school
   const staticSchool = schools[0];
-  const staticFellows = fellows.slice(0, 3); // First three fellows are static
+  const staticFellows = fellows.filter((f) =>
+    f.visibleId?.startsWith("FELLOW"),
+  );
 
   // Create one group for each static fellow
   staticFellows.forEach((fellow, index) => {
