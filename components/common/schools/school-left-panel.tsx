@@ -138,7 +138,7 @@ export default function SchoolLeftPanel({
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-shamiri-new-light-blue text-lg font-semibold text-shamiri-new-blue lg:h-16 lg:w-16 lg:p-[18px] lg:text-xl">
                 {getSchoolInitials(school?.schoolName ?? "")}
               </div>
-              <h2 className="text-xl font-semibold text-black lg:text-[28px]">
+              <h2 className="text-xl font-semibold text-black lg:text-left lg:text-[28px]">
                 {school?.schoolName}
               </h2>
             </div>
