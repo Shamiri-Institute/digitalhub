@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function ReportingPage() {
-  return <div>Ops Reporting Page</div>;
+  redirect(`/ops/reporting/expenses/fellows`);
 }

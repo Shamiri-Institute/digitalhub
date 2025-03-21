@@ -1,20 +1,20 @@
 "use server";
 
-import { currentHubCoordinator } from "#/app/auth";
+import { currentOpsUser } from "#/app/auth";
 import { db } from "#/lib/db";
 
-export type HubPayoutHistoryType = Awaited<
-  ReturnType<typeof loadHubPayoutHistory>
+export type OpsHubsPayoutHistoryType = Awaited<
+  ReturnType<typeof loadOpsHubsPayoutHistory>
 >[number];
 
-export async function loadHubPayoutHistory() {
-  const hubCoordinator = await currentHubCoordinator();
+export async function loadOpsHubsPayoutHistory() {
+  const opsUser = await currentOpsUser();
 
-  if (!hubCoordinator) {
+  if (!opsUser) {
     throw new Error("Unauthorised user");
   }
 
-  const hubPayoutHistory = await db.$queryRaw<
+  const opsHubsPayoutHistory = await db.$queryRaw<
     Array<{
       dateAdded: Date;
       duration: string;
@@ -29,7 +29,7 @@ export async function loadHubPayoutHistory() {
         LEAD(DATE_TRUNC('day', executed_at)) OVER (ORDER BY DATE_TRUNC('day', executed_at)) as next_payout_date
       FROM payout_statements ps
       WHERE fellow_id IN (
-        SELECT id FROM fellows WHERE hub_id = ${hubCoordinator.assignedHubId}
+        SELECT id FROM fellows WHERE implementer_id = ${opsUser.implementerId}
       )
       AND executed_at IS NOT NULL
       GROUP BY DATE_TRUNC('day', executed_at)
@@ -43,9 +43,9 @@ export async function loadHubPayoutHistory() {
         COALESCE(TO_CHAR(next_payout_date, 'DD/MM/YYYY'), 'Current')
       ) as "duration",
       total_amount as "totalPayoutAmount",
-      '/api/download/hub-payout-csv' as "downloadLink"
+      '/api/download/payout-csv' as "downloadLink"
     FROM grouped_payouts;
   `;
 
-  return hubPayoutHistory;
+  return opsHubsPayoutHistory;
 }
