@@ -1,12 +1,12 @@
 "use client";
 
 import { HubPayoutHistoryType } from "#/app/(platform)/hc/reporting/expenses/payout-history/actions";
-import { columns } from "#/components/common/expenses/payout-history/columns";
+import { columns } from "#/components/common/expenses/fellows/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
 import { ColumnDef } from "@tanstack/react-table";
 
-export default function PayoutHistoryTableSkeleton() {
+export default function FellowsTableSkeleton() {
   const loadingColumns: ColumnDef<HubPayoutHistoryType>[] = columns.map(
     (column) => {
       const columnId =
@@ -25,7 +25,6 @@ export default function PayoutHistoryTableSkeleton() {
 
   const emptyData: HubPayoutHistoryType[] = Array.from(Array(10).keys()).map(
     () => ({
-      id: "",
       dateAdded: new Date(),
       duration: "",
       totalPayoutAmount: 0,
@@ -36,7 +35,7 @@ export default function PayoutHistoryTableSkeleton() {
   return (
     <div className="space-y-3 px-6 py-10">
       <DataTable
-        key="skeleton-payout-history-table"
+        key="skeleton-fellows-table"
         columns={loadingColumns}
         data={emptyData}
         className="data-table data-table-action lg:mt-4"
