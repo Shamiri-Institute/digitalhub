@@ -268,6 +268,17 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
   const hubs = [];
   const minLength = Math.min(projects.length, implementers.length);
 
+  // Add static hub first
+  const staticHub = {
+    id: objectId("hub"),
+    visibleId: "ARSENAL1",
+    hubName: "Arsenal Hub",
+    projectId: projects[0]?.id as string,
+    implementerId: implementers[0]?.id as string,
+  };
+  hubs.push(staticHub);
+
+  // Continue with dynamic hubs
   for (let i = 0; i < minLength; i++) {
     const numHubs = faker.number.int({ min: 3, max: 6 });
 
@@ -412,7 +423,7 @@ async function createCoreUsers(
         dateOfBirth: faker.date.birthdate(),
         cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
         mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-        gender: faker.person.sex(),
+        gender: faker.person.sexType(),
         idNumber: faker.string.alpha({ casing: "upper", length: 8 }),
         assignedHubId: faker.helpers.arrayElement(hubs).id,
       };
@@ -436,7 +447,33 @@ async function createHubCoordinators(
   console.log("creating hub coordinators");
   const hubCoordinators = [];
 
-  for (let i = 0; i < hubs.length; i++) {
+  // Add two static hub coordinators for the static hub
+  const staticHub = hubs[0];
+  const staticCoordinators = [
+    {
+      id: objectId("user"),
+      email: "mikel.arteta@test.com",
+      role: ImplementerRole.HUB_COORDINATOR,
+      hubId: staticHub!.id,
+      implementerId: staticHub!.implementerId,
+      coordinatorName: "Mikel Arteta",
+      assignedHubId: staticHub!.id,
+    },
+    {
+      id: objectId("user"),
+      email: "edu.gaspar@test.com",
+      role: ImplementerRole.HUB_COORDINATOR,
+      hubId: staticHub!.id,
+      implementerId: staticHub!.implementerId,
+      coordinatorName: "Edu Gaspar",
+      assignedHubId: staticHub!.id,
+    },
+  ];
+  hubCoordinators.push(...staticCoordinators);
+  staticCoordinators.forEach((coord) => emails.add(coord.email));
+
+  // Continue with dynamic coordinators
+  for (let i = 1; i < hubs.length; i++) {
     let uniqueEmail = faker.internet.email().toLowerCase();
     while (emails.has(uniqueEmail)) {
       uniqueEmail = faker.internet.email().toLowerCase();
@@ -511,8 +548,82 @@ async function createSupervisors(
   emails: Set<string>,
 ) {
   console.log("creating supervisors");
+  const supervisors: Prisma.SupervisorCreateManyInput[] = [];
 
-  const supervisors = hubs
+  // Add three static supervisors for the static hub
+  const staticHub = hubs[0];
+  const staticSupervisors = [
+    {
+      id: objectId("supervisor"),
+      visibleId: "SUPERVISOR1",
+      supervisorName: "Martin Ødegaard",
+      supervisorEmail: "martin.odegaard@test.com",
+      hubId: staticHub!.id,
+      implementerId: staticHub!.implementerId,
+      county: "Nairobi",
+      subCounty: "Westlands",
+      bankName: "Arsenal Bank",
+      bankBranch: "Emirates Branch",
+      bankAccountNumber: "12345678",
+      bankAccountName: "Martin Ødegaard",
+      kra: "A123456789B",
+      nhif: "12345678",
+      dateOfBirth: new Date(1998, 11, 17),
+      cellNumber: "254712345678",
+      mpesaNumber: "254712345678",
+      gender: "Male",
+      idNumber: "12345678",
+    },
+    {
+      id: objectId("supervisor"),
+      visibleId: "SUPERVISOR2",
+      supervisorName: "Declan Rice",
+      supervisorEmail: "declan.rice@test.com",
+      hubId: staticHub!.id,
+      implementerId: staticHub!.implementerId,
+      county: "Nairobi",
+      subCounty: "Westlands",
+      bankName: "Arsenal Bank",
+      bankBranch: "Emirates Branch",
+      bankAccountNumber: "23456789",
+      bankAccountName: "Declan Rice",
+      kra: "B234567890C",
+      nhif: "23456789",
+      dateOfBirth: new Date(1999, 0, 14),
+      cellNumber: "254723456789",
+      mpesaNumber: "254723456789",
+      gender: "Male",
+      idNumber: "23456789",
+    },
+    {
+      id: objectId("supervisor"),
+      visibleId: "SUPERVISOR3",
+      supervisorName: "William Saliba",
+      supervisorEmail: "william.saliba@test.com",
+      hubId: staticHub!.id,
+      implementerId: staticHub!.implementerId,
+      county: "Nairobi",
+      subCounty: "Westlands",
+      bankName: "Arsenal Bank",
+      bankBranch: "Emirates Branch",
+      bankAccountNumber: "34567890",
+      bankAccountName: "William Saliba",
+      kra: "C345678901D",
+      nhif: "34567890",
+      dateOfBirth: new Date(2001, 2, 24),
+      cellNumber: "254734567890",
+      mpesaNumber: "254734567890",
+      gender: "Male",
+      idNumber: "34567890",
+    },
+  ];
+
+  supervisors.push(...staticSupervisors);
+  staticSupervisors.forEach((sup) => emails.add(sup.supervisorEmail));
+
+  // Continue with dynamic supervisors
+  const hubsWithoutStatic = hubs.slice(1);
+  const dynamicSupervisors = hubsWithoutStatic
     .map((hub) => {
       return Array.from(Array(n).keys()).map(() => {
         let uniqueEmail = faker.internet.email().toLowerCase();
@@ -527,15 +638,18 @@ async function createSupervisors(
           role: ImplementerRole.SUPERVISOR,
           hubId: hub.id,
           implementerId: hub.implementerId,
+          visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
         };
       });
     })
     .flat();
 
+  supervisors.push(...dynamicSupervisors);
+
   const createSupervisors = await db.user.createManyAndReturn({
-    data: supervisors.map(({ id, email }) => ({
+    data: supervisors.map(({ id, supervisorEmail }) => ({
       id,
-      email,
+      email: supervisorEmail,
     })),
   });
 
@@ -552,6 +666,18 @@ async function createSupervisors(
   });
 
   const supervisorRecords = supervisors.map((_user) => {
+    // Check if this is a static supervisor
+    const isStaticSupervisor = _user.visibleId?.startsWith("SUPERVISOR");
+    if (isStaticSupervisor) {
+      // Return the static supervisor data as-is
+      const { id: _id, ...rest } = _user;
+      return {
+        id: membershipData.find((x) => x.userId === _user.id)?.identifier!,
+        ...rest,
+      };
+    }
+
+    // For dynamic supervisors, generate random data
     const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
     const subCounty = faker.helpers.arrayElement(county.sub_counties);
     const gender = faker.person.sexType();
@@ -559,7 +685,8 @@ async function createSupervisors(
     return {
       id: membershipData.find((x) => x.userId === _user.id)?.identifier!,
       implementerId: _user.implementerId,
-      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+      visibleId:
+        _user.visibleId || faker.string.alpha({ casing: "upper", length: 6 }),
       supervisorName: faker.person.fullName(),
       supervisorEmail: faker.internet.email(),
       county: county.name,
@@ -591,10 +718,20 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
   console.log("creating operations users");
   const operations: Prisma.OpsUserCreateManyInput[] = [];
 
-  // Only create 3 ops users for now
-  // NOTE: If we want each hub to have its own ops person, remove the slice
-  // and let the loop run for all hubs
-  const selectedHubs = hubs.slice(0, 3);
+  // Add static operations user for static hub
+  const staticHub = hubs[0];
+  const staticOps = {
+    id: objectId("user"),
+    email: "kai.havertz@test.com",
+    implementerId: staticHub!.implementerId,
+    name: "Kai Havertz",
+    cellPhone: "254712345678",
+  };
+  operations.push(staticOps);
+  emails.add(staticOps.email);
+
+  // Continue with dynamic operations users
+  const selectedHubs = hubs.slice(1);
 
   for (const hub of selectedHubs) {
     let uniqueEmail = faker.internet.email().toLowerCase();
@@ -644,7 +781,20 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
   console.log("creating clinical leads");
   const clinicalLeads: Prisma.ClinicalLeadCreateManyInput[] = [];
 
-  for (const hub of hubs) {
+  // Add static clinical lead for static hub
+  const staticHub = hubs[0];
+  const staticClinicalLead = {
+    id: objectId("user"),
+    clinicalLeadEmail: "ben.white@test.com",
+    clinicalLeadName: "Ben White",
+    implementerId: staticHub!.implementerId,
+    assignedHubId: staticHub!.id,
+  };
+  clinicalLeads.push(staticClinicalLead);
+  emails.add(staticClinicalLead.clinicalLeadEmail);
+
+  // Continue with dynamic clinical leads
+  for (const hub of hubs.slice(1)) {
     let uniqueEmail = faker.internet.email().toLowerCase();
     while (emails.has(uniqueEmail)) {
       uniqueEmail = faker.internet.email().toLowerCase();
@@ -693,12 +843,72 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
 async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
   console.log("creating fellows");
   const fellows: Prisma.FellowCreateManyInput[] = [];
+
+  // Add three static fellows for the static supervisors
+  const staticSupervisors = supervisors.slice(0, 3);
+  const staticFellows = [
+    {
+      id: objectId("user"),
+      visibleId: "FELLOW1",
+      fellowName: "Bukayo Saka",
+      fellowEmail: "bukayo.saka@test.com",
+      supervisorId: staticSupervisors[0]!.id,
+      hubId: staticSupervisors[0]!.hubId,
+      implementerId: staticSupervisors[0]!.implementerId,
+      mpesaName: "Bukayo Saka",
+      mpesaNumber: "254712345678",
+      cellNumber: "254712345678",
+      gender: "Male",
+      dateOfBirth: new Date(2001, 8, 5),
+      idNumber: "12345678",
+      county: "Nairobi",
+      subCounty: "Westlands",
+    },
+    {
+      id: objectId("user"),
+      visibleId: "FELLOW2",
+      fellowName: "Gabriel Martinelli",
+      fellowEmail: "gabriel.martinelli@test.com",
+      supervisorId: staticSupervisors[1]!.id,
+      hubId: staticSupervisors[1]!.hubId,
+      implementerId: staticSupervisors[1]!.implementerId,
+      mpesaName: "Gabriel Martinelli",
+      mpesaNumber: "254723456789",
+      cellNumber: "254723456789",
+      gender: "Male",
+      dateOfBirth: new Date(2001, 5, 18),
+      idNumber: "23456789",
+      county: "Nairobi",
+      subCounty: "Westlands",
+    },
+    {
+      id: objectId("user"),
+      visibleId: "FELLOW3",
+      fellowName: "Gabriel Jesus",
+      fellowEmail: "gabriel.jesus@test.com",
+      supervisorId: staticSupervisors[2]!.id,
+      hubId: staticSupervisors[2]!.hubId,
+      implementerId: staticSupervisors[2]!.implementerId,
+      mpesaName: "Gabriel Jesus",
+      mpesaNumber: "254734567890",
+      cellNumber: "254734567890",
+      gender: "Male",
+      dateOfBirth: new Date(1997, 3, 3),
+      idNumber: "34567890",
+      county: "Nairobi",
+      subCounty: "Westlands",
+    },
+  ];
+  fellows.push(...staticFellows);
+  staticFellows.forEach((fellow) => emails.add(fellow.fellowEmail));
+
+  // Continue with dynamic fellows
   const counties = KENYAN_COUNTIES.map((county) => {
     const { name, sub_counties } = county;
     return { name, sub_counties };
   });
 
-  supervisors.forEach((supervisor) => {
+  for (const supervisor of supervisors.slice(3)) {
     const numFellows = faker.number.int({ min: 10, max: 15 });
     const subCounties = counties.find(
       (county) => county.name === supervisor.county,
@@ -739,7 +949,7 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
         idNumber: faker.string.numeric({ length: 8 }),
       });
     }
-  });
+  }
 
   const createFellows = await db.user.createManyAndReturn({
     data: fellows.map(({ id, fellowEmail }) => ({
@@ -776,7 +986,35 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
   console.log("creating schools");
   const schools: Prisma.SchoolCreateManyInput[] = [];
 
-  hubs.forEach((hub) => {
+  // Add static school for static hub
+  const staticHub = hubs[0];
+  const staticSupervisor = supervisors.find(
+    (s) => s.visibleId === "SUPERVISOR1",
+  );
+  const staticSchool = {
+    id: objectId("sch"),
+    visibleId: "ARSENAL_SCH",
+    schoolName: "Emirates Academy",
+    hubId: staticHub!.id,
+    schoolType: "National",
+    schoolEmail: "emirates.academy@test.com",
+    schoolCounty: "Nairobi",
+    schoolSubCounty: "Westlands",
+    schoolDemographics: "Mixed",
+    pointPersonId: "ARSENAL_PP",
+    pointPersonName: "Thomas Partey",
+    pointPersonPhone: "254700000000",
+    numbersExpected: 300,
+    principalName: "David Raya",
+    droppedOut: false,
+    dropoutReason: null,
+    droppedOutAt: null,
+    assignedSupervisorId: staticSupervisor!.id,
+  };
+  schools.push(staticSchool);
+
+  // Continue with dynamic schools
+  hubs.slice(1).forEach((hub) => {
     const hubSupervisors = supervisors.filter(
       (supervisor) => supervisor.hubId === hub.id,
     );
@@ -841,6 +1079,25 @@ async function createInterventionGroups(
 ) {
   console.log("creating intervention groups");
   const interventionGroups: Prisma.InterventionGroupCreateManyInput[] = [];
+
+  // Add static intervention groups for static school
+  const staticSchool = schools[0];
+  const staticFellows = fellows.filter((f) =>
+    f.visibleId?.startsWith("FELLOW"),
+  );
+
+  // Create one group for each static fellow
+  staticFellows.forEach((fellow, index) => {
+    interventionGroups.push({
+      id: objectId("group"),
+      groupName: `Static Group ${index + 1}`,
+      schoolId: staticSchool!.id,
+      leaderId: fellow.id,
+      projectId: staticSchool!.hub?.projectId as string,
+    });
+  });
+
+  // Continue with dynamic intervention groups
   const schoolFellowAssignments = new Map<string, Set<string>>(); // Maps schoolId -> Set<fellowId>
   const fellowSchoolCount = new Map<string, number>(); // Track how many schools each fellow is assigned to
 
@@ -849,7 +1106,7 @@ async function createInterventionGroups(
     fellowSchoolCount.set(fellow.id, 0);
   }
 
-  for (const school of schools) {
+  for (const school of schools.slice(1)) {
     const numGroups = school.numbersExpected
       ? Math.ceil(school.numbersExpected / 16)
       : Math.ceil(1000 / 16);
@@ -913,7 +1170,27 @@ async function createStudentsForSchools(
   console.log("creating students");
   const students: Prisma.StudentCreateManyInput[] = [];
 
-  for (const school of schools) {
+  // Add static students for static school
+  const staticSchool = schools[0];
+  const staticGroups = staticSchool!.interventionGroups;
+
+  // Create 30 static students (10 for each group)
+  staticGroups.forEach((group, groupIndex) => {
+    for (let i = 0; i < 10; i++) {
+      students.push({
+        id: objectId("student"),
+        visibleId: `STATIC_STU_${groupIndex + 1}_${i + 1}`,
+        studentName: `Static Student ${groupIndex + 1}.${i + 1}`,
+        schoolId: staticSchool!.id,
+        assignedGroupId: group.id,
+        gender: i % 2 === 0 ? "Male" : "Female",
+        yearOfBirth: 2008, // Fixed birth year for static students
+      });
+    }
+  });
+
+  // Continue with dynamic students for other schools
+  for (const school of schools.slice(1)) {
     const numStudents = faker.number.int({
       min: school.numbersExpected || 1000 - Math.ceil(Math.random() * 60),
       max: school.numbersExpected || 1000,
@@ -946,7 +1223,22 @@ async function createSessionNames(hubs: Hub[]) {
   const interventionSessionNames = ["s0", "s1", "s2", "s3", "s4"];
   const followUpSessionNames = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"];
 
-  for (const hub of hubs) {
+  // Add static session names for static hub
+  const staticHub = hubs[0];
+  for (const sessionName of interventionSessionNames) {
+    sessionNamesRecords.push({
+      id: objectId("sessionname"),
+      sessionName,
+      sessionType: sessionTypes.INTERVENTION,
+      sessionLabel: `Static ${sessionName}`,
+      amount: 500, // Fixed amount for static sessions
+      currency: "KES",
+      hubId: staticHub!.id,
+    });
+  }
+
+  // Continue with dynamic session names for other hubs
+  for (const hub of hubs.slice(1)) {
     for (const sessionName of interventionSessionNames) {
       sessionNamesRecords.push({
         id: objectId("sessionname"),
@@ -1000,40 +1292,55 @@ async function createInterventionSessionsForSchools(
 ) {
   console.log("creating intervention sessions");
   const interventionSessions: Prisma.InterventionSessionCreateManyInput[] = [];
-  const fellowSessionDates = new Map<string, Set<string>>(); // fellowId -> Set of dates (YYYY-MM-DD)
+  const fellowSessionDates = new Map<string, Set<string>>();
 
-  // Sort session names by hubId and then by sessionName for lookup
-  const hubIdSessionNameMapping = interventionSessionNames.reduce<
-    Record<string, { sessionName: string; sessionId: string }[]>
-  >((acc, sessionName) => {
-    if (!acc[sessionName.hubId]) {
-      acc[sessionName.hubId] = [
-        { sessionId: sessionName.id, sessionName: sessionName.sessionName },
-      ];
-    } else {
-      acc[sessionName.hubId]!.push({
-        sessionId: sessionName.id,
-        sessionName: sessionName.sessionName,
-      });
-    }
-    return acc;
-  }, {});
+  // Create static sessions for static school
+  const staticSchool = schools[0];
+  const staticSessionNames = interventionSessionNames.filter(
+    (sn) => sn.hubId === staticSchool!.hub?.id,
+  );
 
-  const hubIdKeys = Object.keys(hubIdSessionNameMapping);
-  for (let key of hubIdKeys) {
-    // taking advantage of lexigraphic sorting due to the constant prefix
-    hubIdSessionNameMapping[key] = hubIdSessionNameMapping[key]!.sort();
+  // Start from a fixed date for static sessions
+  let staticDate = new Date();
+  staticDate.setHours(16, 0, 0, 0); // Set to 4 PM today
+
+  // Create a Set to track used session types for the static school
+  const usedStaticSessionTypes = new Set<string>();
+
+  for (const sessionName of staticSessionNames) {
+    // Skip if we've already used this session type for this school
+    if (usedStaticSessionTypes.has(sessionName.sessionName)) continue;
+    usedStaticSessionTypes.add(sessionName.sessionName);
+
+    interventionSessions.push({
+      id: objectId("session"),
+      sessionDate: new Date(staticDate),
+      sessionEndTime: new Date(staticDate.getTime() + 3 * 60 * 60 * 1000),
+      status: "Scheduled",
+      sessionType: sessionName.sessionName,
+      sessionId: sessionName.id,
+      schoolId: staticSchool!.id,
+      occurred: isBefore(staticDate, new Date()),
+      yearOfImplementation: 2024,
+      projectId: staticSchool!.hub?.projectId || undefined,
+    });
+
+    // Move to next week for next static session
+    staticDate.setDate(staticDate.getDate() + 7);
   }
 
-  for (const school of schools) {
+  // Continue with dynamic sessions for other schools
+  for (const school of schools.slice(1)) {
     // Skip if school has no hub
     if (!school.hubId) continue;
 
-    // Filter session names for this school's hub
-    const hubSessionNames = hubIdSessionNameMapping[school.hubId];
+    // Get session names for this school's hub
+    const schoolSessionNames = interventionSessionNames.filter(
+      (sn) => sn.hubId === school.hub?.id,
+    );
 
-    // Skip if no session names found for this hub
-    if (!hubSessionNames || hubSessionNames.length === 0) continue;
+    // Create a Set to track used session types for this school
+    const usedSessionTypes = new Set<string>();
 
     // Get all fellows who lead groups in this school
     const fellowsInSchool = school.interventionGroups.map(
@@ -1045,7 +1352,11 @@ async function createInterventionSessionsForSchools(
     let currentDate = startOfMonth(new Date());
     currentDate.setHours(9, 0, 0, 0); // Set to 9 AM
 
-    for (const sessionName of hubSessionNames) {
+    for (const sessionName of schoolSessionNames) {
+      // Skip if we've already used this session type for this school
+      if (usedSessionTypes.has(sessionName.sessionName)) continue;
+      usedSessionTypes.add(sessionName.sessionName);
+
       // Check if any fellow in this school has a session on this date
       while (
         Array.from(fellowIds).some((fellowId) => {
@@ -1061,10 +1372,10 @@ async function createInterventionSessionsForSchools(
       interventionSessions.push({
         id: objectId("session"),
         sessionDate: new Date(currentDate),
-        sessionEndTime: new Date(currentDate.getTime() + 3 * 60 * 60 * 1000), // 3 hours later
+        sessionEndTime: new Date(currentDate.getTime() + 3 * 60 * 60 * 1000),
         status: "Scheduled",
         sessionType: sessionName.sessionName,
-        sessionId: sessionName.sessionId,
+        sessionId: sessionName.id,
         schoolId: school.id,
         occurred: isBefore(new Date(currentDate), new Date()),
         yearOfImplementation: new Date().getFullYear(),
