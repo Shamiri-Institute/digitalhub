@@ -43,6 +43,7 @@ export function SessionList({
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
     setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
+    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
   fellowId?: string;
@@ -142,6 +143,7 @@ export function SessionDetail({
     setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
     setRescheduleSessionDialog?: Dispatch<SetStateAction<boolean>>;
+    setCancelSessionDialog?: Dispatch<SetStateAction<boolean>>;
   };
   layout: "compact" | "expanded";
   withDropdown?: boolean;
@@ -288,6 +290,7 @@ export function SessionDropDown({
     setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
     setRescheduleSessionDialog?: Dispatch<SetStateAction<boolean>>;
+    setCancelSessionDialog?: Dispatch<SetStateAction<boolean>>;
   };
   role: ImplementerRole;
   fellowId?: string;
@@ -432,9 +435,14 @@ export function SessionDropDown({
                 className="text-shamiri-light-red"
                 onClick={() => {
                   state.setSession && state.setSession(session);
-                  cancelSessionContext.setIsOpen(true);
+                  state.setCancelSessionDialog &&
+                    state.setCancelSessionDialog(true);
                 }}
-                disabled={session.status === "Cancelled" || session.occurred}
+                disabled={
+                  session.status === "Cancelled" ||
+                  session.occurred ||
+                  session.school?.assignedSupervisorId !== supervisorId
+                }
               >
                 Cancel session
               </DropdownMenuItem>

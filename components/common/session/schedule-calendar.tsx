@@ -29,7 +29,6 @@ import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import SupervisorAttendance, {
   SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
-import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
 import {
   DateRangeType,
@@ -432,6 +431,7 @@ function CalendarView({
               setRatingsDialog,
               setSessionOccurrenceDialog,
               setRescheduleSessionDialog,
+              setCancelSessionDialog,
             }}
             fellowId={fellow?.id}
           />
@@ -449,6 +449,7 @@ function CalendarView({
               setRatingsDialog,
               setSessionOccurrenceDialog,
               setRescheduleSessionDialog,
+              setCancelSessionDialog,
             }}
             fellowId={fellow?.id}
           />
@@ -467,6 +468,7 @@ function CalendarView({
               setRatingsDialog,
               setSessionOccurrenceDialog,
               setRescheduleSessionDialog,
+              setCancelSessionDialog,
             }}
             supervisorId={supervisorId}
             fellowId={fellow?.id}
@@ -487,6 +489,7 @@ function CalendarView({
               setRatingsDialog,
               setSessionOccurrenceDialog,
               setRescheduleSessionDialog,
+              setCancelSessionDialog,
             }}
             fellowId={fellow?.id}
           />
@@ -502,21 +505,6 @@ function CalendarView({
     }
   };
 
-  function updateCancelledSessionState() {
-    const sessionIndex =
-      session !== null
-        ? sessions.findIndex((_session) => {
-            return _session.id === session.id;
-          })
-        : -1;
-
-    const copiedSessions = [...sessions];
-    if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
-      copiedSessions[sessionIndex]!.status = "Cancelled";
-      setSessions(copiedSessions);
-    }
-  }
-
   return (
     <div>
       <SupervisorAttendanceContext.Provider
@@ -531,16 +519,9 @@ function CalendarView({
           setAttendance: setSupervisorAttendance,
         }}
       >
-        <CancelSessionContext.Provider
-          value={{
-            isOpen: cancelSessionDialog,
-            setIsOpen: setCancelSessionDialog,
-            session,
-            setSession,
-          }}
-        >
-          {activeMode()}
-          {session ? (
+        {activeMode()}
+        {session ? (
+          <>
             <RescheduleSession
               sessionId={session.id}
               open={rescheduleSessionDialog}
@@ -554,12 +535,21 @@ function CalendarView({
                 role={role}
               />
             </RescheduleSession>
-          ) : null}
-          <CancelSession
-            updateSessionsState={updateCancelledSessionState}
-            role={role}
-          />
-        </CancelSessionContext.Provider>
+            <CancelSession
+              sessionId={session.id}
+              open={cancelSessionDialog}
+              onOpenChange={setCancelSessionDialog}
+              role={role}
+            >
+              <SessionDetail
+                state={{ session }}
+                layout={"compact"}
+                withDropdown={false}
+                role={role}
+              />
+            </CancelSession>
+          </>
+        ) : null}
         <FellowAttendance
           supervisors={supervisors}
           supervisorId={role === "SUPERVISOR" ? supervisorId : undefined}

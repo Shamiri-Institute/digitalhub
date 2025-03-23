@@ -82,7 +82,21 @@ export async function createNewSession(
 
 export async function cancelSession(id: string) {
   try {
-    await checkAuth();
+    const user = await checkAuth();
+    const session = await db.interventionSession.findFirstOrThrow({
+      where: { id },
+      include: {
+        school: true,
+      },
+    });
+
+    if (
+      session.school?.assignedSupervisorId !== user.supervisor?.id ||
+      !user.hubCoordinator
+    ) {
+      throw new Error(`You are not assigned to ${session.school?.schoolName}`);
+    }
+
     await db.interventionSession.update({
       data: {
         status: "Cancelled",
@@ -98,7 +112,12 @@ export async function cancelSession(id: string) {
     };
   } catch (error: unknown) {
     console.error(error);
-    return { error: "Something went wrong while cancelling session" };
+    return {
+      success: false,
+      message:
+        (error as Error)?.message ??
+        "An error occurred while marking attendance.",
+    };
   }
 }
 

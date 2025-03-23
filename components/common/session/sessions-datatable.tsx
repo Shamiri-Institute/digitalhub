@@ -6,6 +6,7 @@ import SupervisorAttendance, {
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
+import CancelSession from "#/components/common/session/cancel-session";
 import { columns, SessionData } from "#/components/common/session/columns";
 import RescheduleSession from "#/components/common/session/reschedule-session";
 import { SessionDetail } from "#/components/common/session/session-list";
@@ -81,6 +82,7 @@ export default function SessionsDatatable({
           setStudentAttendanceDialog,
           setSessionOccurrenceDialog,
           setRescheduleSessionDialog,
+          setCancelSessionDialog,
           role,
           fellowId,
           supervisorId,
@@ -139,12 +141,21 @@ export default function SessionsDatatable({
               role={role}
             />
           </RescheduleSession>
+          <CancelSession
+            sessionId={session.id}
+            open={cancelSessionDialog}
+            onOpenChange={setCancelSessionDialog}
+            role={role}
+          >
+            <SessionDetail
+              state={{ session }}
+              layout={"compact"}
+              withDropdown={false}
+              role={role}
+            />
+          </CancelSession>
         </>
       )}
-      {/*<CancelSession*/}
-      {/*  updateSessionsState={updateCancelledSessionState}*/}
-      {/*  role={role}*/}
-      {/*/>*/}
       {fellowRatings ? (
         <FellowAttendance
           supervisors={supervisors}

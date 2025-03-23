@@ -63,7 +63,7 @@ export default function RescheduleSession({
         variant: "destructive",
         description:
           response.message ??
-          "Something went wrong while trying to reschedule session.",
+          "Something went wrong while trying to reschedule the session.",
       });
       return;
     }
