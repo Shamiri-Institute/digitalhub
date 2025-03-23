@@ -419,7 +419,10 @@ export function SessionDropDown({
                   state.setRescheduleSessionDialog &&
                     state.setRescheduleSessionDialog(true);
                 }}
-                disabled={session.occurred}
+                disabled={
+                  session.occurred ||
+                  session.school?.assignedSupervisorId !== supervisorId
+                }
               >
                 Reschedule session
               </DropdownMenuItem>
