@@ -1,13 +1,13 @@
 "use client";
 
-import { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
-import { columns } from "#/components/common/expenses/complaints/columns";
+import { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
+import { columns } from "#/components/common/expenses/payout-history/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
 import { ColumnDef } from "@tanstack/react-table";
 
-export default function ComplaintsTableSkeleton() {
-  const loadingColumns: ColumnDef<HubReportComplaintsType>[] = columns.map(
+export default function PayoutHistoryTableSkeleton() {
+  const loadingColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = columns.map(
     (column) => {
       const columnId =
         typeof column.header === "string"
@@ -27,19 +27,14 @@ export default function ComplaintsTableSkeleton() {
     },
   );
 
-  const emptyData: HubReportComplaintsType[] = Array.from(Array(10).keys()).map(
-    () => ({
-      fellowName: null,
-      hub: undefined,
-      supervisorName: null,
-      specialSession: 0,
-      preVsMain: "",
-      trainingSupervision: "",
-      paidAmount: 0,
-      totalAmount: 0,
-      complaints: [],
-    }),
-  );
+  const emptyData: OpsHubsPayoutHistoryType[] = Array.from(
+    Array(10).keys(),
+  ).map(() => ({
+    dateAdded: new Date(),
+    duration: "",
+    totalPayoutAmount: 0,
+    downloadLink: "",
+  }));
 
   return (
     <div className="space-y-3 px-6 py-10">
