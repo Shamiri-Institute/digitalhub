@@ -1,7 +1,7 @@
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { hubSessionTypes } from "#/prisma/generate-session-names";
+import { hubSessionTypes } from "#/prisma/scripts/generate-session-names";
 import { faker } from "@faker-js/faker";
 import {
   ClinicalLead,
@@ -989,30 +989,52 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
 
   // Add static school for static hub
   const staticHub = hubs[0];
-  const staticSupervisor = supervisors.find(
-    (s) => s.visibleId === "SUPERVISOR1",
+  schools.push(
+    {
+      id: objectId("sch"),
+      visibleId: "ARSENAL_SCH",
+      schoolName: "Emirates Academy",
+      hubId: staticHub!.id,
+      schoolType: "National",
+      schoolEmail: "Gabriel.academy@test.com",
+      schoolCounty: "Nairobi",
+      schoolSubCounty: "Westlands",
+      schoolDemographics: "Mixed",
+      pointPersonId: "ARSENAL_PP",
+      pointPersonName: "Thomas Partey",
+      pointPersonPhone: "254700000000",
+      numbersExpected: 300,
+      principalName: "David Raya",
+      droppedOut: false,
+      dropoutReason: null,
+      droppedOutAt: null,
+      assignedSupervisorId: supervisors.find(
+        (s) => s.visibleId === "SUPERVISOR1",
+      )!.id,
+    },
+    {
+      id: objectId("sch"),
+      visibleId: "SOBHA_SCH",
+      schoolName: "Sobha Academy",
+      hubId: staticHub!.id,
+      schoolType: "National",
+      schoolEmail: "sobha.academy@test.com",
+      schoolCounty: "Nairobi",
+      schoolSubCounty: "Westlands",
+      schoolDemographics: "Mixed",
+      pointPersonId: "SOBHA_PP",
+      pointPersonName: "Kai Havertz",
+      pointPersonPhone: "254700000000",
+      numbersExpected: 350,
+      principalName: "Mikel Merino",
+      droppedOut: false,
+      dropoutReason: null,
+      droppedOutAt: null,
+      assignedSupervisorId: supervisors.find(
+        (s) => s.visibleId === "SUPERVISOR2",
+      )!.id,
+    },
   );
-  const staticSchool = {
-    id: objectId("sch"),
-    visibleId: "ARSENAL_SCH",
-    schoolName: "Emirates Academy",
-    hubId: staticHub!.id,
-    schoolType: "National",
-    schoolEmail: "emirates.academy@test.com",
-    schoolCounty: "Nairobi",
-    schoolSubCounty: "Westlands",
-    schoolDemographics: "Mixed",
-    pointPersonId: "ARSENAL_PP",
-    pointPersonName: "Thomas Partey",
-    pointPersonPhone: "254700000000",
-    numbersExpected: 300,
-    principalName: "David Raya",
-    droppedOut: false,
-    dropoutReason: null,
-    droppedOutAt: null,
-    assignedSupervisorId: staticSupervisor!.id,
-  };
-  schools.push(staticSchool);
 
   // Continue with dynamic schools
   hubs.slice(1).forEach((hub) => {
