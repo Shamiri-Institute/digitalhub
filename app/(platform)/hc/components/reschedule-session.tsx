@@ -1,6 +1,6 @@
-import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { RescheduleSessionSchema } from "#/app/(platform)/hc/schemas";
-import { SessionDetail } from "#/components/common/session/session-list";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -21,23 +21,30 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ImplementerRole } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
-import { useContext } from "react";
+import { usePathname } from "next/navigation";
+import { Dispatch, SetStateAction, useContext } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 export default function RescheduleSession({
-  updateSessionsState,
+  sessionId,
+  open,
+  onOpenChange,
   role,
+  children,
 }: {
-  updateSessionsState: (sessionDate: Date) => void;
+  sessionId: string;
+  open: boolean;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
+  children: React.ReactNode;
 }) {
-  const context = useContext(RescheduleSessionContext);
-
+  const { refresh } = useContext(SessionsContext);
+  const pathname = usePathname();
   const form = useForm<z.infer<typeof RescheduleSessionSchema>>({
     resolver: zodResolver(RescheduleSessionSchema),
     defaultValues: {
-      sessionStartTime: "06:00",
+      sessionStartTime: "16:00",
     },
   });
 
@@ -48,48 +55,39 @@ export default function RescheduleSession({
       data.sessionStartTime +
       ":00";
     data.sessionDate = new Date(sessionDate);
-    try {
-      const response = await rescheduleSession(context.session!.id, data);
-      if (response.success) {
-        updateSessionsState(data.sessionDate);
-        context.setIsOpen(false);
-        toast({
-          description: response.message,
-        });
-        form.reset();
-        return;
-      }
-    } catch (error: unknown) {
-      console.log(error);
+
+    const response = await rescheduleSession(sessionId, data);
+    if (!response.success) {
+      onOpenChange(false);
       toast({
         variant: "destructive",
-        title: "Submission Error",
         description:
-          "Something went wrong while rescheduling session, please try again",
+          response.message ??
+          "Something went wrong while trying to reschedule session.",
       });
+      return;
     }
+
+    await Promise.all([
+      await revalidatePageAction(pathname),
+      await refresh(),
+    ]).then(() => {
+      toast({
+        description: response.message,
+      });
+      onOpenChange(false);
+    });
   };
 
   return (
     <div>
-      <Dialog
-        open={context.isOpen}
-        onOpenChange={context.setIsOpen}
-        modal={true}
-      >
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogPortal>
           <DialogContent className="flex w-1/3 max-w-none flex-col gap-4">
             <DialogHeader>
               <span className="text-xl font-bold">Reschedule session</span>
             </DialogHeader>
-            {context.session && (
-              <SessionDetail
-                state={{ session: context.session }}
-                layout={"compact"}
-                withDropdown={false}
-                role={role}
-              />
-            )}
+            {children}
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -162,7 +160,7 @@ export default function RescheduleSession({
                     type="button"
                     className="text-shamiri-new-blue hover:text-shamiri-blue"
                     onClick={() => {
-                      context.setIsOpen(false);
+                      onOpenChange(false);
                     }}
                   >
                     Cancel

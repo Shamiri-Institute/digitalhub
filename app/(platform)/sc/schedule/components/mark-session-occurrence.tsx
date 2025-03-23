@@ -114,10 +114,6 @@ export function MarkSessionOccurrence({
       setLoading(false);
       return;
     }
-    toast({
-      description: response.message,
-    });
-
     await Promise.all([
       await refresh(),
       await revalidatePageAction(pathname),
@@ -125,6 +121,9 @@ export function MarkSessionOccurrence({
       setLoading(false);
       setConfirmDialogOpen(false);
       setIsOpen(false);
+      toast({
+        description: response.message,
+      });
     });
   };
 

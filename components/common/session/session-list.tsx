@@ -42,6 +42,7 @@ export function SessionList({
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
+    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
   fellowId?: string;
@@ -57,11 +58,7 @@ export function SessionList({
         <SessionDetail
           state={{
             session,
-            setSession: dialogState.setSession,
-            setRatingsDialog: dialogState.setRatingsDialog,
-            setSessionOccurrenceDialog: dialogState.setSessionOccurrenceDialog,
-            setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
-            setStudentAttendanceDialog: dialogState.setStudentAttendanceDialog,
+            ...dialogState,
           }}
           role={role}
           layout="expanded"
@@ -79,11 +76,7 @@ export function SessionList({
         layout="compact"
         state={{
           session: sessions[0]!,
-          setSession: dialogState.setSession,
-          setRatingsDialog: dialogState.setRatingsDialog,
-          setSessionOccurrenceDialog: dialogState.setSessionOccurrenceDialog,
-          setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
-          setStudentAttendanceDialog: dialogState.setStudentAttendanceDialog,
+          ...dialogState,
         }}
         role={role}
         fellowId={fellowId}
@@ -93,11 +86,7 @@ export function SessionList({
         layout="compact"
         state={{
           session: sessions[1]!,
-          setSession: dialogState.setSession,
-          setRatingsDialog: dialogState.setRatingsDialog,
-          setSessionOccurrenceDialog: dialogState.setSessionOccurrenceDialog,
-          setFellowAttendanceDialog: dialogState.setFellowAttendanceDialog,
-          setStudentAttendanceDialog: dialogState.setStudentAttendanceDialog,
+          ...dialogState,
         }}
         role={role}
         fellowId={fellowId}
@@ -120,14 +109,7 @@ export function SessionList({
                       layout="compact"
                       state={{
                         session: moreSessions[index]!,
-                        setSession: dialogState.setSession,
-                        setRatingsDialog: dialogState.setRatingsDialog,
-                        setSessionOccurrenceDialog:
-                          dialogState.setSessionOccurrenceDialog,
-                        setFellowAttendanceDialog:
-                          dialogState.setFellowAttendanceDialog,
-                        setStudentAttendanceDialog:
-                          dialogState.setStudentAttendanceDialog,
+                        ...dialogState,
                       }}
                       role={role}
                       fellowId={fellowId}
@@ -159,6 +141,7 @@ export function SessionDetail({
     setSessionOccurrenceDialog?: Dispatch<SetStateAction<boolean>>;
     setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
+    setRescheduleSessionDialog?: Dispatch<SetStateAction<boolean>>;
   };
   layout: "compact" | "expanded";
   withDropdown?: boolean;
@@ -304,6 +287,7 @@ export function SessionDropDown({
     setSessionOccurrenceDialog?: Dispatch<SetStateAction<boolean>>;
     setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
+    setRescheduleSessionDialog?: Dispatch<SetStateAction<boolean>>;
   };
   role: ImplementerRole;
   fellowId?: string;
@@ -432,7 +416,8 @@ export function SessionDropDown({
               <DropdownMenuItem
                 onClick={() => {
                   state.setSession && state.setSession(session);
-                  rescheduleSessionContext.setIsOpen(true);
+                  state.setRescheduleSessionDialog &&
+                    state.setRescheduleSessionDialog(true);
                 }}
                 disabled={session.occurred}
               >

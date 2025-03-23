@@ -32,7 +32,6 @@ import SupervisorAttendance, {
   SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
 import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
-import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
 import {
   DateRangeType,
@@ -61,7 +60,6 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
-import { addHours } from "date-fns";
 import * as React from "react";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
@@ -433,6 +431,7 @@ function CalendarView({
               setStudentAttendanceDialog,
               setRatingsDialog,
               setSessionOccurrenceDialog,
+              setRescheduleSessionDialog,
             }}
             fellowId={fellow?.id}
           />
@@ -449,6 +448,7 @@ function CalendarView({
               setStudentAttendanceDialog,
               setRatingsDialog,
               setSessionOccurrenceDialog,
+              setRescheduleSessionDialog,
             }}
             fellowId={fellow?.id}
           />
@@ -466,6 +466,7 @@ function CalendarView({
               setStudentAttendanceDialog,
               setRatingsDialog,
               setSessionOccurrenceDialog,
+              setRescheduleSessionDialog,
             }}
             supervisorId={supervisorId}
             fellowId={fellow?.id}
@@ -485,6 +486,7 @@ function CalendarView({
               setStudentAttendanceDialog,
               setRatingsDialog,
               setSessionOccurrenceDialog,
+              setRescheduleSessionDialog,
             }}
             fellowId={fellow?.id}
           />
@@ -499,23 +501,6 @@ function CalendarView({
         throw new Error(`Invalid mode: ${mode}`);
     }
   };
-
-  function updateRescheduledSessionState(sessionDate: Date) {
-    const sessionIndex =
-      session !== null
-        ? sessions.findIndex((_session) => {
-            return _session.id === session.id;
-          })
-        : -1;
-
-    const copiedSessions = [...sessions];
-    if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
-      copiedSessions[sessionIndex]!.sessionDate = sessionDate;
-      copiedSessions[sessionIndex]!.sessionEndTime = addHours(sessionDate, 1);
-      copiedSessions[sessionIndex]!.status = "Rescheduled";
-      setSessions(copiedSessions);
-    }
-  }
 
   function updateCancelledSessionState() {
     const sessionIndex =
@@ -554,20 +539,22 @@ function CalendarView({
             setSession,
           }}
         >
-          <RescheduleSessionContext.Provider
-            value={{
-              isOpen: rescheduleSessionDialog,
-              setIsOpen: setRescheduleSessionDialog,
-              session,
-              setSession,
-            }}
-          >
-            {activeMode()}
+          {activeMode()}
+          {session ? (
             <RescheduleSession
-              updateSessionsState={updateRescheduledSessionState}
+              sessionId={session.id}
+              open={rescheduleSessionDialog}
+              onOpenChange={setRescheduleSessionDialog}
               role={role}
-            />
-          </RescheduleSessionContext.Provider>
+            >
+              <SessionDetail
+                state={{ session }}
+                layout={"compact"}
+                withDropdown={false}
+                role={role}
+              />
+            </RescheduleSession>
+          ) : null}
           <CancelSession
             updateSessionsState={updateCancelledSessionState}
             role={role}

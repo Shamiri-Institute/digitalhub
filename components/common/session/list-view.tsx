@@ -39,6 +39,7 @@ export function ListView({
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
+    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
   fellowId?: string;
@@ -299,12 +300,7 @@ export function ListView({
                           <SessionDropDown
                             state={{
                               session,
-                              setSession: dialogState.setSession,
-                              setFellowAttendanceDialog:
-                                dialogState.setFellowAttendanceDialog,
-                              setStudentAttendanceDialog:
-                                dialogState.setStudentAttendanceDialog,
-                              setRatingsDialog: dialogState.setRatingsDialog,
+                              ...dialogState,
                             }}
                             role={role}
                             fellowId={fellowId}

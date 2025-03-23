@@ -41,6 +41,8 @@ export const columns = (state: {
   setRatingsDialog: Dispatch<SetStateAction<boolean>>;
   setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
+  setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
   setSession: Dispatch<SetStateAction<Session | null>>;
   fellowId?: string;
   supervisorId?: string;
@@ -176,6 +178,8 @@ export const columns = (state: {
           setSession: state.setSession,
           setFellowAttendanceDialog: state.setFellowAttendanceDialog,
           setStudentAttendanceDialog: state.setStudentAttendanceDialog,
+          setSessionOccurrenceDialog: state.setSessionOccurrenceDialog,
+          setRescheduleSessionDialog: state.setRescheduleSessionDialog,
         }}
         role={state.role}
         fellowId={state.fellowId}
