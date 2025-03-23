@@ -306,10 +306,7 @@ export async function markSessionOccurrence(
 
     // TODO: Who should mark occurrence for venue sessions?
     if (session.school?.assignedSupervisorId !== supervisor.id) {
-      throw new Error(
-        "User not assigned to school. Session can be updated by " +
-          session.school?.assignedSupervisor?.supervisorName,
-      );
+      throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
 
     await db.interventionSession.update({

@@ -25,9 +25,7 @@ import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
-import CancelSession from "#/app/(platform)/hc/components/cancel-session";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
-import RescheduleSession from "#/app/(platform)/hc/components/reschedule-session";
 import SupervisorAttendance, {
   SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
@@ -42,6 +40,8 @@ import {
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import { CurrentFellow } from "#/app/auth";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
+import CancelSession from "#/components/common/session/cancel-session";
+import RescheduleSession from "#/components/common/session/reschedule-session";
 import { ScheduleNewSession } from "#/components/common/session/schedule-new-session-form";
 import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";

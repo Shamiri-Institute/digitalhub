@@ -107,9 +107,23 @@ export async function rescheduleSession(
   data: z.infer<typeof RescheduleSessionSchema>,
 ) {
   try {
-    await checkAuth();
+    const user = await checkAuth();
     const parsedData = RescheduleSessionSchema.parse(data);
     const sessionEndTime = addHours(parsedData.sessionDate, 1);
+
+    const session = await db.interventionSession.findFirstOrThrow({
+      where: { id },
+      include: {
+        school: true,
+      },
+    });
+
+    if (
+      session.school?.assignedSupervisorId !== user.supervisor?.id ||
+      !user.hubCoordinator
+    ) {
+      throw new Error(`You are not assigned to ${session.school?.schoolName}`);
+    }
 
     await db.interventionSession.update({
       data: {
@@ -128,7 +142,12 @@ export async function rescheduleSession(
     };
   } catch (error: unknown) {
     console.error(error);
-    return { error: "Something went wrong while rescheduling session" };
+    return {
+      success: false,
+      message:
+        (error as Error)?.message ??
+        "An error occurred while marking attendance.",
+    };
   }
 }
 

@@ -1,6 +1,5 @@
 "use client";
 
-import RescheduleSession from "#/app/(platform)/hc/components/reschedule-session";
 import SupervisorAttendance, {
   SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
@@ -8,6 +7,7 @@ import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/m
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import { columns, SessionData } from "#/components/common/session/columns";
+import RescheduleSession from "#/components/common/session/reschedule-session";
 import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
 import { Session } from "#/components/common/session/sessions-provider";
