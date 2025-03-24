@@ -400,23 +400,38 @@ function getCurrentUserNavigationLinks(
   // Hub Coordinator links
   if (mainRoute === "hc") {
     links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(scheduleActive && "active")}`}
+        key="hc-schedule"
+      >
         <CalendarIcon />
         <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
       </div>,
-      <div className={`tab-link ${cn(schoolsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(schoolsActive && "active")}`}
+        key="hc-schools"
+      >
         <SchoolIcon />
         <Link href={`/${mainRoute}/schools`}>Schools</Link>
       </div>,
-      <div className={`tab-link ${cn(supervisorsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(supervisorsActive && "active")}`}
+        key="hc-supervisors"
+      >
         <PeopleIcon />
         <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
       </div>,
-      <div className={`tab-link ${cn(fellowsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(fellowsActive && "active")}`}
+        key="hc-fellows"
+      >
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
       </div>,
-      <div className={`tab-link ${cn(studentsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(studentsActive && "active")}`}
+        key="hc-students"
+      >
         <GraduationCapIcon />
         <Link href={`/${mainRoute}/students`}>Students</Link>
       </div>,
@@ -426,23 +441,38 @@ function getCurrentUserNavigationLinks(
   // Supervisor links
   if (mainRoute === "sc") {
     links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(scheduleActive && "active")}`}
+        key="sc-schedule"
+      >
         <CalendarIcon />
         <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
       </div>,
-      <div className={`tab-link ${cn(schoolsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(schoolsActive && "active")}`}
+        key="sc-schools"
+      >
         <SchoolIcon />
         <Link href={`/${mainRoute}/schools`}>Schools</Link>
       </div>,
-      <div className={`tab-link ${cn(fellowsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(fellowsActive && "active")}`}
+        key="sc-fellows"
+      >
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
       </div>,
-      <div className={`tab-link ${cn(studentsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(studentsActive && "active")}`}
+        key="sc-students"
+      >
         <GraduationCapIcon />
         <Link href={`/${mainRoute}/students`}>Students</Link>
       </div>,
-      <div className={`tab-link ${cn(clinicalActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(clinicalActive && "active")}`}
+        key="sc-clinical"
+      >
         <PeopleIcon />
         <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
       </div>,
@@ -452,15 +482,24 @@ function getCurrentUserNavigationLinks(
   // Fellow links
   if (mainRoute === "fel") {
     links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(scheduleActive && "active")}`}
+        key="fel-schedule"
+      >
         <CalendarIcon />
         <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
       </div>,
-      <div className={`tab-link ${cn(schoolsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(schoolsActive && "active")}`}
+        key="fel-schools"
+      >
         <SchoolIcon />
         <Link href={`/${mainRoute}/schools`}>Schools</Link>
       </div>,
-      <div className={`tab-link ${cn(studentsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(studentsActive && "active")}`}
+        key="fel-portal"
+      >
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/portal`}>Fellow portal</Link>
       </div>,
@@ -470,27 +509,45 @@ function getCurrentUserNavigationLinks(
   // Clinical Lead links
   if (mainRoute === "cl") {
     links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(scheduleActive && "active")}`}
+        key="cl-schedule"
+      >
         <CalendarIcon />
         <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
       </div>,
-      <div className={`tab-link ${cn(schoolsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(schoolsActive && "active")}`}
+        key="cl-schools"
+      >
         <SchoolIcon />
         <Link href={`/${mainRoute}/schools`}>Schools</Link>
       </div>,
-      <div className={`tab-link ${cn(supervisorsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(supervisorsActive && "active")}`}
+        key="cl-supervisors"
+      >
         <PeopleIcon />
         <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
       </div>,
-      <div className={`tab-link ${cn(fellowsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(fellowsActive && "active")}`}
+        key="cl-fellows"
+      >
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
       </div>,
-      <div className={`tab-link ${cn(studentsActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(studentsActive && "active")}`}
+        key="cl-students"
+      >
         <GraduationCapIcon />
         <Link href={`/${mainRoute}/students`}>Students</Link>
       </div>,
-      <div className={`tab-link ${cn(clinicalActive && "active")}`}>
+      <div
+        className={`tab-link ${cn(clinicalActive && "active")}`}
+        key="cl-clinical"
+      >
         <PeopleIcon />
         <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
       </div>,
@@ -499,7 +556,7 @@ function getCurrentUserNavigationLinks(
 
   // Add reporting to all roles
   links.push(
-    <div className={`tab-link ${reportingActive ? "active" : ""}`}>
+    <div className={`tab-link ${reportingActive ? "active" : ""}`} key="report">
       <ReportingDropdown
         popoverOpen={popoverOpen}
         setPopoverOpen={setPopoverOpen}
