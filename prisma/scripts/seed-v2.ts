@@ -266,35 +266,63 @@ function createProjectImplementers(
 function createHubs(projects: Project[], implementers: Implementer[]) {
   console.log("creating hubs");
   const hubs = [];
-  const minLength = Math.min(projects.length, implementers.length);
 
   // Add static hub first
   const staticHub = {
     id: objectId("hub"),
     visibleId: "ARSENAL1",
     hubName: "Arsenal Hub",
-    projectId: projects[0]?.id as string,
-    implementerId: implementers[0]?.id as string,
+    implementerId: implementers[0]!.id,
   };
   hubs.push(staticHub);
 
   // Continue with dynamic hubs
-  for (let i = 0; i < minLength; i++) {
+  for (const implementer of implementers.slice(1)) {
     const numHubs = faker.number.int({ min: 3, max: 6 });
-
     for (let j = 0; j < numHubs; j++) {
       hubs.push({
         id: objectId("hub"),
         visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
         hubName: faker.company.name(),
-        projectId: projects[i]?.id as string,
-        implementerId: implementers[i]?.id as string,
+        implementerId: implementer.id,
       });
     }
   }
 
   return db.hub.createManyAndReturn({
     data: hubs,
+  });
+}
+
+async function createHubProjects(hubs: Hub[], projects: Project[]) {
+  console.log("creating hub-project associations");
+  const hubProjects = [];
+
+  // Assign first two projects to static hub
+  const staticHub = hubs[0];
+  const staticProjects = projects.slice(0, 2);
+  for (const project of staticProjects) {
+    hubProjects.push({
+      hubId: staticHub!.id,
+      projectId: project.id,
+    });
+  }
+
+  // Assign random projects to other hubs
+  for (const hub of hubs.slice(1)) {
+    const numProjects = faker.number.int({ min: 1, max: 3 });
+    const selectedProjects = faker.helpers.arrayElements(projects, numProjects);
+
+    for (const project of selectedProjects) {
+      hubProjects.push({
+        hubId: hub.id,
+        projectId: project.id,
+      });
+    }
+  }
+
+  return db.hubProject.createMany({
+    data: hubProjects,
   });
 }
 
@@ -1113,7 +1141,7 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
     include: {
       hub: {
         include: {
-          project: true,
+          projects: true,
           fellows: true,
         },
       },
@@ -1273,46 +1301,42 @@ async function createSessionNames(hubs: Hub[]) {
   const interventionSessionNames = ["s0", "s1", "s2", "s3", "s4"];
   const followUpSessionNames = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"];
 
-  // Add static session names for static hub
-  const staticHub = hubs[0];
-  for (const sessionName of interventionSessionNames) {
-    sessionNamesRecords.push({
-      id: objectId("sessionname"),
-      sessionName,
-      sessionType: sessionTypes.INTERVENTION,
-      sessionLabel: `Static ${sessionName}`,
-      amount: 500, // Fixed amount for static sessions
-      currency: "KES",
-      hubId: staticHub!.id,
-    });
-  }
+  // Get hub-project associations
+  const hubProjects = await db.hubProject.findMany({
+    where: { hubId: { in: hubs.map((h) => h.id) } },
+  });
 
-  // Continue with dynamic session names for other hubs
-  for (const hub of hubs.slice(1)) {
+  // Create session names for each hub-project combination
+  for (const { hubId, projectId } of hubProjects) {
+    const isStaticHub = hubId === hubs[0]?.id;
+
+    // Create intervention session names
     for (const sessionName of interventionSessionNames) {
       sessionNamesRecords.push({
         id: objectId("sessionname"),
         sessionName,
         sessionType: sessionTypes.INTERVENTION,
-        sessionLabel: sessionName,
-        // TODO: ensure amount maps to the correct session type
-        amount: faker.number.int({ min: 500, max: 1000 }),
+        sessionLabel: isStaticHub ? `Static ${sessionName}` : sessionName,
+        amount: isStaticHub ? 500 : faker.number.int({ min: 500, max: 1000 }),
         currency: "KES",
-        hubId: hub.id,
+        hubId,
+        projectId,
       });
     }
-  }
 
-  for (const sessionName of followUpSessionNames) {
-    sessionNamesRecords.push({
-      id: objectId("sessionname"),
-      sessionName,
-      sessionType: sessionTypes.CLINICAL,
-      sessionLabel: sessionName,
-      amount: faker.number.int({ min: 500, max: 1000 }),
-      currency: "KES",
-      hubId: faker.helpers.arrayElement(hubs).id,
-    });
+    // Create follow-up session names
+    for (const sessionName of followUpSessionNames) {
+      sessionNamesRecords.push({
+        id: objectId("sessionname"),
+        sessionName,
+        sessionType: sessionTypes.CLINICAL,
+        sessionLabel: sessionName,
+        amount: faker.number.int({ min: 500, max: 1000 }),
+        currency: "KES",
+        hubId,
+        projectId,
+      });
+    }
   }
 
   const sessions = await db.sessionName.createManyAndReturn({
@@ -1467,6 +1491,7 @@ async function main() {
   const userEmailSet = new Set<string>();
 
   const hubs = await createHubs(projects, implementers);
+  await createHubProjects(hubs, projects);
   const hubCoordinators = await createHubCoordinators(
     hubs,
     implementers,
