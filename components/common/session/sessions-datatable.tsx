@@ -164,6 +164,7 @@ export default function SessionsDatatable({
           session={session}
           isOpen={fellowAttendanceDialog}
           setIsOpen={setFellowAttendanceDialog}
+          supervisorId={supervisorId}
         />
       ) : null}
       <SupervisorAttendance supervisors={supervisors} role={role} />
