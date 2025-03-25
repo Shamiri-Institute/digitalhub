@@ -2,7 +2,7 @@
   Warnings:
 
   - You are about to drop the column `project_id` on the `hubs` table. All the data in the column will be lost.
-  - A unique constraint covering the columns `[sessionType,project_id]` on the table `session_names` will be added. If there are existing duplicate values, this will fail.
+  - A unique constraint covering the columns `[session_name,project_id]` on the table `session_names` will be added. If there are existing duplicate values, this will fail.
 
 */
 -- DropForeignKey
@@ -27,7 +27,7 @@ CREATE UNIQUE INDEX "_HubToProject_AB_unique" ON "_HubToProject"("A", "B");
 CREATE INDEX "_HubToProject_B_index" ON "_HubToProject"("B");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "session_names_sessionType_project_id_key" ON "session_names"("sessionType", "project_id");
+CREATE UNIQUE INDEX "session_names_session_name_project_id_key" ON "session_names"("session_name", "project_id");
 
 -- AddForeignKey
 ALTER TABLE "session_names" ADD CONSTRAINT "session_names_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "projects"("id") ON DELETE SET NULL ON UPDATE CASCADE;

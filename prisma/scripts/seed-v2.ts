@@ -1314,9 +1314,12 @@ async function createSessionNames(hubs: Hub[]) {
   const interventionSessionNames = ["s0", "s1", "s2", "s3", "s4"];
   const followUpSessionNames = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"];
 
+  // Track used session names per project
+  const usedSessionNames = new Map<string, Set<string>>();
+
   // Get hubs with their projects
   const hubsWithProjects = await db.hub.findMany({
-    where: { id: { in: hubs.map((h) => h.id) } },
+    where: { id: { in: hubs.map((h) => h.id).filter(Boolean) } },
     include: { projects: true },
   });
 
@@ -1325,33 +1328,49 @@ async function createSessionNames(hubs: Hub[]) {
     const isStaticHub = hub.id === hubs[0]?.id;
 
     for (const project of hub.projects) {
-      // Create intervention session names
-      for (const sessionName of interventionSessionNames) {
-        sessionNamesRecords.push({
-          id: objectId("sessionname"),
-          sessionName,
-          sessionType: sessionTypes.INTERVENTION,
-          sessionLabel: isStaticHub ? `Static ${sessionName}` : sessionName,
-          amount: isStaticHub ? 500 : faker.number.int({ min: 500, max: 1000 }),
-          currency: "KES",
-          hubId: hub.id,
-          projectId: project.id,
-        });
+      // Initialize set for this project if it doesn't exist
+      if (!usedSessionNames.has(project.id)) {
+        usedSessionNames.set(project.id, new Set());
       }
+      const projectSessionNames = usedSessionNames.get(project.id)!;
 
-      // Create follow-up session names if it's a static hub
-      if (isStaticHub) {
-        for (const sessionName of followUpSessionNames) {
+      // Create intervention session names
+      for (const baseName of interventionSessionNames) {
+        const sessionName = `${baseName}_${project.id.slice(0, 4)}`;
+        if (!projectSessionNames.has(sessionName)) {
+          projectSessionNames.add(sessionName);
           sessionNamesRecords.push({
             id: objectId("sessionname"),
             sessionName,
-            sessionType: sessionTypes.CLINICAL,
-            sessionLabel: sessionName,
-            amount: faker.number.int({ min: 500, max: 1000 }),
+            sessionType: sessionTypes.INTERVENTION,
+            sessionLabel: isStaticHub ? `Static ${baseName}` : baseName,
+            amount: isStaticHub
+              ? 500
+              : faker.number.int({ min: 500, max: 1000 }),
             currency: "KES",
             hubId: hub.id,
             projectId: project.id,
           });
+        }
+      }
+
+      // Create follow-up session names if it's a static hub
+      if (isStaticHub) {
+        for (const baseName of followUpSessionNames) {
+          const sessionName = `${baseName}_${project.id.slice(0, 4)}`;
+          if (!projectSessionNames.has(sessionName)) {
+            projectSessionNames.add(sessionName);
+            sessionNamesRecords.push({
+              id: objectId("sessionname"),
+              sessionName,
+              sessionType: sessionTypes.CLINICAL,
+              sessionLabel: baseName,
+              amount: faker.number.int({ min: 500, max: 1000 }),
+              currency: "KES",
+              hubId: hub.id,
+              projectId: project.id,
+            });
+          }
         }
       }
     }
