@@ -788,13 +788,12 @@ model Hub {
   reimbursementRequests   ReimbursementRequest[]
   repaymentRequests       RepaymentRequest[]
   coordinators            HubCoordinator[]
-  projectId               String?                   @map("project_id") @db.VarChar(100)
-  project                 Project?                  @relation(fields: [projectId], references: [id])
   weeklyHubReports        WeeklyHubReport[]
   WeeklyTeamMeetingReport WeeklyTeamMeetingReport[]
   sessions                SessionName[]
   clinicalLeads           ClinicalLead[]
   opsUser                 OpsUser[]
+  projects                Project[]
 
   @@map("hubs")
 }
@@ -1297,6 +1296,7 @@ model Project {
   interventionGroups          InterventionGroup[]
   projectImplementers         ProjectImplementer[]
   MonthlySupervisorEvaluation MonthlySupervisorEvaluation[]
+  sessions                    SessionName[]
 
   @@map("projects")
 }
@@ -1394,7 +1394,10 @@ model SessionName {
   hub                 Hub                   @relation(fields: [hubId], references: [id])
   InterventionSession InterventionSession[]
   sessionLabel        String                @map("session_label") @db.VarChar(255)
+  projectId           String?               @map("project_id") @db.VarChar(255)
+  project             Project?              @relation(fields: [projectId], references: [id])
 
+  @@unique([sessionType, projectId])
   @@map("session_names")
 }
 

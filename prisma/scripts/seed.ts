@@ -811,7 +811,9 @@ async function seedDatabase() {
             visibleId: hub.visibleId,
             hubName: hub.hubName,
             implementerId: implementer.id, // TODO: remove; projectImplementer replaces this
-            projectId: createdProject.id,
+            projects: {
+              connect: { id: createdProject.id },
+            },
           },
         });
 
