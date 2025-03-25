@@ -263,7 +263,7 @@ function createProjectImplementers(
   });
 }
 
-function createHubs(projects: Project[], implementers: Implementer[]) {
+function createHubs(implementers: Implementer[]) {
   console.log("creating hubs");
   const hubs = [];
 
@@ -294,36 +294,34 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
   });
 }
 
-async function createHubProjects(hubs: Hub[], projects: Project[]) {
-  console.log("creating hub-project associations");
-  const hubProjects = [];
+async function connectHubsToProjects(hubs: Hub[], projects: Project[]) {
+  console.log("connecting hubs to projects");
 
-  // Assign first two projects to static hub
+  // Connect static hub to first two projects
   const staticHub = hubs[0];
-  const staticProjects = projects.slice(0, 2);
-  for (const project of staticProjects) {
-    hubProjects.push({
-      hubId: staticHub!.id,
-      projectId: project.id,
-    });
-  }
+  await db.hub.update({
+    where: { id: staticHub!.id },
+    data: {
+      projects: {
+        connect: projects.slice(0, 2).map((p) => ({ id: p.id })),
+      },
+    },
+  });
 
-  // Assign random projects to other hubs
+  // Connect other hubs to random projects
   for (const hub of hubs.slice(1)) {
     const numProjects = faker.number.int({ min: 1, max: 3 });
     const selectedProjects = faker.helpers.arrayElements(projects, numProjects);
 
-    for (const project of selectedProjects) {
-      hubProjects.push({
-        hubId: hub.id,
-        projectId: project.id,
-      });
-    }
+    await db.hub.update({
+      where: { id: hub.id },
+      data: {
+        projects: {
+          connect: selectedProjects.map((p) => ({ id: p.id })),
+        },
+      },
+    });
   }
-
-  return db.hubProject.createMany({
-    data: hubProjects,
-  });
 }
 
 async function createCoreUsers(
@@ -1164,6 +1162,12 @@ async function createInterventionGroups(
     f.visibleId?.startsWith("FELLOW"),
   );
 
+  // Get the first project from the static hub's projects
+  const staticProjectId = staticSchool?.hub?.projects[0]?.id;
+  if (!staticProjectId) {
+    throw new Error("No project found for static hub");
+  }
+
   // Create one group for each static fellow
   staticFellows.forEach((fellow, index) => {
     interventionGroups.push({
@@ -1171,7 +1175,7 @@ async function createInterventionGroups(
       groupName: `Static Group ${index + 1}`,
       schoolId: staticSchool!.id,
       leaderId: fellow.id,
-      projectId: staticSchool!.hub?.projectId as string,
+      projectId: staticProjectId,
     });
   });
 
@@ -1185,6 +1189,15 @@ async function createInterventionGroups(
   }
 
   for (const school of schools.slice(1)) {
+    // Get the first project from the hub's projects
+    const projectId = school.hub?.projects[0]?.id;
+    if (!projectId) {
+      console.warn(
+        `No project found for school ${school.schoolName}, skipping...`,
+      );
+      continue;
+    }
+
     const numGroups = school.numbersExpected
       ? Math.ceil(school.numbersExpected / 16)
       : Math.ceil(1000 / 16);
@@ -1227,7 +1240,7 @@ async function createInterventionGroups(
         groupName: faker.company.name(),
         schoolId: school.id,
         leaderId: leader,
-        projectId: school.hub?.projectId as string,
+        projectId: projectId,
       });
     }
   }
@@ -1301,66 +1314,60 @@ async function createSessionNames(hubs: Hub[]) {
   const interventionSessionNames = ["s0", "s1", "s2", "s3", "s4"];
   const followUpSessionNames = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"];
 
-  // Get hub-project associations
-  const hubProjects = await db.hubProject.findMany({
-    where: { hubId: { in: hubs.map((h) => h.id) } },
+  // Get hubs with their projects
+  const hubsWithProjects = await db.hub.findMany({
+    where: { id: { in: hubs.map((h) => h.id) } },
+    include: { projects: true },
   });
 
   // Create session names for each hub-project combination
-  for (const { hubId, projectId } of hubProjects) {
-    const isStaticHub = hubId === hubs[0]?.id;
+  for (const hub of hubsWithProjects) {
+    const isStaticHub = hub.id === hubs[0]?.id;
 
-    // Create intervention session names
-    for (const sessionName of interventionSessionNames) {
-      sessionNamesRecords.push({
-        id: objectId("sessionname"),
-        sessionName,
-        sessionType: sessionTypes.INTERVENTION,
-        sessionLabel: isStaticHub ? `Static ${sessionName}` : sessionName,
-        amount: isStaticHub ? 500 : faker.number.int({ min: 500, max: 1000 }),
-        currency: "KES",
-        hubId,
-        projectId,
-      });
-    }
+    for (const project of hub.projects) {
+      // Create intervention session names
+      for (const sessionName of interventionSessionNames) {
+        sessionNamesRecords.push({
+          id: objectId("sessionname"),
+          sessionName,
+          sessionType: sessionTypes.INTERVENTION,
+          sessionLabel: isStaticHub ? `Static ${sessionName}` : sessionName,
+          amount: isStaticHub ? 500 : faker.number.int({ min: 500, max: 1000 }),
+          currency: "KES",
+          hubId: hub.id,
+          projectId: project.id,
+        });
+      }
 
-    // Create follow-up session names
-    for (const sessionName of followUpSessionNames) {
-      sessionNamesRecords.push({
-        id: objectId("sessionname"),
-        sessionName,
-        sessionType: sessionTypes.CLINICAL,
-        sessionLabel: sessionName,
-        amount: faker.number.int({ min: 500, max: 1000 }),
-        currency: "KES",
-        hubId,
-        projectId,
-      });
+      // Create follow-up session names if it's a static hub
+      if (isStaticHub) {
+        for (const sessionName of followUpSessionNames) {
+          sessionNamesRecords.push({
+            id: objectId("sessionname"),
+            sessionName,
+            sessionType: sessionTypes.CLINICAL,
+            sessionLabel: sessionName,
+            amount: faker.number.int({ min: 500, max: 1000 }),
+            currency: "KES",
+            hubId: hub.id,
+            projectId: project.id,
+          });
+        }
+      }
     }
   }
 
-  const sessions = await db.sessionName.createManyAndReturn({
+  return db.sessionName.createManyAndReturn({
     data: sessionNamesRecords,
   });
-
-  return sessions.reduce<
-    Record<"interventionSessionsNames" | "followUpSessionsNames", SessionName[]>
-  >(
-    (acc, val) => {
-      if (val.sessionType === sessionTypes.INTERVENTION) {
-        acc.interventionSessionsNames.push(val);
-      } else {
-        acc.followUpSessionsNames.push(val);
-      }
-      return acc;
-    },
-    { interventionSessionsNames: [], followUpSessionsNames: [] },
-  );
 }
 
 async function createInterventionSessionsForSchools(
   schools: Prisma.SchoolGetPayload<{
-    include: { interventionGroups: { include: { leader: true } }; hub: true };
+    include: {
+      interventionGroups: { include: { leader: true } };
+      hub: { include: { projects: true } };
+    };
   }>[],
   interventionSessionNames: SessionName[],
 ) {
@@ -1381,6 +1388,9 @@ async function createInterventionSessionsForSchools(
   // Create a Set to track used session types for the static school
   const usedStaticSessionTypes = new Set<string>();
 
+  // Use the first project from the hub's projects
+  const staticProjectId = staticSchool?.hub?.projects[0]?.id;
+
   for (const sessionName of staticSessionNames) {
     // Skip if we've already used this session type for this school
     if (usedStaticSessionTypes.has(sessionName.sessionName)) continue;
@@ -1396,7 +1406,7 @@ async function createInterventionSessionsForSchools(
       schoolId: staticSchool!.id,
       occurred: isBefore(staticDate, new Date()),
       yearOfImplementation: 2024,
-      projectId: staticSchool!.hub?.projectId || undefined,
+      projectId: staticProjectId,
     });
 
     // Move to next week for next static session
@@ -1408,41 +1418,41 @@ async function createInterventionSessionsForSchools(
     // Skip if school has no hub
     if (!school.hubId) continue;
 
+    // Get the first project from the hub's projects
+    const projectId = school.hub?.projects[0]?.id;
+    if (!projectId) {
+      console.warn(`No project found for school ${school.schoolName}`);
+      continue;
+    }
+
     // Get session names for this school's hub
     const schoolSessionNames = interventionSessionNames.filter(
       (sn) => sn.hubId === school.hub?.id,
     );
 
-    // Create a Set to track used session types for this school
+    // Rest of the function remains the same, just use projectId instead of hub?.projectId
     const usedSessionTypes = new Set<string>();
-
-    // Get all fellows who lead groups in this school
     const fellowsInSchool = school.interventionGroups.map(
       (group) => group.leader,
     );
     const fellowIds = new Set(fellowsInSchool.map((f) => f.id));
 
-    // Start from current date for this school
     let currentDate = startOfMonth(new Date());
-    currentDate.setHours(9, 0, 0, 0); // Set to 9 AM
+    currentDate.setHours(9, 0, 0, 0);
 
     for (const sessionName of schoolSessionNames) {
-      // Skip if we've already used this session type for this school
       if (usedSessionTypes.has(sessionName.sessionName)) continue;
       usedSessionTypes.add(sessionName.sessionName);
 
-      // Check if any fellow in this school has a session on this date
       while (
         Array.from(fellowIds).some((fellowId) => {
           const fellowDates = fellowSessionDates.get(fellowId);
           return fellowDates?.has(currentDate.toISOString().split("T")[0]!);
         })
       ) {
-        // If conflict exists, move to next day
         currentDate.setDate(currentDate.getDate() + 1);
       }
 
-      // Create session for this school
       interventionSessions.push({
         id: objectId("session"),
         sessionDate: new Date(currentDate),
@@ -1453,10 +1463,9 @@ async function createInterventionSessionsForSchools(
         schoolId: school.id,
         occurred: isBefore(new Date(currentDate), new Date()),
         yearOfImplementation: new Date().getFullYear(),
-        projectId: school.hub?.projectId || undefined,
+        projectId,
       });
 
-      // Record the date for all fellows in this school
       fellowsInSchool.forEach((fellow) => {
         if (!fellowSessionDates.has(fellow.id)) {
           fellowSessionDates.set(fellow.id, new Set());
@@ -1466,7 +1475,6 @@ async function createInterventionSessionsForSchools(
           ?.add(currentDate.toISOString().split("T")[0]!);
       });
 
-      // Move to next week for next session
       currentDate.setDate(currentDate.getDate() + 7);
     }
   }
@@ -1490,8 +1498,9 @@ async function main() {
 
   const userEmailSet = new Set<string>();
 
-  const hubs = await createHubs(projects, implementers);
-  await createHubProjects(hubs, projects);
+  const hubs = await createHubs(implementers);
+  await connectHubsToProjects(hubs, projects);
+
   const hubCoordinators = await createHubCoordinators(
     hubs,
     implementers,
@@ -1527,16 +1536,20 @@ async function main() {
           leader: true,
         },
       },
-      hub: true,
+      hub: {
+        include: {
+          projects: true,
+        },
+      },
     },
   });
   const students = await createStudentsForSchools(schoolsWithGroupsAndFellows);
-  const { interventionSessionsNames } = await createSessionNames(hubs);
+  const sessionNames = await createSessionNames(hubs);
 
   // TODO: question, should we also dynamically mark attendance for fellows in these sessions?
   const interventionSessions = await createInterventionSessionsForSchools(
     schoolsWithGroupsAndFellows,
-    interventionSessionsNames,
+    sessionNames,
   );
 
   // TODO:
