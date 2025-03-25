@@ -6,11 +6,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { SupervisorSchema } from "./schemas";
 
-import {
-  DropoutFellowSchema,
-  MarkSessionOccurrenceSchema,
-  WeeklyFellowRatingSchema,
-} from "./schemas";
+import { DropoutFellowSchema, WeeklyFellowRatingSchema } from "./schemas";
 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 
@@ -278,56 +274,6 @@ export async function dropoutFellowWithReason(
     }
     console.error(error);
     return { error: "Something went wrong" };
-  }
-}
-
-export async function markSessionOccurrence(
-  data: z.infer<typeof MarkSessionOccurrenceSchema>,
-) {
-  try {
-    const supervisor = await currentSupervisor();
-
-    if (!supervisor) {
-      throw new Error("User is not authorized.");
-    }
-
-    const parsedData = MarkSessionOccurrenceSchema.parse(data);
-
-    const session = await db.interventionSession.findFirstOrThrow({
-      where: { id: parsedData.sessionId },
-      include: {
-        school: {
-          include: {
-            assignedSupervisor: true,
-          },
-        },
-      },
-    });
-
-    // TODO: Who should mark occurrence for venue sessions?
-    if (session.school?.assignedSupervisorId !== supervisor.id) {
-      throw new Error(`You are not assigned to ${session.school?.schoolName}`);
-    }
-
-    await db.interventionSession.update({
-      where: { id: parsedData.sessionId },
-      data: {
-        occurred: parsedData.occurrence === "attended",
-      },
-    });
-
-    return {
-      success: true,
-      message: "Successfully updated session occurrence",
-    };
-  } catch (error: unknown) {
-    console.error(error);
-    return {
-      success: false,
-      message:
-        (error as Error)?.message ??
-        "An error occurred while marking attendance.",
-    };
   }
 }
 

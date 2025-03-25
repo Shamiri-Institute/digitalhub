@@ -1,12 +1,13 @@
 "use server";
 
-import { RescheduleSessionSchema } from "#/app/(platform)/hc/schemas";
 import {
   currentHubCoordinator,
   currentSupervisor,
   getCurrentUser,
 } from "#/app/auth";
 import {
+  MarkSessionOccurrenceSchema,
+  RescheduleSessionSchema,
   ScheduleNewSessionSchema,
   SessionRatingsSchema,
 } from "#/components/common/session/schema";
@@ -253,5 +254,71 @@ export async function submitSessionRatings(
   } catch (error: unknown) {
     console.error(error);
     return { error: "Something went wrong while submitting session ratings" };
+  }
+}
+
+export async function markSessionOccurrence(
+  data: z.infer<typeof MarkSessionOccurrenceSchema>,
+) {
+  try {
+    const auth = await checkAuth();
+    if (!auth.supervisor && !auth.hubCoordinator) {
+      throw new Error("Something went wrong. User is not authorized.");
+    }
+
+    const parsedData = MarkSessionOccurrenceSchema.parse(data);
+
+    const session = await db.interventionSession.findFirstOrThrow({
+      where: { id: parsedData.sessionId },
+      include: {
+        school: true,
+        session: true,
+      },
+    });
+
+    const schoolSessionTypes = ["INTERVENTION", "DATA_COLLECTION", "CLINICAL"];
+    const venueSessionTypes = ["SUPERVISION", "TRAINING"];
+    if (
+      session.session &&
+      schoolSessionTypes.includes(session.session?.sessionType) &&
+      session.school?.assignedSupervisorId !== auth.supervisor?.id &&
+      !auth.hubCoordinator
+    ) {
+      throw new Error(
+        `Something went wrong. You are not assigned to ${session.school?.schoolName}`,
+      );
+    } else if (
+      session.session &&
+      venueSessionTypes.includes(session.session?.sessionType) &&
+      !auth.hubCoordinator
+    ) {
+      throw new Error(
+        `Something went wrong. You are not authorized to perform this action.`,
+      );
+    } else if (!session.session) {
+      throw new Error(
+        `Something went wrong. Session details not found ${session.school?.schoolName}`,
+      );
+    }
+
+    await db.interventionSession.update({
+      where: { id: parsedData.sessionId },
+      data: {
+        occurred: parsedData.occurrence === "attended",
+      },
+    });
+
+    return {
+      success: true,
+      message: "Successfully updated session occurrence",
+    };
+  } catch (error: unknown) {
+    console.error(error);
+    return {
+      success: false,
+      message:
+        (error as Error)?.message ??
+        "An error occurred while marking attendance.",
+    };
   }
 }

@@ -352,20 +352,6 @@ export function SessionDropDown({
         )}
         {role === "SUPERVISOR" && (
           <>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setSessionOccurrenceDialog &&
-                  state.setSessionOccurrenceDialog(true);
-              }}
-              disabled={
-                session.status === "Cancelled" ||
-                session.occurred ||
-                session.school?.assignedSupervisorId !== supervisorId
-              }
-            >
-              Mark session occurrence
-            </DropdownMenuItem>
             {(session.session?.sessionType === "INTERVENTION" ||
               session.session?.sessionType === "CLINICAL" ||
               session.session?.sessionType === "DATA_COLLECTION") && (
@@ -415,6 +401,21 @@ export function SessionDropDown({
         )}
         {role === "HUB_COORDINATOR" || role === "SUPERVISOR" ? (
           <>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession && state.setSession(session);
+                state.setSessionOccurrenceDialog &&
+                  state.setSessionOccurrenceDialog(true);
+              }}
+              disabled={
+                session.status === "Cancelled" ||
+                session.occurred ||
+                (session.school?.assignedSupervisorId !== supervisorId &&
+                  role !== "HUB_COORDINATOR")
+              }
+            >
+              Mark session occurrence
+            </DropdownMenuItem>
             {session.sessionDate > new Date() && (
               <DropdownMenuItem
                 onClick={() => {
