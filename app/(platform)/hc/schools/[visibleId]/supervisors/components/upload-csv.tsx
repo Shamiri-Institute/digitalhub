@@ -36,12 +36,10 @@ export const handleSupervisorCSVTemplateDownload = () => {
 export function BatchUploadDownloadSupervisors({
   hubId,
   implementerId,
-  projectId,
   schoolVisibleId,
 }: {
   hubId: string;
   implementerId: string;
-  projectId: string;
   schoolVisibleId: string;
 }) {
   return (
@@ -58,7 +56,6 @@ export function BatchUploadDownloadSupervisors({
         metadata={{
           hubId,
           implementerId,
-          projectId,
           schoolVisibleId,
           urlPath: `/hc/schools/${schoolVisibleId}/supervisors`,
         }}

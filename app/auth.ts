@@ -1,6 +1,5 @@
 import { getServerSession } from "next-auth";
 
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export type CurrentHubCoordinator = Awaited<
@@ -25,6 +24,7 @@ export async function currentHubCoordinator() {
     include: {
       assignedHub: {
         include: {
+          projects: true,
           schools: true,
         },
       },
@@ -53,6 +53,7 @@ export async function currentSupervisor() {
     include: {
       hub: {
         include: {
+          projects: true,
           schools: {
             include: {
               interventionSessions: true,
@@ -61,9 +62,6 @@ export async function currentSupervisor() {
         },
       },
       assignedSchools: {
-        where: {
-          hub: { projectId: CURRENT_PROJECT_ID },
-        },
         include: {
           interventionSessions: true,
           _count: {
@@ -254,7 +252,11 @@ export async function currentClinicalLead() {
   const clinicalLead = await db.clinicalLead.findFirst({
     where: { id: identifier },
     include: {
-      assignedHub: true,
+      assignedHub: {
+        include: {
+          projects: true,
+        },
+      },
       clinicalScreeningCases: true,
     },
   });
@@ -285,7 +287,11 @@ export async function currentOpsUser() {
     where: { id: identifier },
     include: {
       implementer: true,
-      assignedHub: true,
+      assignedHub: {
+        include: {
+          projects: true,
+        },
+      },
     },
   });
 

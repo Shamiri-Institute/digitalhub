@@ -20,7 +20,7 @@ export type SupervisorsData = Prisma.SupervisorGetPayload<{
     fellows: true;
     hub: {
       include: {
-        project: true;
+        projects: true;
       };
     };
     monthlySupervisorEvaluation: true;

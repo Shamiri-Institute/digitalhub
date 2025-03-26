@@ -12,7 +12,6 @@ import {
 } from "#/app/api/payouts/generate/email-report";
 import type { PayoutDetail } from "#/app/api/payouts/generate/types";
 import { parseRelativeDate } from "#/app/api/utils";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import { notEmpty } from "#/lib/utils";
 import { calculatePayouts } from "./calculate-payouts";
@@ -260,7 +259,6 @@ async function fetchSupervisors({ implementerId }: { implementerId: string }) {
   const supervisors = await db.supervisor.findMany({
     where: {
       hub: {
-        projectId: CURRENT_PROJECT_ID,
         implementerId,
       },
     },

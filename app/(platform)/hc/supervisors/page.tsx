@@ -24,7 +24,7 @@ export default async function SupervisorsPage() {
       fellows: true,
       hub: {
         include: {
-          project: true,
+          projects: true,
         },
       },
       monthlySupervisorEvaluation: true,
@@ -71,7 +71,6 @@ export default async function SupervisorsPage() {
             supervisors={supervisors}
             hubId={coordinator.assignedHubId}
             implementerId={coordinator.implementerId!}
-            projectId={coordinator.assignedHub?.projectId!}
           />
         </SupervisorProvider>
       </div>

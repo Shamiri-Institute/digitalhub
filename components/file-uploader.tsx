@@ -30,7 +30,6 @@ export default function FileUploader({
   metadata?: {
     hubId?: string;
     implementerId?: string;
-    projectId?: string;
     schoolVisibleId?: string;
     urlPath?: string;
   };
@@ -74,7 +73,6 @@ export default function FileUploader({
       formData.append("schoolVisibleId", metadata?.schoolVisibleId!);
       formData.append("hubId", metadata.hubId ?? "");
       formData.append("implementerId", metadata.implementerId ?? "");
-      formData.append("projectId", metadata.projectId ?? "");
       formData.append("urlPath", metadata.urlPath!);
     }
 

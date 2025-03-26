@@ -37,7 +37,7 @@ export default async function FellowsPage({
         },
         hub: {
           include: {
-            project: true,
+            projects: true,
           },
         },
       },

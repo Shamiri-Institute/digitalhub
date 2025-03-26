@@ -15,7 +15,7 @@ export async function fetchPersonnel() {
       include: {
         hub: {
           include: {
-            project: true,
+            projects: true,
           },
         },
       },
@@ -25,7 +25,7 @@ export async function fetchPersonnel() {
     role: ImplementerRole.SUPERVISOR,
     label: `${sup.supervisorName}`,
     hub: sup.hub?.hubName,
-    project: sup.hub?.project?.name,
+    // project: sup.hub?.projects[0]?.name,
   }));
 
   const hubCoordinators: Personnel[] = (
@@ -34,7 +34,7 @@ export async function fetchPersonnel() {
       include: {
         assignedHub: {
           include: {
-            project: true,
+            projects: true,
           },
         },
       },
@@ -44,7 +44,7 @@ export async function fetchPersonnel() {
     role: ImplementerRole.HUB_COORDINATOR,
     label: `${hc.coordinatorName}`,
     hub: hc.assignedHub?.hubName,
-    project: hc.assignedHub?.project?.name,
+    // project: hc.assignedHub?.project?.name,
   }));
 
   const fellows: Personnel[] = (
@@ -53,7 +53,7 @@ export async function fetchPersonnel() {
       include: {
         hub: {
           include: {
-            project: true,
+            projects: true,
           },
         },
       },
@@ -63,7 +63,7 @@ export async function fetchPersonnel() {
     role: ImplementerRole.FELLOW,
     label: `${fellow.fellowName}`,
     hub: fellow.hub?.hubName,
-    project: fellow.hub?.project?.name,
+    // project: fellow.hub?.project?.name,
   }));
 
   const clinicalLeads: Personnel[] = (
@@ -72,7 +72,7 @@ export async function fetchPersonnel() {
       include: {
         assignedHub: {
           include: {
-            project: true,
+            projects: true,
           },
         },
       },
@@ -82,7 +82,7 @@ export async function fetchPersonnel() {
     role: ImplementerRole.CLINICAL_LEAD,
     label: `${cl.clinicalLeadName}`,
     hub: cl.assignedHub?.hubName,
-    project: cl.assignedHub?.project?.name,
+    // project: cl.assignedHub?.project?.name,
   }));
 
   const opsUsers: Personnel[] = (
@@ -91,7 +91,7 @@ export async function fetchPersonnel() {
       include: {
         assignedHub: {
           include: {
-            project: true,
+            projects: true,
           },
         },
       },
@@ -101,7 +101,7 @@ export async function fetchPersonnel() {
     role: ImplementerRole.OPERATIONS,
     label: `${ops.name}`,
     hub: ops.assignedHub?.hubName,
-    project: ops.assignedHub?.project?.name,
+    // project: ops.assignedHub?.project?.name,
   }));
 
   const personnel = [

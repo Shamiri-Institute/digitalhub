@@ -33,7 +33,6 @@ export default function MainSupervisorsDataTable({
   supervisors,
   hubId,
   implementerId,
-  projectId,
 }: {
   supervisors: Prisma.SupervisorGetPayload<{
     include: {
@@ -41,7 +40,7 @@ export default function MainSupervisorsDataTable({
       fellows: true;
       hub: {
         include: {
-          project: true;
+          projects: true;
         };
       };
       monthlySupervisorEvaluation: true;
@@ -49,7 +48,6 @@ export default function MainSupervisorsDataTable({
   }>[];
   hubId: string;
   implementerId: string;
-  projectId: string;
 }) {
   const [selectedRows, setSelectedRows] = useState<SupervisorsData[]>([]);
   const context = useContext(SupervisorContext);
@@ -91,7 +89,6 @@ export default function MainSupervisorsDataTable({
           metadata={{
             implementerId,
             hubId,
-            projectId,
             urlPath: "/hc/supervisors",
           }}
         />
@@ -160,7 +157,8 @@ export default function MainSupervisorsDataTable({
         }
         setIsOpen={context.setEvaluationDialog}
         isOpen={context.evaluationDialog}
-        project={context.supervisor?.hub?.project ?? null}
+        // TODO: Figure out how to get the exact project since hubs have more than one @wambugudavis
+        project={context.supervisor?.hub?.projects[0] ?? null}
         evaluations={context.supervisor?.monthlySupervisorEvaluation ?? []}
       >
         {renderDialogAlert()}

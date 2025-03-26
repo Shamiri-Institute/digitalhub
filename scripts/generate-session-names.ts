@@ -5,8 +5,8 @@ import {
   SUPERVISION_SESSION_TYPES,
   TRAINING_SESSION_TYPES,
 } from "#/lib/app-constants/constants";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
+import { Hub } from "@prisma/client";
 
 type SessionType = {
   name:
@@ -204,11 +204,14 @@ const sessionTypes: SessionType[] = [
 ];
 
 async function main() {
-  const hubs = await db.hub.findMany({
-    where: {
-      projectId: CURRENT_PROJECT_ID,
-    },
-  });
+  //TODO: Figure the where cla
+
+  // const hubs = await db.hub.findMany({
+  //   where: {
+  //     projectId: CURRENT_PROJECT_ID,
+  //   },
+  // });
+  const hubs = [] as Hub[];
   const sessions = hubs.map((hub) => {
     return sessionTypes.map((sessionType) => {
       return {

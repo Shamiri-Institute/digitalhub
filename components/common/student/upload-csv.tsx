@@ -29,7 +29,7 @@ export async function BatchUploadDownloadStudents({
       </Button>
       <FileUploader
         url="/api/csv-uploads/students"
-        metadata={{ hubId, implementerId, projectId, schoolVisibleId }}
+        metadata={{ hubId, implementerId, schoolVisibleId }}
         type="students"
       />
     </div>

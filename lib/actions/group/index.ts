@@ -9,7 +9,6 @@ import {
   CreateGroupSchema,
   StudentGroupEvaluationSchema,
 } from "#/components/common/group/schema";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getSchoolInitials } from "#/lib/utils";
@@ -72,10 +71,15 @@ export async function createInterventionGroup(
         id: objectId("group"),
         leaderId: fellowId,
         schoolId,
+        // TODO: Please check this @wambugudavis
+        // projectId:
+        //   hubCoordinator?.assignedHub?.projectId ??
+        //   supervisor?.hub?.projectId ??
+        //   CURRENT_PROJECT_ID,
         projectId:
-          hubCoordinator?.assignedHub?.projectId ??
-          supervisor?.hub?.projectId ??
-          CURRENT_PROJECT_ID,
+          hubCoordinator?.assignedHub?.projects[0]?.id ??
+          supervisor?.hub?.projects[0]?.id ??
+          "",
         groupName: `${getSchoolInitials(school.schoolName)}_${groupCount + 1}`,
       },
     });

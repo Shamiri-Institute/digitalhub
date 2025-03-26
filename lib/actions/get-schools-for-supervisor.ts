@@ -1,7 +1,6 @@
 "use server";
 
 import { CurrentSupervisor } from "#/app/auth";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export async function getSchoolsForSupervisor(
@@ -10,7 +9,6 @@ export async function getSchoolsForSupervisor(
   const assignedSchools = await db.school.findMany({
     where: {
       assignedSupervisorId: supervisor.id,
-      hub: { projectId: CURRENT_PROJECT_ID },
     },
   });
   const fetchedSchools = await Promise.all(
