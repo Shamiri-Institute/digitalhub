@@ -6,11 +6,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { SupervisorSchema } from "./schemas";
 
-import {
-  DropoutFellowSchema,
-  MarkSessionOccurrenceSchema,
-  WeeklyFellowRatingSchema,
-} from "./schemas";
+import { DropoutFellowSchema, WeeklyFellowRatingSchema } from "./schemas";
 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 
@@ -268,45 +264,6 @@ export async function dropoutFellowWithReason(
       success: true,
       message: "Successfully dropped out the fellow",
       fellow,
-    };
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.error(error.message);
-      return {
-        error: error.message,
-      };
-    }
-    console.error(error);
-    return { error: "Something went wrong" };
-  }
-}
-
-export async function markSessionOccurrence(
-  data: z.infer<typeof MarkSessionOccurrenceSchema>,
-) {
-  try {
-    const supervisor = await currentSupervisor();
-
-    if (!supervisor) {
-      return {
-        success: false,
-        message: "User is not authorised",
-      };
-    }
-
-    const parsedData = MarkSessionOccurrenceSchema.parse(data);
-
-    const session = await db.interventionSession.update({
-      where: { id: parsedData.sessionId },
-      data: {
-        occurred: parsedData.occurrence === "attended",
-      },
-    });
-
-    return {
-      success: true,
-      message: "Successfully updated session occurrence",
-      data: session,
     };
   } catch (error: unknown) {
     if (error instanceof Error) {
