@@ -6,18 +6,22 @@ import { HubPayoutHistoryType } from "#/app/(platform)/hc/reporting/expenses/pay
 import { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import { SupervisorPayoutHistoryType } from "#/app/(platform)/sc/reporting/expenses/payout-history/actions";
 import CreateProjectsForm from "#/components/common/expenses/payout-history/components/create-projects-form";
+import PayoutFrequencyForm from "#/components/common/expenses/payout-history/components/payout-frequency-form";
 import PayoutSettingsForm from "#/components/common/expenses/payout-history/components/payout-settings-form";
 import FellowPayoutFilterTab from "#/components/common/expenses/payout-history/payout-filter";
+import { HubWithProjects } from "#/components/common/expenses/payout-history/types";
 import { Button } from "#/components/ui/button";
 import { columns } from "./columns";
 
 export default function FellowPayoutHistoryDataTable({
   payoutHistory,
+  hubs,
 }: {
   payoutHistory:
     | HubPayoutHistoryType[]
     | OpsHubsPayoutHistoryType[]
     | SupervisorPayoutHistoryType[];
+  hubs?: HubWithProjects[];
 }) {
   const renderTableActions = () => {
     return (
@@ -36,7 +40,15 @@ export default function FellowPayoutHistoryDataTable({
               Payout Settings
             </Button>
           </DialogTrigger>
-          <PayoutSettingsForm />
+          <PayoutSettingsForm hubs={hubs || []} />
+        </Dialog>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="bg-white">
+              Payout Frequency
+            </Button>
+          </DialogTrigger>
+          <PayoutFrequencyForm />
         </Dialog>
       </div>
     );
