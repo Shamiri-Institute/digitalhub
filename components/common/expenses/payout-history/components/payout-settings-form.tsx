@@ -2,7 +2,6 @@
 
 import { Alert, AlertDescription } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
-import { Checkbox } from "#/components/ui/checkbox";
 import { DialogContent, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
@@ -20,48 +19,70 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
+import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { z } from "zod";
+import { updatePayoutSettings } from "../actions";
+import { PayoutSettingsSchema, type HubWithProjects } from "../types";
 
-const formSchema = z.object({
-  hubs: z.array(z.string()).min(1, "Select at least one hub"),
-  payoutFrequency: z.enum(["twice_week", "once_week", "biweekly", "monthly"]),
-  day1: z.string().optional(),
-  day2: z.string().optional(),
-  trainingRate: z.number().min(1, "Must be greater than 0"),
-  preSessionRate: z.number().min(1, "Must be greater than 0"),
-  mainSessionRate: z.number().min(1, "Must be greater than 0"),
-  supervisionRate: z.number().min(1, "Must be greater than 0"),
-});
+interface PayoutSettingsFormProps {
+  hubs: HubWithProjects[];
+}
 
-const weekDays = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+export default function PayoutSettingsForm({ hubs }: PayoutSettingsFormProps) {
+  const [selectedHub, setSelectedHub] = useState<HubWithProjects | null>(null);
+  const [loading, setLoading] = useState(false);
 
-export default function PayoutSettingsForm() {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof PayoutSettingsSchema>>({
+    resolver: zodResolver(PayoutSettingsSchema),
     defaultValues: {
-      hubs: [],
-      trainingRate: 0,
-      preSessionRate: 0,
-      mainSessionRate: 0,
-      supervisionRate: 0,
+      hubId: "",
+      projectSettings: [],
     },
-  });
+  }) as any;
 
-  const payoutFrequency = form.watch("payoutFrequency");
+  const onHubChange = (hubId: string) => {
+    const hub = hubs.find((h) => h.id === hubId);
+    setSelectedHub(hub || null);
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log(data);
-    // Handle form submission
+    if (hub) {
+      const projectSettings = hub.projects.map((project) => ({
+        projectId: project.id,
+        sessionSettings: project.sessions.map((session) => ({
+          sessionId: session.id,
+          amount: session.amount || 0,
+        })),
+      }));
+      form.setValue("hubId", hubId);
+      form.setValue("projectSettings", projectSettings as never[]);
+    }
+  };
+
+  const onSubmit = async (data: typeof PayoutSettingsSchema._type) => {
+    try {
+      setLoading(true);
+      const result = await updatePayoutSettings(data);
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: result.message,
+        });
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error) {
+      console.error("Error saving payout settings:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save payout settings",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,53 +103,29 @@ export default function PayoutSettingsForm() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
-            name="hubs"
-            render={() => (
-              <FormItem>
-                <FormLabel>Select Hubs</FormLabel>
-                <div className="space-y-2">
-                  {/* Replace with actual hubs data */}
-                  {["Hub 1", "Hub 2", "Hub 3"].map((hub) => (
-                    <div key={hub} className="flex items-center space-x-2">
-                      <Checkbox
-                        onCheckedChange={(checked) => {
-                          const currentHubs = form.getValues("hubs");
-                          if (checked) {
-                            form.setValue("hubs", [...currentHubs, hub]);
-                          } else {
-                            form.setValue(
-                              "hubs",
-                              currentHubs.filter((h) => h !== hub),
-                            );
-                          }
-                        }}
-                      />
-                      <label>{hub}</label>
-                    </div>
-                  ))}
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="payoutFrequency"
+            name="hubId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Payout Frequency</FormLabel>
-                <Select onValueChange={field.onChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select frequency" />
-                  </SelectTrigger>
+                <FormLabel>Hub</FormLabel>
+                <Select
+                  disabled={loading}
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    onHubChange(value);
+                  }}
+                  value={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a hub" />
+                    </SelectTrigger>
+                  </FormControl>
                   <SelectContent>
-                    <SelectItem value="twice_week">Twice a week</SelectItem>
-                    <SelectItem value="once_week">Once a week</SelectItem>
-                    <SelectItem value="biweekly">
-                      Once every two weeks
-                    </SelectItem>
-                    <SelectItem value="monthly">Once a month</SelectItem>
+                    {hubs.map((hub) => (
+                      <SelectItem key={hub.id} value={hub.id}>
+                        {hub.hubName}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -136,134 +133,48 @@ export default function PayoutSettingsForm() {
             )}
           />
 
-          {payoutFrequency && (
-            <FormField
-              control={form.control}
-              name="day1"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Day 1</FormLabel>
-                  <Select onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {weekDays.map((day) => (
-                        <SelectItem key={day} value={day.toLowerCase()}>
-                          {day}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
-          {payoutFrequency === "twice_week" && (
-            <FormField
-              control={form.control}
-              name="day2"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Day 2</FormLabel>
-                  <Select onValueChange={field.onChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {weekDays.map((day) => (
-                        <SelectItem key={day} value={day.toLowerCase()}>
-                          {day}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
           <div className="space-y-4">
             <h3 className="font-semibold">Set Payment Rate (KES)</h3>
-
-            <FormField
-              control={form.control}
-              name="trainingRate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Training Session</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+            {selectedHub &&
+              selectedHub.projects.map((project, projectIndex) => (
+                <div
+                  key={project.id}
+                  className="space-y-4 rounded-lg border p-4"
+                >
+                  <h4 className="font-medium">{project.name}</h4>
+                  {project.sessions.map((session, sessionIndex) => (
+                    <FormField
+                      key={session.id}
+                      control={form.control}
+                      name={
+                        `projectSettings.${projectIndex}.sessionSettings.${sessionIndex}.amount` as `projectSettings.${number}.sessionSettings.${number}.amount`
+                      }
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{session.sessionLabel}</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                              placeholder="Enter amount"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="preSessionRate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Intervention Pre-session</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="mainSessionRate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Intervention Main-session</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="supervisionRate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Intervention Supervision Session</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  ))}
+                </div>
+              ))}
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Saving..." : "Save Settings"}
+            </Button>
           </div>
         </form>
       </Form>
