@@ -34,6 +34,8 @@ export function DayView({
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
+    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
+    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
   fellowId?: string;
@@ -144,6 +146,7 @@ export function DayView({
                 role={role}
                 dialogState={dialogState}
                 fellowId={fellowId}
+                supervisorId={supervisorId}
               />
             </tr>
           ))}
@@ -161,6 +164,7 @@ function DayCalendarCell({
   role,
   dialogState,
   fellowId,
+  supervisorId,
 }: {
   rowIdx: number;
   hour: number;
@@ -173,8 +177,11 @@ function DayCalendarCell({
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
+    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
+    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
   };
   fellowId?: string;
+  supervisorId?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const { cellProps, buttonProps, isSelected, isDisabled, isUnavailable } =
@@ -208,6 +215,7 @@ function DayCalendarCell({
             role={role}
             dialogState={dialogState}
             fellowId={fellowId}
+            supervisorId={supervisorId}
           />
         </div>
       </div>

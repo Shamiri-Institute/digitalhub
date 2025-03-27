@@ -25,14 +25,10 @@ import { CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
-import CancelSession from "#/app/(platform)/hc/components/cancel-session";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
-import RescheduleSession from "#/app/(platform)/hc/components/reschedule-session";
 import SupervisorAttendance, {
   SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
-import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
-import { RescheduleSessionContext } from "#/app/(platform)/hc/context/reschedule-session-dialog-context";
 import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
 import {
   DateRangeType,
@@ -43,6 +39,8 @@ import {
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import { CurrentFellow } from "#/app/auth";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
+import CancelSession from "#/components/common/session/cancel-session";
+import RescheduleSession from "#/components/common/session/reschedule-session";
 import { ScheduleNewSession } from "#/components/common/session/schedule-new-session-form";
 import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
@@ -61,7 +59,6 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
-import { addHours } from "date-fns";
 import * as React from "react";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
@@ -433,6 +430,8 @@ function CalendarView({
               setStudentAttendanceDialog,
               setRatingsDialog,
               setSessionOccurrenceDialog,
+              setRescheduleSessionDialog,
+              setCancelSessionDialog,
             }}
             fellowId={fellow?.id}
           />
@@ -449,6 +448,8 @@ function CalendarView({
               setStudentAttendanceDialog,
               setRatingsDialog,
               setSessionOccurrenceDialog,
+              setRescheduleSessionDialog,
+              setCancelSessionDialog,
             }}
             fellowId={fellow?.id}
           />
@@ -466,6 +467,8 @@ function CalendarView({
               setStudentAttendanceDialog,
               setRatingsDialog,
               setSessionOccurrenceDialog,
+              setRescheduleSessionDialog,
+              setCancelSessionDialog,
             }}
             supervisorId={supervisorId}
             fellowId={fellow?.id}
@@ -485,6 +488,8 @@ function CalendarView({
               setStudentAttendanceDialog,
               setRatingsDialog,
               setSessionOccurrenceDialog,
+              setRescheduleSessionDialog,
+              setCancelSessionDialog,
             }}
             fellowId={fellow?.id}
           />
@@ -500,38 +505,6 @@ function CalendarView({
     }
   };
 
-  function updateRescheduledSessionState(sessionDate: Date) {
-    const sessionIndex =
-      session !== null
-        ? sessions.findIndex((_session) => {
-            return _session.id === session.id;
-          })
-        : -1;
-
-    const copiedSessions = [...sessions];
-    if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
-      copiedSessions[sessionIndex]!.sessionDate = sessionDate;
-      copiedSessions[sessionIndex]!.sessionEndTime = addHours(sessionDate, 1);
-      copiedSessions[sessionIndex]!.status = "Rescheduled";
-      setSessions(copiedSessions);
-    }
-  }
-
-  function updateCancelledSessionState() {
-    const sessionIndex =
-      session !== null
-        ? sessions.findIndex((_session) => {
-            return _session.id === session.id;
-          })
-        : -1;
-
-    const copiedSessions = [...sessions];
-    if (sessionIndex !== -1 && copiedSessions[sessionIndex] !== undefined) {
-      copiedSessions[sessionIndex]!.status = "Cancelled";
-      setSessions(copiedSessions);
-    }
-  }
-
   return (
     <div>
       <SupervisorAttendanceContext.Provider
@@ -546,33 +519,37 @@ function CalendarView({
           setAttendance: setSupervisorAttendance,
         }}
       >
-        <CancelSessionContext.Provider
-          value={{
-            isOpen: cancelSessionDialog,
-            setIsOpen: setCancelSessionDialog,
-            session,
-            setSession,
-          }}
-        >
-          <RescheduleSessionContext.Provider
-            value={{
-              isOpen: rescheduleSessionDialog,
-              setIsOpen: setRescheduleSessionDialog,
-              session,
-              setSession,
-            }}
-          >
-            {activeMode()}
+        {activeMode()}
+        {session ? (
+          <>
             <RescheduleSession
-              updateSessionsState={updateRescheduledSessionState}
+              sessionId={session.id}
+              open={rescheduleSessionDialog}
+              onOpenChange={setRescheduleSessionDialog}
               role={role}
-            />
-          </RescheduleSessionContext.Provider>
-          <CancelSession
-            updateSessionsState={updateCancelledSessionState}
-            role={role}
-          />
-        </CancelSessionContext.Provider>
+            >
+              <SessionDetail
+                state={{ session }}
+                layout={"compact"}
+                withDropdown={false}
+                role={role}
+              />
+            </RescheduleSession>
+            <CancelSession
+              sessionId={session.id}
+              open={cancelSessionDialog}
+              onOpenChange={setCancelSessionDialog}
+              role={role}
+            >
+              <SessionDetail
+                state={{ session }}
+                layout={"compact"}
+                withDropdown={false}
+                role={role}
+              />
+            </CancelSession>
+          </>
+        ) : null}
         <FellowAttendance
           supervisors={supervisors}
           supervisorId={role === "SUPERVISOR" ? supervisorId : undefined}
