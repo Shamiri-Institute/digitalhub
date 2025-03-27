@@ -1,8 +1,7 @@
 "use client";
 
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { markSessionOccurrence } from "#/app/(platform)/sc/actions";
-import { MarkSessionOccurrenceSchema } from "#/app/(platform)/sc/schemas";
+import { MarkSessionOccurrenceSchema } from "#/components/common/session/schema";
 import {
   Session,
   SessionsContext,
@@ -25,6 +24,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
+import { markSessionOccurrence } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, isBefore } from "date-fns";
@@ -53,7 +53,7 @@ export function MarkSessionOccurrence({
   defaultOccurrence?: boolean | null;
 }) {
   const pathname = usePathname();
-  const { sessions, setSessions } = useContext(SessionsContext);
+  const { sessions, refresh } = useContext(SessionsContext);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [previousUnmarkedSessions, setPreviousUnmarkedSessions] = useState<
@@ -106,35 +106,24 @@ export function MarkSessionOccurrence({
 
     if (!response.success) {
       toast({
+        variant: "destructive",
         description:
           response.message ??
           "Something went wrong during submission, please try again",
       });
       setLoading(false);
       return;
-    } else {
-      const sessionIndex = sessions.findIndex((session) => {
-        return session.id === id;
-      });
-
-      const copiedSessions = [...sessions];
-      if (
-        sessionIndex !== -1 &&
-        copiedSessions[sessionIndex] !== undefined &&
-        response.data
-      ) {
-        copiedSessions[sessionIndex].occurred = response.data.occurred;
-        setSessions(copiedSessions);
-      }
-      toast({
-        description: response.message,
-      });
     }
-
-    await revalidatePageAction(pathname).then(() => {
+    await Promise.all([
+      await refresh(),
+      await revalidatePageAction(pathname),
+    ]).then(() => {
       setLoading(false);
       setConfirmDialogOpen(false);
       setIsOpen(false);
+      toast({
+        description: response.message,
+      });
     });
   };
 

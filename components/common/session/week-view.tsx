@@ -32,6 +32,8 @@ export function WeekView({
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
+    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
+    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
   fellowId?: string;
@@ -162,6 +164,7 @@ export function WeekView({
                         role={role}
                         dialogState={dialogState}
                         fellowId={fellowId}
+                        supervisorId={supervisorId}
                       />
                     ) : (
                       <td key={colIdx} />
@@ -222,6 +225,7 @@ function WeekCalendarCell({
   role,
   dialogState,
   fellowId,
+  supervisorId,
 }: {
   rowIdx: number;
   colIdx: number;
@@ -235,8 +239,11 @@ function WeekCalendarCell({
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
+    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
+    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
   };
   fellowId?: string;
+  supervisorId?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const {
@@ -278,6 +285,7 @@ function WeekCalendarCell({
             role={role}
             dialogState={dialogState}
             fellowId={fellowId}
+            supervisorId={supervisorId}
           />
         </div>
       </div>
