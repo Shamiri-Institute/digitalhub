@@ -1,5 +1,7 @@
-import { CancelSessionContext } from "#/app/(platform)/hc/context/cancel-session-dialog-context";
-import { SessionDetail } from "#/components/common/session/session-list";
+"use client";
+
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -12,58 +14,67 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { cancelSession } from "#/lib/actions/session/session";
 import { ImplementerRole } from "@prisma/client";
-import { useContext } from "react";
+import { usePathname } from "next/navigation";
+import { Dispatch, SetStateAction, useContext, useState } from "react";
 
 export default function CancelSession({
-  updateSessionsState,
+  sessionId,
+  open,
+  onOpenChange,
   role,
+  children,
 }: {
-  updateSessionsState: () => void;
+  sessionId: string;
+  open: boolean;
+  onOpenChange: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
+  children: React.ReactNode;
 }) {
-  const context = useContext(CancelSessionContext);
+  const pathname = usePathname();
+  const { refresh } = useContext(SessionsContext);
+  const [loading, setLoading] = useState<boolean>(false);
+
   async function cancelSelectedSession() {
-    if (context.session) {
-      const response = await cancelSession(context.session?.id);
-      if (response.success) {
-        updateSessionsState();
-        context.setIsOpen(false);
-        toast({
-          description: response.message,
-        });
-      } else {
-        toast({
-          description: response.error,
-        });
-      }
+    setLoading(true);
+    const response = await cancelSession(sessionId);
+    if (!response.success) {
+      onOpenChange(false);
+      toast({
+        variant: "destructive",
+        description:
+          response.message ??
+          "Something went wrong while trying to reschedule session.",
+      });
+      setLoading(false);
+      return;
     }
+
+    await Promise.all([
+      await revalidatePageAction(pathname),
+      await refresh(),
+    ]).then(() => {
+      toast({
+        description: response.message,
+      });
+      setLoading(false);
+      onOpenChange(false);
+    });
   }
 
   return (
     <div>
-      <Dialog
-        open={context.isOpen}
-        onOpenChange={context.setIsOpen}
-        modal={true}
-      >
+      <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
         <DialogPortal>
-          <DialogContent className="w-1/3 max-w-none">
+          <DialogContent className="lg:w-1/3 lg:max-w-none">
             <DialogHeader>
               <span className="text-xl font-bold">Cancel session</span>
             </DialogHeader>
-            {context.session && (
-              <SessionDetail
-                state={{ session: context.session }}
-                layout={"compact"}
-                withDropdown={false}
-                role={role}
-              />
-            )}
+            {children}
             <div className="flex flex-col gap-y-4">
               <Separator />
               <span>Are you sure?</span>
-              <div className="flex gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-red-base">
-                <Icons.info className="-mt-1 h-8 w-8 stroke-2" />
+              <div className="flex items-start gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-red-base">
+                <Icons.info className="h-4 w-4 shrink-0 stroke-2" />
                 <div>
                   Once this change has been made it is irreversible and will
                   need you to contact support in order to modify. Please be sure
@@ -77,13 +88,15 @@ export default function CancelSession({
                 className="text-shamiri-light-red hover:bg-red-bg hover:text-shamiri-light-red"
                 variant="ghost"
                 onClick={() => {
-                  context.setIsOpen(false);
+                  onOpenChange(false);
                 }}
               >
                 Cancel
               </Button>
               <Button
                 variant="destructive"
+                loading={loading}
+                disabled={loading}
                 onClick={async () => {
                   await cancelSelectedSession();
                 }}

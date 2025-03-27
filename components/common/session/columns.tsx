@@ -41,8 +41,12 @@ export const columns = (state: {
   setRatingsDialog: Dispatch<SetStateAction<boolean>>;
   setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
+  setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
+  setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
   setSession: Dispatch<SetStateAction<Session | null>>;
   fellowId?: string;
+  supervisorId?: string;
 }): ColumnDef<SessionData>[] => [
   {
     id: "checkbox",
@@ -175,9 +179,13 @@ export const columns = (state: {
           setSession: state.setSession,
           setFellowAttendanceDialog: state.setFellowAttendanceDialog,
           setStudentAttendanceDialog: state.setStudentAttendanceDialog,
+          setSessionOccurrenceDialog: state.setSessionOccurrenceDialog,
+          setRescheduleSessionDialog: state.setRescheduleSessionDialog,
+          setCancelSessionDialog: state.setCancelSessionDialog,
         }}
         role={state.role}
         fellowId={state.fellowId}
+        supervisorId={state.supervisorId}
       >
         <div className="absolute inset-0 border-l bg-white">
           <div className="flex h-full w-full items-center justify-center">
