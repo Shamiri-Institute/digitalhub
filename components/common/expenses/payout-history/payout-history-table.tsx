@@ -11,17 +11,20 @@ import PayoutSettingsForm from "#/components/common/expenses/payout-history/comp
 import FellowPayoutFilterTab from "#/components/common/expenses/payout-history/payout-filter";
 import { HubWithProjects } from "#/components/common/expenses/payout-history/types";
 import { Button } from "#/components/ui/button";
+import { Implementer } from "@prisma/client";
 import { columns } from "./columns";
 
 export default function FellowPayoutHistoryDataTable({
   payoutHistory,
   hubs,
+  implementers,
 }: {
   payoutHistory:
     | HubPayoutHistoryType[]
     | OpsHubsPayoutHistoryType[]
     | SupervisorPayoutHistoryType[];
   hubs?: HubWithProjects[];
+  implementers?: Implementer[];
 }) {
   const renderTableActions = () => {
     return (
@@ -32,7 +35,10 @@ export default function FellowPayoutHistoryDataTable({
               Create Project
             </Button>
           </DialogTrigger>
-          <CreateProjectsForm />
+          <CreateProjectsForm
+            implementers={implementers || []}
+            hubs={hubs || []}
+          />
         </Dialog>
         <Dialog>
           <DialogTrigger asChild>

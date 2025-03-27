@@ -2,6 +2,7 @@
 
 import { CreateProjectformSchema } from "#/components/common/expenses/payout-history/components/create-projects-form";
 import { db } from "#/lib/db";
+import { Implementer } from "@prisma/client";
 import * as z from "zod";
 import type { HubWithProjects, PayoutSettingsFormData } from "./types";
 
@@ -19,6 +20,14 @@ export async function createProject(
         funder: data.funder,
         budget: data.budget,
         visibleId: data.projectName.toLowerCase().replace(/ /g, "-"),
+        projectImplementers: {
+          create: {
+            implementerId: data.implementerId,
+          },
+        },
+        hubs: {
+          connect: data.hubIds.map((hubId) => ({ id: hubId })),
+        },
       },
     });
 
@@ -59,6 +68,15 @@ export async function fetchHubsWithProjects(): Promise<HubWithProjects[]> {
   } catch (error) {
     console.error("Error fetching hubs with projects:", error);
     throw new Error("Failed to fetch hubs with projects");
+  }
+}
+export async function fetchImplementers(): Promise<Implementer[]> {
+  try {
+    const implementers = await db.implementer.findMany();
+    return implementers;
+  } catch (error) {
+    console.error("Error fetching implementers:", error);
+    throw new Error("Failed to fetch implementers");
   }
 }
 

@@ -1,13 +1,16 @@
 import { loadOpsHubsPayoutHistory } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import { currentOpsUser } from "#/app/auth";
-import { fetchHubsWithProjects } from "#/components/common/expenses/payout-history/actions";
+import {
+  fetchHubsWithProjects,
+  fetchImplementers,
+} from "#/components/common/expenses/payout-history/actions";
 import FellowPayoutHistoryDataTable from "#/components/common/expenses/payout-history/payout-history-table";
 import { signOut } from "next-auth/react";
 
 export default async function PayoutHistoryPage() {
   const opsUser = await currentOpsUser();
   const hubs = await fetchHubsWithProjects();
-
+  const implementers = await fetchImplementers();
   if (!opsUser) {
     return signOut({ callbackUrl: "/login" });
   }
@@ -18,6 +21,7 @@ export default async function PayoutHistoryPage() {
     <FellowPayoutHistoryDataTable
       payoutHistory={opsHubsPayoutHistory}
       hubs={hubs}
+      implementers={implementers}
     />
   );
 }
