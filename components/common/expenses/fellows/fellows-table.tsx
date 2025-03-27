@@ -1,8 +1,10 @@
 "use client";
 import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
+import {
+  columns,
+  subColumns,
+} from "#/components/common/expenses/fellows/columns";
 import DataTable from "#/components/data-table";
-
-import { columns, subColumns } from "./columns";
 
 export default function FellowsReportingDataTable({
   fellowAttendanceExpenses,

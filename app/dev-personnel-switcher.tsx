@@ -111,11 +111,10 @@ export function PersonnelSwitcher({
                         <span className="capitalize text-shamiri-new-blue">
                           {person.role.replace("_", " ")}{" "}
                         </span>
-                        <span className="text-nowrap">({person.hub})</span>
                       </div>
                       <span className="text-sm">{person.label}</span>
                       <span className="text-[8px] uppercase tracking-widest text-muted-foreground">
-                        {person.project}
+                        {person.hub}
                       </span>
                     </div>
                     <CheckIcon
