@@ -1,4 +1,7 @@
-import { SESSION_NAME_TYPES } from "#/lib/app-constants/constants";
+import {
+  OCCURRENCE_STATUS,
+  SESSION_NAME_TYPES,
+} from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
 
@@ -66,3 +69,17 @@ export const ScheduleNewSessionSchema = z
       return z.NEVER;
     }
   });
+
+export const MarkSessionOccurrenceSchema = z.object({
+  occurrence: z.enum(OCCURRENCE_STATUS, {
+    errorMap: (issue, _ctx) => ({
+      message: "Please mark occurrence",
+    }),
+  }),
+  sessionId: stringValidation("session ID is required"),
+});
+
+export const RescheduleSessionSchema = z.object({
+  sessionDate: z.coerce.date({ required_error: "Please select a date" }),
+  sessionStartTime: stringValidation("Please select a start time"),
+});

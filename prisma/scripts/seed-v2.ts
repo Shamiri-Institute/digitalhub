@@ -1,6 +1,7 @@
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { hubSessionTypes } from "#/prisma/scripts/generate-session-names";
 import { faker } from "@faker-js/faker";
 import {
   ClinicalLead,
@@ -1038,30 +1039,52 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
 
   // Add static school for static hub
   const staticHub = hubs[0];
-  const staticSupervisor = supervisors.find(
-    (s) => s.visibleId === "SUPERVISOR1",
+  schools.push(
+    {
+      id: objectId("sch"),
+      visibleId: "ARSENAL_SCH",
+      schoolName: "Emirates Academy",
+      hubId: staticHub!.id,
+      schoolType: "National",
+      schoolEmail: "Gabriel.academy@test.com",
+      schoolCounty: "Nairobi",
+      schoolSubCounty: "Westlands",
+      schoolDemographics: "Mixed",
+      pointPersonId: "ARSENAL_PP",
+      pointPersonName: "Thomas Partey",
+      pointPersonPhone: "254700000000",
+      numbersExpected: 300,
+      principalName: "David Raya",
+      droppedOut: false,
+      dropoutReason: null,
+      droppedOutAt: null,
+      assignedSupervisorId: supervisors.find(
+        (s) => s.visibleId === "SUPERVISOR1",
+      )!.id,
+    },
+    {
+      id: objectId("sch"),
+      visibleId: "SOBHA_SCH",
+      schoolName: "Sobha Academy",
+      hubId: staticHub!.id,
+      schoolType: "National",
+      schoolEmail: "sobha.academy@test.com",
+      schoolCounty: "Nairobi",
+      schoolSubCounty: "Westlands",
+      schoolDemographics: "Mixed",
+      pointPersonId: "SOBHA_PP",
+      pointPersonName: "Kai Havertz",
+      pointPersonPhone: "254700000000",
+      numbersExpected: 350,
+      principalName: "Mikel Merino",
+      droppedOut: false,
+      dropoutReason: null,
+      droppedOutAt: null,
+      assignedSupervisorId: supervisors.find(
+        (s) => s.visibleId === "SUPERVISOR2",
+      )!.id,
+    },
   );
-  const staticSchool = {
-    id: objectId("sch"),
-    visibleId: "ARSENAL_SCH",
-    schoolName: "Emirates Academy",
-    hubId: staticHub!.id,
-    schoolType: "National",
-    schoolEmail: "emirates.academy@test.com",
-    schoolCounty: "Nairobi",
-    schoolSubCounty: "Westlands",
-    schoolDemographics: "Mixed",
-    pointPersonId: "ARSENAL_PP",
-    pointPersonName: "Thomas Partey",
-    pointPersonPhone: "254700000000",
-    numbersExpected: 300,
-    principalName: "David Raya",
-    droppedOut: false,
-    dropoutReason: null,
-    droppedOutAt: null,
-    assignedSupervisorId: staticSupervisor!.id,
-  };
-  schools.push(staticSchool);
 
   // Continue with dynamic schools
   hubs.slice(1).forEach((hub) => {
@@ -1103,7 +1126,7 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
         droppedOut: false,
         dropoutReason: null,
         droppedOutAt: null,
-        assignedSupervisorId: faker.helpers.arrayElement(supervisors).id,
+        assignedSupervisorId: faker.helpers.arrayElement(hubSupervisors).id,
       });
     }
   });
@@ -1270,49 +1293,20 @@ async function createStudentsForSchools(
 async function createSessionNames(hubs: Hub[]) {
   console.log("creating session names");
   const sessionNamesRecords: Prisma.SessionNameCreateManyInput[] = [];
-  const interventionSessionNames = ["s0", "s1", "s2", "s3", "s4"];
-  const followUpSessionNames = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"];
 
-  // Add static session names for static hub
-  const staticHub = hubs[0];
-  for (const sessionName of interventionSessionNames) {
-    sessionNamesRecords.push({
-      id: objectId("sessionname"),
-      sessionName,
-      sessionType: sessionTypes.INTERVENTION,
-      sessionLabel: `Static ${sessionName}`,
-      amount: 500, // Fixed amount for static sessions
-      currency: "KES",
-      hubId: staticHub!.id,
-    });
-  }
-
-  // Continue with dynamic session names for other hubs
-  for (const hub of hubs.slice(1)) {
-    for (const sessionName of interventionSessionNames) {
+  for (const hub of hubs) {
+    // TODO: Modify to create sessionTypes per project per hub
+    for (const sessionType of hubSessionTypes) {
       sessionNamesRecords.push({
         id: objectId("sessionname"),
-        sessionName,
-        sessionType: sessionTypes.INTERVENTION,
-        sessionLabel: sessionName,
-        // TODO: ensure amount maps to the correct session type
-        amount: faker.number.int({ min: 500, max: 1000 }),
-        currency: "KES",
+        sessionType: sessionType.type,
+        sessionName: sessionType.name,
+        sessionLabel: sessionType.label,
         hubId: hub.id,
+        currency: "KES",
+        amount: sessionType.amount,
       });
     }
-  }
-
-  for (const sessionName of followUpSessionNames) {
-    sessionNamesRecords.push({
-      id: objectId("sessionname"),
-      sessionName,
-      sessionType: sessionTypes.CLINICAL,
-      sessionLabel: sessionName,
-      amount: faker.number.int({ min: 500, max: 1000 }),
-      currency: "KES",
-      hubId: faker.helpers.arrayElement(hubs).id,
-    });
   }
 
   const sessions = await db.sessionName.createManyAndReturn({
