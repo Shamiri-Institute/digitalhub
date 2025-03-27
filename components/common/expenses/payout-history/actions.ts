@@ -1,13 +1,15 @@
 "use server";
 
+import { HubCoordinatorFormData } from "#/components/common/expenses/payout-history/components/add-hub-coordinator-form";
 import { CreateProjectformSchema } from "#/components/common/expenses/payout-history/components/create-projects-form";
 import {
   INTERVENTION_SESSION_TYPES,
   SUPERVISION_SESSION_TYPES,
   TRAINING_SESSION_TYPES,
 } from "#/lib/app-constants/constants";
+import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { Implementer, sessionTypes } from "@prisma/client";
+import { Implementer, ImplementerRole, sessionTypes } from "@prisma/client";
 import * as z from "zod";
 import type {
   CreateSessionNameType,
@@ -195,6 +197,58 @@ export async function updatePayoutSettings(data: PayoutSettingsFormData) {
     return {
       success: false,
       message: "Failed to update payout settings",
+    };
+  }
+}
+
+export async function createHubCoordinator(data: HubCoordinatorFormData) {
+  try {
+    return await db.$transaction(async (tx) => {
+      const userId = objectId("user");
+      await tx.user.create({
+        data: {
+          id: userId,
+          email: data.coordinatorEmail,
+        },
+      });
+
+      const coordinatorId = objectId("hubcoordinator");
+
+      await tx.implementerMember.create({
+        data: {
+          userId,
+          implementerId: data.implementerId,
+          role: ImplementerRole.HUB_COORDINATOR,
+          identifier: coordinatorId,
+        },
+      });
+
+      await tx.hubCoordinator.create({
+        data: {
+          id: coordinatorId,
+          coordinatorName: data.coordinatorName,
+          coordinatorEmail: data.coordinatorEmail,
+          cellNumber: data.cellNumber,
+          mpesaNumber: data.mpesaNumber,
+          idNumber: data.idNumber,
+          gender: data.gender,
+          implementerId: data.implementerId,
+          assignedHubId: data.assignedHubId,
+          visibleId: objectId("hc"),
+        },
+      });
+
+      return {
+        success: true,
+        message: "Hub Coordinator created successfully",
+      };
+    });
+  } catch (error) {
+    console.error("Error creating hub coordinator:", error);
+    return {
+      success: false,
+      message:
+        "Failed to create hub coordinator, please check the data you provided",
     };
   }
 }

@@ -5,6 +5,7 @@ import { Dialog, DialogTrigger } from "#/components/ui/dialog";
 import { HubPayoutHistoryType } from "#/app/(platform)/hc/reporting/expenses/payout-history/actions";
 import { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import { SupervisorPayoutHistoryType } from "#/app/(platform)/sc/reporting/expenses/payout-history/actions";
+import AddHubCoordinatorForm from "#/components/common/expenses/payout-history/components/add-hub-coordinator-form";
 import CreateProjectsForm from "#/components/common/expenses/payout-history/components/create-projects-form";
 import PayoutFrequencyForm from "#/components/common/expenses/payout-history/components/payout-frequency-form";
 import PayoutSettingsForm from "#/components/common/expenses/payout-history/components/payout-settings-form";
@@ -29,6 +30,17 @@ export default function FellowPayoutHistoryDataTable({
   const renderTableActions = () => {
     return (
       <div className="flex items-center gap-3">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="bg-white">
+              Add Hub Coordinator
+            </Button>
+          </DialogTrigger>
+          <AddHubCoordinatorForm
+            hubs={hubs || []}
+            implementers={implementers || []}
+          />
+        </Dialog>
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="outline" className="bg-white">
