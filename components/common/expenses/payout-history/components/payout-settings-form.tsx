@@ -136,37 +136,139 @@ export default function PayoutSettingsForm({ hubs }: PayoutSettingsFormProps) {
           <div className="space-y-4">
             <h3 className="font-semibold">Set Payment Rate (KES)</h3>
             {selectedHub &&
-              selectedHub.projects.map((project, projectIndex) => (
+              selectedHub?.projects?.map((project, projectIndex) => (
                 <div
                   key={project.id}
                   className="space-y-4 rounded-lg border p-4"
                 >
-                  <h4 className="font-medium">{project.name}</h4>
-                  {project.sessions.map((session, sessionIndex) => (
-                    <FormField
-                      key={session.id}
-                      control={form.control}
-                      name={
-                        `projectSettings.${projectIndex}.sessionSettings.${sessionIndex}.amount` as `projectSettings.${number}.sessionSettings.${number}.amount`
-                      }
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{session.sessionLabel}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              {...field}
-                              onChange={(e) =>
-                                field.onChange(Number(e.target.value))
-                              }
-                              placeholder="Enter amount"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ))}
+                  <h4 className="font-medium text-shamiri-blue">
+                    Project: {project.name}
+                  </h4>
+                  {project.sessions.length > 0 ? (
+                    project.sessions.map((session, sessionIndex) => (
+                      <FormField
+                        key={session.id}
+                        control={form.control}
+                        name={
+                          `projectSettings.${projectIndex}.sessionSettings.${sessionIndex}.amount` as `projectSettings.${number}.sessionSettings.${number}.amount`
+                        }
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{session.sessionLabel}</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                onChange={(e) =>
+                                  field.onChange(Number(e.target.value))
+                                }
+                                placeholder="Enter amount"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ))
+                  ) : (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name={`defaultRates.${project.id}.trainingSession`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Training Session Rate{" "}
+                              <span className="text-shamiri-light-red">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                onChange={(e) =>
+                                  field.onChange(Number(e.target.value))
+                                }
+                                placeholder="Enter amount"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name={`defaultRates.${project.id}.preSession`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Intervention Pre-session Rate{" "}
+                              <span className="text-shamiri-light-red">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                onChange={(e) =>
+                                  field.onChange(Number(e.target.value))
+                                }
+                                placeholder="Enter amount"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name={`defaultRates.${project.id}.mainSession`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Intervention Main-session Rate{" "}
+                              <span className="text-shamiri-light-red">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                onChange={(e) =>
+                                  field.onChange(Number(e.target.value))
+                                }
+                                placeholder="Enter amount"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name={`defaultRates.${project.id}.supervisionSession`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>
+                              Supervision Session Rate{" "}
+                              <span className="text-shamiri-light-red">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                onChange={(e) =>
+                                  field.onChange(Number(e.target.value))
+                                }
+                                placeholder="Enter amount"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
                 </div>
               ))}
           </div>

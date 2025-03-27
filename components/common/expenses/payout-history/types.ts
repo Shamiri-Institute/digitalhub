@@ -41,21 +41,39 @@ export const DaysOfWeek = {
   SUNDAY: "sunday",
 } as const;
 
+const DefaultSessionRatesSchema = z.object({
+  trainingSession: z.number().min(1, "Training session rate is required"),
+  preSession: z.number().min(1, "Pre-session rate is required"),
+  mainSession: z.number().min(1, "Main session rate is required"),
+  supervisionSession: z.number().min(1, "Supervision session rate is required"),
+});
+
 export const PayoutSettingsSchema = z.object({
-  hubId: z.string({
-    required_error: "Please select a hub",
-  }),
-  projectSettings: z.array(
-    z.object({
-      projectId: z.string(),
-      sessionSettings: z.array(
-        z.object({
-          sessionId: z.string(),
-          amount: z.number().min(0, "Amount must be positive"),
-        }),
-      ),
-    }),
-  ),
+  hubId: z.string().min(1, "Hub is required"),
+  projectSettings: z
+    .array(
+      z.object({
+        projectId: z.string(),
+        sessionSettings: z.array(
+          z.object({
+            sessionId: z.string(),
+            amount: z.number(),
+          }),
+        ),
+      }),
+    )
+    .optional(),
+  defaultRates: z.record(z.string(), DefaultSessionRatesSchema).optional(),
 });
 
 export type PayoutSettingsFormData = z.infer<typeof PayoutSettingsSchema>;
+
+export type CreateSessionNameType = {
+  sessionName: string;
+  sessionType: "INTERVENTION" | "SUPERVISION" | "TRAINING";
+  sessionLabel: string;
+  amount: number;
+  currency: string;
+  projectId: string;
+  hubId: string;
+}[];
