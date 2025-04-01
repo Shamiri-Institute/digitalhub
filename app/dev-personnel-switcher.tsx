@@ -54,7 +54,7 @@ export function PersonnelSwitcher({
     <div className="rounded-md border border-zinc-200/60 bg-gradient-to-br from-zinc-50 to-transparent px-1.5 py-3">
       <div className="ml-2 flex items-center justify-between">
         <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-700">
-          Impersonate Supervisor or HC
+          Impersonate Supervisor, Fellow, HC OR Ops
         </div>
         {loading && (
           <Spinner className="-ml-1 mr-3 h-5 w-5 animate-spin text-zinc-600" />

@@ -5,24 +5,7 @@ import * as fastCsv from "fast-csv";
 import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
 
-const supervisorCSVHeaders = [
-  "supervisor_name",
-  "cell_number",
-  "personal_email",
-  "id_number",
-  "gender",
-  "shamiri_email",
-  "county",
-  "sub_county",
-  "mpesa_name",
-  "mpesa_number",
-  "training_level",
-  "kra",
-  "bank_name",
-  "bank_branch",
-  "bank_account_name",
-  "bank_account_number",
-];
+const supervisorCSVHeaders = ["supervisor_name", "personal_email", "id_number"];
 
 type SupervisorUpploadSchema = Prisma.SupervisorGetPayload<{
   select: {

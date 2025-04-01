@@ -2,24 +2,7 @@
 import FileUploader from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
 
-const supervisorCSVHeaders = [
-  "supervisor_name",
-  "cell_number",
-  "personal_email",
-  "id_number",
-  "gender",
-  "shamiri_email",
-  "county",
-  "sub_county",
-  "mpesa_name",
-  "mpesa_number",
-  "training_level",
-  "kra",
-  "bank_name",
-  "bank_branch",
-  "bank_account_name",
-  "bank_account_number",
-];
+const supervisorCSVHeaders = ["supervisor_name", "personal_email", "id_number"];
 
 export const handleSupervisorCSVTemplateDownload = () => {
   const csvContent =
