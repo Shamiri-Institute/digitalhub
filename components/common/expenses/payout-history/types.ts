@@ -8,6 +8,8 @@ export type HubWithProjects = {
   projects: {
     id: string;
     name: string;
+    startDate: Date | null;
+    endDate: Date | null;
     sessions: {
       id: string;
       sessionName: string;

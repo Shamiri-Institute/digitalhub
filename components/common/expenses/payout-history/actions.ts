@@ -89,6 +89,8 @@ export async function fetchHubsWithProjects(): Promise<HubWithProjects[]> {
           select: {
             id: true,
             name: true,
+            startDate: true,
+            endDate: true,
             sessions: {
               select: {
                 id: true,
@@ -110,7 +112,7 @@ export async function fetchHubsWithProjects(): Promise<HubWithProjects[]> {
         },
       },
     });
-    return hubs;
+    return hubs || [];
   } catch (error) {
     console.error("Error fetching hubs with projects:", error);
     throw new Error("Failed to fetch hubs with projects");
