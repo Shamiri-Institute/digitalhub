@@ -3,6 +3,7 @@ import { currentOpsUser } from "#/app/auth";
 import {
   fetchHubsWithProjects,
   fetchImplementers,
+  fetchPayoutFrequencySettings,
   fetchProjects,
 } from "#/components/common/expenses/payout-history/actions";
 import FellowPayoutHistoryDataTable from "#/components/common/expenses/payout-history/payout-history-table";
@@ -13,6 +14,7 @@ export default async function PayoutHistoryPage() {
   const hubs = await fetchHubsWithProjects();
   const implementers = await fetchImplementers();
   const projects = await fetchProjects();
+  const payoutFrequencySettings = await fetchPayoutFrequencySettings();
 
   if (!opsUser) {
     return signOut({ callbackUrl: "/login" });
@@ -26,6 +28,7 @@ export default async function PayoutHistoryPage() {
       hubs={hubs}
       implementers={implementers}
       projects={projects}
+      payoutFrequencySettings={payoutFrequencySettings}
     />
   );
 }

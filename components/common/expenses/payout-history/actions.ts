@@ -419,9 +419,6 @@ export async function fetchProjects() {
           gte: new Date(),
         },
       },
-      include: {
-        payoutFrequencySettings: true,
-      },
     });
     return projects || [];
   } catch (error) {
@@ -432,13 +429,9 @@ export async function fetchProjects() {
 
 export async function setPayoutFrequencySettings(data: PayoutFrequencyType) {
   try {
-    const { projectId, payoutFrequency, payoutDays, payoutTime } = data;
+    const { payoutFrequency, payoutDays, payoutTime } = data;
 
-    const existingSetting = await db.payoutFrequencySettings.findUnique({
-      where: {
-        projectId: projectId,
-      },
-    });
+    const existingSetting = await db.payoutFrequencySettings.findFirst();
 
     if (existingSetting) {
       await db.payoutFrequencySettings.update({
@@ -454,7 +447,6 @@ export async function setPayoutFrequencySettings(data: PayoutFrequencyType) {
     } else {
       await db.payoutFrequencySettings.create({
         data: {
-          projectId: projectId,
           frequency: payoutFrequency,
           days: payoutDays,
           time: payoutTime,
@@ -473,5 +465,39 @@ export async function setPayoutFrequencySettings(data: PayoutFrequencyType) {
       success: false,
       message: "Failed to set payout frequency settings",
     };
+  }
+}
+
+export async function fetchPayoutFrequencySettings() {
+  try {
+    const settings = await db.payoutFrequencySettings.findFirst({
+      select: {
+        frequency: true,
+        days: true,
+        time: true,
+      },
+    });
+
+    let payoutFrequency: "once_a_week" | "twice_a_week" | "biweekly" =
+      "once_a_week";
+
+    if (settings?.frequency) {
+      if (
+        settings.frequency === "once_a_week" ||
+        settings.frequency === "twice_a_week" ||
+        settings.frequency === "biweekly"
+      ) {
+        payoutFrequency = settings.frequency;
+      }
+    }
+
+    return {
+      payoutFrequency,
+      payoutDays: settings?.days || [],
+      payoutTime: settings?.time || "09:00",
+    };
+  } catch (error) {
+    console.error("Error fetching payout frequency settings:", error);
+    return null;
   }
 }

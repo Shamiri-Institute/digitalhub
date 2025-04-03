@@ -33,14 +33,13 @@ export const PayoutFrequencyOptions = {
 } as const;
 
 export const PayoutFrequencySchema = z.object({
-  projectId: stringValidation("Project is required"),
   payoutFrequency: z.enum([
     PayoutFrequencyOptions.ONCE_A_WEEK,
     PayoutFrequencyOptions.TWICE_A_WEEK,
     PayoutFrequencyOptions.BIWEEKLY,
   ]),
   payoutDays: z.array(z.string()).min(1, "At least one day must be selected"),
-  payoutTime: z.string().min(1, "Payout time is required"),
+  payoutTime: stringValidation("Payout time is required"),
 });
 
 export type PayoutFrequencyType = z.infer<typeof PayoutFrequencySchema>;
