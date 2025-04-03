@@ -29,7 +29,6 @@ export const createImplementerSchema = z.object({
   implementerName: stringValidation("Implementer name is required"),
   implementerType: stringValidation("Implementer type is required"),
   implementerAddress: z.string().optional(),
-  countyOfOperation: z.string().optional(),
   pointPersonName: z.string().optional(),
   pointPersonPhone: z.string().optional(),
   pointPersonEmail: z.string().email("Invalid email address").optional(),
@@ -39,7 +38,6 @@ type FormValues = z.infer<typeof createImplementerSchema>;
 
 export default function CreateImplementerForm() {
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(createImplementerSchema),
@@ -47,7 +45,6 @@ export default function CreateImplementerForm() {
       implementerName: "",
       implementerType: "",
       implementerAddress: "",
-      countyOfOperation: "",
       pointPersonName: "",
       pointPersonPhone: "",
       pointPersonEmail: "",
@@ -66,8 +63,6 @@ export default function CreateImplementerForm() {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      setLoading(true);
-      // TODO: Implement create implementer action
       const response = await createImplementer(data);
       if (response.success) {
         toast({
@@ -89,8 +84,6 @@ export default function CreateImplementerForm() {
         description: "Failed to create implementer",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -162,20 +155,6 @@ export default function CreateImplementerForm() {
 
               <FormField
                 control={form.control}
-                name="countyOfOperation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>County of Operation</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="makueni" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name="pointPersonName"
                 render={({ field }) => (
                   <FormItem>
@@ -237,8 +216,8 @@ export default function CreateImplementerForm() {
               </Button>
               <Button
                 type="submit"
-                disabled={loading}
-                loading={loading}
+                disabled={form.formState.isSubmitting}
+                loading={form.formState.isSubmitting}
                 className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
               >
                 Create Implementer

@@ -27,8 +27,7 @@ import {
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import {
   DaysOfWeek,
@@ -37,55 +36,36 @@ import {
   PayoutFrequencyType,
 } from "../types";
 
-type ProjectWithPayoutSettings = Prisma.ProjectGetPayload<{
-  include: {
-    payoutFrequencySettings: true;
-  };
-}>;
-
 export default function PayoutFrequencyForm({
-  projects,
+  payoutFrequencySettings,
 }: {
-  projects: ProjectWithPayoutSettings[];
+  payoutFrequencySettings?: PayoutFrequencyType | null;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedProject, setSelectedProject] =
-    useState<ProjectWithPayoutSettings | null>(null);
 
   const form = useForm<PayoutFrequencyType>({
     resolver: zodResolver(PayoutFrequencySchema),
     defaultValues: {
-      projectId: "",
-      payoutFrequency: PayoutFrequencyOptions.ONCE_A_WEEK,
-      payoutDays: [],
-      payoutTime: "09:00",
+      payoutFrequency:
+        payoutFrequencySettings?.payoutFrequency ||
+        PayoutFrequencyOptions.ONCE_A_WEEK,
+      payoutDays: payoutFrequencySettings?.payoutDays || [],
+      payoutTime: payoutFrequencySettings?.payoutTime || "09:00",
     },
   });
 
+  useEffect(() => {
+    if (isOpen && payoutFrequencySettings) {
+      form.reset({
+        payoutFrequency: payoutFrequencySettings.payoutFrequency,
+        payoutDays: payoutFrequencySettings.payoutDays,
+        payoutTime: payoutFrequencySettings.payoutTime,
+      });
+    }
+  }, [isOpen, payoutFrequencySettings, form]);
+
   const payoutFrequency = form.watch("payoutFrequency");
   const selectedDays = form.watch("payoutDays");
-
-  const onProjectChange = async (projectId: string) => {
-    const project = projects.find((p) => p.id === projectId);
-    setSelectedProject(project || null);
-    form.setValue("projectId", projectId);
-
-    if (project?.payoutFrequencySettings) {
-      // If project has existing settings, populate the form
-      form.setValue(
-        "payoutFrequency",
-        project.payoutFrequencySettings
-          .frequency as (typeof PayoutFrequencyOptions)[keyof typeof PayoutFrequencyOptions],
-      );
-      form.setValue("payoutDays", project.payoutFrequencySettings.days);
-      form.setValue("payoutTime", project.payoutFrequencySettings.time);
-    } else {
-      // Reset to defaults
-      form.setValue("payoutFrequency", PayoutFrequencyOptions.ONCE_A_WEEK);
-      form.setValue("payoutDays", []);
-      form.setValue("payoutTime", "09:00");
-    }
-  };
 
   const handleDayToggle = (day: string) => {
     const currentDays = [...selectedDays];
@@ -157,28 +137,26 @@ export default function PayoutFrequencyForm({
             <div className="space-y-4">
               <FormField
                 control={form.control}
-                name="projectId"
+                name="payoutFrequency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Project</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        onProjectChange(value);
-                      }}
-                      value={field.value}
-                    >
+                    <FormLabel>Frequency</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a project" />
+                          <SelectValue placeholder="Select frequency" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {projects.map((project) => (
-                          <SelectItem key={project.id} value={project.id}>
-                            {project.name}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value={PayoutFrequencyOptions.ONCE_A_WEEK}>
+                          Once a week
+                        </SelectItem>
+                        <SelectItem value={PayoutFrequencyOptions.TWICE_A_WEEK}>
+                          Twice a week
+                        </SelectItem>
+                        <SelectItem value={PayoutFrequencyOptions.BIWEEKLY}>
+                          Once every two weeks
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -186,99 +164,54 @@ export default function PayoutFrequencyForm({
                 )}
               />
 
-              {selectedProject && (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="payoutFrequency"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Frequency</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
+              <FormField
+                control={form.control}
+                name="payoutDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {payoutFrequency === PayoutFrequencyOptions.TWICE_A_WEEK
+                        ? "Select Days (up to 2)"
+                        : "Select Day"}
+                    </FormLabel>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {Object.entries(DaysOfWeek).map(([key, value]) => (
+                        <div
+                          key={value}
+                          className="flex items-center space-x-2"
                         >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select frequency" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem
-                              value={PayoutFrequencyOptions.ONCE_A_WEEK}
-                            >
-                              Once a week
-                            </SelectItem>
-                            <SelectItem
-                              value={PayoutFrequencyOptions.TWICE_A_WEEK}
-                            >
-                              Twice a week
-                            </SelectItem>
-                            <SelectItem value={PayoutFrequencyOptions.BIWEEKLY}>
-                              Once every two weeks
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="payoutDays"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          {payoutFrequency ===
-                          PayoutFrequencyOptions.TWICE_A_WEEK
-                            ? "Select Days (up to 2)"
-                            : "Select Day"}
-                        </FormLabel>
-                        <div className="mt-2 grid grid-cols-2 gap-2">
-                          {Object.entries(DaysOfWeek).map(([key, value]) => (
-                            <div
-                              key={value}
-                              className="flex items-center space-x-2"
-                            >
-                              <Checkbox
-                                id={value}
-                                checked={field.value.includes(value)}
-                                onCheckedChange={() => handleDayToggle(value)}
-                              />
-                              <label
-                                htmlFor={value}
-                                className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                              >
-                                {key.charAt(0) + key.slice(1).toLowerCase()}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="payoutTime"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Payout Time</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="time"
-                            {...field}
-                            placeholder="Select time"
+                          <Checkbox
+                            id={value}
+                            checked={field.value.includes(value)}
+                            onCheckedChange={() => handleDayToggle(value)}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </>
-              )}
+                          <label
+                            htmlFor={value}
+                            className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {key.charAt(0) + key.slice(1).toLowerCase()}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="payoutTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payout Time</FormLabel>
+                    <FormControl>
+                      <Input type="time" {...field} placeholder="Select time" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <div className="flex justify-end space-x-2">

@@ -53,7 +53,6 @@ const CreateProjectformSchema = z.object({
   funder: z.string().optional(),
   budget: z.number().optional(),
   projectLead: z.string().optional(),
-  phase: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof CreateProjectformSchema>;
@@ -76,7 +75,6 @@ export default function CreateProjectsForm() {
       funder: "",
       budget: undefined,
       projectLead: "",
-      phase: "",
     },
   });
 
@@ -131,10 +129,7 @@ export default function CreateProjectsForm() {
                     <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="Project name (eg: Anansi 100K Phase 1)"
-                    />
+                    <Input {...field} placeholder="Enter project name" />
                   </FormControl>
                   <p className="text-sm text-muted-foreground">
                     Please be as specific as possible, eg: Anansi 100K Phase 1
@@ -254,20 +249,6 @@ export default function CreateProjectsForm() {
                     <FormLabel>Project Lead</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter project lead name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phase"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Project Phase</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter project phase" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
