@@ -10,9 +10,15 @@ import PayoutSettingsForm from "#/components/common/expenses/payout-history/comp
 import FellowPayoutFilterTab from "#/components/common/expenses/payout-history/payout-filter";
 import { HubWithProjects } from "#/components/common/expenses/payout-history/types";
 import DataTable from "#/components/data-table";
-import { Implementer, Project } from "@prisma/client";
+import { Implementer, Prisma } from "@prisma/client";
 import { columns } from "./columns";
 import CreateHubForm from "./components/create-hub-form";
+
+export type ProjectWithPayoutSettings = Prisma.ProjectGetPayload<{
+  include: {
+    payoutFrequencySettings: true;
+  };
+}>;
 
 export default function FellowPayoutHistoryDataTable({
   payoutHistory,
@@ -26,7 +32,7 @@ export default function FellowPayoutHistoryDataTable({
     | SupervisorPayoutHistoryType[];
   hubs?: HubWithProjects[];
   implementers?: Implementer[];
-  projects?: Project[];
+  projects?: ProjectWithPayoutSettings[];
 }) {
   const renderTableActions = () => {
     return (
@@ -40,7 +46,7 @@ export default function FellowPayoutHistoryDataTable({
         />
         <AddHubCoordinatorForm hubs={hubs || []} />
         <PayoutSettingsForm hubs={hubs || []} />
-        <PayoutFrequencyForm />
+        <PayoutFrequencyForm projects={projects || []} />
       </div>
     );
   };

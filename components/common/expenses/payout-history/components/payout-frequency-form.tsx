@@ -1,6 +1,8 @@
 "use client";
 
+import { setPayoutFrequencySettings } from "#/components/common/expenses/payout-history/actions";
 import { Button } from "#/components/ui/button";
+import { Checkbox } from "#/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +27,7 @@ import {
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Prisma } from "@prisma/client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import {
@@ -34,38 +37,106 @@ import {
   PayoutFrequencyType,
 } from "../types";
 
-export default function PayoutFrequencyForm() {
+type ProjectWithPayoutSettings = Prisma.ProjectGetPayload<{
+  include: {
+    payoutFrequencySettings: true;
+  };
+}>;
+
+export default function PayoutFrequencyForm({
+  projects,
+}: {
+  projects: ProjectWithPayoutSettings[];
+}) {
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [selectedProject, setSelectedProject] =
+    useState<ProjectWithPayoutSettings | null>(null);
 
   const form = useForm<PayoutFrequencyType>({
     resolver: zodResolver(PayoutFrequencySchema),
     defaultValues: {
-      payoutFrequency: "once_a_week",
+      projectId: "",
+      payoutFrequency: PayoutFrequencyOptions.ONCE_A_WEEK,
       payoutDays: [],
       payoutTime: "09:00",
     },
   });
 
   const payoutFrequency = form.watch("payoutFrequency");
+  const selectedDays = form.watch("payoutDays");
 
-  const onSubmit = async (data: any) => {
+  const onProjectChange = async (projectId: string) => {
+    const project = projects.find((p) => p.id === projectId);
+    setSelectedProject(project || null);
+    form.setValue("projectId", projectId);
+
+    if (project?.payoutFrequencySettings) {
+      // If project has existing settings, populate the form
+      form.setValue(
+        "payoutFrequency",
+        project.payoutFrequencySettings
+          .frequency as (typeof PayoutFrequencyOptions)[keyof typeof PayoutFrequencyOptions],
+      );
+      form.setValue("payoutDays", project.payoutFrequencySettings.days);
+      form.setValue("payoutTime", project.payoutFrequencySettings.time);
+    } else {
+      // Reset to defaults
+      form.setValue("payoutFrequency", PayoutFrequencyOptions.ONCE_A_WEEK);
+      form.setValue("payoutDays", []);
+      form.setValue("payoutTime", "09:00");
+    }
+  };
+
+  const handleDayToggle = (day: string) => {
+    const currentDays = [...selectedDays];
+
+    if (payoutFrequency === PayoutFrequencyOptions.TWICE_A_WEEK) {
+      if (currentDays.includes(day)) {
+        const index = currentDays.indexOf(day);
+        if (index > -1) {
+          currentDays.splice(index, 1);
+        }
+      } else if (currentDays.length < 2) {
+        currentDays.push(day);
+      }
+    } else {
+      if (currentDays.includes(day)) {
+        const index = currentDays.indexOf(day);
+        if (index > -1) {
+          currentDays.splice(index, 1);
+        }
+      } else {
+        currentDays.length = 0;
+        currentDays.push(day);
+      }
+    }
+
+    form.setValue("payoutDays", currentDays);
+  };
+
+  const onSubmit = async (data: PayoutFrequencyType) => {
     try {
-      setLoading(true);
-      // TODO: Implement payout frequency update
-      toast({
-        title: "Success",
-        description: "Payout frequency updated successfully",
-      });
-      setIsOpen(false);
+      const response = await setPayoutFrequencySettings(data);
+      if (response.success) {
+        toast({
+          title: "Success",
+          description: "Payout frequency settings saved successfully",
+        });
+        setIsOpen(false);
+        form.reset();
+      } else {
+        toast({
+          title: "Error",
+          description: response.message,
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update payout frequency",
+        description: "Failed to save payout frequency settings",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -86,68 +157,26 @@ export default function PayoutFrequencyForm() {
             <div className="space-y-4">
               <FormField
                 control={form.control}
-                name="payoutFrequency"
+                name="projectId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Frequency</FormLabel>
+                    <FormLabel>Project</FormLabel>
                     <Select
-                      disabled={loading}
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        onProjectChange(value);
+                      }}
                       value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select frequency" />
+                          <SelectValue placeholder="Select a project" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={PayoutFrequencyOptions.ONCE_A_WEEK}>
-                          Once a week
-                        </SelectItem>
-                        <SelectItem value={PayoutFrequencyOptions.TWICE_A_WEEK}>
-                          Twice a week
-                        </SelectItem>
-                        <SelectItem value={PayoutFrequencyOptions.BIWEEKLY}>
-                          Once every two weeks
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="payoutDays"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {payoutFrequency === PayoutFrequencyOptions.TWICE_A_WEEK
-                        ? "Select Days"
-                        : "Select Day"}
-                    </FormLabel>
-                    <Select
-                      disabled={loading}
-                      onValueChange={(value) => {
-                        const days =
-                          payoutFrequency ===
-                          PayoutFrequencyOptions.TWICE_A_WEEK
-                            ? [...field.value, value].slice(-2)
-                            : [value];
-                        field.onChange(days);
-                      }}
-                      value={field.value[0]}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select day(s)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.entries(DaysOfWeek).map(([key, value]) => (
-                          <SelectItem key={value} value={value}>
-                            {key.charAt(0) + key.slice(1).toLowerCase()}
+                        {projects.map((project) => (
+                          <SelectItem key={project.id} value={project.id}>
+                            {project.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -157,19 +186,99 @@ export default function PayoutFrequencyForm() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="payoutTime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Payout Time</FormLabel>
-                    <FormControl>
-                      <Input type="time" {...field} placeholder="Select time" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {selectedProject && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="payoutFrequency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Frequency</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select frequency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem
+                              value={PayoutFrequencyOptions.ONCE_A_WEEK}
+                            >
+                              Once a week
+                            </SelectItem>
+                            <SelectItem
+                              value={PayoutFrequencyOptions.TWICE_A_WEEK}
+                            >
+                              Twice a week
+                            </SelectItem>
+                            <SelectItem value={PayoutFrequencyOptions.BIWEEKLY}>
+                              Once every two weeks
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="payoutDays"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {payoutFrequency ===
+                          PayoutFrequencyOptions.TWICE_A_WEEK
+                            ? "Select Days (up to 2)"
+                            : "Select Day"}
+                        </FormLabel>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          {Object.entries(DaysOfWeek).map(([key, value]) => (
+                            <div
+                              key={value}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={value}
+                                checked={field.value.includes(value)}
+                                onCheckedChange={() => handleDayToggle(value)}
+                              />
+                              <label
+                                htmlFor={value}
+                                className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                {key.charAt(0) + key.slice(1).toLowerCase()}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="payoutTime"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Payout Time</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="time"
+                            {...field}
+                            placeholder="Select time"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
             </div>
 
             <div className="flex justify-end space-x-2">
@@ -183,8 +292,8 @@ export default function PayoutFrequencyForm() {
               </Button>
               <Button
                 type="submit"
-                disabled={loading}
-                loading={loading}
+                disabled={form.formState.isSubmitting}
+                loading={form.formState.isSubmitting}
                 className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
               >
                 Save Settings
