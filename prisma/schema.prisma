@@ -1296,6 +1296,7 @@ model Project {
   MonthlySupervisorEvaluation MonthlySupervisorEvaluation[]
   sessions                    SessionName[]
   projectPaymentRates         ProjectPaymentRates?
+  payoutFrequencySettings     PayoutFrequencySettings?
 
   @@map("projects")
 }
@@ -1627,4 +1628,17 @@ model OpsUser {
   assignedHub   Hub?        @relation(fields: [assignedHubId], references: [id])
 
   @@map("ops_users")
+}
+
+model PayoutFrequencySettings {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  frequency String   @map("frequency") // once_a_week, twice_a_week
+  days      String[] @map("days") // days of the week
+  time      String   @map("time")
+  projectId String   @unique @map("project_id") @db.VarChar(255)
+  project   Project  @relation(fields: [projectId], references: [id])
+
+  @@map("payout_frequency_settings")
 }

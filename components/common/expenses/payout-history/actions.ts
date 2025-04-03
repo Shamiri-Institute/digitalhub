@@ -17,6 +17,7 @@ import * as z from "zod";
 import type {
   CreateSessionNameType,
   HubWithProjects,
+  PayoutFrequencyType,
   PayoutSettingsFormData,
 } from "./types";
 
@@ -341,10 +342,59 @@ export async function fetchProjects() {
           gte: new Date(),
         },
       },
+      include: {
+        payoutFrequencySettings: true,
+      },
     });
-    return projects;
+    return projects || [];
   } catch (error) {
     console.error("Error fetching projects:", error);
-    throw new Error("Failed to fetch projects");
+    return [];
+  }
+}
+
+export async function setPayoutFrequencySettings(data: PayoutFrequencyType) {
+  try {
+    const { projectId, payoutFrequency, payoutDays, payoutTime } = data;
+
+    const existingSetting = await db.payoutFrequencySettings.findUnique({
+      where: {
+        projectId: projectId,
+      },
+    });
+
+    if (existingSetting) {
+      await db.payoutFrequencySettings.update({
+        where: {
+          id: existingSetting.id,
+        },
+        data: {
+          frequency: payoutFrequency,
+          days: payoutDays,
+          time: payoutTime,
+        },
+      });
+    } else {
+      await db.payoutFrequencySettings.create({
+        data: {
+          projectId: projectId,
+          frequency: payoutFrequency,
+          days: payoutDays,
+          time: payoutTime,
+        },
+      });
+    }
+
+    revalidatePath("/ops/reporting/expenses/payout-history");
+    return {
+      success: true,
+      message: "Payout frequency settings updated successfully",
+    };
+  } catch (error) {
+    console.error("Error setting payout frequency settings:", error);
+    return {
+      success: false,
+      message: "Failed to set payout frequency settings",
+    };
   }
 }
