@@ -3,6 +3,7 @@ import * as z from "zod";
 export type HubWithProjects = {
   id: string;
   hubName: string;
+  implementerId: string;
   projects: {
     id: string;
     name: string;
@@ -22,7 +23,6 @@ export const PayoutFrequencyOptions = {
   BIWEEKLY: "biweekly",
 } as const;
 
-// Create a zod schema for payout frequency
 export const PayoutFrequencySchema = z.object({
   payoutFrequency: z.enum(["once_a_week", "twice_a_week", "biweekly"]),
   payoutDays: z.array(z.string()),
