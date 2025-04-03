@@ -232,8 +232,8 @@ function createProjects() {
       id: objectId("proj"),
       visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
       name: faker.company.name(),
-      actualStartDate: startOfMonth(new Date()),
-      actualEndDate: startOfMonth(new Date()),
+      startDate: startOfMonth(new Date()),
+      endDate: startOfMonth(new Date()),
     });
   }
 
