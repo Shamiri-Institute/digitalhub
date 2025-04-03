@@ -1,6 +1,8 @@
 "use server";
 
 import { HubCoordinatorFormData } from "#/components/common/expenses/payout-history/components/add-hub-coordinator-form";
+import { CreateHubFormSchema } from "#/components/common/expenses/payout-history/components/create-hub-form";
+import { createImplementerSchema } from "#/components/common/expenses/payout-history/components/create-implementer-form";
 import { CreateProjectformSchema } from "#/components/common/expenses/payout-history/components/create-projects-form";
 import {
   INTERVENTION_SESSION_TYPES,
@@ -10,6 +12,7 @@ import {
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { Implementer, ImplementerRole, sessionTypes } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 import * as z from "zod";
 import type {
   CreateSessionNameType,
@@ -45,24 +48,24 @@ export async function createProject(
   try {
     await db.project.create({
       data: {
+        id: objectId("proj"),
         name: data.projectName,
-        estimatedStartDate: data.startDate,
-        estimatedEndDate: data.endDate,
-        actualStartDate: data.startDate,
-        actualEndDate: data.endDate,
+        startDate: data.startDate,
+        endDate: data.endDate,
         funder: data.funder,
         budget: data.budget,
         visibleId: data.projectName.toLowerCase().replace(/ /g, "-"),
-        projectImplementers: {
+        projectPaymentRates: {
           create: {
-            implementerId: data.implementerId,
+            trainingSession: data.defaultRates.trainingSession,
+            preSession: data.defaultRates.preSession,
+            mainSession: data.defaultRates.mainSession,
+            supervisionSession: data.defaultRates.supervisionSession,
           },
-        },
-        hubs: {
-          connect: data.hubIds.map((hubId) => ({ id: hubId })),
         },
       },
     });
+    revalidatePath("/ops/reporting/expenses/payout-history");
 
     return { success: true, message: "Project created successfully" };
   } catch (error) {
@@ -80,6 +83,7 @@ export async function fetchHubsWithProjects(): Promise<HubWithProjects[]> {
       select: {
         id: true,
         hubName: true,
+        implementerId: true,
         projects: {
           select: {
             id: true,
@@ -187,6 +191,7 @@ export async function updatePayoutSettings(data: PayoutSettingsFormData) {
         }
       }
     }
+    revalidatePath("/ops/reporting/expenses/payout-history");
 
     return {
       success: true,
@@ -212,7 +217,7 @@ export async function createHubCoordinator(data: HubCoordinatorFormData) {
         },
       });
 
-      const coordinatorId = objectId("hubcoordinator");
+      const coordinatorId = objectId("hubc");
 
       await tx.implementerMember.create({
         data: {
@@ -232,12 +237,22 @@ export async function createHubCoordinator(data: HubCoordinatorFormData) {
           mpesaNumber: data.mpesaNumber,
           idNumber: data.idNumber,
           gender: data.gender,
-          implementerId: data.implementerId,
           assignedHubId: data.assignedHubId,
-          visibleId: objectId("hc"),
+          visibleId: coordinatorId,
+          implementerId: data.implementerId,
+          dateOfBirth: data.dateOfBirth,
+          county: data.county,
+          subCounty: data.subCounty,
+          bankName: data.bankName,
+          bankAccountNumber: data.bankAccountNumber,
+          bankAccountName: data.bankAccountName,
+          bankBranch: data.bankBranch,
+          kra: data.kra,
+          nhif: data.nhif,
+          trainingLevel: data.trainingLevel,
         },
       });
-
+      revalidatePath("/ops/reporting/expenses/payout-history");
       return {
         success: true,
         message: "Hub Coordinator created successfully",
@@ -250,5 +265,78 @@ export async function createHubCoordinator(data: HubCoordinatorFormData) {
       message:
         "Failed to create hub coordinator, please check the data you provided",
     };
+  }
+}
+
+export async function createImplementer(
+  data: z.infer<typeof createImplementerSchema>,
+) {
+  try {
+    const implementerId = objectId("imp");
+    await db.implementer.create({
+      data: {
+        ...data,
+        id: implementerId,
+        visibleId: implementerId,
+      },
+    });
+    revalidatePath("/ops/reporting/expenses/payout-history");
+    return {
+      success: true,
+      message: "Implementer created successfully",
+    };
+  } catch (error) {
+    console.error("Error creating implementer:", error);
+    return {
+      success: false,
+      message: "Failed to create implementer",
+    };
+  }
+}
+
+export async function createHub(data: z.infer<typeof CreateHubFormSchema>) {
+  try {
+    const hubId = objectId("hub");
+    await db.hub.create({
+      data: {
+        id: hubId,
+        hubName: data.hubName,
+        implementerId: data.implementerId,
+        visibleId: hubId,
+        projects: {
+          connect: data.projectIds.map((id) => ({ id })),
+        },
+      },
+    });
+    revalidatePath("/ops/reporting/expenses/payout-history");
+    return {
+      success: true,
+      message: "Hub created successfully",
+    };
+  } catch (error) {
+    console.error("Error creating hub:", error);
+    return {
+      success: false,
+      message: "Failed to create hub",
+    };
+  }
+}
+
+export async function fetchProjects() {
+  try {
+    const projects = await db.project.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      where: {
+        endDate: {
+          gte: new Date(),
+        },
+      },
+    });
+    return projects;
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    throw new Error("Failed to fetch projects");
   }
 }
