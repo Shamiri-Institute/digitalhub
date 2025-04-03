@@ -14,6 +14,12 @@ export type HubWithProjects = {
       sessionType: string;
       amount: number | null;
     }[];
+    projectPaymentRates: {
+      trainingSession: number;
+      preSession: number;
+      mainSession: number;
+      supervisionSession: number;
+    } | null;
   }[];
 };
 

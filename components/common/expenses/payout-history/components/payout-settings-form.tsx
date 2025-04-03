@@ -54,13 +54,28 @@ export default function PayoutSettingsForm({ hubs }: PayoutSettingsFormProps) {
     setSelectedHub(hub || null);
 
     if (hub) {
-      const projectSettings = hub.projects.map((project) => ({
-        projectId: project.id,
-        sessionSettings: project.sessions.map((session) => ({
-          sessionId: session.id,
-          amount: session.amount || 0,
-        })),
-      }));
+      const projectSettings = hub.projects.map((project) => {
+        const defaultRates = project.projectPaymentRates || {
+          trainingSession: 0,
+          preSession: 0,
+          mainSession: 0,
+          supervisionSession: 0,
+        };
+
+        return {
+          projectId: project.id,
+          sessionSettings: project.sessions.map((session) => ({
+            sessionId: session.id,
+            amount: session.amount || 0,
+          })),
+          defaultRates: {
+            trainingSession: defaultRates.trainingSession,
+            preSession: defaultRates.preSession,
+            mainSession: defaultRates.mainSession,
+            supervisionSession: defaultRates.supervisionSession,
+          },
+        };
+      });
       form.setValue("hubId", hubId);
       form.setValue("projectSettings", projectSettings as never[]);
     }

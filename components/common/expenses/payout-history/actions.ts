@@ -97,6 +97,14 @@ export async function fetchHubsWithProjects(): Promise<HubWithProjects[]> {
                 amount: true,
               },
             },
+            projectPaymentRates: {
+              select: {
+                trainingSession: true,
+                preSession: true,
+                mainSession: true,
+                supervisionSession: true,
+              },
+            },
           },
         },
       },
