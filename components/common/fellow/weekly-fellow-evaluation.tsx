@@ -75,10 +75,10 @@ export default function WeeklyFellowEvaluation({
   const weeks =
     mode === "view"
       ? evaluations.map((x) => x.week).sort((a, b) => a.getTime() - b.getTime())
-      : project && project.actualStartDate !== null
+      : project && project.startDate !== null
         ? eachWeekOfInterval({
-            start: project.actualStartDate,
-            end: project.actualEndDate ?? new Date(),
+            start: project.startDate ?? new Date(),
+            end: project.endDate ?? new Date(),
           })
         : [];
 

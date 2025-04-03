@@ -216,10 +216,10 @@ export default function MonthlySupervisorEvaluation({
   };
 
   const months =
-    project !== null && project.actualStartDate !== null
+    project !== null && project.startDate !== null
       ? eachMonthOfInterval({
-          start: project.actualStartDate,
-          end: project.actualEndDate ?? new Date(),
+          start: project.startDate ?? new Date(),
+          end: project.endDate ?? new Date(),
         })
       : [];
 
