@@ -1,9 +1,7 @@
 "use client";
 
 import { createProject } from "#/components/common/expenses/payout-history/actions";
-import { HubWithProjects } from "#/components/common/expenses/payout-history/types";
 import { Button } from "#/components/ui/button";
-import { Checkbox } from "#/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -19,17 +17,10 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "#/components/ui/select";
+import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Implementer } from "@prisma/client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -45,7 +36,20 @@ const CreateProjectformSchema = z.object({
   implementerId: z.string({
     required_error: "Implementer is required",
   }),
-  hubIds: z.array(z.string()).min(1, "At least one hub must be selected"),
+  defaultRates: z.object({
+    trainingSession: z.number({
+      required_error: "Training session rate is required",
+    }),
+    preSession: z.number({
+      required_error: "Pre-session rate is required",
+    }),
+    mainSession: z.number({
+      required_error: "Main session rate is required",
+    }),
+    supervisionSession: z.number({
+      required_error: "Supervision session rate is required",
+    }),
+  }),
   funder: z.string().optional(),
   budget: z.number().optional(),
   projectLead: z.string().optional(),
@@ -54,32 +58,27 @@ const CreateProjectformSchema = z.object({
 
 type FormValues = z.infer<typeof CreateProjectformSchema>;
 
-export default function CreateProjectsForm({
-  implementers,
-  hubs,
-}: {
-  implementers: Implementer[];
-  hubs: HubWithProjects[];
-}) {
+export default function CreateProjectsForm() {
   const [isOpen, setIsOpen] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(CreateProjectformSchema),
     defaultValues: {
+      projectName: "",
       implementerId: "",
-      hubIds: [],
+      startDate: new Date(),
+      endDate: new Date(),
+      defaultRates: {
+        trainingSession: 500,
+        preSession: 1000,
+        mainSession: 1500,
+        supervisionSession: 500,
+      },
       funder: "",
       budget: undefined,
       projectLead: "",
       phase: "",
-      startDate: undefined,
-      endDate: undefined,
     },
   });
-
-  const handleImplementerChange = (value: string) => {
-    form.setValue("implementerId", value);
-    form.setValue("hubIds", []);
-  };
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -116,6 +115,12 @@ export default function CreateProjectsForm({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="col-span-2 py-2">
+              <span className="text-xs uppercase text-shamiri-text-grey">
+                Project Information
+              </span>
+              <Separator />
+            </div>
             <FormField
               control={form.control}
               name="projectName"
@@ -126,8 +131,14 @@ export default function CreateProjectsForm({
                     <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Enter project name" />
+                    <Input
+                      {...field}
+                      placeholder="Project name (eg: Anansi 100K Phase 1)"
+                    />
                   </FormControl>
+                  <p className="text-sm text-muted-foreground">
+                    Please be as specific as possible, eg: Anansi 100K Phase 1
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
@@ -193,69 +204,6 @@ export default function CreateProjectsForm({
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="implementerId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Implementer{" "}
-                    <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
-                  <Select
-                    onValueChange={handleImplementerChange}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select implementer" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {implementers.map((implementer) => (
-                        <SelectItem key={implementer.id} value={implementer.id}>
-                          {implementer.implementerName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="hubIds"
-              render={() => (
-                <FormItem>
-                  <FormLabel>
-                    Hubs <span className="text-shamiri-light-red">*</span>
-                  </FormLabel>
-                  <div className="grid grid-cols-3 gap-4 rounded-lg border p-4">
-                    {hubs.map((hub) => (
-                      <div key={hub.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          checked={form.watch("hubIds").includes(hub.id)}
-                          onCheckedChange={(checked) => {
-                            const currentHubs = form.watch("hubIds");
-                            const newHubs = checked
-                              ? [...currentHubs, hub.id]
-                              : currentHubs.filter((id) => id !== hub.id);
-                            form.setValue("hubIds", newHubs);
-                          }}
-                        />
-                        <label className="text-sm font-medium">
-                          {hub.hubName}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -317,7 +265,7 @@ export default function CreateProjectsForm({
                 name="phase"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phase</FormLabel>
+                    <FormLabel>Project Phase</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter project phase" {...field} />
                     </FormControl>
@@ -325,6 +273,112 @@ export default function CreateProjectsForm({
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="space-y-4">
+              <div className="col-span-2 py-2">
+                <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
+                  Set Payment Rate (KES)
+                </span>
+                <Separator />
+              </div>
+              <div className="space-y-4 rounded-lg border p-4">
+                <FormField
+                  control={form.control}
+                  name="defaultRates.trainingSession"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Training Session Rate{" "}
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                          placeholder="Enter amount"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="defaultRates.preSession"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Intervention Pre-session Rate{" "}
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                          placeholder="Enter amount"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="defaultRates.mainSession"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Intervention Main-session Rate{" "}
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                          placeholder="Enter amount"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="defaultRates.supervisionSession"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Supervision Session Rate{" "}
+                        <span className="text-shamiri-light-red">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                          placeholder="Enter amount"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <div className="flex justify-end space-x-2">
