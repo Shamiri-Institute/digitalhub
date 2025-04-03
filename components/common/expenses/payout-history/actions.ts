@@ -306,17 +306,92 @@ export async function createImplementer(
 export async function createHub(data: z.infer<typeof CreateHubFormSchema>) {
   try {
     const hubId = objectId("hub");
-    await db.hub.create({
-      data: {
-        id: hubId,
-        hubName: data.hubName,
-        implementerId: data.implementerId,
-        visibleId: hubId,
-        projects: {
-          connect: data.projectIds.map((id) => ({ id })),
+
+    await db.$transaction(async (tx) => {
+      await tx.hub.create({
+        data: {
+          id: hubId,
+          hubName: data.hubName,
+          implementerId: data.implementerId,
+          visibleId: hubId,
+          projects: {
+            connect: data.projectIds.map((id) => ({ id })),
+          },
         },
-      },
+      });
+
+      // Create session names for each project based on their payment rates
+      for (const projectId of data.projectIds) {
+        const projectPaymentRates = await tx.projectPaymentRates.findUnique({
+          where: {
+            projectId: projectId,
+          },
+        });
+
+        if (projectPaymentRates) {
+          const sessionNamesToCreate: CreateSessionNameType = [];
+
+          // training session names
+          if (projectPaymentRates.trainingSession) {
+            TRAINING_SESSION_VALUES.forEach((sessionType) => {
+              sessionNamesToCreate.push({
+                sessionName: `${sessionType}_${projectId.slice(0, 4)}`,
+                sessionType: sessionTypes.TRAINING,
+                sessionLabel: sessionType,
+                amount: projectPaymentRates.trainingSession,
+                currency: "KES",
+                projectId: projectId,
+                hubId: hubId,
+              });
+            });
+          }
+
+          // intervention session names
+          if (
+            projectPaymentRates.preSession ||
+            projectPaymentRates.mainSession
+          ) {
+            INTERVENTION_SESSION_VALUES.forEach((sessionType) => {
+              sessionNamesToCreate.push({
+                sessionName: `${sessionType}_${projectId.slice(0, 4)}`,
+                sessionType: sessionTypes.INTERVENTION,
+                sessionLabel: sessionType,
+                amount:
+                  sessionType === "s0"
+                    ? projectPaymentRates.preSession
+                    : projectPaymentRates.mainSession,
+                currency: "KES",
+                projectId: projectId,
+                hubId: hubId,
+              });
+            });
+          }
+
+          //  supervision session names
+          if (projectPaymentRates.supervisionSession) {
+            SUPERVISION_SESSION_VALUES.forEach((sessionType) => {
+              sessionNamesToCreate.push({
+                sessionName: `${sessionType}_${projectId.slice(0, 4)}`,
+                sessionType: sessionTypes.SUPERVISION,
+                sessionLabel: sessionType,
+                amount: projectPaymentRates.supervisionSession,
+                currency: "KES",
+                projectId: projectId,
+                hubId: hubId,
+              });
+            });
+          }
+
+          // Create all session names
+          if (sessionNamesToCreate.length > 0) {
+            await tx.sessionName.createMany({
+              data: sessionNamesToCreate,
+            });
+          }
+        }
+      }
     });
+
     revalidatePath("/ops/reporting/expenses/payout-history");
     return {
       success: true,
