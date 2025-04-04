@@ -219,56 +219,35 @@ export async function updatePayoutSettings(data: PayoutSettingsFormData) {
 
 export async function createHubCoordinator(data: HubCoordinatorFormData) {
   try {
-    return await db.$transaction(async (tx) => {
-      const userId = objectId("user");
-      await tx.user.create({
-        data: {
-          id: userId,
-          email: data.coordinatorEmail,
-        },
-      });
+    const coordinatorId = objectId("hubc");
 
-      const coordinatorId = objectId("hubc");
-
-      await tx.implementerMember.create({
-        data: {
-          userId,
-          implementerId: data.implementerId,
-          role: ImplementerRole.HUB_COORDINATOR,
-          identifier: coordinatorId,
-        },
-      });
-
-      await tx.hubCoordinator.create({
-        data: {
-          id: coordinatorId,
-          coordinatorName: data.coordinatorName,
-          coordinatorEmail: data.coordinatorEmail,
-          cellNumber: data.cellNumber,
-          mpesaNumber: data.mpesaNumber,
-          idNumber: data.idNumber,
-          gender: data.gender,
-          assignedHubId: data.assignedHubId,
-          visibleId: coordinatorId,
-          implementerId: data.implementerId,
-          dateOfBirth: data.dateOfBirth,
-          county: data.county,
-          subCounty: data.subCounty,
-          bankName: data.bankName,
-          bankAccountNumber: data.bankAccountNumber,
-          bankAccountName: data.bankAccountName,
-          bankBranch: data.bankBranch,
-          kra: data.kra,
-          nhif: data.nhif,
-          trainingLevel: data.trainingLevel,
-        },
-      });
-      revalidatePath("/ops/reporting/expenses/payout-history");
-      return {
-        success: true,
-        message: "Hub Coordinator created successfully",
-      };
+    await db.hubCoordinator.create({
+      data: {
+        id: coordinatorId,
+        coordinatorName: data.coordinatorName,
+        coordinatorEmail: data.coordinatorEmail,
+        cellNumber: data.cellNumber,
+        mpesaNumber: data.mpesaNumber,
+        idNumber: data.idNumber,
+        gender: data.gender,
+        visibleId: coordinatorId,
+        dateOfBirth: data.dateOfBirth,
+        county: data.county,
+        subCounty: data.subCounty,
+        bankName: data.bankName,
+        bankAccountNumber: data.bankAccountNumber,
+        bankAccountName: data.bankAccountName,
+        bankBranch: data.bankBranch,
+        kra: data.kra,
+        nhif: data.nhif,
+        trainingLevel: data.trainingLevel,
+      },
     });
+    revalidatePath("/ops/reporting/expenses/payout-history");
+    return {
+      success: true,
+      message: "Hub Coordinator created successfully",
+    };
   } catch (error) {
     console.error("Error creating hub coordinator:", error);
     return {
@@ -321,6 +300,37 @@ export async function createHub(data: z.infer<typeof CreateHubFormSchema>) {
           },
         },
       });
+
+      if (data.hubCoordinatorId) {
+        await tx.hubCoordinator.update({
+          where: {
+            id: data.hubCoordinatorId,
+          },
+          data: {
+            assignedHubId: hubId,
+            implementerId: data.implementerId,
+          },
+        });
+
+        if (data.coordinatorEmail) {
+          const userId = objectId("user");
+          await tx.user.create({
+            data: {
+              id: userId,
+              email: data.coordinatorEmail,
+            },
+          });
+
+          await tx.implementerMember.create({
+            data: {
+              userId,
+              implementerId: data.implementerId,
+              role: ImplementerRole.HUB_COORDINATOR,
+              identifier: data.hubCoordinatorId,
+            },
+          });
+        }
+      }
 
       // Create session names for each project based on their payment rates
       for (const projectId of data.projectIds) {
@@ -499,5 +509,19 @@ export async function fetchPayoutFrequencySettings() {
   } catch (error) {
     console.error("Error fetching payout frequency settings:", error);
     return null;
+  }
+}
+
+export async function fetchHubCoordinatorsWithoutHubs() {
+  try {
+    const hubCoordinators = await db.hubCoordinator.findMany({
+      where: {
+        assignedHubId: null,
+      },
+    });
+    return hubCoordinators || [];
+  } catch (error) {
+    console.error("Error fetching hub coordinators without hubs:", error);
+    return [];
   }
 }
