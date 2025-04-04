@@ -28,19 +28,19 @@ import {
 import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Implementer, Project } from "@prisma/client";
+import { HubCoordinator, Implementer, Project } from "@prisma/client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 const CreateHubFormSchema = z.object({
   hubName: stringValidation("Hub name is required"),
-  implementerId: z.string({
-    required_error: "Implementer is required",
-  }),
+  implementerId: stringValidation("Implementer is required"),
   projectIds: z
     .array(z.string())
     .min(1, "At least one project must be selected"),
+  hubCoordinatorId: stringValidation("Hub coordinator is required"),
+  coordinatorEmail: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof CreateHubFormSchema>;
@@ -48,11 +48,13 @@ type FormValues = z.infer<typeof CreateHubFormSchema>;
 interface CreateHubFormProps {
   implementers: Implementer[];
   projects: Project[];
+  hubCoordinators: HubCoordinator[];
 }
 
 export default function CreateHubForm({
   implementers,
   projects,
+  hubCoordinators,
 }: CreateHubFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const form = useForm<FormValues>({
@@ -61,8 +63,22 @@ export default function CreateHubForm({
       hubName: "",
       implementerId: "",
       projectIds: [],
+      hubCoordinatorId: "",
+      coordinatorEmail: "",
     },
   });
+
+  const handleHubCoordinatorChange = (coordinatorId: string) => {
+    form.setValue("hubCoordinatorId", coordinatorId);
+
+    const selectedCoordinator = hubCoordinators.find(
+      (coordinator) => coordinator.id === coordinatorId,
+    );
+
+    if (selectedCoordinator && selectedCoordinator.coordinatorEmail) {
+      form.setValue("coordinatorEmail", selectedCoordinator.coordinatorEmail);
+    }
+  };
 
   const onSubmit = async (data: FormValues) => {
     try {
@@ -137,6 +153,37 @@ export default function CreateHubForm({
                       {implementers.map((implementer) => (
                         <SelectItem key={implementer.id} value={implementer.id}>
                           {implementer.implementerName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="hubCoordinatorId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Assign Hub Coordinator{" "}
+                    <span className="text-shamiri-light-red">*</span>
+                  </FormLabel>
+                  <Select
+                    onValueChange={(value) => handleHubCoordinatorChange(value)}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select hub coordinator" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {hubCoordinators.map((coordinator) => (
+                        <SelectItem key={coordinator.id} value={coordinator.id}>
+                          {coordinator.coordinatorName}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -32,11 +32,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { createHubCoordinator } from "../actions";
-import { HubWithProjects } from "../types";
 
 const hubCoordinatorSchema = z.object({
   coordinatorName: stringValidation("Coordinator name is required"),
@@ -44,8 +43,6 @@ const hubCoordinatorSchema = z.object({
   cellNumber: z.string().min(10, "Phone number must be at least 10 digits"),
   mpesaNumber: z.string().min(10, "M-Pesa number must be at least 10 digits"),
   idNumber: stringValidation("ID number is required"),
-  assignedHubId: stringValidation("Hub assignment is required"),
-  implementerId: stringValidation("Implementer is required"),
   gender: z.enum(["Male", "Female"]),
   dateOfBirth: z.date({
     required_error: "Date of birth is required",
@@ -63,26 +60,11 @@ const hubCoordinatorSchema = z.object({
 
 export type HubCoordinatorFormData = z.infer<typeof hubCoordinatorSchema>;
 
-export default function AddHubCoordinatorForm({
-  hubs,
-}: {
-  hubs: HubWithProjects[];
-}) {
+export default function AddHubCoordinatorForm() {
   const [isOpen, setIsOpen] = useState(false);
   const form = useForm<HubCoordinatorFormData>({
     resolver: zodResolver(hubCoordinatorSchema),
   });
-
-  const selectedHubId = form.watch("assignedHubId");
-
-  useEffect(() => {
-    if (selectedHubId) {
-      const selectedHub = hubs.find((hub) => hub.id === selectedHubId);
-      if (selectedHub) {
-        form.setValue("implementerId", selectedHub.implementerId);
-      }
-    }
-  }, [selectedHubId, hubs, form]);
 
   const validatePhoneNumber = (
     field: keyof typeof form.formState.defaultValues,
@@ -462,36 +444,6 @@ export default function AddHubCoordinatorForm({
                             placeholder="Enter training level"
                           />
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="assignedHubId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Assigned Hub{" "}
-                          <span className="text-shamiri-light-red">*</span>
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select hub" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {hubs.map((hub) => (
-                              <SelectItem key={hub.id} value={hub.id}>
-                                {hub.hubName}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
