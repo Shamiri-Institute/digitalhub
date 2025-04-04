@@ -41,14 +41,13 @@ export default function FellowPayoutHistoryDataTable({
     return (
       <div className="flex items-center gap-3">
         <CreateImplementerForm />
-
         <CreateProjectsForm />
+        <AddHubCoordinatorForm />
         <CreateHubForm
           implementers={implementers || []}
           projects={projects || []}
           hubCoordinators={hubCoordinatorsWithoutHubs || []}
         />
-        <AddHubCoordinatorForm />
         <PayoutSettingsForm hubs={hubs || []} />
         <PayoutFrequencyForm
           payoutFrequencySettings={payoutFrequencySettings}
