@@ -13,7 +13,7 @@ import {
   PayoutFrequencyType,
 } from "#/components/common/expenses/payout-history/types";
 import DataTable from "#/components/data-table";
-import { Implementer, Prisma } from "@prisma/client";
+import { HubCoordinator, Implementer, Prisma } from "@prisma/client";
 import { columns } from "./columns";
 import CreateHubForm from "./components/create-hub-form";
 
@@ -25,6 +25,7 @@ export default function FellowPayoutHistoryDataTable({
   implementers,
   projects,
   payoutFrequencySettings,
+  hubCoordinatorsWithoutHubs,
 }: {
   payoutHistory:
     | HubPayoutHistoryType[]
@@ -34,6 +35,7 @@ export default function FellowPayoutHistoryDataTable({
   implementers?: Implementer[];
   projects?: ProjectWithPayoutSettings[];
   payoutFrequencySettings?: PayoutFrequencyType | null;
+  hubCoordinatorsWithoutHubs?: HubCoordinator[];
 }) {
   const renderTableActions = () => {
     return (
@@ -44,8 +46,9 @@ export default function FellowPayoutHistoryDataTable({
         <CreateHubForm
           implementers={implementers || []}
           projects={projects || []}
+          hubCoordinators={hubCoordinatorsWithoutHubs || []}
         />
-        <AddHubCoordinatorForm hubs={hubs || []} />
+        <AddHubCoordinatorForm />
         <PayoutSettingsForm hubs={hubs || []} />
         <PayoutFrequencyForm
           payoutFrequencySettings={payoutFrequencySettings}

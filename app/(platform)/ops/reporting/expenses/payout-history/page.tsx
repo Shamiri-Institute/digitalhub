@@ -1,6 +1,7 @@
 import { loadOpsHubsPayoutHistory } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import { currentOpsUser } from "#/app/auth";
 import {
+  fetchHubCoordinatorsWithoutHubs,
   fetchHubsWithProjects,
   fetchImplementers,
   fetchPayoutFrequencySettings,
@@ -15,6 +16,7 @@ export default async function PayoutHistoryPage() {
   const implementers = await fetchImplementers();
   const projects = await fetchProjects();
   const payoutFrequencySettings = await fetchPayoutFrequencySettings();
+  const hubCoordinatorsWithoutHubs = await fetchHubCoordinatorsWithoutHubs();
 
   if (!opsUser) {
     return signOut({ callbackUrl: "/login" });
@@ -29,6 +31,7 @@ export default async function PayoutHistoryPage() {
       implementers={implementers}
       projects={projects}
       payoutFrequencySettings={payoutFrequencySettings}
+      hubCoordinatorsWithoutHubs={hubCoordinatorsWithoutHubs}
     />
   );
 }
