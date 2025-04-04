@@ -56,12 +56,14 @@ const hubCoordinatorSchema = z.object({
   kra: z.string().optional(),
   nhif: z.string().optional(),
   trainingLevel: z.string().optional(),
+  otherTrainingLevel: z.string().optional(),
 });
 
 export type HubCoordinatorFormData = z.infer<typeof hubCoordinatorSchema>;
 
 export default function AddHubCoordinatorForm() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showOtherTrainingLevel, setShowOtherTrainingLevel] = useState(false);
   const form = useForm<HubCoordinatorFormData>({
     resolver: zodResolver(hubCoordinatorSchema),
   });
@@ -79,7 +81,21 @@ export default function AddHubCoordinatorForm() {
     }
   };
 
+  const handleTrainingLevelChange = (value: string) => {
+    form.setValue("trainingLevel", value);
+    if (value === "OTHER") {
+      setShowOtherTrainingLevel(true);
+    } else {
+      setShowOtherTrainingLevel(false);
+      form.setValue("otherTrainingLevel", "");
+    }
+  };
+
   async function onSubmit(data: HubCoordinatorFormData) {
+    if (data.trainingLevel === "OTHER" && data.otherTrainingLevel) {
+      data.trainingLevel = data.otherTrainingLevel;
+    }
+
     const result = await createHubCoordinator(data);
     if (result.success) {
       toast({
@@ -438,16 +454,47 @@ export default function AddHubCoordinatorForm() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Training Level</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter training level"
-                          />
-                        </FormControl>
+                        <Select
+                          onValueChange={handleTrainingLevelChange}
+                          value={field.value}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select training level" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="KCSE">KCSE</SelectItem>
+                            <SelectItem value="Diploma">Diploma</SelectItem>
+                            <SelectItem value="Bachelors">Bachelors</SelectItem>
+                            <SelectItem value="Masters">Masters</SelectItem>
+                            <SelectItem value="PhD">PhD</SelectItem>
+                            <SelectItem value="OTHER">OTHER specify</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+                  {showOtherTrainingLevel && (
+                    <FormField
+                      control={form.control}
+                      name="otherTrainingLevel"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Specify Training Level</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Enter training level"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
               </div>
             </div>

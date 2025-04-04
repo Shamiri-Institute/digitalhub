@@ -17,6 +17,13 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -128,9 +135,21 @@ export default function CreateImplementerForm() {
                       Implementer Type{" "}
                       <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="NGO etc" />
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select implementer type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="NGO">NGO</SelectItem>
+                        <SelectItem value="CBO">CBO</SelectItem>
+                        <SelectItem value="Government">Government</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
