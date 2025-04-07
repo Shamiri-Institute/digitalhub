@@ -111,7 +111,11 @@ export const columns = (state: {
       const completed = row.original.occurred;
       const cancelled = row.original.status === SessionStatus.Cancelled;
       return (
-        <div className="flex">
+        <div
+          className="flex"
+          data-testid="occurrence-status-badge"
+          data-rowid={row.original.id}
+        >
           <div
             className={cn(
               "select-none rounded-[0.25rem] border px-1.5 py-0.5",

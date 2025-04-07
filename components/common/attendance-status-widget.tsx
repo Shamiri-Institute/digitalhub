@@ -8,6 +8,7 @@ export default function AttendanceStatusWidget({
 }) {
   return (
     <div
+      data-testid="attendance-status-badge"
       className={cn(
         "flex items-center rounded-[0.25rem] border px-1.5 py-0.5",
         {

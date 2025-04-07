@@ -303,10 +303,14 @@ export function SessionDropDown({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="w-full" asChild>
+      <DropdownMenuTrigger
+        className="w-full"
+        asChild
+        data-testid="session-dropdown"
+      >
         {children}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={"end"}>
+      <DropdownMenuContent align={"end"} data-testid="sessions-table-dropdown">
         <DropdownMenuLabel>
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">
             Actions

@@ -130,7 +130,10 @@ export function MarkSessionOccurrence({
   return (
     <Form {...form}>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="w-2/5 max-w-none">
+        <DialogContent
+          className="w-2/5 max-w-none"
+          data-testid="mark-session-occurrence-dialog"
+        >
           <DialogHeader>
             <h2 className="text-lg font-bold">Mark session occurrence</h2>
           </DialogHeader>
@@ -157,6 +160,7 @@ export function MarkSessionOccurrence({
                         <RadioGroupItem
                           value="attended"
                           id="mark_attended"
+                          data-testid="mark_session_attended"
                           className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
                         ></RadioGroupItem>
                       </div>
@@ -189,6 +193,7 @@ export function MarkSessionOccurrence({
                   type="submit"
                   disabled={form.formState.isSubmitting}
                   loading={form.formState.isSubmitting}
+                  data-testid="submit-session-occurrence"
                 >
                   Submit
                 </Button>
@@ -236,7 +241,10 @@ export function MarkSessionOccurrence({
         </DialogContent>
       </Dialog>
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
-        <DialogContent className="w-1/3 max-w-none">
+        <DialogContent
+          className="w-1/3 max-w-none"
+          data-testid="confirm-mark-session-occurrence-dialog"
+        >
           <DialogHeader>
             <span className="text-xl font-bold">Mark session occurrence</span>
           </DialogHeader>
@@ -271,6 +279,7 @@ export function MarkSessionOccurrence({
               onClick={() => {
                 onConfirmSubmit();
               }}
+              data-testid="confirm-submit-session-occurrence"
             >
               Confirm
             </Button>

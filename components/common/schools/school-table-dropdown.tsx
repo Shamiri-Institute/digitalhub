@@ -29,7 +29,7 @@ export default function SchoolTableDropdown({
         }
       }}
     >
-      <DropdownMenuTrigger asChild data-testid="school-table-dropdown">
+      <DropdownMenuTrigger asChild>
         <div className="absolute inset-0 border-l bg-white">
           <div className="flex h-full w-full items-center justify-center">
             <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
@@ -38,6 +38,7 @@ export default function SchoolTableDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
+        data-testid="school-table-dropdown"
         onCloseAutoFocus={(e) => {
           e.preventDefault();
         }}

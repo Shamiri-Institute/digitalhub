@@ -17,7 +17,7 @@ import {
   sessionTypes,
   Supervisor,
 } from "@prisma/client";
-import { isBefore, startOfMonth } from "date-fns";
+import { addDays, isBefore, startOfMonth } from "date-fns";
 
 // GETTING STARTED WITH SEEDING
 // ===========================
@@ -1338,43 +1338,45 @@ async function createInterventionSessionsForSchools(
   const interventionSessions: Prisma.InterventionSessionCreateManyInput[] = [];
   const fellowSessionDates = new Map<string, Set<string>>();
 
-  // Create static sessions for static school
-  const staticSchool = schools[0];
-  const staticSessionNames = interventionSessionNames.filter(
-    (sn) => sn.hubId === staticSchool!.hub?.id,
-  );
+  // Create static sessions for static schools
+  const staticSchools = schools.slice(0, 2);
+  staticSchools.forEach((staticSchool, index) => {
+    const staticSessionNames = interventionSessionNames.filter(
+      (sn) => sn.hubId === staticSchool!.hub?.id,
+    );
 
-  // Start from a fixed date for static sessions
-  let staticDate = new Date();
-  staticDate.setHours(16, 0, 0, 0); // Set to 4 PM today
+    // Start from a fixed date for static sessions
+    let staticDate = addDays(new Date(), index);
+    staticDate.setHours(16, 0, 0, 0); // Set to 4 PM today
 
-  // Create a Set to track used session types for the static school
-  const usedStaticSessionTypes = new Set<string>();
+    // Create a Set to track used session types for the static school
+    const usedStaticSessionTypes = new Set<string>();
 
-  for (const sessionName of staticSessionNames) {
-    // Skip if we've already used this session type for this school
-    if (usedStaticSessionTypes.has(sessionName.sessionName)) continue;
-    usedStaticSessionTypes.add(sessionName.sessionName);
+    for (const sessionName of staticSessionNames) {
+      // Skip if we've already used this session type for this school
+      if (usedStaticSessionTypes.has(sessionName.sessionName)) continue;
+      usedStaticSessionTypes.add(sessionName.sessionName);
 
-    interventionSessions.push({
-      id: objectId("session"),
-      sessionDate: new Date(staticDate),
-      sessionEndTime: new Date(staticDate.getTime() + 3 * 60 * 60 * 1000),
-      status: "Scheduled",
-      sessionType: sessionName.sessionName,
-      sessionId: sessionName.id,
-      schoolId: staticSchool!.id,
-      occurred: isBefore(staticDate, new Date()),
-      yearOfImplementation: 2024,
-      projectId: staticSchool!.hub?.projectId || undefined,
-    });
+      interventionSessions.push({
+        id: objectId("session"),
+        sessionDate: new Date(staticDate),
+        sessionEndTime: new Date(staticDate.getTime() + 3 * 60 * 60 * 1000),
+        status: "Scheduled",
+        sessionType: sessionName.sessionName,
+        sessionId: sessionName.id,
+        schoolId: staticSchool!.id,
+        occurred: isBefore(staticDate, new Date()),
+        yearOfImplementation: 2024,
+        projectId: staticSchool!.hub?.projectId || undefined,
+      });
 
-    // Move to next week for next static session
-    staticDate.setDate(staticDate.getDate() + 7);
-  }
+      // Move to next week for next static session
+      staticDate.setDate(staticDate.getDate() + 7);
+    }
+  });
 
   // Continue with dynamic sessions for other schools
-  for (const school of schools.slice(1)) {
+  for (const school of schools.slice(2)) {
     // Skip if school has no hub
     if (!school.hubId) continue;
 

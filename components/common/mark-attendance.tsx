@@ -179,7 +179,10 @@ export function MarkAttendance({
   return (
     <Form {...form}>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="lg:w-2/5 lg:max-w-none">
+        <DialogContent
+          className="lg:w-2/5 lg:max-w-none"
+          data-testid="mark-attendance-dialog"
+        >
           <DialogHeader>
             <h2 className="text-lg font-bold">{title}</h2>
           </DialogHeader>
