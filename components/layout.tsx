@@ -470,10 +470,6 @@ function getCurrentUserNavigationLinks(
   // Clinical Lead links
   if (mainRoute === "cl") {
     links.push(
-      <div className={`tab-link ${cn(scheduleActive && "active")}`}>
-        <CalendarIcon />
-        <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
-      </div>,
       <div className={`tab-link ${cn(schoolsActive && "active")}`}>
         <SchoolIcon />
         <Link href={`/${mainRoute}/schools`}>Schools</Link>
