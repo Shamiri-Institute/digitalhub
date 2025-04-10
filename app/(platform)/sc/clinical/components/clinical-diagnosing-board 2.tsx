@@ -27,14 +27,14 @@ const emergency_presenting_issues = [
   { id: 6, name: "Child abuse" },
 ];
 
-const emergency_presenting_issues_scale = [
+export const emergency_presenting_issues_scale = [
   "Low risk",
   "Moderate risk",
   "High risk",
   "Severe risk",
 ];
 
-const general_presenting_issues = [
+export const general_presenting_issues = [
   { id: 1, name: "Academic issues" },
   { id: 2, name: "Family issues" },
   { id: 3, name: "Peer pressure" },
