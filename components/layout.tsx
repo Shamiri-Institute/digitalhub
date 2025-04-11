@@ -507,7 +507,7 @@ function getCurrentUserNavigationLinks(
   }
 
   // Clinical Lead links
-   if (mainRoute === "cl") {
+  if (mainRoute === "cl") {
     links.push(
       <div className={`tab-link ${cn(schoolsActive && "active")}`}>
         <SchoolIcon />
