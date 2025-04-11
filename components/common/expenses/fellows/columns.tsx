@@ -3,10 +3,10 @@
 import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
 import FellowExpenseTableDropdownMe from "#/components/common/expenses/fellows/fellow-expense-table-dropdown-me";
 import { Badge } from "#/components/ui/badge";
-import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
 import Image from "next/image";
 
 export const columns: ColumnDef<HubFellowsAttendancesType>[] = [
@@ -81,38 +81,6 @@ export const subColumns: ColumnDef<
   HubFellowsAttendancesType["attendances"][number]
 >[] = [
   {
-    id: "checkbox",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
-        aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
-      />
-    ),
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(val) => row.toggleSelected(!!val)}
-            aria-label="Select row"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
-          />
-        </div>
-      );
-    },
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
     accessorKey: "session",
     header: "Session",
   },
@@ -127,10 +95,19 @@ export const subColumns: ColumnDef<
   {
     accessorKey: "dateOfAttendance",
     header: "Date of attendance",
+    cell: ({ row }) => {
+      if (row.original.dateOfAttendance) {
+        return format(row.original.dateOfAttendance, "dd-MM-yyyy");
+      }
+      return null;
+    },
   },
   {
     accessorKey: "dateMarked",
     header: "Date marked",
+    cell: ({ row }) => {
+      return format(row.original.dateMarked, "dd-MM-yyyy");
+    },
   },
   {
     accessorKey: "group",

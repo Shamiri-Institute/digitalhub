@@ -23,6 +23,8 @@ export default function FellowsReportingDataTable({
           columns={subColumns}
           className="data-table data-table-action border-0 bg-white"
           emptyStateMessage="No expenses found for this fellow"
+          disableSearch={true}
+          disablePagination={true}
         />
       )}
       emptyStateMessage="No fellow expenses found"

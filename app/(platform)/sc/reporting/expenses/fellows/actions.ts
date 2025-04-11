@@ -68,7 +68,7 @@ export async function loadSupervisorFellowAttendance() {
       attendances: fellow.fellowAttendances.map((attendance) => ({
         id: attendance.id,
         fellowName: fellow.fellowName,
-        session: attendance?.session?.session?.sessionName,
+        session: attendance?.session?.session?.sessionLabel,
         mpesaNo: fellow.mpesaNumber,
         schoolVenue: attendance.school?.schoolName,
         dateOfAttendance: attendance?.session?.sessionDate,
@@ -108,7 +108,7 @@ function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
   const { preCount, mainCount, supervisionCount, trainingCount } =
     fellowAttendances.reduce(
       (counts, attendance) => {
-        const sessionLabel = attendance.session?.session?.sessionLabel;
+        const sessionLabel = attendance.session?.session?.sessionName;
         const sessionType = attendance.session?.session?.sessionType;
 
         // For pre and main session counts
