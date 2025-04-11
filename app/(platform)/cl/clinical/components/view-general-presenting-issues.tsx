@@ -1,4 +1,4 @@
-import { general_presenting_issues } from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board 2";
+import { general_presenting_issues } from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
   Table,
@@ -10,7 +10,17 @@ import {
 } from "#/components/ui/table";
 import { Textarea } from "#/components/ui/textarea";
 
-export default function ViewGeneralPresentingIssues() {
+export default function ViewGeneralPresentingIssues({
+  generalPresentingIssuesBaseline,
+  generalPresentingIssuesEndpoint,
+  generalPresentingIssuesOtherSpecifiedBaseline,
+  generalPresentingIssuesOtherSpecifiedEndpoint,
+}: {
+  generalPresentingIssuesBaseline: Record<string, unknown> | null;
+  generalPresentingIssuesEndpoint: Record<string, unknown> | null;
+  generalPresentingIssuesOtherSpecifiedBaseline?: string | null;
+  generalPresentingIssuesOtherSpecifiedEndpoint?: string | null;
+}) {
   return (
     <div className="w-full space-y-4">
       <div className="overflow-x-auto">
@@ -36,12 +46,24 @@ export default function ViewGeneralPresentingIssues() {
                 </TableCell>
                 <TableCell className="border text-center">
                   <div className="flex justify-center">
-                    <Checkbox id={`baseline-${issue.id}`} />
+                    <Checkbox
+                      id={`baseline-${issue.id}`}
+                      checked={
+                        generalPresentingIssuesBaseline?.[issue.name] === "true"
+                      }
+                      disabled
+                    />
                   </div>
                 </TableCell>
                 <TableCell className="border text-center">
                   <div className="flex justify-center">
-                    <Checkbox id={`endline-${issue.id}`} />
+                    <Checkbox
+                      id={`endline-${issue.id}`}
+                      checked={
+                        generalPresentingIssuesEndpoint?.[issue.name] === "true"
+                      }
+                      disabled
+                    />
                   </div>
                 </TableCell>
               </TableRow>
@@ -55,6 +77,12 @@ export default function ViewGeneralPresentingIssues() {
         <Textarea
           placeholder="Describe any other presenting issues..."
           className="min-h-[100px]"
+          value={
+            generalPresentingIssuesOtherSpecifiedBaseline ||
+            generalPresentingIssuesOtherSpecifiedEndpoint ||
+            ""
+          }
+          disabled
         />
       </div>
     </div>
