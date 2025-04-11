@@ -68,7 +68,7 @@ export async function loadSupervisorFellowAttendance() {
       attendances: fellow.fellowAttendances.map((attendance) => ({
         id: attendance.id,
         fellowName: fellow.fellowName,
-        session: attendance?.session?.session?.sessionName,
+        session: attendance?.session?.session?.sessionLabel,
         mpesaNo: fellow.mpesaNumber,
         schoolVenue: attendance.school?.schoolName,
         dateOfAttendance: attendance?.session?.sessionDate,
