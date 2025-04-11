@@ -32,6 +32,8 @@ jobs:
         run: npm run lint
 
       - name: Typechecks
+        env:
+          NODE_OPTIONS: "--max_old_space_size=4096"
         run: npm run typecheck
   shellcheck:
     runs-on: ubuntu-latest

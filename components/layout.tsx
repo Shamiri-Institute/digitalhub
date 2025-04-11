@@ -14,11 +14,6 @@ import {
   PopoverTrigger,
 } from "#/components/ui/popover";
 import { APP_ENV, constants } from "#/lib/constants";
-import { Menu } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 import {
   BarChartIcon,
   CalendarIcon,
@@ -31,7 +26,12 @@ import {
   RoleIcon,
   SchoolIcon,
   SignOutIcon,
-} from "./ui/layout-icons";
+} from "components/icons";
+import { Menu } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 
 import { Button } from "#/components/ui/button";
 import {
