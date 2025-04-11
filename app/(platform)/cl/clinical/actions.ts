@@ -7,88 +7,99 @@ export async function getClinicalCasesData() {
   const clinicalLead = await currentClinicalLead();
   if (!clinicalLead) throw new Error("Unauthorized");
 
-  // Get cases by status
-  const casesByStatus = await db.clinicalScreeningInfo.groupBy({
-    by: ["caseStatus"],
-    where: {
-      currentSupervisor: {
-        hubId: clinicalLead.assignedHubId,
-      },
-    },
-    _count: true,
+  const hubId = clinicalLead.assignedHubId;
+
+  type StatusResult = { name: string; value: bigint };
+  type SupervisorResult = { id: string; value: bigint };
+  type SupervisorInfo = { id: string; supervisorName: string };
+
+  const [
+    casesByStatusResult,
+    casesByRiskStatusResult,
+    casesBySessionResult,
+    casesBySupervisorResult,
+    supervisorsResult,
+  ] = await Promise.all([
+    db.$queryRaw<StatusResult[]>`
+      SELECT 
+        "case_status" as name, 
+        COUNT(*) as value
+      FROM "clinical_screening_info" csi
+      JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
+      WHERE s."hub_id" = ${hubId}
+      GROUP BY "case_status"
+    `,
+
+    db.$queryRaw<StatusResult[]>`
+      SELECT 
+        "risk_status" as name, 
+        COUNT(*) as value
+      FROM "clinical_screening_info" csi
+      JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
+      WHERE s."hub_id" = ${hubId}
+      GROUP BY "risk_status"
+    `,
+
+    db.$queryRaw<StatusResult[]>`
+      SELECT 
+        session as name, 
+        COUNT(*) as value
+      FROM "clinical_session_attendance" csa
+      JOIN "clinical_screening_info" csi ON csa."caseId" = csi.id
+      JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
+      WHERE s."hub_id" = ${hubId}
+      GROUP BY session
+    `,
+
+    db.$queryRaw<SupervisorResult[]>`
+      SELECT 
+        csi."current_supervisor_id" as id, 
+        COUNT(*) as value
+      FROM "clinical_screening_info" csi
+      JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
+      WHERE s."hub_id" = ${hubId}
+      GROUP BY csi."current_supervisor_id"
+    `,
+
+    db.$queryRaw<SupervisorInfo[]>`
+      SELECT 
+        id, 
+        "supervisor_name"
+      FROM "supervisors"
+      WHERE "hub_id" = ${hubId}
+    `,
+  ]);
+
+  const sessionTypes = ["Pre", "S1", "S2", "S3", "S4", "F1", "F2"];
+
+  const casesBySession = sessionTypes.map((session) => {
+    const sessionData = casesBySessionResult.find((s) => s.name === session);
+    return {
+      name: session,
+      total: sessionData ? Number(sessionData.value) : 0,
+    };
   });
 
-  // Get cases by risk status
-  const casesByRiskStatus = await db.clinicalScreeningInfo.groupBy({
-    by: ["riskStatus"],
-    where: {
-      currentSupervisor: {
-        hubId: clinicalLead.assignedHubId,
-      },
-    },
-    _count: true,
-  });
-
-  // Get cases by session
-  const sessionTypes = ["pre", "s1", "s2", "s3", "s4", "f1", "f2", "f3", "f4"];
-  const casesBySession = await db.clinicalSessionAttendance.groupBy({
-    by: ["session"],
-    where: {
-      case: {
-        currentSupervisor: {
-          hubId: clinicalLead.assignedHubId,
-        },
-      },
-    },
-    _count: true,
-  });
-
-  // Get cases by supervisor
-  const casesBySupervisor = await db.clinicalScreeningInfo.groupBy({
-    by: ["currentSupervisorId"],
-    where: {
-      currentSupervisor: {
-        hubId: clinicalLead.assignedHubId,
-      },
-    },
-    _count: true,
-  });
-
-  const supervisors = await db.supervisor.findMany({
-    where: {
-      id: {
-        in: casesBySupervisor.map((c) => c.currentSupervisorId),
-      },
-    },
-    select: {
-      id: true,
-      supervisorName: true,
-    },
+  const casesBySupervisor = casesBySupervisorResult.map((supervisor) => {
+    const sup = supervisorsResult.find((s) => s.id === supervisor.id);
+    const names = sup?.supervisorName?.split(" ") ?? ["", ""];
+    return {
+      name: `${names[0]?.[0] ?? ""}${names[1]?.[0] ?? ""}`,
+      total: Number(supervisor.value),
+    };
   });
 
   return {
-    casesByStatus: casesByStatus.map((status) => ({
-      name: status.caseStatus,
-      value: status._count,
+    casesByStatus: casesByStatusResult.map((status) => ({
+      name: status.name,
+      value: Number(status.value),
     })),
-    casesByRiskStatus: casesByRiskStatus.map((status) => ({
-      name: status.riskStatus,
-      value: status._count,
+    casesByRiskStatus: casesByRiskStatusResult.map((status) => ({
+      name: status.name,
+      value: Number(status.value),
     })),
-    casesBySession: sessionTypes.map((session) => ({
-      name: session,
-      total: casesBySession.find((s) => s.session === session)?._count ?? 0,
-    })),
-    casesBySupervisor: casesBySupervisor.map((supervisor) => {
-      const sup = supervisors.find(
-        (s) => s.id === supervisor.currentSupervisorId,
-      );
-      const names = sup?.supervisorName?.split(" ") ?? ["", ""];
-      return {
-        name: `${names[0]?.[0] ?? ""}${names[1]?.[0] ?? ""}`,
-        total: supervisor._count,
-      };
-    }),
+    casesBySession,
+    casesBySupervisor,
   };
 }
 
@@ -172,8 +183,6 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
       ORDER BY 
         csi.id DESC
     `;
-
-    console.log({ cases });
 
     return cases || [];
   } catch (error) {

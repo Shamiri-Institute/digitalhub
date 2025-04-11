@@ -16,33 +16,38 @@ import {
 } from "recharts";
 
 const CASE_STATUS_COLORS = {
-  OPEN: "#0085FF",
-  CLOSED: "#00BA34",
-  REFERRED: "#F98600",
+  Active: "#0085FF",
+  Terminated: "#00BA34",
+  FollowUp: "#F98600",
+  Referred: "#FF4D4F",
 };
 
 const RISK_STATUS_COLORS = {
-  HIGH: "#FF4D4F",
-  MEDIUM: "#F98600",
-  LOW: "#00BA34",
+  No: "#FF4D4F",
+  Low: "#F98600",
+  Medium: "#00BA34",
+  High: "#0085FF",
 };
 
-export default function CasesBreakdown() {
-  const data = {
-    casesByStatus: [],
-    casesByRiskStatus: [],
-    casesBySession: [],
-    casesBySupervisor: [],
-  };
-
+export default function CasesBreakdown({
+  casesByStatus = [],
+  casesByRiskStatus = [],
+  casesBySession = [],
+  casesBySupervisor = [],
+}: {
+  casesByStatus: any[];
+  casesByRiskStatus: any[];
+  casesBySession: any[];
+  casesBySupervisor: any[];
+}) {
   return (
     <div className="grid grid-cols-1 gap-5 py-2 sm:grid-cols-2 xl:grid-cols-4">
       <ChartCard title="Clinical Cases by Case Status">
-        {data.casesByStatus.length ? (
+        {casesByStatus.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={data.casesByStatus}
+                data={casesByStatus}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -54,12 +59,16 @@ export default function CasesBreakdown() {
                   position="center"
                   className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {data.casesByStatus.reduce((acc, curr) => acc + curr.value, 0)}
+                  {casesByStatus.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
-                {data.casesByStatus.map((entry) => (
+                {casesByStatus.map((entry) => (
                   <Cell
                     key={entry.name}
-                    fill={CASE_STATUS_COLORS[entry.name as keyof typeof CASE_STATUS_COLORS]}
+                    fill={
+                      CASE_STATUS_COLORS[
+                        entry.name as keyof typeof CASE_STATUS_COLORS
+                      ]
+                    }
                   />
                 ))}
               </Pie>
@@ -70,11 +79,11 @@ export default function CasesBreakdown() {
       </ChartCard>
 
       <ChartCard title="Clinical Cases by Risk Status">
-        {data.casesByRiskStatus.length ? (
+        {casesByRiskStatus.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
               <Pie
-                data={data.casesByRiskStatus}
+                data={casesByRiskStatus}
                 dataKey="value"
                 nameKey="name"
                 startAngle={90}
@@ -86,12 +95,16 @@ export default function CasesBreakdown() {
                   position="center"
                   className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {data.casesByRiskStatus.reduce((acc, curr) => acc + curr.value, 0)}
+                  {casesByRiskStatus.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
-                {data.casesByRiskStatus.map((entry) => (
+                {casesByRiskStatus.map((entry) => (
                   <Cell
                     key={entry.name}
-                    fill={RISK_STATUS_COLORS[entry.name as keyof typeof RISK_STATUS_COLORS]}
+                    fill={
+                      RISK_STATUS_COLORS[
+                        entry.name as keyof typeof RISK_STATUS_COLORS
+                      ]
+                    }
                   />
                 ))}
               </Pie>
@@ -102,9 +115,9 @@ export default function CasesBreakdown() {
       </ChartCard>
 
       <ChartCard title="Clinical Sessions">
-        {data.casesBySession.length ? (
+        {casesBySession.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart width={307} height={307} data={data.casesBySession}>
+            <BarChart width={307} height={307} data={casesBySession}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
@@ -116,9 +129,9 @@ export default function CasesBreakdown() {
       </ChartCard>
 
       <ChartCard title="Clinical Cases by Supervisor">
-        {data.casesBySupervisor.length ? (
+        {casesBySupervisor.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart width={307} height={307} data={data.casesBySupervisor}>
+            <BarChart width={307} height={307} data={casesBySupervisor}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
