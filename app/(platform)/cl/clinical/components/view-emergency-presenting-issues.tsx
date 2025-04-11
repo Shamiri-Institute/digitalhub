@@ -1,3 +1,4 @@
+import { emergency_presenting_issues } from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
 import {
   Table,
   TableBody,
@@ -6,15 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from "#/components/ui/table";
-
-const emergency_presenting_issues = [
-  { id: 1, name: "Bullying" },
-  { id: 2, name: "Substance abuse" },
-  { id: 3, name: "Sexual abuse" },
-  { id: 4, name: "Suicidality" },
-  { id: 5, name: "Self-harm" },
-  { id: 6, name: "Child abuse" },
-];
 
 export default function ViewEmergencyPresentingIssues({
   emergencyPresentingIssuesBaseline,
@@ -43,15 +35,15 @@ export default function ViewEmergencyPresentingIssues({
           {emergency_presenting_issues.map((issue) => (
             <TableRow key={issue.id} className="hover:bg-gray-50">
               <TableCell className="border font-medium">{issue.name}</TableCell>
-              <TableCell className="border">
+              <TableCell className="border" style={{ textAlign: "center" }}>
                 {emergencyPresentingIssuesBaseline?.[issue.name] !== undefined
                   ? String(emergencyPresentingIssuesBaseline?.[issue.name])
-                  : "N/A"}
+                  : "-"}
               </TableCell>
-              <TableCell className="border">
+              <TableCell className="border" style={{ textAlign: "center" }}>
                 {emergencyPresentingIssuesEndpoint?.[issue.name] !== undefined
                   ? String(emergencyPresentingIssuesEndpoint?.[issue.name])
-                  : "N/A"}
+                  : "-"}
               </TableCell>
             </TableRow>
           ))}

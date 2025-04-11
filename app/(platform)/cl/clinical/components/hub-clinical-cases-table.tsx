@@ -3,6 +3,7 @@ import { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import { columns } from "#/app/(platform)/cl/clinical/columns";
 import ViewCaseSessions from "#/app/(platform)/cl/clinical/components/view-case-session";
 import ViewEmergencyPresentingIssues from "#/app/(platform)/cl/clinical/components/view-emergency-presenting-issues";
+import ViewGeneralPresentingIssues from "#/app/(platform)/cl/clinical/components/view-general-presenting-issues";
 import DataTable from "#/components/data-table";
 
 export default function AllHubClinicalCasesTable({
@@ -31,7 +32,20 @@ export default function AllHubClinicalCasesTable({
               row.original.emergencyPresentingIssuesEndpoint
             }
           />
-          {/* <ViewGeneralPresentingIssues generalPresentingIssuesBaseline={row.original.generalPresentingIssuesBaseline } generalPresentingIssuesEndpoint={row.original.generalPresentingIssuesEndpoint} generalPresentingIssuesOtherSpecifiedBaseline={row.original.generalPresentingIssuesOtherSpecifiedBaseline ?? null} generalPresentingIssuesOtherSpecifiedEndpoint={row.original.generalPresentingIssuesOtherSpecifiedEndpoint} /> */}
+          <ViewGeneralPresentingIssues
+            generalPresentingIssuesBaseline={
+              row.original.generalPresentingIssuesBaseline
+            }
+            generalPresentingIssuesEndpoint={
+              row.original.generalPresentingIssuesEndpoint
+            }
+            generalPresentingIssuesOtherSpecifiedBaseline={
+              row.original.generalPresentingIssuesOtherSpecifiedBaseline
+            }
+            generalPresentingIssuesOtherSpecifiedEndpoint={
+              row.original.generalPresentingIssuesOtherSpecifiedEndpoint
+            }
+          />
         </div>
       )}
       emptyStateMessage="No clinical cases found"

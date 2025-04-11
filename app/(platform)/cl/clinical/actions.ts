@@ -109,8 +109,10 @@ export type HubClinicalCases = {
   caseStatus: string;
   emergencyPresentingIssuesBaseline: Record<string, unknown> | null;
   emergencyPresentingIssuesEndpoint: Record<string, unknown> | null;
-  generalPresentingIssuesBaseline: Record<string, unknown> | null;
-  generalPresentingIssuesEndpoint: Record<string, unknown> | null;
+  generalPresentingIssuesBaseline: Record<string, boolean> | null;
+  generalPresentingIssuesEndpoint: Record<string, boolean> | null;
+  generalPresentingIssuesOtherSpecifiedBaseline: string | null;
+  generalPresentingIssuesOtherSpecifiedEndpoint: string | null;
 };
 
 export async function getClinicalCases(): Promise<HubClinicalCases[]> {
@@ -131,6 +133,8 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
         csi.emergency_presenting_issues_endpoint as "emergencyPresentingIssuesEndpoint",
         csi.general_presenting_issues_baseline as "generalPresentingIssuesBaseline",
         csi.general_presenting_issues_endpoint as "generalPresentingIssuesEndpoint",
+        csi.general_presenting_issues_other_specified_baseline as "generalPresentingIssuesOtherSpecifiedBaseline",
+        csi.general_presenting_issues_other_specified_endpoint as "generalPresentingIssuesOtherSpecifiedEndpoint",
         CASE WHEN csfp.id IS NOT NULL THEN true ELSE false END as "treatmentPlan",
         CASE WHEN EXISTS (
           SELECT 1 FROM "clinical_case_notes" ccn 
@@ -177,4 +181,3 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
     return [];
   }
 }
-// Monique McClour
