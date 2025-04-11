@@ -39,6 +39,8 @@ export function ListView({
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
+    setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
+    setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
   fellowId?: string;
@@ -299,15 +301,11 @@ export function ListView({
                           <SessionDropDown
                             state={{
                               session,
-                              setSession: dialogState.setSession,
-                              setFellowAttendanceDialog:
-                                dialogState.setFellowAttendanceDialog,
-                              setStudentAttendanceDialog:
-                                dialogState.setStudentAttendanceDialog,
-                              setRatingsDialog: dialogState.setRatingsDialog,
+                              ...dialogState,
                             }}
                             role={role}
                             fellowId={fellowId}
+                            supervisorId={supervisorId}
                           >
                             <div className="absolute inset-0 bg-white">
                               <div className="flex h-full w-full items-center justify-center">

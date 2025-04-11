@@ -1,6 +1,7 @@
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { hubSessionTypes } from "#/prisma/scripts/generate-session-names";
 import { faker } from "@faker-js/faker";
 import {
   ClinicalLead,
@@ -451,94 +452,144 @@ async function createHubCoordinators(
   const staticHub = hubs[0];
   const staticCoordinators = [
     {
-      id: objectId("user"),
-      email: "mikel.arteta@test.com",
-      role: ImplementerRole.HUB_COORDINATOR,
-      hubId: staticHub!.id,
-      implementerId: staticHub!.implementerId,
+      id: objectId("hubcoordinator"),
+      visibleId: "HC_ARTETA",
       coordinatorName: "Mikel Arteta",
+      coordinatorEmail: "mikel.arteta@test.com",
+      implementerId: staticHub!.implementerId,
       assignedHubId: staticHub!.id,
+      county: "Nairobi",
+      subCounty: "Westlands",
+      bankName: "Arsenal Bank",
+      bankBranch: "Emirates Branch",
+      bankAccountNumber: "12345678",
+      bankAccountName: "Mikel Arteta",
+      kra: "A123456789B",
+      nhif: "12345678",
+      dateOfBirth: new Date(1982, 2, 26),
+      cellNumber: "254712345678",
+      mpesaNumber: "254712345678",
+      gender: "Male",
+      idNumber: "12345678",
     },
     {
-      id: objectId("user"),
-      email: "edu.gaspar@test.com",
-      role: ImplementerRole.HUB_COORDINATOR,
-      hubId: staticHub!.id,
-      implementerId: staticHub!.implementerId,
+      id: objectId("hubcoordinator"),
+      visibleId: "HC_GASPAR",
       coordinatorName: "Edu Gaspar",
+      coordinatorEmail: "edu.gaspar@test.com",
+      implementerId: staticHub!.implementerId,
       assignedHubId: staticHub!.id,
+      county: "Nairobi",
+      subCounty: "Westlands",
+      bankName: "Arsenal Bank",
+      bankBranch: "Emirates Branch",
+      bankAccountNumber: "23456789",
+      bankAccountName: "Edu Gaspar",
+      kra: "B234567890C",
+      nhif: "23456789",
+      dateOfBirth: new Date(1978, 6, 15),
+      cellNumber: "254723456789",
+      mpesaNumber: "254723456789",
+      gender: "Male",
+      idNumber: "23456789",
     },
   ];
-  hubCoordinators.push(...staticCoordinators);
-  staticCoordinators.forEach((coord) => emails.add(coord.email));
+
+  // Create users for static coordinators
+  const staticUsers = staticCoordinators.map((coord) => ({
+    id: objectId("user"),
+    email: coord.coordinatorEmail,
+  }));
+
+  // Create users in database
+  const createdUsers = await db.user.createMany({
+    data: staticUsers,
+  });
+
+  // Create membership records for static coordinators
+  const staticMembershipData = staticUsers.map((user, index) => ({
+    userId: user.id,
+    implementerId: staticHub!.implementerId,
+    role: ImplementerRole.HUB_COORDINATOR,
+    identifier: staticCoordinators[index]!.id,
+  }));
+
+  await db.implementerMember.createMany({
+    data: staticMembershipData,
+  });
+
+  // Add static coordinators to database
+  await db.hubCoordinator.createMany({
+    data: staticCoordinators,
+  });
+
+  // Add static coordinator emails to set
+  staticCoordinators.forEach((coord) => emails.add(coord.coordinatorEmail));
 
   // Continue with dynamic coordinators
-  for (let i = 1; i < hubs.length; i++) {
+  const hubsWithoutStatic = hubs.slice(1);
+  for (const hub of hubsWithoutStatic) {
     let uniqueEmail = faker.internet.email().toLowerCase();
     while (emails.has(uniqueEmail)) {
       uniqueEmail = faker.internet.email().toLowerCase();
     }
     emails.add(uniqueEmail);
 
-    hubCoordinators.push({
-      id: objectId("user"),
-      email: uniqueEmail,
-      role: ImplementerRole.HUB_COORDINATOR,
+    const userId = objectId("user");
+    const coordinatorId = objectId("hubcoordinator");
+
+    // Create user
+    await db.user.create({
+      data: {
+        id: userId,
+        email: uniqueEmail,
+      },
     });
-  }
 
-  const createHubCoordinators = await db.user.createManyAndReturn({
-    data: hubCoordinators.map(({ id, email }) => ({
-      id,
-      email,
-    })),
-  });
+    // Create membership
+    await db.implementerMember.create({
+      data: {
+        userId,
+        implementerId: hub.implementerId,
+        role: ImplementerRole.HUB_COORDINATOR,
+        identifier: coordinatorId,
+      },
+    });
 
-  const membershipData = createHubCoordinators.map((user) => ({
-    userId: user.id,
-    implementerId: faker.helpers.arrayElement(implementers).id,
-    role: ImplementerRole.HUB_COORDINATOR,
-    identifier: objectId("hubcoordinator"),
-  }));
-
-  await db.implementerMember.createMany({
-    data: membershipData,
-  });
-
-  const hubCoordinatorRecords = hubCoordinators.map((_user) => {
+    // Create hub coordinator
     const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
     const subCounty = faker.helpers.arrayElement(county.sub_counties);
     const gender = faker.person.sexType();
 
-    return {
-      id: membershipData.find((x) => x.userId === _user.id)?.identifier!,
-      implementerId: faker.helpers.arrayElement(implementers).id,
-      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
-      coordinatorName: faker.person.fullName(),
-      coordinatorEmail: faker.internet.email(),
-      county: county.name,
-      subCounty: subCounty,
-      bankName: faker.company.name(),
-      bankBranch: faker.location.county(),
-      bankAccountNumber: faker.finance.accountNumber(),
-      bankAccountName: faker.person.fullName(),
-      kra: faker.finance.accountNumber(),
-      nhif: faker.finance.accountNumber(),
-      dateOfBirth: faker.date.birthdate(),
-      cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-      mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-      gender:
-        Math.random() > 0.9
-          ? "Other"
-          : gender[0]?.toUpperCase() + gender.substring(1),
-      idNumber: faker.string.numeric({ length: 8 }),
-      assignedHubId: faker.helpers.arrayElement(hubs).id,
-    };
-  });
+    await db.hubCoordinator.create({
+      data: {
+        id: coordinatorId,
+        implementerId: hub.implementerId,
+        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+        coordinatorName: faker.person.fullName(),
+        coordinatorEmail: uniqueEmail,
+        county: county.name,
+        subCounty: subCounty,
+        bankName: faker.company.name(),
+        bankBranch: faker.location.county(),
+        bankAccountNumber: faker.finance.accountNumber(),
+        bankAccountName: faker.person.fullName(),
+        kra: faker.finance.accountNumber(),
+        nhif: faker.finance.accountNumber(),
+        dateOfBirth: faker.date.birthdate(),
+        cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+        mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
+        gender:
+          Math.random() > 0.9
+            ? "Other"
+            : gender[0]?.toUpperCase() + gender.substring(1),
+        idNumber: faker.string.numeric({ length: 8 }),
+        assignedHubId: hub.id,
+      },
+    });
+  }
 
-  return db.hubCoordinator.createManyAndReturn({
-    data: hubCoordinatorRecords,
-  });
+  return db.hubCoordinator.findMany();
 }
 
 async function createSupervisors(
@@ -988,30 +1039,52 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
 
   // Add static school for static hub
   const staticHub = hubs[0];
-  const staticSupervisor = supervisors.find(
-    (s) => s.visibleId === "SUPERVISOR1",
+  schools.push(
+    {
+      id: objectId("sch"),
+      visibleId: "ARSENAL_SCH",
+      schoolName: "Emirates Academy",
+      hubId: staticHub!.id,
+      schoolType: "National",
+      schoolEmail: "Gabriel.academy@test.com",
+      schoolCounty: "Nairobi",
+      schoolSubCounty: "Westlands",
+      schoolDemographics: "Mixed",
+      pointPersonId: "ARSENAL_PP",
+      pointPersonName: "Thomas Partey",
+      pointPersonPhone: "254700000000",
+      numbersExpected: 300,
+      principalName: "David Raya",
+      droppedOut: false,
+      dropoutReason: null,
+      droppedOutAt: null,
+      assignedSupervisorId: supervisors.find(
+        (s) => s.visibleId === "SUPERVISOR1",
+      )!.id,
+    },
+    {
+      id: objectId("sch"),
+      visibleId: "SOBHA_SCH",
+      schoolName: "Sobha Academy",
+      hubId: staticHub!.id,
+      schoolType: "National",
+      schoolEmail: "sobha.academy@test.com",
+      schoolCounty: "Nairobi",
+      schoolSubCounty: "Westlands",
+      schoolDemographics: "Mixed",
+      pointPersonId: "SOBHA_PP",
+      pointPersonName: "Kai Havertz",
+      pointPersonPhone: "254700000000",
+      numbersExpected: 350,
+      principalName: "Mikel Merino",
+      droppedOut: false,
+      dropoutReason: null,
+      droppedOutAt: null,
+      assignedSupervisorId: supervisors.find(
+        (s) => s.visibleId === "SUPERVISOR2",
+      )!.id,
+    },
   );
-  const staticSchool = {
-    id: objectId("sch"),
-    visibleId: "ARSENAL_SCH",
-    schoolName: "Emirates Academy",
-    hubId: staticHub!.id,
-    schoolType: "National",
-    schoolEmail: "emirates.academy@test.com",
-    schoolCounty: "Nairobi",
-    schoolSubCounty: "Westlands",
-    schoolDemographics: "Mixed",
-    pointPersonId: "ARSENAL_PP",
-    pointPersonName: "Thomas Partey",
-    pointPersonPhone: "254700000000",
-    numbersExpected: 300,
-    principalName: "David Raya",
-    droppedOut: false,
-    dropoutReason: null,
-    droppedOutAt: null,
-    assignedSupervisorId: staticSupervisor!.id,
-  };
-  schools.push(staticSchool);
 
   // Continue with dynamic schools
   hubs.slice(1).forEach((hub) => {
@@ -1053,7 +1126,7 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
         droppedOut: false,
         dropoutReason: null,
         droppedOutAt: null,
-        assignedSupervisorId: faker.helpers.arrayElement(supervisors).id,
+        assignedSupervisorId: faker.helpers.arrayElement(hubSupervisors).id,
       });
     }
   });
@@ -1220,49 +1293,20 @@ async function createStudentsForSchools(
 async function createSessionNames(hubs: Hub[]) {
   console.log("creating session names");
   const sessionNamesRecords: Prisma.SessionNameCreateManyInput[] = [];
-  const interventionSessionNames = ["s0", "s1", "s2", "s3", "s4"];
-  const followUpSessionNames = ["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"];
 
-  // Add static session names for static hub
-  const staticHub = hubs[0];
-  for (const sessionName of interventionSessionNames) {
-    sessionNamesRecords.push({
-      id: objectId("sessionname"),
-      sessionName,
-      sessionType: sessionTypes.INTERVENTION,
-      sessionLabel: `Static ${sessionName}`,
-      amount: 500, // Fixed amount for static sessions
-      currency: "KES",
-      hubId: staticHub!.id,
-    });
-  }
-
-  // Continue with dynamic session names for other hubs
-  for (const hub of hubs.slice(1)) {
-    for (const sessionName of interventionSessionNames) {
+  for (const hub of hubs) {
+    // TODO: Modify to create sessionTypes per project per hub
+    for (const sessionType of hubSessionTypes) {
       sessionNamesRecords.push({
         id: objectId("sessionname"),
-        sessionName,
-        sessionType: sessionTypes.INTERVENTION,
-        sessionLabel: sessionName,
-        // TODO: ensure amount maps to the correct session type
-        amount: faker.number.int({ min: 500, max: 1000 }),
-        currency: "KES",
+        sessionType: sessionType.type,
+        sessionName: sessionType.name,
+        sessionLabel: sessionType.label,
         hubId: hub.id,
+        currency: "KES",
+        amount: sessionType.amount,
       });
     }
-  }
-
-  for (const sessionName of followUpSessionNames) {
-    sessionNamesRecords.push({
-      id: objectId("sessionname"),
-      sessionName,
-      sessionType: sessionTypes.CLINICAL,
-      sessionLabel: sessionName,
-      amount: faker.number.int({ min: 500, max: 1000 }),
-      currency: "KES",
-      hubId: faker.helpers.arrayElement(hubs).id,
-    });
   }
 
   const sessions = await db.sessionName.createManyAndReturn({
