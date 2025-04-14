@@ -5,13 +5,11 @@ import DataTable from "#/components/data-table";
 export default async function SupervisorClinicalCasesTable() {
   const data = await getSupervisorClinicalCasesData();
   return (
-    <div>
-      <DataTable
-        data={data}
-        columns={columns}
-        className="data-table data-table-action bg-white lg:mt-4"
-        emptyStateMessage="No clinical cases found"
-      />
-    </div>
+    <DataTable
+      data={data}
+      columns={columns}
+      className="data-table data-table-action bg-white lg:mt-4"
+      emptyStateMessage="No clinical cases found"
+    />
   );
 }

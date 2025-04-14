@@ -11,7 +11,7 @@ export const columns: ColumnDef<SupervisorClinicalCasesData>[] = [
     header: "Supervisor Name",
   },
   {
-    accessorKey: "active Status",
+    accessorKey: "activeStatus",
     header: "Active Status",
     cell: ({ row }) => {
       return (
