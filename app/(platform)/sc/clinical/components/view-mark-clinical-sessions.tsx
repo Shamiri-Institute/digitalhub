@@ -24,7 +24,7 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon, Check, X } from "lucide-react";
 import { useState } from "react";
 
-const SESSION_TYPES = [
+export const CLINICAL_SESSION_TYPES = [
   { key: "Pre", value: "Pre-session" },
   { key: "S1", value: "Clinical S1" },
   { key: "S2", value: "Clinical S2" },
@@ -129,7 +129,7 @@ export default function ViewMarkClinicalSessions({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {SESSION_TYPES.map((sessionType) => (
+          {CLINICAL_SESSION_TYPES.map((sessionType) => (
             <TableRow key={sessionType.key} className="hover:bg-gray-50">
               <TableCell className="border font-medium">
                 {sessionType.value}
