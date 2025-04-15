@@ -18,7 +18,7 @@ import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { useState } from "react";
 
-const emergency_presenting_issues = [
+export const emergency_presenting_issues = [
   { id: 1, name: "Bullying" },
   { id: 2, name: "Substance abuse" },
   { id: 3, name: "Sexual abuse" },
@@ -27,14 +27,14 @@ const emergency_presenting_issues = [
   { id: 6, name: "Child abuse" },
 ];
 
-const emergency_presenting_issues_scale = [
+export const emergency_presenting_issues_scale = [
   "Low risk",
   "Moderate risk",
   "High risk",
   "Severe risk",
 ];
 
-const general_presenting_issues = [
+export const general_presenting_issues = [
   { id: 1, name: "Academic issues" },
   { id: 2, name: "Family issues" },
   { id: 3, name: "Peer pressure" },
@@ -92,14 +92,28 @@ export function ClinicalDiagnosingBoard({
     ),
   );
 
-  const [generalIssues, setGeneralIssues] = useState<Record<string, Severity>>(
-    () =>
-      initializeIssues(
-        general_presenting_issues,
-        isBaseline
-          ? currentcase.generalPresentingIssuesBaseline
-          : currentcase.generalPresentingIssuesEndpoint,
-      ),
+  const [generalIssues, setGeneralIssues] = useState<Record<string, boolean>>(
+    () => {
+      const initialState: Record<string, boolean> = {};
+
+      const generalIssuesData = isBaseline
+        ? currentcase.generalPresentingIssuesBaseline
+        : currentcase.generalPresentingIssuesEndpoint;
+
+      if (generalIssuesData) {
+        general_presenting_issues.forEach((issue) => {
+          if (
+            generalIssuesData &&
+            typeof generalIssuesData === "object" &&
+            issue.name in generalIssuesData
+          ) {
+            initialState[issue.id.toString()] = true;
+          }
+        });
+      }
+
+      return initialState;
+    },
   );
 
   const [otherIssues, setOtherIssues] = useState(initialOtherIssues);
@@ -119,16 +133,16 @@ export function ClinicalDiagnosingBoard({
     );
 
     const currentGeneralData = Object.entries(generalIssues).reduce(
-      (acc, [id, severity]) => {
+      (acc, [id, selected]) => {
         const issueName = general_presenting_issues.find(
           (i) => i.id.toString() === id,
         )?.name;
-        if (issueName) {
-          acc[issueName] = severity;
+        if (issueName && selected) {
+          acc[issueName] = "true";
         }
         return acc;
       },
-      {} as Record<string, Severity>,
+      {} as Record<string, string>,
     );
 
     const emergencyChanged =
@@ -157,21 +171,20 @@ export function ClinicalDiagnosingBoard({
         {} as Record<string, Severity>,
       );
 
-      const generalData = {
-        ...Object.entries(generalIssues).reduce(
-          (acc, [id, severity]) => {
-            const issueName = general_presenting_issues.find(
-              (i) => i.id.toString() === id,
-            )?.name;
-            if (issueName) {
-              acc[issueName] = severity;
-            }
-            return acc;
-          },
-          {} as Record<string, Severity>,
-        ),
-      };
+      const generalData = Object.entries(generalIssues).reduce(
+        (acc, [id, selected]) => {
+          const issueName = general_presenting_issues.find(
+            (i) => i.id.toString() === id,
+          )?.name;
+          if (issueName && selected) {
+            acc[issueName] = "true";
+          }
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
 
+      console.log(emergencyData, generalData, otherIssues);
       await Promise.all([
         updateClinicalCaseEmergencyPresentingIssue({
           caseId: currentcase.id,
@@ -210,14 +223,27 @@ export function ClinicalDiagnosingBoard({
       ),
     );
 
-    setGeneralIssues(
-      initializeIssues(
-        general_presenting_issues,
-        isBaseline
-          ? currentcase.generalPresentingIssuesBaseline
-          : currentcase.generalPresentingIssuesEndpoint,
-      ),
-    );
+    setGeneralIssues(() => {
+      const initialState: Record<string, boolean> = {};
+
+      const generalIssuesData = isBaseline
+        ? currentcase.generalPresentingIssuesBaseline
+        : currentcase.generalPresentingIssuesEndpoint;
+
+      if (generalIssuesData) {
+        general_presenting_issues.forEach((issue) => {
+          if (
+            generalIssuesData &&
+            typeof generalIssuesData === "object" &&
+            issue.name in generalIssuesData
+          ) {
+            initialState[issue.id.toString()] = true;
+          }
+        });
+      }
+
+      return initialState;
+    });
 
     setOtherIssues(
       isBaseline
@@ -239,8 +265,8 @@ export function ClinicalDiagnosingBoard({
           />
 
           <GeneralPresentingIssues
-            selectedSeverities={generalIssues}
-            setSelectedSeverities={setGeneralIssues}
+            selectedIssues={generalIssues}
+            setSelectedIssues={setGeneralIssues}
           />
 
           <div className="space-y-2">
@@ -337,18 +363,18 @@ function EmergencyPresentingIssues({
 }
 
 function GeneralPresentingIssues({
-  selectedSeverities,
-  setSelectedSeverities,
+  selectedIssues,
+  setSelectedIssues,
 }: {
-  selectedSeverities: Record<string, Severity>;
-  setSelectedSeverities: React.Dispatch<
-    React.SetStateAction<Record<string, Severity>>
+  selectedIssues: Record<string, boolean>;
+  setSelectedIssues: React.Dispatch<
+    React.SetStateAction<Record<string, boolean>>
   >;
 }) {
-  const handleSelect = (issueId: string, severity: Severity) => {
-    setSelectedSeverities((prev: Record<string, Severity>) => ({
+  const handleSelect = (issueId: string, checked: boolean) => {
+    setSelectedIssues((prev: Record<string, boolean>) => ({
       ...prev,
-      [issueId]: severity,
+      [issueId]: checked,
     }));
   };
 
@@ -357,38 +383,32 @@ function GeneralPresentingIssues({
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50">
-            <TableHead className="w-[50%] border">
+            <TableHead className="w-[75%] border">
               General presenting issues
             </TableHead>
-            {emergency_presenting_issues_scale.map((scaleItem) => (
-              <TableHead key={scaleItem} className="border text-center">
-                {scaleItem}
-              </TableHead>
-            ))}
+            <TableHead className="w-[25%] border text-center">{""}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {general_presenting_issues.map((issue) => (
             <TableRow key={issue.id} className="hover:bg-gray-50">
               <TableCell className="border font-medium">{issue.name}</TableCell>
-              {emergency_presenting_issues_scale.map((severity) => (
-                <TableCell key={severity} className="border text-center">
-                  <div className="flex justify-center">
-                    <Checkbox
-                      checked={selectedSeverities[issue.id] === severity}
-                      onCheckedChange={() =>
-                        handleSelect(issue.id.toString(), severity as Severity)
-                      }
-                      className={cn(
-                        "h-6 w-6 border",
-                        selectedSeverities[issue.id] === severity
-                          ? "text-white data-[state=checked]:border-brand data-[state=checked]:bg-brand"
-                          : "border-gray-200",
-                      )}
-                    />
-                  </div>
-                </TableCell>
-              ))}
+              <TableCell className="border text-center">
+                <div className="flex justify-center">
+                  <Checkbox
+                    checked={selectedIssues[issue.id] || false}
+                    onCheckedChange={(checked) =>
+                      handleSelect(issue.id.toString(), checked as boolean)
+                    }
+                    className={cn(
+                      "h-6 w-6 border",
+                      selectedIssues[issue.id]
+                        ? "text-white data-[state=checked]:border-brand data-[state=checked]:bg-brand"
+                        : "border-gray-200",
+                    )}
+                  />
+                </div>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
