@@ -509,45 +509,23 @@ function getCurrentUserNavigationLinks(
   // Clinical Lead links
   if (mainRoute === "cl") {
     links.push(
-      <div
-        className={`tab-link ${cn(scheduleActive && "active")}`}
-        key="cl-schedule"
-      >
-        <CalendarIcon />
-        <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
-      </div>,
-      <div
-        className={`tab-link ${cn(schoolsActive && "active")}`}
-        key="cl-schools"
-      >
+      <div className={`tab-link ${cn(schoolsActive && "active")}`}>
         <SchoolIcon />
         <Link href={`/${mainRoute}/schools`}>Schools</Link>
       </div>,
-      <div
-        className={`tab-link ${cn(supervisorsActive && "active")}`}
-        key="cl-supervisors"
-      >
+      <div className={`tab-link ${cn(supervisorsActive && "active")}`}>
         <PeopleIcon />
         <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
       </div>,
-      <div
-        className={`tab-link ${cn(fellowsActive && "active")}`}
-        key="cl-fellows"
-      >
+      <div className={`tab-link ${cn(fellowsActive && "active")}`}>
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
       </div>,
-      <div
-        className={`tab-link ${cn(studentsActive && "active")}`}
-        key="cl-students"
-      >
+      <div className={`tab-link ${cn(studentsActive && "active")}`}>
         <GraduationCapIcon />
         <Link href={`/${mainRoute}/students`}>Students</Link>
       </div>,
-      <div
-        className={`tab-link ${cn(clinicalActive && "active")}`}
-        key="cl-clinical"
-      >
+      <div className={`tab-link ${cn(clinicalActive && "active")}`}>
         <PeopleIcon />
         <Link href={`/${mainRoute}/clinical`}>Clinical cases</Link>
       </div>,
