@@ -752,3 +752,22 @@ export async function referClinicalCaseToClinicalLead(data: {
     return { success: false };
   }
 }
+
+export async function getReferredCasesToSupervisor() {
+  const supervisor = await currentSupervisor();
+  if (!supervisor) {
+    throw new Error("Supervisor not found");
+  }
+
+  const referredCases = await db.clinicalScreeningInfo.findMany({
+    where: {
+      referredToSupervisorId: supervisor?.id,
+      acceptCase: false,
+    },
+    include: {
+      student: true,
+    },
+  });
+
+  return referredCases;
+}
