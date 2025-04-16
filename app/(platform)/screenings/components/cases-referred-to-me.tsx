@@ -6,7 +6,6 @@ import {
 } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
-import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import { ClinicalScreeningInfo, Student } from "@prisma/client";
 
@@ -22,11 +21,10 @@ export function CasesReferredToMe({
   currentSupervisorId: string | undefined;
 }) {
   return (
-    <div className="min-h-[200px]">
-      <h3 className="mb-4 mt-5 text-base font-semibold text-brand xl:text-2xl">
-        Cases referred to you
-      </h3>
-      <Separator />
+    <div className="w-full">
+      <span className="text-sm font-medium">
+        Cases referred to you : {cases.length}
+      </span>
       {cases.map((stud) => (
         <RefferedCasesTab
           key={stud.id}
@@ -37,13 +35,6 @@ export function CasesReferredToMe({
           referralNotes={stud.referralNotes}
         />
       ))}
-      {cases.length === 0 && (
-        <div className="flex h-40 items-center justify-center">
-          <p className="text-base font-medium text-muted-foreground">
-            No cases referred to you yet...
-          </p>
-        </div>
-      )}
     </div>
   );
 }
@@ -114,10 +105,10 @@ export function RefferedCasesTab({
         {handleWordLimit(referralNotes, 50)}
       </span>
       <div className="flex items-center justify-between">
-        <button onClick={handleAcceptReferredCase}>
+        <button onClick={handleAcceptReferredCase} className="cursor-pointer">
           <Icons.check className="mx-2 h-6 w-6 align-baseline text-muted-green xl:h-7 xl:w-7" />
         </button>
-        <button onClick={handleRejectReferredCase}>
+        <button onClick={handleRejectReferredCase} className="cursor-pointer">
           <Icons.xIcon className="mx-2 h-6 w-6 align-baseline text-shamiri-red xl:h-7 xl:w-7" />
         </button>
       </div>
