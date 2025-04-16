@@ -179,7 +179,7 @@ export async function updateClinicalSessionAttendance(
   }
 }
 
-export async function referClinicalCaseAsSupervisor(data: {
+export async function referClinicalCaseToSupervisor(data: {
   referTo: string;
   referralReason: string;
   caseId: string;
@@ -207,10 +207,10 @@ export async function referClinicalCaseAsSupervisor(data: {
         referralReason: data.referralReason,
         caseTransferTrail: {
           create: {
-            from: data.referredFromSpecified ?? "",
-            fromRole: data.referredFrom,
+            from: data.referredFrom,
+            fromRole: data.referredFromSpecified,
             to: data.supervisorName,
-            toRole: data.referredTo,
+            toRole: data.referredToPerson ?? data.referredTo,
             date: new Date(),
             referralStatus: "Pending",
           },
@@ -688,5 +688,67 @@ export async function updateClinicalCaseAttendance(data: {
   } catch (error) {
     console.error(error);
     return { error: "Something went wrong" };
+  }
+}
+
+export async function getClinicalLeads() {
+  try {
+    const supervisor = await currentSupervisor();
+    if (!supervisor) {
+      throw new Error("Supervisor not found");
+    }
+    const clinicalLeads = await db.clinicalLead.findMany();
+    const clinicalLeadsWithSupervisor = clinicalLeads.map((lead) => ({
+      name: lead.clinicalLeadName,
+      id: lead.id,
+      hubId: lead.assignedHubId,
+    }));
+    return clinicalLeadsWithSupervisor || [];
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+export async function referClinicalCaseToClinicalLead(data: {
+  referralReason: string;
+  caseId: string;
+  referredFrom: string;
+  referredFromSpecified: string;
+  referredTo: string;
+  referredToPerson: string;
+  referralNotes: string;
+  referredToPersonId: string;
+}) {
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: {
+        clinicalLeadId: data.referredToPersonId,
+        referralNotes: data.referralNotes,
+        referralStatus: "Pending",
+        referralReason: data.referralReason,
+        referredTo: data.referredTo,
+        caseTransferTrail: {
+          create: {
+            from: data.referredFrom,
+            fromRole: data.referredFromSpecified,
+            to: data.referredToPerson,
+            toRole: data.referredToPersonId,
+            date: new Date(),
+            referralStatus: "Pending",
+          },
+        },
+        acceptCase: false,
+      },
+    });
+
+    revalidatePath("/screenings");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
   }
 }
