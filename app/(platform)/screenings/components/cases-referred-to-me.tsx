@@ -6,7 +6,6 @@ import {
 } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
-import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import { ClinicalScreeningInfo, Student } from "@prisma/client";
 
@@ -22,11 +21,10 @@ export function CasesReferredToMe({
   currentSupervisorId: string | undefined;
 }) {
   return (
-    <div className="min-h-[200px]">
-      <h3 className="mb-4 mt-5 text-base font-semibold text-brand xl:text-2xl">
-        Cases referred to you
-      </h3>
-      <Separator />
+    <div className="w-full">
+      <span className="text-sm font-medium">
+        Cases referred to you : {cases.length}
+      </span>
       {cases.map((stud) => (
         <RefferedCasesTab
           key={stud.id}
@@ -37,13 +35,6 @@ export function CasesReferredToMe({
           referralNotes={stud.referralNotes}
         />
       ))}
-      {cases.length === 0 && (
-        <div className="flex h-40 items-center justify-center">
-          <p className="text-base font-medium text-muted-foreground">
-            No cases referred to you yet...
-          </p>
-        </div>
-      )}
     </div>
   );
 }
