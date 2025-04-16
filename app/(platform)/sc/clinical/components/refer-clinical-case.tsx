@@ -2,8 +2,10 @@
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
   ClinicalCases,
+  getClinicalLeads,
   getSupervisorsInHub,
-  referClinicalCaseAsSupervisor,
+  referClinicalCaseToClinicalLead,
+  referClinicalCaseToSupervisor,
 } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 
@@ -37,14 +39,15 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-const ComplaintSchema = z.object({
+const ReferClinicalCaseSchema = z.object({
   referTo: z.string().min(1, "Refer to is required"),
   referralReason: z.string().min(1, "Referral reason is required"),
   message: z.string(),
   supervisorId: z.string().optional(),
+  clinicalLeadId: z.string().optional(),
 });
 
-type ComplaintFormValues = z.infer<typeof ComplaintSchema>;
+type ComplaintFormValues = z.infer<typeof ReferClinicalCaseSchema>;
 
 const REFERRAL_OPTIONS = {
   "Clinical Lead": ["Severe risk case", "Complex high-risk case"],
@@ -67,6 +70,13 @@ export default function ReferClinicalCase({
   const [supervisorsInHub, setSupervisorsInHub] = useState<
     { id: string; name: string | null }[]
   >([]);
+  const [clinicalLeads, setClinicalLeads] = useState<
+    { id: string; name: string | null; hubId: string | null }[]
+  >([]);
+  const [selectedClinicalLead, setSelectedClinicalLead] = useState<{
+    id: string;
+    name: string | null;
+  } | null>(null);
   const [currentSupervisor, setCurrentSupervisor] = useState<{
     id: string | undefined;
     name?: string | null;
@@ -79,34 +89,71 @@ export default function ReferClinicalCase({
       setCurrentSupervisor(data?.currentSupervisor ?? null);
     };
     fetchSupervisorsInHub();
+  }, []);
+
+  useEffect(() => {
+    const fetchClinicalLeads = async () => {
+      if (selectedReferTo === "Clinical Lead") {
+        const data = await getClinicalLeads();
+        setClinicalLeads(data ?? []);
+      }
+    };
+    fetchClinicalLeads();
   }, [selectedReferTo]);
 
   const form = useForm<ComplaintFormValues>({
-    resolver: zodResolver(ComplaintSchema),
+    resolver: zodResolver(ReferClinicalCaseSchema),
     defaultValues: {
       referTo: "",
       referralReason: "",
       message: "",
+      supervisorId: "",
+      clinicalLeadId: "",
     },
   });
 
+  useEffect(() => {
+    if (selectedReferTo !== "Supervisor") {
+      form.setValue("supervisorId", "");
+    }
+    if (selectedReferTo !== "Clinical Lead") {
+      form.setValue("clinicalLeadId", "");
+      setSelectedClinicalLead(null);
+    }
+  }, [selectedReferTo, form]);
+
   const onSubmit = async (data: ComplaintFormValues) => {
     try {
-      const response = await referClinicalCaseAsSupervisor({
-        caseId: clinicalCase.id,
-        supervisorName: currentSupervisor?.name ?? "",
-        referralNotes: data.message,
-        referredFromSpecified: currentSupervisor?.name ?? "",
-        referredFrom: currentSupervisor?.id ?? "",
-        referredToPerson:
-          data.referTo === "Clinical Lead" ? null : data.supervisorId || null,
-        externalCare: null,
-        referTo: data.referTo,
-        referralReason: data.referralReason,
-        referredTo: data.referTo,
-      });
+      let response;
+      if (data.referTo === "Clinical Lead") {
+        response = await referClinicalCaseToClinicalLead({
+          caseId: clinicalCase.id,
+          referredToPersonId: data.clinicalLeadId ?? "",
+          referralNotes: data.message,
+          referralReason: data.referralReason,
+          referredFrom: currentSupervisor?.name ?? "",
+          referredFromSpecified: currentSupervisor?.id ?? "",
+          referredTo: data.referTo,
+          referredToPerson: selectedClinicalLead?.name ?? "",
+        });
+      }
 
-      if (response.success) {
+      if (data.referTo === "Supervisor") {
+        response = await referClinicalCaseToSupervisor({
+          caseId: clinicalCase.id,
+          supervisorName: currentSupervisor?.name ?? "",
+          referralNotes: data.message,
+          referredFromSpecified: currentSupervisor?.name ?? "",
+          referredFrom: currentSupervisor?.id ?? "",
+          referredToPerson: data.supervisorId ?? null,
+          externalCare: null,
+          referTo: data.referTo,
+          referralReason: data.referralReason,
+          referredTo: data.referTo,
+        });
+      }
+
+      if (response?.success) {
         toast({
           title: "Success",
           description: "Clinical case referred successfully",
@@ -203,6 +250,50 @@ export default function ReferClinicalCase({
                               value={supervisor.id}
                             >
                               {supervisor.name || "Unknown"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {selectedReferTo === "Clinical Lead" && (
+                <FormField
+                  control={form.control}
+                  name="clinicalLeadId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center">
+                        Select Clinical Lead
+                        <span className="ml-1 text-red-500">*</span>
+                      </FormLabel>
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          const selectedLead = clinicalLeads.find(
+                            (lead) => lead.id === value,
+                          );
+                          if (selectedLead) {
+                            setSelectedClinicalLead({
+                              id: selectedLead.id,
+                              name: selectedLead.name,
+                            });
+                          }
+                        }}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select clinical lead..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {clinicalLeads.map((lead) => (
+                            <SelectItem key={lead.id} value={lead.id}>
+                              {lead.name || "Unknown"}
                             </SelectItem>
                           ))}
                         </SelectContent>
