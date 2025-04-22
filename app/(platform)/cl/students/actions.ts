@@ -51,14 +51,73 @@ export async function getOverallStudentsDataBreakdown() {
 }
 
 export async function getStudentsDataBreakdown() {
-  const graphData = [
-    { name: "Total Students", value: 100 },
-    { name: "Group Sessions", value: 100 },
-    { name: "Clinical Cases", value: 100 },
-    { name: "Clinical Sessions", value: 100 },
-  ];
+  const clinicalLead = await currentClinicalLead();
+  if (!clinicalLead) throw new Error("Unauthorized");
 
-  return graphData;
+  const [
+    // attendanceData,
+    dropoutData,
+    completionData,
+    // ratingsData,
+  ] = await Promise.all([
+    // Fetch attendance data for Pre, S1, S2, S3, S4
+
+    // Fetch dropout reasons
+    db.$queryRaw<{ reason: string | null; count: bigint }[]>`
+      SELECT drop_out_reason as reason, COUNT(*) as count
+      FROM students s
+      JOIN schools sc ON s.school_id = sc.id
+      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      AND drop_out_reason IS NOT NULL
+      GROUP BY drop_out_reason
+      ORDER BY count DESC
+    `,
+
+    // Fetch student information completion
+    db.$queryRaw<{ name: string; value: number }[]>`
+      WITH total_students AS (
+        SELECT COUNT(*) as total
+        FROM students s
+        JOIN schools sc ON s.school_id = sc.id
+        WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      ),
+      completed_students AS (
+        SELECT COUNT(*) as completed
+        FROM students s
+        JOIN schools sc ON s.school_id = sc.id
+        WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+        AND s.student_name IS NOT NULL
+        AND s.gender IS NOT NULL
+        AND s.year_of_birth IS NOT NULL
+        AND s.form IS NOT NULL
+      )
+      SELECT 
+        'actual' as name,
+        ROUND((completed::float / total::float) * 100) as value
+      FROM total_students, completed_students
+      UNION ALL
+      SELECT 
+        'target' as name,
+        100 as value
+    `,
+
+    //   // Fetch student group ratings
+  ]);
+
+  return {
+    // attendanceData: attendanceData.map((item) => ({
+    //   name: item.sessionType,
+    //   value: Number(item.count),
+    // })),
+    attendanceData: [],
+    dropoutData: dropoutData.map((item) => ({
+      name: item.reason || "Unknown",
+      value: Number(item.count),
+    })),
+    completionData: completionData,
+    // ratingsData: ratingsData,
+    ratingsData: [],
+  };
 }
 
 export async function clinicalSessionsDataBreakdown() {
