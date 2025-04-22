@@ -62,9 +62,75 @@ export async function getStudentsDataBreakdown() {
 }
 
 export async function clinicalSessionsDataBreakdown() {
-  const graphData = [{ name: "Clinical Sessions", value: 100 }];
+  const clinicalLead = await currentClinicalLead();
+  if (!clinicalLead) throw new Error("Unauthorized");
 
-  return graphData;
+  const [
+    casesByStatus,
+    casesBySession,
+    casesBySupervisor,
+    casesByInitialContact,
+  ] = await Promise.all([
+    db.$queryRaw<{ caseStatus: string | null; count: bigint }[]>`
+      SELECT case_status as "caseStatus", COUNT(*) as count
+      FROM clinical_screening_info csi
+      JOIN students s ON s.id = csi.student_id
+      JOIN schools sc ON s.school_id = sc.id
+      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      GROUP BY case_status
+      ORDER BY count DESC
+    `,
+
+    db.$queryRaw<{ session: string | null; count: bigint }[]>`
+      SELECT session, COUNT(*) as count
+      FROM clinical_session_attendance csa
+      JOIN clinical_screening_info csi ON csi.id = csa."caseId"
+      JOIN students s ON s.id = csi.student_id
+      JOIN schools sc ON s.school_id = sc.id
+      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      GROUP BY session
+      ORDER BY count DESC
+    `,
+
+    db.$queryRaw<{ supervisorName: string | null; count: bigint }[]>`
+      SELECT sp.supervisor_name as "supervisorName", COUNT(*) as count
+      FROM clinical_screening_info csi
+      JOIN students s ON s.id = csi.student_id
+      JOIN supervisors sp ON sp.id = csi.current_supervisor_id
+      WHERE sp.hub_id = ${clinicalLead.assignedHubId}
+      GROUP BY sp.supervisor_name
+      ORDER BY count DESC
+    `,
+
+    db.$queryRaw<{ initialReferredFrom: string | null; count: bigint }[]>`
+      SELECT initial_referred_from_specified as "initialReferredFrom", COUNT(*) as count
+      FROM clinical_screening_info csi
+      JOIN students s ON s.id = csi.student_id
+      JOIN schools sc ON s.school_id = sc.id
+      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      GROUP BY initial_referred_from_specified
+      ORDER BY count DESC
+    `,
+  ]);
+
+  return {
+    casesByStatus: casesByStatus.map((item) => ({
+      name: item.caseStatus || "Unknown",
+      value: Number(item.count),
+    })),
+    casesBySession: casesBySession.map((item) => ({
+      name: item.session || "Unknown",
+      value: Number(item.count),
+    })),
+    casesBySupervisor: casesBySupervisor.map((item) => ({
+      name: item.supervisorName || "Unknown",
+      value: Number(item.count),
+    })),
+    casesByInitialContact: casesByInitialContact.map((item) => ({
+      name: item.initialReferredFrom || "Unknown",
+      value: Number(item.count),
+    })),
+  };
 }
 
 export async function getStudentsStatsBreakdown() {
