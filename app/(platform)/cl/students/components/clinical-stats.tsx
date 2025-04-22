@@ -47,7 +47,7 @@ export default function ClinicalStats({
 
   return (
     <div className="grid grid-cols-1 gap-5 py-2 sm:grid-cols-2 xl:grid-cols-4">
-      <ChartCard title="Clinical Cases by Case Status">
+      <ChartCard showCardFooter={false} title="Clinical Cases by Case Status">
         {casesByStatus.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
@@ -81,7 +81,7 @@ export default function ClinicalStats({
         ) : null}
       </ChartCard>
 
-      <ChartCard title="Clinical Sessions">
+      <ChartCard showCardFooter={false} title="Clinical Sessions">
         {casesBySession.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart width={307} height={307} data={casesBySession}>
@@ -95,7 +95,7 @@ export default function ClinicalStats({
         ) : null}
       </ChartCard>
 
-      <ChartCard title="Clinical Cases by Supervisor">
+      <ChartCard showCardFooter={false} title="Clinical Cases by Supervisor">
         {casesBySupervisor.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart width={307} height={307} data={casesBySupervisor}>
@@ -109,7 +109,10 @@ export default function ClinicalStats({
         ) : null}
       </ChartCard>
 
-      <ChartCard title="Clinical Cases by Initial Contact">
+      <ChartCard
+        showCardFooter={false}
+        title="Clinical Cases by Initial Contact"
+      >
         {casesByInitialContact.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
