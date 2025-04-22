@@ -4,10 +4,10 @@ import StudentsDataLoader from "#/app/(platform)/cl/students/components/students
 import { Suspense } from "react";
 
 export default async function StudentsDataWrapper() {
-  const graphData = await getStudentsDataBreakdown();
+  const studentData = await getStudentsDataBreakdown();
   return (
     <Suspense fallback={<StudentsDataLoader />}>
-      <StudentsDataBreakdown graphData={graphData} />
+      <StudentsDataBreakdown {...studentData} />
     </Suspense>
   );
 }
