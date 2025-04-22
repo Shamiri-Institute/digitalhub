@@ -15,7 +15,7 @@ export default function OverallStudentsClinicalStats({
 }) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
+      <Card key="total-students">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Students</CardTitle>
         </CardHeader>
@@ -24,7 +24,7 @@ export default function OverallStudentsClinicalStats({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card key="group-sessions">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Group Sessions</CardTitle>
         </CardHeader>
@@ -33,7 +33,7 @@ export default function OverallStudentsClinicalStats({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card key="clinical-cases">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Clinical Cases</CardTitle>
         </CardHeader>
@@ -42,7 +42,7 @@ export default function OverallStudentsClinicalStats({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card key="clinical-sessions">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">
             Clinical Sessions

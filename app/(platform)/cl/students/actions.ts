@@ -1,16 +1,52 @@
 "use server";
 
+import { currentClinicalLead } from "#/app/auth";
+import { db } from "#/lib/db";
+
 export async function getOverallStudentsDataBreakdown() {
-  const totalStudents = 100;
-  const groupSessions = 100;
-  const clinicalCases = 100;
-  const clinicalSessions = 100;
+  const clinicalLead = await currentClinicalLead();
+  if (!clinicalLead) throw new Error("Unauthorized");
+
+  const [
+    totalStudentsResult,
+    groupSessionsResult,
+    clinicalCasesResult,
+    clinicalSessionsResult,
+  ] = await Promise.all([
+    db.$queryRaw<[{ count: bigint }]>`
+      SELECT COUNT(*) as count 
+      FROM students s
+      JOIN schools sc ON s.school_id = sc.id
+      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+    `,
+    db.$queryRaw<[{ count: bigint }]>`
+      SELECT COUNT(*) as count 
+      FROM intervention_sessions ins
+      JOIN session_names sn ON ins.session_id = sn.id
+      WHERE sn.hub_id = ${clinicalLead.assignedHubId}
+    `,
+    db.$queryRaw<[{ count: bigint }]>`
+      SELECT COUNT(*) as count 
+      FROM clinical_screening_info csi
+      JOIN students sts ON sts.id = csi.student_id
+      JOIN schools sc ON sts.school_id = sc.id
+      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+    `,
+    db.$queryRaw<[{ count: bigint }]>`
+      SELECT COUNT(*) as count 
+      FROM clinical_session_attendance cs
+      JOIN clinical_screening_info csi ON csi.id = cs."caseId"
+      JOIN students sts ON sts.id = csi.student_id
+      JOIN schools sc ON sts.school_id = sc.id
+      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+    `,
+  ]);
 
   return {
-    totalStudents,
-    groupSessions,
-    clinicalCases,
-    clinicalSessions,
+    totalStudents: Number(totalStudentsResult[0].count),
+    groupSessions: Number(groupSessionsResult[0].count),
+    clinicalCases: Number(clinicalCasesResult[0].count),
+    clinicalSessions: Number(clinicalSessionsResult[0].count),
   };
 }
 
