@@ -68,7 +68,59 @@ export async function clinicalSessionsDataBreakdown() {
 }
 
 export async function getStudentsStatsBreakdown() {
-  const studentsStats = [{ name: "Total Students", value: 100 }];
+  const clinicalLead = await currentClinicalLead();
+  if (!clinicalLead) throw new Error("Unauthorized");
 
-  return studentsStats;
+  const [formStats, ageStats, genderStats] = await Promise.all([
+    db.$queryRaw<{ form: number | null; count: bigint }[]>`
+      SELECT form, COUNT(*) as count 
+      FROM students s
+      JOIN schools sc ON s.school_id = sc.id
+      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      GROUP BY form
+      ORDER BY form ASC
+    `,
+
+    db.$queryRaw<{ age: number | null; count: bigint }[]>`
+      SELECT 
+        CASE 
+          WHEN year_of_birth IS NULL THEN NULL
+          ELSE EXTRACT(YEAR FROM CURRENT_DATE) - year_of_birth
+        END as age,
+        COUNT(*) as count
+      FROM students s
+      JOIN schools sc ON s.school_id = sc.id
+      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      GROUP BY 
+        CASE 
+          WHEN year_of_birth IS NULL THEN NULL
+          ELSE EXTRACT(YEAR FROM CURRENT_DATE) - year_of_birth
+        END
+      ORDER BY age ASC
+    `,
+
+    db.$queryRaw<{ gender: string | null; count: bigint }[]>`
+      SELECT gender, COUNT(*) as count 
+      FROM students s
+      JOIN schools sc ON s.school_id = sc.id
+      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      GROUP BY gender
+      ORDER BY gender ASC
+    `,
+  ]);
+
+  return {
+    formStats: formStats.map((stat) => ({
+      form: stat.form ? `Form ${stat.form}` : "N/A",
+      value: Number(stat.count),
+    })),
+    ageStats: ageStats.map((stat) => ({
+      age: stat.age ? `${stat.age} years` : "N/A",
+      value: Number(stat.count),
+    })),
+    genderStats: genderStats.map((stat) => ({
+      gender: stat.gender || "N/A",
+      value: Number(stat.count),
+    })),
+  };
 }
