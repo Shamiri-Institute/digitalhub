@@ -36,7 +36,13 @@
     "db:preview:create": "dotenv -c development -- bash -c 'PGPASSWORD=${PROD_DBPASS} psql -h ${PROD_DBHOST} -p ${PROD_DBPORT} -U ${PROD_DBUSER} -d ${PROD_DBNAME} -c \"CREATE DATABASE ${PROD_PREVIEWDBNAME} WITH TEMPLATE ${PROD_DBNAME} OWNER ${PROD_DBUSER};\"'",
     "db:preview:reset": "npm run db:preview:kill-sessions && npm run db:preview:drop && npm run db:prod:kill-sessions && npm run db:preview:create",
     "db:dump:local": "dotenv -c development -- ./scripts/db/dump-db.sh",
-    "email:dev": "email dev -p 4444"
+    "email:dev": "email dev -p 4444",
+    "release": "commit-and-tag-version"
+  },
+  "commit-and-tag-version": {
+    "scripts": {
+      "precommit": "npm run format > /dev/null"
+    }
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.663.0",
@@ -118,6 +124,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "@vitest/ui": "^1.0.4",
     "autoprefixer": "^10.4.16",
+    "commit-and-tag-version": "^12.5.1",
     "dotenv-cli": "^7.3.0",
     "eslint-config-next": "^14.2.1",
     "eslint-config-prettier": "^9.0.0",
