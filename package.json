@@ -36,7 +36,8 @@
     "db:preview:create": "dotenv -c development -- bash -c 'PGPASSWORD=${PROD_DBPASS} psql -h ${PROD_DBHOST} -p ${PROD_DBPORT} -U ${PROD_DBUSER} -d ${PROD_DBNAME} -c \"CREATE DATABASE ${PROD_PREVIEWDBNAME} WITH TEMPLATE ${PROD_DBNAME} OWNER ${PROD_DBUSER};\"'",
     "db:preview:reset": "npm run db:preview:kill-sessions && npm run db:preview:drop && npm run db:prod:kill-sessions && npm run db:preview:create",
     "db:dump:local": "dotenv -c development -- ./scripts/db/dump-db.sh",
-    "email:dev": "email dev -p 4444"
+    "email:dev": "email dev -p 4444",
+    "release": "commit-and-tag-version"
   },
   "commit-and-tag-version": {
     "scripts": {
