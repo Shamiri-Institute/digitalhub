@@ -118,6 +118,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "@vitest/ui": "^1.0.4",
     "autoprefixer": "^10.4.16",
+    "commit-and-tag-version": "^12.5.1",
     "dotenv-cli": "^7.3.0",
     "eslint-config-next": "^14.2.1",
     "eslint-config-prettier": "^9.0.0",
