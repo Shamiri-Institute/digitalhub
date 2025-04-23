@@ -38,6 +38,11 @@
     "db:dump:local": "dotenv -c development -- ./scripts/db/dump-db.sh",
     "email:dev": "email dev -p 4444"
   },
+  "commit-and-tag-version": {
+    "scripts": {
+      "precommit": "npm run format > /dev/null"
+    }
+  },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.663.0",
     "@aws-sdk/client-ses": "^3.750.0",
