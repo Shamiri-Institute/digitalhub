@@ -202,6 +202,7 @@ function generateFellowAttendanceDotProps({
         sessionId: null,
         yearOfImplementation: 2023,
         venue: null,
+        hubId: null,
       },
     },
     fellow: {
