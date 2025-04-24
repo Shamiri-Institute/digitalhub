@@ -18,6 +18,7 @@ import {
   Supervisor,
 } from "@prisma/client";
 import { isBefore, startOfMonth } from "date-fns";
+import { zonedTimeToUtc } from "date-fns-tz";
 
 // GETTING STARTED WITH SEEDING
 // ===========================
@@ -1358,8 +1359,7 @@ async function createInterventionSessionsForSchools(
 
     interventionSessions.push({
       id: objectId("session"),
-      sessionDate: new Date(staticDate),
-      sessionEndTime: new Date(staticDate.getTime() + 3 * 60 * 60 * 1000),
+      sessionDate: zonedTimeToUtc(new Date(staticDate), "Africa/Nairobi"),
       status: "Scheduled",
       sessionType: sessionName.sessionName,
       sessionId: sessionName.id,
@@ -1415,8 +1415,7 @@ async function createInterventionSessionsForSchools(
       // Create session for this school
       interventionSessions.push({
         id: objectId("session"),
-        sessionDate: new Date(currentDate),
-        sessionEndTime: new Date(currentDate.getTime() + 3 * 60 * 60 * 1000),
+        sessionDate: zonedTimeToUtc(new Date(currentDate), "Africa/Nairobi"),
         status: "Scheduled",
         sessionType: sessionName.sessionName,
         sessionId: sessionName.id,
