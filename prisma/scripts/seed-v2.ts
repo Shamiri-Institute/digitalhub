@@ -1367,6 +1367,7 @@ async function createInterventionSessionsForSchools(
       occurred: isBefore(staticDate, new Date()),
       yearOfImplementation: 2024,
       projectId: staticSchool!.hub?.projectId || undefined,
+      hubId: staticSchool!.hubId,
     });
 
     // Move to next week for next static session
@@ -1424,6 +1425,7 @@ async function createInterventionSessionsForSchools(
         occurred: isBefore(new Date(currentDate), new Date()),
         yearOfImplementation: new Date().getFullYear(),
         projectId: school.hub?.projectId || undefined,
+        hubId: school.hubId,
       });
 
       // Record the date for all fellows in this school

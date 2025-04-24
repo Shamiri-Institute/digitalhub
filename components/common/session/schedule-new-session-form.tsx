@@ -24,7 +24,6 @@ import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
 import { createNewSession } from "#/lib/actions/session/session";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
@@ -59,7 +58,12 @@ export function ScheduleNewSession({
   const form = useForm<z.infer<typeof ScheduleNewSessionSchema>>({
     resolver: zodResolver(ScheduleNewSessionSchema),
     defaultValues: {
-      sessionId: hubSessionTypes[0]?.id,
+      sessionId: hubSessionTypes.filter((sessionType) => {
+        return (
+          sessionType.sessionType === "SUPERVISION" ||
+          sessionType.sessionType === "TRAINING"
+        );
+      })[0]?.id,
       sessionStartTime: "06:00",
       schoolId: undefined,
       venue: undefined,
@@ -95,7 +99,6 @@ export function ScheduleNewSession({
       data.sessionStartTime +
       ":00";
     data.sessionDate = new Date(sessionDate);
-    data.projectId = CURRENT_PROJECT_ID;
 
     try {
       const response = await createNewSession(data);
@@ -147,18 +150,25 @@ export function ScheduleNewSession({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent className="max-h-[200px]">
-                  {hubSessionTypes.map((sessionType) => (
-                    <SelectItem key={sessionType.id} value={sessionType.id}>
-                      <span className="">
-                        {sessionType.sessionType.charAt(0).toUpperCase() +
-                          sessionType.sessionType
-                            .slice(1)
-                            .replace("_", " ")
-                            .toLowerCase()}{" "}
-                      </span>
-                      session - <span>{sessionType.sessionLabel}</span>
-                    </SelectItem>
-                  ))}
+                  {hubSessionTypes
+                    .filter((sessionType) => {
+                      return (
+                        sessionType.sessionType === "SUPERVISION" ||
+                        sessionType.sessionType === "TRAINING"
+                      );
+                    })
+                    .map((sessionType) => (
+                      <SelectItem key={sessionType.id} value={sessionType.id}>
+                        <span className="">
+                          {sessionType.sessionType.charAt(0).toUpperCase() +
+                            sessionType.sessionType
+                              .slice(1)
+                              .replace("_", " ")
+                              .toLowerCase()}{" "}
+                        </span>
+                        session - <span>{sessionType.sessionLabel}</span>
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               <FormMessage />

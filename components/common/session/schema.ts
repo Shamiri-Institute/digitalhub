@@ -34,7 +34,6 @@ export const ScheduleNewSessionSchema = z
     venue: z.string().optional(),
     sessionDate: z.coerce.date({ required_error: "Please select a date" }),
     sessionStartTime: stringValidation("Please select a start time"),
-    projectId: z.string().optional(),
   })
   .superRefine((val, ctx) => {
     if (

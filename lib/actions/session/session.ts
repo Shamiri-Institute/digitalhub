@@ -35,19 +35,49 @@ export async function createNewSession(
   try {
     await checkAuth();
     const parsedData = ScheduleNewSessionSchema.parse(data);
+    const hubSessionType = await db.sessionName.findFirst({
+      where: {
+        id: parsedData.sessionId,
+      },
+      include: {
+        hub: true,
+      },
+    });
 
-    const sessionEndTime = addHours(parsedData.sessionDate, 1);
+    if (!hubSessionType) {
+      throw new Error("Session type not found.");
+    }
+
+    const { hub } = hubSessionType;
+    if (
+      hubSessionType.sessionType === "SUPERVISION" ||
+      hubSessionType.sessionType === "TRAINING"
+    ) {
+      const existingSession = await db.interventionSession.findFirst({
+        where: {
+          hubId: hub.id,
+          sessionId: parsedData.sessionId,
+        },
+      });
+      if (existingSession) {
+        console.error(`This session already exists for hub ${hub.hubName}`);
+        return {
+          success: false,
+          message: `Something went wrong while scheduling a new session. This session already exists for this hub`,
+        };
+      }
+    }
     await db.interventionSession.create({
       data: {
         id: objectId("isess"),
         sessionId: parsedData.sessionId,
         sessionDate: parsedData.sessionDate,
-        sessionEndTime,
         yearOfImplementation:
           parsedData.sessionDate.getFullYear() || new Date().getFullYear(),
         schoolId: parsedData.schoolId,
         occurred: false,
-        projectId: parsedData.projectId,
+        projectId: hubSessionType.hub.projectId,
+        hubId: hub.id,
         venue: parsedData.venue,
       },
     });
