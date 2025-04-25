@@ -250,4 +250,13 @@
   .form-view-mode .label span {
     @apply hidden;
   }
+
+  .transparent-number-arrows::-webkit-outer-spin-button,
+  .transparent-number-arrows::-webkit-inner-spin-button {
+    opacity: 0;
+  }
+
+  .transparent-number-arrows {
+    -moz-appearance: textfield; /* hides in Firefox */
+  }
 }
