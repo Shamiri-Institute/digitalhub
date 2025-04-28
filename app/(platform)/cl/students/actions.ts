@@ -131,7 +131,7 @@ export async function getStudentsDataBreakdown() {
 
   return {
     attendanceData: attendanceData.map((item) => ({
-      name: item.sessionName,
+      name: item.sessionName || "Unknown",
       value: Number(item.count),
     })),
     dropoutData: dropoutData.map((item) => ({
