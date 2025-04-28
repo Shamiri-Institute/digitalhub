@@ -848,7 +848,7 @@ model InterventionSession {
   createdAt               DateTime                    @default(now()) @map("created_at")
   updatedAt               DateTime                    @updatedAt @map("updated_at")
   archivedAt              DateTime?                   @map("archived_at")
-  sessionDate             DateTime                    @map("session_date") // TODO: rename to sessionStartTime in separate PR / deployment
+  sessionDate             DateTime                    @map("session_date") @db.Timestamptz(6)
   sessionEndTime          DateTime?                   @map("session_end_time")
   scheduleHistory         Json?                       @map("schedule_history") // e.g. [ { startTime, endTime, userId } ]
   status                  SessionStatus?              @default(Scheduled)
