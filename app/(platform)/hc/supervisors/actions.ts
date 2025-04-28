@@ -355,16 +355,39 @@ export async function createNewSupervisor(
     }
 
     const parsedData = AddNewSupervisorSchema.parse(data);
+    const assignedHub = hc.assignedHub;
 
-    const result = await db.supervisor.create({
-      data: {
-        ...parsedData,
-        id: objectId("sup"),
-        visibleId: await generateSupervisorVisibleId(),
-        implementerId: hc.assignedHub.implementerId,
-        hubId: hc.assignedHub.id,
-      },
+    const result = await db.$transaction(async (tx) => {
+      const supervisor = await tx.supervisor.create({
+        data: {
+          ...parsedData,
+          id: objectId("sup"),
+          visibleId: await generateSupervisorVisibleId(),
+          implementerId: assignedHub.implementerId,
+          hubId: assignedHub.id,
+        },
+      });
+
+      const newUser = await tx.user.create({
+        data: {
+          id: objectId("user"),
+          email: parsedData.personalEmail,
+          name: parsedData.supervisorName,
+        },
+      });
+
+      await tx.implementerMember.create({
+        data: {
+          implementerId: assignedHub.implementerId,
+          userId: newUser.id,
+          role: "SUPERVISOR",
+          identifier: supervisor.id,
+        },
+      });
+
+      return supervisor;
     });
+
     return {
       success: true,
       message: `Successfully added ${result.supervisorName}`,
@@ -374,7 +397,8 @@ export async function createNewSupervisor(
     return {
       success: false,
       message:
-        (err as Error)?.message ?? "Sorry, could add new supervisor details.",
+        (err as Error)?.message ??
+        "Sorry, could not add new supervisor details.",
     };
   }
 }
