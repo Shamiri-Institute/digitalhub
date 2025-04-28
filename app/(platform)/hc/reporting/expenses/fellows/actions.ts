@@ -76,6 +76,7 @@ export async function loadHubFellowAttendance() {
         group: attendance.group?.groupName,
         amount: attendance?.session?.session?.amount || 0,
         status: attendance.attended ? "Attended" : "Absent",
+        executedAt: null,
       })),
     };
   });

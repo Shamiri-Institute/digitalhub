@@ -1,4 +1,5 @@
 import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
+import { SupervisorFellowsAttendancesType } from "#/app/(platform)/sc/reporting/expenses/fellows/actions";
 import ApproveSpecialSessionFellows from "#/components/common/expenses/fellows/approve-special-session";
 import ConfirmReversalFellows from "#/components/common/expenses/fellows/confirm-reversal";
 import RequestRepaymentFellows from "#/components/common/expenses/fellows/request-repayment";
@@ -13,13 +14,15 @@ import {
 import { cn } from "#/lib/utils";
 
 export type FellowExpenseData =
-  HubFellowsAttendancesType["attendances"][number];
+  | HubFellowsAttendancesType["attendances"][number]
+  | SupervisorFellowsAttendancesType["attendances"][number];
 
-export default function FellowExpenseTableDropdownMe({
+export default function FellowExpenseTableDropdown({
   expense,
 }: {
   expense: FellowExpenseData;
 }) {
+  const isHub = "hub" in expense;
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -44,7 +47,8 @@ export default function FellowExpenseTableDropdownMe({
         <ConfirmReversalFellows expense={expense}>
           <div
             className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
+              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black ",
+              !isHub && "pointer-events-none cursor-not-allowed opacity-50",
             )}
           >
             Reverse payment
@@ -54,6 +58,7 @@ export default function FellowExpenseTableDropdownMe({
           <div
             className={cn(
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
+              !isHub && "pointer-events-none cursor-not-allowed opacity-50",
             )}
           >
             Request repayment
@@ -65,6 +70,7 @@ export default function FellowExpenseTableDropdownMe({
           <div
             className={cn(
               "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
+              !isHub && "pointer-events-none cursor-not-allowed opacity-50",
             )}
           >
             Approve/reject special session

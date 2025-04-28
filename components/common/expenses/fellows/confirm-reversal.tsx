@@ -1,7 +1,7 @@
 "use client";
 import { submitPaymentReversal } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown-me";
+import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -48,7 +48,7 @@ export default function ConfirmReversalFellows({
 
   const onSubmit = async (data: z.infer<typeof ConfirmReversalSchema>) => {
     const response = await submitPaymentReversal({
-      id: expense.id,
+      id: Number(expense.id),
       name: data.name,
     });
     if (!response.success) {

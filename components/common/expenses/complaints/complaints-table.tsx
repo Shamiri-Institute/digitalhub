@@ -26,6 +26,8 @@ export default function FellowComplaintsDataTable({
             data={row.original?.complaints}
             editColumns={false}
             columns={subColumns}
+            disableSearch
+            disablePagination
             className="data-table data-table-action border-0 bg-white"
             emptyStateMessage="No complaints found for this fellow"
           />
