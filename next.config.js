@@ -1,3 +1,5 @@
+const { withSentryConfig } = require("@sentry/nextjs");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
@@ -37,13 +39,8 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
-
 // Injected content via Sentry wizard below
-
-const { withSentryConfig } = require("@sentry/nextjs");
-
-module.exports = withSentryConfig(module.exports, {
+module.exports = withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
@@ -51,7 +48,7 @@ module.exports = withSentryConfig(module.exports, {
   project: "digitalhub-frontend",
 
   // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
+  silent: true,
 
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
