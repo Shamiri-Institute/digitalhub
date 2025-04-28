@@ -54,16 +54,24 @@ export async function getStudentsDataBreakdown() {
   const clinicalLead = await currentClinicalLead();
   if (!clinicalLead) throw new Error("Unauthorized");
 
-  const [
-    // attendanceData,
-    dropoutData,
-    completionData,
-    // ratingsData,
-  ] = await Promise.all([
-    // Fetch attendance data for Pre, S1, S2, S3, S4
+  const [attendanceData, dropoutData, completionData, ratingsData] =
+    await Promise.all([
+      db.$queryRaw<{ sessionName: string | null; count: bigint }[]>`
+      SELECT 
+        sn.session_name as "sessionName",
+        COUNT(DISTINCT sa.student_id) as count
+      FROM student_attendances sa
+      JOIN students s ON s.id = sa.student_id
+      JOIN schools sc ON s.school_id = sc.id
+      JOIN intervention_sessions ins ON ins.id = sa.session_id
+      JOIN session_names sn ON sn.id = ins.session_id
+      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      AND sa.attended = true
+      GROUP BY sn.session_name
+      ORDER BY sn.session_name ASC
+    `,
 
-    // Fetch dropout reasons
-    db.$queryRaw<{ reason: string | null; count: bigint }[]>`
+      db.$queryRaw<{ reason: string | null; count: bigint }[]>`
       SELECT drop_out_reason as reason, COUNT(*) as count
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
@@ -73,50 +81,70 @@ export async function getStudentsDataBreakdown() {
       ORDER BY count DESC
     `,
 
-    // Fetch student information completion
-    db.$queryRaw<{ name: string; value: number }[]>`
+      db.$queryRaw<{ name: string; value: number }[]>`
       WITH total_students AS (
         SELECT COUNT(*) as total
         FROM students s
         JOIN schools sc ON s.school_id = sc.id
         WHERE sc.hub_id = ${clinicalLead.assignedHubId}
       ),
-      completed_students AS (
-        SELECT COUNT(*) as completed
+      incomplete_students_data AS (
+        SELECT COUNT(*) as incomplete
         FROM students s
         JOIN schools sc ON s.school_id = sc.id
         WHERE sc.hub_id = ${clinicalLead.assignedHubId}
-        AND s.student_name IS NOT NULL
-        AND s.gender IS NOT NULL
-        AND s.year_of_birth IS NOT NULL
-        AND s.form IS NOT NULL
+        AND (
+          s.student_name IS NULL
+          OR s.gender IS NULL
+          OR s.year_of_birth IS NULL
+          OR s.form IS NULL
+        )
       )
       SELECT 
         'actual' as name,
-        ROUND((completed::float / total::float) * 100) as value
-      FROM total_students, completed_students
+        CASE 
+          WHEN total = 0 THEN 0
+          ELSE ROUND((incomplete::float / NULLIF(total, 0)::float) * 100)
+        END as value
+      FROM total_students, incomplete_students_data
       UNION ALL
       SELECT 
         'target' as name,
-        100 as value
-    `,
+        0 as value
+      `,
 
-    //   // Fetch student group ratings
-  ]);
+      db.$queryRaw<
+        {
+          session_name: string | null;
+          avg_student_behavior_rating: number | null;
+        }[]
+      >`
+      SELECT sn.session_name, AVG(isr.student_behavior_rating) as avg_student_behavior_rating
+      FROM intervention_session_ratings isr
+      JOIN intervention_sessions ins ON ins.id = isr.session_id
+      JOIN session_names sn ON sn.id = ins.session_id
+      WHERE sn.hub_id = ${clinicalLead.assignedHubId}
+      GROUP BY sn.session_name
+      ORDER BY sn.session_name ASC
+    `,
+    ]);
 
   return {
-    // attendanceData: attendanceData.map((item) => ({
-    //   name: item.sessionType,
-    //   value: Number(item.count),
-    // })),
-    attendanceData: [],
+    attendanceData: attendanceData.map((item) => ({
+      name: item.sessionName,
+      value: Number(item.count),
+    })),
     dropoutData: dropoutData.map((item) => ({
       name: item.reason || "Unknown",
       value: Number(item.count),
     })),
     completionData: completionData,
-    // ratingsData: ratingsData,
-    ratingsData: [],
+    ratingsData: ratingsData.map((item) => ({
+      session: item.session_name || "Unknown",
+      value: item.avg_student_behavior_rating
+        ? Number(item.avg_student_behavior_rating)
+        : 0,
+    })),
   };
 }
 

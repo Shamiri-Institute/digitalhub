@@ -29,10 +29,8 @@ export default function StudentsDataBreakdown({
   dropoutData: { name: string; value: number }[];
   completionData: { name: string; value: number }[];
   ratingsData: {
-    session_type: string;
-    student_behaviour: number;
-    admin_support: number;
-    workload: number;
+    session: string;
+    value: number;
   }[];
 }) {
   const randomColors = dropoutData.map(() => generateRandomColor());
@@ -102,7 +100,10 @@ export default function StudentsDataBreakdown({
                   {completionData.find((d) => d.name === "actual")?.value}%
                 </Label>
                 {completionData.map((entry, index) => (
-                  <Cell key={entry.name} fill={randomColors[index]} />
+                  <Cell
+                    key={entry.name}
+                    fill={entry.name === "actual" ? "#0085FF" : "#EFF6FF"}
+                  />
                 ))}
               </Pie>
               <Tooltip />
@@ -116,13 +117,11 @@ export default function StudentsDataBreakdown({
           <ResponsiveContainer width="100%" height="100%">
             <LineChart width={307} height={307} data={ratingsData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="session_type" />
+              <XAxis dataKey="session" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line dataKey="student_behaviour" stroke="#0085FF" />
-              <Line dataKey="admin_support" stroke="#00BA34" />
-              <Line dataKey="workload" stroke="#F98600" />
+              <Line type="monotone" dataKey="value" stroke="#0085FF" />
             </LineChart>
           </ResponsiveContainer>
         ) : null}
