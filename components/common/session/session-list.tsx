@@ -1,5 +1,5 @@
 import { ImplementerRole, SessionStatus } from "@prisma/client";
-import { addHours, format } from "date-fns";
+import { addHours, addMinutes, format } from "date-fns";
 import {
   Dispatch,
   SetStateAction,
@@ -164,7 +164,8 @@ export function SessionDetail({
   useEffect(() => {
     const startTimeLabel = format(session.sessionDate, "h:mma");
     const durationLabel = `${format(session.sessionDate, "h:mm")} - ${format(
-      session.sessionEndTime ?? addHours(session.sessionDate, 1.5),
+      session.sessionEndTime ??
+        addHours(addMinutes(session.sessionDate, 30), 1),
       "h:mma",
     )}`;
 
