@@ -87,25 +87,46 @@ export async function submitFellowDetails(
         },
       });
 
-      await db.fellow.create({
-        data: {
-          id: objectId("fellow"),
-          visibleId: generateFellowVisibleID(fellowsCreatedThisYearCount),
-          hubId: supervisor?.hubId ?? hubCoordinator?.assignedHubId,
-          supervisorId: supervisor?.id,
-          implementerId:
-            supervisor?.implementerId ?? hubCoordinator?.implementerId,
-          fellowName,
-          fellowEmail,
-          cellNumber,
-          mpesaName,
-          mpesaNumber,
-          idNumber,
-          county,
-          subCounty,
-          dateOfBirth,
-          gender,
-        },
+      await db.$transaction(async (tx) => {
+        const fellow = await tx.fellow.create({
+          data: {
+            id: objectId("fellow"),
+            visibleId: generateFellowVisibleID(fellowsCreatedThisYearCount),
+            hubId: supervisor?.hubId ?? hubCoordinator?.assignedHubId,
+            supervisorId: supervisor?.id,
+            implementerId:
+              supervisor?.implementerId ?? hubCoordinator?.implementerId,
+            fellowName,
+            fellowEmail,
+            cellNumber,
+            mpesaName,
+            mpesaNumber,
+            idNumber,
+            county,
+            subCounty,
+            dateOfBirth,
+            gender,
+          },
+        });
+
+        const newUser = await tx.user.create({
+          data: {
+            id: objectId("user"),
+            email: fellowEmail,
+            name: fellowName,
+          },
+        });
+
+        await tx.implementerMember.create({
+          data: {
+            implementerId: fellow.implementerId!,
+            userId: newUser.id,
+            role: "FELLOW",
+            identifier: fellow.id,
+          },
+        });
+
+        return fellow;
       });
       return {
         success: true,
