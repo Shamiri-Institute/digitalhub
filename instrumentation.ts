@@ -1,8 +1,9 @@
 // https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
 
 import { constants } from "#/lib/constants";
+import * as Sentry from "@sentry/nextjs";
 
-export function register() {
+export async function register() {
   if (constants.NEXT_PUBLIC_ENV === "development") {
     const url = new URL(process.env.DATABASE_URL!);
     const databaseHost = url.hostname;
@@ -29,4 +30,13 @@ export function register() {
     console.log(`${leftPad}${color}Database host: ${databaseHost}\x1b[0m`);
     console.log(`${leftPad}${color}Database name: ${databaseName}\x1b[0m`);
   }
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    await import("./sentry.server.config");
+  }
+
+  if (process.env.NEXT_RUNTIME === "edge") {
+    await import("./sentry.edge.config");
+  }
 }
+
+export const onRequestError = Sentry.captureRequestError;
