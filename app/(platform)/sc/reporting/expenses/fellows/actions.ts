@@ -92,11 +92,10 @@ function calculateAmounts(attendances: FellowAttendance[]) {
   let totalAmount = 0;
   let totalPaidAmount = 0;
 
-  attendances?.forEach((a) => {
-    // Sum all payout amounts for this attendance
-    a.PayoutStatements?.forEach((payout) => {
+  attendances?.forEach((attendance) => {
+    attendance.PayoutStatements?.forEach((payout) => {
       totalAmount += payout.amount;
-      if (a?.paymentInitiated) {
+      if (attendance?.paymentInitiated) {
         totalPaidAmount += payout.amount;
       }
     });
@@ -117,13 +116,13 @@ function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
   const { preCount, mainCount, supervisionCount, trainingCount } =
     fellowAttendances.reduce(
       (counts, attendance) => {
-        const sessionLabel = attendance.session?.session?.sessionLabel;
+        const sessionName = attendance.session?.session?.sessionName;
         const sessionType = attendance.session?.session?.sessionType;
 
         // For pre and main session counts
-        if (sessionLabel === "s0") {
+        if (sessionName === "s0") {
           counts.preCount += 1;
-        } else if (["s1", "s2", "s3", "s4"].includes(sessionLabel ?? "")) {
+        } else if (["s1", "s2", "s3", "s4"].includes(sessionName ?? "")) {
           counts.mainCount += 1;
         }
 
