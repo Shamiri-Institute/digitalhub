@@ -52,7 +52,7 @@ export default function RequestRepaymentFellows({
 
   const onSubmit = async (data: z.infer<typeof RequestRepaymentSchema>) => {
     const response = await submitRequestRepayment({
-      id: expense.id,
+      id: Number(expense.id),
       name: data.comments,
       mpesaNumber: data.mpesaNumber,
     });

@@ -183,7 +183,7 @@ function renderStatus(status: null | Date, amount: number) {
   }
   if (amount > 0 && status == null) {
     return (
-      <Badge variant="warning" className="text-xs">
+      <Badge variant="secondary" className="text-xs">
         Pending Payment
       </Badge>
     );
