@@ -43,7 +43,11 @@ export async function loadSupervisorFellowAttendance() {
               schoolName: true,
             },
           },
-          PayoutStatements: true,
+          PayoutStatements: {
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
         },
       },
     },
