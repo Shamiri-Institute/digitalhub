@@ -45,7 +45,7 @@ export async function loadHubFellowAttendance() {
           },
           PayoutStatements: {
             orderBy: {
-              createdAt: "desc",
+              createdAt: "asc",
             },
           },
         },

@@ -45,7 +45,7 @@ export async function loadSupervisorFellowAttendance() {
           },
           PayoutStatements: {
             orderBy: {
-              createdAt: "desc",
+              createdAt: "asc",
             },
           },
         },
