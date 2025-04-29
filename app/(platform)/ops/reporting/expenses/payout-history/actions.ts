@@ -24,16 +24,16 @@ export async function loadOpsHubsPayoutHistory() {
   >`
     WITH grouped_payouts AS (
       SELECT 
-        DATE_TRUNC('day', executed_at) as payout_date,
+        executed_at as payout_date,
         SUM(amount) as total_amount,
-        LEAD(DATE_TRUNC('day', executed_at)) OVER (ORDER BY DATE_TRUNC('day', executed_at)) as next_payout_date
+        LEAD(executed_at) OVER (ORDER BY executed_at) as next_payout_date
       FROM payout_statements ps
       WHERE fellow_id IN (
         SELECT id FROM fellows WHERE implementer_id = ${opsUser.implementerId}
       )
       AND executed_at IS NOT NULL
-      GROUP BY DATE_TRUNC('day', executed_at)
-      ORDER BY DATE_TRUNC('day', executed_at) DESC
+      GROUP BY executed_at
+      ORDER BY executed_at DESC
     )
     SELECT 
       payout_date as "dateAdded",
@@ -43,7 +43,11 @@ export async function loadOpsHubsPayoutHistory() {
         COALESCE(TO_CHAR(next_payout_date, 'DD/MM/YYYY'), 'Current')
       ) as "duration",
       total_amount as "totalPayoutAmount",
-      '/api/download/payout-csv' as "downloadLink"
+      CONCAT(
+        ${process.env.NEXT_PUBLIC_APP_URL},
+        '/api/payouts/download?executedAt=',
+        TO_CHAR(payout_date, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')
+      ) as "downloadLink"
     FROM grouped_payouts;
   `;
 
@@ -51,6 +55,7 @@ export async function loadOpsHubsPayoutHistory() {
 }
 
 export async function triggerPayoutAction() {
+  console.log("triggerPayoutAction");
   const opsUser = await currentOpsUser();
 
   if (!opsUser) {

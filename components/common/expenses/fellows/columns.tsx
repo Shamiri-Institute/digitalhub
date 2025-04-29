@@ -158,7 +158,7 @@ export const subColumns: ColumnDef<
     id: "status",
     header: "Status",
     accessorKey: "status",
-    cell: ({ row }) => renderStatus(row.original.status),
+    cell: ({ row }) => renderPayoutStatus(row.original.status),
   },
 
   {
@@ -168,7 +168,7 @@ export const subColumns: ColumnDef<
   },
 ];
 
-function renderStatus(status: string) {
+export function renderPayoutStatus(status: string) {
   if (status === "inititiated") {
     return <Badge variant="shamiri-green">Payment Initiated</Badge>;
   }

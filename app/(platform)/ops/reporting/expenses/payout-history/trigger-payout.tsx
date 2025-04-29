@@ -25,7 +25,12 @@ export default function TriggerPayout() {
       if (response.success) {
         setOpen(false);
         toast({
-          title: "Payout triggered successfully",
+          title: response.message,
+        });
+      } else {
+        toast({
+          title: response.message,
+          variant: "destructive",
         });
       }
     } catch (error) {
