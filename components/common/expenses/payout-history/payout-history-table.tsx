@@ -22,7 +22,7 @@ export default function FellowPayoutHistoryDataTable({
         data={payoutHistory}
         columns={columns}
         className="data-table data-table-action bg-white lg:mt-4"
-        emptyStateMessage="No payout history found"
+        emptyStateMessage="No payouts made yet"
       />
     </div>
   );
