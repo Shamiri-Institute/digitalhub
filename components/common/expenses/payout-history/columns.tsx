@@ -1,18 +1,13 @@
 "use client";
 
-import { HubPayoutHistoryType } from "#/app/(platform)/hc/reporting/expenses/payout-history/actions";
-import { HubFellowsAttendancesType } from "#/app/(platform)/ops/reporting/expenses/fellows/actions";
-import { renderPayoutStatus } from "#/components/common/expenses/fellows/columns";
-import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
-import { Checkbox } from "#/components/ui/checkbox";
+import { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Image from "next/image";
-import Link from "next/link";
 
-export const columns: ColumnDef<HubPayoutHistoryType>[] = [
+export const columns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
   {
     id: "button",
     cell: ({ row }) => {
@@ -62,100 +57,80 @@ export const columns: ColumnDef<HubPayoutHistoryType>[] = [
     header: "Total Payout Amount (KES)",
   },
   {
-    cell: ({ row }) => (
-      <Link
-        href={row.original.downloadLink}
-        download
-        className="text-shamiri-new-blue"
-        target="_blank"
-      >
-        Download .csv
-      </Link>
-    ),
+    cell: ({ row }) => {
+      const downloadCSV = () => {
+        const fellowDetails = row.original.fellowDetails;
+        const headers = [
+          "Fellow Name",
+          "Hub",
+          "Supervisor Name",
+          "MPESA Number",
+          "Amount",
+        ];
+        const csvContent = [
+          headers.join(","),
+          ...fellowDetails.map((fellow) =>
+            [
+              `"${fellow.fellowName}"`,
+              `"${fellow.hub}"`,
+              `"${fellow.supervisorName}"`,
+              `"${fellow.mpesaNumber}"`,
+              fellow.totalAmount,
+            ].join(","),
+          ),
+        ].join("\n");
+
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute(
+          "download",
+          `payout_${row.original.dateAdded.toISOString().split("T")[0]}.csv`,
+        );
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      return (
+        <button
+          onClick={downloadCSV}
+          className="text-shamiri-new-blue hover:underline"
+        >
+          Download .csv
+        </button>
+      );
+    },
     header: "Action",
     id: "action",
   },
 ];
 
 export const subColumns: ColumnDef<
-  HubFellowsAttendancesType["attendances"][number]
+  OpsHubsPayoutHistoryType["fellowDetails"][number]
 >[] = [
   {
-    id: "checkbox",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
-        aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
-      />
-    ),
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(val) => row.toggleSelected(!!val)}
-            aria-label="Select row"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
-          />
-        </div>
-      );
-    },
-    enableSorting: false,
-    enableHiding: false,
+    accessorKey: "fellowName",
+    header: "Fellow Name",
   },
   {
-    accessorKey: "session",
-    header: "Session",
+    accessorKey: "hub",
+    header: "Hub",
   },
   {
-    accessorKey: "mpesaNo",
-    header: "MPESA Number",
-    id: "MPESA Number",
-    cell: ({ row }) => {
-      return RenderParsedPhoneNumber(row.original.mpesaNo ?? undefined);
-    },
+    accessorKey: "supervisorName",
+    header: "Supervisor Name",
   },
   {
-    accessorKey: "schoolVenue",
-    header: "School/Venue",
+    accessorKey: "mpesaNumber",
+    header: "Mpesa Number",
   },
   {
-    accessorKey: "dateOfAttendance",
-    header: "Date of attendance",
-    cell: ({ row }) => {
-      return row.original.dateOfAttendance
-        ? format(row.original.dateOfAttendance, "dd-MM-yyyy")
-        : null;
-    },
-  },
-  {
-    accessorKey: "dateMarked",
-    header: "Date marked",
-    cell: ({ row }) => {
-      return format(row.original.dateMarked, "dd-MM-yyyy");
-    },
-  },
-  {
-    accessorKey: "group",
-    header: "Group",
-  },
-  {
-    accessorKey: "amount",
-    header: "Amount (KES)",
-  },
-  {
-    id: "status",
-    header: "Status",
-    accessorKey: "status",
-    cell: ({ row }) => renderPayoutStatus(row.original.status),
+    accessorKey: "totalAmount",
+    header: "Total Amount (KES)",
   },
 ];
