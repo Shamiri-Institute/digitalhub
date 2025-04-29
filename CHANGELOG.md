@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.2...v0.1.3) (2025-04-29)
+
+### Features
+
+- add sentry feedback tool to the SDH ([#427](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/427)) ([3f897de](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/3f897de37a9740b8c4a95eca24e9fe845a39be85))
+- clinical lead students tab ([#419](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/419)) ([38f3030](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/38f3030bd143c8139d294e81b6dbf2fc1ce08758))
+- enhance fellow submission process with user creation ([#425](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/425)) ([bf4052a](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/bf4052a2bd06802e645b7a1f5fe7173125479d20))
+- enhance supervisor creation process with user creation functionality ([#422](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/422)) ([7314f0e](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/7314f0e9badc65ff021055a06c46a7503688a431))
+
+### Bug Fixes
+
+- remove sentry initialization from instrumentation-client.ts ([#429](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/429)) ([d4ebdb0](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/d4ebdb0b3e2936e64c10ae400d05e97835d7dbfa))
+- session_date column type to include timezone ([#423](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/423)) ([0a1dfc8](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/0a1dfc87f1ce75608f68376422633a153900efaa))
+
 ## 0.1.2 (2025-04-23)
 
 ### ⚠ BREAKING CHANGES
