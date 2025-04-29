@@ -49,3 +49,94 @@ export async function loadOpsHubsPayoutHistory() {
 
   return opsHubsPayoutHistory;
 }
+
+export async function triggerPayoutAction() {
+  const opsUser = await currentOpsUser();
+
+  if (!opsUser) {
+    throw new Error("Unauthorised user");
+  }
+
+  const currentTime = new Date();
+
+  try {
+    return await db.$transaction(async (tx) => {
+      const eligibleAttendances = await tx.fellowAttendance.findMany({
+        where: {
+          session: {
+            occurred: true,
+          },
+          attended: true,
+          processedAt: null,
+          fellow: {
+            OR: [{ droppedOut: false }, { droppedOut: null }],
+            implementerId: opsUser.implementerId,
+          },
+        },
+        include: {
+          fellow: true,
+          session: {
+            include: {
+              session: true,
+            },
+          },
+          PayoutStatements: {
+            where: {
+              executedAt: null,
+            },
+          },
+        },
+      });
+
+      if (eligibleAttendances.length === 0) {
+        return {
+          success: true,
+          message: "No eligible attendances found to process",
+        };
+      }
+
+      let processedCount = 0;
+      let payoutStatementsCount = 0;
+
+      for (const attendance of eligibleAttendances) {
+        // Skip if there are no payout statements to process
+        if (attendance.PayoutStatements.length === 0) continue;
+
+        await tx.fellowAttendance.update({
+          where: { id: attendance.id },
+          data: { processedAt: currentTime },
+        });
+
+        const updatedPayouts = await tx.payoutStatements.updateMany({
+          where: {
+            fellowAttendanceId: attendance.id,
+            executedAt: null,
+          },
+          data: {
+            executedAt: currentTime,
+          },
+        });
+
+        processedCount++;
+        payoutStatementsCount += updatedPayouts.count;
+      }
+
+      if (processedCount === 0) {
+        return {
+          success: true,
+          message: "No payout statements found to process",
+        };
+      }
+
+      return {
+        success: true,
+        message: `Successfully processed ${processedCount} attendances and ${payoutStatementsCount} payout statements`,
+      };
+    });
+  } catch (error) {
+    console.error("Error in triggerPayoutAction:", error);
+    throw new Error(
+      "Failed to process payouts. Please try again or contact support if the issue persists.",
+    );
+  }
+}
