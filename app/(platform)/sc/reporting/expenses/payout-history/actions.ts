@@ -15,7 +15,6 @@ export type SupervisorPayoutHistoryType = {
   dateAdded: Date;
   duration: string;
   totalPayoutAmount: number;
-  downloadLink: string;
   fellowDetails: FellowPayoutDetail[];
 };
 

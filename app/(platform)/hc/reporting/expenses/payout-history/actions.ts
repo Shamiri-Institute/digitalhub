@@ -15,7 +15,6 @@ export type HubPayoutHistoryType = {
   dateAdded: Date;
   duration: string;
   totalPayoutAmount: number;
-  downloadLink: string;
   fellowDetails: FellowPayoutDetail[];
 };
 
@@ -31,7 +30,6 @@ export async function loadHubPayoutHistory(): Promise<HubPayoutHistoryType[]> {
       dateAdded: Date;
       duration: string;
       totalPayoutAmount: number;
-      downloadLink: string;
     }>
   >`
     WITH payout_groups AS (

@@ -16,7 +16,6 @@ export type OpsHubsPayoutHistoryType = {
   dateAdded: Date;
   duration: string;
   totalPayoutAmount: number;
-  downloadLink: string;
   fellowDetails: FellowPayoutDetail[];
 };
 
