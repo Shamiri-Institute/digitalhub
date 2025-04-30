@@ -175,7 +175,11 @@ export const subColumns: ColumnDef<
 
 export function renderPayoutStatus(status: null | Date, amount: number) {
   if (amount < 0) {
-    return <Badge variant="destructive">Payment Deducted</Badge>;
+    return (
+      <Badge variant="destructive" className="text-xs">
+        Payment Deducted
+      </Badge>
+    );
   }
   if (amount > 0 && status == null) {
     return (
