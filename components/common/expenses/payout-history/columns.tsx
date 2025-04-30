@@ -1,6 +1,7 @@
 "use client";
 
 import { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
+import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
@@ -74,7 +75,7 @@ export const columns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
               `"${fellow.fellowName}"`,
               `"${fellow.hub}"`,
               `"${fellow.supervisorName}"`,
-              `"${fellow.mpesaNumber}"`,
+              `"${RenderParsedPhoneNumber(fellow.mpesaNumber)}"`,
               fellow.totalAmount,
             ].join(","),
           ),

@@ -55,7 +55,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<
       CONCAT(
         TO_CHAR(payout_date, 'DD/MM/YYYY'),
         ' - ',
-        COALESCE(TO_CHAR(next_payout_date, 'DD/MM/YYYY'), 'Current')
+        COALESCE(TO_CHAR(next_payout_date, 'DD/MM/YYYY'), 'N/A')
       ) as "duration",
       total_amount as "totalPayoutAmount"
     FROM payout_groups;
@@ -129,7 +129,6 @@ export async function triggerPayoutAction() {
       });
 
       if (eligibleAttendances.length === 0) {
-        revalidatePath("/ops/reporting/expenses/payout-history");
         return {
           success: true,
           message: "No eligible attendances found to process",

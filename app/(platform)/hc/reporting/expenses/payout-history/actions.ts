@@ -52,7 +52,7 @@ export async function loadHubPayoutHistory(): Promise<HubPayoutHistoryType[]> {
       CONCAT(
         TO_CHAR(payout_date, 'DD/MM/YYYY'),
         ' - ',
-        COALESCE(TO_CHAR(next_payout_date, 'DD/MM/YYYY'), 'Current')
+        COALESCE(TO_CHAR(next_payout_date, 'DD/MM/YYYY'), 'N/A')
       ) as "duration",
       total_amount as "totalPayoutAmount"
     FROM payout_groups;
