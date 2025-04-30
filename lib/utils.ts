@@ -169,7 +169,7 @@ export function handleMinutesChange(
 ) {
   const num = parseInt(e.target.value, 10);
   if (!isNaN(num)) {
-    const clamped = Math.max(0, Math.min(num, 60));
+    const clamped = Math.max(0, Math.min(num, 59));
     const padded = clamped.toString().padStart(2, "0");
     updateFn(padded);
   } else {
