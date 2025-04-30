@@ -23,6 +23,7 @@ export async function recordStudentComplaint(
     };
   }
 
+  let success = false;
   try {
     await db.studentReportingNotes.create({
       data: {
@@ -31,13 +32,17 @@ export async function recordStudentComplaint(
         studentId: complaint.data.studentId,
       },
     });
-
-    revalidatePath(
-      `/schools/${complaint.data.schoolId}/students?fellowId=${complaint.data.fellowId}`,
-    );
-    return { success: true };
+    success = true;
   } catch (e) {
     console.error(e);
     return { success: false };
   }
+
+  if (success) {
+    revalidatePath(
+      `/schools/${complaint.data.schoolId}/students?fellowId=${complaint.data.fellowId}`,
+    );
+  }
+  
+  return { success: true };
 }
