@@ -879,8 +879,6 @@ model InterventionSession {
   sessionComments         SessionComment[]
   clinicalCases           ClinicalScreeningInfo[]
 
-  @@unique([schoolId, sessionType], name: "interventionBySchoolIdAndSessionType")
-  @@unique([schoolId, sessionId], name: "interventionBySchoolIdAndSessionId")
   @@map("intervention_sessions")
 }
 

@@ -13,8 +13,6 @@ import {
 } from "#/components/common/session/schema";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
-import { addHours } from "date-fns";
 import { z } from "zod";
 
 async function checkAuth() {
@@ -63,7 +61,28 @@ export async function createNewSession(
         console.error(`This session already exists for hub ${hub.hubName}`);
         return {
           success: false,
-          message: `Something went wrong while scheduling a new session. This session already exists for this hub`,
+          data: existingSession,
+          message: `This session already exists for this hub`,
+        };
+      }
+    } else {
+      const existingSession = await db.interventionSession.findFirst({
+        where: {
+          schoolId: parsedData.schoolId,
+          sessionId: parsedData.sessionId,
+        },
+        include: {
+          school: true,
+        },
+      });
+      if (existingSession) {
+        console.error(
+          `This session already exists for ${existingSession?.school?.schoolName}`,
+        );
+        return {
+          success: false,
+          data: existingSession,
+          message: `This session already exists for ${existingSession?.school?.schoolName}`,
         };
       }
     }
@@ -74,7 +93,7 @@ export async function createNewSession(
         sessionDate: parsedData.sessionDate,
         yearOfImplementation:
           parsedData.sessionDate.getFullYear() || new Date().getFullYear(),
-        schoolId: parsedData.schoolId,
+        schoolId: parsedData.schoolId !== "" ? parsedData.schoolId : undefined,
         occurred: false,
         projectId: hubSessionType.hub.projectId,
         hubId: hub.id,
@@ -87,22 +106,6 @@ export async function createNewSession(
       message: "Successfully scheduled new session.",
     };
   } catch (error: unknown) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      // https://www.prisma.io/docs/reference/api-reference/error-reference#p2025
-      if (error.code === "P2002") {
-        const parsedData = ScheduleNewSessionSchema.parse(data);
-        const school = await db.school.findFirst({
-          where: {
-            id: parsedData.schoolId,
-          },
-        });
-        console.error(`This session already exists for ${school!.schoolName}`);
-        return {
-          success: false,
-          message: `Something went wrong while scheduling a new session. This session already exists for ${school!.schoolName}`,
-        };
-      }
-    }
     console.error(error);
     return {
       success: false,
@@ -159,7 +162,6 @@ export async function rescheduleSession(
   try {
     const user = await checkAuth();
     const parsedData = RescheduleSessionSchema.parse(data);
-    const sessionEndTime = addHours(parsedData.sessionDate, 1);
 
     const session = await db.interventionSession.findFirstOrThrow({
       where: { id },
@@ -169,7 +171,7 @@ export async function rescheduleSession(
     });
 
     if (
-      session.school?.assignedSupervisorId !== user.supervisor?.id ||
+      session.school?.assignedSupervisorId !== user.supervisor?.id &&
       !user.hubCoordinator
     ) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
@@ -178,7 +180,6 @@ export async function rescheduleSession(
     await db.interventionSession.update({
       data: {
         sessionDate: parsedData.sessionDate,
-        sessionEndTime: new Date(sessionEndTime),
         status: "Rescheduled",
       },
       where: {

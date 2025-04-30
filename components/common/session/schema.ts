@@ -32,7 +32,15 @@ export const ScheduleNewSessionSchema = z
     sessionType: z.enum(SESSION_NAME_TYPES),
     schoolId: z.string().optional(),
     venue: z.string().optional(),
-    sessionDate: z.coerce.date({ required_error: "Please select a date" }),
+    sessionDate: z.date({
+      required_error: "Please select a date",
+      invalid_type_error: "Please select a date",
+    }).transform((val) => {
+      if (!val) {
+        throw new Error("Please select a date");
+      }
+      return val;
+    }),
     sessionStartTime: stringValidation("Please select a start time"),
   })
   .superRefine((val, ctx) => {
@@ -40,7 +48,7 @@ export const ScheduleNewSessionSchema = z
       (val.sessionType === "INTERVENTION" ||
         val.sessionType === "CLINICAL" ||
         val.sessionType === "DATA_COLLECTION") &&
-      val.schoolId === undefined
+      (val.schoolId === undefined || val.schoolId === "")
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -53,10 +61,8 @@ export const ScheduleNewSessionSchema = z
     }
 
     if (
-      (val.sessionType !== "INTERVENTION" &&
-        val.sessionType !== "CLINICAL" &&
-        val.venue === undefined) ||
-      val.venue === ""
+      (val.sessionType === "SUPERVISION" || val.sessionType === "TRAINING") &&
+      (val.venue === undefined || val.venue === "")
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

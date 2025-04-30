@@ -1,6 +1,7 @@
 import { Prisma, riskStatusOptions } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx";
 import { Metadata } from "next";
+import { ChangeEvent } from "react";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 
@@ -160,4 +161,18 @@ export function generateStudentVisibleID(
   lastNumber: number,
 ) {
   return `${groupName}_${lastNumber}`;
+}
+
+export function handleMinutesChange(
+  e: ChangeEvent<HTMLInputElement>,
+  updateFn: (value: string) => void,
+) {
+  const num = parseInt(e.target.value, 10);
+  if (!isNaN(num)) {
+    const clamped = Math.max(0, Math.min(num, 60));
+    const padded = clamped.toString().padStart(2, "0");
+    updateFn(padded);
+  } else {
+    updateFn("00");
+  }
 }
