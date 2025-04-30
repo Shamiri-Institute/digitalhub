@@ -32,15 +32,17 @@ export const ScheduleNewSessionSchema = z
     sessionType: z.enum(SESSION_NAME_TYPES),
     schoolId: z.string().optional(),
     venue: z.string().optional(),
-    sessionDate: z.date({
-      required_error: "Please select a date",
-      invalid_type_error: "Please select a date",
-    }).transform((val) => {
-      if (!val) {
-        throw new Error("Please select a date");
-      }
-      return val;
-    }),
+    sessionDate: z
+      .date({
+        required_error: "Please select a date",
+        invalid_type_error: "Please select a date",
+      })
+      .transform((val) => {
+        if (!val) {
+          throw new Error("Please select a date");
+        }
+        return val;
+      }),
     sessionStartTime: stringValidation("Please select a start time"),
   })
   .superRefine((val, ctx) => {

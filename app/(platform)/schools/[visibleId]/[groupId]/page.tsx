@@ -20,6 +20,7 @@ const sessionTypeToDisplayName: {
   s4: "Session 04",
 };
 
+// TODO: Remove depreciated functions
 export default async function GroupReport({
   searchParams,
   params,
@@ -55,17 +56,17 @@ export default async function GroupReport({
   let session: Prisma.InterventionSessionGetPayload<{}> | null = null;
 
   if (sessionType !== "all") {
-    session = await db.interventionSession.findUnique({
-      where: {
-        interventionBySchoolIdAndSessionType: {
-          schoolId: selectedSchool.id,
-          sessionType,
-        },
-      },
-      include: {
-        InterventionGroupReport: true,
-      },
-    });
+    // session = await db.interventionSession.findUnique({
+    //   where: {
+    //     interventionBySchoolIdAndSessionType: {
+    //       schoolId: selectedSchool.id,
+    //       sessionType,
+    //     },
+    //   },
+    //   include: {
+    //     InterventionGroupReport: true,
+    //   },
+    // });
   } else {
     session = await db.interventionSession.findFirst({
       where: {

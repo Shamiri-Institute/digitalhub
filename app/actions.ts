@@ -665,67 +665,68 @@ export interface OccurrenceData {
  *
  * Student and fellow attendance is more about the individual level the individual level.
  */
+// TODO: Remove depreciated functions
 export async function toggleInterventionOccurrence(data: OccurrenceData) {
-  const interventionSession = await db.interventionSession.findUnique({
-    where: {
-      interventionBySchoolIdAndSessionType: {
-        schoolId: data.schoolId,
-        sessionType: data.sessionType,
-      },
-    },
-  });
+  // const interventionSession = await db.interventionSession.findUnique({
+  //   where: {
+  //     interventionBySchoolIdAndSessionType: {
+  //       schoolId: data.schoolId,
+  //       sessionType: data.sessionType,
+  //     },
+  //   },
+  // });
+  //
+  // const { occurred } = data;
+  // let success = false;
+  // if (occurred) {
+  //   if (interventionSession === null) {
+  //     await db.interventionSession.create({
+  //       data: {
+  //         id: objectId("isess"),
+  //         sessionName: data.sessionName,
+  //         sessionDate: data.sessionDate,
+  //         sessionType: data.sessionType,
+  //         yearOfImplementation: data.yearOfImplementation,
+  //         schoolId: data.schoolId,
+  //         occurred,
+  //         projectId: CURRENT_PROJECT_ID,
+  //       },
+  //     });
+  //     success = true;
+  //   } else if (interventionSession.occurred === false) {
+  //     // await db.interventionSession.update({
+  //     //   where: {
+  //     //     interventionBySchoolIdAndSessionType: {
+  //     //       schoolId: data.schoolId,
+  //     //       sessionType: data.sessionType,
+  //     //     },
+  //     //   },
+  //     //   data: { occurred },
+  //     // });
+  //     success = true;
+  //   } else if (interventionSession.occurred === true) {
+  //     console.error(`Intervention session is already marked as occurring`);
+  //   }
+  // } else {
+  //   if (interventionSession === null) {
+  //     console.error(
+  //       `Intervention session is attempting to be unmarked but session doesn't exist`,
+  //     );
+  //   } else {
+  //     await db.interventionSession.update({
+  //       where: {
+  //         interventionBySchoolIdAndSessionType: {
+  //           schoolId: data.schoolId,
+  //           sessionType: data.sessionType,
+  //         },
+  //       },
+  //       data: { occurred },
+  //     });
+  //     success = true;
+  //   }
+  // }
 
-  const { occurred } = data;
-  let success = false;
-  if (occurred) {
-    if (interventionSession === null) {
-      await db.interventionSession.create({
-        data: {
-          id: objectId("isess"),
-          sessionName: data.sessionName,
-          sessionDate: data.sessionDate,
-          sessionType: data.sessionType,
-          yearOfImplementation: data.yearOfImplementation,
-          schoolId: data.schoolId,
-          occurred,
-          projectId: CURRENT_PROJECT_ID,
-        },
-      });
-      success = true;
-    } else if (interventionSession.occurred === false) {
-      await db.interventionSession.update({
-        where: {
-          interventionBySchoolIdAndSessionType: {
-            schoolId: data.schoolId,
-            sessionType: data.sessionType,
-          },
-        },
-        data: { occurred },
-      });
-      success = true;
-    } else if (interventionSession.occurred === true) {
-      console.error(`Intervention session is already marked as occurring`);
-    }
-  } else {
-    if (interventionSession === null) {
-      console.error(
-        `Intervention session is attempting to be unmarked but session doesn't exist`,
-      );
-    } else {
-      await db.interventionSession.update({
-        where: {
-          interventionBySchoolIdAndSessionType: {
-            schoolId: data.schoolId,
-            sessionType: data.sessionType,
-          },
-        },
-        data: { occurred },
-      });
-      success = true;
-    }
-  }
-
-  return success;
+  return true;
 }
 
 export async function submitTransportReimbursementRequest(data: {
@@ -781,23 +782,24 @@ export async function submitTransportReimbursementRequest(data: {
   }
 }
 
+// TODO: Remove depreciated functions
 export async function updateInterventionOccurrenceDate(
   data: Pick<OccurrenceData, "sessionDate" | "sessionType" | "schoolId">,
 ) {
   try {
-    const result = await db.interventionSession.update({
-      where: {
-        interventionBySchoolIdAndSessionType: {
-          schoolId: data.schoolId,
-          sessionType: data.sessionType,
-        },
-      },
-      data: {
-        sessionDate: data.sessionDate,
-      },
-    });
-
-    console.log({ result });
+    // const result = await db.interventionSession.update({
+    //   where: {
+    //     interventionBySchoolIdAndSessionType: {
+    //       schoolId: data.schoolId,
+    //       sessionType: data.sessionType,
+    //     },
+    //   },
+    //   data: {
+    //     sessionDate: data.sessionDate,
+    //   },
+    // });
+    //
+    // console.log({ result });
 
     return true;
   } catch (error: unknown) {
