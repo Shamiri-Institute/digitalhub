@@ -162,7 +162,8 @@ export const subColumns: ColumnDef<
     id: "status",
     header: "Status",
     accessorKey: "status",
-    cell: ({ row }) => renderPayoutStatus(row.original.executedAt, row.original.amount),
+    cell: ({ row }) =>
+      renderPayoutStatus(row.original.executedAt, row.original.amount),
   },
 
   {
@@ -172,7 +173,7 @@ export const subColumns: ColumnDef<
   },
 ];
 
-export function renderPayoutStatus(status: null | Date, amount: number) { 
+export function renderPayoutStatus(status: null | Date, amount: number) {
   if (amount < 0) {
     return <Badge variant="destructive">Payment Deducted</Badge>;
   }

@@ -2,6 +2,7 @@
 
 import { currentOpsUser } from "#/app/auth";
 import { db } from "#/lib/db";
+import { revalidatePath } from "next/cache";
 
 export type FellowPayoutDetail = {
   fellowName: string;
@@ -128,6 +129,7 @@ export async function triggerPayoutAction() {
       });
 
       if (eligibleAttendances.length === 0) {
+        revalidatePath("/ops/reporting/expenses/payout-history");
         return {
           success: true,
           message: "No eligible attendances found to process",
@@ -166,7 +168,7 @@ export async function triggerPayoutAction() {
           message: "No payout statements found to process",
         };
       }
-
+      revalidatePath("/ops/reporting/expenses/payout-history");
       return {
         success: true,
         message: `Successfully processed ${processedCount} attendances and ${payoutStatementsCount} payout statements`,
