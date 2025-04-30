@@ -259,4 +259,8 @@
   .transparent-number-arrows {
     -moz-appearance: textfield; /* hides in Firefox */
   }
+
+  #sentry-feedback{
+    @apply z-[99];
+  }
 }
