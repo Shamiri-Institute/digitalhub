@@ -1,5 +1,6 @@
 "use client";
 import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
+import { SupervisorFellowsAttendancesType } from "#/app/(platform)/sc/reporting/expenses/fellows/actions";
 import {
   columns,
   subColumns,
@@ -9,7 +10,9 @@ import DataTable from "#/components/data-table";
 export default function FellowsReportingDataTable({
   fellowAttendanceExpenses,
 }: {
-  fellowAttendanceExpenses: HubFellowsAttendancesType[];
+  fellowAttendanceExpenses:
+    | HubFellowsAttendancesType[]
+    | SupervisorFellowsAttendancesType[];
 }) {
   return (
     <DataTable

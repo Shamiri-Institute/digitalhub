@@ -1,6 +1,6 @@
 "use client";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown-me";
+import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,

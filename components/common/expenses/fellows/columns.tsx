@@ -1,7 +1,8 @@
 "use client";
 
 import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
-import FellowExpenseTableDropdownMe from "#/components/common/expenses/fellows/fellow-expense-table-dropdown-me";
+import { SupervisorFellowsAttendancesType } from "#/app/(platform)/sc/reporting/expenses/fellows/actions";
+import FellowExpenseTableDropdown from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
@@ -11,7 +12,9 @@ import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Image from "next/image";
 
-export const columns: ColumnDef<HubFellowsAttendancesType>[] = [
+export const columns: ColumnDef<
+  HubFellowsAttendancesType | SupervisorFellowsAttendancesType
+>[] = [
   {
     id: "button",
     cell: ({ row }) => {
@@ -80,7 +83,8 @@ export const columns: ColumnDef<HubFellowsAttendancesType>[] = [
 ];
 
 export const subColumns: ColumnDef<
-  HubFellowsAttendancesType["attendances"][number]
+  | HubFellowsAttendancesType["attendances"][number]
+  | SupervisorFellowsAttendancesType["attendances"][number]
 >[] = [
   {
     id: "checkbox",
@@ -158,22 +162,42 @@ export const subColumns: ColumnDef<
     id: "status",
     header: "Status",
     accessorKey: "status",
-    cell: ({ row }) => renderStatus(row.original.status),
+    cell: ({ row }) =>
+      renderStatus(row.original.executedAt, row.original.amount),
   },
 
   {
     id: "button",
-    cell: ({ row }) => <FellowExpenseTableDropdownMe expense={row.original} />,
+    cell: ({ row }) => <FellowExpenseTableDropdown expense={row.original} />,
     enableHiding: false,
   },
 ];
 
-function renderStatus(status: string) {
-  if (status === "inititiated") {
-    return <Badge variant="shamiri-green">Payment Initiated</Badge>;
+function renderStatus(status: null | Date, amount: number) {
+  if (amount < 0) {
+    return (
+      <Badge variant="destructive" className="text-xs">
+        Payment Deducted
+      </Badge>
+    );
   }
-  if (status === "deducted") {
-    return <Badge variant="destructive">Payment Deducted</Badge>;
+  if (amount > 0 && status == null) {
+    return (
+      <Badge variant="secondary" className="text-xs">
+        Pending Payment
+      </Badge>
+    );
   }
-  return <Badge variant="default">Pending Payment</Badge>;
+  if (amount > 0 && status != null) {
+    return (
+      <Badge variant="shamiri-green" className="text-xs">
+        Payment Initiated
+      </Badge>
+    );
+  }
+  return (
+    <Badge variant="default" className="text-xs">
+      Pending Payment
+    </Badge>
+  );
 }

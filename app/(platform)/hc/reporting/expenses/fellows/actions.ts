@@ -43,6 +43,11 @@ export async function loadHubFellowAttendance() {
               schoolName: true,
             },
           },
+          PayoutStatements: {
+            orderBy: {
+              createdAt: "asc",
+            },
+          },
         },
       },
     },
@@ -56,6 +61,24 @@ export async function loadHubFellowAttendance() {
     const { preCount, mainCount, supervisionCount, trainingCount } =
       calculateSessionCounts(fellow.fellowAttendances);
 
+    const payoutStatements = fellow.fellowAttendances.flatMap((attendance) =>
+      attendance.PayoutStatements.map((payout) => ({
+        id: payout.id,
+        fellowName: fellow.fellowName,
+        session: attendance?.session?.session?.sessionLabel,
+        mpesaNo: fellow.mpesaNumber,
+        schoolVenue: attendance.school?.schoolName,
+        dateOfAttendance: attendance?.session?.sessionDate,
+        dateMarked: attendance?.updatedAt,
+        group: attendance.group?.groupName,
+        amount: payout.amount,
+        status: attendance.attended ? "Attended" : "Absent",
+        payoutReason: payout.reason,
+        payoutNotes: payout.notes,
+        executedAt: payout.executedAt,
+      })),
+    );
+
     return {
       fellowName: fellow.fellowName,
       hub: fellow?.hub?.hubName,
@@ -65,18 +88,7 @@ export async function loadHubFellowAttendance() {
       trainingSupervision: `${trainingCount} - T | ${supervisionCount} - SV`,
       paidAmount: totalPaidAmount,
       totalAmount: totalAmount,
-      attendances: fellow.fellowAttendances.map((attendance) => ({
-        id: attendance.id,
-        fellowName: fellow.fellowName,
-        session: attendance?.session?.session?.sessionName,
-        mpesaNo: fellow.mpesaNumber,
-        schoolVenue: attendance.school?.schoolName,
-        dateOfAttendance: attendance?.session?.sessionDate,
-        dateMarked: attendance?.updatedAt,
-        group: attendance.group?.groupName,
-        amount: attendance?.session?.session?.amount || 0,
-        status: attendance.attended ? "Attended" : "Absent",
-      })),
+      attendances: payoutStatements,
     };
   });
 }
@@ -85,12 +97,13 @@ function calculateAmounts(attendances: FellowAttendance[]) {
   let totalAmount = 0;
   let totalPaidAmount = 0;
 
-  attendances?.forEach((a) => {
-    const sessionAmount = a?.session?.session?.amount || 0;
-    totalAmount += sessionAmount;
-    if (a?.paymentInitiated) {
-      totalPaidAmount += sessionAmount;
-    }
+  attendances?.forEach((attendance) => {
+    attendance.PayoutStatements?.forEach((payout) => {
+      totalAmount += payout.amount;
+      if (attendance?.paymentInitiated) {
+        totalPaidAmount += payout.amount;
+      }
+    });
   });
 
   return { totalAmount, totalPaidAmount };
@@ -140,6 +153,7 @@ type FellowAttendance = Prisma.FellowAttendanceGetPayload<{
         session: true;
       };
     };
+    PayoutStatements: true;
   };
 }>;
 

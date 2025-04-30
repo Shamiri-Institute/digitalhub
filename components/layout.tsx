@@ -547,16 +547,21 @@ function getCurrentUserNavigationLinks(
     );
   }
 
-  // Add reporting to all roles
-  links.push(
-    <div className={`tab-link ${reportingActive ? "active" : ""}`} key="report">
-      <ReportingDropdown
-        popoverOpen={popoverOpen}
-        setPopoverOpen={setPopoverOpen}
-        mainRoute={mainRoute ?? ""}
-      />
-    </div>,
-  );
+  // Add reporting to all roles except for fellows
+  if (mainRoute !== "fel") {
+    links.push(
+      <div
+        className={`tab-link ${reportingActive ? "active" : ""}`}
+        key="report"
+      >
+        <ReportingDropdown
+          popoverOpen={popoverOpen}
+          setPopoverOpen={setPopoverOpen}
+          mainRoute={mainRoute ?? ""}
+        />
+      </div>,
+    );
+  }
 
   return links;
 }
