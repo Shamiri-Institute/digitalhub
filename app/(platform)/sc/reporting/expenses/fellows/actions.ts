@@ -4,7 +4,7 @@ import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
 
-export type HubFellowsAttendancesType = Awaited<
+export type SupervisorFellowsAttendancesType = Awaited<
   ReturnType<typeof loadSupervisorFellowAttendance>
 >[number];
 
@@ -43,6 +43,11 @@ export async function loadSupervisorFellowAttendance() {
               schoolName: true,
             },
           },
+          PayoutStatements: {
+            orderBy: {
+              createdAt: "asc",
+            },
+          },
         },
       },
     },
@@ -56,6 +61,23 @@ export async function loadSupervisorFellowAttendance() {
     const { preCount, mainCount, supervisionCount, trainingCount } =
       calculateSessionCounts(fellow.fellowAttendances);
 
+    const payoutStatements = fellow.fellowAttendances.flatMap((attendance) =>
+      attendance.PayoutStatements.map((payout) => ({
+        id: payout.id,
+        fellowName: fellow.fellowName,
+        session: attendance?.session?.session?.sessionLabel,
+        mpesaNo: fellow.mpesaNumber,
+        schoolVenue: attendance.school?.schoolName,
+        dateOfAttendance: attendance?.session?.sessionDate,
+        dateMarked: attendance?.updatedAt,
+        group: attendance.group?.groupName,
+        amount: payout.amount,
+        status: attendance.attended ? "Attended" : "Absent",
+        payoutReason: payout.reason,
+        payoutNotes: payout.notes,
+        executedAt: payout.executedAt,
+      })),
+    );
     return {
       fellowName: fellow.fellowName,
       hub: fellow?.hub?.hubName,
@@ -65,18 +87,7 @@ export async function loadSupervisorFellowAttendance() {
       trainingSupervision: `${trainingCount} - T | ${supervisionCount} - SV`,
       paidAmount: totalPaidAmount,
       totalAmount: totalAmount,
-      attendances: fellow.fellowAttendances.map((attendance) => ({
-        id: attendance.id,
-        fellowName: fellow.fellowName,
-        session: attendance?.session?.session?.sessionLabel,
-        mpesaNo: fellow.mpesaNumber,
-        schoolVenue: attendance.school?.schoolName,
-        dateOfAttendance: attendance?.session?.sessionDate,
-        dateMarked: attendance?.updatedAt,
-        group: attendance.group?.groupName,
-        amount: attendance?.session?.session?.amount || 0,
-        status: attendance.attended ? "Attended" : "Absent",
-      })),
+      attendances: payoutStatements,
     };
   });
 }
@@ -85,12 +96,13 @@ function calculateAmounts(attendances: FellowAttendance[]) {
   let totalAmount = 0;
   let totalPaidAmount = 0;
 
-  attendances?.forEach((a) => {
-    const sessionAmount = a?.session?.session?.amount || 0;
-    totalAmount += sessionAmount;
-    if (a?.paymentInitiated) {
-      totalPaidAmount += sessionAmount;
-    }
+  attendances?.forEach((attendance) => {
+    attendance.PayoutStatements?.forEach((payout) => {
+      totalAmount += payout.amount;
+      if (attendance?.paymentInitiated) {
+        totalPaidAmount += payout.amount;
+      }
+    });
   });
 
   return { totalAmount, totalPaidAmount };
@@ -108,13 +120,13 @@ function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
   const { preCount, mainCount, supervisionCount, trainingCount } =
     fellowAttendances.reduce(
       (counts, attendance) => {
-        const sessionLabel = attendance.session?.session?.sessionLabel;
+        const sessionName = attendance.session?.session?.sessionName;
         const sessionType = attendance.session?.session?.sessionType;
 
         // For pre and main session counts
-        if (sessionLabel === "s0") {
+        if (sessionName === "s0") {
           counts.preCount += 1;
-        } else if (["s1", "s2", "s3", "s4"].includes(sessionLabel ?? "")) {
+        } else if (["s1", "s2", "s3", "s4"].includes(sessionName ?? "")) {
           counts.mainCount += 1;
         }
 
@@ -140,6 +152,7 @@ type FellowAttendance = Prisma.FellowAttendanceGetPayload<{
         session: true;
       };
     };
+    PayoutStatements: true;
   };
 }>;
 

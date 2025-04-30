@@ -11,7 +11,7 @@ import {
 import { useState } from "react";
 
 import { submitRequestRepayment } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
-import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown-me";
+import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
 import {
   Form,
   FormControl,
@@ -52,7 +52,7 @@ export default function RequestRepaymentFellows({
 
   const onSubmit = async (data: z.infer<typeof RequestRepaymentSchema>) => {
     const response = await submitRequestRepayment({
-      id: expense.id,
+      id: Number(expense.id),
       name: data.comments,
       mpesaNumber: data.mpesaNumber,
     });
