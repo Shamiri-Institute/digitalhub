@@ -70,9 +70,9 @@ export async function loadOpsHubsPayoutHistory(): Promise<
           ps.mpesa_number as "mpesaNumber",
           SUM(ps.amount) as "totalAmount"
         FROM payout_statements ps
-        JOIN fellows f ON f.id = ps.fellow_id
-        JOIN hubs h ON h.id = f.hub_id
-        JOIN supervisors s ON s.id = f.supervisor_id
+        INNER JOIN fellows f ON f.id = ps.fellow_id
+        INNER JOIN hubs h ON h.id = f.hub_id
+        INNER JOIN supervisors s ON s.id = f.supervisor_id
         WHERE ps.executed_at = ${payout.dateAdded}
         AND f.implementer_id = ${opsUser.implementerId}
         GROUP BY f.id, f.fellow_name, h.hub_name, s.supervisor_name, ps.mpesa_number
