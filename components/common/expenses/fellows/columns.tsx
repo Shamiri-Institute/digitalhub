@@ -163,7 +163,7 @@ export const subColumns: ColumnDef<
     header: "Status",
     accessorKey: "status",
     cell: ({ row }) =>
-      renderStatus(row.original.executedAt, row.original.amount),
+      renderPayoutStatus(row.original.executedAt, row.original.amount),
   },
 
   {
@@ -173,7 +173,7 @@ export const subColumns: ColumnDef<
   },
 ];
 
-function renderStatus(status: null | Date, amount: number) {
+export function renderPayoutStatus(status: null | Date, amount: number) {
   if (amount < 0) {
     return (
       <Badge variant="destructive" className="text-xs">

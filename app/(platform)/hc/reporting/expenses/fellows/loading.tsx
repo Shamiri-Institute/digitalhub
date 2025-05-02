@@ -28,7 +28,7 @@ export default function FellowsTableSkeleton() {
       dateAdded: new Date(),
       duration: "",
       totalPayoutAmount: 0,
-      downloadLink: "",
+      fellowDetails: [],
     }),
   );
 
