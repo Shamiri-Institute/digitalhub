@@ -25,7 +25,6 @@ import { z } from "zod";
 
 import { addSupervisorExpense } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { formatBytes } from "#/app/(platform)/profile/refund/refund-form";
 import { Icons } from "#/components/icons";
 import {
   Form,
@@ -37,6 +36,7 @@ import {
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { toast } from "#/components/ui/use-toast";
+import { formatBytes } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { Loader2 } from "lucide-react";
 import { useS3Upload } from "next-s3-upload";

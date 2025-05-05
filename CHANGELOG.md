@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [Unreleased]
+
+### Removed
+
+- Removed deprecated dashboard functionality
+- Removed deprecated fellows management system
+- Removed fellow attendance dot component and its test file
+- Moved some dashboard components to `components/old` directory
+- See DEPRECATED.md for detailed information about removed and moved files
+
 ## [0.1.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.2...v0.1.3) (2025-04-29)
 
 ### Features
