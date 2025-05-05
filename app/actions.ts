@@ -12,10 +12,10 @@ import {
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { ModifyFellowData } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
-import type { ModifyStudentData } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
 import { getCurrentUser } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
+import { ModifyFellowData } from "#/components/old/schools/[visibleId]/fellow-modify-dialog";
+import type { ModifyStudentData } from "#/components/old/schools/[visibleId]/students/student-modify-dialog";
 import {
   CURRENT_PROJECT_ID,
   SHOW_DUPLICATE_ID_CHECKBOX,
@@ -665,68 +665,40 @@ export interface OccurrenceData {
  *
  * Student and fellow attendance is more about the individual level the individual level.
  */
-// TODO: Remove depreciated functions
 export async function toggleInterventionOccurrence(data: OccurrenceData) {
-  // const interventionSession = await db.interventionSession.findUnique({
-  //   where: {
-  //     interventionBySchoolIdAndSessionType: {
-  //       schoolId: data.schoolId,
-  //       sessionType: data.sessionType,
-  //     },
-  //   },
-  // });
-  //
-  // const { occurred } = data;
-  // let success = false;
-  // if (occurred) {
-  //   if (interventionSession === null) {
-  //     await db.interventionSession.create({
-  //       data: {
-  //         id: objectId("isess"),
-  //         sessionName: data.sessionName,
-  //         sessionDate: data.sessionDate,
-  //         sessionType: data.sessionType,
-  //         yearOfImplementation: data.yearOfImplementation,
-  //         schoolId: data.schoolId,
-  //         occurred,
-  //         projectId: CURRENT_PROJECT_ID,
-  //       },
-  //     });
-  //     success = true;
-  //   } else if (interventionSession.occurred === false) {
-  //     // await db.interventionSession.update({
-  //     //   where: {
-  //     //     interventionBySchoolIdAndSessionType: {
-  //     //       schoolId: data.schoolId,
-  //     //       sessionType: data.sessionType,
-  //     //     },
-  //     //   },
-  //     //   data: { occurred },
-  //     // });
-  //     success = true;
-  //   } else if (interventionSession.occurred === true) {
-  //     console.error(`Intervention session is already marked as occurring`);
-  //   }
-  // } else {
-  //   if (interventionSession === null) {
-  //     console.error(
-  //       `Intervention session is attempting to be unmarked but session doesn't exist`,
-  //     );
-  //   } else {
-  //     await db.interventionSession.update({
-  //       where: {
-  //         interventionBySchoolIdAndSessionType: {
-  //           schoolId: data.schoolId,
-  //           sessionType: data.sessionType,
-  //         },
-  //       },
-  //       data: { occurred },
-  //     });
-  //     success = true;
-  //   }
-  // }
+  const interventionSession = await db.interventionSession.findFirst({
+    where: {
+      schoolId: data.schoolId,
+      sessionType: data.sessionType,
+    },
+  });
 
-  return true;
+  if (!interventionSession) {
+    return { success: false, error: "Intervention session not found" };
+  }
+
+  const occurred = data.occurred;
+  let success = false;
+
+  if (interventionSession.occurred === true) {
+    await db.interventionSession.update({
+      where: {
+        id: interventionSession.id,
+      },
+      data: { occurred },
+    });
+    success = true;
+  } else if (interventionSession.occurred === false) {
+    await db.interventionSession.update({
+      where: {
+        id: interventionSession.id,
+      },
+      data: { occurred },
+    });
+    success = true;
+  }
+
+  return { success };
 }
 
 export async function submitTransportReimbursementRequest(data: {
@@ -782,37 +754,37 @@ export async function submitTransportReimbursementRequest(data: {
   }
 }
 
-// TODO: Remove depreciated functions
 export async function updateInterventionOccurrenceDate(
   data: Pick<OccurrenceData, "sessionDate" | "sessionType" | "schoolId">,
-) {
+): Promise<{ success: boolean; result?: any; error?: string }> {
   try {
-    // const result = await db.interventionSession.update({
-    //   where: {
-    //     interventionBySchoolIdAndSessionType: {
-    //       schoolId: data.schoolId,
-    //       sessionType: data.sessionType,
-    //     },
-    //   },
-    //   data: {
-    //     sessionDate: data.sessionDate,
-    //   },
-    // });
-    //
-    // console.log({ result });
+    const interventionSession = await db.interventionSession.findFirst({
+      where: {
+        schoolId: data.schoolId,
+        sessionType: data.sessionType,
+      },
+    });
 
-    return true;
-  } catch (error: unknown) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      // https://www.prisma.io/docs/reference/api-reference/error-reference#p2025
-      if (error.code === "P2025") {
-        console.error(`Intervention session doesn't exist`);
-      }
-      return false;
+    if (!interventionSession) {
+      return { success: false, error: "Intervention session not found" };
     }
 
-    console.error({ error });
-    throw error;
+    const result = await db.interventionSession.update({
+      where: {
+        id: interventionSession.id,
+      },
+      data: {
+        sessionDate: data.sessionDate,
+      },
+    });
+
+    return { success: true, result };
+  } catch (error: unknown) {
+    console.error("Failed to update intervention session date:", error);
+    return {
+      success: false,
+      error: "Failed to update intervention session date",
+    };
   }
 }
 

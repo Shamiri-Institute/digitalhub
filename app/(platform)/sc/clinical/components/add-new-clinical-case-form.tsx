@@ -4,7 +4,7 @@ import { createClinicalCaseBySupervisor } from "#/app/(platform)/sc/clinical/act
 import {
   SchoolSelector,
   StudentSelector,
-} from "#/app/(platform)/screenings/[caseId]/components/create-clinical-case";
+} from "#/components/old/screenings/[caseId]/components/create-clinical-case";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
 import {

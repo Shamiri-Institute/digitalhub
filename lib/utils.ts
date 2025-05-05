@@ -1,7 +1,6 @@
 import { Prisma, riskStatusOptions } from "@prisma/client";
 import { clsx, type ClassValue } from "clsx";
 import { Metadata } from "next";
-import { ChangeEvent } from "react";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 
@@ -163,16 +162,14 @@ export function generateStudentVisibleID(
   return `${groupName}_${lastNumber}`;
 }
 
-export function handleMinutesChange(
-  e: ChangeEvent<HTMLInputElement>,
-  updateFn: (value: string) => void,
-) {
-  const num = parseInt(e.target.value, 10);
-  if (!isNaN(num)) {
-    const clamped = Math.max(0, Math.min(num, 59));
-    const padded = clamped.toString().padStart(2, "0");
-    updateFn(padded);
-  } else {
-    updateFn("00");
-  }
+export function formatBytes(bytes: number, decimals = 2): string {
+  if (bytes === 0) return "0 Bytes";
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
