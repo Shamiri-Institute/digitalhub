@@ -1,7 +1,6 @@
 "use client";
 
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { readFileContent } from "#/app/(platform)/screenings/[caseId]/components/treatment-plan";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -16,6 +15,7 @@ import {
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
+import { readFileContent } from "#/utils/file-utils";
 import { ColumnDef } from "@tanstack/react-table";
 import clsx from "clsx";
 import { Loader2 } from "lucide-react";
