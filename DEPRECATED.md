@@ -77,6 +77,46 @@ This document tracks files that have been removed or moved to the `components/ol
 - Reason: This is a core utility function used across multiple components
 - Impact: Updated imports in `file-uploader.tsx` and `file-uploader-with-datatable.tsx`
 
+### Profile Components Reorganization
+- Moved: `app/(platform)/new-edit-profile/components/ProfileFormWrapper.tsx` → `components/common/profile/profile-form-wrapper.tsx`
+- Moved: `app/(platform)/new-edit-profile/components/genericProfile.tsx` → `components/common/profile/generic-profile.tsx`
+- Removed: `app/(platform)/new-edit-profile/` (entire directory)
+- Reason: Profile components were reorganized to follow kebab-case naming convention and moved to a more appropriate location in the common components directory
+- Impact: Updated imports in:
+  - `app/(platform)/hc/@profileModal/(.)profile/page.tsx`
+  - `app/(platform)/sc/@profileModal/(.)profile/page.tsx`
+  - `app/(platform)/fel/@profileModal/(.)profile/page.tsx`
+- Note: The functionality remains unchanged, only the location and naming conventions were updated
+
+### Common Components Reorganization
+- Moved: `app/(platform)/clinical-feature-card.tsx` → `components/common/clinical-feature-card.tsx`
+- Moved: `app/(platform)/common.tsx` → `components/common/common.tsx`
+- Reason: These components were moved to the common components directory to better organize shared components and improve code maintainability
+- Impact: No import updates were needed as these components were not being imported elsewhere
+- Note: The functionality remains unchanged, only the location was updated to better reflect their role as common/shared components
+
+### Unused Components Removal
+- Removed: `components/common/clinical-feature-card.tsx`
+- Removed: `components/common/common.tsx`
+- Reason: These components were not being imported or used anywhere in the codebase
+- Impact: No import updates were needed as these components were not referenced elsewhere
+- Note: 
+  - `clinical-feature-card.tsx` was a component for displaying clinical case statistics using a donut chart
+  - `common.tsx` contained a Header component that was previously extracted from the homepage but is no longer in use
+  - Both components were removed to maintain a clean codebase and remove unused code
+
+### App Components Reorganization
+- Moved: `app/dev-personnel-switcher.tsx` → `components/common/dev-personnel-switcher.tsx`
+- Reason: This component was moved to the common components directory as it's a reusable development tool used across multiple components
+- Impact: Updated imports in:
+  - `lib/actions/fetch-personnel.ts`
+  - `components/navigation.tsx`
+  - `components/layout.tsx`
+- Note: The following files were kept in the app directory as they are Next.js framework-specific files:
+  - `app/global-error.tsx`
+  - `app/error.tsx`
+  - `app/layout.tsx`
+
 ## Impact
 - The dashboard functionality has been completely removed
 - The fellows management system has been completely removed

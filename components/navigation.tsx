@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
-import { PersonnelTool } from "#/app/dev-personnel-switcher";
+import { PersonnelTool } from "#/components/common/dev-personnel-switcher";
 import { Icons, type Icon } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
 import { Separator } from "#/components/ui/separator";

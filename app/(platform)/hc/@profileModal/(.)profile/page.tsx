@@ -1,7 +1,7 @@
 import { currentHubCoordinator } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
-import ProfileFormWrapper from "app/(platform)/new-edit-profile/components/ProfileFormWrapper";
-import { GenericFormData } from "app/(platform)/new-edit-profile/components/genericProfile";
+import ProfileFormWrapper from "#/components/common/profile/profile-form-wrapper";
+import { GenericFormData } from "#/components/common/profile/generic-profile";
 
 export default async function Page() {
   const coordinator = await currentHubCoordinator();
