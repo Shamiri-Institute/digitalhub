@@ -1,7 +1,7 @@
 "use client";
 
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { readFileContent } from "#/app/(platform)/screenings/[caseId]/components/treatment-plan";
+import { readFileContent } from "#/utils/file-utils";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";

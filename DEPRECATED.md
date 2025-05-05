@@ -35,6 +35,11 @@ This document tracks files that have been removed or moved to the `components/ol
 - Reason: Settings functionality was deprecated and removed
 - Note: All components were moved to `components/old` for reference
 
+### Screenings Directory
+- Removed: `app/(platform)/screenings/` (entire directory)
+- Reason: Screenings functionality was deprecated and removed
+- Note: Some components were moved to `components/old` for reference
+
 ## Moved Files
 
 ### Components Moved to `components/old`
@@ -52,17 +57,32 @@ This document tracks files that have been removed or moved to the `components/ol
 - Moved: `app/(platform)/settings/` → `components/old/settings/`
 - Reason: Settings functionality was deprecated but preserved for reference
 
+### Screenings Components Moved to `components/old`
+- Moved: `app/(platform)/screenings/[caseId]/components/treatment-plan.tsx` → `components/old/screenings/[caseId]/components/`
+- Moved: `app/(platform)/screenings/components/cases-referred-to-me.tsx` → `components/old/screenings/components/`
+- Moved: `app/(platform)/screenings/screen.d.ts` → `components/old/screenings/`
+- Reason: These components and types were still in use by other parts of the application
+
+### Utility Functions Relocated
+- Moved: `readFileContent` from `app/(platform)/screenings/[caseId]/components/treatment-plan.tsx` → `utils/file-utils.ts`
+- Reason: This is a core utility function used across multiple components
+- Impact: Updated imports in `file-uploader.tsx` and `file-uploader-with-datatable.tsx`
+
 ## Impact
 - The dashboard functionality has been completely removed
 - The fellows management system has been completely removed
 - The fellow attendance dot component has been replaced with a simpler implementation in the schools page
 - The profile functionality has been completely removed, with some components preserved for reference
 - The settings functionality has been completely removed, with all components preserved for reference
+- The screenings functionality has been completely removed, with some components preserved for reference
+- The `readFileContent` utility function has been moved to a more appropriate location
 - No external dependencies were affected by these changes
 
 ## Migration Notes
-- If you need to reference the old dashboard, fellows, profile, or settings functionality, check the git history
+- If you need to reference the old dashboard, fellows, profile, settings, or screenings functionality, check the git history
 - The moved components in `components/old` should not be used in new code
 - The schools page has been updated to use a simpler attendance display
 - Profile-related functionality should be implemented using the new profile management system
-- Settings-related functionality should be implemented using the new settings management system 
+- Settings-related functionality should be implemented using the new settings management system
+- Screenings-related functionality should be implemented using the new clinical case management system
+- File handling utilities should be imported from `utils/file-utils.ts` 
