@@ -3,8 +3,8 @@
 import { Prisma } from "@prisma/client";
 import { formatInTimeZone } from "date-fns-tz";
 
-import { AddNoteDialog } from "#/app/(platform)/profile/school-report/session/add-note-dialogue";
 import { Button } from "#/components/ui/button";
+import { AddNoteDialog } from "./add-note-dialogue";
 
 export function SessionNotes({
   revalidatePath,

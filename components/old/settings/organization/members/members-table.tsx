@@ -15,7 +15,6 @@ import {
 } from "@tanstack/react-table";
 import * as React from "react";
 
-import { Member } from "#/app/(platform)/settings/organization/members/page";
 import { Icons } from "#/components/icons";
 import { UserAvatar } from "#/components/ui/avatar";
 import { Button } from "#/components/ui/button";
@@ -31,6 +30,7 @@ import { Table, TableBody, TableCell, TableRow } from "#/components/ui/table";
 import { cn } from "#/lib/utils";
 import { RoleTypes } from "#/models/role";
 import { constants } from "#/tests/constants";
+import { Member } from "./page";
 
 import { AddMemberDialog } from "./add-member-dialog";
 

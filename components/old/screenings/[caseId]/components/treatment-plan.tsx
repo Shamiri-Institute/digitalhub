@@ -1,5 +1,5 @@
-import { CurrentCase } from "#/app/(platform)/screenings/screen";
 import { Icons } from "#/components/icons";
+import { CurrentCase } from "#/components/old/screenings/screen";
 import { Button } from "#/components/ui/button";
 import { Input } from "#/components/ui/input";
 import { useToast } from "#/components/ui/use-toast";

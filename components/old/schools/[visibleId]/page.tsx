@@ -2,12 +2,12 @@ import { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { SchoolDemographics } from "#/components/old/schools/[visibleId]/demographics";
-import FellowCardMenu from "#/components/old/schools/[visibleId]/fellow-card-menu";
 import { currentSupervisor } from "#/app/auth";
 import { Back } from "#/components/common/back";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { Icons } from "#/components/icons";
+import { SchoolDemographics } from "#/components/old/schools/[visibleId]/demographics";
+import FellowCardMenu from "#/components/old/schools/[visibleId]/fellow-card-menu";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import { cn } from "#/lib/utils";

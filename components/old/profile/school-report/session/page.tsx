@@ -48,12 +48,10 @@ export default async function ReportDetails({
 
   const schoolName = assignedSchool.schoolName;
 
-  const session = await db.interventionSession.findUnique({
+  const session = await db.interventionSession.findFirst({
     where: {
-      interventionBySchoolIdAndSessionType: {
-        schoolId: assignedSchool.id,
-        sessionType,
-      },
+      schoolId: assignedSchool.id,
+      sessionType,
     },
     include: {
       sessionRatings: true,

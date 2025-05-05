@@ -1,7 +1,7 @@
 import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
-import ProfileFormWrapper from "#/components/common/profile/profile-form-wrapper";
 import { GenericFormData } from "#/components/common/profile/generic-profile";
+import ProfileFormWrapper from "#/components/common/profile/profile-form-wrapper";
 
 export default async function Page() {
   const supervisor = await currentSupervisor();

@@ -1,11 +1,11 @@
+import { Back } from "#/components/common/back";
+import { Icons } from "#/components/icons";
 import StudentTransferTrail from "#/components/old/schools/[visibleId]/students/components/student-transfer-trail";
 import { SingleHistory } from "#/components/old/schools/[visibleId]/students/components/student-transfer-trail-card";
 import { StudentDropoutDialog } from "#/components/old/schools/[visibleId]/students/dropout-dialog";
 import { StudentAttendanceDot } from "#/components/old/schools/[visibleId]/students/student-attendance-dot";
 import { StudentModifyDialog } from "#/components/old/schools/[visibleId]/students/student-modify-dialog";
 import { StudentUndoDropoutDialog } from "#/components/old/schools/[visibleId]/students/undo-dropout-dialog";
-import { Back } from "#/components/common/back";
-import { Icons } from "#/components/icons";
 import {
   Accordion,
   AccordionContent,

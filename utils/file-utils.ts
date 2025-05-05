@@ -22,4 +22,4 @@ export function readFileContent(file: File): Promise<Blob> {
     };
     reader.readAsArrayBuffer(file);
   });
-} 
+}

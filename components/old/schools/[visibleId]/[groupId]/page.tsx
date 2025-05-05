@@ -55,12 +55,10 @@ export default async function GroupReport({
   let session: Prisma.InterventionSessionGetPayload<{}> | null = null;
 
   if (sessionType !== "all") {
-    session = await db.interventionSession.findUnique({
+    session = await db.interventionSession.findFirst({
       where: {
-        interventionBySchoolIdAndSessionType: {
-          schoolId: selectedSchool.id,
-          sessionType,
-        },
+        schoolId: selectedSchool.id,
+        sessionType,
       },
       include: {
         InterventionGroupReport: true,

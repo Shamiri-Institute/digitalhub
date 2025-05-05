@@ -3,7 +3,7 @@
 import { updateHubCoordinatorProfile } from "app/(platform)/hc/actions";
 import { updateSupervisorProfile } from "app/(platform)/sc/actions";
 import { useRouter } from "next/navigation";
-import GenericProfileForm, { GenericFormData } from "./genericProfile";
+import GenericProfileForm, { GenericFormData } from "./generic-profile";
 
 type ProfileFormWrapperProps = {
   role: "supervisor" | "hub-coordinator" | "fellow";

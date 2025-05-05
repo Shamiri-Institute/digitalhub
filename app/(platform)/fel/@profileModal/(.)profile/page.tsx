@@ -1,6 +1,6 @@
 import { currentFellow } from "#/app/auth";
-import ProfileFormWrapper from "#/components/common/profile/profile-form-wrapper";
 import { GenericFormData } from "#/components/common/profile/generic-profile";
+import ProfileFormWrapper from "#/components/common/profile/profile-form-wrapper";
 import { signOut } from "next-auth/react";
 
 export default async function Page() {

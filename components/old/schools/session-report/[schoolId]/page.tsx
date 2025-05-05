@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 
-import { SessionNavigationHeader } from "#/app/(platform)/profile/school-report/session/session-navigation-header";
-import { SessionNotes } from "#/app/(platform)/profile/school-report/session/session-notes";
-import { SessionRater } from "#/app/(platform)/profile/school-report/session/session-rater";
-import { WeeklyReportForm } from "#/app/(platform)/profile/school-report/session/weekly-report-form";
 import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
+import { SessionNavigationHeader } from "#/components/old/profile/school-report/session/session-navigation-header";
+import { SessionNotes } from "#/components/old/profile/school-report/session/session-notes";
+import { SessionRater } from "#/components/old/profile/school-report/session/session-rater";
+import { WeeklyReportForm } from "#/components/old/profile/school-report/session/weekly-report-form";
 import { db } from "#/lib/db";
 
 const sessionTypeToDisplayName: {
@@ -37,12 +37,10 @@ export default async function ReportDetails({
     return <InvalidPersonnelRole role="supervisor" />;
   }
 
-  const session = await db.interventionSession.findUnique({
+  const session = await db.interventionSession.findFirst({
     where: {
-      interventionBySchoolIdAndSessionType: {
-        schoolId,
-        sessionType,
-      },
+      schoolId,
+      sessionType,
     },
     include: {
       sessionRatings: true,

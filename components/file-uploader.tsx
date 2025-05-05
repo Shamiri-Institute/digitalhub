@@ -1,7 +1,6 @@
 "use client";
 
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { readFileContent } from "#/utils/file-utils";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -13,6 +12,7 @@ import {
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
+import { readFileContent } from "#/utils/file-utils";
 import clsx from "clsx";
 import { Loader2 } from "lucide-react";
 

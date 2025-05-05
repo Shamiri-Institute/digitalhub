@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file. See [commit
 ## [Unreleased]
 
 ### Removed
+
 - Removed deprecated dashboard functionality
 - Removed deprecated fellows management system
 - Removed fellow attendance dot component and its test file
