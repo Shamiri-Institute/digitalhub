@@ -2,6 +2,14 @@
 
 This document tracks files that have been removed or moved to the `components/old` directory.
 
+## Recent Changes
+
+### GitHub Workflow Updates
+- Removed unit tests check from GitHub workflow
+- Reason: Streamlining the CI/CD process
+- Impact: Faster build times, reduced resource usage
+- Note: Unit tests are still available to run locally
+
 ## Removed Files
 
 ### Dashboard Directory
