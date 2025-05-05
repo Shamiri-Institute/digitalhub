@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 
-import { PersonnelTool } from "#/app/dev-personnel-switcher";
+import { PersonnelTool } from "#/components/common/dev-personnel-switcher";
 import { Footer } from "#/components/footer";
 import { Header } from "#/components/header";
 import { Icons } from "#/components/icons";

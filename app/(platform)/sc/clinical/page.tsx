@@ -5,7 +5,7 @@ import {
 } from "#/app/(platform)/sc/clinical/action";
 import ClinicalCasesStats from "#/app/(platform)/sc/clinical/components/cases-stats";
 import ClinicalCasesTable from "#/app/(platform)/sc/clinical/components/clinical-cases-table";
-import { CasesReferredToMe } from "#/app/(platform)/screenings/components/cases-referred-to-me";
+import { CasesReferredToMe } from "#/components/old/screenings/components/cases-referred-to-me";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import { signOut } from "next-auth/react";
