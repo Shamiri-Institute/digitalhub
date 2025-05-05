@@ -5,6 +5,7 @@ This document tracks files that have been removed or moved to the `components/ol
 ## Recent Changes
 
 ### GitHub Workflow Updates
+
 - Removed unit tests check from GitHub workflow
 - Reason: Streamlining the CI/CD process
 - Impact: Faster build times, reduced resource usage
