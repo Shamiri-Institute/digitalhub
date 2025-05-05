@@ -2,8 +2,8 @@ import { Prisma } from "@prisma/client";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { SchoolDemographics } from "#/app/(platform)/schools/[visibleId]/demographics";
-import FellowCardMenu from "#/app/(platform)/schools/[visibleId]/fellow-card-menu";
+import { SchoolDemographics } from "#/components/old/schools/[visibleId]/demographics";
+import FellowCardMenu from "#/components/old/schools/[visibleId]/fellow-card-menu";
 import { currentSupervisor } from "#/app/auth";
 import { Back } from "#/components/common/back";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";

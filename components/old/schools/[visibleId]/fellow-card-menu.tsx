@@ -6,9 +6,9 @@ import React from "react";
 import {
   FellowDropoutDialog,
   FellowUndropoutDialog,
-} from "#/app/(platform)/schools/[visibleId]/dropout-dialog";
-import { FellowModifyDialog } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
-import { FellowSubstitutionDialog } from "#/app/(platform)/schools/[visibleId]/fellow-substitution-dialog";
+} from "#/components/old/schools/[visibleId]/dropout-dialog";
+import { FellowModifyDialog } from "#/components/old/schools/[visibleId]/fellow-modify-dialog";
+import { FellowSubstitutionDialog } from "#/components/old/schools/[visibleId]/fellow-substitution-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,

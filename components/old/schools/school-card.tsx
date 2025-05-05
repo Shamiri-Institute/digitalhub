@@ -1,4 +1,4 @@
-import SessionLink from "#/app/(platform)/schools/session-link";
+import SessionLink from "#/components/old/schools/session-link";
 import { Icons } from "#/components/icons";
 import {
   Accordion,

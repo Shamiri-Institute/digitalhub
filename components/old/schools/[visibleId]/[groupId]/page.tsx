@@ -4,10 +4,10 @@ import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
 
-import { GroupContentCoverage } from "#/app/(platform)/schools/[visibleId]/[groupId]/components/group-content-coverage";
-import { GroupDisciplineRater } from "#/app/(platform)/schools/[visibleId]/[groupId]/components/group-cooperation-rater";
-import { GroupEngagementRater } from "#/app/(platform)/schools/[visibleId]/[groupId]/components/group-engagement-rater";
-import { GroupReportHeader } from "#/app/(platform)/schools/[visibleId]/[groupId]/components/group-report-header";
+import { GroupContentCoverage } from "#/components/old/schools/[visibleId]/[groupId]/components/group-content-coverage";
+import { GroupDisciplineRater } from "#/components/old/schools/[visibleId]/[groupId]/components/group-cooperation-rater";
+import { GroupEngagementRater } from "#/components/old/schools/[visibleId]/[groupId]/components/group-engagement-rater";
+import { GroupReportHeader } from "#/components/old/schools/[visibleId]/[groupId]/components/group-report-header";
 import { Prisma } from "@prisma/client";
 
 const sessionTypeToDisplayName: {

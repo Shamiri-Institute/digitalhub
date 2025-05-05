@@ -63,6 +63,15 @@ This document tracks files that have been removed or moved to the `components/ol
 - Moved: `app/(platform)/screenings/screen.d.ts` → `components/old/screenings/`
 - Reason: These components and types were still in use by other parts of the application
 
+### Schools Components Moved to `components/old`
+- Moved: `app/(platform)/schools/page.tsx` → `components/old/schools/`
+- Moved: `app/(platform)/schools/school-card.tsx` → `components/old/schools/`
+- Moved: `app/(platform)/schools/session-link.tsx` → `components/old/schools/`
+- Moved: `app/(platform)/schools/[visibleId]/` → `components/old/schools/[visibleId]/`
+- Moved: `app/(platform)/schools/session-report/` → `components/old/schools/session-report/`
+- Reason: The schools route has been deprecated in favor of the new HC schools implementation
+- Note: The new implementation is in `app/(platform)/hc/schools/`
+
 ### Utility Functions Relocated
 - Moved: `readFileContent` from `app/(platform)/screenings/[caseId]/components/treatment-plan.tsx` → `utils/file-utils.ts`
 - Reason: This is a core utility function used across multiple components
@@ -75,6 +84,7 @@ This document tracks files that have been removed or moved to the `components/ol
 - The profile functionality has been completely removed, with some components preserved for reference
 - The settings functionality has been completely removed, with all components preserved for reference
 - The screenings functionality has been completely removed, with some components preserved for reference
+- The schools route has been deprecated in favor of the new HC schools implementation
 - The `readFileContent` utility function has been moved to a more appropriate location
 - No external dependencies were affected by these changes
 
@@ -85,4 +95,5 @@ This document tracks files that have been removed or moved to the `components/ol
 - Profile-related functionality should be implemented using the new profile management system
 - Settings-related functionality should be implemented using the new settings management system
 - Screenings-related functionality should be implemented using the new clinical case management system
+- Schools-related functionality should be implemented using the new HC schools implementation
 - File handling utilities should be imported from `utils/file-utils.ts` 

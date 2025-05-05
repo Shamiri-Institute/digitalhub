@@ -1,4 +1,4 @@
-import { StudentTransferTrailCard } from "#/app/(platform)/schools/[visibleId]/students/components/student-transfer-trail-card";
+import { StudentTransferTrailCard } from "#/components/old/schools/[visibleId]/students/components/student-transfer-trail-card";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";

@@ -12,8 +12,8 @@ import {
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { ModifyFellowData } from "#/app/(platform)/schools/[visibleId]/fellow-modify-dialog";
-import type { ModifyStudentData } from "#/app/(platform)/schools/[visibleId]/students/student-modify-dialog";
+import { ModifyFellowData } from "#/components/old/schools/[visibleId]/fellow-modify-dialog";
+import type { ModifyStudentData } from "#/components/old/schools/[visibleId]/students/student-modify-dialog";
 import { getCurrentUser } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
 import {

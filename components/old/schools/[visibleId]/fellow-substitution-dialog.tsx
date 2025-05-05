@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { substituteFellowForAttendance } from "#/app/(platform)/schools/[visibleId]/actions";
+import { substituteFellowForAttendance } from "#/components/old/schools/[visibleId]/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
