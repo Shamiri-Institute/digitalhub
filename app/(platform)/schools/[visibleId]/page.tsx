@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SchoolDemographics } from "#/app/(platform)/schools/[visibleId]/demographics";
-import { FellowAttendanceDot } from "#/app/(platform)/schools/[visibleId]/fellow-attendance-dot";
 import FellowCardMenu from "#/app/(platform)/schools/[visibleId]/fellow-card-menu";
 import { currentSupervisor } from "#/app/auth";
 import { Back } from "#/components/common/back";
@@ -303,14 +302,10 @@ async function FellowCard({
 
       <div className="mt-4 flex justify-between pb-2">
         {sessionItems.map((sessionItem, index) => (
-          <FellowAttendanceDot
-            key={index}
-            sessionItem={sessionItem}
-            fellow={fellow}
-            school={school}
-            supervisor={supervisor}
-            recordTime={new Date()}
-          />
+          <div key={index} className="flex flex-col items-center">
+            <span className="text-sm">{sessionItem.label}</span>
+            <span className="text-sm">{sessionItem.status}</span>
+          </div>
         ))}
       </div>
 
