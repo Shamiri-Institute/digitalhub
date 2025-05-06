@@ -795,6 +795,7 @@ model Hub {
   sessions                SessionName[]
   clinicalLeads           ClinicalLead[]
   opsUser                 OpsUser[]
+  hubSessions             InterventionSession[]
 
   @@map("hubs")
 }
@@ -858,7 +859,6 @@ model InterventionSession {
   // New sessionName relation
   sessionId               String?                     @map("session_id") @db.VarChar(255)
   session                 SessionName?                @relation(fields: [sessionId], references: [id])
-  // TODO: consider adding column for sessionIndex Int, while sessionType tracks, intervention, dataCollation, followUp
   schoolId                String?                     @map("school_id") @db.VarChar(255)
   school                  School?                     @relation(fields: [schoolId], references: [id])
   // If session has occurred. Should be set by assigned supervisor of the school before attendance can be marked
@@ -866,6 +866,8 @@ model InterventionSession {
   yearOfImplementation    Int                         @map("year_of_implementation") // TODO: might not be needed anymore
   projectId               String?                     @map("project_id") @db.VarChar(100)
   project                 Project?                    @relation(fields: [projectId], references: [id])
+  hubId                   String?                     @map("hub_id") @db.VarChar(255)
+  hub                     Hub?                        @relation(fields: [hubId], references: [id])
   venue                   String?                     @db.Text
   sessionRatings          InterventionSessionRating[]
   sessionNotes            InterventionSessionNote[]
@@ -877,8 +879,6 @@ model InterventionSession {
   sessionComments         SessionComment[]
   clinicalCases           ClinicalScreeningInfo[]
 
-  @@unique([schoolId, sessionType], name: "interventionBySchoolIdAndSessionType")
-  @@unique([schoolId, sessionId], name: "interventionBySchoolIdAndSessionId")
   @@map("intervention_sessions")
 }
 
