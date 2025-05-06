@@ -10,30 +10,45 @@ import {
   DialogHeader,
   DialogPortal,
 } from "#/components/ui/dialog";
-import { Form, FormField, FormLabel } from "#/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormLabel,
+  FormMessage,
+} from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { Popover, PopoverContent } from "#/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { rescheduleSession } from "#/lib/actions/session/session";
-import { cn } from "#/lib/utils";
+import { cn, handleMinutesChange } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImplementerRole } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
+import { ChevronsUpDown } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useContext } from "react";
+import { Dispatch, SetStateAction, useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import type { Session } from "./sessions-provider";
 
 export default function RescheduleSession({
-  sessionId,
+  session,
   open,
   onOpenChange,
   role,
   children,
 }: {
-  sessionId: string;
+  session: Session;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   role: ImplementerRole;
@@ -41,22 +56,27 @@ export default function RescheduleSession({
 }) {
   const { refresh } = useContext(SessionsContext);
   const pathname = usePathname();
+
+  const [hour, setHour] = useState(format(session.sessionDate, "h"));
+  const [minutes, setMinutes] = useState(format(session.sessionDate, "mm"));
+  const [time, setTime] = useState(format(session.sessionDate, "aa"));
+  const [timePicker, setTimePicker] = useState(false);
+
   const form = useForm<z.infer<typeof RescheduleSessionSchema>>({
     resolver: zodResolver(RescheduleSessionSchema),
     defaultValues: {
-      sessionStartTime: "16:00",
+      sessionDate: session.sessionDate,
+      sessionStartTime: format(session.sessionDate, "h:mm aa"),
     },
   });
 
   const onSubmit = async (data: z.infer<typeof RescheduleSessionSchema>) => {
-    const sessionDate =
-      format(new Date(data.sessionDate), "yyyy-MM-dd") +
-      "T" +
-      data.sessionStartTime +
-      ":00";
-    data.sessionDate = new Date(sessionDate);
+    const combinedDateTime = new Date(
+      `${format(new Date(data.sessionDate), "yyyy-MM-dd")}T${new Date(`1970-01-01 ${data.sessionStartTime}`).toTimeString().slice(0, 5)}:00`,
+    );
+    data.sessionDate = new Date(combinedDateTime);
 
-    const response = await rescheduleSession(sessionId, data);
+    const response = await rescheduleSession(session.id, data);
     if (!response.success) {
       onOpenChange(false);
       toast({
@@ -137,16 +157,118 @@ export default function RescheduleSession({
                     render={({ field }) => (
                       <div>
                         <FormLabel>Start time</FormLabel>
-                        <Input
-                          id="startTime"
-                          name="startTime"
-                          type="time"
-                          onChange={field.onChange}
-                          min="06:00"
-                          max="18:00"
-                          defaultValue="06:00"
-                          className="mt-1.5 w-full appearance-none"
-                        />
+                        <Popover open={timePicker} onOpenChange={setTimePicker}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "mt-1.5 w-full justify-start px-3 text-left font-normal active:scale-100",
+                                !field.value && "text-muted-foreground",
+                              )}
+                            >
+                              <Icons.clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                              {field.value ? (
+                                field.value
+                              ) : (
+                                <span>Pick a time</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent
+                            className="w-auto px-4 py-3"
+                            align="start"
+                          >
+                            <div className="flex flex-col gap-2">
+                              <span className="text-sm">Pick a start time</span>
+                              <div className="flex items-center gap-2 py-2">
+                                <div className="relative w-[4rem]">
+                                  <Input
+                                    type="number"
+                                    onChange={(e) => {
+                                      setHour(e.target.value);
+                                    }}
+                                    value={hour}
+                                    min={1}
+                                    max={12}
+                                    className="transparent-number-arrows"
+                                  />
+                                  <div className="pointer-events-none absolute right-1 top-1/2 flex -translate-y-1/2 flex-col items-center justify-center space-y-0.5 text-muted-foreground">
+                                    <ChevronsUpDown className="mr-2 h-4 w-4" />
+                                  </div>
+                                </div>
+                                <span>:</span>
+                                <div className="relative w-[4rem]">
+                                  <Input
+                                    type="number"
+                                    onChange={(e) => {
+                                      setMinutes(
+                                        handleMinutesChange(e.target.value),
+                                      );
+                                    }}
+                                    value={minutes}
+                                    min={0}
+                                    max={59}
+                                    className="transparent-number-arrows"
+                                  />
+                                  <div className="pointer-events-none absolute right-1 top-1/2 flex -translate-y-1/2 flex-col items-center justify-center space-y-0.5 text-muted-foreground">
+                                    <ChevronsUpDown className="mr-2 h-4 w-4" />
+                                  </div>
+                                </div>
+                                <Select
+                                  onValueChange={(value) => {
+                                    setTime(value);
+                                  }}
+                                  defaultValue={time}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger className="w-[4rem]">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent className="min-w-[4rem]">
+                                    {["AM", "PM"].map((time) => {
+                                      return (
+                                        <SelectItem key={time} value={time}>
+                                          <span>{time}</span>
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <Separator />
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  type="button"
+                                  size="sm"
+                                  className="text-sm font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+                                  onClick={() => {
+                                    setTimePicker(false);
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  className="flex items-center gap-2 bg-shamiri-new-blue text-sm font-semibold leading-6 text-white"
+                                  type="submit"
+                                  size="sm"
+                                  disabled={form.formState.isSubmitting}
+                                  loading={form.formState.isSubmitting}
+                                  onClick={() => {
+                                    const timeString =
+                                      hour + ":" + minutes + " " + time;
+                                    field.onChange(timeString);
+                                    setTimePicker(false);
+                                  }}
+                                >
+                                  Save
+                                </Button>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage className="pt-1" />
                       </div>
                     )}
                   />
