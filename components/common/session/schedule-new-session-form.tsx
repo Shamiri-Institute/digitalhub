@@ -95,7 +95,6 @@ export function ScheduleNewSession({
       data.sessionStartTime +
       ":00";
     data.sessionDate = new Date(sessionDate);
-    data.projectId = CURRENT_PROJECT_ID;
 
     try {
       const response = await createNewSession(data);
