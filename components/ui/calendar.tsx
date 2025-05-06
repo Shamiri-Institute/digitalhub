@@ -41,10 +41,9 @@ function Calendar({
         dropdown_icon: "pr-2",
         nav_button_previous: "",
         nav_button_next: "",
-        table: "w-full border-collapse space-y-1",
+        table: "w-full border-0 space-y-1",
         head_row: "flex",
-        head_cell:
-          "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
+        head_cell: "text-foreground rounded-md w-8 font-normal text-[0.8rem]",
         row: "flex w-full mt-2",
         cell: cn(
           "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent",
@@ -54,13 +53,14 @@ function Calendar({
         ),
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-8 w-8 p-0 font-normal aria-selected:opacity-100",
+          "text-primary h-8 w-8 p-0 font-normal aria-selected:opacity-100",
         ),
         day_range_start: "day-range-start",
         day_range_end: "day-range-end",
         day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
+          "bg-shamiri-new-blue text-primary-foreground hover:bg-shamiri-new-blue hover:text-primary-foreground focus:bg-shamiri-new-blue focus:text-primary-foreground",
+        day_today:
+          "text-shamiri-new-blue bg-accent hover:bg-shamiri-new-blue hover:text-primary-foreground",
         day_outside: "text-muted-foreground opacity-50",
         day_disabled: "text-muted-foreground opacity-50",
         day_range_middle:
