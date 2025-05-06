@@ -771,3 +771,22 @@ export async function getReferredCasesToSupervisor() {
 
   return referredCases;
 }
+
+export async function triggerCaseStatusToFollowup(data: { caseId: string }) {
+  try {
+    await db.clinicalScreeningInfo.update({
+      where: {
+        id: data.caseId,
+      },
+      data: {
+        caseStatus: "FollowUp",
+      },
+    });
+
+    revalidatePath("/sc/clinical");
+    return { success: true };
+  } catch (error) {
+    console.error(error);
+    return { success: false };
+  }
+}
