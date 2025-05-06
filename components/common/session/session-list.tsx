@@ -19,7 +19,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
@@ -101,25 +100,23 @@ export function SessionList({
                 + {moreSessions.length} more
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuPortal>
-              <DropdownMenuContent className="flex min-w-52 flex-col gap-2 p-2">
-                {moreSessions.map((session, index) => {
-                  return (
-                    <SessionDetail
-                      key={session.id}
-                      layout="compact"
-                      state={{
-                        session: moreSessions[index]!,
-                        ...dialogState,
-                      }}
-                      role={role}
-                      fellowId={fellowId}
-                      supervisorId={supervisorId}
-                    />
-                  );
-                })}
-              </DropdownMenuContent>
-            </DropdownMenuPortal>
+            <DropdownMenuContent className="flex min-w-48 flex-col gap-2 p-2">
+              {moreSessions.map((session, index) => {
+                return (
+                  <SessionDetail
+                    key={session.id}
+                    layout="compact"
+                    state={{
+                      session: moreSessions[index]!,
+                      ...dialogState,
+                    }}
+                    role={role}
+                    fellowId={fellowId}
+                    supervisorId={supervisorId}
+                  />
+                );
+              })}
+            </DropdownMenuContent>
           </DropdownMenu>
         )}
       </div>
@@ -417,38 +414,36 @@ export function SessionDropDown({
             >
               Mark session occurrence
             </DropdownMenuItem>
-            {session.sessionDate > new Date() && (
-              <DropdownMenuItem
-                onClick={() => {
-                  state.setSession && state.setSession(session);
-                  state.setRescheduleSessionDialog &&
-                    state.setRescheduleSessionDialog(true);
-                }}
-                disabled={
-                  session.occurred ||
-                  session.school?.assignedSupervisorId !== supervisorId
-                }
-              >
-                Reschedule session
-              </DropdownMenuItem>
-            )}
-            {session.sessionDate > new Date() && (
-              <DropdownMenuItem
-                className="text-shamiri-light-red"
-                onClick={() => {
-                  state.setSession && state.setSession(session);
-                  state.setCancelSessionDialog &&
-                    state.setCancelSessionDialog(true);
-                }}
-                disabled={
-                  session.status === "Cancelled" ||
-                  session.occurred ||
-                  session.school?.assignedSupervisorId !== supervisorId
-                }
-              >
-                Cancel session
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession && state.setSession(session);
+                state.setRescheduleSessionDialog &&
+                  state.setRescheduleSessionDialog(true);
+              }}
+              disabled={
+                session.occurred ||
+                (role === "SUPERVISOR" &&
+                  session.school?.assignedSupervisorId !== supervisorId)
+              }
+            >
+              Reschedule session
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-shamiri-light-red"
+              onClick={() => {
+                state.setSession && state.setSession(session);
+                state.setCancelSessionDialog &&
+                  state.setCancelSessionDialog(true);
+              }}
+              disabled={
+                session.status === "Cancelled" ||
+                session.occurred ||
+                (role === "SUPERVISOR" &&
+                  session.school?.assignedSupervisorId !== supervisorId)
+              }
+            >
+              Cancel session
+            </DropdownMenuItem>
           </>
         ) : null}
         {role === "FELLOW" ? (

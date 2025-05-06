@@ -235,8 +235,8 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                   open={newScheduleDialog}
                   setDialogOpen={setNewScheduleDialog}
                   schools={schools}
-                  hubId={hubId}
                   hubSessionTypes={props.hubSessionTypes}
+                  role={props.role}
                 />
               </SessionsLoader>
             )}
@@ -266,15 +266,15 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
 function CreateSessionButton({
   open,
   setDialogOpen,
-  hubId,
   schools,
   hubSessionTypes,
+  role,
 }: {
   open: boolean;
   setDialogOpen: Dispatch<SetStateAction<boolean>>;
-  hubId: string;
   schools: Prisma.SchoolGetPayload<{}>[];
   hubSessionTypes?: Prisma.SessionNameGetPayload<{}>[];
+  role: ImplementerRole;
 }) {
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -291,8 +291,8 @@ function CreateSessionButton({
           </DialogHeader>
           <ScheduleNewSession
             toggleDialog={setDialogOpen}
+            role={role}
             schools={schools}
-            hubId={hubId}
             hubSessionTypes={hubSessionTypes ?? []}
           />
         </DialogContent>
@@ -523,7 +523,7 @@ function CalendarView({
         {session ? (
           <>
             <RescheduleSession
-              sessionId={session.id}
+              session={session}
               open={rescheduleSessionDialog}
               onOpenChange={setRescheduleSessionDialog}
               role={role}
