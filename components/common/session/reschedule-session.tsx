@@ -201,7 +201,9 @@ export default function RescheduleSession({
                                   <Input
                                     type="number"
                                     onChange={(e) => {
-                                      setMinutes(handleMinutesChange(e.target.value));
+                                      setMinutes(
+                                        handleMinutesChange(e.target.value),
+                                      );
                                     }}
                                     value={minutes}
                                     min={0}

@@ -260,7 +260,7 @@
     -moz-appearance: textfield; /* hides in Firefox */
   }
 
-  #sentry-feedback{
+  #sentry-feedback {
     @apply z-[99];
   }
 }
