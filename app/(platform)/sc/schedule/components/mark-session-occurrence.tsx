@@ -77,7 +77,8 @@ export function MarkSessionOccurrence({
               return (
                 isBefore(session.sessionDate, activeSession?.sessionDate) &&
                 activeSession.schoolId === session.schoolId &&
-                !session.occurred
+                !session.occurred &&
+                session.status !== "Cancelled"
               );
             })
             .sort((a, b) => {
