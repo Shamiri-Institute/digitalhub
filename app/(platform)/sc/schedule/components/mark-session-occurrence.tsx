@@ -93,7 +93,7 @@ export function MarkSessionOccurrence({
         occurrence: defaultOccurrence ? "attended" : "unmarked",
       });
     }
-  }, [id, form, isOpen, defaultOccurrence]);
+  }, [id, form, isOpen, defaultOccurrence, sessions]);
 
   const onSubmit = () => {
     setIsOpen(false);
