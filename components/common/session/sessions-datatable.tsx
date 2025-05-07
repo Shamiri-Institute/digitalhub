@@ -129,7 +129,7 @@ export default function SessionsDatatable({
             </SessionRatings>
           )}
           <RescheduleSession
-            sessionId={session.id}
+            session={session}
             open={rescheduleSessionDialog}
             onOpenChange={setRescheduleSessionDialog}
             role={role}

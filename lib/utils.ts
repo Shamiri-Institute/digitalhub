@@ -173,3 +173,11 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
+
+export function handleMinutesChange(value: string): string {
+  const numericValue = parseInt(value);
+  if (isNaN(numericValue)) return "00";
+  if (numericValue < 0) return "00";
+  if (numericValue > 59) return "59";
+  return numericValue.toString().padStart(2, "0");
+}
