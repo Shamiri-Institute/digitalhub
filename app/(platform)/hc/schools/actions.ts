@@ -506,7 +506,9 @@ export async function assignSchoolPointSupervisor(
   }
 }
 
-export async function addSchool(data: z.infer<typeof SchoolInformationSchema>): Promise<AddSchoolResponse> {
+export async function addSchool(
+  data: z.infer<typeof SchoolInformationSchema>,
+): Promise<AddSchoolResponse> {
   try {
     const hubCoordinator = await currentHubCoordinator();
     if (!hubCoordinator?.assignedHubId) {
@@ -570,8 +572,7 @@ export async function addSchool(data: z.infer<typeof SchoolInformationSchema>): 
     if (availableFellows.length === 0) {
       return {
         success: false,
-        message:
-          "No available fellows for the pre-session date",
+        message: "No available fellows for the pre-session date",
       };
     }
 
