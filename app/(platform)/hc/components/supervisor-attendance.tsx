@@ -120,9 +120,7 @@ export default function SupervisorAttendance({
           <DialogContent className="w-5/6 max-w-none lg:w-4/5">
             <DialogHeader>
               <span className="text-xl font-bold">
-                {context.session?.occurred
-                  ? "View supervisor attendance"
-                  : "Mark supervisor attendance"}
+                Mark supervisor attendance
               </span>
             </DialogHeader>
             {context.session && (
