@@ -19,6 +19,34 @@ import {
  * TODO: the functions here should also be cognizant of the project
  */
 
+type SchoolWithRelations = Prisma.SchoolGetPayload<{
+  include: {
+    assignedSupervisor: true;
+    interventionSessions: {
+      include: {
+        sessionRatings: true;
+        session: true;
+      };
+    };
+    students: {
+      include: {
+        assignedGroup: true;
+        _count: {
+          select: {
+            clinicalCases: true;
+          };
+        };
+      };
+    };
+  };
+}>;
+
+type AddSchoolResponse = {
+  success: boolean;
+  message: string;
+  data?: SchoolWithRelations;
+};
+
 export async function fetchSchoolData(hubId: string) {
   return await db.school.findMany({
     where: {
@@ -478,35 +506,6 @@ export async function assignSchoolPointSupervisor(
   }
 }
 
-// Add type definitions at the top of the file
-type SchoolWithRelations = Prisma.SchoolGetPayload<{
-  include: {
-    assignedSupervisor: true;
-    interventionSessions: {
-      include: {
-        sessionRatings: true;
-        session: true;
-      };
-    };
-    students: {
-      include: {
-        assignedGroup: true;
-        _count: {
-          select: {
-            clinicalCases: true;
-          };
-        };
-      };
-    };
-  };
-}>;
-
-type AddSchoolResponse = {
-  success: boolean;
-  message: string;
-  data?: SchoolWithRelations;
-};
-
 export async function addSchool(data: z.infer<typeof SchoolInformationSchema>): Promise<AddSchoolResponse> {
   try {
     const hubCoordinator = await currentHubCoordinator();
@@ -572,11 +571,7 @@ export async function addSchool(data: z.infer<typeof SchoolInformationSchema>): 
       return {
         success: false,
         message:
-          "No available fellows for the pre-session date: " +
-          format(
-            utcToZonedTime(parsedData.preSessionDate, "Africa/Nairobi"),
-            "yyyy-MM-dd",
-          ),
+          "No available fellows for the pre-session date",
       };
     }
 
