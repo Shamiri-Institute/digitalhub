@@ -1,14 +1,17 @@
 "use server";
 
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
+import { Prisma, sessionTypes } from "@prisma/client";
+import { format, isBefore } from "date-fns";
+import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
   AssignPointSupervisorSchema,
   DropoutSchoolSchema,
-  EditSchoolSchema,
+  SchoolInformationSchema,
   WeeklyHubReportSchema,
 } from "../schemas";
 
@@ -384,7 +387,7 @@ export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
 
 export async function editSchoolInformation(
   schoolId: string,
-  schoolInfo: z.infer<typeof EditSchoolSchema>,
+  schoolInfo: z.infer<typeof SchoolInformationSchema>,
 ) {
   try {
     const authedCoordinator = await currentHubCoordinator();
@@ -393,13 +396,29 @@ export async function editSchoolInformation(
       throw new Error("User not authorised to perform this function");
     }
 
-    const parsedData = EditSchoolSchema.parse(schoolInfo);
+    const parsedData = SchoolInformationSchema.parse(schoolInfo);
 
     const { schoolName } = await db.school.update({
       where: {
         id: schoolId,
       },
-      data: parsedData,
+      data: {
+        schoolName: parsedData.schoolName!,
+        schoolType: parsedData.schoolType ?? null,
+        schoolEmail: parsedData.schoolEmail ?? null,
+        schoolCounty: parsedData.schoolCounty ?? null,
+        schoolSubCounty: parsedData.schoolSubCounty ?? null,
+        schoolDemographics: parsedData.schoolDemographics ?? null,
+        pointPersonName: parsedData.pointPersonName ?? null,
+        pointPersonPhone: parsedData.pointPersonPhone ?? null,
+        pointPersonEmail: parsedData.pointPersonEmail ?? null,
+        numbersExpected: parsedData.numbersExpected ?? null,
+        principalName: parsedData.principalName ?? null,
+        principalPhone: parsedData.principalPhone ?? null,
+        droppedOut: false,
+        dropoutReason: null,
+        droppedOutAt: null,
+      },
     });
     return {
       success: true,
@@ -455,6 +474,234 @@ export async function assignSchoolPointSupervisor(
       message:
         (err as Error)?.message ??
         "Sorry, could not assign the school point supervisor",
+    };
+  }
+}
+
+// Add type definitions at the top of the file
+type SchoolWithRelations = Prisma.SchoolGetPayload<{
+  include: {
+    assignedSupervisor: true;
+    interventionSessions: {
+      include: {
+        sessionRatings: true;
+        session: true;
+      };
+    };
+    students: {
+      include: {
+        assignedGroup: true;
+        _count: {
+          select: {
+            clinicalCases: true;
+          };
+        };
+      };
+    };
+  };
+}>;
+
+type AddSchoolResponse = {
+  success: boolean;
+  message: string;
+  data?: SchoolWithRelations;
+};
+
+export async function addSchool(data: z.infer<typeof SchoolInformationSchema>): Promise<AddSchoolResponse> {
+  try {
+    const hubCoordinator = await currentHubCoordinator();
+    if (!hubCoordinator?.assignedHubId) {
+      throw new Error("User not authorized to perform this function");
+    }
+
+    const hubId = hubCoordinator.assignedHubId;
+    const parsedData = SchoolInformationSchema.parse(data);
+
+    // Get available fellows for the pre-session date
+    const fellows = await db.fellow.findMany({
+      where: { hubId },
+      include: {
+        groups: {
+          include: {
+            school: {
+              select: {
+                interventionSessions: {
+                  select: {
+                    sessionDate: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Create a map of fellows and their session dates
+    const fellowSessionDates = new Map<string, Set<string>>();
+    fellows.forEach((fellow) => {
+      const dates = new Set<string>();
+      fellow.groups.forEach((group) => {
+        group.school.interventionSessions.forEach((session) => {
+          const dateStr = format(
+            utcToZonedTime(session.sessionDate, "Africa/Nairobi"),
+            "yyyy-MM-dd",
+          );
+          if (dateStr) {
+            dates.add(dateStr);
+          }
+        });
+      });
+      fellowSessionDates.set(fellow.id, dates);
+    });
+
+    const availableFellows = fellows.filter((fellow) => {
+      const fellowDates = fellowSessionDates.get(fellow.id);
+      return !fellowDates?.has(
+        format(
+          utcToZonedTime(parsedData.preSessionDate, "Africa/Nairobi"),
+          "yyyy-MM-dd",
+        ),
+      );
+    });
+
+    // Sort fellows by number of assigned groups (ascending)
+    availableFellows.sort((a, b) => a.groups.length - b.groups.length);
+
+    if (availableFellows.length === 0) {
+      return {
+        success: false,
+        message:
+          "No available fellows for the pre-session date: " +
+          format(
+            utcToZonedTime(parsedData.preSessionDate, "Africa/Nairobi"),
+            "yyyy-MM-dd",
+          ),
+      };
+    }
+
+    return await db.$transaction(async (tx) => {
+      const school = await tx.school.create({
+        data: {
+          id: objectId("sch"),
+          visibleId: objectId("sch"),
+          schoolName: parsedData.schoolName!,
+          schoolType: parsedData.schoolType,
+          schoolEmail: parsedData.schoolEmail,
+          schoolCounty: parsedData.schoolCounty,
+          schoolSubCounty: parsedData.schoolSubCounty,
+          schoolDemographics: parsedData.schoolDemographics,
+          pointPersonName: parsedData.pointPersonName,
+          pointPersonPhone: parsedData.pointPersonPhone,
+          pointPersonEmail: parsedData.pointPersonEmail,
+          numbersExpected: parsedData.numbersExpected,
+          principalName: parsedData.principalName,
+          principalPhone: parsedData.principalPhone,
+          droppedOut: false,
+          dropoutReason: null,
+          droppedOutAt: null,
+          hubId,
+        },
+        include: {
+          assignedSupervisor: true,
+          interventionSessions: {
+            include: {
+              sessionRatings: true,
+              session: true,
+            },
+          },
+          students: {
+            include: {
+              assignedGroup: true,
+              _count: {
+                select: {
+                  clinicalCases: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const numGroups = Math.ceil((parsedData.numbersExpected || 1000) / 16);
+
+      // Get the first word of the school name for the prefix
+      const schoolNamePrefix =
+        school.schoolName?.split(" ")[0]?.toUpperCase() ?? "GROUP";
+
+      const interventionGroups = [];
+      for (let i = 0; i < numGroups; i++) {
+        // Get the fellow with the least number of groups
+        const leader = availableFellows[i];
+        if (!leader) break;
+
+        interventionGroups.push({
+          id: objectId("group"),
+          groupName: `${schoolNamePrefix} ${i + 1}`,
+          schoolId: school.id,
+          leaderId: leader.id,
+          projectId: hubCoordinator.assignedHub?.projectId ?? "",
+        });
+      }
+
+      if (interventionGroups.length > 0) {
+        await tx.interventionGroup.createMany({
+          data: interventionGroups,
+        });
+      }
+
+      // Create intervention sessions
+      const sessionNames = await tx.sessionName.findMany({
+        where: {
+          hubId,
+          sessionType: sessionTypes.INTERVENTION,
+        },
+      });
+
+      const interventionSessions: Prisma.InterventionSessionCreateManyInput[] =
+        [];
+
+      let currentDate = utcToZonedTime(
+        parsedData.preSessionDate,
+        "Africa/Nairobi",
+      );
+      currentDate.setHours(16, 0, 0, 0); // Set to 4 PM Nairobi time
+
+      for (const sessionName of sessionNames) {
+        interventionSessions.push({
+          id: objectId("session"),
+          sessionDate: zonedTimeToUtc(currentDate, "Africa/Nairobi"),
+          status: "Scheduled",
+          sessionType: sessionName.sessionName,
+          sessionId: sessionName.id,
+          schoolId: school.id,
+          occurred: isBefore(new Date(currentDate), new Date()),
+          yearOfImplementation: new Date().getFullYear(),
+          projectId: hubCoordinator.assignedHub?.projectId || undefined,
+          hubId,
+        });
+
+        // Move to next week for next session
+        currentDate.setDate(currentDate.getDate() + 7);
+      }
+
+      if (interventionSessions.length > 0) {
+        await tx.interventionSession.createMany({
+          data: interventionSessions,
+        });
+      }
+
+      return {
+        success: true,
+        message: "School added successfully",
+        data: school,
+      };
+    });
+  } catch (error) {
+    console.error("Error adding school:", error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Failed to add school",
     };
   }
 }

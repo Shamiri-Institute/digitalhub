@@ -8,7 +8,7 @@ import { z } from "zod";
 import {
   AssignPointSupervisorSchema,
   DropoutSchoolSchema,
-  EditSchoolSchema,
+  SchoolInformationSchema,
   WeeklyHubReportSchema,
 } from "../../hc/schemas";
 
@@ -333,7 +333,7 @@ export async function fetchSchoolAttendances(hubId: string) {
 
 export async function editSchoolInformation(
   schoolId: string,
-  schoolInfo: z.infer<typeof EditSchoolSchema>,
+  schoolInfo: z.infer<typeof SchoolInformationSchema>,
 ) {
   try {
     const authedCoordinator = await currentHubCoordinator();
@@ -342,7 +342,7 @@ export async function editSchoolInformation(
       throw new Error("User not authorised to perform this function");
     }
 
-    const parsedData = EditSchoolSchema.parse(schoolInfo);
+    const parsedData = SchoolInformationSchema.parse(schoolInfo);
 
     const { schoolName } = await db.school.update({
       where: {
