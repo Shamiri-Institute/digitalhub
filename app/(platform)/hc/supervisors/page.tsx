@@ -50,7 +50,6 @@ export default async function SupervisorsPage() {
         <div className="flex items-center justify-between">
           <div className="flex gap-3">{/* search filters go here */}</div>
           <div className="flex items-center gap-3">
-            <AddNewSupervisor />
             <WeeklyHubTeamMeetingForm
               hubCoordinatorId={coordinator?.id!}
               hubId={coordinator?.assignedHubId}

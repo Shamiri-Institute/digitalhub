@@ -28,6 +28,7 @@ import { Prisma } from "@prisma/client";
 import { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useContext, useState } from "react";
+import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";
 
 export default function MainSupervisorsDataTable({
   supervisors,
@@ -75,31 +76,7 @@ export default function MainSupervisorsDataTable({
   const renderTableActions = () => {
     return (
       <div className="flex gap-3">
-        <Button
-          variant="outline"
-          className="flex gap-1 bg-white"
-          onClick={handleSupervisorCSVTemplateDownload}
-        >
-          <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
-          <span>Download supervisors CSV template</span>
-        </Button>
-
-        <FileUploader
-          url="/api/csv-uploads/supervisors"
-          type="supervisors"
-          uploadVisibleMessage="Upload supervisors CSV"
-          metadata={{
-            implementerId,
-            hubId,
-            projectId,
-            urlPath: "/hc/supervisors",
-          }}
-        />
-
-        {/*<Button variant="outline" className="flex gap-1 bg-white">*/}
-        {/*  <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />*/}
-        {/*  <span>Upload fellow monthly feedback CSV</span>*/}
-        {/*</Button>*/}
+        <AddNewSupervisor />
       </div>
     );
   };
