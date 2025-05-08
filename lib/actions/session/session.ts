@@ -125,7 +125,7 @@ export async function cancelSession(id: string) {
     });
 
     if (
-      session.school?.assignedSupervisorId !== user.supervisor?.id ||
+      session.school?.assignedSupervisorId !== user.supervisor?.id &&
       !user.hubCoordinator
     ) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
