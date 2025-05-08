@@ -6,6 +6,7 @@ import ConsultClinicalExpert from "#/app/(platform)/sc/clinical/components/consu
 import MarkCaseAsSpecial from "#/app/(platform)/sc/clinical/components/mark-case-as-special";
 import ReferClinicalCase from "#/app/(platform)/sc/clinical/components/refer-clinical-case";
 import TreatmentPlanForm from "#/app/(platform)/sc/clinical/components/treatment-plan-form";
+import TriggerFollowupDialog from "#/app/(platform)/sc/clinical/components/trigger-followup-dialog";
 import ViewEditClinicalCaseStudentInfo from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { Icons } from "#/components/icons";
 import {
@@ -94,6 +95,19 @@ export default function ClinicalCaseActionsDropdownMenu({
             Case notes
           </div>
         </CaseNotesForm>
+        <TriggerFollowupDialog caseId={clinicalCase.id}>
+          <div
+            className={cn(
+              "px-2 py-1.5 text-sm",
+              clinicalCase.caseStatus === "FollowUp" ||
+                clinicalCase.caseStatus === "Terminated"
+                ? "pointer-events-none cursor-not-allowed text-gray-400"
+                : "cursor-pointer text-shamiri-black",
+            )}
+          >
+            Follow up
+          </div>
+        </TriggerFollowupDialog>
         <CaseTerminationForm clinicalCase={clinicalCase}>
           <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             Terminate case
