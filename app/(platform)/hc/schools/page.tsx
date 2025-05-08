@@ -1,7 +1,7 @@
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
 import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
-import EditSchoolDetailsForm from "#/components/common/schools/edit-school-details-form";
+import SchoolDetailsForm from "#/components/common/schools/school-details-form";
 import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
@@ -99,7 +99,7 @@ export default async function SchoolsPage(props: {
         <Separator />
         <SchoolInfoProvider>
           <SchoolsDatatable role={user?.membership.role!} />
-          <EditSchoolDetailsForm />
+          <SchoolDetailsForm />
           <AssignPointSupervisor supervisors={supervisors} />
           <DropoutSchool />
           <UndoDropoutSchool />
