@@ -2,15 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
-## [Unreleased]
+## [0.1.4](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.3...v0.1.4) (2025-05-08)
 
-### Removed
+### Features
 
-- Removed deprecated dashboard functionality
-- Removed deprecated fellows management system
-- Removed fellow attendance dot component and its test file
-- Moved some dashboard components to `components/old` directory
-- See DEPRECATED.md for detailed information about removed and moved files
+- add follow up case toggle and view case notes ([#435](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/435)) ([cce69ad](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/cce69adea2019446b6b3d9632d8db8e8f7b07765))
+- add school functionality ([#436](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/436)) ([68113d5](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/68113d5f6e32dab713bb494ca248cf764278259b))
+- cleanup depreciated files ([#433](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/433)) ([3eff72d](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/3eff72d4f1eadb97b379f2bd5bb4392343a70e80))
+- fellows expenses syncing on all users ([#426](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/426)) ([9307807](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/930780761148b5b80b0f60cccc2b3d6b3da67845))
+- manually trigger payouts and view payouts on relevant users ([#430](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/430)) ([dd99cbb](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/dd99cbb93cdce2f13f377dda6d200379277fb162))
+
+### Bug Fixes
+
+- creating sessions for venue locations ([#424](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/424)) ([7f18d0e](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/7f18d0e362a9ab76021fa9145610643ed6cbf140))
+- marking session occurrence ([#434](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/434)) ([1160da1](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1160da12f9deea8b669d5e3255bf6b4fa5b92815))
 
 ## [0.1.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.2...v0.1.3) (2025-04-29)
 
