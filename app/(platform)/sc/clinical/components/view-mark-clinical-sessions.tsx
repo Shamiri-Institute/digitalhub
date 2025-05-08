@@ -129,7 +129,19 @@ export default function ViewMarkClinicalSessions({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {CLINICAL_SESSION_TYPES.map((sessionType) => (
+          {CLINICAL_SESSION_TYPES.filter(
+            (
+              sessionType,
+            ): sessionType is (typeof CLINICAL_SESSION_TYPES)[number] => {
+              if (
+                sessionType.key.startsWith("S") ||
+                sessionType.key === "Pre"
+              ) {
+                return true;
+              }
+              return currentcase.caseStatus === "FollowUp";
+            },
+          ).map((sessionType) => (
             <TableRow key={sessionType.key} className="hover:bg-gray-50">
               <TableCell className="border font-medium">
                 {sessionType.value}
