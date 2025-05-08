@@ -262,6 +262,7 @@ export default function CaseNotesForm({
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={!clinicalCase.clinicalSessionAttendance?.length}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -296,6 +297,17 @@ export default function CaseNotesForm({
                       )}
                     </SelectContent>
                   </Select>
+                  {!clinicalCase.clinicalSessionAttendance?.length ? (
+                    <p className="text-sm text-muted-foreground">
+                      No sessions available. Please mark a session as done
+                      before creating case notes.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Please ensure the session is marked as done before
+                      creating case notes.
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -306,7 +318,8 @@ export default function CaseNotesForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Presenting Issues on this session
+                    Situation: What issues did the student present and in what
+                    state?
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -468,7 +481,8 @@ export default function CaseNotesForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Intervention Explanation
+                    Intervention: What techniques, approaches and tools did you
+                    use?
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -481,7 +495,7 @@ export default function CaseNotesForm({
 
             <div className="space-y-4">
               <h3 className="border-b border-gray-200 pb-2 font-semibold">
-                Student Response
+                Response: How did the student respond to the intervention?
               </h3>
 
               <div className="flex gap-8">
@@ -634,7 +648,9 @@ export default function CaseNotesForm({
                 name="followUpPlan.isGroupSession"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Plan for Follow-up Session Type</FormLabel>
+                    <FormLabel>
+                      Plan: What is the plan for future session(s)?
+                    </FormLabel>
                     <div className="flex space-x-4">
                       <FormItem className="flex flex-row items-center space-x-3 space-y-0">
                         <FormControl>
