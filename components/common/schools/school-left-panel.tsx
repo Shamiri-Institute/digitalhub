@@ -119,7 +119,7 @@ export default function SchoolLeftPanel({
   return (
     <div
       ref={panelRef}
-      className="h-auto w-full space-y-6 px-0 py-0 lg:h-screen lg:overflow-y-scroll lg:border-r lg:border-solid lg:border-shamiri-light-grey lg:px-6 lg:py-4"
+      className="h-auto w-full space-y-6 px-0 py-0 lg:h-screen lg:overflow-y-auto lg:border-r lg:border-solid lg:border-shamiri-light-grey lg:px-6 lg:py-4"
     >
       <Accordion
         type="single"

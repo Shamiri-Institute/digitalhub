@@ -6,6 +6,7 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { SchoolsTableData } from "#/components/common/schools/columns";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
+import { Calendar } from "#/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,11 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -38,22 +44,26 @@ import {
 } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { Loader2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { EditSchoolSchema } from "../../../app/(platform)/hc/schemas";
+import { SchoolInformationSchema } from "../../../app/(platform)/hc/schemas";
 import {
+  addSchool,
   editSchoolInformation,
   revalidatePageAction,
 } from "../../../app/(platform)/hc/schools/actions";
 
-export default function EditSchoolDetailsForm() {
+export default function SchoolDetailsForm() {
+  // TODO: Refactor this component to not use context
   const context = useContext(SchoolInfoContext);
   const schoolsContext = useContext(SchoolsDataContext);
   const pathname = usePathname();
+  const isEditing = !!context.school;
   const isCountySelectionValid = KENYAN_COUNTIES.some(
     (county) => county.name === context.school?.schoolCounty,
   );
@@ -63,58 +73,53 @@ export default function EditSchoolDetailsForm() {
   >([]);
 
   const isSubCountyValid = () => {
-    const subCounties: string[] = Array.from(
-      KENYAN_COUNTIES.find(
-        (county) => county.name === form.getValues("schoolCounty"),
-      )!.sub_counties,
+    const selectedCounty = KENYAN_COUNTIES.find(
+      (county) => county.name === form.getValues("schoolCounty"),
     );
+    if (!selectedCounty) return false;
+
+    const subCounties: string[] = Array.from(selectedCounty.sub_counties);
     return subCounties.includes(form.getValues("schoolSubCounty")!);
   };
 
-  const form = useForm<z.infer<typeof EditSchoolSchema>>({
-    resolver: zodResolver(EditSchoolSchema),
+  const form = useForm<z.infer<typeof SchoolInformationSchema>>({
+    resolver: zodResolver(SchoolInformationSchema),
   });
 
   const pointPersonPhoneWatcher = form.watch("pointPersonPhone");
 
   useEffect(() => {
     const defaultValues = {
-      numbersExpected: context.school?.numbersExpected ?? undefined,
+      numbersExpected: context.school?.numbersExpected ?? 0,
       schoolEmail: context.school?.schoolEmail ?? "",
-      /* TODO:
-       * All the ts-ignores are for data that's meant to be some sort of enum.
-       * However the prisma schema and old data in the DB forces us to make the form backwards-compatible and allow users
-       * to clean up the data.
-       *
-       * once we clean up the data in the database and update the prisma schema then we can remove the ts-ignores
-       * it's safe to assume that zod would still parse the incoming data anyway
-       */
-      // @ts-ignore
-      schoolDemographics: context.school?.schoolDemographics,
-      // @ts-ignore
-      schoolCounty: context.school?.schoolCounty,
-      // @ts-ignore
-      schoolSubCounty: context.school?.schoolSubCounty,
-      // @ts-ignore
-      schoolName: context.school?.schoolName,
-      // @ts-ignore
-      boardingDay: context.school?.boardingDay,
-      // @ts-ignore
-      schoolType: context.school?.schoolType,
+      schoolDemographics: context.school?.schoolDemographics as
+        | (typeof SCHOOL_DEMOGRAPHICS)[number]
+        | undefined,
+      schoolCounty: context.school?.schoolCounty as
+        | (typeof KENYAN_COUNTIES)[number]["name"]
+        | undefined,
+      schoolSubCounty: context.school?.schoolSubCounty ?? undefined,
+      schoolName: context.school?.schoolName ?? "",
+      boardingDay: context.school?.boardingDay as
+        | (typeof BOARDING_DAY_TYPES)[number]
+        | undefined,
+      schoolType: context.school?.schoolType as
+        | (typeof SCHOOL_TYPES)[number]
+        | undefined,
       pointPersonPhone: context.school?.pointPersonPhone ?? undefined,
       pointPersonEmail: context.school?.pointPersonEmail ?? undefined,
       pointPersonName: context.school?.pointPersonName ?? undefined,
       principalName: context.school?.principalName ?? undefined,
       principalPhone: context.school?.principalPhone ?? undefined,
+      preSessionDate: undefined,
     };
     if (context.editDialog) {
-      // @ts-ignore
       form.reset(defaultValues);
     }
-  }, [context.editDialog]);
+  }, [context.editDialog, context.school, form]);
 
-  const onSubmit = async (data: z.infer<typeof EditSchoolSchema>) => {
-    if (context.school) {
+  const onSubmit = async (data: z.infer<typeof SchoolInformationSchema>) => {
+    if (isEditing && context.school) {
       // remove empty strings (removed phone numbers)
       const pointPersonPhoneNumbers = data.pointPersonPhone
         ?.split("/")
@@ -153,10 +158,33 @@ export default function EditSchoolDetailsForm() {
       toast({
         description: response.message,
       });
+    } else {
+      // Add new school
+      const response = await addSchool(data);
 
-      form.reset();
-      context.setEditDialog(false);
+      if (!response.success) {
+        toast({
+          variant: "destructive",
+          description:
+            response.message ??
+            "Something went wrong during submission, please try again",
+        });
+        return;
+      }
+
+      // Add the new school to the list
+      if (response.data) {
+        schoolsContext.setSchools([...schoolsContext.schools, response.data]);
+      }
+      await revalidatePageAction(pathname, "layout");
+
+      toast({
+        description: response.message,
+      });
     }
+
+    form.reset();
+    context.setEditDialog(false);
   };
 
   const validatePhoneNumber = (
@@ -176,14 +204,18 @@ export default function EditSchoolDetailsForm() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <span className="text-xl">Edit school information</span>
+              <span className="text-xl">
+                {isEditing ? "Edit school information" : "Add new school"}
+              </span>
             </DialogHeader>
-            <div className="pb-2 pt-4">
-              <DialogAlertWidget
-                label={context.school?.schoolName}
-                separator={false}
-              />
-            </div>
+            {isEditing && (
+              <div className="pb-2 pt-4">
+                <DialogAlertWidget
+                  label={context.school?.schoolName}
+                  separator={false}
+                />
+              </div>
+            )}
             <div className="space-y-6">
               <div className="flex flex-col">
                 <div className="col-span-2 py-2">
@@ -198,7 +230,12 @@ export default function EditSchoolDetailsForm() {
                     name="schoolName"
                     render={({ field }) => (
                       <FormItem className="col-span-4">
-                        <FormLabel>School name</FormLabel>
+                        <FormLabel>
+                          School name{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <FormControl>
                           <Input {...field} type="text" />
                         </FormControl>
@@ -211,9 +248,14 @@ export default function EditSchoolDetailsForm() {
                     name="numbersExpected"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
-                        <FormLabel>No. of students</FormLabel>
+                        <FormLabel>
+                          No. of students{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" />
+                          <Input {...field} type="number" min="1" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -224,7 +266,12 @@ export default function EditSchoolDetailsForm() {
                     name="schoolEmail"
                     render={({ field }) => (
                       <FormItem className="col-span-4">
-                        <FormLabel>School email</FormLabel>
+                        <FormLabel>
+                          School email{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <FormControl>
                           <Input {...field} type="email" />
                         </FormControl>
@@ -237,14 +284,19 @@ export default function EditSchoolDetailsForm() {
                     name="schoolDemographics"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
-                        <FormLabel>School demographics</FormLabel>
+                        <FormLabel>
+                          School demographics{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Please select one of the options" />
+                              <SelectValue placeholder="Select demographic" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -264,7 +316,12 @@ export default function EditSchoolDetailsForm() {
                     name="schoolCounty"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>School county</FormLabel>
+                        <FormLabel>
+                          School county{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -299,7 +356,12 @@ export default function EditSchoolDetailsForm() {
                     name="schoolSubCounty"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>School sub-county</FormLabel>
+                        <FormLabel>
+                          School sub-county{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -329,7 +391,7 @@ export default function EditSchoolDetailsForm() {
                                 );
                               })
                             ) : (
-                              <SelectItem value={""}>
+                              <SelectItem value="select county first">
                                 Please pick a county first
                               </SelectItem>
                             )}
@@ -343,15 +405,20 @@ export default function EditSchoolDetailsForm() {
                     control={form.control}
                     name="boardingDay"
                     render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>School boarding status</FormLabel>
+                      <FormItem className="col-span-3">
+                        <FormLabel>
+                          School boarding status{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Please select the school boarding status" />
+                              <SelectValue placeholder="Select boarding status" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -370,15 +437,20 @@ export default function EditSchoolDetailsForm() {
                     control={form.control}
                     name="schoolType"
                     render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>School type</FormLabel>
+                      <FormItem className="col-span-3">
+                        <FormLabel>
+                          School type{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Please select the school type (county, national, etc)" />
+                              <SelectValue placeholder="Select school type" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -393,6 +465,47 @@ export default function EditSchoolDetailsForm() {
                       </FormItem>
                     )}
                   />
+                  {!isEditing && (
+                    <FormField
+                      control={form.control}
+                      name="preSessionDate"
+                      render={({ field }) => (
+                        <FormItem className="col-span-3">
+                          <FormLabel>
+                            Pre-session date{" "}
+                            <span className="text-shamiri-light-red">*</span>
+                          </FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground",
+                                )}
+                              >
+                                <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                                {field.value ? (
+                                  format(field.value, "dd/MM/yyyy")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar
+                                mode="single"
+                                selected={field.value || undefined}
+                                onSelect={field.onChange}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                 </div>
               </div>
               <div className="flex flex-col">
@@ -408,7 +521,12 @@ export default function EditSchoolDetailsForm() {
                     name="principalName"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>Principal name</FormLabel>
+                        <FormLabel>
+                          Principal name{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -421,7 +539,12 @@ export default function EditSchoolDetailsForm() {
                     name="principalPhone"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>Principal phone number</FormLabel>
+                        <FormLabel>
+                          Principal phone number{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
                         </FormControl>
@@ -434,7 +557,12 @@ export default function EditSchoolDetailsForm() {
                     name="pointPersonName"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>Point teacher name</FormLabel>
+                        <FormLabel>
+                          Point teacher name{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -447,7 +575,12 @@ export default function EditSchoolDetailsForm() {
                     name="pointPersonEmail"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>Point person email</FormLabel>
+                        <FormLabel>
+                          Point person email{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -460,7 +593,12 @@ export default function EditSchoolDetailsForm() {
                     name="pointPersonPhone"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>Point teacher phone number</FormLabel>
+                        <FormLabel>
+                          Point teacher phone number{" "}
+                          {!isEditing && (
+                            <span className="text-shamiri-light-red">*</span>
+                          )}
+                        </FormLabel>
                         <FormControl>
                           <div className="flex flex-col gap-3">
                             {field.value &&
@@ -633,7 +771,7 @@ export default function EditSchoolDetailsForm() {
                 {form.formState.isSubmitting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
-                Confirm
+                {isEditing ? "Save Changes" : "Add School"}
               </Button>
             </DialogFooter>
           </form>

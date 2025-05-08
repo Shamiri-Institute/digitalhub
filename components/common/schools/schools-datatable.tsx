@@ -1,12 +1,13 @@
 "use client";
 
+import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import { columns } from "#/components/common/schools/columns";
+import SchoolDetailsForm from "#/components/common/schools/school-details-form";
 import SchoolsDataTable from "#/components/data-table";
-import FileUploaderWithDataTable from "#/components/file-uploader-with-datatable";
-import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { ImplementerRole } from "@prisma/client";
+import { Plus } from "lucide-react";
 import { useContext } from "react";
 
 const schoolsCSVHeaders = [
@@ -39,35 +40,32 @@ export const handleSchoolsCSVTemplateDownload = () => {
 };
 
 export default function SchoolsDatatable({ role }: { role: ImplementerRole }) {
-  const context = useContext(SchoolsDataContext);
+  // TODO: Refactor this component to not use context
+  const schoolsContext = useContext(SchoolsDataContext);
+  const schoolInfoContext = useContext(SchoolInfoContext);
 
   const renderTableActions = () => {
     return (
       role === "HUB_COORDINATOR" && (
-        <div className="flex gap-3">
+        <>
+          <SchoolDetailsForm />
           <Button
-            variant="outline"
-            className="flex gap-1 bg-white"
-            onClick={handleSchoolsCSVTemplateDownload}
-          >
-            <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
-            <span>Download schools CSV template</span>
-          </Button>
-          <FileUploaderWithDataTable
-            url="/api/csv-uploads/schools"
-            type="schools"
-            uploadVisibleMessage="Upload schools CSV"
-            metadata={{
-              urlPath: "/hc/schools",
+            className="flex gap-1"
+            onClick={() => {
+              schoolInfoContext.setSchool(null);
+              schoolInfoContext.setEditDialog(true);
             }}
-          />
-        </div>
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add school</span>
+          </Button>
+        </>
       )
     );
   };
   return (
     <SchoolsDataTable
-      data={context.schools}
+      data={schoolsContext.schools}
       columns={columns({ role })}
       emptyStateMessage="No schools found for this hub"
       className="data-table bg-white lg:mt-4"
