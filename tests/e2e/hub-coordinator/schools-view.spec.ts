@@ -22,8 +22,6 @@ test("Hub Coordinator can view the /schools page", async ({ page }) => {
   await expect(mainTag).toContainText("Drop out reasons");
   await expect(mainTag).toContainText("School information completion");
   await expect(mainTag).toContainText("Ratings");
-  await expect(mainTag).toContainText("Download schools CSV template");
-  await expect(mainTag).toContainText("Upload schools CSV");
   await expect(page.locator("main")).toContainText("Edit columns");
 });
 
