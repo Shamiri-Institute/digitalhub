@@ -171,7 +171,7 @@ export const MonthlySupervisorEvaluationSchema = z.object({
 
 const counties = KENYAN_COUNTIES.map((county) => county.name);
 
-export const EditSchoolSchema = z.object({
+export const SchoolInformationSchema = z.object({
   numbersExpected: z.coerce
     .number({
       required_error: "Please enter the promised number of students.",
@@ -258,6 +258,17 @@ export const EditSchoolSchema = z.object({
       message: "Please enter a valid kenyan phone number",
     })
     .optional(),
+  preSessionDate: z
+    .date({
+      required_error: "Please select a date",
+      invalid_type_error: "Please select a date",
+    })
+    .transform((val) => {
+      if (!val) {
+        throw new Error("Please select a date");
+      }
+      return val;
+    }),
 });
 
 export const EditSupervisorSchema = z
