@@ -77,7 +77,8 @@ export function MarkSessionOccurrence({
               return (
                 isBefore(session.sessionDate, activeSession?.sessionDate) &&
                 activeSession.schoolId === session.schoolId &&
-                !session.occurred
+                !session.occurred &&
+                session.status !== "Cancelled"
               );
             })
             .sort((a, b) => {
@@ -92,7 +93,7 @@ export function MarkSessionOccurrence({
         occurrence: defaultOccurrence ? "attended" : "unmarked",
       });
     }
-  }, [id, form, isOpen, defaultOccurrence]);
+  }, [id, form, isOpen, defaultOccurrence, sessions]);
 
   const onSubmit = () => {
     setIsOpen(false);
