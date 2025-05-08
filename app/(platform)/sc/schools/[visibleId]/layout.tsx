@@ -3,7 +3,7 @@ import { currentSupervisor } from "#/app/auth";
 import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
 import { SchoolsTableData } from "#/components/common/schools/columns";
 import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
-import EditSchoolDetailsForm from "#/components/common/schools/edit-school-details-form";
+import SchoolDetailsForm from "#/components/common/schools/school-details-form";
 import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
 import SchoolLeftPanel from "#/components/common/schools/school-left-panel";
 import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";
@@ -98,7 +98,7 @@ export default async function SchoolViewLayout({
           <PageFooter />
         </div>
       </div>
-      <EditSchoolDetailsForm />
+      <SchoolDetailsForm />
       <AssignPointSupervisor supervisors={supervisors} />
       <DropoutSchool />
       <UndoDropoutSchool />
