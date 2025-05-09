@@ -162,7 +162,11 @@ export default function SupervisorsDataTable({
       </UndropSupervisor>
       <MarkAttendance
         title={"Mark supervisor attendance"}
-        sessions={schoolContext.school?.interventionSessions ?? []}
+        sessions={
+          schoolContext.school?.interventionSessions.filter(
+            (session) => session.occurred,
+          ) ?? []
+        }
         selectedSessionId={selectedSession}
         attendances={
           context.supervisor?.supervisorAttendances.map((attendance) => {
