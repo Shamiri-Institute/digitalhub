@@ -36,6 +36,7 @@ export function DayView({
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
     setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
     setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
+    setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
   supervisorId?: string;
   fellowId?: string;
@@ -179,6 +180,7 @@ function DayCalendarCell({
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
     setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
     setCancelSessionDialog: Dispatch<SetStateAction<boolean>>;
+    setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
   fellowId?: string;
   supervisorId?: string;

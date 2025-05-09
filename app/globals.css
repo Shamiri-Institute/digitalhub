@@ -261,6 +261,6 @@
   }
 
   #sentry-feedback {
-    @apply z-[99];
+    @apply z-[1];
   }
 }

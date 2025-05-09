@@ -79,6 +79,7 @@ export default function SessionsDatatable({
           setSession,
           setRatingsDialog,
           setFellowAttendanceDialog,
+          setSupervisorAttendanceDialog,
           setStudentAttendanceDialog,
           setSessionOccurrenceDialog,
           setRescheduleSessionDialog,
@@ -167,7 +168,13 @@ export default function SessionsDatatable({
           supervisorId={supervisorId}
         />
       ) : null}
-      <SupervisorAttendance supervisors={supervisors} role={role} />
+      <SupervisorAttendance
+        supervisors={supervisors}
+        role={role}
+        isOpen={supervisorAttendanceDialog}
+        setIsOpen={setSupervisorAttendanceDialog}
+        session={session}
+      />
     </>
   );
 }

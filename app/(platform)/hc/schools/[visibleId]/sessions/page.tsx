@@ -44,6 +44,9 @@ export default async function SchoolSessionsPage({
         sessionRatings: true,
         session: true,
       },
+      orderBy: {
+        sessionDate: "asc",
+      },
     }),
     await db.supervisor.findMany({
       where: {

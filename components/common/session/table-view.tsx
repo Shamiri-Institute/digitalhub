@@ -42,6 +42,7 @@ const supervisorAttendanceColumns = (state: {
   setAttendance: Dispatch<
     SetStateAction<SupervisorAttendanceTableData | undefined>
   >;
+  setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
 }): ColumnDef<SupervisorAttendanceTableData>[] => [
   {
     id: "schoolName",
@@ -509,7 +510,7 @@ export function TableView({
     });
     setSupervisorAttendances(attendances.filter((x) => x !== undefined).flat());
     setFellowAttendances(_fellowAttendances);
-  }, [hubId, selectedDay, roleToggle, filters, sessions, supervisors]);
+  }, [hubId, selectedDay, roleToggle, filters, sessions, supervisors, state]);
 
   useEffect(() => {
     setTitle(

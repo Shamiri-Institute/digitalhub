@@ -15,6 +15,7 @@ export default function SessionsDatatableSkeleton({
     setSession: () => {},
     setRatingsDialog: () => {},
     setFellowAttendanceDialog: () => {},
+    setSupervisorAttendanceDialog: () => {},
     setStudentAttendanceDialog: () => {},
     setSessionOccurrenceDialog: () => {},
     setRescheduleSessionDialog: () => {},
