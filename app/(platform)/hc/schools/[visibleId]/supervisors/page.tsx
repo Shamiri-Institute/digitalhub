@@ -1,6 +1,5 @@
 import SupervisorInfoProvider from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisor-info-provider";
 import SupervisorsDataTable from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
-import { BatchUploadDownloadSupervisors } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/upload-csv";
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 
@@ -39,16 +38,6 @@ export default async function SupervisorsPage({
       <SupervisorInfoProvider>
         <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} />
       </SupervisorInfoProvider>
-      {coordinator?.assignedHubId &&
-        coordinator.implementerId &&
-        coordinator.assignedHub?.projectId && (
-          <BatchUploadDownloadSupervisors
-            hubId={coordinator?.assignedHubId}
-            implementerId={coordinator?.implementerId}
-            projectId={coordinator?.assignedHub?.projectId}
-            schoolVisibleId={visibleId}
-          />
-        )}
     </>
   );
 }

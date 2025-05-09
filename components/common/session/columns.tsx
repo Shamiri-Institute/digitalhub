@@ -40,6 +40,7 @@ export const columns = (state: {
   role: ImplementerRole;
   setRatingsDialog: Dispatch<SetStateAction<boolean>>;
   setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+  setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
   setRescheduleSessionDialog: Dispatch<SetStateAction<boolean>>;
@@ -179,6 +180,7 @@ export const columns = (state: {
           setSession: state.setSession,
           setFellowAttendanceDialog: state.setFellowAttendanceDialog,
           setStudentAttendanceDialog: state.setStudentAttendanceDialog,
+          setSupervisorAttendanceDialog: state.setSupervisorAttendanceDialog,
           setSessionOccurrenceDialog: state.setSessionOccurrenceDialog,
           setRescheduleSessionDialog: state.setRescheduleSessionDialog,
           setCancelSessionDialog: state.setCancelSessionDialog,

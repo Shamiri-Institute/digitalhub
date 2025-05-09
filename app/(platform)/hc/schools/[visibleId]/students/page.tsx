@@ -57,6 +57,9 @@ export default async function StudentsPage({
         },
       },
     },
+    orderBy: {
+      updatedAt: "desc",
+    },
   });
 
   return (

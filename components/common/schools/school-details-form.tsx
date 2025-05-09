@@ -51,12 +51,17 @@ import { usePathname } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { SchoolInformationSchema } from "../../../app/(platform)/hc/schemas";
+import {
+  AddSchoolSchema,
+  EditSchoolSchema,
+} from "../../../app/(platform)/hc/schemas";
 import {
   addSchool,
   editSchoolInformation,
   revalidatePageAction,
 } from "../../../app/(platform)/hc/schools/actions";
+
+type FormData = z.infer<typeof AddSchoolSchema>;
 
 export default function SchoolDetailsForm() {
   // TODO: Refactor this component to not use context
@@ -79,17 +84,17 @@ export default function SchoolDetailsForm() {
     if (!selectedCounty) return false;
 
     const subCounties: string[] = Array.from(selectedCounty.sub_counties);
-    return subCounties.includes(form.getValues("schoolSubCounty")!);
+    return subCounties.includes(form.getValues("schoolSubCounty") ?? "");
   };
 
-  const form = useForm<z.infer<typeof SchoolInformationSchema>>({
-    resolver: zodResolver(SchoolInformationSchema),
+  const form = useForm<FormData>({
+    resolver: zodResolver(isEditing ? EditSchoolSchema : AddSchoolSchema),
   });
 
   const pointPersonPhoneWatcher = form.watch("pointPersonPhone");
 
   useEffect(() => {
-    const defaultValues = {
+    const defaultValues: Partial<FormData> = {
       numbersExpected: context.school?.numbersExpected ?? 0,
       schoolEmail: context.school?.schoolEmail ?? "",
       schoolDemographics: context.school?.schoolDemographics as
@@ -118,17 +123,18 @@ export default function SchoolDetailsForm() {
     }
   }, [context.editDialog, context.school, form]);
 
-  const onSubmit = async (data: z.infer<typeof SchoolInformationSchema>) => {
+  const onSubmit = async (data: FormData) => {
     if (isEditing && context.school) {
       // remove empty strings (removed phone numbers)
       const pointPersonPhoneNumbers = data.pointPersonPhone
         ?.split("/")
-        .filter((phone) => phone !== " ");
+        .filter((phone: string) => phone !== " ");
       data.pointPersonPhone =
         pointPersonPhoneNumbers && pointPersonPhoneNumbers.length > 0
           ? pointPersonPhoneNumbers.join("/")
-          : null;
-      const response = await editSchoolInformation(context.school?.id, data);
+          : undefined;
+
+      const response = await editSchoolInformation(context.school.id, data);
 
       if (!response.success) {
         toast({
@@ -160,7 +166,7 @@ export default function SchoolDetailsForm() {
       });
     } else {
       // Add new school
-      const response = await addSchool(data);
+      const response = await addSchool(data as z.infer<typeof AddSchoolSchema>);
 
       if (!response.success) {
         toast({
@@ -229,12 +235,12 @@ export default function SchoolDetailsForm() {
                     control={form.control}
                     name="schoolName"
                     render={({ field }) => (
-                      <FormItem className="col-span-4">
+                      <FormItem
+                        className={isEditing ? "col-span-6" : "col-span-4"}
+                      >
                         <FormLabel>
                           School name{" "}
-                          {!isEditing && (
-                            <span className="text-shamiri-light-red">*</span>
-                          )}
+                          <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="text" />
@@ -243,35 +249,37 @@ export default function SchoolDetailsForm() {
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="numbersExpected"
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>
-                          No. of students{" "}
-                          {!isEditing && (
+                  {!isEditing && (
+                    <FormField
+                      control={form.control}
+                      name="numbersExpected"
+                      render={({ field }) => (
+                        <FormItem className="col-span-2">
+                          <FormLabel>
+                            No. of students{" "}
                             <span className="text-shamiri-light-red">*</span>
-                          )}
-                        </FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" min="1" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              min="1"
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                   <FormField
                     control={form.control}
                     name="schoolEmail"
                     render={({ field }) => (
                       <FormItem className="col-span-4">
-                        <FormLabel>
-                          School email{" "}
-                          {!isEditing && (
-                            <span className="text-shamiri-light-red">*</span>
-                          )}
-                        </FormLabel>
+                        <FormLabel>School email</FormLabel>
                         <FormControl>
                           <Input {...field} type="email" />
                         </FormControl>
@@ -284,12 +292,7 @@ export default function SchoolDetailsForm() {
                     name="schoolDemographics"
                     render={({ field }) => (
                       <FormItem className="col-span-2">
-                        <FormLabel>
-                          School demographics{" "}
-                          {!isEditing && (
-                            <span className="text-shamiri-light-red">*</span>
-                          )}
-                        </FormLabel>
+                        <FormLabel>School demographics</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -316,12 +319,7 @@ export default function SchoolDetailsForm() {
                     name="schoolCounty"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>
-                          School county{" "}
-                          {!isEditing && (
-                            <span className="text-shamiri-light-red">*</span>
-                          )}
-                        </FormLabel>
+                        <FormLabel>School county</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -356,12 +354,7 @@ export default function SchoolDetailsForm() {
                     name="schoolSubCounty"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>
-                          School sub-county{" "}
-                          {!isEditing && (
-                            <span className="text-shamiri-light-red">*</span>
-                          )}
-                        </FormLabel>
+                        <FormLabel>School sub-county</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -406,12 +399,7 @@ export default function SchoolDetailsForm() {
                     name="boardingDay"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>
-                          School boarding status{" "}
-                          {!isEditing && (
-                            <span className="text-shamiri-light-red">*</span>
-                          )}
-                        </FormLabel>
+                        <FormLabel>School boarding status</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -438,12 +426,7 @@ export default function SchoolDetailsForm() {
                     name="schoolType"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>
-                          School type{" "}
-                          {!isEditing && (
-                            <span className="text-shamiri-light-red">*</span>
-                          )}
-                        </FormLabel>
+                        <FormLabel>School type</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -521,12 +504,7 @@ export default function SchoolDetailsForm() {
                     name="principalName"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>
-                          Principal name{" "}
-                          {!isEditing && (
-                            <span className="text-shamiri-light-red">*</span>
-                          )}
-                        </FormLabel>
+                        <FormLabel>Principal name</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -539,12 +517,7 @@ export default function SchoolDetailsForm() {
                     name="principalPhone"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>
-                          Principal phone number{" "}
-                          {!isEditing && (
-                            <span className="text-shamiri-light-red">*</span>
-                          )}
-                        </FormLabel>
+                        <FormLabel>Principal phone number</FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
                         </FormControl>
@@ -557,12 +530,7 @@ export default function SchoolDetailsForm() {
                     name="pointPersonName"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>
-                          Point teacher name{" "}
-                          {!isEditing && (
-                            <span className="text-shamiri-light-red">*</span>
-                          )}
-                        </FormLabel>
+                        <FormLabel>Point teacher name</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -575,12 +543,7 @@ export default function SchoolDetailsForm() {
                     name="pointPersonEmail"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>
-                          Point person email{" "}
-                          {!isEditing && (
-                            <span className="text-shamiri-light-red">*</span>
-                          )}
-                        </FormLabel>
+                        <FormLabel>Point person email</FormLabel>
                         <FormControl>
                           <Input {...field} />
                         </FormControl>
@@ -593,111 +556,112 @@ export default function SchoolDetailsForm() {
                     name="pointPersonPhone"
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>
-                          Point teacher phone number{" "}
-                          {!isEditing && (
-                            <span className="text-shamiri-light-red">*</span>
-                          )}
-                        </FormLabel>
+                        <FormLabel>Point teacher phone number</FormLabel>
                         <FormControl>
                           <div className="flex flex-col gap-3">
                             {field.value &&
-                              field.value.split("/").map((number, index) => {
-                                return (
-                                  <div key={index}>
-                                    <div
-                                      className={cn(
-                                        "flex gap-2",
-                                        pointPersonPhoneWatcher?.split("/")[
-                                          index
-                                        ] === " "
-                                          ? "hidden"
-                                          : "",
-                                      )}
-                                    >
-                                      <Input
-                                        defaultValue={number}
-                                        disabled={
+                              field.value
+                                .split("/")
+                                .map((number: string, index: number) => {
+                                  return (
+                                    <div key={index}>
+                                      <div
+                                        className={cn(
+                                          "flex gap-2",
                                           pointPersonPhoneWatcher?.split("/")[
                                             index
                                           ] === " "
-                                        }
-                                        type="tel"
-                                        onChange={(e) => {
-                                          const newValue =
-                                            field.value!.split("/");
-                                          newValue.splice(
-                                            index,
-                                            1,
-                                            e.target.value,
-                                          );
-                                          form.setValue(
-                                            "pointPersonPhone",
-                                            newValue.join("/"),
-                                          );
-                                        }}
-                                        onBlur={(e) => {
-                                          if (
-                                            !isValidPhoneNumber(
-                                              e.target.value,
-                                              "KE",
-                                            ) &&
-                                            e.target.value !== ""
-                                          ) {
-                                            const errors = [
-                                              ...pointPersonPhoneErrors,
-                                            ];
-                                            errors.push(index);
-                                            setPointPersonPhoneErrors(errors);
+                                            ? "hidden"
+                                            : "",
+                                        )}
+                                      >
+                                        <Input
+                                          defaultValue={number}
+                                          disabled={
+                                            pointPersonPhoneWatcher?.split("/")[
+                                              index
+                                            ] === " "
                                           }
-
-                                          if (
-                                            isValidPhoneNumber(
+                                          type="tel"
+                                          onChange={(e) => {
+                                            const newValue =
+                                              field.value!.split("/");
+                                            newValue.splice(
+                                              index,
+                                              1,
                                               e.target.value,
-                                              "KE",
-                                            )
-                                          ) {
-                                            const matchIndex =
-                                              pointPersonPhoneErrors.findIndex(
-                                                (error) => error === index,
-                                              );
-                                            if (matchIndex !== -1) {
+                                            );
+                                            form.setValue(
+                                              "pointPersonPhone",
+                                              newValue.join("/"),
+                                            );
+                                          }}
+                                          onBlur={(e) => {
+                                            if (
+                                              !isValidPhoneNumber(
+                                                e.target.value,
+                                                "KE",
+                                              ) &&
+                                              e.target.value !== ""
+                                            ) {
                                               const errors = [
                                                 ...pointPersonPhoneErrors,
                                               ];
-                                              errors.splice(matchIndex, 1);
+                                              errors.push(index);
                                               setPointPersonPhoneErrors(errors);
                                             }
-                                          }
-                                        }}
-                                      />
-                                      <Button
-                                        variant="ghost"
-                                        type="button"
-                                        className="flex items-center text-shamiri-light-red hover:bg-red-bg"
-                                        onClick={() => {
-                                          const newValue =
-                                            field.value?.split("/");
-                                          newValue?.splice(index, 1, " ");
-                                          form.setValue(
-                                            "pointPersonPhone",
-                                            newValue?.join("/") ?? "",
-                                          );
-                                        }}
-                                      >
-                                        <Icons.minusCircle className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                    {pointPersonPhoneErrors.includes(index) ? (
-                                      <div className="py-1">
-                                        <FormMessage>
-                                          Please enter a valid kenyan number
-                                        </FormMessage>
+
+                                            if (
+                                              isValidPhoneNumber(
+                                                e.target.value,
+                                                "KE",
+                                              )
+                                            ) {
+                                              const matchIndex =
+                                                pointPersonPhoneErrors.findIndex(
+                                                  (error) => error === index,
+                                                );
+                                              if (matchIndex !== -1) {
+                                                const errors = [
+                                                  ...pointPersonPhoneErrors,
+                                                ];
+                                                errors.splice(matchIndex, 1);
+                                                setPointPersonPhoneErrors(
+                                                  errors,
+                                                );
+                                              }
+                                            }
+                                          }}
+                                        />
+                                        <Button
+                                          variant="ghost"
+                                          type="button"
+                                          className="flex items-center text-shamiri-light-red hover:bg-red-bg"
+                                          onClick={() => {
+                                            const newValue =
+                                              field.value?.split("/");
+                                            newValue?.splice(index, 1, " ");
+                                            form.setValue(
+                                              "pointPersonPhone",
+                                              newValue?.join("/") ?? "",
+                                            );
+                                          }}
+                                        >
+                                          <Icons.minusCircle className="h-4 w-4" />
+                                        </Button>
                                       </div>
-                                    ) : null}
-                                  </div>
-                                );
-                              })}
+                                      {pointPersonPhoneErrors.includes(
+                                        index,
+                                      ) ? (
+                                        <div className="py-1">
+                                          <FormMessage>
+                                            Please enter a valid kenyan number
+                                          </FormMessage>
+                                        </div>
+                                      ) : null}
+                                    </div>
+                                  );
+                                })}
                             <div className="flex gap-2">
                               <Input
                                 onChange={(e) => {
