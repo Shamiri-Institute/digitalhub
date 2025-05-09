@@ -21,7 +21,7 @@ export default function SessionHistoryWidget({
 }) {
   return (
     <div className="flex gap-2">
-      {SESSION_TYPES.map((session) => {
+      {SESSION_TYPES.filter((session) => session.type === "INTERVENTION").map((session) => {
         const match = attendedSessions.find((attendance) => {
           return attendance.sessionType === session.name;
         });
