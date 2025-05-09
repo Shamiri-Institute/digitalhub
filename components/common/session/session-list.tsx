@@ -286,6 +286,7 @@ export function SessionDropDown({
     setRatingsDialog?: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog?: Dispatch<SetStateAction<boolean>>;
     setFellowAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
+    setSupervisorAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog?: Dispatch<SetStateAction<boolean>>;
     setRescheduleSessionDialog?: Dispatch<SetStateAction<boolean>>;
     setCancelSessionDialog?: Dispatch<SetStateAction<boolean>>;
@@ -316,13 +317,12 @@ export function SessionDropDown({
             <DropdownMenuItem
               onClick={() => {
                 state.setSession && state.setSession(session);
-                supervisorAttendanceContext.setIsOpen(true);
+                state.setSupervisorAttendanceDialog &&
+                  state.setSupervisorAttendanceDialog(true);
               }}
-              disabled={session.status === "Cancelled"}
+              disabled={session.status === "Cancelled" || !session.occurred}
             >
-              {session.occurred
-                ? "View supervisor attendance"
-                : "Mark supervisor attendance"}
+              Mark supervisor attendance
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
@@ -330,13 +330,14 @@ export function SessionDropDown({
                 state.setFellowAttendanceDialog &&
                   state.setFellowAttendanceDialog(true);
               }}
-              disabled={session.status === "Cancelled"}
+              disabled={session.status === "Cancelled" || !session.occurred}
             >
-              View fellow attendance
+              Mark fellow attendance
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={
                 session.status === "Cancelled" ||
+                !session.occurred ||
                 session.sessionRatings.length === 0
               }
               onClick={() => {

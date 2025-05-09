@@ -1,6 +1,6 @@
 "use client";
 
-import { handleSupervisorCSVTemplateDownload } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/upload-csv";
+import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";
 import {
   columns,
   SupervisorsData,
@@ -13,9 +13,7 @@ import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-
 import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
-import FileUploader from "#/components/file-uploader";
 import { Icons } from "#/components/icons";
-import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,32 +72,8 @@ export default function MainSupervisorsDataTable({
 
   const renderTableActions = () => {
     return (
-      <div className="flex gap-3">
-        <Button
-          variant="outline"
-          className="flex gap-1 bg-white"
-          onClick={handleSupervisorCSVTemplateDownload}
-        >
-          <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
-          <span>Download supervisors CSV template</span>
-        </Button>
-
-        <FileUploader
-          url="/api/csv-uploads/supervisors"
-          type="supervisors"
-          uploadVisibleMessage="Upload supervisors CSV"
-          metadata={{
-            implementerId,
-            hubId,
-            projectId,
-            urlPath: "/hc/supervisors",
-          }}
-        />
-
-        {/*<Button variant="outline" className="flex gap-1 bg-white">*/}
-        {/*  <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />*/}
-        {/*  <span>Upload fellow monthly feedback CSV</span>*/}
-        {/*</Button>*/}
+      <div className="flex items-center gap-3">
+        <AddNewSupervisor />
       </div>
     );
   };
