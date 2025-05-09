@@ -334,7 +334,8 @@ export function SessionDropDown({
             </DropdownMenuItem>
             <DropdownMenuItem
               disabled={
-                session.status === "Cancelled" || !session.occurred ||
+                session.status === "Cancelled" ||
+                !session.occurred ||
                 session.sessionRatings.length === 0
               }
               onClick={() => {

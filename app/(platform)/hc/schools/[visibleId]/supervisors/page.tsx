@@ -39,16 +39,6 @@ export default async function SupervisorsPage({
       <SupervisorInfoProvider>
         <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} />
       </SupervisorInfoProvider>
-      {coordinator?.assignedHubId &&
-        coordinator.implementerId &&
-        coordinator.assignedHub?.projectId && (
-          <BatchUploadDownloadSupervisors
-            hubId={coordinator?.assignedHubId}
-            implementerId={coordinator?.implementerId}
-            projectId={coordinator?.assignedHub?.projectId}
-            schoolVisibleId={visibleId}
-          />
-        )}
     </>
   );
 }

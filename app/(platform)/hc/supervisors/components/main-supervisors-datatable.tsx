@@ -1,6 +1,6 @@
 "use client";
 
-import { handleSupervisorCSVTemplateDownload } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/upload-csv";
+import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";
 import {
   columns,
   SupervisorsData,
@@ -13,9 +13,7 @@ import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-
 import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
-import FileUploader from "#/components/file-uploader";
 import { Icons } from "#/components/icons";
-import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +26,6 @@ import { Prisma } from "@prisma/client";
 import { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useContext, useState } from "react";
-import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";
 
 export default function MainSupervisorsDataTable({
   supervisors,
@@ -75,7 +72,7 @@ export default function MainSupervisorsDataTable({
 
   const renderTableActions = () => {
     return (
-      <div className="flex gap-3">
+      <div className="flex items-center gap-3">
         <AddNewSupervisor />
       </div>
     );

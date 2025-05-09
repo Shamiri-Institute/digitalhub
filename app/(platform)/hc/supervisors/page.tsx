@@ -1,7 +1,6 @@
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
-import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";
 import MainSupervisorsDataTable from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
 import SupervisorChartsWrapper from "#/app/(platform)/hc/supervisors/components/supervisor-charts-container";
 import SupervisorProvider from "#/app/(platform)/hc/supervisors/components/supervisor-provider";

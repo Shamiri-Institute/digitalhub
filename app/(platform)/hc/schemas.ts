@@ -171,105 +171,66 @@ export const MonthlySupervisorEvaluationSchema = z.object({
 
 const counties = KENYAN_COUNTIES.map((county) => county.name);
 
-export const SchoolInformationSchema = z.object({
-  numbersExpected: z.coerce
-    .number({
-      required_error: "Please enter the promised number of students.",
-    })
-    .optional(),
-  schoolEmail: z
-    .string({
-      required_error: "Please enter the school's email.",
-    })
-    .email({
-      message: "Please enter a valid email.",
-    })
-    .optional(),
-  schoolCounty: z
-    .enum([counties[0]!, ...counties.slice(1)], {
-      invalid_type_error: "Please pick a valid option",
-    })
-    .optional(),
-  schoolSubCounty: z
-    .string({
-      invalid_type_error: "Please pick a valid sub county.",
-      description: "Pick a county first",
-    })
-    .optional(),
-  schoolContact: z
-    .string({
-      required_error: "Please enter the school's contact number.",
-    })
-    .optional(),
-  schoolDemographics: z
-    .enum(SCHOOL_DEMOGRAPHICS, {
-      invalid_type_error: "Please pick a valid option",
-    })
-    .optional(),
-  boardingDay: z
-    .enum(BOARDING_DAY_TYPES, {
-      invalid_type_error: "Please pick a valid option",
-    })
-    .optional(),
-  schoolType: z
-    .enum(SCHOOL_TYPES, {
-      invalid_type_error: "Please pick a valid option",
-    })
-    .optional(),
-  pointPersonName: z
-    .string({ required_error: "Please enter the point person's name" })
-    .optional(),
-  pointPersonEmail: z
-    .string({ required_error: "Please enter the point person's email" })
-    .email({
-      message: "Please enter a valid email.",
-    })
-    .optional(),
-  pointPersonPhone: z
-    .string({
-      required_error: "Please enter the point person's phone number",
-    })
-    .nullable()
-    .superRefine((val, ctx) => {
-      if (val !== null) {
-        val.split("/").forEach((phone: string) => {
-          if (!isValidPhoneNumber(phone, "KE") && phone !== " ") {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: phone + " is not a valid kenyan number",
-              fatal: true,
-            });
-          }
-        });
-      }
-    })
-    .optional(),
-  schoolName: z
-    .string({ required_error: "Please enter the school's name" })
-    .optional(),
-  principalName: z
-    .string({ required_error: "Please enter the principal's name" })
-    .optional(),
-  principalPhone: z
-    .string({
-      required_error: "Please enter the principal's phone number",
-    })
-    .refine((val) => isValidPhoneNumber(val, "KE"), {
-      message: "Please enter a valid kenyan phone number",
-    })
-    .optional(),
-  preSessionDate: z
-    .date({
-      required_error: "Please select a date",
-      invalid_type_error: "Please select a date",
-    })
-    .transform((val) => {
-      if (!val) {
-        throw new Error("Please select a date");
-      }
-      return val;
+// Base schema with common fields
+const BaseSchoolSchema = z.object({
+  schoolName: z.string().min(1, "School name is required"),
+  schoolType: z.enum(SCHOOL_TYPES, {
+    invalid_type_error: "Please pick a valid option",
+  }).optional(),
+  schoolEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+  schoolCounty: z.enum([counties[0]!, ...counties.slice(1)], {
+    errorMap: (_issue, _ctx) => ({
+      message: "Please select a valid option",
     }),
+  }).optional(),
+  schoolSubCounty: z.string().optional(),
+  schoolDemographics: z.enum(SCHOOL_DEMOGRAPHICS, {
+    errorMap: (_issue, _ctx) => ({
+      message: "Please select a valid option",
+    }),
+  }).optional(),
+  pointPersonName: z.string().optional(),
+  pointPersonPhone: z.string().optional(),
+  pointPersonEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+  principalName: z.string().optional(),
+  principalPhone: z.string().optional(),
+  boardingDay: z.enum(BOARDING_DAY_TYPES, {
+    errorMap: (_issue, _ctx) => ({
+      message: "Please select a valid option",
+    }),
+  }).optional(),
 });
+
+// Schema for adding a new school (requires preSessionDate and numbersExpected)
+export const AddSchoolSchema = BaseSchoolSchema.extend({
+  preSessionDate: z.date({
+    required_error: "Please select a date",
+    invalid_type_error: "Please select a date",
+  }).transform((val) => {
+    if (!val) {
+      throw new Error("Please select a date");
+    }
+    return val;
+  }),
+  numbersExpected: z.number().min(1, "Number of students is required"),
+});
+
+// Schema for editing a school (preSessionDate and numbersExpected are optional)
+export const EditSchoolSchema = BaseSchoolSchema.extend({
+  preSessionDate: z.date({
+    required_error: "Please select a date",
+    invalid_type_error: "Please select a date",
+  }).optional().transform((val) => {
+    if (val) {
+      return val;
+    }
+    return undefined;
+  }),
+  numbersExpected: z.number().min(1, "Number of students is required").optional(),
+});
+
+// For backward compatibility
+export const SchoolInformationSchema = EditSchoolSchema;
 
 export const EditSupervisorSchema = z
   .object({

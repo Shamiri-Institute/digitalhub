@@ -46,7 +46,7 @@ export const COMPLAINT_TYPES = [
 
 export const SCHOOL_DEMOGRAPHICS = ["Girls", "Boys", "Mixed"] as const;
 
-export const BOARDING_DAY_TYPES = ["Day", "Boarding", "Mixed"] as const;
+export const BOARDING_DAY_TYPES = ["Day", "Boarding", "Both"] as const;
 
 export const ATTENDANCE_STATUS = ["attended", "missed", "unmarked"] as const;
 
