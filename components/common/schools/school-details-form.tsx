@@ -51,7 +51,10 @@ import { usePathname } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { AddSchoolSchema, EditSchoolSchema } from "../../../app/(platform)/hc/schemas";
+import {
+  AddSchoolSchema,
+  EditSchoolSchema,
+} from "../../../app/(platform)/hc/schemas";
 import {
   addSchool,
   editSchoolInformation,
@@ -232,7 +235,9 @@ export default function SchoolDetailsForm() {
                     control={form.control}
                     name="schoolName"
                     render={({ field }) => (
-                      <FormItem className={isEditing ? "col-span-6" : "col-span-4"}>
+                      <FormItem
+                        className={isEditing ? "col-span-6" : "col-span-4"}
+                      >
                         <FormLabel>
                           School name{" "}
                           <span className="text-shamiri-light-red">*</span>
@@ -255,11 +260,13 @@ export default function SchoolDetailsForm() {
                             <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input 
-                              {...field} 
-                              type="number" 
+                            <Input
+                              {...field}
+                              type="number"
                               min="1"
-                              onChange={(e) => field.onChange(Number(e.target.value))}
+                              onChange={(e) =>
+                                field.onChange(Number(e.target.value))
+                              }
                             />
                           </FormControl>
                           <FormMessage />
@@ -553,102 +560,108 @@ export default function SchoolDetailsForm() {
                         <FormControl>
                           <div className="flex flex-col gap-3">
                             {field.value &&
-                              field.value.split("/").map((number: string, index: number) => {
-                                return (
-                                  <div key={index}>
-                                    <div
-                                      className={cn(
-                                        "flex gap-2",
-                                        pointPersonPhoneWatcher?.split("/")[
-                                          index
-                                        ] === " "
-                                          ? "hidden"
-                                          : "",
-                                      )}
-                                    >
-                                      <Input
-                                        defaultValue={number}
-                                        disabled={
+                              field.value
+                                .split("/")
+                                .map((number: string, index: number) => {
+                                  return (
+                                    <div key={index}>
+                                      <div
+                                        className={cn(
+                                          "flex gap-2",
                                           pointPersonPhoneWatcher?.split("/")[
                                             index
                                           ] === " "
-                                        }
-                                        type="tel"
-                                        onChange={(e) => {
-                                          const newValue =
-                                            field.value!.split("/");
-                                          newValue.splice(
-                                            index,
-                                            1,
-                                            e.target.value,
-                                          );
-                                          form.setValue(
-                                            "pointPersonPhone",
-                                            newValue.join("/"),
-                                          );
-                                        }}
-                                        onBlur={(e) => {
-                                          if (
-                                            !isValidPhoneNumber(
-                                              e.target.value,
-                                              "KE",
-                                            ) &&
-                                            e.target.value !== ""
-                                          ) {
-                                            const errors = [
-                                              ...pointPersonPhoneErrors,
-                                            ];
-                                            errors.push(index);
-                                            setPointPersonPhoneErrors(errors);
+                                            ? "hidden"
+                                            : "",
+                                        )}
+                                      >
+                                        <Input
+                                          defaultValue={number}
+                                          disabled={
+                                            pointPersonPhoneWatcher?.split("/")[
+                                              index
+                                            ] === " "
                                           }
-
-                                          if (
-                                            isValidPhoneNumber(
+                                          type="tel"
+                                          onChange={(e) => {
+                                            const newValue =
+                                              field.value!.split("/");
+                                            newValue.splice(
+                                              index,
+                                              1,
                                               e.target.value,
-                                              "KE",
-                                            )
-                                          ) {
-                                            const matchIndex =
-                                              pointPersonPhoneErrors.findIndex(
-                                                (error) => error === index,
-                                              );
-                                            if (matchIndex !== -1) {
+                                            );
+                                            form.setValue(
+                                              "pointPersonPhone",
+                                              newValue.join("/"),
+                                            );
+                                          }}
+                                          onBlur={(e) => {
+                                            if (
+                                              !isValidPhoneNumber(
+                                                e.target.value,
+                                                "KE",
+                                              ) &&
+                                              e.target.value !== ""
+                                            ) {
                                               const errors = [
                                                 ...pointPersonPhoneErrors,
                                               ];
-                                              errors.splice(matchIndex, 1);
+                                              errors.push(index);
                                               setPointPersonPhoneErrors(errors);
                                             }
-                                          }
-                                        }}
-                                      />
-                                      <Button
-                                        variant="ghost"
-                                        type="button"
-                                        className="flex items-center text-shamiri-light-red hover:bg-red-bg"
-                                        onClick={() => {
-                                          const newValue =
-                                            field.value?.split("/");
-                                          newValue?.splice(index, 1, " ");
-                                          form.setValue(
-                                            "pointPersonPhone",
-                                            newValue?.join("/") ?? "",
-                                          );
-                                        }}
-                                      >
-                                        <Icons.minusCircle className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                    {pointPersonPhoneErrors.includes(index) ? (
-                                      <div className="py-1">
-                                        <FormMessage>
-                                          Please enter a valid kenyan number
-                                        </FormMessage>
+
+                                            if (
+                                              isValidPhoneNumber(
+                                                e.target.value,
+                                                "KE",
+                                              )
+                                            ) {
+                                              const matchIndex =
+                                                pointPersonPhoneErrors.findIndex(
+                                                  (error) => error === index,
+                                                );
+                                              if (matchIndex !== -1) {
+                                                const errors = [
+                                                  ...pointPersonPhoneErrors,
+                                                ];
+                                                errors.splice(matchIndex, 1);
+                                                setPointPersonPhoneErrors(
+                                                  errors,
+                                                );
+                                              }
+                                            }
+                                          }}
+                                        />
+                                        <Button
+                                          variant="ghost"
+                                          type="button"
+                                          className="flex items-center text-shamiri-light-red hover:bg-red-bg"
+                                          onClick={() => {
+                                            const newValue =
+                                              field.value?.split("/");
+                                            newValue?.splice(index, 1, " ");
+                                            form.setValue(
+                                              "pointPersonPhone",
+                                              newValue?.join("/") ?? "",
+                                            );
+                                          }}
+                                        >
+                                          <Icons.minusCircle className="h-4 w-4" />
+                                        </Button>
                                       </div>
-                                    ) : null}
-                                  </div>
-                                );
-                              })}
+                                      {pointPersonPhoneErrors.includes(
+                                        index,
+                                      ) ? (
+                                        <div className="py-1">
+                                          <FormMessage>
+                                            Please enter a valid kenyan number
+                                          </FormMessage>
+                                        </div>
+                                      ) : null}
+                                    </div>
+                                  );
+                                })}
                             <div className="flex gap-2">
                               <Input
                                 onChange={(e) => {

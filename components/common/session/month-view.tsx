@@ -36,6 +36,7 @@ export function MonthView({
   dialogState: {
     setSession: Dispatch<SetStateAction<Session | null>>;
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;
@@ -166,6 +167,7 @@ export function MonthCalendarCell({
   dialogState: {
     setSession: Dispatch<SetStateAction<Session | null>>;
     setFellowAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setSupervisorAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setRatingsDialog: Dispatch<SetStateAction<boolean>>;
     setSessionOccurrenceDialog: Dispatch<SetStateAction<boolean>>;

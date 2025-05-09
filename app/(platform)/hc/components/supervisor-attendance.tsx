@@ -1,7 +1,7 @@
-import { SupervisorAttendanceContext } from "#/app/(platform)/hc/context/supervisor-attendance-dialog-context";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
+import { Session } from "#/components/common/session/sessions-provider";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -34,17 +34,14 @@ import { cn, sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
-import {
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 export default function SupervisorAttendance({
   supervisors,
   role,
+  isOpen,
+  setIsOpen,
+  session,
 }: {
   supervisors?: Prisma.SupervisorGetPayload<{
     include: {
@@ -63,8 +60,10 @@ export default function SupervisorAttendance({
     };
   }>[];
   role: ImplementerRole;
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+  session: Session | null;
 }) {
-  const context = useContext(SupervisorAttendanceContext);
   const [attendances, setAttendances] = useState<
     SupervisorAttendanceTableData[]
   >([]);
@@ -74,14 +73,14 @@ export default function SupervisorAttendance({
       supervisors?.map((supervisor) => {
         const totalAttendedFellows = supervisor.fellows.filter((fellow) => {
           const attended = fellow.fellowAttendances.find(
-            (attendance) => attendance.sessionId === context.session?.id,
+            (attendance) => attendance.sessionId === session?.id,
           );
           if (attended) {
             return fellow;
           }
         });
         const attendance = supervisor.supervisorAttendances.find(
-          (_attendance) => _attendance.sessionId === context.session?.id,
+          (_attendance) => _attendance.sessionId === session?.id,
         );
         return {
           id: attendance?.id,
@@ -99,23 +98,17 @@ export default function SupervisorAttendance({
           absenceReason: attendance?.absenceReason ?? "",
           absenceComments: attendance?.absenceComments ?? "",
           schoolName:
-            context.session?.school?.schoolName ??
-            context.session?.venue ??
-            undefined,
-          sessionType: context.session?.sessionType ?? undefined,
-          sessionStatus: context.session?.status,
+            session?.school?.schoolName ?? session?.venue ?? undefined,
+          sessionType: session?.sessionType ?? undefined,
+          sessionStatus: session?.status,
         };
       }) ?? [];
     setAttendances(tableData);
-  }, [context.isOpen, context.session, supervisors]);
+  }, [isOpen, session, supervisors]);
 
   return (
     <div>
-      <Dialog
-        open={context.isOpen}
-        onOpenChange={context.setIsOpen}
-        modal={true}
-      >
+      <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
         <DialogPortal>
           <DialogContent className="w-5/6 max-w-none lg:w-4/5">
             <DialogHeader>
@@ -123,9 +116,9 @@ export default function SupervisorAttendance({
                 Mark supervisor attendance
               </span>
             </DialogHeader>
-            {context.session && (
+            {session && (
               <SessionDetail
-                state={{ session: context.session }}
+                state={{ session }}
                 layout={"compact"}
                 withDropdown={false}
                 role={role}
@@ -134,6 +127,7 @@ export default function SupervisorAttendance({
             <SupervisorAttendanceDataTable
               data={attendances}
               toggleBulkMode={true}
+              session={session}
             />
           </DialogContent>
         </DialogPortal>
@@ -147,6 +141,7 @@ export function SupervisorAttendanceDataTable({
   emptyStateMessage = "No supervisors in hub",
   overrideColumns,
   toggleBulkMode = false,
+  session,
 }: {
   data: SupervisorAttendanceTableData[];
   emptyStateMessage?: string;
@@ -154,8 +149,10 @@ export function SupervisorAttendanceDataTable({
     setAttendance: Dispatch<
       SetStateAction<SupervisorAttendanceTableData | undefined>
     >;
+    setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   }) => ColumnDef<SupervisorAttendanceTableData>[];
   toggleBulkMode?: boolean;
+  session?: Session | null;
 }) {
   const [selectedRows, setSelectedRows] = useState<
     Row<SupervisorAttendanceTableData>[]
@@ -164,8 +161,8 @@ export function SupervisorAttendanceDataTable({
   const [attendance, setAttendance] = useState<
     SupervisorAttendanceTableData | undefined
   >();
-
-  const context = useContext(SupervisorAttendanceContext);
+  const [markAttendanceDialog, setMarkAttendanceDialog] =
+    useState<boolean>(false);
 
   const renderTableActions = () => {
     return (
@@ -177,7 +174,7 @@ export function SupervisorAttendanceDataTable({
             disabled={selectedRows.length === 0}
             onClick={() => {
               setBulkMode(true);
-              context.setMarkAttendanceDialog(true);
+              setMarkAttendanceDialog(true);
             }}
           >
             <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
@@ -196,9 +193,11 @@ export function SupervisorAttendanceDataTable({
           overrideColumns
             ? overrideColumns({
                 setAttendance,
+                setMarkAttendanceDialog,
               })
             : (columns({
                 setAttendance,
+                setMarkAttendanceDialog,
               }) as ColumnDef<SupervisorAttendanceTableData>[])
         }
         data={data}
@@ -213,7 +212,7 @@ export function SupervisorAttendanceDataTable({
       />
       <MarkAttendance
         title={"Mark supervisor attendance"}
-        selectedSessionId={attendance?.sessionId ?? context.session?.id}
+        selectedSessionId={attendance?.sessionId ?? session?.id}
         attendances={
           attendance
             ? [
@@ -230,8 +229,8 @@ export function SupervisorAttendanceDataTable({
             : []
         }
         id={attendance?.supervisorId}
-        isOpen={context.markAttendanceDialog}
-        setIsOpen={context.setMarkAttendanceDialog}
+        isOpen={markAttendanceDialog}
+        setIsOpen={setMarkAttendanceDialog}
         markAttendanceAction={markSupervisorAttendance}
         sessionMode="single"
         bulkMode={bulkMode}
@@ -251,7 +250,7 @@ export function SupervisorAttendanceDataTable({
             </span>
             <span>
               {sessionDisplayName(
-                attendance?.sessionType ?? context.session?.sessionType ?? "",
+                attendance?.sessionType ?? session?.sessionType ?? "",
               )}
             </span>
             <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
@@ -259,8 +258,8 @@ export function SupervisorAttendanceDataTable({
             </span>
             <span>
               {attendance?.schoolName ??
-                context.session?.school?.schoolName ??
-                context.session?.venue}
+                session?.school?.schoolName ??
+                session?.venue}
             </span>
           </div>
         </DialogAlertWidget>
@@ -292,6 +291,7 @@ const columns = (state: {
   setAttendance: Dispatch<
     SetStateAction<SupervisorAttendanceTableData | undefined>
   >;
+  setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
 }): ColumnDef<SupervisorAttendanceTableData>[] => [
   {
     header: ({ table }) => (
@@ -483,9 +483,9 @@ export function SupervisorAttendanceDataTableMenu({
     setAttendance: Dispatch<
       SetStateAction<SupervisorAttendanceTableData | undefined>
     >;
+    setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
-  const context = useContext(SupervisorAttendanceContext);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -506,7 +506,7 @@ export function SupervisorAttendanceDataTableMenu({
           <DropdownMenuItem
             onClick={() => {
               state.setAttendance(attendance);
-              context.setMarkAttendanceDialog(true);
+              state.setMarkAttendanceDialog(true);
             }}
             disabled={attendance?.sessionStatus === SessionStatus.Cancelled}
           >

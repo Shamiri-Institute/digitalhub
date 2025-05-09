@@ -13,7 +13,6 @@ import {
   AssignPointSupervisorSchema,
   DropoutSchoolSchema,
   EditSchoolSchema,
-  SchoolInformationSchema,
   WeeklyHubReportSchema,
 } from "../schemas";
 
