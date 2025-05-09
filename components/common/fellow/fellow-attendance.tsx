@@ -137,7 +137,7 @@ export default function FellowAttendance({
       });
       setFellows(attendances);
     }
-  }, [fellowRatings, selectedSupervisor, session, supervisors]);
+  }, [fellowRatings, selectedSupervisor, session, supervisors, watcher]);
 
   return (
     <div>

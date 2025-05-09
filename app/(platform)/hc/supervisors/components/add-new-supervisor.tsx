@@ -37,6 +37,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
+import { Plus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -104,8 +105,8 @@ export default function AddNewSupervisor() {
           }}
           className="flex gap-2"
         >
-          <Icons.plusCircle className="h-4 w-4" />
-          Add New Supervisor
+          <Plus className="h-4 w-4" />
+          Add supervisor
         </Button>
       </DialogTrigger>
       <DialogContent className="w-2/5 max-w-none">

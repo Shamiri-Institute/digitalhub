@@ -9,9 +9,10 @@ import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import {
+  AddSchoolSchema,
   AssignPointSupervisorSchema,
   DropoutSchoolSchema,
-  SchoolInformationSchema,
+  EditSchoolSchema,
   WeeklyHubReportSchema,
 } from "../schemas";
 
@@ -415,7 +416,7 @@ export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
 
 export async function editSchoolInformation(
   schoolId: string,
-  schoolInfo: z.infer<typeof SchoolInformationSchema>,
+  schoolInfo: z.infer<typeof EditSchoolSchema>,
 ) {
   try {
     const authedCoordinator = await currentHubCoordinator();
@@ -424,7 +425,7 @@ export async function editSchoolInformation(
       throw new Error("User not authorised to perform this function");
     }
 
-    const parsedData = SchoolInformationSchema.parse(schoolInfo);
+    const parsedData = EditSchoolSchema.parse(schoolInfo);
 
     const { schoolName } = await db.school.update({
       where: {
@@ -440,9 +441,9 @@ export async function editSchoolInformation(
         pointPersonName: parsedData.pointPersonName ?? null,
         pointPersonPhone: parsedData.pointPersonPhone ?? null,
         pointPersonEmail: parsedData.pointPersonEmail ?? null,
-        numbersExpected: parsedData.numbersExpected ?? null,
         principalName: parsedData.principalName ?? null,
         principalPhone: parsedData.principalPhone ?? null,
+        boardingDay: parsedData.boardingDay ?? null,
         droppedOut: false,
         dropoutReason: null,
         droppedOutAt: null,
@@ -507,7 +508,7 @@ export async function assignSchoolPointSupervisor(
 }
 
 export async function addSchool(
-  data: z.infer<typeof SchoolInformationSchema>,
+  data: z.infer<typeof AddSchoolSchema>,
 ): Promise<AddSchoolResponse> {
   try {
     const hubCoordinator = await currentHubCoordinator();
@@ -516,7 +517,7 @@ export async function addSchool(
     }
 
     const hubId = hubCoordinator.assignedHubId;
-    const parsedData = SchoolInformationSchema.parse(data);
+    const parsedData = AddSchoolSchema.parse(data);
 
     // Get available fellows for the pre-session date
     const fellows = await db.fellow.findMany({
@@ -593,6 +594,7 @@ export async function addSchool(
           numbersExpected: parsedData.numbersExpected,
           principalName: parsedData.principalName,
           principalPhone: parsedData.principalPhone,
+          boardingDay: parsedData.boardingDay,
           droppedOut: false,
           dropoutReason: null,
           droppedOutAt: null,
