@@ -55,7 +55,7 @@ export default function SupervisorsDataTable({
 }) {
   const schoolContext = useContext(SchoolInfoContext);
   const [batchMode, setBatchMode] = useState<boolean>(false);
-  const [selectedRows, setSelectedRows] = useState<SupervisorsData[]>([]);
+  const [selectedRows, setSelectedRows] = useState<Row<SupervisorsData>[]>([]);
   const context = useContext(SupervisorInfoContext);
   const [markAttendanceDialog, setMarkAttendanceDialog] =
     useState<boolean>(false);
@@ -193,9 +193,7 @@ export default function SupervisorsDataTable({
         bulkMode={batchMode}
         setBulkMode={setBatchMode}
         markBulkAttendanceAction={markManySupervisorAttendance}
-        selectedIds={(selectedRows as SupervisorsData[]).map(
-          (x): string => x.id,
-        )}
+        selectedIds={selectedRows.map((x): string => x.original.id)}
       >
         <DialogAlertWidget>
           <div className="flex flex-wrap items-center gap-2">
