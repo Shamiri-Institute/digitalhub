@@ -17,7 +17,6 @@ import { SubmitComplaintSchema } from "#/components/common/schemas";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { generateFellowVisibleID } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { format } from "date-fns";
 import { z } from "zod";
@@ -87,7 +86,8 @@ export async function submitFellowDetails(
       if (existingUser) {
         return {
           success: false,
-          message: "Something went wrong. A user with this email already exists",
+          message:
+            "Something went wrong. A user with this email already exists",
         };
       }
 
@@ -134,16 +134,20 @@ export async function submitFellowDetails(
       if (existingUser) {
         return {
           success: false,
-          message: "Something went wrong. A user with this email already exists",
+          message:
+            "Something went wrong. A user with this email already exists",
         };
       }
 
-      const implementerId = hubCoordinator?.user?.membership.implementerId ?? supervisor?.user?.membership.implementerId;
+      const implementerId =
+        hubCoordinator?.user?.membership.implementerId ??
+        supervisor?.user?.membership.implementerId;
       const hubId = supervisor?.hubId ?? hubCoordinator?.assignedHubId;
       if (!implementerId || !hubId) {
         return {
           success: false,
-          message: "Something went wrong. Missing implementer or hub information",
+          message:
+            "Something went wrong. Missing implementer or hub information",
         };
       }
 
@@ -204,11 +208,11 @@ export async function submitFellowDetails(
     const { mode } = FellowDetailsSchema.parse(data);
     return {
       success: false,
-      message: (err as Error)?.message ?? (
-        mode === "edit"
+      message:
+        (err as Error)?.message ??
+        (mode === "edit"
           ? "Something went wrong. Could not update fellow details."
-          : "Something went wrong. Could not add new fellow"
-      ),
+          : "Something went wrong. Could not add new fellow"),
     };
   }
 }
