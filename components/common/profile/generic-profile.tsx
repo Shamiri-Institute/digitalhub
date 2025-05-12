@@ -459,53 +459,55 @@ export default function GenericProfileForm({
                   />
                 </div>
               </div>
-              {isFellow && (<div className="flex flex-col">
-                <div className="py-2">
-                  <span className="pb-2 text-xs uppercase text-gray-500">
-                    M-PESA Information
-                  </span>
-                  <Separator />
+              {isFellow && (
+                <div className="flex flex-col">
+                  <div className="py-2">
+                    <span className="pb-2 text-xs uppercase text-gray-500">
+                      M-PESA Information
+                    </span>
+                    <Separator />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name</FormLabel>
+                          <FormControl>
+                            {maybeWrapWithTooltip(
+                              <Input
+                                {...field}
+                                disabled={isFellow || isReadOnlyForSupervisors}
+                              />,
+                            )}
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="mpesaNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>M-Pesa number</FormLabel>
+                          <FormControl>
+                            {maybeWrapWithTooltip(
+                              <Input
+                                {...field}
+                                type="tel"
+                                disabled={isFellow || isReadOnlyForSupervisors}
+                              />,
+                            )}
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          {maybeWrapWithTooltip(
-                            <Input
-                              {...field}
-                              disabled={isFellow || isReadOnlyForSupervisors}
-                            />,
-                          )}
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="mpesaNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>M-Pesa number</FormLabel>
-                        <FormControl>
-                          {maybeWrapWithTooltip(
-                            <Input
-                              {...field}
-                              type="tel"
-                              disabled={isFellow || isReadOnlyForSupervisors}
-                            />,
-                          )}
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>)}
+              )}
               {!isFellow && (
                 <div className="flex flex-col">
                   <div className="py-2">
