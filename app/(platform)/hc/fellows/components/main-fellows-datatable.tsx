@@ -13,7 +13,6 @@ import UploadFellowQualification from "#/components/common/fellow/upload-qualifi
 import WeeklyFellowEvaluation from "#/components/common/fellow/weekly-fellow-evaluation";
 import SubmitComplaint from "#/components/common/submit-complaint";
 import DataTable from "#/components/data-table";
-import FileUploader from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { ImplementerRole, Prisma } from "@prisma/client";
@@ -70,22 +69,6 @@ export default function MainFellowsDatatable({
   const renderTableActions = () => {
     return (
       <div className="flex items-center gap-3">
-        <FileUploader
-          url="/api/csv-uploads/fellows"
-          type="fellows"
-          uploadVisibleMessage="Upload fellows CSV"
-          metadata={{
-            urlPath: "/hc/fellows",
-          }}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          className="bg-white"
-          onClick={downloadFellowsCsvTemplate}
-        >
-          Download fellows csv template
-        </Button>
         <FellowDetailsForm
           open={addDialog}
           onOpenChange={setAddDialog}
