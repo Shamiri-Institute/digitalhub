@@ -285,6 +285,41 @@ export async function updateSupervisorDetails(
       dateOfBirth,
     } = EditSupervisorSchema.parse(data);
 
+    // Get the current supervisor's user ID
+    const supervisorMember = await db.implementerMember.findFirst({
+      where: {
+        identifier: supervisorId,
+        role: "SUPERVISOR",
+      },
+      select: {
+        userId: true,
+      },
+    });
+
+    if (!supervisorMember) {
+      return {
+        success: false,
+        message: "Something went wrong. Supervisor user record not found",
+      };
+    }
+
+    // Check if email exists for any other user
+    const existingUser = await db.user.findFirst({
+      where: {
+        email: personalEmail,
+        NOT: {
+          id: supervisorMember.userId,
+        },
+      },
+    });
+
+    if (existingUser) {
+      return {
+        success: false,
+        message: "Something went wrong. A user with this email already exists",
+      };
+    }
+
     await db.supervisor.update({
       where: {
         id: supervisorId,
@@ -302,6 +337,17 @@ export async function updateSupervisorDetails(
         dateOfBirth,
       },
     });
+
+    // Update the corresponding user's email
+    await db.user.update({
+      where: {
+        id: supervisorMember.userId,
+      },
+      data: {
+        email: personalEmail,
+      },
+    });
+
     return {
       success: true,
       message: `Successfully updated details for ${supervisorName}`,
