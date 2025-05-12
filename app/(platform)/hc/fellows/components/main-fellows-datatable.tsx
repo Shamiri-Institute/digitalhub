@@ -70,22 +70,6 @@ export default function MainFellowsDatatable({
   const renderTableActions = () => {
     return (
       <div className="flex items-center gap-3">
-        <FileUploader
-          url="/api/csv-uploads/fellows"
-          type="fellows"
-          uploadVisibleMessage="Upload fellows CSV"
-          metadata={{
-            urlPath: "/hc/fellows",
-          }}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          className="bg-white"
-          onClick={downloadFellowsCsvTemplate}
-        >
-          Download fellows csv template
-        </Button>
         <FellowDetailsForm
           open={addDialog}
           onOpenChange={setAddDialog}
