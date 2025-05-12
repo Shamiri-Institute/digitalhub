@@ -17,7 +17,6 @@ import { SubmitComplaintSchema } from "#/components/common/schemas";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { generateFellowVisibleID } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { format } from "date-fns";
 import { z } from "zod";
@@ -56,6 +55,42 @@ export async function submitFellowDetails(
     } = FellowDetailsSchema.parse(data);
 
     if (mode === "edit") {
+      // Get the fellow's user ID
+      const fellowMember = await db.implementerMember.findFirst({
+        where: {
+          identifier: id,
+          role: "FELLOW",
+        },
+        select: {
+          userId: true,
+        },
+      });
+
+      if (!fellowMember) {
+        return {
+          success: false,
+          message: "Something went wrong. Fellow user record not found",
+        };
+      }
+
+      // Check if email exists for any other user
+      const existingUser = await db.user.findFirst({
+        where: {
+          email: fellowEmail,
+          NOT: {
+            id: fellowMember.userId,
+          },
+        },
+      });
+
+      if (existingUser) {
+        return {
+          success: false,
+          message:
+            "Something went wrong. A user with this email already exists",
+        };
+      }
+
       await db.fellow.update({
         where: {
           id,
@@ -73,29 +108,56 @@ export async function submitFellowDetails(
           dateOfBirth,
         },
       });
+
+      // Update the corresponding user's email
+      await db.user.update({
+        where: {
+          id: fellowMember.userId,
+        },
+        data: {
+          email: fellowEmail,
+        },
+      });
+
       return {
         success: true,
         message: `Successfully updated details for ${fellowName}`,
       };
     } else if (mode === "add" && (hubCoordinator || supervisor)) {
-      // TODO: Let's track this as a serial number on implementer
-      const fellowsCreatedThisYearCount = await db.fellow.count({
+      // Check if email already exists
+      const existingUser = await db.user.findFirst({
         where: {
-          createdAt: {
-            gte: new Date(new Date().getFullYear(), 0, 1),
-          },
+          email: fellowEmail,
         },
       });
+
+      if (existingUser) {
+        return {
+          success: false,
+          message:
+            "Something went wrong. A user with this email already exists",
+        };
+      }
+
+      const implementerId =
+        hubCoordinator?.user?.membership.implementerId ??
+        supervisor?.user?.membership.implementerId;
+      const hubId = supervisor?.hubId ?? hubCoordinator?.assignedHubId;
+      if (!implementerId || !hubId) {
+        return {
+          success: false,
+          message:
+            "Something went wrong. Missing implementer or hub information",
+        };
+      }
 
       await db.$transaction(async (tx) => {
         const fellow = await tx.fellow.create({
           data: {
             id: objectId("fellow"),
-            visibleId: generateFellowVisibleID(fellowsCreatedThisYearCount),
-            hubId: supervisor?.hubId ?? hubCoordinator?.assignedHubId,
+            hubId,
             supervisorId: supervisor?.id,
-            implementerId:
-              supervisor?.implementerId ?? hubCoordinator?.implementerId,
+            implementerId,
             fellowName,
             fellowEmail,
             cellNumber,
@@ -119,7 +181,7 @@ export async function submitFellowDetails(
 
         await tx.implementerMember.create({
           data: {
-            implementerId: fellow.implementerId!,
+            implementerId,
             userId: newUser.id,
             role: "FELLOW",
             identifier: fellow.id,
@@ -147,9 +209,10 @@ export async function submitFellowDetails(
     return {
       success: false,
       message:
-        ((err as Error)?.message ?? mode === "edit")
-          ? "Sorry, could not update fellow details."
-          : "Sorry, could not add new fellow",
+        (err as Error)?.message ??
+        (mode === "edit"
+          ? "Something went wrong. Could not update fellow details."
+          : "Something went wrong. Could not add new fellow"),
     };
   }
 }
