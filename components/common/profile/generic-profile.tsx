@@ -459,7 +459,7 @@ export default function GenericProfileForm({
                   />
                 </div>
               </div>
-              <div className="flex flex-col">
+              {isFellow && (<div className="flex flex-col">
                 <div className="py-2">
                   <span className="pb-2 text-xs uppercase text-gray-500">
                     M-PESA Information
@@ -505,7 +505,7 @@ export default function GenericProfileForm({
                     )}
                   />
                 </div>
-              </div>
+              </div>)}
               {!isFellow && (
                 <div className="flex flex-col">
                   <div className="py-2">
