@@ -16,28 +16,6 @@ import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { z } from "zod";
 
-async function generateSupervisorVisibleId() {
-  const hc = await currentHubCoordinator();
-
-  if (!hc) {
-    throw new Error("The session has not been authenticated");
-  }
-
-  if (!hc.assignedHub) {
-    throw new Error("Hub coordinator has no assigned hub");
-  }
-
-  const supervisorCount = await db.supervisor.count({
-    where: {
-      hubId: hc.assignedHubId,
-    },
-  });
-
-  const hubPrefix = hc.assignedHub.visibleId.split("_")[0];
-  const supervisorIndex: number = supervisorCount + 1;
-  return "SPV" + hubPrefix + supervisorIndex;
-}
-
 export async function submitWeeklyTeamMeeting(
   data: z.infer<typeof WeeklyHubTeamMeetingSchema>,
 ) {
@@ -307,6 +285,41 @@ export async function updateSupervisorDetails(
       dateOfBirth,
     } = EditSupervisorSchema.parse(data);
 
+    // Get the current supervisor's user ID
+    const supervisorMember = await db.implementerMember.findFirst({
+      where: {
+        identifier: supervisorId,
+        role: "SUPERVISOR",
+      },
+      select: {
+        userId: true,
+      },
+    });
+
+    if (!supervisorMember) {
+      return {
+        success: false,
+        message: "Something went wrong. Supervisor user record not found",
+      };
+    }
+
+    // Check if email exists for any other user
+    const existingUser = await db.user.findFirst({
+      where: {
+        email: personalEmail,
+        NOT: {
+          id: supervisorMember.userId,
+        },
+      },
+    });
+
+    if (existingUser) {
+      return {
+        success: false,
+        message: "Something went wrong. A user with this email already exists",
+      };
+    }
+
     await db.supervisor.update({
       where: {
         id: supervisorId,
@@ -324,6 +337,17 @@ export async function updateSupervisorDetails(
         dateOfBirth,
       },
     });
+
+    // Update the corresponding user's email
+    await db.user.update({
+      where: {
+        id: supervisorMember.userId,
+      },
+      data: {
+        email: personalEmail,
+      },
+    });
+
     return {
       success: true,
       message: `Successfully updated details for ${supervisorName}`,
@@ -357,12 +381,25 @@ export async function createNewSupervisor(
     const parsedData = AddNewSupervisorSchema.parse(data);
     const assignedHub = hc.assignedHub;
 
+    // Check if email already exists
+    const existingUser = await db.user.findUnique({
+      where: {
+        email: parsedData.personalEmail,
+      },
+    });
+
+    if (existingUser) {
+      return {
+        success: false,
+        message: "Something went wrong. A user with this email already exists",
+      };
+    }
+
     const result = await db.$transaction(async (tx) => {
       const supervisor = await tx.supervisor.create({
         data: {
           ...parsedData,
           id: objectId("sup"),
-          visibleId: await generateSupervisorVisibleId(),
           implementerId: assignedHub.implementerId,
           hubId: assignedHub.id,
         },

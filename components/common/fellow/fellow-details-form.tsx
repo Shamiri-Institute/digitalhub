@@ -108,7 +108,6 @@ export default function FellowDetailsForm({
     if (!response.success) {
       toast({
         variant: "destructive",
-        title: "Submission error",
         description:
           response.message ??
           "Something went wrong during submission, please try again",

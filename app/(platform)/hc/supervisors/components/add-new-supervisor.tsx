@@ -67,6 +67,7 @@ export default function AddNewSupervisor() {
     const response = await createNewSupervisor(data);
     if (!response.success) {
       toast({
+        variant: "destructive",
         description:
           response.message ??
           "Something went wrong during submission, please try again",
