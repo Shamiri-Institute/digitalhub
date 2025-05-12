@@ -474,7 +474,7 @@ model Fellow {
   createdAt               DateTime                  @default(now()) @map("created_at")
   updatedAt               DateTime                  @updatedAt @map("updated_at")
   archivedAt              DateTime?                 @map("archived_at")
-  visibleId               String                    @unique @map("visible_id") @db.VarChar(100)
+  visibleId               String?                   @map("visible_id") @db.VarChar(100)
   fellowName              String?                   @map("fellow_name") @db.VarChar(255)
   fellowEmail             String?                   @map("fellow_email") @db.VarChar(255)
   yearOfImplementation    Int?                      @map("year_of_implementation") // might not be required anymore

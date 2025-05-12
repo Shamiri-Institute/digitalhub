@@ -56,6 +56,41 @@ export async function submitFellowDetails(
     } = FellowDetailsSchema.parse(data);
 
     if (mode === "edit") {
+      // Get the fellow's user ID
+      const fellowMember = await db.implementerMember.findFirst({
+        where: {
+          identifier: id,
+          role: "FELLOW",
+        },
+        select: {
+          userId: true,
+        },
+      });
+
+      if (!fellowMember) {
+        return {
+          success: false,
+          message: "Something went wrong. Fellow user record not found",
+        };
+      }
+
+      // Check if email exists for any other user
+      const existingUser = await db.user.findFirst({
+        where: {
+          email: fellowEmail,
+          NOT: {
+            id: fellowMember.userId,
+          },
+        },
+      });
+
+      if (existingUser) {
+        return {
+          success: false,
+          message: "Something went wrong. A user with this email already exists",
+        };
+      }
+
       await db.fellow.update({
         where: {
           id,
@@ -73,25 +108,40 @@ export async function submitFellowDetails(
           dateOfBirth,
         },
       });
+
+      // Update the corresponding user's email
+      await db.user.update({
+        where: {
+          id: fellowMember.userId,
+        },
+        data: {
+          email: fellowEmail,
+        },
+      });
+
       return {
         success: true,
         message: `Successfully updated details for ${fellowName}`,
       };
     } else if (mode === "add" && (hubCoordinator || supervisor)) {
-      // TODO: Let's track this as a serial number on implementer
-      const fellowsCreatedThisYearCount = await db.fellow.count({
+      // Check if email already exists
+      const existingUser = await db.user.findFirst({
         where: {
-          createdAt: {
-            gte: new Date(new Date().getFullYear(), 0, 1),
-          },
+          email: fellowEmail,
         },
       });
+
+      if (existingUser) {
+        return {
+          success: false,
+          message: "Something went wrong. A user with this email already exists",
+        };
+      }
 
       await db.$transaction(async (tx) => {
         const fellow = await tx.fellow.create({
           data: {
             id: objectId("fellow"),
-            visibleId: generateFellowVisibleID(fellowsCreatedThisYearCount),
             hubId: supervisor?.hubId ?? hubCoordinator?.assignedHubId,
             supervisorId: supervisor?.id,
             implementerId:
