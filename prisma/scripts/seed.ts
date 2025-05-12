@@ -957,7 +957,8 @@ async function seedDatabase() {
                 id: group.id,
                 groupName: group.groupName,
                 leader: {
-                  connect: { visibleId: group.groupFellowVisibleId },
+                  // TODO: Replace visible id value with id
+                  connect: { id: group.groupFellowVisibleId },
                 },
                 project: {
                   connect: { id: createdProject.id },
@@ -981,7 +982,8 @@ async function seedDatabase() {
                 condition: student.condition,
                 fellow: {
                   connect: {
-                    visibleId: student.fellowVisibleId,
+                    // TODO: Replace visible id value with id
+                    id: student.fellowVisibleId,
                   },
                 },
                 school: {
