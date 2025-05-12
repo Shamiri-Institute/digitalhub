@@ -138,14 +138,22 @@ export async function submitFellowDetails(
         };
       }
 
+      const implementerId = hubCoordinator?.user?.membership.implementerId ?? supervisor?.user?.membership.implementerId;
+      const hubId = supervisor?.hubId ?? hubCoordinator?.assignedHubId;
+      if (!implementerId || !hubId) {
+        return {
+          success: false,
+          message: "Something went wrong. Missing implementer or hub information",
+        };
+      }
+
       await db.$transaction(async (tx) => {
         const fellow = await tx.fellow.create({
           data: {
             id: objectId("fellow"),
-            hubId: supervisor?.hubId ?? hubCoordinator?.assignedHubId,
+            hubId,
             supervisorId: supervisor?.id,
-            implementerId:
-              supervisor?.implementerId ?? hubCoordinator?.implementerId,
+            implementerId,
             fellowName,
             fellowEmail,
             cellNumber,
@@ -169,7 +177,7 @@ export async function submitFellowDetails(
 
         await tx.implementerMember.create({
           data: {
-            implementerId: fellow.implementerId!,
+            implementerId,
             userId: newUser.id,
             role: "FELLOW",
             identifier: fellow.id,
@@ -196,10 +204,11 @@ export async function submitFellowDetails(
     const { mode } = FellowDetailsSchema.parse(data);
     return {
       success: false,
-      message:
-        ((err as Error)?.message ?? mode === "edit")
-          ? "Sorry, could not update fellow details."
-          : "Sorry, could not add new fellow",
+      message: (err as Error)?.message ?? (
+        mode === "edit"
+          ? "Something went wrong. Could not update fellow details."
+          : "Something went wrong. Could not add new fellow"
+      ),
     };
   }
 }
