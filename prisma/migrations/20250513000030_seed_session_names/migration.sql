@@ -1,10 +1,7 @@
--- Add unique constraint for hub_id and session_name
-CREATE UNIQUE INDEX "session_names_hub_id_session_name_key" ON "session_names"("hub_id", "session_name");
-
 -- Seed session names for all hubs
 INSERT INTO "session_names" ("id", "sessionType", "session_name", "session_label", "hub_id", "currency", "amount", "created_at", "updated_at")
 SELECT 
-    'cl' || gen_random_uuid()::text,  -- Generate a CUID-like ID
+    gen_random_uuid()::text,
     s.session_type::session_types,
     s.session_name,
     s.session_label,
@@ -79,5 +76,4 @@ FROM (
     SELECT 'DATA_COLLECTION', 'dfu6', 'Data Follow Up 6', 0
 ) s
 CROSS JOIN "hubs" h
-WHERE h."project_id" = '2025_Project_1'
-ON CONFLICT (hub_id, session_name) DO NOTHING; 
+WHERE h."project_id" = '2025_Project_1'; 
