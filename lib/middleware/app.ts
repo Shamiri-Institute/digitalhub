@@ -1,4 +1,5 @@
 import { ImplementerRole } from "@prisma/client";
+import { addBreadcrumb } from "@sentry/nextjs";
 import { JWT, getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -21,6 +22,45 @@ export default async function AppMiddleware(req: NextRequest) {
       ),
     );
   } else if (session?.email) {
+    // Check for valid membership
+    if (!session.activeMembership?.role) {
+      console.warn(`No valid membership found for user`, {
+        email: session.email,
+        pathname: req.nextUrl.pathname,
+      });
+
+      // Log the error for monitoring
+      addBreadcrumb({
+        category: "auth",
+        message: "No valid membership found",
+        level: "warning",
+        data: {
+          email: session.email,
+          path: path,
+        },
+      });
+
+      // Clear session cookies
+      const response = NextResponse.redirect(new URL("/login", req.url));
+      const cookiesToClear = [
+        "next-auth.session-token",
+        "next-auth.callback-url",
+        "next-auth.csrf-token",
+        "__Secure-next-auth.session-token",
+        "__Secure-next-auth.callback-url",
+        "__Secure-next-auth.csrf-token",
+        "session",
+      ];
+
+      cookiesToClear.forEach((cookie) => {
+        response.cookies.delete(cookie);
+      });
+
+      // Add error message
+      response.headers.set("x-middleware-cache", "no-cache");
+      return response;
+    }
+
     if (path === "/login") {
       if (ifHcUserAndUnprefixedPath(session, path)) {
         return NextResponse.redirect(new URL("/hc", req.url));
@@ -59,6 +99,8 @@ export default async function AppMiddleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/", req.url));
     }
   }
+
+  return NextResponse.next();
 }
 
 function ifHcUserAndUnprefixedPath(session: JWT | null, path: string) {
