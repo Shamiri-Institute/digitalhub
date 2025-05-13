@@ -9,6 +9,11 @@ export default async function AppMiddleware(req: NextRequest) {
   const { path } = parse(req);
   const session = await getToken({ req });
 
+  // If accessing login page and not authenticated, allow access
+  if (path === "/login" && !session?.email) {
+    return NextResponse.next();
+  }
+
   // Check if authenticated and accessing authorized route
   if (!session?.email && path !== "/login" && path !== "/register") {
     console.warn(`No email in session`, {
@@ -21,8 +26,8 @@ export default async function AppMiddleware(req: NextRequest) {
         req.url,
       ),
     );
-  } else if (session?.email) {
-    // Check for valid membership
+  } else if (session?.email && path !== "/login") {
+    // Check for valid membership only when not on login page
     if (!session.activeMembership?.role) {
       console.warn(`No valid membership found for user`, {
         email: session.email,
