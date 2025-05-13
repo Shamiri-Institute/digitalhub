@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.5](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.4...v0.1.5) (2025-05-13)
+
+### Features
+
+- implement membership validation on login ([#440](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/440)) ([62eeeaa](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/62eeeaa75413f7d18e0a50b10492055ccfecd1c6))
+- seed hub session names ([#441](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/441)) ([fd34142](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/fd341421b3913ad2140aada2c653157e01a98ccd))
+
+### Bug Fixes
+
+- hc training issues and bugs ([#439](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/439)) ([1a382d9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1a382d963abb0f9892ed0e0c15856e7afee522cf))
+- minor fixes (hc) ([#437](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/437)) ([097b6af](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/097b6afd65334082388294a87f1f74d2d03f8629))
+- redirect issue on login ([5392de4](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/5392de4272d97c8c1a38935ab5a42b321bea349d))
+
 ## [0.1.4](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.3...v0.1.4) (2025-05-08)
 
 ### Features
