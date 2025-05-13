@@ -76,5 +76,5 @@ FROM (
     SELECT 'DATA_COLLECTION'::session_types, 'dfu6', 'Data Follow Up 6', 0
 ) s
 CROSS JOIN "hubs" h
-WHERE h."projectId" = current_setting('app.current_project_id')::uuid
+WHERE h."project_id" = '2025_Project_1'
 ON CONFLICT (hub_id, session_name) DO NOTHING; 
