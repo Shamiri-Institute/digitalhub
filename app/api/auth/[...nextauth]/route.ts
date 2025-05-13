@@ -116,30 +116,51 @@ const authOptions: AuthOptions = {
       return session;
     },
     jwt: async ({ token, user, account, trigger }) => {
-      if (trigger === "signIn") {
-        if (user.email) {
-          const currentUser = await db.user.findUnique({
-            where: { email: user.email },
-            select: {
-              memberships: {
-                select: {
-                  id: true,
-                  implementer: true,
-                  role: true,
-                  identifier: true,
-                },
+      if (trigger === "signIn" && user?.email) {
+        // First get the user by email
+        const currentUser = await db.user.findUnique({
+          where: { email: user.email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            image: true,
+          },
+        });
+
+        if (!currentUser) {
+          console.error("User not found in database");
+          return token;
+        }
+
+        // Update token.sub to match the found user's ID
+        token.sub = currentUser.id;
+
+        // Now get the memberships using the user's ID
+        const memberships = await db.implementerMember.findMany({
+          where: {
+            userId: currentUser.id,
+          },
+          include: {
+            implementer: {
+              select: {
+                id: true,
+                implementerName: true,
               },
             },
-          });
-          if (!currentUser) {
-            console.error("User not found in database");
-            return token;
-          }
+          },
+        });
 
-          if (currentUser) {
-            token.memberships = parseMembershipsForJWT(currentUser) || [];
-            token.activeMembership = token.memberships[0];
-          }
+        if (memberships.length > 0) {
+          const processedMemberships = memberships.map((m) => ({
+            id: m.id,
+            implementerId: m.implementer.id,
+            role: m.role,
+            identifier: m.identifier,
+          }));
+
+          token.memberships = processedMemberships;
+          token.activeMembership = processedMemberships[0];
         }
       }
       return token;
