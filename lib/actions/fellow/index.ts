@@ -475,7 +475,7 @@ export async function markFellowAttendance(
         const attendanceStatus =
           attended === "attended" ? true : attended === "missed" ? false : null;
 
-        if (amount) {
+        if (Number.isInteger(amount)  && amount) {
           if (!attendanceStatus) {
             amount = -amount;
             reason = "UNMARK_SESSION_ATTENDANCE";
@@ -549,7 +549,7 @@ export async function markFellowAttendance(
           }
         }
 
-        if (!session.session?.amount) {
+        if (session.session?.amount  === undefined || session.session?.amount === null) {
           throw new Error(
             "An error occurred while marking attendance for " +
               fellow.fellowName +
@@ -664,7 +664,7 @@ export async function markManyFellowAttendance(
 
         let reason = "MARK_SESSION_ATTENDANCE";
         let _amount = amount;
-        if (!attendanceStatus) {
+        if (!attendanceStatus && amount) {
           _amount = -amount;
           reason = "UNMARK_SESSION_ATTENDANCE";
         }
