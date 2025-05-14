@@ -673,7 +673,7 @@ export async function addSchool(
           sessionType: sessionName.sessionName,
           sessionId: sessionName.id,
           schoolId: school.id,
-          occurred: isBefore(new Date(currentDate), new Date()),
+          occurred: false,
           yearOfImplementation: new Date().getFullYear(),
           projectId: hubCoordinator.assignedHub?.projectId || undefined,
           hubId,
