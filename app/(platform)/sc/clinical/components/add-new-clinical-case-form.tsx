@@ -6,6 +6,7 @@ import {
   StudentSelector,
 } from "#/components/old/screenings/[caseId]/components/create-clinical-case";
 import { Button } from "#/components/ui/button";
+import { Calendar } from "#/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
@@ -17,6 +18,11 @@ import {
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "#/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -24,9 +30,11 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
-import { stringValidation } from "#/lib/utils";
+import { Icons } from "#/components/icons";
+import { cn, stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
+import { format } from "date-fns";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -36,7 +44,7 @@ const formSchema = z.object({
   studentName: stringValidation("Student name is required"),
   pseudonym: stringValidation("Pseudonym is required"),
   admissionNumber: z.number().min(1, "Admission number is required"),
-  yearOfBirth: stringValidation("Year of birth is required"),
+  yearOfBirth: z.date({ required_error: "Year of birth is required" }),
   gender: z.enum(["male", "female", "other"]),
   classForm: stringValidation("Class/Form is required"),
   stream: z.string().optional(),
@@ -125,10 +133,9 @@ export function AddNewClinicalCaseForm({
     if (selectedStudent) {
       form.setValue("studentName", selectedStudent.studentName || "");
       form.setValue("admissionNumber", Number(selectedStudent.admissionNumber));
-      form.setValue(
-        "yearOfBirth",
-        selectedStudent.yearOfBirth?.toString() || "",
-      );
+      if (selectedStudent.yearOfBirth) {
+        form.setValue("yearOfBirth", new Date(selectedStudent.yearOfBirth, 0, 1));
+      }
       form.setValue(
         "gender",
         (selectedStudent.gender?.toLowerCase() as any) || "",
@@ -156,7 +163,7 @@ export function AddNewClinicalCaseForm({
         pseudonym: data.pseudonym,
         stream: data.stream || "",
         classForm: data.classForm,
-        age: new Date().getFullYear() - parseInt(data.yearOfBirth),
+        age: new Date().getFullYear() - data.yearOfBirth.getFullYear(),
         gender: data.gender,
         initialContact: data.initialContact,
         supervisorId: data.supervisor,
@@ -276,12 +283,34 @@ export function AddNewClinicalCaseForm({
                 render={({ field }) => (
                   <FormItem className="flex-1">
                     <FormLabel>
-                      Year of Birth
-                      <span className="text-red-500">*</span>
+                      Year of Birth <span className="text-red-500">*</span>
                     </FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "mt-1.5 w-full justify-start px-3 text-left font-normal",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        >
+                          <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                          {field.value ? (
+                            format(field.value, "dd/MM/yyyy")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
