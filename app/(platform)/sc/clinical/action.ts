@@ -607,9 +607,6 @@ export async function createClinicalCaseNotes(data: {
   treatmentInterventions: string[];
   otherIntervention: string;
   interventionExplanation: string;
-  emotionalResponse: string;
-  behavioralResponse: string;
-  overallFeedback: string;
   studentResponseExplanation: string;
   followUpPlan: "GROUP" | "INDIVIDUAL";
   followUpPlanExplanation: string;
@@ -639,9 +636,6 @@ export async function createClinicalCaseNotes(data: {
         treatmentInterventions: data.treatmentInterventions,
         otherIntervention: data.otherIntervention,
         interventionExplanation: data.interventionExplanation,
-        emotionalResponse: data.emotionalResponse,
-        behavioralResponse: data.behavioralResponse,
-        overallFeedback: data.overallFeedback,
         studentResponseExplanations: data.studentResponseExplanation,
         followUpPlan: data.followUpPlan,
         followUpPlanExplanation: data.followUpPlanExplanation,
