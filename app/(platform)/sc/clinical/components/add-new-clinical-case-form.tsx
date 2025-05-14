@@ -2,12 +2,9 @@
 
 import { createClinicalCaseBySupervisor } from "#/app/(platform)/sc/clinical/action";
 import { Icons } from "#/components/icons";
-import {
-  SchoolSelector,
-  StudentSelector,
-} from "#/components/old/screenings/[caseId]/components/create-clinical-case";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
+import { Combobox } from "#/components/ui/combobox";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
@@ -216,10 +213,15 @@ export function AddNewClinicalCaseForm({
                 School
                 <span className="text-red-500">*</span>
               </FormLabel>
-              <SchoolSelector
-                schools={schools}
-                activeSchoolId={selectedSchoolId}
-                onSelectSchool={handleSchoolSelect}
+              <Combobox
+                items={schools.map((school) => ({
+                  id: school.id,
+                  label: school.schoolName || "Unknown School",
+                }))}
+                activeItemId={selectedSchoolId}
+                onSelectItem={handleSchoolSelect}
+                placeholder="Select a school..."
+                inputPlaceholder="Search schools..."
               />
             </div>
 
@@ -228,10 +230,15 @@ export function AddNewClinicalCaseForm({
                 Student
                 <span className="text-red-500">*</span>
               </FormLabel>
-              <StudentSelector
-                students={students}
-                activeStudentId={selectedStudentId}
-                onSelectStudent={handleStudentSelect}
+              <Combobox
+                items={students.map((student) => ({
+                  id: student.id,
+                  label: student.studentName || "Unknown Student",
+                }))}
+                activeItemId={selectedStudentId}
+                onSelectItem={handleStudentSelect}
+                placeholder="Select a student..."
+                inputPlaceholder="Search students..."
               />
             </div>
 
