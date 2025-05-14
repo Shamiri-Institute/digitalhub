@@ -27,13 +27,13 @@ export default function Error({
         <div className="flex flex-col items-center justify-center space-y-3 border-b border-gray-200 bg-white px-4 py-6 pt-8 text-center sm:px-16">
           <Icons.logo className="h-9 text-sky-600 lg:h-10" />
           <h2 className="text-lg font-semibold text-gray-900">
-            Something went wrong!
-          </h2>
-          <p className="text-sm text-gray-500">
-            An unexpected error occurred. Please try again. If the issue
-            continues, try clearing your browser cache.
-            <br /> Still having trouble? Contact support — we're here to help!
-          </p>
+  Oops! Something went wrong!
+</h2>
+<p className="text-sm text-muted-foreground">
+  We couldn't complete your request. Please try refreshing the page or clearing your browser cache.
+  <br />
+  Need assistance? Our support team is ready to help!
+</p>
         </div>
         <div className="flex flex-col space-y-3 bg-gray-50 px-4 py-8 sm:px-16">
           <Button onClick={() => reset()} variant="outline">
