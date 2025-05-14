@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.6](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.5...v0.1.6) (2025-05-14)
+
+### Bug Fixes
+
+- set sessions occurred default value to false ([#442](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/442)) ([acbf178](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/acbf1788ec4f4423cd6b6210e73e8dc467706853))
+
 ## [0.1.5](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.4...v0.1.5) (2025-05-13)
 
 ### Features
