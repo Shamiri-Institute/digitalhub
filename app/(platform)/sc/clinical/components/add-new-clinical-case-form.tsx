@@ -1,6 +1,7 @@
 "use client";
 
 import { createClinicalCaseBySupervisor } from "#/app/(platform)/sc/clinical/action";
+import { Icons } from "#/components/icons";
 import {
   SchoolSelector,
   StudentSelector,
@@ -30,7 +31,6 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
-import { Icons } from "#/components/icons";
 import { cn, stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
@@ -134,7 +134,10 @@ export function AddNewClinicalCaseForm({
       form.setValue("studentName", selectedStudent.studentName || "");
       form.setValue("admissionNumber", Number(selectedStudent.admissionNumber));
       if (selectedStudent.yearOfBirth) {
-        form.setValue("yearOfBirth", new Date(selectedStudent.yearOfBirth, 0, 1));
+        form.setValue(
+          "yearOfBirth",
+          new Date(selectedStudent.yearOfBirth, 0, 1),
+        );
       }
       form.setValue(
         "gender",

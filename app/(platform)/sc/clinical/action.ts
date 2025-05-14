@@ -560,8 +560,11 @@ export async function terminateClinicalCase(data: {
       throw new Error("User not found");
     }
 
-    if (currentUser.personnelRole !== "supervisor") {
-      throw new Error("You are not authorized to terminate this case");
+    if (currentUser.membership.role !== "SUPERVISOR") {
+      return {
+        success: false,
+        message: "You are not authorized to terminate this case",
+      };
     }
 
     await db.$transaction(async (tx) => {
@@ -617,8 +620,11 @@ export async function createClinicalCaseNotes(data: {
       throw new Error("User not found");
     }
 
-    if (currentUser.personnelRole !== "supervisor") {
-      throw new Error("You are not authorized to create clinical case notes");
+    if (currentUser.membership.role !== "SUPERVISOR") {
+      return {
+        success: false,
+        message: "You are not authorized to create clinical case notes",
+      };
     }
 
     await db.clinicalCaseNotes.create({
@@ -663,8 +669,11 @@ export async function updateClinicalCaseAttendance(data: {
       throw new Error("User not found");
     }
 
-    if (currentUser.personnelRole !== "supervisor") {
-      throw new Error("You are not authorized to create clinical case notes");
+    if (currentUser.membership.role !== "SUPERVISOR") {
+      return {
+        success: false,
+        message: "You are not authorized to create clinical case notes",
+      };
     }
 
     await db.clinicalScreeningInfo.update({
