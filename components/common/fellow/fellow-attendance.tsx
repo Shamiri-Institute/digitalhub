@@ -40,7 +40,6 @@ import {
   markFellowAttendance,
   markManyFellowAttendance,
 } from "#/lib/actions/fellow";
-import { SESSION_NAME_TYPE } from "#/lib/app-constants/constants";
 import { sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef, Row } from "@tanstack/react-table";
@@ -297,6 +296,7 @@ export function FellowAttendanceDataTable({
       </div>
     );
   };
+
   return (
     <div className="space-y-4">
       <DataTable
@@ -359,13 +359,7 @@ export function FellowAttendanceDataTable({
               <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
                 {""}
               </span>
-              <span>
-                {sessionDisplayName(
-                  attendance?.sessionName ??
-                    session?.session?.sessionName ??
-                    "",
-                )}
-              </span>
+              <span>{sessionDisplayName(attendance?.sessionType ?? "")}</span>
               <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
                 {""}
               </span>
@@ -420,7 +414,7 @@ export type FellowAttendancesTableData = {
   groupName: string | null;
   groupId?: string;
   averageRating: number | null;
-  sessionType?: SESSION_NAME_TYPE;
+  sessionType?: string;
   sessionName?: string;
   occurred?: boolean | null;
   sessionStatus?: SessionStatus | null;
