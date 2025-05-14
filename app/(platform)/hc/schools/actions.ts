@@ -4,7 +4,7 @@ import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { Prisma, sessionTypes } from "@prisma/client";
-import { format, isBefore } from "date-fns";
+import { format } from "date-fns";
 import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
