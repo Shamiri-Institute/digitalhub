@@ -99,7 +99,7 @@ export default function SupervisorAttendance({
           absenceComments: attendance?.absenceComments ?? "",
           schoolName:
             session?.school?.schoolName ?? session?.venue ?? undefined,
-          sessionType: session?.sessionType ?? undefined,
+          sessionType: session?.session?.sessionName,
           sessionStatus: session?.status,
         };
       }) ?? [];
@@ -250,7 +250,7 @@ export function SupervisorAttendanceDataTable({
             </span>
             <span>
               {sessionDisplayName(
-                attendance?.sessionType ?? session?.sessionType ?? "",
+                attendance?.sessionType ?? session?.session?.sessionName ?? "",
               )}
             </span>
             <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">

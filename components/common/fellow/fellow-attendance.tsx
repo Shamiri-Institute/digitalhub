@@ -297,6 +297,7 @@ export function FellowAttendanceDataTable({
       </div>
     );
   };
+
   return (
     <div className="space-y-4">
       <DataTable
@@ -361,8 +362,7 @@ export function FellowAttendanceDataTable({
               </span>
               <span>
                 {sessionDisplayName(
-                  attendance?.sessionName ??
-                    session?.session?.sessionName ??
+                  attendance?.sessionType ??
                     "",
                 )}
               </span>
@@ -420,7 +420,7 @@ export type FellowAttendancesTableData = {
   groupName: string | null;
   groupId?: string;
   averageRating: number | null;
-  sessionType?: SESSION_NAME_TYPE;
+  sessionType?: string;
   sessionName?: string;
   occurred?: boolean | null;
   sessionStatus?: SessionStatus | null;

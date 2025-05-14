@@ -430,8 +430,10 @@ export function TableView({
       // filter by sessionType
       if (filters.sessionTypes) {
         if (
-          session.sessionType !== null &&
-          !Object.keys(filters.sessionTypes).includes(session.sessionType)
+          session.session?.sessionName !== undefined &&
+          !Object.keys(filters.sessionTypes).includes(
+            session.session?.sessionName,
+          )
         ) {
           return;
         }
@@ -477,7 +479,7 @@ export function TableView({
               supervisorId: fellow.supervisorId,
               supervisorName: supervisor.supervisorName,
               cellNumber: fellow.cellNumber,
-              sessionType: session.session?.sessionType,
+              sessionType: session.session?.sessionName,
               occurred: session.occurred,
               sessionStatus: session.status,
               sessionDate: session.sessionDate,
@@ -502,7 +504,7 @@ export function TableView({
           absenceReason: attendance?.absenceReason ?? "",
           absenceComments: attendance?.absenceComments ?? "",
           schoolName: session.school?.schoolName,
-          sessionType: session?.sessionType!,
+          sessionType: session?.session?.sessionName,
           occurred: session?.occurred,
           sessionStatus: session?.status,
         };

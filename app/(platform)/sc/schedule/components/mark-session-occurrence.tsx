@@ -78,7 +78,9 @@ export function MarkSessionOccurrence({
                 isBefore(session.sessionDate, activeSession?.sessionDate) &&
                 activeSession.schoolId === session.schoolId &&
                 !session.occurred &&
-                session.status !== "Cancelled" && session.session?.sessionType === activeSession.session?.sessionType
+                session.status !== "Cancelled" &&
+                session.session?.sessionType ===
+                  activeSession.session?.sessionType
               );
             })
             .sort((a, b) => {
@@ -213,7 +215,9 @@ export function MarkSessionOccurrence({
                     <span>
                       {sessionDisplayName(session.session?.sessionName)}
                     </span>
-                    <span>- {session.school?.schoolName ?? session.venue} -</span>
+                    <span>
+                      - {session.school?.schoolName ?? session.venue} -
+                    </span>
                     <span className="text-muted-foreground">
                       {format(session.sessionDate, "dd/MM/yyyy - h:mm a")}
                     </span>
