@@ -30,8 +30,8 @@ export default function Error({
             Oops! Something went wrong!
           </h2>
           <p className="text-sm text-muted-foreground">
-            We couldn't complete your request. Please try refreshing the page or
-            clearing your browser cache.
+            We couldn&apos;t complete your request. Please try refreshing the
+            page or clearing your browser cache.
             <br />
             Need assistance? Our support team is ready to help!
           </p>
