@@ -8,6 +8,52 @@ Shamiri Institute is aiming for a digital solution that will help expand its rea
 
 - Install [docker compose](https://docs.docker.com/compose/install/)
 
+## Environment Setup
+
+Create a `.env.development` file in the root directory with the following variables:
+
+```bash
+# Database
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/shamiri_db_dev"
+
+# NextAuth Configuration
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-nextauth-secret" # Generate a secure random string
+
+# Google OAuth (for NextAuth)
+GOOGLE_ID="your-google-client-id"
+GOOGLE_SECRET="your-google-client-secret"
+
+# Google Drive API (for document storage)
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_EMAIL="your-google-service-account-email"
+GOOGLE_PROJECT_ID="your-google-project-id"
+GOOGLE_PRIVATE_KEY="your-google-private-key"
+PROGRESSNOTE_FILEID="your-google-drive-folder-id-for-progress-notes"
+TREATMENTPLAN_FILEID="your-google-drive-folder-id-for-treatment-plans"
+CASEREPORTS_FILEID="your-google-drive-folder-id-for-case-reports"
+
+# AWS S3 Configuration (for file uploads)
+AWS_REGION="your-aws-region"
+AWS_ACCESS_KEY_ID="your-aws-access-key-id"
+AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
+S3_UPLOAD_KEY="your-s3-upload-key"
+S3_UPLOAD_SECRET="your-s3-upload-secret"
+S3_UPLOAD_BUCKET="your-s3-bucket-name"
+S3_UPLOAD_REGION="your-s3-region"
+
+# Application Settings
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_ENV="development"
+APP_ENV="development"
+
+# Email Sending
+SEND_EMAILS="0" # Set to 1 to enable email sending
+
+# Debug Mode
+DEBUG="0" # Set to 1 to enable debug mode
+```
+
 ## Database
 
 ### Creating and running migrations
