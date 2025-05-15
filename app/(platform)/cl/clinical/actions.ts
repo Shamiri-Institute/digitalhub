@@ -124,6 +124,32 @@ export type HubClinicalCases = {
   generalPresentingIssuesEndpoint: Record<string, boolean> | null;
   generalPresentingIssuesOtherSpecifiedBaseline: string | null;
   generalPresentingIssuesOtherSpecifiedEndpoint: string | null;
+  caseNotes: Array<{
+    id: string;
+    createdAt: Date;
+    presentingIssues: string;
+    orsAssessment: number;
+    riskLevel: string;
+    necessaryConditions: string;
+    treatmentInterventions: string[];
+    otherIntervention: string;
+    interventionExplanation: string;
+    emotionalResponse: string;
+    behavioralResponse: string;
+    overallFeedback: string;
+    studentResponseExplanations: string;
+    followUpPlan: string;
+    followUpPlanExplanation: string;
+    sessionId: string;
+  }>;
+  termination: {
+    id: string;
+    createdAt: Date;
+    terminationDate: Date;
+    terminationReason: string;
+    terminationReasonExplanation: string;
+    sessionId: string;
+  } | null;
 };
 
 export async function getClinicalCases(): Promise<HubClinicalCases[]> {
@@ -131,7 +157,43 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
     const clinicalLead = await currentClinicalLead();
     if (!clinicalLead) throw new Error("Unauthorized");
 
-    const cases: HubClinicalCases[] = await db.$queryRaw`
+    const cases = await db.$queryRaw`
+      WITH case_notes AS (
+        SELECT 
+          ccn.case_id,
+          json_agg(
+            json_build_object(
+              'id', ccn.id,
+              'createdAt', ccn.created_at,
+              'presentingIssues', ccn.presenting_issues,
+              'orsAssessment', ccn.ors_assessment,
+              'riskLevel', ccn.risk_level,
+              'necessaryConditions', ccn.necessary_conditions,
+              'treatmentInterventions', ccn.treatment_interventions,
+              'otherIntervention', ccn.other_intervention,
+              'interventionExplanation', ccn.intervention_explanation,
+              'studentResponseExplanations', ccn.student_response_explanations,
+              'followUpPlan', ccn.follow_up_plan,
+              'followUpPlanExplanation', ccn.follow_up_plan_explanation,
+              'sessionId', ccn.session_id
+            )
+          ) AS notes_data
+        FROM "clinical_case_notes" ccn
+        GROUP BY ccn.case_id
+      ),
+      case_termination AS (
+        SELECT 
+          cct.case_id,
+          json_build_object(
+            'id', cct.id,
+            'createdAt', cct.created_at,
+            'terminationDate', cct.termination_date,
+            'terminationReason', cct.termination_reason,
+            'terminationReasonExplanation', cct.termination_reason_explanation,
+            'sessionId', cct.session_id
+          ) AS termination_data
+        FROM "clinical_case_termination" cct
+      )
       SELECT 
         csi.id,
         csi.pseudonym,
@@ -165,7 +227,9 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
           WHERE csa."caseId" = csi.id 
           ORDER BY csa.date DESC 
           LIMIT 1
-        ) as "upcomingSession"
+        ) as "upcomingSession",
+        COALESCE(cn.notes_data, '[]'::json) as "caseNotes",
+        ct.termination_data as "termination"
       FROM 
         "clinical_screening_info" csi
       JOIN 
@@ -178,13 +242,17 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
         "hubs" h ON sch."hub_id" = h.id
       LEFT JOIN
         "clinical_follow_up_treatment_plan" csfp ON csi.id = csfp."case_id"
+      LEFT JOIN
+        case_notes cn ON csi.id = cn.case_id
+      LEFT JOIN
+        case_termination ct ON csi.id = ct.case_id
       WHERE 
         s."hub_id" = ${clinicalLead.assignedHubId}
       ORDER BY 
         csi.id DESC
     `;
 
-    return cases || [];
+    return cases as HubClinicalCases[];
   } catch (error) {
     console.error("Error fetching clinical cases:", error);
     return [];
