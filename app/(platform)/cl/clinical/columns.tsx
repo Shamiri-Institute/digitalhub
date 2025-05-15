@@ -1,6 +1,7 @@
 "use client";
 
 import { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
+import ClinicalCaseActionsDropdownMenu from "#/app/(platform)/cl/clinical/components/clinical-case-actions-dropdown";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import {
@@ -116,9 +117,9 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
   },
   {
     id: "button",
-    // cell: ({ row }) => (
-    //   <ClinicalCaseActionsDropdownMenu clinicalCase={row.original} />
-    // ),
+    cell: ({ row }) => (
+      <ClinicalCaseActionsDropdownMenu clinicalCase={row.original} />
+    ),
     enableHiding: false,
   },
 ];
