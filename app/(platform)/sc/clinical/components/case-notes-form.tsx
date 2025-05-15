@@ -54,14 +54,6 @@ const treatmentInterventions = [
 
 const riskLevels = ["no", "low", "medium", "high", "severe"] as const;
 
-const emotionalResponses = ["Positive", "Negative", "Mixed"] as const;
-const behavioralResponses = [
-  "Commitment to Change",
-  "Resistance or Hesitation",
-  "Requests for further Support",
-] as const;
-const overallFeedback = ["Positive", "Negative", "Neutral"] as const;
-
 const CaseReportSchema = z.object({
   sessionId: stringValidation("Session ID is required"),
   presentingIssues: stringValidation("Presenting issues are required"),
@@ -77,15 +69,6 @@ const CaseReportSchema = z.object({
   interventionExplanation: stringValidation(
     "Treatment explanation is required",
   ),
-  emotionalResponse: z.enum(emotionalResponses, {
-    required_error: "Emotional response is required",
-  }),
-  behavioralResponse: z.enum(behavioralResponses, {
-    required_error: "Behavioral response is required",
-  }),
-  overallFeedback: z.enum(overallFeedback, {
-    required_error: "Overall feedback is required",
-  }),
   studentResponseExplanation: stringValidation(
     "Student response explanation is required",
   ),
@@ -119,9 +102,6 @@ export default function CaseNotesForm({
       treatmentInterventions: [],
       otherIntervention: "",
       interventionExplanation: "",
-      emotionalResponse: "Positive",
-      behavioralResponse: "Commitment to Change",
-      overallFeedback: "Positive",
       studentResponseExplanation: "",
       followUpPlan: {
         isGroupSession: false,
@@ -151,12 +131,6 @@ export default function CaseNotesForm({
         treatmentInterventions: existingNote.treatmentInterventions,
         otherIntervention: existingNote.otherIntervention,
         interventionExplanation: existingNote.interventionExplanation,
-        emotionalResponse:
-          existingNote.emotionalResponse as (typeof emotionalResponses)[number],
-        behavioralResponse:
-          existingNote.behavioralResponse as (typeof behavioralResponses)[number],
-        overallFeedback:
-          existingNote.overallFeedback as (typeof overallFeedback)[number],
         studentResponseExplanation: existingNote.studentResponseExplanations,
         followUpPlan: {
           isGroupSession: existingNote.followUpPlan === "GROUP",
@@ -176,9 +150,6 @@ export default function CaseNotesForm({
         treatmentInterventions: [],
         otherIntervention: "",
         interventionExplanation: "",
-        emotionalResponse: "Positive",
-        behavioralResponse: "Commitment to Change",
-        overallFeedback: "Positive",
         studentResponseExplanation: "",
         followUpPlan: {
           isGroupSession: false,
@@ -199,9 +170,6 @@ export default function CaseNotesForm({
         followUpPlan: data.followUpPlan.isGroupSession ? "GROUP" : "INDIVIDUAL",
         orsAssessment: parseInt(data.orsAssessment),
         interventionExplanation: data.interventionExplanation,
-        emotionalResponse: data.emotionalResponse,
-        behavioralResponse: data.behavioralResponse,
-        overallFeedback: data.overallFeedback,
         studentResponseExplanation: data.studentResponseExplanation,
         presentingIssues: data.presentingIssues,
         riskLevel: data.riskLevel,
@@ -345,7 +313,12 @@ export default function CaseNotesForm({
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input
+                      type="number"
+                      {...field}
+                      disabled={hasExistingNotes}
+                      className={hasExistingNotes ? "bg-muted" : ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -372,6 +345,7 @@ export default function CaseNotesForm({
                             <FormControl>
                               <Checkbox
                                 checked={field.value === level}
+                                disabled={hasExistingNotes}
                                 onCheckedChange={(checked) => {
                                   if (checked) {
                                     field.onChange(level);
@@ -400,7 +374,12 @@ export default function CaseNotesForm({
                   <FormItem>
                     <FormLabel>Necessary Conditions</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={3} />
+                      <Textarea
+                        {...field}
+                        rows={3}
+                        disabled={hasExistingNotes}
+                        className={hasExistingNotes ? "bg-muted" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -428,6 +407,7 @@ export default function CaseNotesForm({
                             <FormControl>
                               <Checkbox
                                 checked={field.value?.includes(intervention)}
+                                disabled={hasExistingNotes}
                                 onCheckedChange={(checked) => {
                                   const value = intervention;
                                   if (value === "Other") {
@@ -467,7 +447,11 @@ export default function CaseNotesForm({
                       <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input
+                        {...field}
+                        disabled={hasExistingNotes}
+                        className={hasExistingNotes ? "bg-muted" : ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -486,140 +470,17 @@ export default function CaseNotesForm({
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={4} />
+                    <Textarea
+                      {...field}
+                      rows={4}
+                      disabled={hasExistingNotes}
+                      className={hasExistingNotes ? "bg-muted" : ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <div className="space-y-4">
-              <h3 className="border-b border-gray-200 pb-2 font-semibold">
-                Response: How did the student respond to the intervention?
-              </h3>
-
-              <div className="flex gap-8">
-                <FormField
-                  control={form.control}
-                  name="emotionalResponse"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>
-                        Emotional Responses
-                        <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <div className="space-y-2">
-                        {emotionalResponses.map((response) => (
-                          <FormField
-                            key={response}
-                            control={form.control}
-                            name="emotionalResponse"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value === response}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        field.onChange(response);
-                                      }
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  {response}
-                                </FormLabel>
-                              </FormItem>
-                            )}
-                          />
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="behavioralResponse"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>
-                        Behavioral Responses
-                        <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <div className="space-y-2">
-                        {behavioralResponses.map((response) => (
-                          <FormField
-                            key={response}
-                            control={form.control}
-                            name="behavioralResponse"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value === response}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        field.onChange(response);
-                                      }
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  {response}
-                                </FormLabel>
-                              </FormItem>
-                            )}
-                          />
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="overallFeedback"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>
-                        Overall Session Feedback
-                        <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <div className="space-y-2">
-                        {overallFeedback.map((feedback) => (
-                          <FormField
-                            key={feedback}
-                            control={form.control}
-                            name="overallFeedback"
-                            render={({ field }) => (
-                              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value === feedback}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        field.onChange(feedback);
-                                      }
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="font-normal">
-                                  {feedback}
-                                </FormLabel>
-                              </FormItem>
-                            )}
-                          />
-                        ))}
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
 
             <FormField
               control={form.control}
@@ -627,7 +488,7 @@ export default function CaseNotesForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Student Response Explanation
+                    Student Behavioural and Emotional Responses
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -635,6 +496,8 @@ export default function CaseNotesForm({
                       {...field}
                       rows={4}
                       placeholder="Explain the student's response to the session..."
+                      disabled={hasExistingNotes}
+                      className={hasExistingNotes ? "bg-muted" : ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -656,6 +519,7 @@ export default function CaseNotesForm({
                         <FormControl>
                           <Checkbox
                             checked={!field.value}
+                            disabled={hasExistingNotes}
                             onCheckedChange={(checked) => {
                               if (checked) {
                                 field.onChange(false);
@@ -672,6 +536,7 @@ export default function CaseNotesForm({
                         <FormControl>
                           <Checkbox
                             checked={field.value}
+                            disabled={hasExistingNotes}
                             onCheckedChange={(checked) => {
                               if (checked) {
                                 field.onChange(true);
@@ -702,6 +567,8 @@ export default function CaseNotesForm({
                         {...field}
                         rows={4}
                         placeholder="Enter explanation for follow-up plan..."
+                        disabled={hasExistingNotes}
+                        className={hasExistingNotes ? "bg-muted" : ""}
                       />
                     </FormControl>
                     <FormMessage />
