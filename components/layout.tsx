@@ -180,15 +180,18 @@ function LayoutV2({
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-40 max-w-none divide-y">
-              <DropdownMenuItem
-                className="flex items-center gap-2"
-                onClick={() => {
-                  router.push(`/${mainRoute}/profile`);
-                }}
-              >
-                <PeopleIcon fill="#969696" />
-                <span>My Profile</span>
-              </DropdownMenuItem>
+              {!pathname.startsWith("/cl/") &&
+                !pathname.startsWith("/ops/") && (
+                  <DropdownMenuItem
+                    className="flex items-center gap-2"
+                    onClick={() => {
+                      router.push(`/${mainRoute}/profile`);
+                    }}
+                  >
+                    <PeopleIcon fill="#969696" />
+                    <span>My Profile</span>
+                  </DropdownMenuItem>
+                )}
 
               <DropdownMenuItem
                 className="flex items-center gap-2"
@@ -201,7 +204,7 @@ function LayoutV2({
           </DropdownMenu>
         </div>
         <div
-          className="nav-link lg:hidden"
+          className={`nav-link lg:hidden ${pathname.startsWith("/cl/") || pathname.startsWith("/ops/") ? "hidden" : ""}`}
           onClick={() => {
             router.push(`/${mainRoute}/profile`);
           }}
