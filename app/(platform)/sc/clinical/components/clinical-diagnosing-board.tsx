@@ -25,6 +25,7 @@ export const emergency_presenting_issues = [
   { id: 4, name: "Suicidality" },
   { id: 5, name: "Self-harm" },
   { id: 6, name: "Child abuse" },
+  { id: 7, name: "NSSI" },
 ];
 
 export const emergency_presenting_issues_scale = [
@@ -40,6 +41,14 @@ export const general_presenting_issues = [
   { id: 3, name: "Peer pressure" },
   { id: 4, name: "Romantic relationship issues" },
   { id: 5, name: "Self esteem issues" },
+  { id: 6, name: "Parent-Child Relationships" },
+  { id: 7, name: "Student-Teacher Relationships" },
+  { id: 8, name: "Sexuality/ Sexual Identity" },
+  { id: 9, name: "Unresolved Grief/ Loss" },
+  { id: 10, name: "Medical Condition" },
+  { id: 11, name: "Self-Perception" },
+  { id: 12, name: "Self-Regulation" },
+  { id: 13, name: "Anxiety" },
 ];
 
 type Severity = "Low risk" | "Moderate risk" | "High risk" | "Severe risk";
