@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.8](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.6...v0.1.8) (2025-05-15)
+
+### Features
+
+- enhance error handling UI with improved messaging and retry button ([#443](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/443)) ([5dc80bf](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/5dc80bfbc1357b683a07087250d43926b486c210))
+- update add case ui and action roles to create cases ([#445](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/445)) ([ac2b115](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/ac2b11561fd8813b45207efbd78b6eb60d45f4ad))
+
+### Bug Fixes
+
+- hide profile for ops and clinical lead ([#447](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/447)) ([ebe733d](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/ebe733d22442ecb7e7428a1f06ba6d6c40baedfb))
+- issue marking attendance for supervision sessions + ENG-852 ([#444](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/444)) ([57a3e40](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/57a3e40c86b62985afecb27c4c9dcc56be700c41))
+
+## [0.1.7](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.6...v0.1.7) (2025-05-15)
+
+### Features
+
+- enhance error handling UI with improved messaging and retry button ([#443](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/443)) ([5dc80bf](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/5dc80bfbc1357b683a07087250d43926b486c210))
+- update add case ui and action roles to create cases ([#445](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/445)) ([ac2b115](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/ac2b11561fd8813b45207efbd78b6eb60d45f4ad))
+
+### Bug Fixes
+
+- hide profile for ops and clinical lead ([#447](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/447)) ([ebe733d](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/ebe733d22442ecb7e7428a1f06ba6d6c40baedfb))
+- issue marking attendance for supervision sessions + ENG-852 ([#444](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/444)) ([57a3e40](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/57a3e40c86b62985afecb27c4c9dcc56be700c41))
+
 ## [0.1.6](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.5...v0.1.6) (2025-05-14)
 
 ### Bug Fixes
