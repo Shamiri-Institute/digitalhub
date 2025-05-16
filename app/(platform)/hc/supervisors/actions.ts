@@ -386,13 +386,18 @@ export async function createNewSupervisor(
       where: {
         email: parsedData.personalEmail,
       },
+      include: {
+        memberships: true,
+      },
     });
 
     if (existingUser) {
-      return {
-        success: false,
-        message: "Something went wrong. A user with this email already exists",
-      };
+      if (existingUser.memberships.length > 0) {
+        return {
+          success: false,
+          message: "A user with this email already exists in the system",
+        };
+      }
     }
 
     const result = await db.$transaction(async (tx) => {
@@ -405,18 +410,20 @@ export async function createNewSupervisor(
         },
       });
 
-      const newUser = await tx.user.create({
-        data: {
-          id: objectId("user"),
-          email: parsedData.personalEmail,
-          name: parsedData.supervisorName,
-        },
-      });
+      const user =
+        existingUser ||
+        (await tx.user.create({
+          data: {
+            id: objectId("user"),
+            email: parsedData.personalEmail,
+            name: parsedData.supervisorName,
+          },
+        }));
 
       await tx.implementerMember.create({
         data: {
           implementerId: assignedHub.implementerId,
-          userId: newUser.id,
+          userId: user.id,
           role: "SUPERVISOR",
           identifier: supervisor.id,
         },

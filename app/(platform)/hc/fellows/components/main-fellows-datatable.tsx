@@ -17,8 +17,8 @@ import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { ImplementerRole, Prisma } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
+import { Plus } from "lucide-react";
 import { useState } from "react";
-
 const fellowCSVHeaders = [
   "fellow_name",
   "cell_no",
@@ -76,6 +76,7 @@ export default function MainFellowsDatatable({
         >
           <DialogTrigger asChild={true}>
             <Button variant="outline" className="bg-white">
+              <Plus className="h-4 w-4" />
               Add new fellow
             </Button>
           </DialogTrigger>
