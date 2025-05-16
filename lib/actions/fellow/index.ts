@@ -129,14 +129,18 @@ export async function submitFellowDetails(
         where: {
           email: fellowEmail,
         },
+        include: {
+          memberships: true,
+        },
       });
 
       if (existingUser) {
-        return {
-          success: false,
-          message:
-            "Something went wrong. A user with this email already exists",
-        };
+        if (existingUser.memberships.length > 0) {
+          return {
+            success: false,
+            message: "A user with this email already exists in the system",
+          };
+        }
       }
 
       const implementerId =
@@ -171,18 +175,20 @@ export async function submitFellowDetails(
           },
         });
 
-        const newUser = await tx.user.create({
-          data: {
-            id: objectId("user"),
-            email: fellowEmail,
-            name: fellowName,
-          },
-        });
+        const user =
+          existingUser ||
+          (await tx.user.create({
+            data: {
+              id: objectId("user"),
+              email: fellowEmail,
+              name: fellowName,
+            },
+          }));
 
         await tx.implementerMember.create({
           data: {
             implementerId,
-            userId: newUser.id,
+            userId: user.id,
             role: "FELLOW",
             identifier: fellow.id,
           },
