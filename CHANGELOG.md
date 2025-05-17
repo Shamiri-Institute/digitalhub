@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.9](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.8...v0.1.9) (2025-05-17)
+
+### Features
+
+- add new presenting issues to clinical diagnosing board ([#448](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/448)) ([78f8d84](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/78f8d84ac608946a0b97c4320e1cd3bc54240dfa))
+- clinical lead to view clinical case notes and termination reasons ([#446](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/446)) ([3a75a59](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/3a75a593f7e55e190724b0761ac345a25f5a0cb6))
+
+### Bug Fixes
+
+- enhance user creation logic for supervisors and fellows with membership checks ([#449](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/449)) ([f46f24b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/f46f24bb88f268448392b949c950e30afb42e7bb))
+
 ## [0.1.8](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.6...v0.1.8) (2025-05-15)
 
 ### Features
