@@ -1,13 +1,14 @@
 "use client";
 import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import { columns } from "#/app/(platform)/sc/clinical/columns";
-import { AddNewClinicalCaseForm } from "#/app/(platform)/sc/clinical/components/add-new-clinical-case-form";
 import { ClinicalDiagnosingBoard } from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
 import ViewMarkClinicalSessions from "#/app/(platform)/sc/clinical/components/view-mark-clinical-sessions";
+import { AddNewClinicalCaseForm } from "#/components/common/clinical/add-new-clinical-case-form";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { Prisma } from "@prisma/client";
+import { Plus } from "lucide-react";
 
 export default function ClinicalCasesTable({
   cases,
@@ -43,10 +44,14 @@ export default function ClinicalCasesTable({
         schools={schools}
         fellowsInHub={fellowsInHub}
         supervisorsInHub={supervisorsInHub}
-        currentSupervisorId={currentSupervisorId}
+        creatorId={currentSupervisorId}
+        role="SUPERVISOR"
       >
         <DialogTrigger asChild={true}>
-          <Button variant="brand">New case</Button>
+          <Button variant="brand">
+            <Plus className="mr-2 h-4 w-4" />
+            New case
+          </Button>
         </DialogTrigger>
       </AddNewClinicalCaseForm>
     </>
