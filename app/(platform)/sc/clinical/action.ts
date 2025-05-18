@@ -302,10 +302,10 @@ export async function getSchoolsInHub() {
   };
 }
 
-export async function createClinicalCaseBySupervisor(data: {
+export async function createStudentClinicalCase(data: {
   studentId: string;
   schoolId: string;
-  currentSupervisorId: string;
+  creatorId: string;
   pseudonym: string;
   stream: string;
   classForm: string;
@@ -315,6 +315,7 @@ export async function createClinicalCaseBySupervisor(data: {
   supervisorId?: string;
   fellowId?: string;
   sessionId: string;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   try {
     await db.$transaction(async (tx) => {
@@ -322,7 +323,8 @@ export async function createClinicalCaseBySupervisor(data: {
         data: {
           studentId: data.studentId,
           schoolId: data.schoolId,
-          currentSupervisorId: data.currentSupervisorId,
+          currentSupervisorId:
+            data.role === "SUPERVISOR" ? data.creatorId : null,
           pseudonym: data.pseudonym,
           initialReferredFromSpecified: data.initialContact,
           initialReferredFrom: data.fellowId ?? data.supervisorId,
@@ -330,6 +332,7 @@ export async function createClinicalCaseBySupervisor(data: {
           riskStatus: "No",
           caseStatus: "Active",
           sessionWhenCaseIsFlaggedId: data.sessionId,
+          clinicalLeadId: data.role === "CLINICAL_LEAD" ? data.creatorId : null,
         },
       });
 
@@ -346,11 +349,16 @@ export async function createClinicalCaseBySupervisor(data: {
       });
     });
 
-    revalidatePath("/sc/clinical");
+    revalidatePath(
+      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
+    );
     return { success: true, message: "Clinical case created successfully" };
   } catch (error) {
     console.error(error);
-    return { success: false, message: "Something went wrong" };
+    return {
+      success: false,
+      message: "Something went wrong, please try again",
+    };
   }
 }
 

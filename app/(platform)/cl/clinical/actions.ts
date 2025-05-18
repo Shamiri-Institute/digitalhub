@@ -258,3 +258,46 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
     return [];
   }
 }
+
+export async function getSchoolsInClinicalLeadHub() {
+  const clinicalLead = await currentClinicalLead();
+
+  const [schools, supervisorsInHub, fellowsInHub] = await Promise.all([
+    db.school.findMany({
+      where: {
+        hubId: clinicalLead?.assignedHubId,
+      },
+      include: {
+        students: true,
+        interventionSessions: {
+          select: {
+            id: true,
+            session: {
+              select: {
+                sessionName: true,
+                sessionLabel: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+    db.supervisor.findMany({
+      where: {
+        hubId: clinicalLead?.assignedHubId,
+      },
+    }),
+    db.fellow.findMany({
+      where: {
+        hubId: clinicalLead?.assignedHubId,
+      },
+    }),
+  ]);
+
+  return {
+    schools,
+    supervisorsInHub,
+    fellowsInHub,
+    currentClinicalLeadId: clinicalLead!.id,
+  };
+}
