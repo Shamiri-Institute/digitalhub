@@ -152,7 +152,7 @@ export type HubClinicalCases = {
   } | null;
 };
 
-export async function getClinicalCases(): Promise<HubClinicalCases[]> {
+export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
   try {
     const clinicalLead = await currentClinicalLead();
     if (!clinicalLead) throw new Error("Unauthorized");
@@ -213,7 +213,7 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
           SELECT 1 FROM "clinical_case_notes" ccn 
           WHERE ccn."case_id" = csi.id
         ) THEN true ELSE false END as "hasNotes",
-        s.supervisor_name as "supervisor",
+        COALESCE(s.supervisor_name, 'CLINICAL_LEAD') as "supervisor",
         h.hub_name as "hub",
         sch.school_name as "school",
         (
@@ -232,7 +232,7 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
         ct.termination_data as "termination"
       FROM 
         "clinical_screening_info" csi
-      JOIN 
+      LEFT JOIN 
         "supervisors" s ON csi."current_supervisor_id" = s.id
       JOIN 
         "students" st ON csi."student_id" = st.id
@@ -247,7 +247,7 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
       LEFT JOIN
         case_termination ct ON csi.id = ct.case_id
       WHERE 
-        s."hub_id" = ${clinicalLead.assignedHubId}
+        (s."hub_id" = ${clinicalLead.assignedHubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
       ORDER BY 
         csi.id DESC
     `;

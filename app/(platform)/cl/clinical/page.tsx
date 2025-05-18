@@ -1,6 +1,6 @@
 import {
-  getClinicalCases,
   getClinicalCasesData,
+  getClinicalCasesInHub,
   getSchoolsInClinicalLeadHub,
 } from "#/app/(platform)/cl/clinical/actions";
 import CasesBreakdown from "#/app/(platform)/cl/clinical/components/cases-breakdown";
@@ -11,7 +11,7 @@ import { DialogTrigger } from "#/components/ui/dialog";
 import { Plus } from "lucide-react";
 
 export default async function ClinicalPage() {
-  const cases = await getClinicalCases();
+  const cases = await getClinicalCasesInHub();
   const casesData = await getClinicalCasesData();
   const { schools, fellowsInHub, supervisorsInHub, currentClinicalLeadId } =
     await getSchoolsInClinicalLeadHub();
