@@ -73,9 +73,7 @@ export default function ClinicalCaseActionsDropdownMenu({
             Mark as special/ambiguous
           </div>
         </MarkCaseAsSpecial>
-        <ClinicalCaseSessionsAttendanceHistory
-          clinicalCase={clinicalCase}
-        >
+        <ClinicalCaseSessionsAttendanceHistory clinicalCase={clinicalCase}>
           <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             View attendance history
           </div>
