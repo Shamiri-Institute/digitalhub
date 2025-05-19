@@ -26,8 +26,10 @@ import { useState } from "react";
 
 export default function HandleSessionAttendanceUpdate({
   row,
+  role = "SUPERVISOR",
 }: {
   row: Row<AttendanceRecord>;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>(
@@ -46,7 +48,11 @@ export default function HandleSessionAttendanceUpdate({
       );
       if (response.success) {
         toast({ description: response.message });
-        revalidatePath("/sc/clinical");
+        if (role === "CLINICAL_LEAD") {
+          revalidatePath("/cl/clinical");
+        } else {
+          revalidatePath("/sc/clinical");
+        }
         setIsOpen(false);
       } else {
         toast({ variant: "destructive", description: response.message });

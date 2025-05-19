@@ -1,6 +1,6 @@
 "use client";
 
-import { createClinicalCaseBySupervisor } from "#/app/(platform)/sc/clinical/action";
+import { createStudentClinicalCase } from "#/app/(platform)/sc/clinical/action";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -58,7 +58,8 @@ export function AddNewClinicalCaseForm({
   schools = [],
   fellowsInHub = [],
   supervisorsInHub = [],
-  currentSupervisorId,
+  creatorId,
+  role,
 }: {
   children?: React.ReactNode;
   schools: Prisma.SchoolGetPayload<{
@@ -79,7 +80,8 @@ export function AddNewClinicalCaseForm({
   }>[];
   fellowsInHub: Prisma.FellowGetPayload<{}>[];
   supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
-  currentSupervisorId: string;
+  creatorId: string;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   const [open, setOpen] = useState(false);
   const [initialContactType, setInitialContactType] = useState<string>("");
@@ -156,9 +158,9 @@ export function AddNewClinicalCaseForm({
     }
 
     try {
-      const response = await createClinicalCaseBySupervisor({
+      const response = await createStudentClinicalCase({
         schoolId: selectedSchoolId,
-        currentSupervisorId,
+        creatorId,
         studentId: selectedStudentId,
         pseudonym: data.pseudonym,
         stream: data.stream || "",
@@ -169,6 +171,7 @@ export function AddNewClinicalCaseForm({
         supervisorId: data.supervisor,
         fellowId: data.fellow,
         sessionId: data.session,
+        role,
       });
 
       if (response.success) {

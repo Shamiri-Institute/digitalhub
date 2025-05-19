@@ -73,7 +73,7 @@ export default function ViewEditClinicalCaseStudentInfo({
       admissionNumber: clinicalCase.student.admissionNumber || "",
       classForm: clinicalCase.student.form?.toString() || "",
       stream: clinicalCase.student.stream || "",
-      group: clinicalCase.student.assignedGroupId || "",
+      group: clinicalCase.student.assignedGroup?.groupName || "",
       caseId: clinicalCase.id,
       studentId: clinicalCase.student.id,
     },
