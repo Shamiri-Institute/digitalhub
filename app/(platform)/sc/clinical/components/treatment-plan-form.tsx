@@ -69,9 +69,11 @@ type TreatmentPlanFormValues = z.infer<typeof TreatmentPlanSchema>;
 export default function TreatmentPlanForm({
   children,
   clinicalCase,
+  role,
 }: {
   children: React.ReactNode;
   clinicalCase: ClinicalCases;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [showOtherInput, setShowOtherInput] = useState(false);
@@ -92,6 +94,7 @@ export default function TreatmentPlanForm({
     try {
       const responese = await createTreatmentPlan({
         caseId: clinicalCase.id,
+        role,
         currentOrsScore: parseInt(data.currentOrsScore),
         plannedSessions: parseInt(data.plannedSessions),
         sessionFrequency: data.sessionFrequency,

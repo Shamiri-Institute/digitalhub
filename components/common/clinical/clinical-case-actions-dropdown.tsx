@@ -20,8 +20,10 @@ import { cn } from "#/lib/utils";
 
 export default function ClinicalCaseActionsDropdownMenu({
   clinicalCase,
+  role = "SUPERVISOR",
 }: {
   clinicalCase: ClinicalCases;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   return (
     <DropdownMenu>
@@ -44,19 +46,24 @@ export default function ClinicalCaseActionsDropdownMenu({
             Edit student information
           </div>
         </ViewEditClinicalCaseStudentInfo>
-        <ReferClinicalCase clinicalCase={clinicalCase}>
-          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-            Refer case
-          </div>
-        </ReferClinicalCase>
-        <ConsultClinicalExpert clinicalCase={clinicalCase}>
-          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-            Consult clinical expert
-          </div>
-        </ConsultClinicalExpert>
+        {role === "SUPERVISOR" && (
+          <>
+            <ReferClinicalCase clinicalCase={clinicalCase}>
+              <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+                Refer case
+              </div>
+            </ReferClinicalCase>
+            <ConsultClinicalExpert clinicalCase={clinicalCase}>
+              <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+                Consult clinical expert
+              </div>
+            </ConsultClinicalExpert>
+          </>
+        )}
         <MarkCaseAsSpecial
           caseId={clinicalCase.id}
           reason={clinicalCase.flaggedReason}
+          role={role}
         >
           <div
             className={cn(
@@ -71,7 +78,7 @@ export default function ClinicalCaseActionsDropdownMenu({
             View attendance history
           </div>
         </ClinicalCaseSessionsAttendanceHistory>
-        <TreatmentPlanForm clinicalCase={clinicalCase}>
+        <TreatmentPlanForm clinicalCase={clinicalCase} role={role}>
           <div
             className={cn(
               "px-2 py-1.5 text-sm",
@@ -83,7 +90,7 @@ export default function ClinicalCaseActionsDropdownMenu({
             Treatment plan
           </div>
         </TreatmentPlanForm>
-        <CaseNotesForm clinicalCase={clinicalCase}>
+        <CaseNotesForm clinicalCase={clinicalCase} role={role}>
           <div
             className={cn(
               "px-2 py-1.5 text-sm",

@@ -12,43 +12,48 @@ export default function AllHubClinicalCasesTable({
   cases: HubClinicalCases[];
 }) {
   return (
-    <DataTable
-      data={cases}
-      columns={columns}
-      className="data-table data-table-action bg-white lg:mt-4"
-      renderSubComponent={({ row }) => (
-        <div className="space-y-6 p-4">
-          <ViewCaseSessions
-            initialContact={row.original.initialContact ?? ""}
-            upcomingSession={row.original.upcomingSession ?? ""}
-            noOfClinicalSessions={row.original.noOfClinicalSessions ?? 0}
-            caseStatus={row.original.caseStatus ?? ""}
-          />
-          <ViewEmergencyPresentingIssues
-            emergencyPresentingIssuesBaseline={
-              row.original.emergencyPresentingIssuesBaseline
-            }
-            emergencyPresentingIssuesEndpoint={
-              row.original.emergencyPresentingIssuesEndpoint
-            }
-          />
-          <ViewGeneralPresentingIssues
-            generalPresentingIssuesBaseline={
-              row.original.generalPresentingIssuesBaseline
-            }
-            generalPresentingIssuesEndpoint={
-              row.original.generalPresentingIssuesEndpoint
-            }
-            generalPresentingIssuesOtherSpecifiedBaseline={
-              row.original.generalPresentingIssuesOtherSpecifiedBaseline
-            }
-            generalPresentingIssuesOtherSpecifiedEndpoint={
-              row.original.generalPresentingIssuesOtherSpecifiedEndpoint
-            }
-          />
-        </div>
-      )}
-      emptyStateMessage="No clinical cases found"
-    />
+    <>
+      <h2 className="text-lg font-medium">
+        All Supervisor Cases In This Hub ({cases.length})
+      </h2>
+      <DataTable
+        data={cases}
+        columns={columns}
+        className="data-table data-table-action bg-white lg:mt-4"
+        renderSubComponent={({ row }) => (
+          <div className="space-y-6 p-4">
+            <ViewCaseSessions
+              initialContact={row.original.initialContact ?? ""}
+              upcomingSession={row.original.upcomingSession ?? ""}
+              noOfClinicalSessions={row.original.noOfClinicalSessions ?? 0}
+              caseStatus={row.original.caseStatus ?? ""}
+            />
+            <ViewEmergencyPresentingIssues
+              emergencyPresentingIssuesBaseline={
+                row.original.emergencyPresentingIssuesBaseline
+              }
+              emergencyPresentingIssuesEndpoint={
+                row.original.emergencyPresentingIssuesEndpoint
+              }
+            />
+            <ViewGeneralPresentingIssues
+              generalPresentingIssuesBaseline={
+                row.original.generalPresentingIssuesBaseline
+              }
+              generalPresentingIssuesEndpoint={
+                row.original.generalPresentingIssuesEndpoint
+              }
+              generalPresentingIssuesOtherSpecifiedBaseline={
+                row.original.generalPresentingIssuesOtherSpecifiedBaseline
+              }
+              generalPresentingIssuesOtherSpecifiedEndpoint={
+                row.original.generalPresentingIssuesOtherSpecifiedEndpoint
+              }
+            />
+          </div>
+        )}
+        emptyStateMessage="No clinical cases created by supervisors in this hub yet"
+      />
+    </>
   );
 }

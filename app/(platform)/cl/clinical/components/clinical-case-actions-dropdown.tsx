@@ -11,7 +11,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 
-export default function ClinicalCaseActionsDropdownMenu({
+export default function ClinicalLeadCaseActionsDropdownMenu({
   clinicalCase,
 }: {
   clinicalCase: HubClinicalCases;
