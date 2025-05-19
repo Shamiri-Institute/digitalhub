@@ -39,7 +39,11 @@ export default async function ClinicalPage() {
         casesBySession={casesData.casesBySession}
         casesBySupervisor={casesData.casesBySupervisor}
       />
-      <AllHubClinicalCasesTable cases={cases} />
+      <AllHubClinicalCasesTable
+        cases={cases}
+        role="CLINICAL_LEAD"
+        currentClinicalLeadId={currentClinicalLeadId}
+      />
     </div>
   );
 }
