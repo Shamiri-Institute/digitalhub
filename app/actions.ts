@@ -1086,6 +1086,7 @@ export async function createClinicalCase(data: {
 export async function flagClinicalCaseForFollowUp(data: {
   caseId: string;
   reason: string;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   try {
     await db.clinicalScreeningInfo.update({
@@ -1098,7 +1099,9 @@ export async function flagClinicalCaseForFollowUp(data: {
       },
     });
 
-    revalidatePath("/screenings");
+    revalidatePath(
+      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
+    );
     return { success: true };
   } catch (error) {
     return { error: "Something went wrong" };
