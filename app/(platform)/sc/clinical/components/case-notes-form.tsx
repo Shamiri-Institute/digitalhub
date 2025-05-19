@@ -83,9 +83,11 @@ type CaseReportFormValues = z.infer<typeof CaseReportSchema>;
 export default function CaseNotesForm({
   children,
   clinicalCase,
+  role,
 }: {
   children: React.ReactNode;
   clinicalCase: ClinicalCases;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [showOtherInput, setShowOtherInput] = useState(false);
@@ -176,6 +178,7 @@ export default function CaseNotesForm({
         necessaryConditions: data.necessaryConditions || "",
         treatmentInterventions: data.treatmentInterventions,
         otherIntervention: data.otherIntervention || "",
+        role,
       });
       if (response.success) {
         toast({
