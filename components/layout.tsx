@@ -513,13 +513,6 @@ function getCurrentUserNavigationLinks(
   if (mainRoute === "cl") {
     links.push(
       <div
-        key="cl-schools"
-        className={`tab-link ${cn(schoolsActive && "active")}`}
-      >
-        <SchoolIcon />
-        <Link href={`/${mainRoute}/schools`}>Schools</Link>
-      </div>,
-      <div
         key="cl-supervisors"
         className={`tab-link ${cn(supervisorsActive && "active")}`}
       >
@@ -550,8 +543,8 @@ function getCurrentUserNavigationLinks(
     );
   }
 
-  // Add reporting to all roles except for fellows
-  if (mainRoute !== "fel") {
+  // Add reporting to all roles except for fellows AND clinical leads
+  if (mainRoute !== "fel" && mainRoute !== "cl") {
     links.push(
       <div
         className={`tab-link ${reportingActive ? "active" : ""}`}

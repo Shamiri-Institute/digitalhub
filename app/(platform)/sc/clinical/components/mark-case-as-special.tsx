@@ -27,10 +27,12 @@ export default function MarkCaseAsSpecial({
   caseId,
   reason,
   children,
+  role = "SUPERVISOR",
 }: {
   caseId: string;
   reason: string | null;
   children: React.ReactNode;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const { toast } = useToast();
@@ -47,6 +49,7 @@ export default function MarkCaseAsSpecial({
       const response = await flagClinicalCaseForFollowUp({
         caseId,
         reason: data.reason,
+        role,
       });
 
       if (response.success) {
