@@ -25,6 +25,11 @@ export async function getClinicalCases() {
               schoolName: true,
             },
           },
+          assignedGroup: {
+            select: {
+              groupName: true,
+            },
+          },
         },
       },
       sessions: true,
@@ -72,6 +77,7 @@ export async function getClinicalCases() {
       clinicalSessionAttendance: caseInfo.sessions,
       currentSupervisorId: caseInfo.currentSupervisorId,
       clinicalCaseNotes: caseInfo.clinicalCaseNotes,
+      clinicalLeadId: caseInfo.clinicalLeadId,
     };
   });
 }
@@ -416,11 +422,17 @@ export async function updateTreatmentPlan(
   }
 }
 
-export async function createTreatmentPlan(data: TreatmentPlanData) {
+export async function createTreatmentPlan(
+  data: TreatmentPlanData & { role: "CLINICAL_LEAD" | "SUPERVISOR" },
+) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
       throw new Error("User not found");
+    }
+
+    if (currentUser.membership.role !== data.role) {
+      throw new Error("You are not authorized to create a treatment plan");
     }
 
     await db.$transaction(async (tx) => {
@@ -446,7 +458,9 @@ export async function createTreatmentPlan(data: TreatmentPlanData) {
       });
     });
 
-    revalidatePath("/sc/clinical");
+    revalidatePath(
+      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
+    );
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -568,7 +582,10 @@ export async function terminateClinicalCase(data: {
       throw new Error("User not found");
     }
 
-    if (currentUser.membership.role !== "SUPERVISOR") {
+    if (
+      currentUser.membership.role !== "SUPERVISOR" &&
+      currentUser.membership.role !== "CLINICAL_LEAD"
+    ) {
       return {
         success: false,
         message: "You are not authorized to terminate this case",
@@ -618,6 +635,7 @@ export async function createClinicalCaseNotes(data: {
   studentResponseExplanation: string;
   followUpPlan: "GROUP" | "INDIVIDUAL";
   followUpPlanExplanation: string;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   try {
     const currentUser = await getCurrentUser();
@@ -625,7 +643,7 @@ export async function createClinicalCaseNotes(data: {
       throw new Error("User not found");
     }
 
-    if (currentUser.membership.role !== "SUPERVISOR") {
+    if (currentUser.membership.role !== data.role) {
       return {
         success: false,
         message: "You are not authorized to create clinical case notes",
@@ -650,7 +668,9 @@ export async function createClinicalCaseNotes(data: {
       },
     });
 
-    revalidatePath("/sc/clinical");
+    revalidatePath(
+      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
+    );
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -661,9 +681,11 @@ export async function createClinicalCaseNotes(data: {
 export async function updateClinicalCaseAttendance(data: {
   caseId: string;
   session: string;
-  supervisorId: string;
+  supervisorId: string | null;
   dateOfSession: Date;
   attendanceStatus: boolean;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
+  clinicalLeadId: string | null;
 }) {
   try {
     const currentUser = await getCurrentUser();
@@ -671,7 +693,10 @@ export async function updateClinicalCaseAttendance(data: {
       throw new Error("User not found");
     }
 
-    if (currentUser.membership.role !== "SUPERVISOR") {
+    if (
+      currentUser.membership.role !== "SUPERVISOR" &&
+      currentUser.membership.role !== "CLINICAL_LEAD"
+    ) {
       return {
         success: false,
         message: "You are not authorized to create clinical case notes",
@@ -688,13 +713,16 @@ export async function updateClinicalCaseAttendance(data: {
             date: data.dateOfSession,
             session: data.session,
             supervisorId: data.supervisorId,
+            clinicalLeadId: data.clinicalLeadId,
             attendanceStatus: data.attendanceStatus,
           },
         },
       },
     });
 
-    revalidatePath("/screenings");
+    revalidatePath(
+      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
+    );
     return { success: true };
   } catch (error) {
     console.error(error);

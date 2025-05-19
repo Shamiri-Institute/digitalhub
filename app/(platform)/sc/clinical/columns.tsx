@@ -90,7 +90,10 @@ export const columns: ColumnDef<ClinicalCases>[] = [
   {
     id: "button",
     cell: ({ row }) => (
-      <ClinicalCaseActionsDropdownMenu clinicalCase={row.original} />
+      <ClinicalCaseActionsDropdownMenu
+        clinicalCase={row.original}
+        role="CLINICAL_LEAD"
+      />
     ),
     enableHiding: false,
   },
