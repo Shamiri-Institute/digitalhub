@@ -89,9 +89,16 @@ export default async function StudentsPage() {
     db.clinicalScreeningInfo.groupBy({
       by: ["initialReferredFrom"],
       where: {
-        currentSupervisor: {
-          hubId: hubCoordinator.assignedHubId,
-        },
+        OR: [
+          {
+            currentSupervisor: {
+              hubId: hubCoordinator.assignedHubId,
+            },
+          },
+          {
+            clinicalLeadId: hubCoordinator.assignedHubId,
+          },
+        ],
       },
       _count: {
         initialReferredFrom: true,
@@ -140,7 +147,7 @@ export default async function StudentsPage() {
   const supervisors = await db.supervisor.findMany({
     where: {
       id: {
-        in: supervisorIds,
+        in: supervisorIds.filter((id): id is string => id !== null),
       },
     },
     select: {
@@ -155,7 +162,7 @@ export default async function StudentsPage() {
 
   const clinicalCasesBySupervisors = hubClinicalSessionsBySupervisor.map(
     (item) => ({
-      supervisorName: supervisorMap.get(item.currentSupervisorId) || "Unknown",
+      supervisorName: supervisorMap.get(item.currentSupervisorId!) || "Unknown",
       count: item._count.currentSupervisorId,
     }),
   );

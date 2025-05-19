@@ -1,7 +1,6 @@
 "use client";
 
 import { SupervisorClinicalCasesData } from "#/app/(platform)/cl/supervisors/actions";
-import SupervisorClinicalCasesDropdownActions from "#/app/(platform)/cl/supervisors/components/supervisors-cases-dropdown-actions";
 import { Badge } from "#/components/ui/badge";
 import { ColumnDef } from "@tanstack/react-table";
 
@@ -41,13 +40,13 @@ export const columns: ColumnDef<SupervisorClinicalCasesData>[] = [
     accessorKey: "noOfCaseNotes",
     header: "No. of Case Notes",
   },
-  {
-    id: "button",
-    cell: ({ row }) => (
-      <SupervisorClinicalCasesDropdownActions clinicalCase={row.original} />
-    ),
-    enableHiding: false,
-  },
+  // {
+  //   id: "button",
+  //   cell: ({ row }) => (
+  //     <SupervisorClinicalCasesDropdownActions clinicalCase={row.original} />
+  //   ),
+  //   enableHiding: false,
+  // },
 ];
 
 type BadgeVariant =

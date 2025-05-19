@@ -25,8 +25,8 @@ export async function getClinicalCasesData() {
         "case_status" as name, 
         COUNT(*) as value
       FROM "clinical_screening_info" csi
-      JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
-      WHERE s."hub_id" = ${hubId}
+      LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
+      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
       GROUP BY "case_status"
     `,
 
@@ -35,8 +35,8 @@ export async function getClinicalCasesData() {
         "risk_status" as name, 
         COUNT(*) as value
       FROM "clinical_screening_info" csi
-      JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
-      WHERE s."hub_id" = ${hubId}
+      LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
+      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
       GROUP BY "risk_status"
     `,
 
@@ -46,19 +46,19 @@ export async function getClinicalCasesData() {
         COUNT(*) as value
       FROM "clinical_session_attendance" csa
       JOIN "clinical_screening_info" csi ON csa."caseId" = csi.id
-      JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
-      WHERE s."hub_id" = ${hubId}
+      LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
+      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
       GROUP BY session
     `,
 
     db.$queryRaw<SupervisorResult[]>`
       SELECT 
-        csi."current_supervisor_id" as id, 
+        COALESCE(csi."current_supervisor_id", 'CLINICAL_LEAD') as id, 
         COUNT(*) as value
       FROM "clinical_screening_info" csi
-      JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
-      WHERE s."hub_id" = ${hubId}
-      GROUP BY csi."current_supervisor_id"
+      LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
+      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
+      GROUP BY COALESCE(csi."current_supervisor_id", 'CLINICAL_LEAD')
     `,
 
     db.$queryRaw<SupervisorInfo[]>`
@@ -67,6 +67,10 @@ export async function getClinicalCasesData() {
         "supervisor_name"
       FROM "supervisors"
       WHERE "hub_id" = ${hubId}
+      UNION ALL
+      SELECT 
+        'CLINICAL_LEAD' as id,
+        'Clinical Lead' as "supervisor_name"
     `,
   ]);
 
@@ -81,6 +85,12 @@ export async function getClinicalCasesData() {
   });
 
   const casesBySupervisor = casesBySupervisorResult.map((supervisor) => {
+    if (supervisor.id === "CLINICAL_LEAD") {
+      return {
+        name: "CL",
+        total: Number(supervisor.value),
+      };
+    }
     const sup = supervisorsResult.find((s) => s.id === supervisor.id);
     const names = sup?.supervisorName?.split(" ") ?? ["", ""];
     return {
@@ -124,6 +134,8 @@ export type HubClinicalCases = {
   generalPresentingIssuesEndpoint: Record<string, boolean> | null;
   generalPresentingIssuesOtherSpecifiedBaseline: string | null;
   generalPresentingIssuesOtherSpecifiedEndpoint: string | null;
+  clinicalLeadId: string;
+  isClinicalLeadCase: boolean;
   caseNotes: Array<{
     id: string;
     createdAt: Date;
@@ -152,7 +164,7 @@ export type HubClinicalCases = {
   } | null;
 };
 
-export async function getClinicalCases(): Promise<HubClinicalCases[]> {
+export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
   try {
     const clinicalLead = await currentClinicalLead();
     if (!clinicalLead) throw new Error("Unauthorized");
@@ -208,12 +220,14 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
         csi.general_presenting_issues_endpoint as "generalPresentingIssuesEndpoint",
         csi.general_presenting_issues_other_specified_baseline as "generalPresentingIssuesOtherSpecifiedBaseline",
         csi.general_presenting_issues_other_specified_endpoint as "generalPresentingIssuesOtherSpecifiedEndpoint",
+        csi."clinicalLeadId" as "clinicalLeadId",
+        CASE WHEN csi."clinicalLeadId" = ${clinicalLead.id} THEN true ELSE false END as "isClinicalLeadCase",
         CASE WHEN csfp.id IS NOT NULL THEN true ELSE false END as "treatmentPlan",
         CASE WHEN EXISTS (
           SELECT 1 FROM "clinical_case_notes" ccn 
           WHERE ccn."case_id" = csi.id
         ) THEN true ELSE false END as "hasNotes",
-        s.supervisor_name as "supervisor",
+        COALESCE(s.supervisor_name, 'CLINICAL_LEAD') as "supervisor",
         h.hub_name as "hub",
         sch.school_name as "school",
         (
@@ -232,7 +246,7 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
         ct.termination_data as "termination"
       FROM 
         "clinical_screening_info" csi
-      JOIN 
+      LEFT JOIN 
         "supervisors" s ON csi."current_supervisor_id" = s.id
       JOIN 
         "students" st ON csi."student_id" = st.id
@@ -247,7 +261,7 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
       LEFT JOIN
         case_termination ct ON csi.id = ct.case_id
       WHERE 
-        s."hub_id" = ${clinicalLead.assignedHubId}
+        (s."hub_id" = ${clinicalLead.assignedHubId})
       ORDER BY 
         csi.id DESC
     `;
@@ -257,4 +271,119 @@ export async function getClinicalCases(): Promise<HubClinicalCases[]> {
     console.error("Error fetching clinical cases:", error);
     return [];
   }
+}
+
+export async function getSchoolsInClinicalLeadHub() {
+  const clinicalLead = await currentClinicalLead();
+
+  const [schools, supervisorsInHub, fellowsInHub] = await Promise.all([
+    db.school.findMany({
+      where: {
+        hubId: clinicalLead?.assignedHubId,
+      },
+      include: {
+        students: true,
+        interventionSessions: {
+          select: {
+            id: true,
+            session: {
+              select: {
+                sessionName: true,
+                sessionLabel: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+    db.supervisor.findMany({
+      where: {
+        hubId: clinicalLead?.assignedHubId,
+      },
+    }),
+    db.fellow.findMany({
+      where: {
+        hubId: clinicalLead?.assignedHubId,
+      },
+    }),
+  ]);
+
+  return {
+    schools,
+    supervisorsInHub,
+    fellowsInHub,
+    currentClinicalLeadId: clinicalLead!.id,
+  };
+}
+
+export async function getClinicalCasesCreatedByClinicalLead() {
+  const clinicalLead = await currentClinicalLead();
+
+  const cases = await db.clinicalScreeningInfo.findMany({
+    where: {
+      clinicalLeadId: clinicalLead?.id,
+    },
+    include: {
+      student: {
+        include: {
+          school: {
+            select: {
+              schoolName: true,
+            },
+          },
+          assignedGroup: {
+            select: {
+              groupName: true,
+            },
+          },
+        },
+      },
+      sessions: true,
+      clinicalCaseNotes: true,
+    },
+  });
+
+  return cases.map((caseInfo) => {
+    const age = caseInfo.student?.age ? `${caseInfo.student.age} yrs` : "N/A";
+
+    const formattedSessions = caseInfo.sessions.map((session) => ({
+      sessionId: session.id,
+      session: session.session,
+      sessionDate: session.date.toLocaleDateString(),
+      attendanceStatus: session.attendanceStatus,
+    }));
+
+    return {
+      id: caseInfo.id,
+      school: caseInfo.student?.school?.schoolName,
+      pseudonym: caseInfo.pseudonym || "Anonymous",
+      dateAdded: caseInfo.createdAt.toLocaleDateString(),
+      caseStatus: caseInfo.caseStatus,
+      risk: caseInfo.riskStatus,
+      age,
+      referralFrom:
+        caseInfo.referredFrom ||
+        caseInfo.initialReferredFromSpecified ||
+        "Unknown",
+      hubId: clinicalLead?.assignedHubId,
+      flagged: caseInfo.flagged,
+      flaggedReason: caseInfo.flaggedReason,
+      sessionAttendanceHistory: formattedSessions,
+      student: caseInfo.student,
+      emergencyPresentingIssuesBaseline:
+        caseInfo.emergencyPresentingIssuesBaseline,
+      generalPresentingIssuesBaseline: caseInfo.generalPresentingIssuesBaseline,
+      emergencyPresentingIssuesEndpoint:
+        caseInfo.emergencyPresentingIssuesEndpoint,
+      generalPresentingIssuesEndpoint: caseInfo.generalPresentingIssuesEndpoint,
+      generalPresentingIssuesOtherSpecifiedBaseline:
+        caseInfo.generalPresentingIssuesOtherSpecifiedBaseline,
+      generalPresentingIssuesOtherSpecifiedEndpoint:
+        caseInfo.generalPresentingIssuesOtherSpecifiedEndpoint,
+      clinicalSessionAttendance: caseInfo.sessions,
+      currentSupervisorId: caseInfo.currentSupervisorId,
+      clinicalCaseNotes: caseInfo.clinicalCaseNotes,
+      clinicalLeadId: caseInfo.clinicalLeadId,
+    };
+  });
 }

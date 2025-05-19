@@ -6,6 +6,10 @@ import { currentSupervisor, getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
 
+export type ClinicalCases = Awaited<
+  ReturnType<typeof getClinicalCases>
+>[number];
+
 export async function getClinicalCases() {
   const supervisor = await currentSupervisor();
 
@@ -19,6 +23,11 @@ export async function getClinicalCases() {
           school: {
             select: {
               schoolName: true,
+            },
+          },
+          assignedGroup: {
+            select: {
+              groupName: true,
             },
           },
         },
@@ -68,6 +77,7 @@ export async function getClinicalCases() {
       clinicalSessionAttendance: caseInfo.sessions,
       currentSupervisorId: caseInfo.currentSupervisorId,
       clinicalCaseNotes: caseInfo.clinicalCaseNotes,
+      clinicalLeadId: caseInfo.clinicalLeadId,
     };
   });
 }
@@ -120,10 +130,6 @@ export async function getClinicalCasesStats() {
     completedCasesPercentage,
   };
 }
-
-export type ClinicalCases = Awaited<
-  ReturnType<typeof getClinicalCases>
->[number];
 
 export async function supSubmitConsultClinicalexpert(data: {
   caseId: string;
@@ -302,10 +308,10 @@ export async function getSchoolsInHub() {
   };
 }
 
-export async function createClinicalCaseBySupervisor(data: {
+export async function createStudentClinicalCase(data: {
   studentId: string;
   schoolId: string;
-  currentSupervisorId: string;
+  creatorId: string;
   pseudonym: string;
   stream: string;
   classForm: string;
@@ -315,6 +321,7 @@ export async function createClinicalCaseBySupervisor(data: {
   supervisorId?: string;
   fellowId?: string;
   sessionId: string;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   try {
     await db.$transaction(async (tx) => {
@@ -322,7 +329,8 @@ export async function createClinicalCaseBySupervisor(data: {
         data: {
           studentId: data.studentId,
           schoolId: data.schoolId,
-          currentSupervisorId: data.currentSupervisorId,
+          currentSupervisorId:
+            data.role === "SUPERVISOR" ? data.creatorId : null,
           pseudonym: data.pseudonym,
           initialReferredFromSpecified: data.initialContact,
           initialReferredFrom: data.fellowId ?? data.supervisorId,
@@ -330,6 +338,7 @@ export async function createClinicalCaseBySupervisor(data: {
           riskStatus: "No",
           caseStatus: "Active",
           sessionWhenCaseIsFlaggedId: data.sessionId,
+          clinicalLeadId: data.role === "CLINICAL_LEAD" ? data.creatorId : null,
         },
       });
 
@@ -346,11 +355,16 @@ export async function createClinicalCaseBySupervisor(data: {
       });
     });
 
-    revalidatePath("/sc/clinical");
+    revalidatePath(
+      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
+    );
     return { success: true, message: "Clinical case created successfully" };
   } catch (error) {
     console.error(error);
-    return { success: false, message: "Something went wrong" };
+    return {
+      success: false,
+      message: "Something went wrong, please try again",
+    };
   }
 }
 
@@ -408,11 +422,17 @@ export async function updateTreatmentPlan(
   }
 }
 
-export async function createTreatmentPlan(data: TreatmentPlanData) {
+export async function createTreatmentPlan(
+  data: TreatmentPlanData & { role: "CLINICAL_LEAD" | "SUPERVISOR" },
+) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
       throw new Error("User not found");
+    }
+
+    if (currentUser.membership.role !== data.role) {
+      throw new Error("You are not authorized to create a treatment plan");
     }
 
     await db.$transaction(async (tx) => {
@@ -438,7 +458,9 @@ export async function createTreatmentPlan(data: TreatmentPlanData) {
       });
     });
 
-    revalidatePath("/sc/clinical");
+    revalidatePath(
+      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
+    );
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -560,7 +582,10 @@ export async function terminateClinicalCase(data: {
       throw new Error("User not found");
     }
 
-    if (currentUser.membership.role !== "SUPERVISOR") {
+    if (
+      currentUser.membership.role !== "SUPERVISOR" &&
+      currentUser.membership.role !== "CLINICAL_LEAD"
+    ) {
       return {
         success: false,
         message: "You are not authorized to terminate this case",
@@ -610,6 +635,7 @@ export async function createClinicalCaseNotes(data: {
   studentResponseExplanation: string;
   followUpPlan: "GROUP" | "INDIVIDUAL";
   followUpPlanExplanation: string;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   try {
     const currentUser = await getCurrentUser();
@@ -617,7 +643,7 @@ export async function createClinicalCaseNotes(data: {
       throw new Error("User not found");
     }
 
-    if (currentUser.membership.role !== "SUPERVISOR") {
+    if (currentUser.membership.role !== data.role) {
       return {
         success: false,
         message: "You are not authorized to create clinical case notes",
@@ -642,7 +668,9 @@ export async function createClinicalCaseNotes(data: {
       },
     });
 
-    revalidatePath("/sc/clinical");
+    revalidatePath(
+      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
+    );
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -653,9 +681,11 @@ export async function createClinicalCaseNotes(data: {
 export async function updateClinicalCaseAttendance(data: {
   caseId: string;
   session: string;
-  supervisorId: string;
+  supervisorId: string | null;
   dateOfSession: Date;
   attendanceStatus: boolean;
+  role: "CLINICAL_LEAD" | "SUPERVISOR";
+  clinicalLeadId: string | null;
 }) {
   try {
     const currentUser = await getCurrentUser();
@@ -663,7 +693,10 @@ export async function updateClinicalCaseAttendance(data: {
       throw new Error("User not found");
     }
 
-    if (currentUser.membership.role !== "SUPERVISOR") {
+    if (
+      currentUser.membership.role !== "SUPERVISOR" &&
+      currentUser.membership.role !== "CLINICAL_LEAD"
+    ) {
       return {
         success: false,
         message: "You are not authorized to create clinical case notes",
@@ -680,13 +713,16 @@ export async function updateClinicalCaseAttendance(data: {
             date: data.dateOfSession,
             session: data.session,
             supervisorId: data.supervisorId,
+            clinicalLeadId: data.clinicalLeadId,
             attendanceStatus: data.attendanceStatus,
           },
         },
       },
     });
 
-    revalidatePath("/screenings");
+    revalidatePath(
+      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
+    );
     return { success: true };
   } catch (error) {
     console.error(error);

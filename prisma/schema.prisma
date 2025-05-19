@@ -1093,8 +1093,8 @@ model ClinicalScreeningInfo {
   riskStatus riskStatusOptions @map("risk_status")
   schoolId   String            @map("school_id") @db.VarChar(255)
 
-  currentSupervisorId    String      @map("current_supervisor_id") @db.VarChar(255)
-  currentSupervisor      Supervisor  @relation(fields: [currentSupervisorId], references: [id])
+  currentSupervisorId    String?     @map("current_supervisor_id") @db.VarChar(255)
+  currentSupervisor      Supervisor? @relation(fields: [currentSupervisorId], references: [id])
   referredToSupervisorId String?     @map("referredTo_supervisor_id") @db.VarChar(255)
   referredToSupervisor   Supervisor? @relation("referredtocases", fields: [referredToSupervisorId], references: [id])
 
@@ -1190,13 +1190,14 @@ model ClinicalSessionAttendance {
   createdAt               DateTime                  @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt               DateTime                  @updatedAt @map("updated_at") @db.Timestamptz()
   date                    DateTime                  @default(now()) @map("date") @db.Timestamptz()
-  supervisorId            String                    @map("supervisor_id") @db.VarChar(255)
+  supervisorId            String?                   @map("supervisor_id") @db.VarChar(255)
   session                 String                    @map("session") @db.VarChar(255)
   attendanceStatus        Boolean?                  @map("attendance_status")
   caseId                  String
   case                    ClinicalScreeningInfo     @relation(fields: [caseId], references: [id])
   clinicalCaseNotes       ClinicalCaseNotes[]
   clinicalCaseTermination ClinicalCaseTermination[]
+  clinicalLeadId          String?
 
   @@map("clinical_session_attendance")
 }
