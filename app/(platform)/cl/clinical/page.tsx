@@ -1,9 +1,11 @@
 import {
+  getClinicalCasesCreatedByClinicalLead,
   getClinicalCasesData,
   getClinicalCasesInHub,
   getSchoolsInClinicalLeadHub,
 } from "#/app/(platform)/cl/clinical/actions";
 import CasesBreakdown from "#/app/(platform)/cl/clinical/components/cases-breakdown";
+import ClinicalLeadCases from "#/app/(platform)/cl/clinical/components/clinical-lead-cases";
 import AllHubClinicalCasesTable from "#/app/(platform)/cl/clinical/components/hub-clinical-cases-table";
 import { AddNewClinicalCaseForm } from "#/components/common/clinical/add-new-clinical-case-form";
 import { Button } from "#/components/ui/button";
@@ -13,6 +15,7 @@ import { Plus } from "lucide-react";
 export default async function ClinicalPage() {
   const cases = await getClinicalCasesInHub();
   const casesData = await getClinicalCasesData();
+  const allClinicalLeadCases = await getClinicalCasesCreatedByClinicalLead();
   const { schools, fellowsInHub, supervisorsInHub, currentClinicalLeadId } =
     await getSchoolsInClinicalLeadHub();
   return (
@@ -39,11 +42,9 @@ export default async function ClinicalPage() {
         casesBySession={casesData.casesBySession}
         casesBySupervisor={casesData.casesBySupervisor}
       />
-      <AllHubClinicalCasesTable
-        cases={cases}
-        role="CLINICAL_LEAD"
-        currentClinicalLeadId={currentClinicalLeadId}
-      />
+      <AllHubClinicalCasesTable cases={cases} />
+
+      <ClinicalLeadCases clinicalLeadCases={allClinicalLeadCases} />
     </div>
   );
 }

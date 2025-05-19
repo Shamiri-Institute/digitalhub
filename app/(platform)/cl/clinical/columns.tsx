@@ -2,7 +2,6 @@
 
 import { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import ClinicalLeadCaseActionsDropdownMenu from "#/app/(platform)/cl/clinical/components/clinical-case-actions-dropdown";
-import ClinicalCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
@@ -110,9 +109,6 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
   {
     id: "button",
     cell: ({ row }) => {
-      if (row.original.isClinicalLeadCase) {
-        return <ClinicalCaseActionsDropdownMenu clinicalCase={row.original} />;
-      }
       return (
         <ClinicalLeadCaseActionsDropdownMenu clinicalCase={row.original} />
       );
