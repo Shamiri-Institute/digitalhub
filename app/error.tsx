@@ -65,7 +65,7 @@ export default function Error({
               href="mailto:techsupport@shamiri.institute"
               className="text-shamiri-blue-darker hover:underline"
             >
-              techsupport@shamiri.institute
+              tech-support@@shamiri.institute
             </Link>
           </p>
         </div>
