@@ -27,7 +27,7 @@ export default function MarkCaseAsSpecial({
   caseId,
   reason,
   children,
-  role="SUPERVISOR",
+  role = "SUPERVISOR",
 }: {
   caseId: string;
   reason: string | null;

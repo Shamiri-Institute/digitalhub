@@ -1,7 +1,6 @@
 "use client";
 
 import { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
-import ClinicalLeadCaseActionsDropdownMenu from "#/app/(platform)/cl/clinical/components/clinical-case-actions-dropdown";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
@@ -106,15 +105,15 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
       );
     },
   },
-  {
-    id: "button",
-    cell: ({ row }) => {
-      return (
-        <ClinicalLeadCaseActionsDropdownMenu clinicalCase={row.original} />
-      );
-    },
-    enableHiding: false,
-  },
+  // {
+  //   id: "button",
+  //   cell: ({ row }) => {
+  //     return (
+  //       <ClinicalLeadCaseActionsDropdownMenu clinicalCase={row.original} />
+  //     );
+  //   },
+  //   enableHiding: false,
+  // },
 ];
 
 type BadgeVariant =

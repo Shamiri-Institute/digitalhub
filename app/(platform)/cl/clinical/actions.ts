@@ -25,8 +25,8 @@ export async function getClinicalCasesData() {
         "case_status" as name, 
         COUNT(*) as value
       FROM "clinical_screening_info" csi
-      JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
-      WHERE s."hub_id" = ${hubId}
+      LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
+      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
       GROUP BY "case_status"
     `,
 
@@ -35,8 +35,8 @@ export async function getClinicalCasesData() {
         "risk_status" as name, 
         COUNT(*) as value
       FROM "clinical_screening_info" csi
-      JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
-      WHERE s."hub_id" = ${hubId}
+      LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
+      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
       GROUP BY "risk_status"
     `,
 
@@ -46,19 +46,19 @@ export async function getClinicalCasesData() {
         COUNT(*) as value
       FROM "clinical_session_attendance" csa
       JOIN "clinical_screening_info" csi ON csa."caseId" = csi.id
-      JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
-      WHERE s."hub_id" = ${hubId}
+      LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
+      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
       GROUP BY session
     `,
 
     db.$queryRaw<SupervisorResult[]>`
       SELECT 
-        csi."current_supervisor_id" as id, 
+        COALESCE(csi."current_supervisor_id", 'CLINICAL_LEAD') as id, 
         COUNT(*) as value
       FROM "clinical_screening_info" csi
-      JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
-      WHERE s."hub_id" = ${hubId}
-      GROUP BY csi."current_supervisor_id"
+      LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
+      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
+      GROUP BY COALESCE(csi."current_supervisor_id", 'CLINICAL_LEAD')
     `,
 
     db.$queryRaw<SupervisorInfo[]>`
@@ -67,6 +67,10 @@ export async function getClinicalCasesData() {
         "supervisor_name"
       FROM "supervisors"
       WHERE "hub_id" = ${hubId}
+      UNION ALL
+      SELECT 
+        'CLINICAL_LEAD' as id,
+        'Clinical Lead' as "supervisor_name"
     `,
   ]);
 
@@ -81,6 +85,12 @@ export async function getClinicalCasesData() {
   });
 
   const casesBySupervisor = casesBySupervisorResult.map((supervisor) => {
+    if (supervisor.id === "CLINICAL_LEAD") {
+      return {
+        name: "CL",
+        total: Number(supervisor.value),
+      };
+    }
     const sup = supervisorsResult.find((s) => s.id === supervisor.id);
     const names = sup?.supervisorName?.split(" ") ?? ["", ""];
     return {
