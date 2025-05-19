@@ -3,6 +3,7 @@
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import { getSchoolInitials } from "#/lib/utils";
 import { Prisma, sessionTypes } from "@prisma/client";
 import { format } from "date-fns";
 import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
@@ -624,8 +625,7 @@ export async function addSchool(
       const numGroups = Math.ceil((parsedData.numbersExpected || 1000) / 16);
 
       // Get the first word of the school name for the prefix
-      const schoolNamePrefix =
-        school.schoolName?.split(" ")[0]?.toUpperCase() ?? "GROUP";
+      const schoolNamePrefix = getSchoolInitials(school.schoolName) ?? "GROUP";
 
       const interventionGroups = [];
       for (let i = 0; i < numGroups; i++) {
