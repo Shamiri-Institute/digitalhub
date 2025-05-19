@@ -1,6 +1,7 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
+import { signOut } from "next-auth/react";
 import * as React from "react";
 
 import { Icons } from "#/components/icons";
@@ -22,7 +23,7 @@ export default function Error({
     }
   }, [error]);
 
-  const handleRedirectToLogin = () => {
+  const handleRedirectToLogin = async () => {
     const cookiesToClear = [
       "next-auth.session-token",
       "next-auth.callback-url",
@@ -43,6 +44,7 @@ export default function Error({
 
     reset();
 
+    await signOut({ redirect: false });
     window.location.replace("/login");
   };
 
