@@ -75,7 +75,6 @@ export default function ClinicalCaseActionsDropdownMenu({
         </MarkCaseAsSpecial>
         <ClinicalCaseSessionsAttendanceHistory
           clinicalCase={clinicalCase}
-          role={role}
         >
           <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
             View attendance history
