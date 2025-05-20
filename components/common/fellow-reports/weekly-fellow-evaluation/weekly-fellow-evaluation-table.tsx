@@ -22,6 +22,8 @@ export default function WeeklyFellowEvaluationTable({
             columns={subColumns}
             className="data-table data-table-action border-0 bg-white"
             emptyStateMessage="No weekly evaluation found for this fellow"
+            disablePagination={true}
+            disableSearch={true}
           />
         )}
       />
