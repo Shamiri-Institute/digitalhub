@@ -17,6 +17,7 @@ export type OpsHubsPayoutHistoryType = {
   duration: string;
   totalPayoutAmount: number;
   fellowDetails: FellowPayoutDetail[];
+  confirmedAt: Date | null;
 };
 
 export async function loadOpsHubsPayoutHistory(): Promise<
@@ -34,6 +35,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<
       duration: string;
       totalPayoutAmount: number;
       downloadLink: string;
+      confirmedAt: Date | null;
     }>
   >`
     WITH payout_groups AS (

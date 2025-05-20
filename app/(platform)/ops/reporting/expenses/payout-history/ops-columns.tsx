@@ -67,8 +67,12 @@ export const opsColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
         confirmPayoutAction(row.original.dateAdded);
       };
       return (
-        <Button variant="outline" onClick={confirmPayout}>
-          Confirm Payout
+        <Button
+          variant="outline"
+          disabled={row.original.confirmedAt !== null}
+          onClick={confirmPayout}
+        >
+          {row.original.confirmedAt ? "Confirmed" : "Confirm Payout"}
         </Button>
       );
     },
