@@ -9,18 +9,20 @@ import { columns, subColumns } from "./columns";
 
 export default function FellowPayoutHistoryDataTable({
   payoutHistory,
+  customColumns,
 }: {
   payoutHistory:
     | HubPayoutHistoryType[]
     | OpsHubsPayoutHistoryType[]
     | SupervisorPayoutHistoryType[];
+  customColumns?: typeof columns;
 }) {
   return (
     <div className="container w-full grow space-y-3">
       <FellowPayoutFilterTab />
       <DataTable
         data={payoutHistory}
-        columns={columns}
+        columns={customColumns ?? columns}
         className="data-table data-table-action bg-white lg:mt-4"
         renderSubComponent={({ row }) => (
           <DataTable
