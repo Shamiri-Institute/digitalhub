@@ -62,7 +62,7 @@ export default function Error({
             <br />
             Need assistance? Our support team is ready to help!{" "}
             <Link
-              href="mailto:techsupport@shamiri.institute"
+              href="mailto:tech-support@@shamiri.institute"
               className="text-shamiri-blue-darker hover:underline"
             >
               tech-support@@shamiri.institute
