@@ -179,3 +179,52 @@ export async function triggerPayoutAction() {
     );
   }
 }
+
+export async function confirmPayoutAction(executedAt: Date) {
+  const opsUser = await currentOpsUser();
+
+  if (!opsUser) {
+    throw new Error("Unauthorised user");
+  }
+
+  const currentTime = new Date();
+
+  try {
+    return await db.$transaction(async (tx) => {
+      const executedPayouts = await tx.payoutStatements.findMany({
+        where: {
+          executedAt: executedAt,
+          confirmedAt: null,
+        },
+      });
+
+      if (executedPayouts.length === 0) {
+        return {
+          success: true,
+          message: "No executed payouts found to confirm for this date",
+        };
+      }
+
+      const updatedPayouts = await tx.payoutStatements.updateMany({
+        where: {
+          id: { in: executedPayouts.map((payout) => payout.id) },
+        },
+        data: {
+          confirmedAt: currentTime,
+          confirmedBy: opsUser.id,
+        },
+      });
+
+      revalidatePath("/ops/reporting/expenses/payout-history");
+      return {
+        success: true,
+        message: `Successfully confirmed ${updatedPayouts.count} payouts`,
+      };
+    });
+  } catch (error) {
+    console.error("Error in confirmPayoutAction:", error);
+    throw new Error(
+      "Failed to confirm payouts. Please try again or contact support if the issue persists.",
+    );
+  }
+}

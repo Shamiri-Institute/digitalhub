@@ -1,13 +1,13 @@
 "use client";
 
 import { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
-import { columns } from "#/components/common/expenses/payout-history/columns";
+import { opsColumns } from "#/app/(platform)/ops/reporting/expenses/payout-history/ops-columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
 import { ColumnDef } from "@tanstack/react-table";
 
 export default function PayoutHistoryTableSkeleton() {
-  const loadingColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = columns.map(
+  const loadingColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = opsColumns.map(
     (column) => {
       const columnId =
         typeof column.header === "string"
