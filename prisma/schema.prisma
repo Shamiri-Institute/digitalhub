@@ -36,6 +36,7 @@ model User {
   clinicalFollowUpTreatmentPlanAuditTrail ClinicalFollowUpTreatmentPlanAuditTrail[]
   clinicalCaseNotes                       ClinicalCaseNotes[]
   clinicalCaseTermination                 ClinicalCaseTermination[]
+  confirmedPayouts                        PayoutStatements[]                        @relation("payout_statements_confirmed_by")
 
   @@map("users")
 }
@@ -1418,6 +1419,7 @@ model PayoutStatements {
   specialPayoutRequest   SpecialApprovalRequests? @relation(fields: [specialPayoutRequestId], references: [id])
   confirmedAt            DateTime?                @map("confirmed_at") @db.Timestamptz()
   confirmedBy            String?                  @map("confirmed_by")
+  confirmedByUser        User?                    @relation("payout_statements_confirmed_by", fields: [confirmedBy], references: [id])
 
   @@map("payout_statements")
 }
