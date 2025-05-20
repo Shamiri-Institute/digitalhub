@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.10](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.9...v0.1.10) (2025-05-20)
+
+### Features
+
+- add redirect to login functionality and support contact link in error component ([#453](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/453)) ([16fc4c0](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/16fc4c086d92628aa6fa7c62df4625b6adb03bff))
+- uncomment dropdown on clinical cases ([#452](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/452)) ([be76fc4](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/be76fc4af534fd663d783589d8f9dd9ab3a9a4f9))
+
+### Bug Fixes
+
+- use school initials for group naming ([#454](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/454)) ([cdd43d3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/cdd43d34e20390aad226434541d01414e4609bbe))
+
 ## [0.1.9](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.8...v0.1.9) (2025-05-17)
 
 ### Features
