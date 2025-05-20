@@ -1416,6 +1416,8 @@ model PayoutStatements {
   mpesaNumber            String?                  @map("mpesa_number")
   specialPayoutRequestId String?                  @map("special_payout_request_id")
   specialPayoutRequest   SpecialApprovalRequests? @relation(fields: [specialPayoutRequestId], references: [id])
+  confirmedAt            DateTime?                @map("confirmed_at") @db.Timestamptz()
+  confirmedBy            String?                  @map("confirmed_by")
 
   @@map("payout_statements")
 }
