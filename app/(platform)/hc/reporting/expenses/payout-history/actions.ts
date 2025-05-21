@@ -9,6 +9,7 @@ export type FellowPayoutDetail = {
   supervisorName: string;
   mpesaNumber: string;
   totalAmount: number;
+  fellowMpesaName: string;
 };
 
 export type HubPayoutHistoryType = {
