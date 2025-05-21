@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.11](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.10...v0.1.11) (2025-05-21)
+
+### Features
+
+- add confirmed by and confirmed at on payouts ([#455](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/455)) ([e84264d](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/e84264dc03c9ca37e6c2753c2f999b66f805b0fb))
+- enhance fellow payout details and attendance loading with project-specific filtering ([#456](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/456)) ([b3e7e64](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/b3e7e6447389c0a2b9667b8379576c2bf455005e))
+
 ## [0.1.10](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.9...v0.1.10) (2025-05-20)
 
 ### Features
