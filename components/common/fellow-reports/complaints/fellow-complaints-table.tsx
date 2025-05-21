@@ -23,6 +23,8 @@ export default function FellowComplaintsTable({
             columns={subColumns}
             className="data-table data-table-action border-0 bg-white"
             emptyStateMessage="No expenses found for this fellow"
+            disablePagination={true}
+            disableSearch={true}
           />
         )}
       />
