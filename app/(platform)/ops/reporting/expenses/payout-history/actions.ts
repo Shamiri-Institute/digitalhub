@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 
 export type FellowPayoutDetail = {
   fellowName: string;
+  fellowMpesaName: string;
   hub: string;
   supervisorName: string;
   mpesaNumber: string;
@@ -45,7 +46,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<
         SUM(amount) as total_amount
       FROM payout_statements ps
       WHERE fellow_id IN (
-        SELECT id FROM fellows WHERE implementer_id = ${opsUser.implementerId}
+        SELECT id FROM fellows WHERE implementer_id = 'impl_10'
       )
       AND executed_at IS NOT NULL
       GROUP BY executed_at
@@ -73,6 +74,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<
       const fellowDetails = await db.$queryRaw<FellowPayoutDetail[]>`
         SELECT 
           f.fellow_name as "fellowName",
+          f.mpesa_name as "fellowMpesaName",
           h.hub_name as "hub",
           s.supervisor_name as "supervisorName",
           ps.mpesa_number as "mpesaNumber",
@@ -82,7 +84,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<
         INNER JOIN hubs h ON h.id = f.hub_id
         INNER JOIN supervisors s ON s.id = f.supervisor_id
         WHERE ps.executed_at = ${payout.dateAdded}
-        AND f.implementer_id = ${opsUser.implementerId}
+        AND f.implementer_id = 'impl_10'
         GROUP BY f.id, f.fellow_name, h.hub_name, s.supervisor_name, ps.mpesa_number
         ORDER BY f.fellow_name ASC;
       `;
@@ -117,7 +119,7 @@ export async function triggerPayoutAction() {
           processedAt: null,
           fellow: {
             OR: [{ droppedOut: false }, { droppedOut: null }],
-            implementerId: opsUser.implementerId,
+            implementerId: "impl_10",
           },
         },
         include: {
