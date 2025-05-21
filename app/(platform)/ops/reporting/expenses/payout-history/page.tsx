@@ -1,4 +1,5 @@
 import { loadOpsHubsPayoutHistory } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
+import { opsColumns } from "#/app/(platform)/ops/reporting/expenses/payout-history/ops-columns";
 import TriggerPayout from "#/app/(platform)/ops/reporting/expenses/payout-history/trigger-payout";
 import { currentOpsUser } from "#/app/auth";
 import FellowPayoutHistoryDataTable from "#/components/common/expenses/payout-history/payout-history-table";
@@ -16,7 +17,10 @@ export default async function PayoutHistoryPage() {
   return (
     <div className="w-full grow">
       <TriggerPayout />
-      <FellowPayoutHistoryDataTable payoutHistory={opsHubsPayoutHistory} />
+      <FellowPayoutHistoryDataTable
+        payoutHistory={opsHubsPayoutHistory}
+        customColumns={opsColumns}
+      />
     </div>
   );
 }

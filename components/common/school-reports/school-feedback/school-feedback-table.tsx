@@ -23,6 +23,8 @@ export default function SchoolFeedbackDataTable({
             columns={subColumns}
             className="data-table data-table-action border-0 bg-white"
             emptyStateMessage="No feedback found for this school"
+            disablePagination={true}
+            disableSearch={true}
           />
         )}
       />
