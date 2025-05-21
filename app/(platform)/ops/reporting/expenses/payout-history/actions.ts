@@ -58,7 +58,13 @@ export async function loadOpsHubsPayoutHistory(): Promise<
         ' - ',
         COALESCE(TO_CHAR(next_payout_date, 'DD/MM/YYYY'), 'N/A')
       ) as "duration",
-      total_amount as "totalPayoutAmount"
+      total_amount as "totalPayoutAmount",
+      (
+        SELECT confirmed_at
+        FROM payout_statements
+        WHERE executed_at = payout_date
+        LIMIT 1
+      ) as "confirmedAt"
     FROM payout_groups;
   `;
 
