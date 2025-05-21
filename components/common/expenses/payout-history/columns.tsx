@@ -119,6 +119,10 @@ export const subColumns: ColumnDef<
     header: "Fellow Name",
   },
   {
+    accessorKey: "fellowMpesaName",
+    header: "Fellow Mpesa Name",
+  },
+  {
     accessorKey: "hub",
     header: "Hub",
   },

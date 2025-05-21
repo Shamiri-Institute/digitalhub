@@ -1,6 +1,7 @@
 "use server";
 
 import { currentOpsUser } from "#/app/auth";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
 
@@ -17,7 +18,9 @@ export async function loadHubsFellowAttendance() {
 
   const fellows = await db.fellow.findMany({
     where: {
-      implementerId: opsUser.implementerId,
+      hub: {
+        projectId: CURRENT_PROJECT_ID,
+      },
     },
     include: {
       hub: {

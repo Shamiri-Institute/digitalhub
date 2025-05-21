@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 
 export type FellowPayoutDetail = {
   fellowName: string;
+  fellowMpesaNumber: string;
   hub: string;
   supervisorName: string;
   mpesaNumber: string;
@@ -45,7 +46,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<
         SUM(amount) as total_amount
       FROM payout_statements ps
       WHERE fellow_id IN (
-        SELECT id FROM fellows WHERE implementer_id = ${opsUser.implementerId}
+        SELECT id FROM fellows WHERE implementer_id = 'impl_10'
       )
       AND executed_at IS NOT NULL
       GROUP BY executed_at
@@ -73,6 +74,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<
       const fellowDetails = await db.$queryRaw<FellowPayoutDetail[]>`
         SELECT 
           f.fellow_name as "fellowName",
+          f.mpesa_name as "fellowMpesaName",
           h.hub_name as "hub",
           s.supervisor_name as "supervisorName",
           ps.mpesa_number as "mpesaNumber",
