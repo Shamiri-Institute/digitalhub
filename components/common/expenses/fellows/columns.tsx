@@ -163,7 +163,11 @@ export const subColumns: ColumnDef<
     header: "Status",
     accessorKey: "status",
     cell: ({ row }) =>
-      renderPayoutStatus(row.original.executedAt, row.original.amount),
+      renderPayoutStatus(
+        row.original.executedAt,
+        row.original.amount,
+        row.original.confirmedAt,
+      ),
   },
 
   {
@@ -173,31 +177,51 @@ export const subColumns: ColumnDef<
   },
 ];
 
-export function renderPayoutStatus(status: null | Date, amount: number) {
+export function renderPayoutStatus(
+  status: null | Date,
+  amount: number,
+  confirmedAt: null | Date,
+) {
   if (amount < 0) {
+    if (confirmedAt === null) {
+      return (
+        <Badge variant="destructive" className="text-xs">
+          Pending Deduction
+        </Badge>
+      );
+    }
     return (
       <Badge variant="destructive" className="text-xs">
         Payment Deducted
       </Badge>
     );
   }
-  if (amount > 0 && status == null) {
-    return (
-      <Badge variant="secondary" className="text-xs">
-        Pending Payment
-      </Badge>
-    );
-  }
-  if (amount > 0 && status != null) {
+
+  if (amount > 0) {
+    if (status === null) {
+      return (
+        <Badge variant="secondary" className="text-xs">
+          Payment Pending
+        </Badge>
+      );
+    }
+    if (confirmedAt === null) {
+      return (
+        <Badge variant="shamiri-green" className="text-xs">
+          Payment Initiated
+        </Badge>
+      );
+    }
     return (
       <Badge variant="shamiri-green" className="text-xs">
-        Payment Initiated
+        Payment Completed
       </Badge>
     );
   }
+
   return (
     <Badge variant="default" className="text-xs">
-      Pending Payment
+      Payment Pending
     </Badge>
   );
 }
