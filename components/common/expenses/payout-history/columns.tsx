@@ -66,8 +66,8 @@ export const columns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
           "Hub",
           "Supervisor Name",
           "MPESA Number",
-          "Amount",
           "Mpesa Name",
+          "Amount",
         ];
         const csvContent = [
           headers.join(","),
@@ -77,8 +77,8 @@ export const columns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
               `"${fellow.hub}"`,
               `"${fellow.supervisorName}"`,
               `"${RenderParsedPhoneNumber(fellow.mpesaNumber)}"`,
-              fellow.totalAmount,
               `"${fellow.fellowMpesaName}"`,
+              fellow.totalAmount,
             ].join(","),
           ),
         ].join("\n");
