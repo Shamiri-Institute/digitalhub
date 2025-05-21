@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 export type FellowPayoutDetail = {
   fellowName: string;
-  fellowMpesaNumber: string;
+  fellowMpesaName: string;
   hub: string;
   supervisorName: string;
   mpesaNumber: string;
