@@ -1,6 +1,7 @@
 "use server";
 
 import { currentOpsUser } from "#/app/auth";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
 
@@ -17,7 +18,9 @@ export async function loadHubsFellowAttendance() {
 
   const fellows = await db.fellow.findMany({
     where: {
-      implementerId: opsUser.implementerId,
+      hub: {
+        projectId: CURRENT_PROJECT_ID,
+      },
     },
     include: {
       hub: {
@@ -101,7 +104,7 @@ function calculateAmounts(attendances: FellowAttendance[]) {
   attendances?.forEach((attendance) => {
     attendance.PayoutStatements?.forEach((payout) => {
       totalAmount += payout.amount;
-      if (attendance?.paymentInitiated) {
+      if (payout.confirmedAt) {
         totalPaidAmount += payout.amount;
       }
     });
@@ -126,9 +129,13 @@ function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
         const sessionType = attendance.session?.session?.sessionType;
 
         // For pre and main session counts
-        if (sessionLabel === "s0") {
+        if (sessionLabel === "Pre-session") {
           counts.preCount += 1;
-        } else if (["s1", "s2", "s3", "s4"].includes(sessionLabel ?? "")) {
+        } else if (
+          ["Session 1", "Session 2", "Session 3", "Session 4"].includes(
+            sessionLabel ?? "",
+          )
+        ) {
           counts.mainCount += 1;
         }
 
