@@ -97,7 +97,7 @@ function calculateAmounts(attendances: FellowAttendance[]) {
   attendances?.forEach((a) => {
     const sessionAmount = a?.session?.session?.amount || 0;
     totalAmount += sessionAmount;
-    if (a?.paymentInitiated) {
+    if (a?.processedAt) {
       totalPaidAmount += sessionAmount;
     }
   });
