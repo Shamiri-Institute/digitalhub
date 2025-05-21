@@ -76,6 +76,7 @@ export async function loadSupervisorFellowAttendance() {
         payoutReason: payout.reason,
         payoutNotes: payout.notes,
         executedAt: payout.executedAt,
+        confirmedAt: payout.confirmedAt,
       })),
     );
     return {

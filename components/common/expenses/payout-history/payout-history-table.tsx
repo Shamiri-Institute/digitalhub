@@ -5,22 +5,29 @@ import { HubPayoutHistoryType } from "#/app/(platform)/hc/reporting/expenses/pay
 import { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import { SupervisorPayoutHistoryType } from "#/app/(platform)/sc/reporting/expenses/payout-history/actions";
 import FellowPayoutFilterTab from "#/components/common/expenses/payout-history/payout-filter";
+import { ColumnDef } from "@tanstack/react-table";
 import { columns, subColumns } from "./columns";
+
+type PayoutHistoryType =
+  | HubPayoutHistoryType
+  | SupervisorPayoutHistoryType
+  | OpsHubsPayoutHistoryType;
 
 export default function FellowPayoutHistoryDataTable({
   payoutHistory,
+  customColumns,
 }: {
-  payoutHistory:
-    | HubPayoutHistoryType[]
-    | OpsHubsPayoutHistoryType[]
-    | SupervisorPayoutHistoryType[];
+  payoutHistory: PayoutHistoryType[];
+  customColumns?: ColumnDef<OpsHubsPayoutHistoryType>[];
 }) {
+  const displayColumns = customColumns || columns;
+
   return (
     <div className="container w-full grow space-y-3">
       <FellowPayoutFilterTab />
       <DataTable
         data={payoutHistory}
-        columns={columns}
+        columns={displayColumns as ColumnDef<PayoutHistoryType>[]}
         className="data-table data-table-action bg-white lg:mt-4"
         renderSubComponent={({ row }) => (
           <DataTable
