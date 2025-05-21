@@ -183,7 +183,7 @@ export function renderPayoutStatus(
   confirmedAt: null | Date,
 ) {
   if (amount < 0) {
-    if (confirmedAt === null) {
+    if (!confirmedAt) {
       return (
         <Badge variant="destructive" className="text-xs">
           Pending Deduction
@@ -198,29 +198,31 @@ export function renderPayoutStatus(
   }
 
   if (amount > 0) {
-    if (status === null) {
+    if (!status) {
       return (
-        <Badge variant="secondary" className="text-xs">
+        <Badge variant="outline" className="text-xs">
           Payment Pending
         </Badge>
       );
     }
-    if (confirmedAt === null) {
+    if (!!confirmedAt) {
+      return (
+        <Badge variant="shamiri-green" className="text-xs">
+          Payment Completed
+        </Badge>
+      );
+    }
+    if (!!status) {
       return (
         <Badge variant="shamiri-green" className="text-xs">
           Payment Initiated
         </Badge>
       );
     }
-    return (
-      <Badge variant="shamiri-green" className="text-xs">
-        Payment Completed
-      </Badge>
-    );
   }
 
   return (
-    <Badge variant="default" className="text-xs">
+    <Badge variant="outline" className="text-xs">
       Payment Pending
     </Badge>
   );

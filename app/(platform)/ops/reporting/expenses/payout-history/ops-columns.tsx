@@ -1,10 +1,8 @@
 "use client";
 
-import {
-  OpsHubsPayoutHistoryType,
-} from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
-import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
+import { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import TriggerConfirmPayout from "#/app/(platform)/ops/reporting/expenses/payout-history/trigger-confirm-payout";
+import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 import { ColumnDef } from "@tanstack/react-table";
@@ -63,7 +61,7 @@ export const opsColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
   {
     cell: ({ row }) => {
       return (
-        <TriggerConfirmPayout 
+        <TriggerConfirmPayout
           dateAdded={row.original.dateAdded}
           disabled={!!row.original.confirmedAt}
         />

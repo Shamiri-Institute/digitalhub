@@ -18,7 +18,10 @@ interface TriggerConfirmPayoutProps {
   disabled?: boolean;
 }
 
-export default function TriggerConfirmPayout({ dateAdded, disabled }: TriggerConfirmPayoutProps) {
+export default function TriggerConfirmPayout({
+  dateAdded,
+  disabled,
+}: TriggerConfirmPayoutProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -57,7 +60,8 @@ export default function TriggerConfirmPayout({ dateAdded, disabled }: TriggerCon
         <DialogHeader>
           <DialogTitle>Confirm Payout</DialogTitle>
           <DialogDescription>
-            This action will confirm the payout for all processed payments on this date.
+            This action will confirm the payout for all processed payments on
+            this date.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -90,4 +94,4 @@ export default function TriggerConfirmPayout({ dateAdded, disabled }: TriggerCon
       </DialogContent>
     </Dialog>
   );
-} 
+}
