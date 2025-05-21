@@ -34,6 +34,7 @@ export default function PayoutHistoryTableSkeleton() {
     duration: "",
     totalPayoutAmount: 0,
     fellowDetails: [],
+    confirmedAt: null,
   }));
 
   return (
