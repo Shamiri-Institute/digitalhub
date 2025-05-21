@@ -84,7 +84,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<
         INNER JOIN hubs h ON h.id = f.hub_id
         INNER JOIN supervisors s ON s.id = f.supervisor_id
         WHERE ps.executed_at = ${payout.dateAdded}
-        AND f.implementer_id = ${opsUser.implementerId}
+        AND f.implementer_id = 'impl_10'
         GROUP BY f.id, f.fellow_name, h.hub_name, s.supervisor_name, ps.mpesa_number
         ORDER BY f.fellow_name ASC;
       `;
@@ -119,7 +119,7 @@ export async function triggerPayoutAction() {
           processedAt: null,
           fellow: {
             OR: [{ droppedOut: false }, { droppedOut: null }],
-            implementerId: opsUser.implementerId,
+            implementerId: "impl_10",
           },
         },
         include: {
