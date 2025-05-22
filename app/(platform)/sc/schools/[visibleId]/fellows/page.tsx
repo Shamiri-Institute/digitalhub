@@ -108,16 +108,12 @@ export default async function FellowsPage({
   });
 
   return (
-    <FellowInfoContextProvider>
-      <Suspense fallback={<Loading />}>
-        <FellowsDatatable
-          fellows={data}
-          supervisors={supervisors}
-          schoolId={school.id}
-          role={supervisor?.user.membership.role!}
-          attendances={school.fellowAttendances}
-        />
-      </Suspense>
-    </FellowInfoContextProvider>
+    <FellowsDatatable
+      fellows={data}
+      supervisors={supervisors}
+      schoolId={school.id}
+      role={supervisor?.user.membership.role!}
+      attendances={school.fellowAttendances}
+    />
   );
 }

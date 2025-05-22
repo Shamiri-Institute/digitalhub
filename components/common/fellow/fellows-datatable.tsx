@@ -1,6 +1,5 @@
 "use client";
 
-import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
@@ -23,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { ImplementerRole, Prisma } from "@prisma/client";
-import { Dispatch, SetStateAction, useContext, useState } from "react";
+import { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
 import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
 export default function FellowsDatatable({
@@ -62,9 +61,19 @@ export default function FellowsDatatable({
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
   const [assignSupervisorDialog, setAssignSupervisorDialog] = useState(false);
+
   const renderTableActions = () => {
     return <BatchUploadDownloadFellow role={role} />;
   };
+
+  useEffect(() => {
+    if (fellow) {
+      const updatedFellow = fellows.find((_fellow) => {
+        return _fellow.id === fellow.id;
+      });
+      setFellow(updatedFellow);
+    }
+  }, [fellows, fellow]);
 
   return (
     <>
@@ -177,7 +186,6 @@ export function FellowsDatatableMenu({
   };
   role: ImplementerRole;
 }) {
-  const context = useContext(FellowInfoContext);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
