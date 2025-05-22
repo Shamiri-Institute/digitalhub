@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { ImplementerRole, Prisma } from "@prisma/client";
-import { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
 export default function FellowsDatatable({
