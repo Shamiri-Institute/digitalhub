@@ -1,6 +1,7 @@
 "use server";
 
 import { currentOpsUser } from "#/app/auth";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import { revalidatePath } from "next/cache";
 
@@ -46,7 +47,9 @@ export async function loadOpsHubsPayoutHistory(): Promise<
         SUM(amount) as total_amount
       FROM payout_statements ps
       WHERE fellow_id IN (
-        SELECT id FROM fellows WHERE implementer_id = 'impl_10'
+        SELECT f.id FROM fellows f
+        INNER JOIN hubs h ON h.id = f.hub_id
+        WHERE h.project_id =  ${CURRENT_PROJECT_ID}
       )
       AND executed_at IS NOT NULL
       GROUP BY executed_at
@@ -84,7 +87,7 @@ export async function loadOpsHubsPayoutHistory(): Promise<
         INNER JOIN hubs h ON h.id = f.hub_id
         INNER JOIN supervisors s ON s.id = f.supervisor_id
         WHERE ps.executed_at = ${payout.dateAdded}
-        AND f.implementer_id = 'impl_10'
+        AND h.project_id = ${CURRENT_PROJECT_ID}
         GROUP BY f.id, f.fellow_name, h.hub_name, s.supervisor_name, ps.mpesa_number
         ORDER BY f.fellow_name ASC;
       `;
@@ -119,7 +122,9 @@ export async function triggerPayoutAction() {
           processedAt: null,
           fellow: {
             OR: [{ droppedOut: false }, { droppedOut: null }],
-            implementerId: "impl_10",
+            hub: {
+              projectId: CURRENT_PROJECT_ID,
+            },
           },
         },
         include: {
