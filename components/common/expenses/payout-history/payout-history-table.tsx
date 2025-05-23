@@ -36,7 +36,6 @@ export default function FellowPayoutHistoryDataTable({
             columns={subColumns}
             className="data-table data-table-action border-0 bg-white"
             emptyStateMessage="No expenses found for this fellow"
-            disableSearch={true}
           />
         )}
         emptyStateMessage="No payouts made yet"
