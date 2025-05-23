@@ -101,14 +101,8 @@ export default function StudentDetailsForm({
   }
 
   useEffect(() => {
-    if (open && mode === "edit" && student !== undefined) {
-      form.reset(getDefaultValues());
-    }
-
-    if (!open) {
-      form.reset();
-    }
-  }, [open, student, mode]);
+    form.reset(getDefaultValues());
+  }, [open, student, mode, assignedGroupId]);
 
   useEffect(() => {
     if (!transferDialog) {
@@ -430,14 +424,14 @@ export default function StudentDetailsForm({
                 <label
                   key={student.id}
                   htmlFor={student.id}
-                  className="flex space-x-3 rounded-lg border bg-background-secondary px-4 py-3 lg:items-center"
+                  className="flex gap-x-3 rounded-lg border bg-background-secondary px-4 py-3 lg:items-center"
                 >
                   <RadioGroupItem
                     value={index.toString()}
                     id={student.id}
                     className="h-5 w-5 rounded border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue data-[state=checked]:text-white"
                   />
-                  <div className="flex flex-col gap-0 lg:flex-row lg:items-center">
+                  <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
                     <span className="capitalize">
                       {student.studentName?.toLowerCase()}
                     </span>
