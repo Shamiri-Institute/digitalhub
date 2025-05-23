@@ -1,11 +1,8 @@
-import Loading from "#/app/(platform)/sc/schools/[visibleId]/fellows/loading";
 import { currentSupervisor } from "#/app/auth";
 import { SchoolFellowTableData } from "#/components/common/fellow/columns";
-import FellowInfoContextProvider from "#/components/common/fellow/fellow-info-context-provider";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
-import { Suspense } from "react";
 
 export default async function FellowsPage({
   params: { visibleId },
@@ -108,16 +105,12 @@ export default async function FellowsPage({
   });
 
   return (
-    <FellowInfoContextProvider>
-      <Suspense fallback={<Loading />}>
-        <FellowsDatatable
-          fellows={data}
-          supervisors={supervisors}
-          schoolId={school.id}
-          role={supervisor?.user.membership.role!}
-          attendances={school.fellowAttendances}
-        />
-      </Suspense>
-    </FellowInfoContextProvider>
+    <FellowsDatatable
+      fellows={data}
+      supervisors={supervisors}
+      schoolId={school.id}
+      role={supervisor?.user.membership.role!}
+      attendances={school.fellowAttendances}
+    />
   );
 }
