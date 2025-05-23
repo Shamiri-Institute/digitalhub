@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.0.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.11...v1.0.1) (2025-05-23)
+
+### Bug Fixes
+
+- issue adding students to groups ([#458](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/458)) ([b87d1f5](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/b87d1f55f9c30f30af20c229ad91ef9cb731102f))
+
 ## [0.1.11](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.10...v0.1.11) (2025-05-21)
 
 ### Features
