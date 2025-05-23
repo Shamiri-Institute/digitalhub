@@ -54,7 +54,7 @@ export async function loadFellowComplaints() {
         complaintId: item.id,
         date: formattedDate ?? "",
         complaint: item.complaint ?? "",
-        additionalComments: "N/A",
+        additionalComments: item.comments ?? "",
         fellowName: item.fellow.fellowName ?? "",
       });
       return acc;
