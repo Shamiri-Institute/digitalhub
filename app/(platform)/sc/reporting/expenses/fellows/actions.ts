@@ -100,7 +100,7 @@ function calculateAmounts(attendances: FellowAttendance[]) {
   attendances?.forEach((attendance) => {
     attendance.PayoutStatements?.forEach((payout) => {
       totalAmount += payout.amount;
-      if (attendance?.paymentInitiated) {
+      if (payout.confirmedAt) {
         totalPaidAmount += payout.amount;
       }
     });
