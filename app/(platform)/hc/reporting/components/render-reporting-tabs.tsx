@@ -20,10 +20,6 @@ export default function RenderReportingTabs() {
       href: `/hc/reporting/fellow-reports/student-group-evaluation`,
     },
     { name: "Complaints", href: `/hc/reporting/fellow-reports/complaints` },
-    {
-      name: "Fellow attendance sheet",
-      href: `/hc/reporting/fellow-reports/fellow-attendance-sheet`,
-    },
   ];
 
   const schoolReportOptions: TabType[] = [
