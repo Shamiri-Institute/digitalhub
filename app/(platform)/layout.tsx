@@ -1,9 +1,11 @@
+import { currentHubCoordinator, getCurrentPersonnel } from "#/app/auth";
 import { Layout } from "#/components/layout";
 
-export default function PlatformLayout({
+export default async function PlatformLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <Layout>{children}</Layout>;
+  const profile = await getCurrentPersonnel();
+  return <Layout profile={profile}>{children}</Layout>;
 }
