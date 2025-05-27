@@ -49,6 +49,11 @@ import { APP_ENV, constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
+import { Input } from "#/components/ui/input";
+import { Label } from "#/components/ui/label";
+import { CurrentHubCoordinator, CurrentSupervisor, CurrentFellow, CurrentClinicalLead, CurrentOpsUser } from "#/app/auth";
+import { ProfileDialog } from "#/components/common/profile/profile-dialog";
 
 interface NavigationLinkProps {
   scheduleActive: boolean;
