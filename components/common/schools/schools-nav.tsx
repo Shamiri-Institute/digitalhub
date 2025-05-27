@@ -33,10 +33,10 @@ export default function SchoolsNav({
             { name: "Fellows", href: `/sc/schools/${visibleId}/fellows` },
             { name: "Students", href: `/sc/schools/${visibleId}/students` },
             { name: "Groups", href: `/sc/schools/${visibleId}/groups` },
-            { name: "Files", href: `/sc/schools/${visibleId}/files` },
-            { name: "Clinical Cases", href: `/sc/schools/${visibleId}/cases` },
-            { name: "Referrals", href: `/sc/schools/${visibleId}/referrals` },
-            { name: "Consulting", href: `/sc/schools/${visibleId}/consulting` },
+            // { name: "Files", href: `/sc/schools/${visibleId}/files` },
+            // { name: "Clinical Cases", href: `/sc/schools/${visibleId}/cases` },
+            // { name: "Referrals", href: `/sc/schools/${visibleId}/referrals` },
+            // { name: "Consulting", href: `/sc/schools/${visibleId}/consulting` },
           ]
         : role === "FELLOW"
           ? [
