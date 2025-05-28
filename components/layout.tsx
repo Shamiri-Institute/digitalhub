@@ -33,6 +33,14 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 
+import {
+  CurrentClinicalLead,
+  CurrentFellow,
+  CurrentHubCoordinator,
+  CurrentOpsUser,
+  CurrentSupervisor,
+} from "#/app/auth";
+import { ProfileDialog } from "#/components/common/profile/profile-dialog";
 import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
@@ -46,11 +54,6 @@ import { cn } from "#/lib/utils";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
-import { Input } from "#/components/ui/input";
-import { Label } from "#/components/ui/label";
-import { CurrentHubCoordinator, CurrentSupervisor, CurrentFellow, CurrentClinicalLead, CurrentOpsUser } from "#/app/auth";
-import { ProfileDialog } from "#/components/common/profile/profile-dialog";
 
 interface NavigationLinkProps {
   scheduleActive: boolean;
@@ -64,7 +67,19 @@ interface NavigationLinkProps {
   setPopoverOpen: (open: boolean) => void;
 }
 
-export function Layout({ children, profile }: { children: React.ReactNode, profile: CurrentHubCoordinator | CurrentSupervisor | CurrentFellow | CurrentClinicalLead | CurrentOpsUser | null }) {
+export function Layout({
+  children,
+  profile,
+}: {
+  children: React.ReactNode;
+  profile:
+    | CurrentHubCoordinator
+    | CurrentSupervisor
+    | CurrentFellow
+    | CurrentClinicalLead
+    | CurrentOpsUser
+    | null;
+}) {
   const pathname = usePathname();
   const session = useSession();
 
@@ -123,7 +138,13 @@ function LayoutV2({
   userName: string;
   avatarUrl?: string | null;
   pathname: string;
-  profile: CurrentHubCoordinator | CurrentSupervisor | CurrentFellow | CurrentClinicalLead | CurrentOpsUser | null;
+  profile:
+    | CurrentHubCoordinator
+    | CurrentSupervisor
+    | CurrentFellow
+    | CurrentClinicalLead
+    | CurrentOpsUser
+    | null;
 }) {
   const [mainRoute, subRoute] = pathname.slice(1).split("/"); // get the path under the 'hc' route. fix this when we add other roles
   const schoolsActive = subRoute?.includes("schools");
@@ -189,18 +210,17 @@ function LayoutV2({
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-40 max-w-none divide-y">
-              {!pathname.startsWith("/cl/") &&
-                !pathname.startsWith("/ops/") && (
-                  <DropdownMenuItem
-                    className="flex items-center gap-2"
-                    onClick={() => {
-                      setIsProfileOpen(true);
-                    }}
-                  >
-                    <PeopleIcon fill="#969696" />
-                    <span>My Profile</span>
-                  </DropdownMenuItem>
-                )}
+              {!pathname.startsWith("/ops/") && (
+                <DropdownMenuItem
+                  className="flex items-center gap-2"
+                  onClick={() => {
+                    setIsProfileOpen(true);
+                  }}
+                >
+                  <PeopleIcon fill="#969696" />
+                  <span>My Profile</span>
+                </DropdownMenuItem>
+              )}
 
               <DropdownMenuItem
                 className="flex items-center gap-2"
@@ -213,9 +233,9 @@ function LayoutV2({
           </DropdownMenu>
         </div>
         <div
-          className={`nav-link lg:hidden ${pathname.startsWith("/cl/") || pathname.startsWith("/ops/") ? "hidden" : ""}`}
+          className={`nav-link lg:hidden ${ pathname.startsWith("/ops/") ? "hidden" : ""}`}
           onClick={() => {
-            router.push(`/${mainRoute}/profile`);
+            setIsProfileOpen(true);
           }}
         >
           <PeopleIcon fill="#969696" />
@@ -309,8 +329,8 @@ function LayoutV2({
       <main className="flex grow items-stretch overflow-x-hidden bg-background-secondary">
         {children}
       </main>
-      <ProfileDialog 
-        isOpen={isProfileOpen} 
+      <ProfileDialog
+        isOpen={isProfileOpen}
         onOpenChange={setIsProfileOpen}
         profile={profile}
       />

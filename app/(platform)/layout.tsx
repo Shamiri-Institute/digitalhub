@@ -1,4 +1,4 @@
-import { currentHubCoordinator, getCurrentPersonnel } from "#/app/auth";
+import { getCurrentPersonnel } from "#/app/auth";
 import { Layout } from "#/components/layout";
 
 export default async function PlatformLayout({
