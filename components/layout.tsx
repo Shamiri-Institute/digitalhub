@@ -233,7 +233,7 @@ function LayoutV2({
           </DropdownMenu>
         </div>
         <div
-          className={`nav-link lg:hidden ${ pathname.startsWith("/ops/") ? "hidden" : ""}`}
+          className={`nav-link lg:hidden ${pathname.startsWith("/ops/") ? "hidden" : ""}`}
           onClick={() => {
             setIsProfileOpen(true);
           }}

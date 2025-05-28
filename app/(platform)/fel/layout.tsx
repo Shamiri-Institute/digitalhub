@@ -5,9 +5,5 @@ export default function FellowLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="w-full self-stretch bg-white">
-      {children}
-    </div>
-  );
+  return <div className="w-full self-stretch bg-white">{children}</div>;
 }

@@ -205,7 +205,9 @@ export function ProfileDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <span className="text-xl">{isFellow ? "View profile" : "Edit profile"}</span>
+              <span className="text-xl">
+                {isFellow ? "View profile" : "Edit profile"}
+              </span>
             </DialogHeader>
             <div className="flex items-center gap-2 pt-4">
               <div className="relative h-7 w-7 shrink-0">
@@ -232,7 +234,8 @@ export function ProfileDialog({
                               : profile.user?.user?.name)}
                 </span>
                 <span className="text-[20px] font-semibold text-gray-600">
-                  {" "}-{" "}
+                  {" "}
+                  -{" "}
                   <span className="capitalize">
                     {profile &&
                       (("assignedHub" in profile &&
@@ -494,7 +497,8 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             M-Pesa number{" "}
-                            {profile?.user?.membership?.role === ImplementerRole.FELLOW && (
+                            {profile?.user?.membership?.role ===
+                              ImplementerRole.FELLOW && (
                               <span className="text-shamiri-light-red">*</span>
                             )}
                           </FormLabel>
@@ -522,7 +526,8 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             M-Pesa name{" "}
-                            {profile?.user?.membership?.role === ImplementerRole.FELLOW && (
+                            {profile?.user?.membership?.role ===
+                              ImplementerRole.FELLOW && (
                               <span className="text-shamiri-light-red">*</span>
                             )}
                           </FormLabel>
@@ -552,7 +557,9 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             Bank name
-                            {showBankInfo && <span className="text-shamiri-light-red">*</span>}
+                            {showBankInfo && (
+                              <span className="text-shamiri-light-red">*</span>
+                            )}
                           </FormLabel>
                           <FormControl>
                             <Input {...field} disabled={isFellow} />
@@ -568,7 +575,9 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             Bank branch
-                            {showBankInfo && <span className="text-shamiri-light-red">*</span>}
+                            {showBankInfo && (
+                              <span className="text-shamiri-light-red">*</span>
+                            )}
                           </FormLabel>
                           <FormControl>
                             <Input {...field} disabled={isFellow} />
@@ -584,7 +593,9 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             Account number
-                            {showBankInfo && <span className="text-shamiri-light-red">*</span>}
+                            {showBankInfo && (
+                              <span className="text-shamiri-light-red">*</span>
+                            )}
                           </FormLabel>
                           <FormControl>
                             <Input {...field} disabled={isFellow} />
@@ -600,7 +611,9 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             Account name
-                            {showBankInfo && <span className="text-shamiri-light-red">*</span>}
+                            {showBankInfo && (
+                              <span className="text-shamiri-light-red">*</span>
+                            )}
                           </FormLabel>
                           <FormControl>
                             <Input {...field} disabled={isFellow} />
@@ -616,7 +629,9 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             KRA PIN
-                            {showBankInfo && <span className="text-shamiri-light-red">*</span>}
+                            {showBankInfo && (
+                              <span className="text-shamiri-light-red">*</span>
+                            )}
                           </FormLabel>
                           <FormControl>
                             <Input {...field} disabled={isFellow} />

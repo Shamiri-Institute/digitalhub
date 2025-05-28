@@ -5,9 +5,5 @@ export default function HubCoordinatorLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="w-full self-stretch">
-      {children}
-    </div>
-  );
+  return <div className="w-full self-stretch">{children}</div>;
 }
