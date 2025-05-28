@@ -643,7 +643,10 @@ export async function createClinicalCaseNotes(data: {
       throw new Error("User not found");
     }
 
-    if (currentUser.membership.role !== data.role) {
+    if (
+      currentUser.membership.role !== "SUPERVISOR" &&
+      currentUser.membership.role !== "CLINICAL_LEAD"
+    ) {
       return {
         success: false,
         message: "You are not authorized to create clinical case notes",
