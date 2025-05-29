@@ -5,7 +5,6 @@ import {
   SUPERVISION_SESSION_TYPES,
   TRAINING_SESSION_TYPES,
 } from "#/lib/app-constants/constants";
-import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 type SessionType = {
@@ -204,26 +203,21 @@ export const hubSessionTypes: SessionType[] = [
 ];
 
 async function main() {
-  const hubs = await db.hub.findMany({
-    where: {
-      projectId: CURRENT_PROJECT_ID,
-    },
-  });
-  const sessions = hubs.map((hub) => {
-    return hubSessionTypes.map((sessionType) => {
-      return {
-        sessionType: sessionType.type,
-        sessionName: sessionType.name,
-        sessionLabel: sessionType.label,
-        hubId: hub.id,
-        currency: "KES",
-        amount: sessionType.amount,
-      };
-    });
+  const hubId = "25P1_Hub_11";
+
+  const sessions = hubSessionTypes.map((sessionType) => {
+    return {
+      sessionType: sessionType.type,
+      sessionName: sessionType.name,
+      sessionLabel: sessionType.label,
+      hubId: hubId,
+      currency: "KES",
+      amount: sessionType.amount,
+    };
   });
 
   await db.sessionName.createMany({
-    data: sessions.flat(),
+    data: sessions,
     skipDuplicates: true,
   });
 }
