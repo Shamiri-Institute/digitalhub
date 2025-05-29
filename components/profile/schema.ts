@@ -1,3 +1,4 @@
+import { stringValidation } from "#/lib/utils";
 import { ImplementerRole } from "@prisma/client";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
@@ -18,7 +19,7 @@ const mpesaFieldsSchema = z.object({
       (val) => !val || isValidPhoneNumber(val, "KE"),
       "Invalid Kenyan phone number",
     ),
-  mpesaName: z.string().min(1, "Please enter your M-pesa name"),
+  mpesaName: stringValidation("Please enter your M-pesa name"),
 });
 
 const bankRoles = [
@@ -29,9 +30,9 @@ const bankRoles = [
 
 export const ProfileSchema = z
   .object({
-    name: z.string().min(1, "Name is required"),
+    name: stringValidation("Name is required"),
     email: z.string().email("Invalid email address"),
-    idNumber: z.string().min(1, "Please enter your ID number"),
+    idNumber: stringValidation("Please enter your ID number"),
     cellNumber: z
       .string()
       .min(1, "Please enter your phone number")
@@ -43,8 +44,8 @@ export const ProfileSchema = z
     mpesaName: z.string().optional(),
     dateOfBirth: z.date().optional(),
     gender: z.enum(["Male", "Female", "Other"]),
-    county: z.string().min(1, "County is required"),
-    subCounty: z.string().min(1, "Sub-county is required"),
+    county: stringValidation("County is required"),
+    subCounty: stringValidation("Sub-county is required"),
     bankName: z.string().optional(),
     bankBranch: z.string().optional(),
     bankAccountNumber: z.string().optional(),
