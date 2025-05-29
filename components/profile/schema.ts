@@ -3,11 +3,11 @@ import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
 
 const bankFieldsSchema = z.object({
-  bankName: z.string().min(1, "Please enter your bank name"),
-  bankBranch: z.string().min(1, "Please enter your bank branch"),
-  bankAccountNumber: z.string().min(1, "Please enter your bank account number"),
-  bankAccountName: z.string().min(1, "Please enter your bank account name"),
-  kra: z.string().min(1, "Please enter your KRA PIN"),
+  bankName: stringValidation("Please enter your bank name"),
+  bankBranch: stringValidation("Please enter your bank branch"),
+  bankAccountNumber: stringValidation("Please enter your bank account number"),
+  bankAccountName: stringValidation("Please enter your bank account name"),
+  kra: stringValidation("Please enter your KRA PIN"),
 });
 
 const mpesaFieldsSchema = z.object({
