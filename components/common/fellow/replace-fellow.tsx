@@ -39,7 +39,6 @@ export default function ReplaceFellow({
   onOpenChange,
   children,
   supervisors,
-  schoolId,
 }: {
   fellowId: string;
   groupId: string;
@@ -51,7 +50,6 @@ export default function ReplaceFellow({
       fellows: true;
     };
   }>[];
-  schoolId: string;
 }) {
   const pathname = usePathname();
   const form = useForm<z.infer<typeof ReplaceGroupLeaderSchema>>({
@@ -66,14 +64,15 @@ export default function ReplaceFellow({
         groupId,
       });
     }
-  }, [open, fellowId]);
+  }, [open, fellowId, groupId, form]);
 
   const onSubmit = async (data: z.infer<typeof ReplaceGroupLeaderSchema>) => {
     const response = await replaceGroupLeader({
+      oldLeaderId: data.leaderId,
       leaderId: data.newLeaderId,
       groupId,
-      schoolId,
     });
+
     if (!response.success) {
       toast({
         variant: "destructive",
@@ -174,7 +173,12 @@ export default function ReplaceFellow({
                                     (supervisor) =>
                                       supervisorWatcher === supervisor.id,
                                   )!
-                                  .fellows.map((fellow) => {
+                                  .fellows.filter(
+                                    (fellow) =>
+                                      !fellow.droppedOut &&
+                                      fellow.id !== fellowId,
+                                  )
+                                  .map((fellow) => {
                                     return (
                                       <SelectItem
                                         key={fellow.id}

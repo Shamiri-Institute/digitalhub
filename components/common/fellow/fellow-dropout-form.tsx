@@ -1,6 +1,7 @@
 import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import { DropoutFellowSchema } from "#/components/common/fellow/schema";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
@@ -31,6 +32,7 @@ import { dropoutFellow } from "#/lib/actions/fellow";
 import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Prisma } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -38,17 +40,29 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+type Group = Prisma.InterventionGroupGetPayload<{
+  include: { school: true };
+}>;
+
 export default function FellowDropoutForm({
   fellow,
   isOpen,
   setIsOpen,
+  supervisors,
 }: {
   fellow: MainFellowTableData;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
+  supervisors: Prisma.SupervisorGetPayload<{
+    include: { fellows: true };
+  }>[];
 }) {
   const [loading, setLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(false);
+  const [replaceDialog, setReplaceDialog] = useState(false);
+  const [replaceGroupLeaderDialog, setReplaceGroupLeaderDialog] =
+    useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const pathname = usePathname();
 
   const form = useForm<z.infer<typeof DropoutFellowSchema>>({
@@ -66,16 +80,36 @@ export default function FellowDropoutForm({
         mode: fellow.droppedOut ? "undo" : "dropout",
       });
     }
-  }, [fellow, isOpen]);
+  }, [fellow, isOpen, form]);
+
+  useEffect(() => {
+    if (fellow.groups && fellow.groups.length === 0 && replaceDialog) {
+      setConfirmDialog(true);
+      setReplaceDialog(false);
+    }
+  }, [fellow.groups, replaceDialog]);
 
   async function confirmSubmit() {
     setLoading(true);
+    if (
+      fellow.groups &&
+      fellow.groups.length > 0 &&
+      form.getValues("mode") === "dropout"
+    ) {
+      setReplaceDialog(true);
+      setConfirmDialog(false);
+      setLoading(false);
+      return;
+    }
     const response = await dropoutFellow(form.getValues());
     if (!response.success) {
       toast({
+        variant: "destructive",
         description:
           response.message ?? "Something went wrong, please try again",
       });
+      setConfirmDialog(false);
+      setLoading(false);
       return;
     }
     toast({
@@ -238,6 +272,78 @@ export default function FellowDropoutForm({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={replaceDialog} onOpenChange={setReplaceDialog}>
+        <DialogContent className="min-h-[200px] w-5/6 max-w-none p-5 lg:w-2/5">
+          <DialogHeader>
+            <h2 className="text-lg font-bold">Replace fellow</h2>
+          </DialogHeader>
+          {renderAlertWidget()}
+          <div className="space-y-4">
+            <h3>Replace this fellow in the following groups:</h3>
+            <div className="divide-shamiri-light-gray flex flex-col gap-2 divide-y">
+              {fellow.groups?.map((group) => (
+                <div
+                  key={group.id}
+                  className="flex items-center justify-between gap-2 px-4 py-2"
+                >
+                  <p className="">
+                    <span className="font-medium">{group.groupName}</span>
+                    <span className="text-muted-foreground">
+                      {" "}
+                      - {group.school.schoolName}
+                    </span>
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedGroup(group);
+                      setReplaceGroupLeaderDialog(true);
+                    }}
+                  >
+                    Replace
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <Separator />
+          <DialogFooter className="flex justify-end">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setReplaceDialog(false);
+              }}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {selectedGroup && (
+        <ReplaceFellow
+          open={replaceGroupLeaderDialog}
+          onOpenChange={setReplaceGroupLeaderDialog}
+          fellowId={fellow.id}
+          groupId={selectedGroup.id}
+          supervisors={supervisors}
+        >
+          <DialogAlertWidget>
+            <div className="flex items-center gap-2">
+              <span>{fellow.fellowName}</span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+                {""}
+              </span>
+              <span>{selectedGroup.groupName}</span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+                {""}
+              </span>
+              <span>{selectedGroup.school.schoolName}</span>
+            </div>
+          </DialogAlertWidget>
+        </ReplaceFellow>
+      )}
     </Form>
   );
 }
