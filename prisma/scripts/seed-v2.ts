@@ -320,7 +320,7 @@ async function createCoreUsers(
     {
       id: objectId("user"),
       email: "wambugu.davis@shamiri.institute",
-      role: ImplementerRole.FELLOW,
+      role: ImplementerRole.ADMIN,
     },
     {
       id: objectId("user"),

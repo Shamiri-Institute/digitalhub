@@ -28,6 +28,7 @@
     "db:dev:up": "docker-compose down && docker-compose up db",
     "db:dev:seed": "dotenv -c development -- tsx prisma/scripts/seed.ts",
     "db:seed": "dotenv -c development -- tsx prisma/scripts/seed-v2.ts",
+    "db:studio": "dotenv -c development -- npx prisma studio",
     "db:dev:migrate": "dotenv -c development -- npx prisma migrate dev",
     "db:dev:migrate:reset": "dotenv -c development -- npx prisma migrate reset --force",
     "db:dev:types": "dotenv -c development -- npx prisma generate",

@@ -89,6 +89,10 @@ export default async function AppMiddleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/ct", req.url));
       }
 
+      if (ifAdminUserAndUnprefixedPath(session, path)) {
+        return NextResponse.redirect(new URL("/admin", req.url));
+      }
+
       return NextResponse.redirect(new URL("/", req.url));
     }
 
@@ -112,6 +116,8 @@ export default async function AppMiddleware(req: NextRequest) {
     }
     if (ifSupervisorAndHcRoute(session, path)) {
       return NextResponse.redirect(new URL("/", req.url));
+    } else if (ifAdminUserAndUnprefixedPath(session, path)) {
+      return NextResponse.redirect(new URL("/admin", req.url));
     }
   }
 
@@ -149,5 +155,12 @@ function ifOpsUserAndUnprefixedPath(session: JWT | null, path: string) {
 function ifClinicalTeamUserAndUnprefixedPath(session: JWT | null, path: string) {
   return (
     session?.activeMembership?.role === ImplementerRole.CLINICAL_TEAM && !path.startsWith("/ct")
+  );
+}
+
+function ifAdminUserAndUnprefixedPath(session: JWT | null, path: string) {
+  return (
+    session?.activeMembership?.role === ImplementerRole.ADMIN &&
+    !path.startsWith("/admin")
   );
 }
