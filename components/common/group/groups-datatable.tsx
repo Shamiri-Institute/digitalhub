@@ -119,7 +119,6 @@ export default function GroupsDataTable({
               fellowId={group.leaderId}
               groupId={group.id}
               supervisors={supervisors}
-              schoolId={school.visibleId}
             >
               <DialogAlertWidget>
                 <div className="flex items-center gap-2">

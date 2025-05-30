@@ -136,7 +136,6 @@ export default function FellowsDatatable({
                 fellowId={fellow.id}
                 groupId={fellow.groupId}
                 supervisors={supervisors}
-                schoolId={schoolId}
               >
                 <DialogAlertWidget>
                   <div className="flex items-center gap-2">

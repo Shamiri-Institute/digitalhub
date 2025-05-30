@@ -45,7 +45,6 @@ export default function FellowSchoolsDatatable({
   const [uploadQualificationDialog, setUploadQualificationDialog] =
     useState(false);
   const [complaintsDialog, setComplaintsDialog] = useState(false);
-  const [dropOutDialog, setDropOutDialog] = useState(false);
   const [attendanceDialog, setAttendanceDialog] = useState(false);
   const [studentsDialog, setStudentsDialog] = useState(false);
   const [evaluationDialog, setEvaluationDialog] = useState(false);
@@ -123,7 +122,6 @@ export default function FellowSchoolsDatatable({
             setUploadIdDialog,
             setUploadQualificationDialog,
             setComplaintsDialog,
-            setDropOutDialog,
             role,
           },
         })}
@@ -187,11 +185,6 @@ export default function FellowSchoolsDatatable({
           >
             {renderFellowDialogAlert(fellow)}
           </WeeklyFellowEvaluation>
-          <FellowDropoutForm
-            fellow={fellow}
-            isOpen={dropOutDialog}
-            setIsOpen={setDropOutDialog}
-          />
           <AttendanceHistory
             open={attendanceHistoryDialog}
             onOpenChange={setAttendanceHistoryDialog}

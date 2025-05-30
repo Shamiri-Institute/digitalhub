@@ -54,12 +54,25 @@ export default async function FellowPage() {
         user: true,
       },
     }),
+    await db.interventionGroup.findMany({
+      where: {
+        leader: {
+          hubId: hc.assignedHubId,
+        },
+      },
+      include: {
+        school: true,
+      },
+    }),
   ]).then((values) => {
     return values[0].map((fellow) => {
       return {
         ...fellow,
         complaints: values[1].filter((_complaints) => {
           return _complaints.fellowId === fellow.id;
+        }),
+        groups: values[2].filter((_groups) => {
+          return _groups.leaderId === fellow.id;
         }),
       };
     });
@@ -68,6 +81,9 @@ export default async function FellowPage() {
   const supervisors = await db.supervisor.findMany({
     where: {
       hubId: hc?.assignedHubId as string,
+    },
+    include: {
+      fellows: true,
     },
   });
 

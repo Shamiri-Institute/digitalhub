@@ -24,7 +24,6 @@ export const fellowSchoolsColumns = ({
     setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
     setEditFellowDialog: Dispatch<SetStateAction<boolean>>;
     setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
-    setDropOutDialog: Dispatch<SetStateAction<boolean>>;
     setUploadContractDialog: Dispatch<SetStateAction<boolean>>;
     setUploadIdDialog: Dispatch<SetStateAction<boolean>>;
     setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>;
