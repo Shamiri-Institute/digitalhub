@@ -431,7 +431,10 @@ export async function createTreatmentPlan(
       throw new Error("User not found");
     }
 
-    if (currentUser.membership.role !== data.role) {
+    if (
+      currentUser.membership.role !== "CLINICAL_LEAD" &&
+      currentUser.membership.role !== "SUPERVISOR"
+    ) {
       throw new Error("You are not authorized to create a treatment plan");
     }
 
@@ -672,7 +675,7 @@ export async function createClinicalCaseNotes(data: {
     });
 
     revalidatePath(
-      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
+      `${currentUser.membership.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
     );
     return { success: true };
   } catch (error) {
@@ -724,7 +727,7 @@ export async function updateClinicalCaseAttendance(data: {
     });
 
     revalidatePath(
-      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
+      `${currentUser.membership.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
     );
     return { success: true };
   } catch (error) {
