@@ -79,15 +79,6 @@ export function Layout({
   const pathname = usePathname();
   const session = useSession();
 
-  // TODO: this logic should be made more straightforward
-  if (
-    pathname.startsWith("/hc/") ||
-    pathname.startsWith("/sc/") ||
-    pathname.startsWith("/fel/") ||
-    pathname.startsWith("/cl/") ||
-    pathname.startsWith("/ops/") ||
-    pathname.startsWith("/ct/")
-  ) {
     return (
       <LayoutV2
         userName={session.data?.user.name ?? "N/A"}
@@ -98,30 +89,6 @@ export function Layout({
         {children}
       </LayoutV2>
     );
-  }
-
-  return (
-    <div className="h-full max-w-7xl lg:ml-72 xl:ml-80">
-      <motion.header
-        layoutScroll
-        className="contents lg:pointer-events-none lg:fixed lg:inset-0 lg:z-40 lg:flex"
-      >
-        <div className="contents lg:pointer-events-auto lg:block lg:w-72 lg:overflow-y-auto lg:border-r lg:border-border lg:px-6 lg:pb-8 lg:pt-4 xl:w-80">
-          <div className="hidden lg:flex">
-            <Link href="/" aria-label="Home">
-              <Icons.logo className="h-6" />
-            </Link>
-          </div>
-          <Header />
-          <Navigation className="hidden lg:flex" />
-        </div>
-      </motion.header>
-      <div className="relative mx-auto flex h-full flex-col px-4 pt-20 sm:px-6 lg:px-8">
-        <main className="flex-auto">{children}</main>
-        <Footer />
-      </div>
-    </div>
-  );
 }
 
 function LayoutV2({
@@ -206,7 +173,7 @@ function LayoutV2({
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-40 max-w-none divide-y">
-              {!pathname.startsWith("/ops/") && (
+              {!pathname.startsWith("/ops/") &&  (
                 <DropdownMenuItem
                   className="flex items-center gap-2"
                   onClick={() => {
@@ -363,8 +330,8 @@ function ReportingDropdown({
   mainRoute: string;
 }) {
   return (
-    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-      <PopoverTrigger className="flex cursor-pointer items-center space-x-1">
+    <DropdownMenu open={popoverOpen} onOpenChange={setPopoverOpen}>
+      <DropdownMenuTrigger className="flex cursor-pointer items-center space-x-1">
         <BarChartIcon />
         <p>Reporting</p>
         <Image
@@ -374,25 +341,31 @@ function ReportingDropdown({
           alt="Drop down Icon"
           className="cursor-pointer"
         />
-      </PopoverTrigger>
-      <PopoverContent className="absolute min-w-44 space-y-2 rounded-md  bg-white p-2 shadow-md">
-        <Link href={`/${mainRoute}/reporting`} className="block px-4 py-2 hover:bg-gray-200">
-          Expenses
-        </Link>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuItem asChild>
+          <Link
+            href={`/${mainRoute}/reporting`}
+          >
+            Expenses
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
         <Link
           href={`/${mainRoute}/reporting/school-reports`}
-          className="block px-4 py-2 hover:bg-gray-200"
         >
           School Reports
         </Link>
-        <Link
-          href={`/${mainRoute}/reporting/fellow-reports`}
-          className="block px-4 py-2 hover:bg-gray-200"
-        >
-          Fellow Reports
-        </Link>
-      </PopoverContent>
-    </Popover>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link
+            href={`/${mainRoute}/reporting/fellow-reports`}
+          >
+            Fellow Reports
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -411,6 +384,47 @@ function getCurrentUserNavigationLinks(
   }: NavigationLinkProps,
 ) {
   const links = [];
+
+  // Admin links
+  if (mainRoute === "admin") {
+    links.push(
+      <div
+        className={`tab-link ${cn(scheduleActive && "active")}`}
+        key="admin-schedule"
+      >
+        <CalendarIcon />
+        <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
+      </div>,
+      <div
+        className={`tab-link flex items-center gap-2 ${cn(supervisorsActive && "active")}`}
+        key="admin-supervisors"
+      >
+        <Home className="h-4 w-4" />
+        <Link href={`/${mainRoute}/hubs`}>Hubs</Link>
+      </div>,
+      <div
+      className={`tab-link ${cn(supervisorsActive && "active")}`}
+      key="admin-supervisors"
+    >
+      <PeopleIcon />
+      <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
+    </div>,
+      <div
+        className={`tab-link ${cn(fellowsActive && "active")}`}
+        key="admin-fellows"
+      >
+        <PeopleIconAlternate />
+        <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
+      </div>,
+      <div
+        className={`tab-link ${cn(studentsActive && "active")}`}
+        key="admin-students"
+      >
+        <GraduationCapIcon />
+        <Link href={`/${mainRoute}/students`}>Students</Link>
+      </div>,
+    );
+  }
 
   // Hub Coordinator links
   if (mainRoute === "hc") {

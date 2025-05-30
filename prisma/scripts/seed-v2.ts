@@ -362,16 +362,6 @@ async function createCoreUsers(
       email: "marie.odhiambo@shamiri.institute",
       role: ImplementerRole.HUB_COORDINATOR,
     },
-    {
-      id: objectId("user"),
-      email: "caitlin.bochere@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      id: objectId("user"),
-      email: "david.onywoki@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
-    },
   ];
 
   const users = await db.user.createManyAndReturn({
@@ -381,8 +371,13 @@ async function createCoreUsers(
     })),
   });
 
-  const membershipData = users.map((user) => {
-    const role = userData.find((u) => u.id === user.id)?.role as ImplementerRole;
+  const membershipData = users.filter((user) => {
+    const role = userData.find((u) => u.id === user.id)
+      ?.role as ImplementerRole;
+    return role !== ImplementerRole.ADMIN;
+  }).map((user) => {
+    const role = userData.find((u) => u.id === user.id)
+      ?.role as ImplementerRole;
     return {
       userId: user.id,
       implementerId: faker.helpers.arrayElement(implementers).id,
@@ -404,8 +399,23 @@ async function createCoreUsers(
     };
   });
 
+  const adminMembershipData = users.filter((user) => {
+    const role = userData.find((u) => u.id === user.id)
+      ?.role as ImplementerRole;
+    return role === ImplementerRole.ADMIN;
+  }).map((user) => {
+    const role = userData.find((u) => u.id === user.id)
+      ?.role as ImplementerRole;
+    return implementers.map((implementer) => ({
+      userId: user.id,
+      implementerId: implementer.id,
+      role,
+      identifier:null,
+    }));
+  });
+
   await db.implementerMember.createMany({
-    data: membershipData,
+    data: [...membershipData, ...adminMembershipData.flat()],
   });
 
   const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
