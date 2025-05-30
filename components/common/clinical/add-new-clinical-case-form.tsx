@@ -446,24 +446,19 @@ export function AddNewClinicalCaseForm({
                         Select Supervisor
                         <span className="text-red-500">*</span>
                       </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select supervisor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {supervisorsInHub.map((supervisor) => (
-                            <SelectItem
-                              key={supervisor.id}
-                              value={supervisor.id}
-                            >
-                              {supervisor.supervisorName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div>
+                        <Combobox
+                          items={supervisorsInHub.map((supervisor) => ({
+                            id: supervisor.id,
+                            label:
+                              supervisor.supervisorName || "Unknown Supervisor",
+                          }))}
+                          activeItemId={field.value || ""}
+                          onSelectItem={field.onChange}
+                          placeholder="Select a supervisor..."
+                          inputPlaceholder="Search supervisors..."
+                        />
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -480,21 +475,18 @@ export function AddNewClinicalCaseForm({
                         Select Fellow
                         <span className="text-red-500">*</span>
                       </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select fellow" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {fellowsInHub.map((fellow) => (
-                            <SelectItem key={fellow.id} value={fellow.id}>
-                              {fellow.fellowName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div>
+                        <Combobox
+                          items={fellowsInHub.map((fellow) => ({
+                            id: fellow.id,
+                            label: fellow.fellowName || "Unknown Fellow",
+                          }))}
+                          activeItemId={field.value || ""}
+                          onSelectItem={field.onChange}
+                          placeholder="Select a fellow..."
+                          inputPlaceholder="Search fellows..."
+                        />
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
