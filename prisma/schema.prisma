@@ -1545,6 +1545,7 @@ model ClinicalLead {
   assignedHub            Hub                     @relation(fields: [assignedHubId], references: [id])
   implementerId          String                  @map("implementer_id") @db.VarChar(255)
   implementer            Implementer             @relation(fields: [implementerId], references: [id])
+  cellNumber             String?                 @map("cell_number") @db.VarChar(255)
   clinicalScreeningCases ClinicalScreeningInfo[]
 
   @@map("clinical_leads")

@@ -5,6 +5,9 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
+  images: {
+    domains: ["lh3.googleusercontent.com"],
+  },
   env: {
     APP_ENV: process.env.APP_ENV,
   },
