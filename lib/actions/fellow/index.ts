@@ -328,13 +328,13 @@ export async function submitWeeklyFellowEvaluation(
 }
 
 export async function replaceGroupLeader({
+  oldLeaderId,
   leaderId,
   groupId,
-  schoolId,
 }: {
+  oldLeaderId: string;
   leaderId: string;
   groupId: string;
-  schoolId: string;
 }) {
   try {
     await checkAuth();
@@ -342,9 +342,6 @@ export async function replaceGroupLeader({
     const result = await db.interventionGroup.update({
       where: {
         id: groupId,
-        school: {
-          id: schoolId,
-        },
       },
       data: {
         leaderId,
@@ -362,9 +359,6 @@ export async function replaceGroupLeader({
       if (err.code === "P2002") {
         const result = await db.interventionGroup.findFirst({
           where: {
-            school: {
-              id: schoolId,
-            },
             leaderId,
           },
           include: {
@@ -392,6 +386,20 @@ export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
     await checkAuth();
 
     const { fellowId, mode, dropoutReason } = DropoutFellowSchema.parse(data);
+    if (mode === "dropout") {
+      const groups = await db.interventionGroup.count({
+        where: {
+          leaderId: fellowId,
+        },
+      });
+
+      if (groups > 0) {
+        return {
+          success: false,
+          message: `Sorry, could not drop out fellow. Fellow is still assigned to ${groups} groups. Please assign a new leader to the groups.`,
+        };
+      }
+    }
     const result = await db.fellow.update({
       data: {
         droppedOut: mode === "dropout",

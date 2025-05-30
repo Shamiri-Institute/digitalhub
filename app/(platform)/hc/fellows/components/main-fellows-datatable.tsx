@@ -18,7 +18,7 @@ import { DialogTrigger } from "#/components/ui/dialog";
 import { ImplementerRole, Prisma } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 const fellowCSVHeaders = [
   "fellow_name",
   "cell_no",
@@ -38,7 +38,9 @@ export default function MainFellowsDatatable({
   role,
 }: {
   fellows: MainFellowTableData[];
-  supervisors: Prisma.SupervisorGetPayload<{}>[];
+  supervisors: Prisma.SupervisorGetPayload<{
+    include: { fellows: true };
+  }>[];
   weeklyEvaluations: Prisma.WeeklyFellowRatingsGetPayload<{}>[];
   role: ImplementerRole;
 }) {
@@ -84,6 +86,13 @@ export default function MainFellowsDatatable({
       </div>
     );
   };
+
+  useEffect(() => {
+    const updatedFellow = fellows.find((f) => f.id === fellow?.id);
+    if (updatedFellow) {
+      setFellow(updatedFellow);
+    }
+  }, [fellows]);
 
   return (
     <>
@@ -183,6 +192,7 @@ export default function MainFellowsDatatable({
             fellow={fellow}
             isOpen={dropOutDialog}
             setIsOpen={setDropOutDialog}
+            supervisors={supervisors}
           />
         </>
       )}

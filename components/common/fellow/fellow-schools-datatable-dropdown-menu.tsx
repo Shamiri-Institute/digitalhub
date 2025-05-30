@@ -20,7 +20,6 @@ export default function FellowSchoolsDatatableDropdownMenu({
     setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>;
     setEditFellowDialog: Dispatch<SetStateAction<boolean>>;
     setAttendanceHistoryDialog: Dispatch<SetStateAction<boolean>>;
-    setDropOutDialog: Dispatch<SetStateAction<boolean>>;
     setUploadContractDialog: Dispatch<SetStateAction<boolean>>;
     setUploadIdDialog: Dispatch<SetStateAction<boolean>>;
     setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>;
@@ -114,15 +113,6 @@ export default function FellowSchoolsDatatableDropdownMenu({
                 Upload qualification document
                 <Icons.fileUp className="h-4 w-4 text-shamiri-text-grey" />
               </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-shamiri-light-red"
-              onClick={() => {
-                state.setFellow(fellowRow);
-                state.setDropOutDialog(true);
-              }}
-            >
-              {!fellowRow.droppedOut ? "Dropout fellow" : "Undo dropout"}
             </DropdownMenuItem>
           </>
         ) : null}

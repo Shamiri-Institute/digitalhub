@@ -38,6 +38,9 @@ export type MainFellowTableData = {
       user: true;
     };
   }>[];
+  groups?: Prisma.InterventionGroupGetPayload<{
+    include: { school: true };
+  }>[];
 };
 
 export const columns = (
