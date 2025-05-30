@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.1.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.0.1...v1.1.0) (2025-05-30)
+
+### Features
+
+- create sessionNames for JSS hub 25P1_Hub_11 [#465](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/465) ([#467](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/467)) ([b7009a5](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/b7009a580ccda25e9b4253dcfbbf8712298dfc4f))
+- update payout filter and pagination ([#459](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/459)) ([d853cb0](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/d853cb03e3c5f6cfedf605a8e0157714aab9a50f))
+
+### Bug Fixes
+
+- bug fixes ([#460](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/460)) ([7952e0d](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/7952e0d76703953c76f80ed4431f88a7a9f3f90f))
+- issue replacing fellows ([#469](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/469)) ([d6bf080](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/d6bf080288e838b9efe1a1211006bfdd0a6f8070))
+- refine authorization checks on treatment plan ([#466](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/466)) ([6b6c806](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/6b6c806aa599a2399bfe09ebc4e0d9857edab36e))
+- update authorization logic for creating clinical case notes ([#463](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/463)) ([a16f89c](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/a16f89cea904210b66d1601dce2e6eb72460816d))
+
 ## [1.0.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v0.1.11...v1.0.1) (2025-05-23)
 
 ### Bug Fixes
