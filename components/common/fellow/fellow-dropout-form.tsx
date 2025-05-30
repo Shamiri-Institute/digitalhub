@@ -270,7 +270,7 @@ export default function FellowDropoutForm({
       </Dialog>
 
       <Dialog open={replaceDialog} onOpenChange={setReplaceDialog}>
-        <DialogContent className="w-5/6 max-w-none p-5 lg:w-2/5 min-h-[200px]">
+        <DialogContent className="min-h-[200px] w-5/6 max-w-none p-5 lg:w-2/5">
           <DialogHeader>
             <h2 className="text-lg font-bold">Replace fellow</h2>
           </DialogHeader>
