@@ -104,7 +104,7 @@ export default function FellowDropoutForm({
         description:
           response.message ?? "Something went wrong, please try again",
       });
-      // setIsOpen(false);
+      setConfirmDialog(false);
       setLoading(false);
       return;
     }
@@ -270,7 +270,7 @@ export default function FellowDropoutForm({
       </Dialog>
 
       <Dialog open={replaceDialog} onOpenChange={setReplaceDialog}>
-        <DialogContent className="w-5/6 max-w-none p-5 lg:w-2/5">
+        <DialogContent className="w-5/6 max-w-none p-5 lg:w-2/5 min-h-[200px]">
           <DialogHeader>
             <h2 className="text-lg font-bold">Replace fellow</h2>
           </DialogHeader>
@@ -332,6 +332,10 @@ export default function FellowDropoutForm({
                 {""}
               </span>
               <span>{selectedGroup.groupName}</span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
+                {""}
+              </span>
+              <span>{selectedGroup.school.schoolName}</span>
             </div>
           </DialogAlertWidget>
         </ReplaceFellow>
