@@ -34,16 +34,12 @@ export default async function FellowPage() {
         f.date_of_birth as "dateOfBirth",
         f.id_number as "idNumber",
         f.dropped_out AS "droppedOut",
-        COUNT(ig.*) AS "groupCount",
+        COUNT(DISTINCT ig.id) AS "groupCount",
         (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
       FROM
         fellows f
           LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
-          LEFT JOIN (
-          SELECT
-            _ig.*
-          FROM
-            intervention_groups _ig) ig ON f.id = ig.leader_id
+          LEFT JOIN intervention_groups ig ON f.id = ig.leader_id
       WHERE f.hub_id =${hc.assignedHubId}
       GROUP BY
         f.id
@@ -58,12 +54,25 @@ export default async function FellowPage() {
         user: true,
       },
     }),
+    await db.interventionGroup.findMany({
+      where: {
+        leader: {
+          hubId: hc.assignedHubId,
+        },
+      },
+      include: {
+        school: true,
+      },
+    }),
   ]).then((values) => {
     return values[0].map((fellow) => {
       return {
         ...fellow,
         complaints: values[1].filter((_complaints) => {
           return _complaints.fellowId === fellow.id;
+        }),
+        groups: values[2].filter((_groups) => {
+          return _groups.leaderId === fellow.id;
         }),
       };
     });
@@ -72,6 +81,9 @@ export default async function FellowPage() {
   const supervisors = await db.supervisor.findMany({
     where: {
       hubId: hc?.assignedHubId as string,
+    },
+    include: {
+      fellows: true,
     },
   });
 
