@@ -2,7 +2,6 @@
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
-import FellowDropoutForm from "#/components/common/fellow/fellow-dropout-form";
 import { FellowGroupData } from "#/components/common/fellow/fellow-school-datatable-dropdown-menu";
 import UploadFellowContract from "#/components/common/fellow/upload-contract";
 import UploadFellowID from "#/components/common/fellow/upload-id";
