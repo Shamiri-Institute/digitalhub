@@ -23,7 +23,6 @@ export default function FellowSchoolsDatatableSkeleton({
       setUploadIdDialog: () => false,
       setUploadQualificationDialog: () => false,
       setComplaintsDialog: () => false,
-      setDropOutDialog: () => false,
       role,
     },
   })
