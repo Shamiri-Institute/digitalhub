@@ -174,7 +174,9 @@ export default function ReplaceFellow({
                                       supervisorWatcher === supervisor.id,
                                   )!
                                   .fellows.filter(
-                                    (fellow) => !fellow.droppedOut,
+                                    (fellow) =>
+                                      !fellow.droppedOut &&
+                                      fellow.id !== fellowId,
                                   )
                                   .map((fellow) => {
                                     return (

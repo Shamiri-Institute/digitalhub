@@ -91,7 +91,11 @@ export default function FellowDropoutForm({
 
   async function confirmSubmit() {
     setLoading(true);
-    if (fellow.groups && fellow.groups.length > 0) {
+    if (
+      fellow.groups &&
+      fellow.groups.length > 0 &&
+      form.getValues("mode") === "dropout"
+    ) {
       setReplaceDialog(true);
       setConfirmDialog(false);
       setLoading(false);
