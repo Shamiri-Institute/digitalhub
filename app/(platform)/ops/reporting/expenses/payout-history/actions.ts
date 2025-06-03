@@ -149,38 +149,53 @@ export async function triggerPayoutAction() {
         };
       }
 
-      let processedCount = 0;
-      let payoutStatementsCount = 0;
-
+      const fellowAttendanceIdsToProcess: number[] = [];
       for (const attendance of eligibleAttendances) {
-        // Skip if there are no payout statements to process
-        if (attendance.PayoutStatements.length === 0) continue;
+        if (attendance.PayoutStatements.length > 0) {
+          fellowAttendanceIdsToProcess.push(attendance.id);
+        }
+      }
 
-        await tx.fellowAttendance.update({
-          where: { id: attendance.id },
-          data: { processedAt: currentTime },
-        });
+      if (fellowAttendanceIdsToProcess.length === 0) {
+        return {
+          success: true,
+          message:
+            "No payout statements found to process for the eligible attendances",
+        };
+      }
 
-        const updatedPayouts = await tx.payoutStatements.updateMany({
+      const payoutStatementsUpdateResult = await tx.payoutStatements.updateMany(
+        {
           where: {
-            fellowAttendanceId: attendance.id,
+            fellowAttendanceId: { in: fellowAttendanceIdsToProcess },
             executedAt: null,
           },
           data: {
             executedAt: currentTime,
           },
+        },
+      );
+
+      const fellowAttendancesUpdateResult =
+        await tx.fellowAttendance.updateMany({
+          where: {
+            id: { in: fellowAttendanceIdsToProcess },
+          },
+          data: {
+            processedAt: currentTime,
+          },
         });
 
-        processedCount++;
-        payoutStatementsCount += updatedPayouts.count;
-      }
+      const processedCount = fellowAttendancesUpdateResult.count;
+      const payoutStatementsCount = payoutStatementsUpdateResult.count;
 
-      if (processedCount === 0) {
+      if (processedCount === 0 && payoutStatementsCount === 0) {
         return {
           success: true,
-          message: "No payout statements found to process",
+          message: "No records were updated. Please check data consistency.",
         };
       }
+
       revalidatePath("/ops/reporting/expenses/payout-history");
       return {
         success: true,
