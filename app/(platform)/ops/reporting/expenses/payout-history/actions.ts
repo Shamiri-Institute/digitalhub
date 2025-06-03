@@ -112,7 +112,7 @@ export async function triggerPayoutAction() {
   const currentTime = new Date();
 
   try {
-    return await db.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
       const eligibleAttendances = await tx.fellowAttendance.findMany({
         where: {
           session: {
@@ -152,18 +152,24 @@ export async function triggerPayoutAction() {
       let processedCount = 0;
       let payoutStatementsCount = 0;
 
-      for (const attendance of eligibleAttendances) {
-        // Skip if there are no payout statements to process
-        if (attendance.PayoutStatements.length === 0) continue;
+      // Process all updates in a single batch
+      const attendanceIds = eligibleAttendances
+        .filter((attendance) => attendance.PayoutStatements.length > 0)
+        .map((attendance) => attendance.id);
 
-        await tx.fellowAttendance.update({
-          where: { id: attendance.id },
+      if (attendanceIds.length > 0) {
+        // Update attendances in batch
+        await tx.fellowAttendance.updateMany({
+          where: {
+            id: { in: attendanceIds },
+          },
           data: { processedAt: currentTime },
         });
 
+        // Update payout statements in batch
         const updatedPayouts = await tx.payoutStatements.updateMany({
           where: {
-            fellowAttendanceId: attendance.id,
+            fellowAttendanceId: { in: attendanceIds },
             executedAt: null,
           },
           data: {
@@ -171,8 +177,8 @@ export async function triggerPayoutAction() {
           },
         });
 
-        processedCount++;
-        payoutStatementsCount += updatedPayouts.count;
+        processedCount = attendanceIds.length;
+        payoutStatementsCount = updatedPayouts.count;
       }
 
       if (processedCount === 0) {
@@ -181,12 +187,15 @@ export async function triggerPayoutAction() {
           message: "No payout statements found to process",
         };
       }
-      revalidatePath("/ops/reporting/expenses/payout-history");
+
       return {
         success: true,
         message: `Successfully processed ${processedCount} attendances and ${payoutStatementsCount} payout statements`,
       };
     });
+
+    revalidatePath("/ops/reporting/expenses/payout-history");
+    return result;
   } catch (error) {
     console.error("Error in triggerPayoutAction:", error);
     throw new Error(
