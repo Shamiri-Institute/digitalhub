@@ -14,10 +14,10 @@ import {
   SignOutIcon,
 } from "components/icons";
 import { motion } from "framer-motion";
-import { Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { Menu, Home, Building2 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import type React from "react";
 import { useEffect, useState } from "react";
@@ -399,7 +399,7 @@ function getCurrentUserNavigationLinks(
         className={`tab-link flex items-center gap-2 ${cn(supervisorsActive && "active")}`}
         key="admin-supervisors"
       >
-        <Home className="h-4 w-4" />
+        <Building2 className="h-4 w-4" strokeWidth={3} />
         <Link href={`/${mainRoute}/hubs`}>Hubs</Link>
       </div>,
       <div
