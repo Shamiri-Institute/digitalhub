@@ -117,8 +117,15 @@ export const columns = (state: {
       id: "Group Type",
       header: "Group Type",
       cell: ({ row }) => {
-        const type = row.original.groupType
-        return <Badge variant={type === "TREATMENT" ? "default" : "outline"} className="capitalize">{type.toLowerCase()}</Badge>;
+        const type = row.original.groupType;
+        return (
+          <Badge
+            variant={type === "TREATMENT" ? "default" : "outline"}
+            className="capitalize"
+          >
+            {type.toLowerCase()}
+          </Badge>
+        );
       },
     },
     {

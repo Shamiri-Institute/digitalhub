@@ -10,22 +10,17 @@ import {
   FellowAttendancesTableData,
 } from "#/components/common/fellow/fellow-attendance";
 import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-menu";
+import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { useTitle } from "#/components/common/session/title-provider";
 import { Icons } from "#/components/icons";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "#/components/ui/tooltip";
 import { getCalendarDate } from "#/lib/date-utils";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { CalendarDate } from "@internationalized/date";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { addDays, format, isBefore, isWithinInterval } from "date-fns";
-import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import {
   Dispatch,
   SetStateAction,
@@ -35,7 +30,6 @@ import {
 } from "react";
 import { useDateFormatter } from "react-aria";
 import { CalendarState } from "react-stately";
-import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 
 type Role = "supervisors" | "fellows";
 
@@ -318,7 +312,7 @@ export function TableView({
   hubId,
   supervisors,
   role,
-  supervisorId
+  supervisorId,
 }: {
   state: CalendarState;
   hubId: string;
@@ -551,20 +545,19 @@ export function TableView({
           data={fellowAttendances}
           editColumns={true}
           emptyStateMessage={"No sessions scheduled on this day."}
-          enableRowSelection={(row: Row<FellowAttendancesTableData>) =>
-            {
-              console.log(row.original);
-              return !(
-                  row.original.sessionType === "INTERVENTION" &&
-                  row.original.groupId === undefined
-                ) &&
-                row.original.groupType === "TREATMENT" &&
-                (row.original.supervisorId === supervisorId ||
-                  role === "HUB_COORDINATOR") &&
-                !row.original.droppedOut &&
-                row.original.processedAt === null
-            }
-          }
+          enableRowSelection={(row: Row<FellowAttendancesTableData>) => {
+            return (
+              !(
+                row.original.sessionType === "INTERVENTION" &&
+                row.original.groupId === undefined
+              ) &&
+              row.original.groupType === "TREATMENT" &&
+              (row.original.supervisorId === supervisorId ||
+                role === "HUB_COORDINATOR") &&
+              !row.original.droppedOut &&
+              row.original.processedAt === null
+            );
+          }}
         />
       )}
     </div>

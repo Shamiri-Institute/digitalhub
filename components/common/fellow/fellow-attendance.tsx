@@ -2,11 +2,13 @@ import AttendanceStatusWidget from "#/components/common/attendance-status-widget
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-menu";
 import { MarkAttendance } from "#/components/common/mark-attendance";
+import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { SessionDetail } from "#/components/common/session/session-list";
 import { Session } from "#/components/common/session/sessions-provider";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Alert, AlertTitle } from "#/components/ui/alert";
+import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
@@ -44,12 +46,9 @@ import { sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import { CheckCheck, InfoIcon } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Badge } from "#/components/ui/badge";
-import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 
 type SupervisorData = Prisma.SupervisorGetPayload<{
   include: {
@@ -324,7 +323,7 @@ export function FellowAttendanceDataTable({
         onRowSelectionChange={setSelectedRows}
         renderTableActions={!overrideColumns && renderTableActions()}
         columnVisibilityState={{
-          "Group Type": false
+          "Group Type": false,
         }}
       />
       <MarkAttendance
@@ -366,7 +365,7 @@ export function FellowAttendanceDataTable({
               <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
                 {""}
               </span>
-              <span>{sessionDisplayName(attendance?.sessionType ?? "")}</span>
+              <span>{sessionDisplayName(attendance?.sessionName ?? "")}</span>
               <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
                 {""}
               </span>
@@ -560,8 +559,17 @@ export const columns = (state: {
     id: "Group Type",
     header: "Group Type",
     cell: ({ row }) => {
-      const type = row.original.groupType
-      return type && <Badge variant={type === "TREATMENT" ? "default" : "outline"} className="capitalize">{type?.toLowerCase()}</Badge>;
+      const type = row.original.groupType;
+      return (
+        type && (
+          <Badge
+            variant={type === "TREATMENT" ? "default" : "outline"}
+            className="capitalize"
+          >
+            {type?.toLowerCase()}
+          </Badge>
+        )
+      );
     },
   },
   {
