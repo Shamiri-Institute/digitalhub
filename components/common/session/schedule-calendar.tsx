@@ -487,7 +487,7 @@ function CalendarView({
         );
       case "table":
         if (role === "HUB_COORDINATOR") {
-          return <TableView {...tableProps} supervisors={supervisors} />;
+          return <TableView {...tableProps} supervisors={supervisors} role={role} supervisorId={supervisorId}/>;
         } else {
           throw new Error(`User not authenticated: ${role}`);
         }

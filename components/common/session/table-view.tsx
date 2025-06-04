@@ -22,8 +22,8 @@ import {
 import { getCalendarDate } from "#/lib/date-utils";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { CalendarDate } from "@internationalized/date";
-import { Prisma, SessionStatus } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
+import { ColumnDef, Row } from "@tanstack/react-table";
 import { addDays, format, isBefore, isWithinInterval } from "date-fns";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import {
@@ -35,6 +35,7 @@ import {
 } from "react";
 import { useDateFormatter } from "react-aria";
 import { CalendarState } from "react-stately";
+import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 
 type Role = "supervisors" | "fellows";
 
@@ -56,38 +57,7 @@ const supervisorAttendanceColumns = (state: {
   },
   {
     cell: ({ row }) => {
-      try {
-        return (
-          row.original.phoneNumber &&
-          parsePhoneNumberWithError(
-            row.original.phoneNumber,
-            "KE",
-          ).formatNational()
-        );
-      } catch (error) {
-        if (error instanceof ParseError) {
-          // Not a phone number, non-existent country, etc.
-          return (
-            row.original.phoneNumber && (
-              <Tooltip>
-                <TooltipTrigger>
-                  <div className="flex gap-1">
-                    <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
-                    <span>{row.original.phoneNumber}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="px-2 py-1 capitalize">
-                    {error.message.toLowerCase().replace("_", " ")}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            )
-          );
-        } else {
-          throw error;
-        }
-      }
+      return RenderParsedPhoneNumber(row.original.phoneNumber ?? undefined);
     },
     header: "Phone number",
     id: "phoneNumber",
@@ -202,38 +172,7 @@ const fellowAttendanceColumns = (state: {
     id: "cellNumber",
     header: "Phone Number",
     cell: ({ row }) => {
-      try {
-        return (
-          row.original.cellNumber &&
-          parsePhoneNumberWithError(
-            row.original.cellNumber,
-            "KE",
-          ).formatNational()
-        );
-      } catch (error) {
-        if (error instanceof ParseError) {
-          // Not a phone number, non-existent country, etc.
-          return (
-            row.original.cellNumber && (
-              <Tooltip>
-                <TooltipTrigger>
-                  <div className="flex gap-1">
-                    <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
-                    <span>{row.original.cellNumber}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="px-2 py-1 capitalize">
-                    {error.message.toLowerCase().replace("_", " ")}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            )
-          );
-        } else {
-          throw error;
-        }
-      }
+      return RenderParsedPhoneNumber(row.original.cellNumber ?? undefined);
     },
   },
   {
@@ -378,6 +317,8 @@ export function TableView({
   state,
   hubId,
   supervisors,
+  role,
+  supervisorId
 }: {
   state: CalendarState;
   hubId: string;
@@ -397,6 +338,8 @@ export function TableView({
       assignedSchools: true;
     };
   }>[];
+  role: ImplementerRole;
+  supervisorId?: string;
 }) {
   const [selectedDay, setSelectedDay] = useState<CalendarDate>(state.value);
   const weekDays = state.getDatesInWeek(0);
@@ -476,6 +419,7 @@ export function TableView({
               averageRating: null,
               sessionId: session.id,
               groupName: group.groupName ?? null,
+              groupType: group.groupType,
               supervisorId: fellow.supervisorId,
               supervisorName: supervisor.supervisorName,
               cellNumber: fellow.cellNumber,
@@ -605,8 +549,22 @@ export function TableView({
         <FellowAttendanceDataTable
           overrideColumns={fellowAttendanceColumns}
           data={fellowAttendances}
-          editColumns={false}
+          editColumns={true}
           emptyStateMessage={"No sessions scheduled on this day."}
+          enableRowSelection={(row: Row<FellowAttendancesTableData>) =>
+            {
+              console.log(row.original);
+              return !(
+                  row.original.sessionType === "INTERVENTION" &&
+                  row.original.groupId === undefined
+                ) &&
+                row.original.groupType === "TREATMENT" &&
+                (row.original.supervisorId === supervisorId ||
+                  role === "HUB_COORDINATOR") &&
+                !row.original.droppedOut &&
+                row.original.processedAt === null
+            }
+          }
         />
       )}
     </div>
