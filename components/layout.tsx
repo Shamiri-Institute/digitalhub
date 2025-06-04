@@ -28,6 +28,7 @@ import type {
   CurrentHubCoordinator,
   CurrentOpsUser,
   CurrentSupervisor,
+  CurrentUser,
 } from "#/app/auth";
 import { PersonnelTool } from "#/components/common/dev-personnel-switcher";
 import { ProfileDialog } from "#/components/common/profile/profile-dialog";
@@ -49,6 +50,7 @@ import { APP_ENV, constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { MembershipSwitcher } from "#/components/common/membership-switcher";
 
 interface NavigationLinkProps {
   scheduleActive: boolean;
@@ -108,6 +110,7 @@ function LayoutV2({
     | CurrentFellow
     | CurrentClinicalLead
     | CurrentOpsUser
+    | CurrentUser
     | CurrentClinicalTeam
     | null;
 }) {
@@ -134,6 +137,9 @@ function LayoutV2({
     return (
       <div className={className}>
         <div className="nav-link">
+          <MembershipSwitcher />
+        </div>
+        <div className="nav-link">
           <PersonnelToolPopover>
             <div className="flex items-center gap-2">
               <RoleIcon fill="#0085FF" />
@@ -141,17 +147,14 @@ function LayoutV2({
             </div>
           </PersonnelToolPopover>
         </div>
-        <div className="nav-link">
-          <FeedbackIcon />
-          <Link href="#">Feedback</Link>
-        </div>
-        <div className="nav-link">
+        {/* TODO: Implement help feature */}
+        {/* <div className="nav-link">
           <HelpIcon />
           <Link href="#">Help</Link>
-        </div>
+        </div> */}
+        {/*TODO: notification counter */}
         <div className="nav-link hidden lg:flex">
           <NotificationIcon />
-          {/*TODO: notification counter */}
         </div>
         <div className="nav-link hidden w-full lg:flex lg:w-auto">
           <DropdownMenu>
@@ -397,7 +400,7 @@ function getCurrentUserNavigationLinks(
       </div>,
       <div
         className={`tab-link flex items-center gap-2 ${cn(supervisorsActive && "active")}`}
-        key="admin-supervisors"
+        key="admin-hubs"
       >
         <Building2 className="h-4 w-4" strokeWidth={3} />
         <Link href={`/${mainRoute}/hubs`}>Hubs</Link>

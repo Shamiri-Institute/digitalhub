@@ -17,6 +17,7 @@ import type {
   CurrentHubCoordinator,
   CurrentOpsUser,
   CurrentSupervisor,
+  CurrentUser,
 } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { ProfileSchema } from "#/components/profile/schema";
@@ -62,6 +63,7 @@ interface ProfileDialogProps {
     | CurrentClinicalLead
     | CurrentOpsUser
     | CurrentClinicalTeam
+    | CurrentUser
     | null;
 }
 

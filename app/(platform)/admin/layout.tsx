@@ -6,4 +6,4 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return <div className="w-full self-stretch">{children}</div>;
-} 
+}

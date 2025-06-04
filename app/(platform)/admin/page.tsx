@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function AdminPage() {
-  return <div>Admin Home Page</div>;
+  return redirect("/admin/schedule");
 }

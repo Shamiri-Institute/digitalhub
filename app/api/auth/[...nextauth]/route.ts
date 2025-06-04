@@ -210,6 +210,7 @@ function parseMembershipsForJWT(
   return userWithMemberships.memberships.map((m) => ({
     id: m.id,
     implementerId: m.implementer.id,
+    implementerName: m.implementer.implementerName,
     role: m.role,
     identifier: m.identifier,
   }));
@@ -231,6 +232,7 @@ export type SessionUser = {
 export interface JWTMembership {
   id: number;
   implementerId: string;
+  implementerName: string;
   role: ImplementerRole;
   identifier: string | null;
 }

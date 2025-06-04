@@ -360,6 +360,7 @@ export async function getCurrentPersonnel(): Promise<
   | CurrentFellow
   | CurrentClinicalLead
   | CurrentOpsUser
+  | CurrentUser
   | CurrentClinicalTeam
   | null
 > {
@@ -391,6 +392,10 @@ export async function getCurrentPersonnel(): Promise<
 
   if (role === "CLINICAL_TEAM") {
     return await currentClinicalTeam();
+  }
+
+  if (role === "ADMIN") {
+    return user;
   }
 
   return null;
