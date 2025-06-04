@@ -217,7 +217,8 @@ export default function FellowAttendance({
                     row.original.sessionType === "INTERVENTION" &&
                     row.original.groupId === undefined
                   ) &&
-                  row.original.groupType === "TREATMENT" &&
+                  (row.original.sessionType !== "INTERVENTION" || 
+                   row.original.groupType === "TREATMENT") &&
                   (row.original.supervisorId === supervisorId ||
                     role === "HUB_COORDINATOR") &&
                   !row.original.droppedOut &&
@@ -365,7 +366,7 @@ export function FellowAttendanceDataTable({
               <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
                 {""}
               </span>
-              <span>{sessionDisplayName(attendance?.sessionName ?? "")}</span>
+              <span>{sessionDisplayName(attendance?.sessionName ?? session?.session?.sessionName ?? "")}</span>
               <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
                 {""}
               </span>

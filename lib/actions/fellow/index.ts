@@ -553,7 +553,7 @@ export async function markFellowAttendance(
             },
           });
           if (group) {
-            if (group.groupType !== "TREATMENT") {
+            if (group.groupType !== "TREATMENT" && session.session?.sessionType === "INTERVENTION") {
               throw new Error(
                 "An error occurred while marking attendance. " +
                   fellow.fellowName +
@@ -792,7 +792,7 @@ export async function markManyFellowAttendance(
             );
           }
 
-          if (group.groupType !== "TREATMENT") {
+          if (group.groupType !== "TREATMENT" && session.session?.sessionType === "INTERVENTION") {
             throw new Error(
               "An error occurred while marking attendance. " +
                 fellow.fellowName +
