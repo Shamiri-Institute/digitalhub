@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
+import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn, stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
@@ -42,7 +43,7 @@ const formSchema = z.object({
   pseudonym: stringValidation("Pseudonym is required"),
   admissionNumber: z.number().min(1, "Admission number is required"),
   yearOfBirth: z.date({ required_error: "Year of birth is required" }),
-  gender: z.enum(["male", "female", "other"]),
+  gender: z.enum(GENDER_OPTIONS),
   classForm: stringValidation("Class/Form is required"),
   stream: z.string().optional(),
   initialContact: z.enum(["student", "fellow", "supervisor", "teacher"]),
