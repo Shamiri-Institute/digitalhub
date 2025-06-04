@@ -32,6 +32,7 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
+import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
@@ -218,7 +219,7 @@ export default function AddNewSupervisor() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="max-h-[200px]">
-                            {["Male", "Female", "Other"].map((g) => (
+                            {GENDER_OPTIONS.map((g) => (
                               <SelectItem key={g} value={g}>
                                 {g}
                               </SelectItem>
