@@ -36,6 +36,7 @@ import {
   submitStudentDetails,
   transferStudentToGroup,
 } from "#/lib/actions/student";
+import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Prisma } from "@prisma/client";
@@ -265,7 +266,7 @@ export default function StudentDetailsForm({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="max-h-[200px]">
-                              {["Male", "Female", "Other"].map((g) => (
+                              {GENDER_OPTIONS.map((g) => (
                                 <SelectItem key={g} value={g}>
                                   {g}
                                 </SelectItem>
