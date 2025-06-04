@@ -30,12 +30,18 @@ export const StudentDetailsSchema = z
         message: "Please enter a valid value",
       },
     ),
-    phoneNumber: stringValidation("Please enter the student's contact").refine(
-      (val) => isValidPhoneNumber(val, "KE"),
-      {
-        message: "Please enter a valid kenyan phone number",
-      },
-    ),
+    phoneNumber: z
+      .string()
+      .optional()
+      .refine(
+        (val) => {
+          if (!val) return true;
+          return isValidPhoneNumber(val, "KE");
+        },
+        {
+          message: "Please enter a valid kenyan phone number",
+        },
+      ),
   })
   .superRefine((val, ctx) => {
     if (val.mode === "edit" && val.id === undefined) {

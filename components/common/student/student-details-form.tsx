@@ -235,10 +235,7 @@ export default function StudentDetailsForm({
                       name="phoneNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>
-                            Contact number{" "}
-                            <span className="text-shamiri-light-red">*</span>
-                          </FormLabel>
+                          <FormLabel>Contact number</FormLabel>
                           <FormControl>
                             <Input {...field} type="tel" />
                           </FormControl>
