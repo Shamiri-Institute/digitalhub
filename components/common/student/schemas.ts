@@ -24,10 +24,15 @@ export const StudentDetailsSchema = z
     admissionNumber: z.string().optional(),
     yearOfBirth: stringValidation("Please enter year of birth").refine(
       (val) => {
-        return !isNaN(Number(val)) && val.trim() !== "";
+        const year = Number(val);
+        const currentYear = new Date().getFullYear();
+        return !isNaN(year) && 
+               val.trim() !== "" && 
+               year >= 1900 && 
+               year <= currentYear;
       },
       {
-        message: "Please enter a valid value",
+        message: "Please enter a valid year between 1900 and current year",
       },
     ),
     phoneNumber: z

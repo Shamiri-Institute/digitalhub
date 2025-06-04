@@ -286,8 +286,10 @@ export default function StudentDetailsForm({
                           <FormControl>
                             <Input
                               {...field}
-                              type="text"
-                              placeholder={"Enter year of birth"}
+                              type="number"
+                              min={1900}
+                              max={new Date().getFullYear()}
+                              placeholder="Enter year of birth"
                             />
                           </FormControl>
                           <FormMessage />
