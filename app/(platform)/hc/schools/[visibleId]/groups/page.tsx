@@ -21,6 +21,7 @@ export default async function GroupsPage({
   SELECT
 	intg.id,
 	intg.group_name AS "groupName",
+	intg.group_type AS "groupType",
 	intg.leader_id AS "leaderId",
 	intg.school_id AS "schoolId",
 	intg.archived_at AS "archivedAt",

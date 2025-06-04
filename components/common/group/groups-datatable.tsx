@@ -78,7 +78,7 @@ export default function GroupsDataTable({
         })}
         data={data}
         className="data-table data-table-action lg:mt-4"
-        columnVisibilityState={{ "Active Status": false }}
+        columnVisibilityState={{ "Active Status": false, "Group Type": false }}
         emptyStateMessage="No groups associated with this school"
         renderTableActions={renderTableActions()}
       />
