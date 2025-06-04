@@ -235,10 +235,7 @@ export default function StudentDetailsForm({
                       name="phoneNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>
-                            Contact number{" "}
-                            <span className="text-shamiri-light-red">*</span>
-                          </FormLabel>
+                          <FormLabel>Contact number</FormLabel>
                           <FormControl>
                             <Input {...field} type="tel" />
                           </FormControl>
@@ -289,8 +286,10 @@ export default function StudentDetailsForm({
                           <FormControl>
                             <Input
                               {...field}
-                              type="text"
-                              placeholder={"Enter year of birth"}
+                              type="number"
+                              min={1900}
+                              max={new Date().getFullYear()}
+                              placeholder="Enter year of birth"
                             />
                           </FormControl>
                           <FormMessage />
