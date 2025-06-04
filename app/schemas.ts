@@ -1,3 +1,4 @@
+import { GENDER_OPTIONS } from "#/lib/constants";
 import { z } from "zod";
 
 export const BaseProfileSchema = z.object({
@@ -5,7 +6,7 @@ export const BaseProfileSchema = z.object({
   cellNumber: z.string().min(1),
   mpesaNumber: z.string().min(1),
   dateOfBirth: z.string().optional(),
-  gender: z.enum(["Male", "Female"]),
+  gender: z.enum(GENDER_OPTIONS),
   county: z.string().min(1),
   subCounty: z.string().min(1),
   bankName: z.string().min(1),
