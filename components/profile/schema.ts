@@ -1,3 +1,4 @@
+import { GENDER_OPTIONS } from "#/lib/constants";
 import { stringValidation } from "#/lib/utils";
 import { ImplementerRole } from "@prisma/client";
 import { isValidPhoneNumber } from "libphonenumber-js";
@@ -43,7 +44,7 @@ export const ProfileSchema = z
     mpesaNumber: z.string().optional(),
     mpesaName: z.string().optional(),
     dateOfBirth: z.date().optional(),
-    gender: z.enum(["Male", "Female", "Other"]),
+    gender: z.enum(GENDER_OPTIONS),
     county: stringValidation("County is required"),
     subCounty: stringValidation("Sub-county is required"),
     bankName: z.string().optional(),

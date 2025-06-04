@@ -1,4 +1,5 @@
 import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
+import { GENDER_OPTIONS } from "#/lib/constants";
 import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
 
@@ -60,7 +61,7 @@ export const SupervisorSchema = z.object({
   cellNumber: z.string().min(1),
   mpesaNumber: z.string().min(1),
   dateOfBirth: z.string().optional(),
-  gender: z.enum(["Male", "Female"]),
+  gender: z.enum(GENDER_OPTIONS),
   county: z.string().min(1),
   subCounty: z.string().min(1),
   bankName: z.string().min(1),
