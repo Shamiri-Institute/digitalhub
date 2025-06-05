@@ -1189,7 +1189,7 @@ async function createInterventionGroups(
   staticFellows.forEach((fellow, index) => {
     interventionGroups.push({
       id: objectId("group"),
-      groupName: `Static Group ${index + 1}`,
+      groupName: `Group ${index + 1}`,
       schoolId: staticSchool!.id,
       leaderId: fellow.id,
       projectId: staticSchool!.hub?.projectId as string,
@@ -1279,7 +1279,8 @@ async function createStudentsForSchools(
       students.push({
         id: objectId("student"),
         visibleId: `STATIC_STU_${groupIndex + 1}_${i + 1}`,
-        studentName: `Static Student ${groupIndex + 1}.${i + 1}`,
+        studentName: `Student ${groupIndex + 1}.${i + 1}`,
+        admissionNumber: `ADM_${groupIndex + 1}_${i + 1}`,
         schoolId: staticSchool!.id,
         assignedGroupId: group.id,
         gender: i % 2 === 0 ? "Male" : "Female",
@@ -1300,6 +1301,7 @@ async function createStudentsForSchools(
         id: objectId("student"),
         visibleId: objectId("student"), // use short id?
         studentName: faker.person.fullName(),
+        admissionNumber: faker.string.numeric({ length: 5 }),
         schoolId: school.id,
         assignedGroupId: faker.helpers.arrayElement(school.interventionGroups)
           .id,

@@ -1,9 +1,7 @@
-import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
 import { currentHubCoordinator } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
-import { Suspense } from "react";
 
 export default async function StudentsPage({
   params: { visibleId },
@@ -29,7 +27,11 @@ export default async function StudentsPage({
       },
       studentAttendances: {
         include: {
-          session: true,
+          session: {
+            include: {
+              session: true,
+            },
+          },
           group: true,
         },
       },
@@ -63,8 +65,6 @@ export default async function StudentsPage({
   });
 
   return (
-    <Suspense fallback={<Loading />}>
-      <StudentsDatatable students={students} role={hc?.user.membership.role!} />
-    </Suspense>
+    <StudentsDatatable students={students} role={hc?.user.membership.role!} />
   );
 }

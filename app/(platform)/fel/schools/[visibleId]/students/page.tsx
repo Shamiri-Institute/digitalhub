@@ -33,7 +33,11 @@ export default async function StudentsPage({
       },
       studentAttendances: {
         include: {
-          session: true,
+          session: {
+            include: {
+              session: true,
+            },
+          },
           group: true,
         },
       },
