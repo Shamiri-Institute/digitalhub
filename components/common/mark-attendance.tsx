@@ -67,7 +67,11 @@ export function MarkAttendance({
   id?: string;
   title: string;
   children: React.ReactNode;
-  sessions?: Prisma.InterventionSessionGetPayload<{}>[];
+  sessions?: Prisma.InterventionSessionGetPayload<{
+    include: {
+      session: true;
+    };
+  }>[];
   attendances: Attendance[];
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
@@ -204,31 +208,39 @@ export function MarkAttendance({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {sessions?.map((session) => {
-                          const time = `${format(session.sessionDate, "h:mm")} - ${format(
-                            session.sessionEndTime ??
-                              addHours(session.sessionDate, 1.5),
-                            "h:mm a",
-                          )}`;
-                          return (
-                            <SelectItem key={session.id} value={session.id}>
-                              <div className="flex items-center gap-2">
-                                <span>
-                                  {sessionDisplayName(session.sessionType!)}
-                                </span>
-                                <span>-</span>
-                                <span>
-                                  {format(
-                                    new Date(session.sessionDate),
-                                    "dd MMM yyyy",
-                                  )}
-                                </span>
-                                <span className="h-1 w-1 rounded-full bg-black"></span>
-                                <span>{time}</span>
-                              </div>
-                            </SelectItem>
-                          );
-                        })}
+                        {sessions
+                          ?.sort(
+                            (a, b) =>
+                              a.sessionDate.getTime() - b.sessionDate.getTime(),
+                          )
+                          .filter((session) => session.occurred)
+                          .map((session) => {
+                            const time = `${format(session.sessionDate, "h:mm")} - ${format(
+                              session.sessionEndTime ??
+                                addHours(session.sessionDate, 1.5),
+                              "h:mm a",
+                            )}`;
+                            return (
+                              <SelectItem key={session.id} value={session.id}>
+                                <div className="flex items-center gap-2">
+                                  <span>
+                                    {sessionDisplayName(
+                                      session.session?.sessionName!,
+                                    )}
+                                  </span>
+                                  <span>-</span>
+                                  <span>
+                                    {format(
+                                      new Date(session.sessionDate),
+                                      "dd MMM yyyy",
+                                    )}
+                                  </span>
+                                  <span className="h-1 w-1 rounded-full bg-black"></span>
+                                  <span>{time}</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
                       </SelectContent>
                     </Select>
                     <FormMessage />
