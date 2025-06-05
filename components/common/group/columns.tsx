@@ -11,6 +11,7 @@ import { Dispatch, SetStateAction } from "react";
 export type SchoolGroupDataTableData = {
   id: string;
   groupName: string;
+  groupType: string;
   leaderId: string;
   fellowName: string;
   supervisorId: string;
@@ -111,6 +112,21 @@ export const columns = (state: {
       cell: ({ row }) => `${row.original.students.length}/15`,
       header: "No. of students",
       id: "No. of students",
+    },
+    {
+      id: "Group Type",
+      header: "Group Type",
+      cell: ({ row }) => {
+        const type = row.original.groupType;
+        return (
+          <Badge
+            variant={type === "TREATMENT" ? "default" : "outline"}
+            className="capitalize"
+          >
+            {type.toLowerCase()}
+          </Badge>
+        );
+      },
     },
     {
       id: "button",

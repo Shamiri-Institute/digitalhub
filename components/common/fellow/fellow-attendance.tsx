@@ -2,11 +2,13 @@ import AttendanceStatusWidget from "#/components/common/attendance-status-widget
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-menu";
 import { MarkAttendance } from "#/components/common/mark-attendance";
+import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { SessionDetail } from "#/components/common/session/session-list";
 import { Session } from "#/components/common/session/sessions-provider";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Alert, AlertTitle } from "#/components/ui/alert";
+import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
@@ -44,7 +46,6 @@ import { sessionDisplayName } from "#/lib/utils";
 import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import { ColumnDef, Row } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import { CheckCheck, InfoIcon } from "lucide-react";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -122,6 +123,7 @@ export default function FellowAttendance({
           schoolName: session?.school?.schoolName ?? session?.venue,
           schoolId: sessionAttendance?.schoolId,
           groupName: group?.groupName ?? null,
+          groupType: group?.groupType,
           groupId: group?.id,
           averageRating:
             fellowRatings.find((rating) => rating.id === fellow.id)
@@ -205,7 +207,6 @@ export default function FellowAttendance({
               {/* TODO: https://github.com/TanStack/table/issues/4382 --> ColumnDef types gives typescript error */}
               <FellowAttendanceDataTable
                 data={fellows}
-                editColumns={false}
                 emptyStateMessage={
                   watcher === undefined
                     ? "Please select a supervisor"
@@ -216,12 +217,15 @@ export default function FellowAttendance({
                     row.original.sessionType === "INTERVENTION" &&
                     row.original.groupId === undefined
                   ) &&
+                  (row.original.sessionType !== "INTERVENTION" ||
+                    row.original.groupType === "TREATMENT") &&
                   (row.original.supervisorId === supervisorId ||
                     role === "HUB_COORDINATOR") &&
                   !row.original.droppedOut &&
                   row.original.processedAt === null
                 }
                 session={session}
+                editColumns={true}
               />
               <div className="flex justify-end gap-6">
                 <Button
@@ -319,6 +323,9 @@ export function FellowAttendanceDataTable({
         enableRowSelection={enableRowSelection}
         onRowSelectionChange={setSelectedRows}
         renderTableActions={!overrideColumns && renderTableActions()}
+        columnVisibilityState={{
+          "Group Type": false,
+        }}
       />
       <MarkAttendance
         title={"Mark fellow attendance"}
@@ -359,7 +366,13 @@ export function FellowAttendanceDataTable({
               <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
                 {""}
               </span>
-              <span>{sessionDisplayName(attendance?.sessionType ?? "")}</span>
+              <span>
+                {sessionDisplayName(
+                  attendance?.sessionName ??
+                    session?.session?.sessionName ??
+                    "",
+                )}
+              </span>
               <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
                 {""}
               </span>
@@ -413,6 +426,7 @@ export type FellowAttendancesTableData = {
   schoolId?: string | null;
   groupName: string | null;
   groupId?: string;
+  groupType?: string;
   averageRating: number | null;
   sessionType?: string;
   sessionName?: string;
@@ -465,7 +479,7 @@ export const columns = (state: {
     enableHiding: false,
   },
   {
-    id: "name",
+    id: "Name",
     accessorKey: "fellowName",
     header: "Name",
   },
@@ -496,7 +510,7 @@ export const columns = (state: {
       );
     },
     header: "Attendance",
-    id: "attendance",
+    id: "Attendance",
     accessorKey: "attended",
   },
   {
@@ -533,51 +547,37 @@ export const columns = (state: {
       );
     },
     header: "Average Rating",
-    id: "averageRating",
+    id: "Average Rating",
   },
   {
     accessorKey: "cellNumber",
-    id: "cellNumber",
+    id: "Phone Number",
     header: "Phone Number",
     cell: ({ row }) => {
-      try {
-        return (
-          row.original.cellNumber &&
-          parsePhoneNumberWithError(
-            row.original.cellNumber,
-            "KE",
-          ).formatNational()
-        );
-      } catch (error) {
-        if (error instanceof ParseError) {
-          // Not a phone number, non-existent country, etc.
-          return (
-            row.original.cellNumber && (
-              <Tooltip>
-                <TooltipTrigger>
-                  <div className="flex gap-1">
-                    <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
-                    <span>{row.original.cellNumber}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="px-2 py-1 capitalize">
-                    {error.message.toLowerCase().replace("_", " ")}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            )
-          );
-        } else {
-          throw error;
-        }
-      }
+      return RenderParsedPhoneNumber(row.original.cellNumber ?? undefined);
     },
   },
   {
     accessorKey: "groupName",
-    id: "groupName",
+    id: "Group Name",
     header: "Group",
+  },
+  {
+    id: "Group Type",
+    header: "Group Type",
+    cell: ({ row }) => {
+      const type = row.original.groupType;
+      return (
+        type && (
+          <Badge
+            variant={type === "TREATMENT" ? "default" : "outline"}
+            className="capitalize"
+          >
+            {type?.toLowerCase()}
+          </Badge>
+        )
+      );
+    },
   },
   {
     id: "button",
