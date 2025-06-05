@@ -8,7 +8,11 @@ export default function SessionsOccurredWidget({
   sessions,
   types,
 }: {
-  sessions: Prisma.InterventionSessionGetPayload<{}>[];
+  sessions: Prisma.InterventionSessionGetPayload<{
+    include: {
+      session: true;
+    };
+  }>[];
   types?: Prisma.SessionNameGetPayload<{}>[];
 }) {
   return (
@@ -21,15 +25,15 @@ export default function SessionsOccurredWidget({
         )
         .map((sessionType) => {
           const occurredStatus = sessions.find((session) => {
-            return session.sessionType === sessionType.sessionName;
+            return session.session?.sessionName === sessionType.sessionName;
           })?.occurred;
           const cancelledStatus =
             sessions.find((session) => {
-              return session.sessionType === sessionType.sessionName;
+              return session.session?.sessionName === sessionType.sessionName;
             })?.status === "Cancelled";
           const rescheduledStatus =
             sessions.find((session) => {
-              return session.sessionType === sessionType.sessionName;
+              return session.session?.sessionName === sessionType.sessionName;
             })?.status === "Rescheduled";
           return (
             <div

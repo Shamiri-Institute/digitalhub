@@ -918,6 +918,11 @@ model InterventionSessionNote {
   @@map("intervention_session_notes")
 }
 
+enum GroupType {
+  TREATMENT
+  CONTROL
+}
+
 /// Intervention groups are the all the groups alloted for a school across multiple intervention sessions
 model InterventionGroup {
   id                        String                      @id @db.VarChar(255)
@@ -931,6 +936,7 @@ model InterventionGroup {
   school                    School                      @relation(fields: [schoolId], references: [id])
   projectId                 String                      @map("project_id") @db.VarChar(100)
   project                   Project                     @relation(fields: [projectId], references: [id])
+  groupType                 GroupType                   @default(TREATMENT) @map("group_type")
   students                  Student[]
   fellowAttendances         FellowAttendance[]
   interventionGroupReports  InterventionGroupReport[]

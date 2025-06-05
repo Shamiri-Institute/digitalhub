@@ -553,6 +553,16 @@ export async function markFellowAttendance(
             },
           });
           if (group) {
+            if (
+              group.groupType !== "TREATMENT" &&
+              session.session?.sessionType === "INTERVENTION"
+            ) {
+              throw new Error(
+                "An error occurred while marking attendance. " +
+                  fellow.fellowName +
+                  "'s group is not a treatment group.",
+              );
+            }
             groupId = group.id;
           } else {
             throw new Error(
@@ -640,6 +650,12 @@ export async function markManyFellowAttendance(
         },
       });
 
+      if (!session.occurred) {
+        throw new Error(
+          "An error occurred while marking attendances. Session has not occurred.",
+        );
+      }
+
       if (!Number.isInteger(session.session?.amount)) {
         throw new Error(
           "An error occurred while marking attendances. Session payout amount not found.",
@@ -675,7 +691,8 @@ export async function markManyFellowAttendance(
           throw new Error(
             "An error occurred while marking attendances. " +
               attendance.fellow.fellowName +
-              "'s attendance has already been processed.",
+              "'s attendance has already been processed on " +
+              format(attendance.processedAt, "dd-MM-yyyy."),
           );
         }
 
@@ -746,22 +763,67 @@ export async function markManyFellowAttendance(
             in: fellowIds,
           },
         },
-        include: {
-          groups: true,
-        },
       });
 
-      const data2 = fellows.map((fellow) => {
+      let validFellows: Array<{
+        fellow: (typeof fellows)[0];
+        groupId: string | undefined;
+      }> = [];
+
+      if (session.schoolId) {
+        const groups = await tx.interventionGroup.findMany({
+          where: {
+            schoolId: session.schoolId,
+            leaderId: {
+              in: fellowIds,
+            },
+          },
+        });
+
+        const groupsByFellowId = new Map(
+          groups.map((group) => [group.leaderId, group]),
+        );
+
+        for (const fellow of fellows) {
+          const group = groupsByFellowId.get(fellow.id);
+
+          if (!group) {
+            throw new Error(
+              "An error occurred while marking attendance. " +
+                fellow.fellowName +
+                " has no assigned group",
+            );
+          }
+
+          if (
+            group.groupType !== "TREATMENT" &&
+            session.session?.sessionType === "INTERVENTION"
+          ) {
+            throw new Error(
+              "An error occurred while marking attendance. " +
+                fellow.fellowName +
+                "'s group is not a treatment group.",
+            );
+          }
+
+          validFellows.push({ fellow, groupId: group.id });
+        }
+      } else {
+        validFellows = fellows.map((fellow) => ({
+          fellow,
+          groupId: undefined,
+        }));
+      }
+
+      const data2 = validFellows.map(({ fellow, groupId }) => {
         return {
           attendanceData: {
             fellowId: fellow.id,
             schoolId: session.schoolId,
-            groupId: fellow.groups.find(
-              (group) => group.schoolId === session.schoolId,
-            )?.id,
+            groupId,
             projectId: session.projectId ?? CURRENT_PROJECT_ID,
-            absenceReason,
-            absenceComments: comments,
+            absenceReason: attendanceStatus === false ? absenceReason : null,
+            absenceComments: attendanceStatus === false ? comments : null,
             sessionId,
             markedBy: auth.user!.user.id,
             attended: attendanceStatus,
