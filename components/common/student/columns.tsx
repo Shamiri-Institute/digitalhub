@@ -18,7 +18,11 @@ export type SchoolStudentTableData = Prisma.StudentGetPayload<{
     };
     studentAttendances: {
       include: {
-        session: true;
+        session: {
+          include: {
+            session: true;
+          };
+        };
         group: true;
       };
     };

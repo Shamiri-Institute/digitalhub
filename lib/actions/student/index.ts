@@ -135,6 +135,20 @@ export async function markStudentAttendance(
 
     const { id, sessionId, absenceReason, attended, comments } =
       MarkAttendanceSchema.parse(data);
+
+    const session = await db.interventionSession.findUniqueOrThrow({
+      where: {
+        id: sessionId,
+      },
+    });
+
+    if (!session.occurred) {
+      return {
+        success: false,
+        message: `This session has not occurred yet.`,
+      };
+    }
+
     const student = await db.student.findUniqueOrThrow({
       where: {
         id,
@@ -218,6 +232,20 @@ export async function markManyStudentsAttendance(
     const auth = await checkAuth();
     const { sessionId, absenceReason, attended, comments } =
       MarkAttendanceSchema.parse(data);
+
+    const session = await db.interventionSession.findUniqueOrThrow({
+      where: {
+        id: sessionId,
+      },
+    });
+
+    if (!session.occurred) {
+      return {
+        success: false,
+        message: `This session has not occurred yet.`,
+      };
+    }
+
     const status =
       attended === "attended" ? true : attended === "missed" ? false : null;
 
