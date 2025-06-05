@@ -307,6 +307,12 @@ export async function markSessionOccurrence(
       },
     });
 
+    if (session.sessionDate > new Date()) {
+      throw new Error(
+        "This session's date has not arrived yet. Please check the date and time.",
+      );
+    }
+
     const schoolSessionTypes = ["INTERVENTION", "DATA_COLLECTION", "CLINICAL"];
     const venueSessionTypes = ["SUPERVISION", "TRAINING"];
     if (
