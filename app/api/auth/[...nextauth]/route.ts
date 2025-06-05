@@ -123,8 +123,9 @@ const authOptions: AuthOptions = {
         console.warn(`User ${user.email} has no memberships`);
       }
 
-      const memberships = parseMembershipsForJWT(user);
-      const activeMembership = memberships[0];
+      // Use token data if available (for updates), otherwise use database data
+      const memberships = token.memberships || parseMembershipsForJWT(user);
+      const activeMembership = token.activeMembership || memberships[0];
 
       const sessionUser: SessionUser = {
         id: token.sub || null,
@@ -133,14 +134,12 @@ const authOptions: AuthOptions = {
         image: user.image,
         activeMembership,
         memberships,
-        // @ts-ignore
-        ...(token || session).user,
       };
 
       session.user = sessionUser;
       return session;
     },
-    jwt: async ({ token, user, account, trigger }) => {
+    jwt: async ({ token, user, account, trigger, session }) => {
       if (trigger === "signIn" && user?.email) {
         // First get the user by email
         const currentUser = await db.user.findUnique({
@@ -180,6 +179,7 @@ const authOptions: AuthOptions = {
           const processedMemberships = memberships.map((m) => ({
             id: m.id,
             implementerId: m.implementer.id,
+            implementerName: m.implementer.implementerName,
             role: m.role,
             identifier: m.identifier,
           }));
@@ -187,7 +187,11 @@ const authOptions: AuthOptions = {
           token.memberships = processedMemberships;
           token.activeMembership = processedMemberships[0];
         }
+      } else if (trigger === "update" && session?.user) {
+        token.activeMembership = session.user.activeMembership;
+        token.memberships = session.user.memberships;
       }
+
       return token;
     },
   },

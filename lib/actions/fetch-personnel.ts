@@ -135,3 +135,164 @@ export async function fetchPersonnel() {
 
   return { personnel, activePersonnelId };
 }
+
+export async function fetchImplementerPersonnel() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+  
+  const { membership } = user;
+  
+  const implementerMembers = await db
+      .implementerMember.findMany({
+        where: {
+          implementerId: membership.implementerId,
+        },
+        include: {
+          user: true,
+        },
+      });
+      console.log(implementerMembers)
+
+  const admins: Personnel[] = implementerMembers.filter((member) => member.role === ImplementerRole.ADMIN).map((member) => ({
+    id: member.id.toString(),
+    role: ImplementerRole.ADMIN,
+      label: `${member.user.name}`,
+  }));
+
+  const supervisors: Personnel[] = (
+    await db.supervisor.findMany({
+      orderBy: { supervisorName: "asc" },
+      where: {
+        id: {
+          in: implementerMembers.map((member) => member.identifier || ""),
+        },
+      },
+      include: {
+        hub: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    })
+  ).map((sup) => ({
+    id: sup.id,
+    role: ImplementerRole.SUPERVISOR,
+    label: `${sup.supervisorName}`,
+    hub: sup.hub?.hubName,
+    project: sup.hub?.project?.name,
+  }));
+
+  const hubCoordinators: Personnel[] = (
+    await db.hubCoordinator.findMany({
+      orderBy: { coordinatorName: "asc" },
+      where: {
+        id: {
+          in: implementerMembers.map((member) => member.identifier || ""),
+        },
+      },
+      include: {
+        assignedHub: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    })
+  ).map((hc) => ({
+    id: hc.id,
+    role: ImplementerRole.HUB_COORDINATOR,
+    label: `${hc.coordinatorName}`,
+    hub: hc.assignedHub?.hubName,
+    project: hc.assignedHub?.project?.name,
+  }));
+
+  const fellows: Personnel[] = (
+    await db.fellow.findMany({
+      orderBy: { fellowName: "desc" },
+      where: {
+        id: {
+          in: implementerMembers.map((member) => member.identifier || ""),
+        },
+      },
+      include: {
+        hub: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    })
+  ).map((fellow) => ({
+    id: fellow.id,
+    role: ImplementerRole.FELLOW,
+    label: `${fellow.fellowName}`,
+    hub: fellow.hub?.hubName,
+    project: fellow.hub?.project?.name,
+  }));
+
+  const clinicalLeads: Personnel[] = (
+    await db.clinicalLead.findMany({
+      orderBy: { clinicalLeadName: "asc" },
+      where: {
+        id: {
+          in: implementerMembers.map((member) => member.identifier || ""),
+        },
+      },
+      include: {
+        assignedHub: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    })
+  ).map((cl) => ({
+    id: cl.id,
+    role: ImplementerRole.CLINICAL_LEAD,
+    label: `${cl.clinicalLeadName}`,
+    hub: cl.assignedHub?.hubName,
+    project: cl.assignedHub?.project?.name,
+  }));
+
+  const opsUsers: Personnel[] = (
+    await db.opsUser.findMany({
+      orderBy: { name: "asc" },
+      where: {
+        id: {
+          in: implementerMembers.map((member) => member.identifier || ""),
+        },
+      },
+      include: {
+        assignedHub: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    })
+  ).map((ops) => ({
+    id: ops.id,
+    role: ImplementerRole.OPERATIONS,
+    label: `${ops.name}`,
+    hub: ops.assignedHub?.hubName,
+    project: ops.assignedHub?.project?.name,
+  }));
+
+  const personnel = [
+    ...admins,
+    ...hubCoordinators,
+    ...supervisors,
+    ...fellows,
+    ...clinicalLeads,
+    ...opsUsers,
+  ];
+
+  const activePersonnelId = membership.id.toString() || "";
+
+  return { personnel, activePersonnelId };
+}
+
+export type ImplementerPersonnel = Awaited<ReturnType<typeof fetchImplementerPersonnel>>

@@ -51,6 +51,8 @@ import { cn } from "#/lib/utils";
 import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { MembershipSwitcher } from "#/components/common/membership-switcher";
+import { RoleSwitcher } from "#/components/common/role-switcher";
+import { ImplementerPersonnel } from "#/lib/actions/fetch-personnel";
 
 interface NavigationLinkProps {
   scheduleActive: boolean;
@@ -67,6 +69,7 @@ interface NavigationLinkProps {
 export function Layout({
   children,
   profile,
+  implementerMembers,
 }: {
   children: React.ReactNode;
   profile:
@@ -76,21 +79,24 @@ export function Layout({
     | CurrentClinicalLead
     | CurrentOpsUser
     | CurrentClinicalTeam
+    | CurrentUser
     | null;
+  implementerMembers: ImplementerPersonnel | null;
 }) {
   const pathname = usePathname();
   const session = useSession();
 
-    return (
-      <LayoutV2
-        userName={session.data?.user.name ?? "N/A"}
-        avatarUrl={session.data?.user.image}
-        pathname={pathname}
-        profile={profile}
-      >
-        {children}
-      </LayoutV2>
-    );
+  return (
+    <LayoutV2
+      userName={session.data?.user.name ?? "N/A"}
+      avatarUrl={session.data?.user.image}
+      pathname={pathname}
+      profile={profile}
+      implementerMembers={implementerMembers}
+    >
+      {children}
+    </LayoutV2>
+  );
 }
 
 function LayoutV2({
@@ -99,6 +105,7 @@ function LayoutV2({
   avatarUrl,
   pathname,
   profile,
+  implementerMembers,
 }: {
   children: React.ReactNode;
   userName: string;
@@ -113,6 +120,7 @@ function LayoutV2({
     | CurrentUser
     | CurrentClinicalTeam
     | null;
+  implementerMembers: ImplementerPersonnel | null;
 }) {
   const [mainRoute, subRoute] = pathname.slice(1).split("/"); // get the path under the 'hc' route. fix this when we add other roles
   const schoolsActive = subRoute?.includes("schools");
@@ -138,6 +146,9 @@ function LayoutV2({
       <div className={className}>
         <div className="nav-link">
           <MembershipSwitcher />
+        </div>
+        <div className="nav-link">
+          <RoleSwitcher implementerMembers={implementerMembers} />
         </div>
         <div className="nav-link">
           <PersonnelToolPopover>
@@ -282,7 +293,7 @@ function LayoutV2({
         </div>
       </header>
       <main className="flex grow items-stretch overflow-x-hidden bg-background-secondary">
-        {children}
+        {/* {children} */}
       </main>
       <ProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} profile={profile} />
     </div>
