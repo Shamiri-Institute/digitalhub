@@ -21,7 +21,7 @@ import {
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
-import { format, isBefore } from "date-fns";
+import { format } from "date-fns";
 import { Dispatch, SetStateAction, useEffect } from "react";
 
 export default function AttendanceHistory({
@@ -55,11 +55,7 @@ export default function AttendanceHistory({
         </DialogHeader>
         {children}
         <DataTable
-          columns={columns(
-            markAttendance,
-            setSelectedSessionId,
-            student.school?.interventionSessions ?? [],
-          )}
+          columns={columns(markAttendance, setSelectedSessionId)}
           editColumns={false}
           data={student.studentAttendances ?? []}
           emptyStateMessage={"No attendance records found"}
@@ -84,15 +80,14 @@ export default function AttendanceHistory({
 const columns = (
   markAttendance: Dispatch<SetStateAction<boolean>>,
   setSelectedSessionId: Dispatch<SetStateAction<string | undefined>>,
-  sessions: Prisma.InterventionSessionGetPayload<{
-    include: {
-      session: true;
-    };
-  }>[],
 ): ColumnDef<
   Prisma.StudentAttendanceGetPayload<{
     include: {
-      session: true;
+      session: {
+        include: {
+          session: true;
+        };
+      };
       group: true;
     };
   }>
@@ -107,13 +102,8 @@ const columns = (
   {
     header: "Session",
     id: "session",
-    cell: (props) => {
-      const previousSessions = sessions
-        .filter((session) => {
-          return isBefore(session.sessionDate, props.row.original.createdAt);
-        })
-        .sort((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime());
-      const session = previousSessions[0];
+    cell: ({ row }) => {
+      const session = row.original.session;
       return <span>{sessionDisplayName(session?.session?.sessionName)}</span>;
     },
   },
