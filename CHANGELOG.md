@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.1.0...v1.2.0) (2025-06-06)
+
+### Features
+
+- add a group type column to intervention groups ([#474](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/474)) ([9b1e429](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/9b1e429af4a5f5e576799b3877e72813714a4715))
+- optimise performance of payout generation ([#472](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/472)) ([5ebde59](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/5ebde598ff47cb99b08b4129b6b6744b0d105044))
+- replace hardcoded gender options with constant ([#473](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/473)) ([c471420](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c471420a533aae9e1a4fc24d023095e66d4cce11))
+
+### Bug Fixes
+
+- 'group_type' column on fetch query ([#477](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/477)) ([e11ae84](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/e11ae84956cb04740cb4fc339ce693f710eed8cc))
+- marking student attendance before session occurred ([#476](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/476)) ([b2f918a](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/b2f918a4252638315f60028512cfc2f7d221bbe8))
+- update phone number validation to allow optional input in student input ([#475](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/475)) ([93e058e](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/93e058e3ab5de687a35be7919bef73b4867164b3))
+
 ## [1.1.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.0.1...v1.1.0) (2025-05-30)
 
 ### Features
