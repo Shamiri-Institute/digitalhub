@@ -9,6 +9,7 @@ export function ScheduleHeader({
     count: number;
   }[];
 }) {
+  console.log(stats);
   return (
     <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
       <PageHeading title="Schedule" />

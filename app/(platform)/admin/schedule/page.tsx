@@ -3,88 +3,37 @@ import { Separator } from "#/components/ui/separator";
 import PageFooter from "#/components/ui/page-footer";
 import { ScheduleCalendar } from "../../../../components/common/session/schedule-calendar";
 import { ScheduleHeader } from "../../../../components/common/session/schedule-header";
+import { currentAdminUser } from "#/app/auth";
+import { signOut } from "next-auth/react";
+import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
+import { db } from "#/lib/db";
 
-export default async function HubCoordinatorSchedulePage() {
-  // const coordinator = await currentHubCoordinator();
-  // if (coordinator === null) {
-  //   await signOut({ callbackUrl: "/login" });
-  // }
-  // if (!coordinator?.assignedHubId) {
-  //   return <div>Hub coordinator has no assigned hub</div>;
-  // }
-  const coordinator: any = undefined;
+export default async function AdminSchedulePage() {
+  const admin = await currentAdminUser();
+  if (admin === null) {
+    await signOut({ callbackUrl: "/login" });
+  }
 
-  // const user = await getCurrentUser();
-
-  // const values = await Promise.all([
-  //   await fetchSchoolData(coordinator?.assignedHubId as string),
-  //   await db.$queryRaw<
-  //     {
-  //       session_count: number;
-  //       clinical_case_count: number;
-  //       fellow_count: number;
-  //     }[]
-  //   >`SELECT
-  //   h.id,
-  //   COUNT(DISTINCT s.id) AS session_count,
-  //   COUNT(DISTINCT c.id) AS clinical_case_count,
-  //   COUNT(DISTINCT f.id) AS fellow_count
-  //   FROM
-  //       hubs h
-  //   JOIN
-  //       schools sch ON h.id = sch.hub_id
-  //   LEFT JOIN
-  //       intervention_sessions s ON sch.id = s.school_id
-  //   LEFT JOIN
-  //       students c ON sch.id = c.school_id AND c.is_clinical_case=TRUE
-  //   LEFT JOIN
-  //       fellows f ON h.id = f.hub_id
-  //       WHERE h.id=${coordinator!.assignedHubId}
-  //   GROUP BY
-  //       h.id, h.hub_name`,
-  //   await db.supervisor.findMany({
-  //     where: {
-  //       hubId: coordinator?.assignedHubId as string,
-  //     },
-  //     include: {
-  //       supervisorAttendances: {
-  //         include: {
-  //           session: true,
-  //         },
-  //       },
-  //       fellows: {
-  //         include: {
-  //           fellowAttendances: true,
-  //           groups: true,
-  //         },
-  //       },
-  //       assignedSchools: true,
-  //     },
-  //   }),
-  //   await db.$queryRaw<
-  //     {
-  //       id: string;
-  //       averageRating: number;
-  //     }[]
-  //   >`SELECT
-  //   fel.id,
-  //   (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
-  //   FROM
-  //   fellows fel
-  //   LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
-  //   WHERE fel.hub_id=${coordinator!.assignedHubId}
-  //   GROUP BY fel.id`,
-  //   await db.sessionName.findMany({
-  //     where: {
-  //       hubId: coordinator!.assignedHubId as string,
-  //     },
-  //   }),
-  // ]);
-  // const schools = values[0];
-  // const schoolStats = values[1];
-  // const supervisors = values[2];
-  // const fellowRatings = values[3];
-  // const hubSessionTypes = values[4];
+  const values = await Promise.all([
+    await db.$queryRaw<
+      {
+        hub_count: number;
+        school_count: number;
+        student_count: number;
+      }[]
+    >`SELECT
+      COUNT(DISTINCT h.id) AS hub_count,
+      COUNT(DISTINCT sch.id) AS school_count,
+      COUNT(DISTINCT stu.id) AS student_count
+    FROM
+      hubs h
+      LEFT JOIN schools sch ON h.id = sch.hub_id
+      LEFT JOIN students stu ON sch.id = stu.school_id
+    WHERE
+      h.implementer_id = ${admin!.user.membership.implementerId}`
+  ]);
+  const implementerStats = values[0][0] || { hub_count: 0, school_count: 0, student_count: 0 };
+  console.log(implementerStats);
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -92,21 +41,21 @@ export default async function HubCoordinatorSchedulePage() {
         <ScheduleHeader
           stats={[
             {
-              title: "Sessions",
-              count: 0,
+              title: "Hubs",
+              count: implementerStats.hub_count,
             },
             {
-              title: "Fellows",
-              count: 0,
+              title: "Schools",
+              count: implementerStats.school_count,
             },
             {
-              title: "Cases",
-              count: 0,
+              title: "Students",
+              count: implementerStats.student_count,
             },
           ]}
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
-        <ScheduleCalendar
+        {/* <ScheduleCalendar
           hubId={coordinator?.assignedHubId}
           aria-label="Session schedule"
           schools={[]}
@@ -114,7 +63,7 @@ export default async function HubCoordinatorSchedulePage() {
           fellowRatings={[]}
           role={"ADMIN"}
           hubSessionTypes={[]}
-        />
+        /> */}
       </div>
       <PageFooter />
     </div>

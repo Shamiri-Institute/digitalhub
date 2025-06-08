@@ -154,23 +154,15 @@ function LayoutV2({
         <div className="nav-link">
           <MembershipSwitcher loading={loading} setLoading={setLoading} />
         </div>
-        <div className="nav-link">
-          <PersonnelToolPopover>
-            <div className="flex items-center gap-2">
-              <RoleIcon fill="#0085FF" />
-              <div className="text-shamiri-new-blue">Switch Role</div>
-            </div>
-          </PersonnelToolPopover>
-        </div>
         {/* TODO: Implement help feature */}
         {/* <div className="nav-link">
           <HelpIcon />
           <Link href="#">Help</Link>
         </div> */}
         {/*TODO: notification counter */}
-        <div className="nav-link hidden lg:flex">
+        {/* <div className="nav-link hidden lg:flex">
           <NotificationIcon />
-        </div>
+        </div> */}
         <div className="nav-link hidden w-full lg:flex lg:w-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

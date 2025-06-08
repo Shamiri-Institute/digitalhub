@@ -46,6 +46,7 @@ export function MembershipSwitcher({
 
   useEffect(() => {
     const getMemberships = async () => {
+      setLoading(true);
       if (!activeMembership) {
         return;
       }
@@ -59,9 +60,10 @@ export function MembershipSwitcher({
         }));
       });
       setMemberships(memberships);
+      setLoading(false);
     };
     getMemberships();
-  }, [session, activeMembership]);
+  }, [session, activeMembership, setLoading]);
 
   const handleMembershipChange = async (membership: JWTMembership) => {
     if (activeMembership?.id === membership.id) return;
