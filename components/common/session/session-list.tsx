@@ -70,6 +70,7 @@ export function SessionList({
         role={role}
         fellowId={fellowId}
         supervisorId={supervisorId}
+        onHover={true}
       />
       <SessionDetail
         layout="compact"
@@ -80,8 +81,9 @@ export function SessionList({
         role={role}
         fellowId={fellowId}
         supervisorId={supervisorId}
+        onHover={true}
       />
-      <div className="w-full">
+      <div className="w-full overflow-visible">
         {moreSessions.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -89,22 +91,24 @@ export function SessionList({
                 + {moreSessions.length} more
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="flex min-w-48 flex-col gap-2 p-2">
-              {moreSessions.map((session, index) => {
-                return (
-                  <SessionDetail
-                    key={session.id}
-                    layout="compact"
-                    state={{
-                      session: moreSessions[index]!,
-                      ...dialogState,
-                    }}
-                    role={role}
-                    fellowId={fellowId}
-                    supervisorId={supervisorId}
-                  />
-                );
-              })}
+            <DropdownMenuContent className="p-2 min-w-72 max-h-[250px] overflow-auto" align="start">
+              <div className="flex flex-col gap-2">
+                {moreSessions.map((session, index) => {
+                  return (
+                    <SessionDetail
+                      key={session.id}
+                      layout="compact"
+                      state={{
+                        session: moreSessions[index]!,
+                        ...dialogState,
+                      }}
+                      role={role}
+                      fellowId={fellowId}
+                      supervisorId={supervisorId}
+                    />
+                    );
+                  })}
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -117,6 +121,7 @@ export function SessionDetail({
   state,
   layout,
   withDropdown = true,
+  onHover = false,
   role,
   fellowId,
   supervisorId,
@@ -133,6 +138,7 @@ export function SessionDetail({
   };
   layout: "compact" | "expanded";
   withDropdown?: boolean;
+  onHover?: boolean;
   role: ImplementerRole;
   fellowId?: string;
   supervisorId?: string;
@@ -170,11 +176,14 @@ export function SessionDetail({
 
   const renderSessionDetails = () => {
     return (
-      <div
+      <div className="relative h-[30px]">
+        {" "}
+        <div
         className={cn(
-          "w-full select-none rounded-[0.25rem] border",
+          "w-full select-none rounded-[0.25rem] border absolute left-0 top-0",
           {
-            "px-2 py-1": withDropdown,
+            "group px-2 py-1 hover:w-auto hover:z-50 hover:drop-shadow-md": withDropdown && onHover,
+            "px-2 py-1": withDropdown && !onHover,
             "px-4 py-2": !withDropdown,
           },
           {
@@ -198,25 +207,31 @@ export function SessionDetail({
             "text-green-base": completed,
             "text-blue-base": !completed,
             "text-red-base": cancelled,
-            "text-shamiri-text-dark-grey": rescheduled,
+            "text-shamiri-text-dark-grey": rescheduled && !session.occurred,
           })}
         >
           <div className="flex items-center gap-1">
             {completed && !cancelled && (
-              <Icons.checkCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
+              <Icons.checkCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
             )}
             {!completed && !cancelled && !rescheduled && (
-              <Icons.helpCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
+              <Icons.helpCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
             )}
-            {cancelled && <Icons.crossCircleFilled className="h-3.5 w-3.5" />}
-            {rescheduled && <Icons.calendarCheck2 className="h-3.5 w-3.5" strokeWidth={2.5} />}
-            {isExpanded && <div>{sessionDisplayName(session.session?.sessionName)}</div>}
+            {cancelled && <Icons.crossCircleFilled className="h-3.5 w-3.5 shrink-0" />}
+            {rescheduled && (
+              <Icons.calendarCheck2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+            )}
+            {isExpanded && (
+              <div>{sessionDisplayName(session.session?.sessionName)}</div>
+            )}
             {isCompact && (
               <div className="flex gap-1 truncate">
-                {sessionDisplayName(session.session?.sessionName)} - {timeLabels.startTimeLabel}
-                {(mode === "day" || !withDropdown) && (
+                {sessionDisplayName(session.session?.sessionName)} -{" "}
+                {timeLabels.startTimeLabel}
+                {/* {(mode === "day" || !withDropdown) && (
                   <div className="truncate">- {schoolName}</div>
-                )}
+                )} */}
+                <div className="truncate group-hover:text-foreground">- {schoolName}</div>
               </div>
             )}
           </div>
@@ -233,6 +248,7 @@ export function SessionDetail({
             </div>
           )}
         </div>
+      </div>
       </div>
     );
   };

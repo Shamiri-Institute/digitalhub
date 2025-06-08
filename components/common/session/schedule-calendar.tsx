@@ -355,11 +355,9 @@ function CalendarView({
   };
   listProps: {
     state: CalendarState;
-    hubId?: string;
   };
   tableProps: {
     state: CalendarState;
-    hubId?: string;
   };
   supervisors?: Prisma.SupervisorGetPayload<{
     include: {

@@ -195,7 +195,7 @@ export function MonthCalendarCell({
       >
         <div
           className={cn(
-            "flex flex-col gap-[8px] overflow-y-auto",
+            "flex flex-col gap-[8px]",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
             "h-full lg:h-[120px] xl:h-[144px]",
           )}

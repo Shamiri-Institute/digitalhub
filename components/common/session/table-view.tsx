@@ -263,13 +263,11 @@ const renderSessionTypeAndStatus = (
 
 export function TableView({
   state,
-  hubId,
   supervisors,
   role,
   supervisorId,
 }: {
   state: CalendarState;
-  hubId: string;
   supervisors?: Prisma.SupervisorGetPayload<{
     include: {
       supervisorAttendances: {
@@ -392,7 +390,7 @@ export function TableView({
     });
     setSupervisorAttendances(attendances.filter((x) => x !== undefined).flat());
     setFellowAttendances(_fellowAttendances);
-  }, [hubId, selectedDay, roleToggle, filters, sessions, supervisors, state]);
+  }, [selectedDay, roleToggle, filters, sessions, supervisors, state]);
 
   useEffect(() => {
     setTitle(

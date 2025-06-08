@@ -250,7 +250,7 @@ function WeekCalendarCell({
       >
         <div
           className={cn(
-            "flex flex-col gap-[8px] overflow-y-auto",
+            "flex flex-col gap-[8px]",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
             "h-full lg:h-[85px] xl:h-[112px]",
             "border-t border-grey-border",
