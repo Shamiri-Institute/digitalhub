@@ -1641,3 +1641,13 @@ model OpsUser {
 
   @@map("ops_users")
 }
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  email     String   @unique @map("email") @db.VarChar(255)
+  adminName String   @map("name") @db.VarChar(255)
+
+  @@map("admin_users")
+}

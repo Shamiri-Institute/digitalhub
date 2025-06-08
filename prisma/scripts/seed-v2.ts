@@ -6,6 +6,7 @@ import {
   type Hub,
   type HubCoordinator,
   type Implementer,
+    type AdminUser,
   ImplementerRole,
   type OpsUser,
   type Prisma,
@@ -303,6 +304,7 @@ async function createCoreUsers(
   fellows: Fellow[],
   clinicalLeads: ClinicalLead[],
   operations: OpsUser[],
+  admins: AdminUser[],
   clinicalTeam: ClinicalTeam,
 ) {
   console.log("creating core users");
@@ -372,11 +374,6 @@ async function createCoreUsers(
   });
 
   const membershipData = users
-    .filter((user) => {
-      const role = userData.find((u) => u.id === user.id)
-        ?.role as ImplementerRole;
-      return role !== ImplementerRole.ADMIN;
-    })
     .map((user) => {
       const role = userData.find((u) => u.id === user.id)
         ?.role as ImplementerRole;
@@ -397,29 +394,14 @@ async function createCoreUsers(
                     ? faker.helpers.arrayElement(operations).id
                     : role === "CLINICAL_TEAM"
                     ? clinicalTeam.id
+                    : role === "ADMIN"
+                      ? faker.helpers.arrayElement(admins).id
                     : null,
       };
     });
 
-  const adminMembershipData = users
-    .filter((user) => {
-      const role = userData.find((u) => u.id === user.id)
-        ?.role as ImplementerRole;
-      return role === ImplementerRole.ADMIN;
-    })
-    .map((user) => {
-      const role = userData.find((u) => u.id === user.id)
-        ?.role as ImplementerRole;
-      return implementers.map((implementer) => ({
-        userId: user.id,
-        implementerId: implementer.id,
-        role,
-        identifier: null,
-      }));
-    });
-
   await db.implementerMember.createMany({
-    data: [...membershipData, ...adminMembershipData.flat()],
+    data: membershipData.flat(),
   });
 
   const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
@@ -487,6 +469,72 @@ async function createCoreUsers(
   ]);
 }
 
+async function createAdminUsers(
+  implementers: Implementer[],
+  emails: Set<string>,
+) {
+  console.log("creating admin users");
+
+  // create admin user for all implementers
+  const adminUsers = [
+    {
+      id: objectId("user"),
+      email: "admin@shamiri.institute",
+      adminName: "Super Admin",
+      implementers: implementers.map((implementer) => implementer.id),
+    },
+  ];
+
+  // create admin per implementer
+  const userData = implementers.map((implementer) => ({
+    id: objectId("user"),
+    email: implementer.pointPersonEmail,
+    adminName: implementer.implementerName,
+    implementers: [implementer.id],
+  }));
+
+  const adminData = [
+    ...userData,
+    ...adminUsers,
+  ];
+
+  // create admin profiles
+  const createdAdminUsers = await db.adminUser.createManyAndReturn({
+    data: adminData.map((user) => ({
+      id: objectId("admin"),
+      email: user.email,
+      adminName: user.adminName,
+    })) as Prisma.AdminUserCreateManyInput[],
+  });
+
+  const createdUsers = await db.user.createManyAndReturn({
+    data: adminData.map((user) => ({
+      id: user.id,
+      email: user.email,
+      name: user.adminName,
+    })),
+  });
+
+  // Create membership records
+  const membershipData = adminData.map((user) => {
+    return user.implementers.map((implementer) => ({
+      userId: user.id,
+      implementerId: implementer,
+      role: ImplementerRole.ADMIN,
+      identifier: createdAdminUsers.find((u) => u.email === user.email)?.id!,
+    }));
+  });
+
+  await db.implementerMember.createMany({
+    data: membershipData.flat(),
+  });
+
+  // Add admin emails to set
+  createdUsers.forEach((user) => emails.add(user.email!));
+
+  return createdAdminUsers;
+}
+
 async function createHubCoordinators(
   hubs: Hub[],
   implementers: Implementer[],
@@ -549,7 +597,7 @@ async function createHubCoordinators(
   }));
 
   // Create users in database
-  const createdUsers = await db.user.createMany({
+  const createdUsers = await db.user.createManyAndReturn({
     data: staticUsers,
   });
 
@@ -1501,6 +1549,7 @@ async function main() {
 
   const userEmailSet = new Set<string>();
 
+  const admins = await createAdminUsers(implementers, userEmailSet);
   const hubs = await createHubs(projects, implementers);
   const hubCoordinators = await createHubCoordinators(hubs, implementers, userEmailSet);
   const supervisors = await createSupervisors(hubs, 6, implementers, userEmailSet);
@@ -1519,6 +1568,7 @@ async function main() {
     clinicalLeads,
     operations,
     clinicalTeam,
+    admins
   );
 
   const schools = await createSchools(hubs, supervisors);

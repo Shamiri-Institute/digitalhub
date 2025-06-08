@@ -1,7 +1,8 @@
 "use server";
 
 import { ImplementerRole } from "@prisma/client";
-import { getCurrentUser } from "#/app/auth";
+import { JWTMembership } from "#/app/api/auth/[...nextauth]/route";
+import { CurrentAdminUser, getCurrentUser } from "#/app/auth";
 import type { Personnel } from "#/components/common/dev-personnel-switcher";
 import { db } from "#/lib/db";
 
@@ -136,30 +137,35 @@ export async function fetchPersonnel() {
   return { personnel, activePersonnelId };
 }
 
-export async function fetchImplementerPersonnel() {
+export async function fetchImplementerPersonnel(membership: JWTMembership) {
   const user = await getCurrentUser();
   if (!user) {
-    return null;
+    throw new Error("User not found");
   }
-  
-  const { membership } = user;
-  
-  const implementerMembers = await db
-      .implementerMember.findMany({
-        where: {
-          implementerId: membership.implementerId,
-        },
-        include: {
-          user: true,
-        },
-      });
-      console.log(implementerMembers)
 
-  const admins: Personnel[] = implementerMembers.filter((member) => member.role === ImplementerRole.ADMIN).map((member) => ({
-    id: member.id.toString(),
-    role: ImplementerRole.ADMIN,
-      label: `${member.user.name}`,
-  }));
+  const implementerMembers = await db.implementerMember.findMany({
+    where: {
+      implementerId: membership.implementerId,
+    },
+    include: {
+      user: true,
+    },
+  });
+
+    const admins: Personnel[] = (
+      await db.adminUser.findMany({
+        orderBy: { adminName: "asc" },
+        where: {
+          id: {
+            in: implementerMembers.map((member) => member.identifier || ""),
+          },
+        },
+      })
+    ).map((admin) => ({
+      id: admin.id,
+      role: ImplementerRole.ADMIN,
+      label: `${admin.adminName}`,
+    }));
 
   const supervisors: Personnel[] = (
     await db.supervisor.findMany({
@@ -290,9 +296,29 @@ export async function fetchImplementerPersonnel() {
     ...opsUsers,
   ];
 
-  const activePersonnelId = membership.id.toString() || "";
+  const activePersonnelId = membership.identifier || "";
 
   return { personnel, activePersonnelId };
 }
 
-export type ImplementerPersonnel = Awaited<ReturnType<typeof fetchImplementerPersonnel>>
+export type ImplementerPersonnel = Awaited<
+  ReturnType<typeof fetchImplementerPersonnel>
+>;
+
+export async function fetchPersonnelMemberships(membership: JWTMembership) {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const memberships = await db.implementerMember.findMany({
+    where: {
+      identifier: membership.identifier,
+    },
+    include: {
+      implementer: true,
+    },
+    distinct: ['implementerId'],
+  });
+  return memberships;
+}

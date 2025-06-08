@@ -189,7 +189,6 @@ const authOptions: AuthOptions = {
         }
       } else if (trigger === "update" && session?.user) {
         token.activeMembership = session.user.activeMembership;
-        token.memberships = session.user.memberships;
       }
 
       return token;

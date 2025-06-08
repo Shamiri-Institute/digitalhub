@@ -1,5 +1,6 @@
 "use client";
 
+import { getCurrentUser } from "#/app/auth";
 import { Button } from "#/components/ui/button";
 import {
   Command,
@@ -7,12 +8,14 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandSeparator,
 } from "#/components/ui/command";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "#/components/ui/popover";
+import { fetchPersonnelMemberships } from "#/lib/actions/fetch-personnel";
 import { cn } from "#/lib/utils";
 import { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
@@ -28,33 +31,50 @@ interface JWTMembership {
   identifier: string | null;
 }
 
-export function MembershipSwitcher() {
+export function MembershipSwitcher({
+  loading,
+  setLoading,
+}: {
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
+}) {
   const { data: session, update } = useSession();
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
+  const [memberships, setMemberships] = useState<JWTMembership[]>(session?.user?.memberships || []);
+
+  const { activeMembership } = session?.user || {};
 
   useEffect(() => {
-    console.log(session?.user.activeMembership);
-  }, [session]);
-
-  if (!session?.user?.memberships || session.user.memberships.length <= 1) {
-    return null;
-  }
-
-  const { activeMembership, memberships } = session.user;
+    const getMemberships = async () => {
+      if (!activeMembership) {
+        return;
+      }
+      const memberships = await fetchPersonnelMemberships(activeMembership).then((memberships) => {
+        return memberships.map((membership) => ({
+          id: membership.id,
+          implementerId: membership.implementer.id,
+          identifier: membership.identifier,
+          implementerName: membership.implementer.implementerName,
+          role: membership.role,
+        }));
+      });
+      setMemberships(memberships);
+    };
+    getMemberships();
+  }, [session, activeMembership]);
 
   const handleMembershipChange = async (membership: JWTMembership) => {
     if (activeMembership?.id === membership.id) return;
 
     setLoading(true);
     try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       await update({
         user: {
           ...session?.user,
           activeMembership: membership,
         },
+        trigger: "update",
       });
 
       // Force a hard refresh to ensure the new session is picked up
@@ -73,8 +93,8 @@ export function MembershipSwitcher() {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="-mt-1 w-full justify-between bg-white px-2 text-left"
-          disabled={loading}
+          className="-mt-1 w-full min-w-[200px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
+          disabled={loading || !activeMembership}
         >
           <div className="flex flex-col items-start">
             <span className="text-base font-medium">
@@ -88,6 +108,10 @@ export function MembershipSwitcher() {
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
+          <span className="text-[9px] tracking-widest pt-2 pb-1 px-4 uppercase text-muted-foreground">
+            switch implementer
+          </span>
+          <CommandSeparator />
           <CommandInput placeholder="Search implementers..." className="h-9" />
           <CommandEmpty>No implementers found.</CommandEmpty>
           <CommandGroup className="max-h-[300px] overflow-y-scroll">
@@ -99,7 +123,7 @@ export function MembershipSwitcher() {
                   handleMembershipChange(membership);
                   setOpen(false);
                 }}
-                className="flex items-center justify-between px-3"
+                className="flex items-center gap-3 justify-between rounded-none border-b border-gray-200 px-3 last:border-b-0"
               >
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
@@ -107,8 +131,8 @@ export function MembershipSwitcher() {
                       {membership.implementerName}
                     </span>
                   </div>
-                  <span className="text-[9px] uppercase tracking-widest text-muted-foreground">
-                    {membership.role}
+                  <span className="text-[9px] uppercase tracking-widest text-muted-foreground text-shamiri-new-blue">
+                    {membership.role.replace("_", " ")}
                   </span>
                 </div>
                 <CheckIcon

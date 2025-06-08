@@ -1,11 +1,18 @@
 "use client";
 
+import Link from "next/link";
+
+import { PersonnelTool } from "#/components/common/dev-personnel-switcher";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "#/components/ui/popover";
+import { APP_ENV, constants } from "#/lib/constants";
 import {
   BarChartIcon,
   CalendarIcon,
-  FeedbackIcon,
   GraduationCapIcon,
-  HelpIcon,
   NotificationIcon,
   PeopleIcon,
   PeopleIconAlternate,
@@ -17,25 +24,27 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, Home, Building2 } from "lucide-react";
+import { Building2, Menu } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import type React from "react";
 import { useEffect, useState } from "react";
 import type {
+  CurrentAdminUser,
   CurrentClinicalLead,
   CurrentClinicalTeam,
   CurrentFellow,
   CurrentHubCoordinator,
   CurrentOpsUser,
   CurrentSupervisor,
-  CurrentUser,
 } from "#/app/auth";
 import { PersonnelTool } from "#/components/common/dev-personnel-switcher";
+import { MembershipSwitcher } from "#/components/common/membership-switcher";
 import { ProfileDialog } from "#/components/common/profile/profile-dialog";
 import { Footer } from "#/components/footer";
 import { Header } from "#/components/header";
 import { Icons } from "#/components/icons";
 import { Navigation } from "#/components/navigation";
+import { RoleSwitcher } from "#/components/common/role-switcher";
 import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
@@ -50,9 +59,6 @@ import { APP_ENV, constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { MembershipSwitcher } from "#/components/common/membership-switcher";
-import { RoleSwitcher } from "#/components/common/role-switcher";
-import { ImplementerPersonnel } from "#/lib/actions/fetch-personnel";
 
 interface NavigationLinkProps {
   scheduleActive: boolean;
@@ -69,7 +75,6 @@ interface NavigationLinkProps {
 export function Layout({
   children,
   profile,
-  implementerMembers,
 }: {
   children: React.ReactNode;
   profile:
@@ -80,8 +85,8 @@ export function Layout({
     | CurrentOpsUser
     | CurrentClinicalTeam
     | CurrentUser
+    | CurrentAdminUser
     | null;
-  implementerMembers: ImplementerPersonnel | null;
 }) {
   const pathname = usePathname();
   const session = useSession();
@@ -92,7 +97,6 @@ export function Layout({
       avatarUrl={session.data?.user.image}
       pathname={pathname}
       profile={profile}
-      implementerMembers={implementerMembers}
     >
       {children}
     </LayoutV2>
@@ -105,7 +109,6 @@ function LayoutV2({
   avatarUrl,
   pathname,
   profile,
-  implementerMembers,
 }: {
   children: React.ReactNode;
   userName: string;
@@ -117,10 +120,10 @@ function LayoutV2({
     | CurrentFellow
     | CurrentClinicalLead
     | CurrentOpsUser
+    | CurrentAdminUser
     | CurrentUser
     | CurrentClinicalTeam
     | null;
-  implementerMembers: ImplementerPersonnel | null;
 }) {
   const [mainRoute, subRoute] = pathname.slice(1).split("/"); // get the path under the 'hc' route. fix this when we add other roles
   const schoolsActive = subRoute?.includes("schools");
@@ -135,6 +138,7 @@ function LayoutV2({
   const inactiveColour = "#969696";
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -145,10 +149,10 @@ function LayoutV2({
     return (
       <div className={className}>
         <div className="nav-link">
-          <MembershipSwitcher />
+          <RoleSwitcher loading={loading} setLoading={setLoading} />
         </div>
         <div className="nav-link">
-          <RoleSwitcher implementerMembers={implementerMembers} />
+          <MembershipSwitcher loading={loading} setLoading={setLoading} />
         </div>
         <div className="nav-link">
           <PersonnelToolPopover>
@@ -187,7 +191,7 @@ function LayoutV2({
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-40 max-w-none divide-y">
-              {!pathname.startsWith("/ops/") &&  (
+              {!pathname.startsWith("/ops/") && (
                 <DropdownMenuItem
                   className="flex items-center gap-2"
                   onClick={() => {
@@ -273,7 +277,7 @@ function LayoutV2({
               </div>
             </div>
             <div className="hidden shrink-0 py-2 lg:flex">
-              {renderNavigationLinks("flex flex-row items-center gap-8")}
+              {renderNavigationLinks("flex flex-row items-center gap-4")}
             </div>
           </div>
           <div className="no-scrollbar flex items-center gap-8 overflow-x-auto px-2">
@@ -293,7 +297,7 @@ function LayoutV2({
         </div>
       </header>
       <main className="flex grow items-stretch overflow-x-hidden bg-background-secondary">
-        {/* {children} */}
+        {children}
       </main>
       <ProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} profile={profile} />
     </div>
@@ -358,23 +362,15 @@ function ReportingDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         <DropdownMenuItem asChild>
-          <Link
-            href={`/${mainRoute}/reporting`}
-          >
-            Expenses
+          <Link href={`/${mainRoute}/reporting`}>Expenses</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={`/${mainRoute}/reporting/school-reports`}>
+            School Reports
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-        <Link
-          href={`/${mainRoute}/reporting/school-reports`}
-        >
-          School Reports
-        </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link
-            href={`/${mainRoute}/reporting/fellow-reports`}
-          >
+          <Link href={`/${mainRoute}/reporting/fellow-reports`}>
             Fellow Reports
           </Link>
         </DropdownMenuItem>
@@ -417,12 +413,12 @@ function getCurrentUserNavigationLinks(
         <Link href={`/${mainRoute}/hubs`}>Hubs</Link>
       </div>,
       <div
-      className={`tab-link ${cn(supervisorsActive && "active")}`}
-      key="admin-supervisors"
-    >
-      <PeopleIcon />
-      <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
-    </div>,
+        className={`tab-link ${cn(supervisorsActive && "active")}`}
+        key="admin-supervisors"
+      >
+        <PeopleIcon />
+        <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
+      </div>,
       <div
         className={`tab-link ${cn(fellowsActive && "active")}`}
         key="admin-fellows"

@@ -31,6 +31,7 @@
     "db:studio": "dotenv -c development -- npx prisma studio",
     "db:dev:migrate": "dotenv -c development -- npx prisma migrate dev",
     "db:dev:migrate:reset": "dotenv -c development -- npx prisma migrate reset --force",
+    "db:dev:generate": "dotenv -c development -- npx prisma generate",
     "db:dev:types": "dotenv -c development -- npx prisma generate",
     "db:prod:shell": "dotenv -c development -- bash -c 'PGPASSWORD=${PROD_DBPASS} psql -h ${PROD_DBHOST} -p ${PROD_DBPORT} -U ${PROD_DBUSER} -d ${PROD_DBNAME}'",
     "db:prod:kill-sessions": "dotenv -c development -- bash -c 'DATABASE_NAME=${PROD_DBNAME} ./scripts/db/kill-sessions.sh'",

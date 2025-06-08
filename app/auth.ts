@@ -325,6 +325,32 @@ export async function currentOpsUser() {
   return { ...opsUser, user };
 }
 
+export type CurrentAdminUser = Awaited<ReturnType<typeof currentAdminUser>>;
+
+export async function currentAdminUser() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+
+  const { membership } = user;
+
+  const { identifier } = membership;
+  if (!identifier) {
+    return null;
+  }
+
+  const adminUser = await db.adminUser.findFirst({
+    where: { id: identifier },
+  });
+
+  if (!adminUser) {
+    return null;
+  }
+
+  return { ...adminUser, user };
+}
+
 export async function getCurrentUser() {
   const session = await getServerSession();
   if (!session) {
@@ -362,6 +388,7 @@ export async function getCurrentPersonnel(): Promise<
   | CurrentOpsUser
   | CurrentUser
   | CurrentClinicalTeam
+  | CurrentAdminUser
   | null
 > {
   const user = await getCurrentUser();
@@ -395,7 +422,7 @@ export async function getCurrentPersonnel(): Promise<
   }
 
   if (role === "ADMIN") {
-    return user;
+    return await currentAdminUser();
   }
 
   return null;
