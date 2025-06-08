@@ -3,7 +3,7 @@
 import { ImplementerRole } from "@prisma/client";
 import { JWTMembership } from "#/app/api/auth/[...nextauth]/route";
 import { CurrentAdminUser, getCurrentUser } from "#/app/auth";
-import type { Personnel } from "#/components/common/dev-personnel-switcher";
+import type { Personnel } from "#/lib/types/personnel";
 import { db } from "#/lib/db";
 
 export async function fetchPersonnel() {

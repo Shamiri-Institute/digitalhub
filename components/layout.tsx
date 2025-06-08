@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 
-import { PersonnelTool } from "#/components/common/dev-personnel-switcher";
 import {
   Popover,
   PopoverContent,
@@ -293,21 +292,6 @@ function LayoutV2({
       </main>
       <ProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} profile={profile} />
     </div>
-  );
-}
-
-function PersonnelToolPopover({ children }: { children: React.ReactNode }) {
-  if (APP_ENV !== "testing" && constants.NEXT_PUBLIC_ENV === "production") {
-    return null;
-  }
-
-  return (
-    <Popover>
-      <PopoverTrigger>{children}</PopoverTrigger>
-      <PopoverContent className="-m-px p-0 shadow-none" align="start">
-        <PersonnelTool />
-      </PopoverContent>
-    </Popover>
   );
 }
 

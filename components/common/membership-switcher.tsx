@@ -1,5 +1,6 @@
 "use client";
 
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { getCurrentUser } from "#/app/auth";
 import { Button } from "#/components/ui/button";
 import {
@@ -19,7 +20,7 @@ import { fetchPersonnelMemberships } from "#/lib/actions/fetch-personnel";
 import { cn } from "#/lib/utils";
 import { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -38,6 +39,7 @@ export function MembershipSwitcher({
   loading: boolean;
   setLoading: (loading: boolean) => void;
 }) {
+  const pathname = usePathname();
   const { data: session, update } = useSession();
   const [open, setOpen] = useState(false);
   const [memberships, setMemberships] = useState<JWTMembership[]>(session?.user?.memberships || []);
@@ -73,14 +75,11 @@ export function MembershipSwitcher({
       await new Promise((resolve) => setTimeout(resolve, 1000));
       await update({
         user: {
-          ...session?.user,
           activeMembership: membership,
         },
-        trigger: "update",
       });
 
-      // Force a hard refresh to ensure the new session is picked up
-      window.location.reload();
+      revalidatePageAction(pathname);
     } catch (error) {
       console.error("Failed to switch membership:", error);
     } finally {

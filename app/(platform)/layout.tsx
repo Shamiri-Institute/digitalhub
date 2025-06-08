@@ -16,7 +16,6 @@ export default async function PlatformLayout({
   children: React.ReactNode;
 }) {
   const profile = await getCurrentPersonnel();
-  console.log("memberships", profile?.user.user.memberships);
 
   return <Layout profile={profile}>{children}</Layout>;
 }

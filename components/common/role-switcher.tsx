@@ -1,6 +1,7 @@
 "use client";
 
-import { Personnel } from "#/components/common/dev-personnel-switcher";
+import { selectPersonnel } from "#/app/actions";
+import { Personnel } from "#/lib/types/personnel";
 import { Button } from "#/components/ui/button";
 import {
   Command,
@@ -22,7 +23,7 @@ import {
 import { cn } from "#/lib/utils";
 import { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 interface JWTMembership {
@@ -62,19 +63,8 @@ export function RoleSwitcher({
   const handleRoleChange = async (member: Personnel) => {
     setLoading(true);
     try {
-      await update({
-        user: {
-          ...session?.user,
-          activeMembership: {
-            ...activeMembership,
-            role: member.role,
-            identifier: member.id,
-          },
-        },
-      });
-
-      // Force a hard refresh to ensure the new session is picked up
-      window.location.reload();
+      await selectPersonnel({ identifier: member.id, role: member.role });
+      signOut({ callbackUrl: "/login" });
     } catch (error) {
       console.error("Failed to switch role:", error);
     } finally {
