@@ -196,13 +196,13 @@ export function SessionDetail({
             "border-green-border": completed,
             "border-blue-border": !completed,
             "border-red-border": cancelled,
-            "border-shamiri-text-dark-grey/30": rescheduled,
+            "border-shamiri-text-dark-grey/30": rescheduled && !session.occurred,
           },
           {
             "bg-green-bg": completed,
             "bg-blue-bg": !completed,
             "bg-red-bg": cancelled,
-            "bg-shamiri-light-grey/60": rescheduled,
+            "bg-shamiri-light-grey/60": rescheduled && !session.occurred,
           },
         )}
       >
