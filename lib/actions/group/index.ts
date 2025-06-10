@@ -135,8 +135,10 @@ export async function submitGroupEvaluation(
     } = StudentGroupEvaluationSchema.parse(data);
     const result = await db.interventionGroupReport.upsert({
       where: {
-        groupId,
-        sessionId,
+        sessionId_groupId: {
+          sessionId,
+          groupId,
+        },
       },
       create: {
         id: objectId("ige"),

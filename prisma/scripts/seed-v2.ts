@@ -1203,6 +1203,7 @@ async function createInterventionGroups(
       schoolId: staticSchool!.id,
       leaderId: fellow.id,
       projectId: staticSchool!.hub?.projectId as string,
+      groupType: Math.random() > 0.95 ? "TREATMENT" : "CONTROL",
     });
   });
 
@@ -1259,6 +1260,7 @@ async function createInterventionGroups(
         schoolId: school.id,
         leaderId: leader,
         projectId: school.hub?.projectId as string,
+        groupType: "TREATMENT",
       });
     }
   }
