@@ -1,6 +1,7 @@
 "use client";
 
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import RatingStarsInput from "#/components/common/rating-stars-input";
 import { SessionRatingsSchema } from "#/components/common/session/schema";
@@ -45,6 +46,7 @@ import React, {
 } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Session } from "./sessions-provider";
 export { useSession } from "next-auth/react";
 
 type FormInput = {
@@ -58,7 +60,7 @@ type FormInput = {
 };
 
 export default function SessionRatings({
-  selectedSessionId,
+  selectedSession,
   open,
   onOpenChange,
   mode,
@@ -67,7 +69,7 @@ export default function SessionRatings({
   supervisors,
   role,
 }: {
-  selectedSessionId: string;
+  selectedSession: Session;
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   mode?: "view" | "add";
@@ -91,12 +93,8 @@ export default function SessionRatings({
     };
   }>[];
 }) {
-  const { sessions, refresh } = useContext(SessionsContext);
-  const sessionRatings =
-    sessions.find((session) => {
-      return session.id === selectedSessionId;
-    })?.sessionRatings ?? [];
-
+  const { refresh } = useContext(SessionsContext);
+  const sessionRatings = selectedSession.sessionRatings;
   const rating =
     role === "SUPERVISOR"
       ? sessionRatings.find((_rating) => {
@@ -120,7 +118,7 @@ export default function SessionRatings({
     return {
       mode,
       ratingId: rating?.id,
-      sessionId: selectedSessionId,
+      sessionId: selectedSession.id,
       studentBehaviorRating: existingRating?.studentBehaviorRating ?? undefined,
       adminSupportRating: existingRating?.adminSupportRating ?? undefined,
       workloadRating: existingRating?.workloadRating ?? undefined,
@@ -155,7 +153,8 @@ export default function SessionRatings({
         return;
       }
 
-      refresh();
+      await refresh();
+      await revalidatePageAction(pathname);
       toast({
         description: response.message,
       });
@@ -211,7 +210,7 @@ export default function SessionRatings({
                     <FormItem className="space-y-2">
                       <FormLabel>
                         Select session {mode === "view" && " report"}
-                        <span className="text-shamiri-light-red">*</span>
+                        <span className="ml-1 text-shamiri-light-red">*</span>
                       </FormLabel>{" "}
                       <Select
                         defaultValue={field.value}
@@ -230,32 +229,38 @@ export default function SessionRatings({
                         </FormControl>
                         <SelectContent className="max-h-[200px]">
                           {sessionRatings.map((_rating) => {
-                            const session = sessions.find(
-                              (session) => session.id === _rating.sessionId,
-                            );
                             return (
                               <SelectItem key={_rating.id} value={_rating.id}>
                                 <span>
                                   {sessionDisplayName(
-                                    session?.session?.sessionName,
+                                    selectedSession?.session?.sessionName,
                                   )}
                                 </span>{" "}
                                 -{" "}
                                 <span>
-                                  {session?.sessionDate &&
-                                    format(session?.sessionDate, "dd MMM yyyy")}
-                                </span>{" "}
-                                -{" "}
-                                <span>
-                                  {session?.sessionDate &&
-                                    format(session?.sessionDate, "h:mm a")}
-                                </span>{" "}
-                                -{" "}
-                                <span>
-                                  {session?.sessionDate &&
+                                  {selectedSession?.sessionDate &&
                                     format(
-                                      session?.sessionEndTime ??
-                                        addHours(session?.sessionDate, 1),
+                                      selectedSession?.sessionDate,
+                                      "dd MMM yyyy",
+                                    )}
+                                </span>{" "}
+                                -{" "}
+                                <span>
+                                  {selectedSession?.sessionDate &&
+                                    format(
+                                      selectedSession?.sessionDate,
+                                      "h:mm a",
+                                    )}
+                                </span>{" "}
+                                -{" "}
+                                <span>
+                                  {selectedSession?.sessionDate &&
+                                    format(
+                                      selectedSession?.sessionEndTime ??
+                                        addHours(
+                                          selectedSession?.sessionDate,
+                                          1,
+                                        ),
                                       "h:mm a",
                                     )}
                                 </span>

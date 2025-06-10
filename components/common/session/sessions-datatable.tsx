@@ -4,7 +4,6 @@ import SupervisorAttendance, {
   SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
 import { columns, SessionData } from "#/components/common/session/columns";
@@ -121,12 +120,24 @@ export default function SessionsDatatable({
             <SessionRatings
               open={ratingsDialog}
               onOpenChange={setRatingsDialog}
-              mode="view"
-              selectedSessionId={session.id}
+              mode={
+                role === ImplementerRole.HUB_COORDINATOR
+                  ? "view"
+                  : role === ImplementerRole.SUPERVISOR
+                    ? "add"
+                    : undefined
+              }
+              selectedSession={session}
               role={role}
               supervisors={supervisors}
+              supervisorId={supervisorId}
             >
-              <DialogAlertWidget label={session.school.schoolName} />
+              <SessionDetail
+                state={{ session }}
+                layout={"compact"}
+                withDropdown={false}
+                role={role}
+              />
             </SessionRatings>
           )}
           <RescheduleSession
