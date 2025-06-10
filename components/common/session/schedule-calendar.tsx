@@ -566,15 +566,15 @@ function CalendarView({
       {session?.session?.sessionType === "INTERVENTION" &&
         session?.schoolId && (
           <SessionRatings
-            selectedSessionId={session?.id}
+            selectedSession={session}
             supervisorId={supervisorId}
             supervisors={supervisors}
             open={ratingsDialog}
             onOpenChange={setRatingsDialog}
             mode={
-              role === "HUB_COORDINATOR"
+              role === ImplementerRole.HUB_COORDINATOR
                 ? "view"
-                : role === "SUPERVISOR"
+                : role === ImplementerRole.SUPERVISOR
                   ? "add"
                   : undefined
             }
