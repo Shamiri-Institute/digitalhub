@@ -68,8 +68,8 @@ export const columns: ColumnDef<HubsWithSchools>[] = [
   },
   {
     accessorKey: "hubName",
-    header: "Hub Name",
-    id: "Hub Name",
+    header: "Hub name",
+    id: "Hub name",
   },
   {
     accessorKey: "implementer.implementerName",
@@ -78,16 +78,16 @@ export const columns: ColumnDef<HubsWithSchools>[] = [
   },
   {
     accessorKey: "coordinator",
-    header: "Hub Coordinator",
-    id: "Hub Coordinator",
+    header: "Hub coordinator",
+    id: "Hub coordinator",
     cell: ({ row }) => {
       return row.original.coordinators.length > 0 ? row.original.coordinators[0]?.coordinatorName : "";
     },
   },
   {
     accessorKey: "coordinator",
-    header: "Hub Coordinator Phone Number",
-    id: "Hub Coordinator Phone Number",
+    header: "Hub coordinator phone number",
+    id: "Hub coordinator phone number",
     cell: ({ row }) => {
       return row.original.coordinators.length > 0 ? RenderParsedPhoneNumber(row.original.coordinators[0]?.cellNumber ?? undefined) : "";
     },
