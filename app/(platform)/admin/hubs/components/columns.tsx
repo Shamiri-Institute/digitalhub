@@ -3,10 +3,10 @@
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
-import { Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { ChevronDown, ChevronUp, Link, MoreHorizontal } from "lucide-react";
+import HubDatatableMenu from "./hub-datatable-menu";
+import { Prisma } from "@prisma/client";
 
 export type HubsWithSchools = Prisma.HubGetPayload<{
   include: {
@@ -36,20 +36,13 @@ export type HubsWithSchools = Prisma.HubGetPayload<{
         implementerName: true;
       };
     };
-    coordinators: {
-      select: {
-        coordinatorName: true;
-        coordinatorEmail: true;
-        cellNumber: true;
-      };
-    };
+    coordinators: true;
     _count: {
       select: {
         fellows: true;
         supervisors: true;
       };
     };
-
   };
 }>;
 
@@ -108,22 +101,7 @@ export const columns: ColumnDef<HubsWithSchools>[] = [
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <div className="absolute inset-0 border-l">
-            <div className="flex h-full w-full items-center justify-center">
-              <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
-            </div>
-          </div>  
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem>
-            View hub coordinator
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    cell: ({ row }) => <HubDatatableMenu row={row.original} />,
     enableHiding: false,
   },
 ];
