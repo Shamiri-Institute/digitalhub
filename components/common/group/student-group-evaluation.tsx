@@ -199,6 +199,7 @@ export default function StudentGroupEvaluation({
     const response = await submitGroupEvaluation(data);
     if (!response.success) {
       toast({
+        variant: "destructive",
         description:
           response.message ??
           "Something went wrong during submission, please try again",
@@ -275,25 +276,27 @@ export default function StudentGroupEvaluation({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="max-h-[200px]">
-                        {sessions.map((session) => {
-                          return (
-                            <SelectItem key={session.id} value={session.id}>
-                              <span>
-                                {sessionDisplayName(
-                                  session.session?.sessionName,
-                                )}
-                              </span>{" "}
-                              -{" "}
-                              <span>
-                                {format(session.sessionDate, "dd MMM yyyy")}
-                              </span>{" "}
-                              -{" "}
-                              <span>
-                                {format(session.sessionDate, "h:mm a")}
-                              </span>{" "}
-                            </SelectItem>
-                          );
-                        })}
+                        {sessions
+                          .filter((session) => session.occurred)
+                          .map((session) => {
+                            return (
+                              <SelectItem key={session.id} value={session.id}>
+                                <span>
+                                  {sessionDisplayName(
+                                    session.session?.sessionName,
+                                  )}
+                                </span>{" "}
+                                -{" "}
+                                <span>
+                                  {format(session.sessionDate, "dd MMM yyyy")}
+                                </span>{" "}
+                                -{" "}
+                                <span>
+                                  {format(session.sessionDate, "h:mm a")}
+                                </span>{" "}
+                              </SelectItem>
+                            );
+                          })}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -325,7 +328,7 @@ export default function StudentGroupEvaluation({
                       key={input.section}
                       className="flex flex-col space-y-2 py-4"
                     >
-                      <div className="label">
+                      <div>
                         <span className="text-bold text-lg">
                           {input.section}
                         </span>{" "}
@@ -365,35 +368,29 @@ export default function StudentGroupEvaluation({
                             )}
                           />
                         ))}
-                        {mode !== "view" ? (
-                          <FormField
-                            control={form.control}
-                            name={
-                              input.commentsInputName as keyof typeof form.formState.defaultValues
-                            }
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Textarea
-                                    disabled={
-                                      existingEvaluation &&
-                                      updateWindowDuration === 0
-                                    }
-                                    className="resize-none"
-                                    {...field}
-                                  ></Textarea>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        ) : (
-                          <div className="rounded border bg-background-secondary px-4 py-2">
-                            {form.getValues(
-                              input.commentsInputName as keyof typeof form.formState.defaultValues,
-                            )}
-                          </div>
-                        )}
+                        <FormField
+                          control={form.control}
+                          name={
+                            input.commentsInputName as keyof typeof form.formState.defaultValues
+                          }
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Textarea
+                                  rows={mode === "view" ? 5 : 3}
+                                  disabled={
+                                    mode === "view" ||
+                                    (existingEvaluation &&
+                                      updateWindowDuration === 0)
+                                  }
+                                  className="resize-none"
+                                  {...field}
+                                ></Textarea>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </div>
                     </div>
                   );
