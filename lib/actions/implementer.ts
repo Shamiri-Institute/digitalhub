@@ -1,15 +1,15 @@
 "use server";
 
 import { currentAdminUser } from "#/app/auth";
+import { fetchPersonnelMemberships, PersonnelMembership } from "#/lib/actions/fetch-personnel";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
 
 export async function fetchImplementerStats(implementerId: string) {
   const admin = await currentAdminUser();
   if (admin === null) {
     throw new Error("Unauthorized");
   }
-  
+
   try {
     const stats = await db.$queryRaw<
       {
@@ -31,7 +31,7 @@ export async function fetchImplementerStats(implementerId: string) {
     return { success: true, data: stats[0] };
   } catch (error) {
     console.error("Error fetching implementer stats:", error);
-    return { success: false, message: "Error fetching implementer stats"};
+    return { success: false, message: "Error fetching implementer stats" };
   }
 }
 
@@ -45,15 +45,77 @@ export async function fetchImplementerSessionTypes(implementerId: string) {
     const sessionTypes = await db.sessionName.findMany({
       where: {
         hub: {
-          implementerId: implementerId
-        }
+          implementerId: implementerId,
+        },
       },
-      distinct: ['sessionName']
+      distinct: ["sessionName"],
     });
 
     return { success: true, data: sessionTypes };
   } catch (error) {
     console.error("Error fetching implementer session types:", error);
-    return { success: false, message: "Error fetching implementer session types" };
+    return {
+      success: false,
+      message: "Error fetching implementer session types",
+    };
   }
-} 
+}
+
+export async function fetchImplementerHubs(activeMembership: PersonnelMembership) {
+  const admin = await currentAdminUser();
+  if (admin === null) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const hubs = await db.hub.findMany({
+      where: {
+        implementerId: activeMembership.implementerId,
+      },
+      include: {
+        schools: {
+          include: {
+            assignedSupervisor: true,
+            interventionSessions: {
+              include: {
+                sessionRatings: true,
+                session: true,
+              },
+            },
+            students: {
+              include: {
+                assignedGroup: true,
+                _count: {
+                  select: {
+                    clinicalCases: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        implementer: true,
+        coordinators: true,
+        _count: {
+          select: {
+            fellows: {
+              where: {
+                droppedOut: false || null,
+              },
+            },
+            supervisors: {
+              where: {
+                droppedOut: false || null,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return { success: true, data: hubs };
+  } catch (error) {
+    console.error("Error fetching implementer hubs:", error);
+    return { success: false, message: "Error fetching implementer hubs" };
+  }
+}

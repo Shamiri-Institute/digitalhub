@@ -6,4 +6,4 @@ export type Personnel = {
   label: string;
   hub?: string;
   project?: string;
-}; 
+};

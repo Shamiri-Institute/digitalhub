@@ -4,7 +4,6 @@ import { useSearchParams } from "next/navigation";
 import type * as React from "react";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
-import { cn, sessionDisplayName } from "#/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,8 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import type { Session } from "./sessions-provider";
+import { cn, sessionDisplayName } from "#/lib/utils";
 import Link from "next/link";
+import type { Session } from "./sessions-provider";
 
 export function SessionList({
   sessions,
@@ -93,7 +93,10 @@ export function SessionList({
                 + {moreSessions.length} more
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="p-2 min-w-72 max-h-[250px] overflow-auto" align="start">
+            <DropdownMenuContent
+              className="max-h-[250px] min-w-72 overflow-auto p-2"
+              align="start"
+            >
               <div className="flex flex-col gap-2">
                 {moreSessions.map((session, index) => {
                   return (
@@ -108,8 +111,8 @@ export function SessionList({
                       fellowId={fellowId}
                       supervisorId={supervisorId}
                     />
-                    );
-                  })}
+                  );
+                })}
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -178,80 +181,99 @@ export function SessionDetail({
 
   const renderSessionDetails = () => {
     return (
-      <div className={cn("relative", {
-        "h-[30px]": isCompact,
-        "h-full": isExpanded,
-      })}>
+      <div
+        className={cn("relative", {
+          "h-[30px]": isCompact,
+          "h-full": isExpanded,
+        })}
+      >
         {" "}
         <div
-        className={cn(
-          "w-full transition-all duration-75 ease-in-out select-none rounded-[0.25rem] border",
-          {"absolute left-0 top-0": isCompact},
-          {
-            "group px-2 py-1 hover:w-auto hover:z-50 hover:drop-shadow-md": withDropdown && onHover && isCompact,
-            "px-2 py-1": withDropdown && !onHover,
-            "px-4 py-2": !withDropdown,
-          },
-          {
-            "border-green-border": completed,
-            "border-blue-border": !completed,
-            "border-red-border": cancelled,
-            "border-shamiri-text-dark-grey/30": rescheduled && !session.occurred,
-          },
-          {
-            "bg-green-bg": completed,
-            "bg-blue-bg": !completed,
-            "bg-red-bg": cancelled,
-            "bg-shamiri-light-grey/60": rescheduled && !session.occurred,
-          },
-        )}
-      >
-        <div
-          className={cn("font-semibold", {
-            "text-[0.825rem]": withDropdown,
-            "text-base": !withDropdown,
-            "text-green-base": completed,
-            "text-blue-base": !completed,
-            "text-red-base": cancelled,
-            "text-shamiri-text-dark-grey": rescheduled && !session.occurred,
-          })}
+          className={cn(
+            "w-full select-none rounded-[0.25rem] border transition-all duration-75 ease-in-out",
+            { "absolute left-0 top-0": isCompact },
+            {
+              "group px-2 py-1 hover:z-50 hover:w-auto hover:drop-shadow-md":
+                withDropdown && onHover && isCompact,
+              "px-2 py-1": withDropdown && !onHover,
+              "px-4 py-2": !withDropdown,
+            },
+            {
+              "border-green-border": completed,
+              "border-blue-border": !completed,
+              "border-red-border": cancelled,
+              "border-shamiri-text-dark-grey/30":
+                rescheduled && !session.occurred,
+            },
+            {
+              "bg-green-bg": completed,
+              "bg-blue-bg": !completed,
+              "bg-red-bg": cancelled,
+              "bg-shamiri-light-grey/60": rescheduled && !session.occurred,
+            },
+          )}
         >
-          <div className="flex items-center gap-1">
-            {completed && !cancelled && (
-              <Icons.checkCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
-            )}
-            {!completed && !cancelled && !rescheduled && (
-              <Icons.helpCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
-            )}
-            {cancelled && <Icons.crossCircleFilled className="h-3.5 w-3.5 shrink-0" />}
-            {rescheduled && (
-              <Icons.calendarCheck2 className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
-            )}
+          <div
+            className={cn("font-semibold", {
+              "text-[0.825rem]": withDropdown,
+              "text-base": !withDropdown,
+              "text-green-base": completed,
+              "text-blue-base": !completed,
+              "text-red-base": cancelled,
+              "text-shamiri-text-dark-grey": rescheduled && !session.occurred,
+            })}
+          >
+            <div className="flex items-center gap-1">
+              {completed && !cancelled && (
+                <Icons.checkCircle
+                  className="h-3.5 w-3.5 shrink-0"
+                  strokeWidth={2.5}
+                />
+              )}
+              {!completed && !cancelled && !rescheduled && (
+                <Icons.helpCircle
+                  className="h-3.5 w-3.5 shrink-0"
+                  strokeWidth={2.5}
+                />
+              )}
+              {cancelled && (
+                <Icons.crossCircleFilled className="h-3.5 w-3.5 shrink-0" />
+              )}
+              {rescheduled && (
+                <Icons.calendarCheck2
+                  className="h-3.5 w-3.5 shrink-0"
+                  strokeWidth={2.5}
+                />
+              )}
+              {isExpanded && (
+                <div>{sessionDisplayName(session.session?.sessionName)}</div>
+              )}
+              {isCompact && (
+                <div className="flex gap-1 truncate">
+                  {sessionDisplayName(session.session?.sessionName)} -{" "}
+                  {timeLabels.startTimeLabel}
+                  <div className="truncate group-hover:text-foreground">
+                    - {schoolName}
+                  </div>
+                </div>
+              )}
+            </div>
             {isExpanded && (
-              <div>{sessionDisplayName(session.session?.sessionName)}</div>
-            )}
-            {isCompact && (
-              <div className="flex gap-1 truncate">
-                {sessionDisplayName(session.session?.sessionName)} -{" "}
-                {timeLabels.startTimeLabel}
-                <div className="truncate group-hover:text-foreground">- {schoolName}</div>
+              <div className="text-left">
+                <div className="truncate">{schoolName}</div>
+                <div>
+                  {timeLabels.durationLabel}
+                  <span className="invisible">t</span>
+                </div>
+                {session.status === "Rescheduled" && (
+                  <span className="font-medium text-shamiri-light-red">
+                    RESCHEDULED
+                  </span>
+                )}
               </div>
             )}
           </div>
-          {isExpanded && (
-            <div className="text-left">
-              <div className="truncate">{schoolName}</div>
-              <div>
-                {timeLabels.durationLabel}
-                <span className="invisible">t</span>
-              </div>
-              {session.status === "Rescheduled" && (
-                <span className="font-medium text-shamiri-light-red">RESCHEDULED</span>
-              )}
-            </div>
-          )}
         </div>
-      </div>
       </div>
     );
   };
@@ -304,6 +326,11 @@ export function SessionDropDown({
         <DropdownMenuSeparator />
         {role === ImplementerRole.ADMIN && (
           <>
+            <DropdownMenuItem>
+              <Link href={`/admin/schools/${session.school?.visibleId}`}>
+                View school
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
                 state.setSession && state.setSession(session);
@@ -415,7 +442,8 @@ export function SessionDropDown({
             </DropdownMenuItem>
           </>
         ) : null}
-        {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR ? (
+        {role === ImplementerRole.HUB_COORDINATOR ||
+        role === ImplementerRole.SUPERVISOR ? (
           <>
             <DropdownMenuItem
               onClick={() => {

@@ -1,11 +1,10 @@
 "use client";
 
-import { Separator } from "#/components/ui/separator";
-import { ScheduleHeader } from "./schedule-header";
+import { toast } from "#/components/ui/use-toast";
+import { fetchImplementerStats } from "#/lib/actions/implementer";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { fetchImplementerStats } from "#/lib/actions/implementer";
-import { toast } from "#/components/ui/use-toast";
+import { ScheduleHeader } from "./schedule-header";
 
 interface ImplementerStats {
   hub_count: number;
@@ -30,12 +29,14 @@ export function AdminScheduleHeader() {
       try {
         const data = await fetchImplementerStats(implementerId);
         if (data.success) {
-          setStats(data.data || { hub_count: 0, school_count: 0, student_count: 0 });
+          setStats(
+            data.data || { hub_count: 0, school_count: 0, student_count: 0 },
+          );
         } else {
           toast({
             description: data.message,
             variant: "destructive",
-          }); 
+          });
         }
       } catch (error) {
         console.error("Error loading stats:", error);
@@ -68,4 +69,4 @@ export function AdminScheduleHeader() {
       />
     </>
   );
-} 
+}

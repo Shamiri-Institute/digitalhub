@@ -69,7 +69,10 @@ export function SessionsProvider({
   const [loading, setLoading] = useState(true);
 
   const fetchSessions = async () => {
-    if((role === ImplementerRole.ADMIN && implementerId) || role !== ImplementerRole.ADMIN) {
+    if (
+      (role === ImplementerRole.ADMIN && implementerId) ||
+      role !== ImplementerRole.ADMIN
+    ) {
       setLoading(true);
       const fetchedSessions = await fetchInterventionSessions({
         hubId,

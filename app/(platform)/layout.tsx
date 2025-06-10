@@ -1,13 +1,4 @@
-import {
-  CurrentClinicalLead,
-  CurrentFellow,
-  CurrentHubCoordinator,
-  CurrentOpsUser,
-  CurrentSupervisor,
-  CurrentUser,
-  getCurrentPersonnel,
-  getCurrentUser,
-} from "#/app/auth";
+import { getCurrentPersonnel } from "#/app/auth";
 import { Layout } from "#/components/layout";
 
 export default async function PlatformLayout({

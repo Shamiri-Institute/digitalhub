@@ -50,7 +50,12 @@ import { ListView } from "./list-view";
 import { type Mode, ModeProvider, useMode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import { type Session, SessionsContext, SessionsProvider, useSessions } from "./sessions-provider";
+import {
+ type Session,
+  SessionsContext,
+  SessionsProvider,
+  useSessions,
+} from "./sessions-provider";
 import { TableView } from "./table-view";
 import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
@@ -197,7 +202,12 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   }
 
   return (
-    <SessionsProvider hubId={hubId} implementerId={implementerId} filters={filters} role={props.role}>
+    <SessionsProvider
+      hubId={hubId}
+      implementerId={implementerId}
+      filters={filters}
+      role={props.role}
+    >
       <ModeProvider defaultMode={mode as Mode}>
         <TitleProvider>
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
@@ -213,10 +223,9 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 <ScheduleFilterToggle sessionFilters={props.hubSessionTypes ?? []} />
               </FiltersContext.Provider>
             </div>
-            {(props.role === "HUB_COORDINATOR" ||
-              props.role === "SUPERVISOR") ? (
+            {props.role === "HUB_COORDINATOR" || props.role === "SUPERVISOR" ? (
               <div className="flex items-center gap-4">
-                <SessionsLoader/>
+                <SessionsLoader />
                 <CreateSessionButton
                   open={newScheduleDialog}
                   setDialogOpen={setNewScheduleDialog}
@@ -226,7 +235,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 />
               </div>
             ) : props.role === "ADMIN" ? (
-              <SessionsLoader/>
+              <SessionsLoader />
             ) : null}
           </div>
           <div className="mt-4 w-full">
@@ -264,11 +273,15 @@ function CreateSessionButton({
   hubSessionTypes?: Prisma.SessionNameGetPayload<{}>[];
   role: ImplementerRole;
 }) {
-  const {loading} = useSessions({});
+  const { loading } = useSessions({});
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button variant="brand" disabled={loading} className="flex items-center gap-2 text-base">
+        <Button
+          variant="brand"
+          disabled={loading}
+          className="flex items-center gap-2 text-base"
+        >
           <Icons.plusCircle className="h-4 w-4" />
           <span>Schedule a session</span>
         </Button>
@@ -301,28 +314,28 @@ function SessionsLoader() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center gap-2 text-shamiri-new-blue px-4">
+      <div className="flex items-center justify-center gap-2 px-4 text-shamiri-new-blue">
         {/* <Icons.spinner className="h-3.5 w-3.5 animate-spin" /> */}
         <svg
-        className="-ml-1 h-4 w-4 animate-spin"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        />
-      </svg>
+          className="-ml-1 h-4 w-4 animate-spin"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
         <span>Loading sessions</span>
       </div>
     );
@@ -384,7 +397,7 @@ function CalendarView({
   fellow?: CurrentFellow;
 }) {
   const { mode } = useMode();
-  const {loading} = useContext(SessionsContext);
+  const { loading } = useContext(SessionsContext);
   const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
     React.useState(false);
   const [fellowAttendanceDialog, setFellowAttendanceDialog] =

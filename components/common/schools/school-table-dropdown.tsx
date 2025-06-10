@@ -30,7 +30,7 @@ export default function SchoolTableDropdown({
       }}
     >
       <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l bg-white">
+        <div className="absolute inset-0 border-l">
           <div className="flex h-full w-full items-center justify-center">
             <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
           </div>

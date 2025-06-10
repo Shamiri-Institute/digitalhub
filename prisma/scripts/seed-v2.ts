@@ -373,32 +373,31 @@ async function createCoreUsers(
     })),
   });
 
-  const membershipData = users
-    .map((user) => {
-      const role = userData.find((u) => u.id === user.id)
-        ?.role as ImplementerRole;
-      return {
-        userId: user.id,
-        implementerId: faker.helpers.arrayElement(implementers).id,
-        role,
-        identifier:
-          role === "HUB_COORDINATOR"
-            ? faker.helpers.arrayElement(hubCoordinators).id
-            : role === "SUPERVISOR"
-              ? faker.helpers.arrayElement(supervisors).id
-              : role === "FELLOW"
-                ? faker.helpers.arrayElement(fellows).id
-                : role === "CLINICAL_LEAD"
-                  ? faker.helpers.arrayElement(clinicalLeads).id
-                  : role === "OPERATIONS"
-                    ? faker.helpers.arrayElement(operations).id
-                    : role === "CLINICAL_TEAM"
+  const membershipData = users.map((user) => {
+    const role = userData.find((u) => u.id === user.id)
+      ?.role as ImplementerRole;
+    return {
+      userId: user.id,
+      implementerId: faker.helpers.arrayElement(implementers).id,
+      role,
+      identifier:
+        role === "HUB_COORDINATOR"
+          ? faker.helpers.arrayElement(hubCoordinators).id
+          : role === "SUPERVISOR"
+            ? faker.helpers.arrayElement(supervisors).id
+            : role === "FELLOW"
+              ? faker.helpers.arrayElement(fellows).id
+              : role === "CLINICAL_LEAD"
+                ? faker.helpers.arrayElement(clinicalLeads).id
+                : role === "OPERATIONS"
+                  ? faker.helpers.arrayElement(operations).id
+                  : role === "CLINICAL_TEAM"
                     ? clinicalTeam.id
                     : role === "ADMIN"
-                      ? faker.helpers.arrayElement(admins).id
+                    ? faker.helpers.arrayElement(admins).id
                     : null,
-      };
-    });
+    };
+  });
 
   await db.implementerMember.createMany({
     data: membershipData.flat(),
@@ -493,10 +492,7 @@ async function createAdminUsers(
     implementers: [implementer.id],
   }));
 
-  const adminData = [
-    ...userData,
-    ...adminUsers,
-  ];
+  const adminData = [...userData, ...adminUsers];
 
   // create admin profiles
   const createdAdminUsers = await db.adminUser.createManyAndReturn({
@@ -1568,7 +1564,7 @@ async function main() {
     clinicalLeads,
     operations,
     clinicalTeam,
-    admins
+    admins,
   );
 
   const schools = await createSchools(hubs, supervisors);

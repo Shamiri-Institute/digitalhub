@@ -3,19 +3,12 @@
 import Link from "next/link";
 
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
-import { APP_ENV, constants } from "#/lib/constants";
-import {
   BarChartIcon,
   CalendarIcon,
   GraduationCapIcon,
   NotificationIcon,
   PeopleIcon,
   PeopleIconAlternate,
-  RoleIcon,
   SchoolIcon,
   SignOutIcon,
 } from "components/icons";
@@ -69,6 +62,7 @@ interface NavigationLinkProps {
   reportingActive: boolean;
   popoverOpen: boolean;
   setPopoverOpen: (open: boolean) => void;
+  hubsActive: boolean;
 }
 
 export function Layout({
@@ -132,6 +126,7 @@ function LayoutV2({
   const studentsActive = subRoute?.includes("student");
   const reportingActive = subRoute?.includes("reporting");
   const clinicalActive = subRoute?.includes("clinical");
+  const hubsActive = subRoute?.includes("hubs");
 
   const activeColor = "#0085FF";
   const inactiveColour = "#969696";
@@ -283,6 +278,7 @@ function LayoutV2({
                 reportingActive: reportingActive ?? false,
                 popoverOpen: popoverOpen,
                 setPopoverOpen: setPopoverOpen,
+                hubsActive: hubsActive ?? false,
               })}
           </div>
         </div>
@@ -367,6 +363,7 @@ function getCurrentUserNavigationLinks(
     reportingActive,
     popoverOpen,
     setPopoverOpen,
+    hubsActive,
   }: NavigationLinkProps,
 ) {
   const links = [];
@@ -382,7 +379,7 @@ function getCurrentUserNavigationLinks(
         <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
       </div>,
       <div
-        className={`tab-link flex items-center gap-2 ${cn(supervisorsActive && "active")}`}
+        className={`tab-link flex items-center gap-2 ${cn(hubsActive && "active")}`}
         key="admin-hubs"
       >
         <Building2 className="h-4 w-4" strokeWidth={3} />

@@ -1,7 +1,6 @@
 "use client";
 
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { getCurrentUser } from "#/app/auth";
 import { Button } from "#/components/ui/button";
 import {
   Command,
@@ -20,8 +19,8 @@ import { fetchPersonnelMemberships } from "#/lib/actions/fetch-personnel";
 import { cn } from "#/lib/utils";
 import { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
-import { signOut, useSession } from "next-auth/react";
-import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface JWTMembership {
@@ -42,7 +41,9 @@ export function MembershipSwitcher({
   const pathname = usePathname();
   const { data: session, update } = useSession();
   const [open, setOpen] = useState(false);
-  const [memberships, setMemberships] = useState<JWTMembership[]>(session?.user?.memberships || []);
+  const [memberships, setMemberships] = useState<JWTMembership[]>(
+    session?.user?.memberships || [],
+  );
 
   const { activeMembership } = session?.user || {};
 
@@ -52,7 +53,9 @@ export function MembershipSwitcher({
       if (!activeMembership) {
         return;
       }
-      const memberships = await fetchPersonnelMemberships(activeMembership).then((memberships) => {
+      const memberships = await fetchPersonnelMemberships(
+        activeMembership,
+      ).then((memberships) => {
         return memberships.map((membership) => ({
           id: membership.id,
           implementerId: membership.implementer.id,
@@ -109,7 +112,7 @@ export function MembershipSwitcher({
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
-          <span className="text-[9px] tracking-widest pt-2 pb-1 px-4 uppercase text-muted-foreground">
+          <span className="px-4 pb-1 pt-2 text-[9px] uppercase tracking-widest text-muted-foreground">
             switch implementer
           </span>
           <CommandSeparator />
@@ -124,7 +127,7 @@ export function MembershipSwitcher({
                   handleMembershipChange(membership);
                   setOpen(false);
                 }}
-                className="flex items-center gap-3 justify-between rounded-none border-b border-gray-200 px-3 last:border-b-0"
+                className="flex items-center justify-between gap-3 rounded-none border-b border-gray-200 px-3 last:border-b-0"
               >
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">

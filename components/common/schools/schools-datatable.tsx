@@ -4,11 +4,14 @@ import type { ImplementerRole } from "@prisma/client";
 import { Plus } from "lucide-react";
 import { useContext } from "react";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
-import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
-import { columns } from "#/components/common/schools/columns";
+import { columns, SchoolsTableData } from "#/components/common/schools/columns";
 import SchoolDetailsForm from "#/components/common/schools/school-details-form";
 import SchoolsDataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
+import { cn } from "#/lib/utils";
+import { ImplementerRole } from "@prisma/client";
+import { Plus } from "lucide-react";
+import { useContext } from "react";
 
 const schoolsCSVHeaders = [
   "school_name",
@@ -39,9 +42,20 @@ export const handleSchoolsCSVTemplateDownload = () => {
   link.click();
 };
 
-export default function SchoolsDatatable({ role }: { role: ImplementerRole }) {
+export default function SchoolsDatatable({
+  role,
+  schools,
+  disablePagination = false,
+  isSubComponent = false,
+  className,
+}: {
+  role: ImplementerRole;
+  schools: SchoolsTableData[];
+  disablePagination?: boolean;
+  isSubComponent?: boolean;
+  className?: string;
+}) {
   // TODO: Refactor this component to not use context
-  const schoolsContext = useContext(SchoolsDataContext);
   const schoolInfoContext = useContext(SchoolInfoContext);
 
   const renderTableActions = () => {
@@ -63,12 +77,13 @@ export default function SchoolsDatatable({ role }: { role: ImplementerRole }) {
       )
     );
   };
+
   return (
     <SchoolsDataTable
-      data={schoolsContext.schools}
+      data={schools}
       columns={columns({ role })}
       emptyStateMessage="No schools found for this hub"
-      className="data-table bg-white lg:mt-4"
+      className={cn("data-table bg-white lg:mt-4", className)}
       columnVisibilityState={{
         "School ID": false,
         "Sub - county": false,
@@ -79,6 +94,8 @@ export default function SchoolsDatatable({ role }: { role: ImplementerRole }) {
         "Point supervisor email": false,
       }}
       renderTableActions={renderTableActions()}
+      disablePagination={disablePagination}
+      isSubComponent={isSubComponent}
     />
   );
 }

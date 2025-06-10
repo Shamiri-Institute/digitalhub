@@ -1,22 +1,24 @@
 "use client";
 
-import { ScheduleCalendar } from "./schedule-calendar";
+import { toast } from "#/components/ui/use-toast";
+import { fetchImplementerSessionTypes } from "#/lib/actions/implementer";
+import { Prisma } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { Prisma } from "@prisma/client";
-import { fetchImplementerSessionTypes } from "#/lib/actions/implementer";
-import { toast } from "#/components/ui/use-toast";
+import { ScheduleCalendar } from "./schedule-calendar";
 
 export function AdminScheduleCalendar() {
   const { data: session } = useSession();
   const implementerId = session?.user?.activeMembership?.implementerId;
-  const [hubSessionTypes, setHubSessionTypes] = useState<Prisma.SessionNameGetPayload<{}>[]>([]);
+  const [hubSessionTypes, setHubSessionTypes] = useState<
+    Prisma.SessionNameGetPayload<{}>[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSessionTypes = async () => {
       if (!implementerId) return;
-      
+
       const result = await fetchImplementerSessionTypes(implementerId);
       if (result.success) {
         setHubSessionTypes(result.data || []);
@@ -43,4 +45,4 @@ export function AdminScheduleCalendar() {
       hubSessionTypes={hubSessionTypes}
     />
   );
-} 
+}

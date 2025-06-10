@@ -20,8 +20,8 @@ export async function fetchInterventionSessions({
   end?: Date;
   filters?: Filters;
 }) {
-  if(role === ImplementerRole.ADMIN) {
-    if(!implementerId) {
+  if (role === ImplementerRole.ADMIN) {
+    if (!implementerId) {
       throw new Error("No implementer ID provided for admin");
     }
   } else {

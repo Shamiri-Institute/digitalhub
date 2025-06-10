@@ -1,0 +1,129 @@
+"use client";
+
+import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
+import { Icons } from "#/components/icons";
+import { Button } from "#/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
+import { Prisma } from "@prisma/client";
+import { ColumnDef } from "@tanstack/react-table";
+import { ChevronDown, ChevronUp, Link, MoreHorizontal } from "lucide-react";
+
+export type HubsWithSchools = Prisma.HubGetPayload<{
+  include: {
+    schools: {
+      include: {
+        assignedSupervisor: true;
+        interventionSessions: {
+          include: {
+            sessionRatings: true;
+            session: true;
+          };
+        };
+        students: {
+          include: {
+            assignedGroup: true;
+            _count: {
+              select: {
+                clinicalCases: true;
+              };
+            };
+          };
+        };
+      };
+    };
+    implementer: {
+      select: {
+        implementerName: true;
+      };
+    };
+    coordinators: {
+      select: {
+        coordinatorName: true;
+        coordinatorEmail: true;
+        cellNumber: true;
+      };
+    };
+    _count: {
+      select: {
+        fellows: true;
+        supervisors: true;
+      };
+    };
+
+  };
+}>;
+
+export const columns: ColumnDef<HubsWithSchools>[] = [
+  {
+    id: "checkbox",
+    cell: ({ row }) => {
+      return (
+        <button
+          onClick={row.getToggleExpandedHandler()}
+          className="cursor-pointer px-4 py-2"
+        >
+          {row.getIsExpanded() ? (
+            <ChevronUp className="h-4 w-4" />
+          ) : (
+            <ChevronDown className="h-4 w-4" />
+          )}
+        </button>
+      );
+    },
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "hubName",
+    header: "Hub Name",
+    id: "Hub Name",
+  },
+  {
+    accessorKey: "implementer.implementerName",
+    header: "Implementer",
+    id: "Implementer",
+  },
+  {
+    accessorKey: "coordinator",
+    header: "Hub Coordinator",
+    id: "Hub Coordinator",
+    cell: ({ row }) => {
+      return row.original.coordinators.length > 0 ? row.original.coordinators[0]?.coordinatorName : "";
+    },
+  },
+  {
+    accessorKey: "coordinator",
+    header: "Hub Coordinator Phone Number",
+    id: "Hub Coordinator Phone Number",
+    cell: ({ row }) => {
+      return row.original.coordinators.length > 0 ? RenderParsedPhoneNumber(row.original.coordinators[0]?.cellNumber ?? undefined) : "";
+    },
+  },
+  {
+    header: "Supervisors | Fellows",
+    id: "Supervisors | Fellows",
+    cell: ({ row }) => {
+      return `${row.original._count.supervisors} | ${row.original._count.fellows}`;
+    },
+  },
+  {
+    id: "button",
+    cell: ({ row }) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <div className="absolute inset-0 border-l">
+            <div className="flex h-full w-full items-center justify-center">
+              <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
+            </div>
+          </div>  
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem>
+            View hub coordinator
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+    enableHiding: false,
+  },
+];

@@ -1,10 +1,10 @@
 import { Separator } from "#/components/ui/separator";
 
-import PageFooter from "#/components/ui/page-footer";
-import { AdminScheduleHeader } from "../../../../components/common/session/admin-schedule-header";
-import { AdminScheduleCalendar } from "../../../../components/common/session/admin-schedule-calendar";
 import { currentAdminUser } from "#/app/auth";
+import PageFooter from "#/components/ui/page-footer";
 import { signOut } from "next-auth/react";
+import { AdminScheduleCalendar } from "../../../../components/common/session/admin-schedule-calendar";
+import { AdminScheduleHeader } from "../../../../components/common/session/admin-schedule-header";
 
 export default async function AdminSchedulePage() {
   const admin = await currentAdminUser();

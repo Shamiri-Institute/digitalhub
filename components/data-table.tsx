@@ -129,7 +129,12 @@ export default function DataTable<TData, TValue>({
 
   return (
     <div className="no-scrollbar overflow-hidden">
-      <div className="flex flex-col-reverse lg:flex-row lg:items-end lg:justify-between">
+      <div
+        className={cn(
+          "flex flex-col-reverse lg:flex-row lg:items-end lg:justify-between p-1",
+          isSubComponent ? "bg-background-secondary/50 p-2 shadow-inner" : "",
+        )}
+      >
         <div className="shrink-0">
           {table.getSelectedRowModel().rows.length > 0 && (
             <div className="flex w-full items-center justify-between gap-4 lg:w-auto">
@@ -206,7 +211,9 @@ export default function DataTable<TData, TValue>({
         ) : null}
         <Table
           className={cn(
-            !isSubComponent ? "rounded-lg lg:border lg:border-solid" : "",
+            !isSubComponent
+              ? "rounded-lg lg:border lg:border-solid"
+              : "lg:border-x-none rounded-none lg:border-none",
             "overflow-x-scroll",
             className,
           )}
@@ -247,7 +254,10 @@ export default function DataTable<TData, TValue>({
                 <Fragment key={row.id}>
                   <TableRow
                     id={row.id}
-                    className="text-sm font-medium leading-5 text-shamiri-text-dark-grey transition ease-in-out hover:bg-gray-100 data-[state=Selected]:bg-blue-bg"
+                    className={cn(
+                      "text-sm font-medium leading-5 text-shamiri-text-dark-grey transition ease-in-out hover:bg-shamiri-new-blue/5 data-[state=Selected]:bg-shamiri-new-blue/5",
+                      isSubComponent ? "bg-background-secondary/50" : "",
+                    )}
                     data-state={row.getIsSelected() && "Selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
@@ -255,7 +265,7 @@ export default function DataTable<TData, TValue>({
                         key={cell.id}
                         id={cell.id}
                         className={cn(
-                          "truncate border-y border-l",
+                          "truncate border-y border-l first:border-l-0",
                           cell.column.columnDef.id === "button" ||
                             cell.column.columnDef.id === "checkbox"
                             ? "relative cursor-pointer border-l-0 !p-0"

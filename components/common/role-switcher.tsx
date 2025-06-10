@@ -1,7 +1,6 @@
 "use client";
 
 import { selectPersonnel } from "#/app/actions";
-import { Personnel } from "#/lib/types/personnel";
 import { Button } from "#/components/ui/button";
 import {
   Command,
@@ -20,6 +19,7 @@ import {
   fetchImplementerPersonnel,
   ImplementerPersonnel,
 } from "#/lib/actions/fetch-personnel";
+import { Personnel } from "#/lib/types/personnel";
 import { cn } from "#/lib/utils";
 import { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
@@ -87,10 +87,12 @@ export function RoleSwitcher({
               {activeMembership ? (
                 <div className="flex flex-row items-baseline gap-3">
                   <span className="font-medium">
-                    {implementerMembers?.personnel?.find(
-                          (member) =>
-                            member.id === implementerMembers.activePersonnelId,
-                        )?.label}
+                    {
+                      implementerMembers?.personnel?.find(
+                        (member) =>
+                          member.id === implementerMembers.activePersonnelId,
+                      )?.label
+                    }
                   </span>
                   <span className="text-xs uppercase tracking-widest text-shamiri-new-blue">
                     {" - "}
@@ -107,7 +109,7 @@ export function RoleSwitcher({
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
         <Command>
-          <span className="text-[9px] tracking-widest pt-2 pb-1 px-4 uppercase text-muted-foreground">
+          <span className="px-4 pb-1 pt-2 text-[9px] uppercase tracking-widest text-muted-foreground">
             select member to impersonate
           </span>
           <CommandSeparator />
@@ -131,7 +133,7 @@ export function RoleSwitcher({
                   handleRoleChange(member);
                   setOpen(false);
                 }}
-                className="flex items-center gap-3 justify-between rounded-none border-b px-3 last:border-b-0"
+                className="flex items-center justify-between gap-3 rounded-none border-b px-3 last:border-b-0"
               >
                 <div className="flex flex-col">
                   <div className="flex flex-col">

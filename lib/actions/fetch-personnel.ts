@@ -5,6 +5,8 @@ import { JWTMembership } from "#/app/api/auth/[...nextauth]/route";
 import { CurrentAdminUser, getCurrentUser } from "#/app/auth";
 import type { Personnel } from "#/lib/types/personnel";
 import { db } from "#/lib/db";
+import { Personnel } from "#/lib/types/personnel";
+import { ImplementerRole } from "@prisma/client";
 
 export async function fetchPersonnel() {
   const supervisors: Personnel[] = (
@@ -152,20 +154,20 @@ export async function fetchImplementerPersonnel(membership: JWTMembership) {
     },
   });
 
-    const admins: Personnel[] = (
-      await db.adminUser.findMany({
-        orderBy: { adminName: "asc" },
-        where: {
-          id: {
-            in: implementerMembers.map((member) => member.identifier || ""),
-          },
+  const admins: Personnel[] = (
+    await db.adminUser.findMany({
+      orderBy: { adminName: "asc" },
+      where: {
+        id: {
+          in: implementerMembers.map((member) => member.identifier || ""),
         },
-      })
-    ).map((admin) => ({
-      id: admin.id,
-      role: ImplementerRole.ADMIN,
-      label: `${admin.adminName}`,
-    }));
+      },
+    })
+  ).map((admin) => ({
+    id: admin.id,
+    role: ImplementerRole.ADMIN,
+    label: `${admin.adminName}`,
+  }));
 
   const supervisors: Personnel[] = (
     await db.supervisor.findMany({
