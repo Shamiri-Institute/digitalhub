@@ -36,9 +36,20 @@ const authOptions: AuthOptions = {
       if (account?.provider === "google") {
         const userExists = await db.user.findUnique({
           where: { email: user.email },
-          select: { name: true },
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
         });
-        if (userExists && !userExists.name) {
+
+        // Only allow sign in if user exists
+        if (!userExists) {
+          return false;
+        }
+
+        // Update user info if needed
+        if (!userExists.name) {
           await db.user.update({
             where: { email: user.email },
             data: {
