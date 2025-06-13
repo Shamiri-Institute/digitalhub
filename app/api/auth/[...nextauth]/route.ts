@@ -33,19 +33,35 @@ const authOptions: AuthOptions = {
       if (!user.email) {
         return false;
       }
+
       if (account?.provider === "google") {
         const userExists = await db.user.findUnique({
           where: { email: user.email },
-          select: { name: true },
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
         });
-        if (userExists && !userExists.name) {
-          await db.user.update({
-            where: { email: user.email },
-            data: {
-              name: profile?.name,
-              // @ts-expect-error - this is a bug in the types, `picture` is a valid on the `Profile` type
-              image: profile?.picture,
-              accounts: {
+
+        // Only allow sign in if user exists
+        if (!userExists) {
+          return false;
+        }
+
+        await db.user.update({
+          where: { email: user.email },
+          data: {
+            name: profile?.name ?? user.name,
+            image: profile?.image ?? user.image,
+            accounts: {
+              upsert: {
+                where: {
+                  provider_providerAccountId: {
+                    provider: "google",
+                    providerAccountId: account.providerAccountId,
+                  },
+                },
                 create: {
                   provider: "google",
                   type: "oauth",
@@ -58,10 +74,19 @@ const authOptions: AuthOptions = {
                   id_token: account.id_token,
                   session_state: account.session_state,
                 },
+                update: {
+                  refresh_token: account.refresh_token,
+                  access_token: account.access_token,
+                  expires_at: account.expires_at,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                  session_state: account.session_state,
+                },
               },
             },
-          });
-        }
+          },
+        });
         return true;
       }
       return false;
