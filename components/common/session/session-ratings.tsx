@@ -21,6 +21,7 @@ import {
   FormLabel,
   FormMessage,
 } from "#/components/ui/form";
+import { Input } from "#/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -125,6 +126,7 @@ export default function SessionRatings({
       recommendations: existingRating?.recommendations ?? "",
       challenges: existingRating?.challenges ?? "",
       positiveHighlights: existingRating?.positiveHighlights ?? "",
+      headcount: existingRating?.headcount ?? undefined,
     };
   }
 
@@ -142,30 +144,24 @@ export default function SessionRatings({
   }, [open, rating]);
 
   const onSubmit = async (data: z.infer<typeof SessionRatingsSchema>) => {
-    try {
-      const response = await submitSessionRatings(data);
-      if (!response.success) {
-        toast({
-          description:
-            response.message ??
-            "Something went wrong during submission, please try again",
-        });
-        return;
-      }
-
-      await refresh();
-      await revalidatePageAction(pathname);
+    const response = await submitSessionRatings(data);
+    if (!response.success) {
       toast({
-        description: response.message,
+        variant: "destructive",
+        description:
+          response.message ??
+          "Something went wrong during submission, please try again",
       });
-      form.reset();
-      onOpenChange(false);
-    } catch (error) {
-      console.error(error);
-      toast({
-        description: "Something went wrong during submission, please try again",
-      });
+      return;
     }
+
+    await refresh();
+    await revalidatePageAction(pathname);
+    toast({
+      description: response.message,
+    });
+    form.reset();
+    onOpenChange(false);
   };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -287,8 +283,36 @@ export default function SessionRatings({
                   )}
                 />
               )}
-              <div className="flex flex-col space-y-4 divide-y">
-                <div className="flex flex-col space-y-3 text-sm">
+              <div className="flex flex-col gap-4 divide-y">
+                <div className="flex flex-col space-y-3 pt-4 text-sm">
+                  <FormField
+                    control={form.control}
+                    name="headcount"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel>Student headcount</FormLabel>
+                        <Input
+                          type="number"
+                          placeholder="No of. students who attended"
+                          disabled={
+                            mode === "view" ||
+                            (existingRating && updateWindowDuration < 0)
+                          }
+                          {...field}
+                          onChange={(e) => {
+                            const value =
+                              e.target.value === ""
+                                ? undefined
+                                : Number(e.target.value);
+                            field.onChange(value);
+                          }}
+                        />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex flex-col space-y-3 pt-4 text-sm">
                   <FormField
                     control={form.control}
                     name="studentBehaviorRating"
