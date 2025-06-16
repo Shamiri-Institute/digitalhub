@@ -246,7 +246,19 @@ export async function submitSessionRatings(
       challenges,
       recommendations,
       sessionId,
+      headcount,
     } = SessionRatingsSchema.parse(data);
+
+    const session = await db.interventionSession.findFirstOrThrow({
+      where: { id: sessionId },
+      include: {
+        school: true,
+      },
+    });
+
+    if (session.school?.assignedSupervisorId !== supervisor.id) {
+      throw new Error(`You are not assigned to ${session.school?.schoolName}`);
+    }
 
     await db.interventionSessionRating.upsert({
       where: {
@@ -265,6 +277,7 @@ export async function submitSessionRatings(
         positiveHighlights,
         challenges,
         recommendations,
+        headcount,
       },
       update: {
         sessionId,
@@ -275,6 +288,7 @@ export async function submitSessionRatings(
         positiveHighlights,
         challenges,
         recommendations,
+        headcount,
       },
     });
 
@@ -284,7 +298,12 @@ export async function submitSessionRatings(
     };
   } catch (error: unknown) {
     console.error(error);
-    return { error: "Something went wrong while submitting session ratings" };
+    return {
+      success: false,
+      message:
+        (error as Error)?.message ??
+        "An error occurred while submitting session ratings.",
+    };
   }
 }
 
