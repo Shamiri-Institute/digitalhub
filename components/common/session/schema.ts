@@ -24,6 +24,7 @@ export const SessionRatingsSchema = z.object({
   positiveHighlights: z.string().optional(),
   challenges: z.string().optional(),
   recommendations: z.string().optional(),
+  headcount: z.number().optional(),
 });
 
 export const ScheduleNewSessionSchema = z
