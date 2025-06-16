@@ -1,37 +1,88 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import { Icons } from "#/components/icons";
+import {
+  Command,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "#/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "#/components/ui/popover";
+import { fetchImplementerSchools } from "#/lib/actions/implementer";
+import { cn } from "#/lib/utils";
+import { Prisma } from "@prisma/client";
+import { CheckIcon } from "@radix-ui/react-icons";
+import { ChevronsUpDown } from "lucide-react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
-import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
-import { Icons } from "#/components/icons";
-import { cn } from "#/lib/utils";
+import { useEffect, useState } from "react";
 
-export default function SchoolsBreadcrumb({ role }: { role: ImplementerRole }) {
-  const context = useContext(SchoolsDataContext);
+type School = Prisma.SchoolGetPayload<{
+  select: {
+    visibleId: true;
+    schoolName: true;
+    hub: {
+      select: {
+        hubName: true;
+      };
+    };
+  };
+}>;
+
+export default function SchoolsBreadcrumb() {
+  const { data: session } = useSession();
   const pathname = usePathname();
   const router = useRouter();
   const schoolVisibleId = pathname.split("/")[3];
-  const _school = context.schools.findIndex((school) => {
-    return school.visibleId === schoolVisibleId;
-  });
-  const [selectedSchoolIndex, setSelectedSchoolIndex] = useState(_school);
+
+  const [schools, setSchools] = useState<School[]>([]);
+  const selectedSchool = schools.find(
+    (school) => school.visibleId === schoolVisibleId,
+  );
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    const routeArray = pathname.split("/");
-    routeArray[3] = context.schools[selectedSchoolIndex]?.visibleId!;
-    router.push(routeArray.join("/"));
-  }, [selectedSchoolIndex]);
+  const role = session?.user?.activeMembership?.role;
+  const implementerId = session?.user?.activeMembership?.implementerId;
 
   useEffect(() => {
-    setLoading(false);
-  }, []);
+    const fetchSchools = async () => {
+      setLoading(true);
+      if (implementerId) {
+        const response = await fetchImplementerSchools(implementerId);
+        if (response.success && response.data) {
+          setSchools(response.data);
+        }
+      }
+      setLoading(false);
+    };
+    fetchSchools();
+  }, [implementerId]);
+
+  const handleSchoolSelect = (schoolVisibleId: string) => {
+    const routeArray = pathname.split("/");
+    routeArray[3] = schoolVisibleId;
+    router.replace(routeArray.join("/"));
+  };
+
+  useEffect(() => {
+    revalidatePageAction(pathname);
+  }, [pathname]);
+
+  const schoolIndex = schools.findIndex(
+    (school) => school.visibleId === schoolVisibleId,
+  );
+  const previousSchool = schools[schoolIndex - 1];
+  const nextSchool = schools[schoolIndex + 1];
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-x-5 text-shamiri-text-dark-grey">
         <div
           className="flex cursor-pointer items-center justify-center rounded-lg border p-3 hover:text-shamiri-new-blue hover:drop-shadow active:scale-95"
@@ -50,49 +101,108 @@ export default function SchoolsBreadcrumb({ role }: { role: ImplementerRole }) {
                   ? "/sc/schools"
                   : role === "FELLOW"
                     ? "/fel/schools"
-                    : "#"
+                    : role === "ADMIN"
+                      ? `/admin/hubs`
+                      : "#"
             }
             className="hover:text-shamiri-new-blue"
           >
-            Schools
+            {role === "ADMIN" ? "Hubs" : "Schools"}
           </Link>
+          {role === "ADMIN" && (
+            <>
+              <span>/</span>
+              <span className="text-shamiri-text-dark-grey">
+                {selectedSchool?.hub?.hubName}
+              </span>
+            </>
+          )}
           <span>/</span>
-          <span className="text-shamiri-text-dark-grey">
-            {context.schools[selectedSchoolIndex]?.schoolName}
-          </span>
+          <Popover>
+            <PopoverTrigger
+              asChild
+              className="flex cursor-pointer items-center gap-2"
+            >
+              <div className="flex items-center gap-2 text-shamiri-text-dark-grey">
+                {selectedSchool?.schoolName}
+                <ChevronsUpDown className="h-3.5 w-3.5 opacity-60" />
+              </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              {schools ? (
+                <Command>
+                  <span className="px-4 pb-1 pt-2 text-[9px] uppercase tracking-widest text-muted-foreground">
+                    switch school
+                  </span>
+                  <CommandSeparator />
+                  <CommandInput
+                    placeholder="Search schools..."
+                    className="h-9"
+                  />
+                  <CommandList className="max-h-[300px] overflow-y-scroll">
+                    {schools.map((school) => (
+                      <CommandItem
+                        key={school.visibleId}
+                        value={school.schoolName}
+                        onSelect={() => handleSchoolSelect(school.visibleId)}
+                        className="flex items-center justify-between gap-3 rounded-none border-b border-gray-200 px-3 last:border-b-0"
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {school.schoolName}
+                          </span>
+                          <span className="text-[9px] uppercase tracking-widest text-muted-foreground text-shamiri-new-blue">
+                            {school.hub?.hubName ?? "No Hub"}
+                          </span>
+                        </div>
+                        <CheckIcon
+                          className={cn(
+                            "h-4 w-4",
+                            selectedSchool?.visibleId === school.visibleId
+                              ? "opacity-100"
+                              : "opacity-0",
+                          )}
+                        />
+                      </CommandItem>
+                    ))}
+                  </CommandList>
+                </Command>
+              ) : null}
+            </PopoverContent>
+          </Popover>
           {loading && (
             <Icons.hourglass className="h-3.5 w-3.5 animate-bounce text-shamiri-new-blue" />
           )}
         </div>
-        <div className="hidden lg:flex">
-          <div
-            className={cn(
-              "arrow-button rounded-l-lg",
-              selectedSchoolIndex === 0 || loading ? "pointer-events-none opacity-50" : "",
-            )}
-            onClick={() => {
-              if (selectedSchoolIndex !== 0) {
-                setSelectedSchoolIndex(selectedSchoolIndex - 1);
-              }
-            }}
-          >
-            <Icons.arrowUp className="h-4 w-4" />
-          </div>
-          <div
-            className={cn(
-              "arrow-button rounded-r-lg",
-              selectedSchoolIndex === context.schools.length - 1
-                ? "pointer-events-none opacity-50"
-                : "",
-            )}
-            onClick={() => {
-              if (loading || selectedSchoolIndex !== context.schools.length - 1) {
-                setSelectedSchoolIndex(selectedSchoolIndex + 1);
-              }
-            }}
-          >
-            <Icons.arrowDown className="h-4 w-4" />
-          </div>
+      </div>
+      <div className="hidden lg:flex">
+        <div
+          className={cn(
+            "arrow-button rounded-l-lg",
+            schoolIndex === 0 ? "pointer-events-none opacity-50" : "",
+          )}
+          onClick={() => {
+            if (previousSchool && schoolIndex !== 0) {
+              handleSchoolSelect(previousSchool.visibleId);
+            }
+          }}
+        >
+          <Icons.arrowUp className="h-4 w-4" />
+        </div>
+        <div
+          className={cn(
+            "arrow-button rounded-r-lg",
+            schoolIndex === schools.length - 1
+              ? "pointer-events-none opacity-50"
+              : "",
+          )}
+          onClick={() => {
+            if (nextSchool) {
+              handleSchoolSelect(nextSchool.visibleId);
+            }
+          }}
+        >
+          <Icons.arrowDown className="h-4 w-4" />
         </div>
       </div>
     </div>

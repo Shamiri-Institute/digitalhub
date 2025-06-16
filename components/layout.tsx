@@ -126,7 +126,8 @@ function LayoutV2({
   const studentsActive = subRoute?.includes("student");
   const reportingActive = subRoute?.includes("reporting");
   const clinicalActive = subRoute?.includes("clinical");
-  const hubsActive = subRoute?.includes("hubs");
+  const hubsActive =
+    subRoute?.includes("hubs") || subRoute?.includes("schools");
 
   const activeColor = "#0085FF";
   const inactiveColour = "#969696";

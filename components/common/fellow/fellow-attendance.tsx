@@ -130,9 +130,9 @@ export default function FellowAttendance({
           <DialogContent className="w-3/4 max-w-none">
             <DialogHeader>
               <span className="text-xl font-bold">
-                {role === "HUB_COORDINATOR"
+                {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
                   ? "View fellow attendance"
-                  : role === "SUPERVISOR"
+                  : role === ImplementerRole.SUPERVISOR
                     ? "Mark fellow attendance"
                     : null}
               </span>
@@ -198,6 +198,7 @@ export default function FellowAttendance({
                   row.original.processedAt === null
                 }
                 session={session}
+                role={role}
                 editColumns={true}
               />
               <div className="flex justify-end gap-6">
@@ -226,6 +227,7 @@ export function FellowAttendanceDataTable({
   enableRowSelection,
   session,
   overrideColumns,
+  role,
 }: {
   data: FellowAttendancesTableData[];
   editColumns?: boolean;
@@ -240,6 +242,7 @@ export function FellowAttendanceDataTable({
     setAttendance: Dispatch<SetStateAction<FellowAttendancesTableData | undefined>>;
     setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   }) => ColumnDef<FellowAttendancesTableData>[];
+  role: ImplementerRole;
 }) {
   const [selectedRows, setSelectedRows] = useState<Row<FellowAttendancesTableData>[]>([]);
   const [attendance, setAttendance] = useState<FellowAttendancesTableData | undefined>();
@@ -286,9 +289,11 @@ export function FellowAttendanceDataTable({
         rowSelectionDescription="fellows"
         enableRowSelection={enableRowSelection}
         onRowSelectionChange={setSelectedRows}
-        renderTableActions={!overrideColumns && renderTableActions()}
+        renderTableActions={!overrideColumns && role === ImplementerRole.HUB_COORDINATOR && renderTableActions()}
         columnVisibilityState={{
-          "Group Type": false,
+          checkbox: role === ImplementerRole.ADMIN ? false : true,
+          button: role === ImplementerRole.ADMIN ? false : true,
+            "Group Type": false,
         }}
       />
       <MarkAttendance

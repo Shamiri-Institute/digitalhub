@@ -1,9 +1,5 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
-import { Plus } from "lucide-react";
-import { useContext } from "react";
-import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { columns, SchoolsTableData } from "#/components/common/schools/columns";
 import SchoolDetailsForm from "#/components/common/schools/school-details-form";
 import SchoolsDataTable from "#/components/data-table";
@@ -11,7 +7,7 @@ import { Button } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
 import { ImplementerRole } from "@prisma/client";
 import { Plus } from "lucide-react";
-import { useContext } from "react";
+import { useState } from "react";
 
 const schoolsCSVHeaders = [
   "school_name",
@@ -56,7 +52,11 @@ export default function SchoolsDatatable({
   className?: string;
 }) {
   // TODO: Refactor this component to not use context
-  const schoolInfoContext = useContext(SchoolInfoContext);
+  const [editDialog, setEditDialog] = useState(false);
+  const [school, setSchool] = useState<SchoolsTableData | null>(null);
+  const [pointSupervisorDialog, setPointSupervisorDialog] = useState(false);
+  const [schoolDropOutDialog, setSchoolDropOutDialog] = useState(false);
+  const [undoDropOutDialog, setUndoDropOutDialog] = useState(false);
 
   const renderTableActions = () => {
     return (
@@ -66,8 +66,8 @@ export default function SchoolsDatatable({
           <Button
             className="flex gap-1"
             onClick={() => {
-              schoolInfoContext.setSchool(null);
-              schoolInfoContext.setEditDialog(true);
+              setSchool(null);
+              setEditDialog(true);
             }}
           >
             <Plus className="h-4 w-4" />
@@ -81,7 +81,21 @@ export default function SchoolsDatatable({
   return (
     <SchoolsDataTable
       data={schools}
-      columns={columns({ role })}
+      columns={columns({
+        role,
+        state: {
+          editDialog,
+          setEditDialog,
+          pointSupervisorDialog,
+          setPointSupervisorDialog,
+          schoolDropOutDialog,
+          setSchoolDropOutDialog,
+          undoDropOutDialog,
+          setUndoDropOutDialog,
+          school,
+          setSchool,
+        },
+      })}
       emptyStateMessage="No schools found for this hub"
       className={cn("data-table bg-white lg:mt-4", className)}
       columnVisibilityState={{

@@ -1,12 +1,10 @@
 "use client";
 
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
-import { Icons } from "#/components/icons";
-import { Button } from "#/components/ui/button";
-import { ColumnDef } from "@tanstack/react-table";
-import { ChevronDown, ChevronUp, Link, MoreHorizontal } from "lucide-react";
-import HubDatatableMenu from "./hub-datatable-menu";
 import { Prisma } from "@prisma/client";
+import { ColumnDef } from "@tanstack/react-table";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import HubDatatableMenu from "./hub-datatable-menu";
 
 export type HubsWithSchools = Prisma.HubGetPayload<{
   include: {
@@ -81,7 +79,9 @@ export const columns: ColumnDef<HubsWithSchools>[] = [
     header: "Hub coordinator",
     id: "Hub coordinator",
     cell: ({ row }) => {
-      return row.original.coordinators.length > 0 ? row.original.coordinators[0]?.coordinatorName : "";
+      return row.original.coordinators.length > 0
+        ? row.original.coordinators[0]?.coordinatorName
+        : "";
     },
   },
   {
@@ -89,7 +89,11 @@ export const columns: ColumnDef<HubsWithSchools>[] = [
     header: "Hub coordinator phone number",
     id: "Hub coordinator phone number",
     cell: ({ row }) => {
-      return row.original.coordinators.length > 0 ? RenderParsedPhoneNumber(row.original.coordinators[0]?.cellNumber ?? undefined) : "";
+      return row.original.coordinators.length > 0
+        ? RenderParsedPhoneNumber(
+            row.original.coordinators[0]?.cellNumber ?? undefined,
+          )
+        : "";
     },
   },
   {

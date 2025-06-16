@@ -13,8 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { cn, sessionDisplayName } from "#/lib/utils";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
+import * as React from "react";
 import type { Session } from "./sessions-provider";
 
 export function SessionList({
@@ -313,6 +314,8 @@ export function SessionDropDown({
   supervisorId?: string;
 }) {
   const { session } = state;
+  const pathname = usePathname();
+  const isSchedulePage = pathname.includes("/schedule");
 
   return (
     <DropdownMenu>
@@ -326,11 +329,13 @@ export function SessionDropDown({
         <DropdownMenuSeparator />
         {role === ImplementerRole.ADMIN && (
           <>
-            <DropdownMenuItem>
-              <Link href={`/admin/schools/${session.school?.visibleId}`}>
-                View school
-              </Link>
-            </DropdownMenuItem>
+            {isSchedulePage && (
+              <DropdownMenuItem>
+                <Link href={`/admin/schools/${session.school?.visibleId}/sessions`}>
+                  View school
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={() => {
                 state.setSession && state.setSession(session);

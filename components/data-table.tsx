@@ -131,7 +131,7 @@ export default function DataTable<TData, TValue>({
     <div className="no-scrollbar overflow-hidden">
       <div
         className={cn(
-          "flex flex-col-reverse lg:flex-row lg:items-end lg:justify-between p-1",
+          "flex flex-col-reverse p-1 lg:flex-row lg:items-end lg:justify-between",
           isSubComponent ? "bg-background-secondary/50 p-2 shadow-inner" : "",
         )}
       >

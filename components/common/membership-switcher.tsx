@@ -20,7 +20,7 @@ import { cn } from "#/lib/utils";
 import { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
 import { useSession } from "next-auth/react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface JWTMembership {
@@ -41,6 +41,7 @@ export function MembershipSwitcher({
   const pathname = usePathname();
   const { data: session, update } = useSession();
   const [open, setOpen] = useState(false);
+  const router = useRouter();
   const [memberships, setMemberships] = useState<JWTMembership[]>(
     session?.user?.memberships || [],
   );
@@ -82,7 +83,11 @@ export function MembershipSwitcher({
         },
       });
 
-      revalidatePageAction(pathname);
+      if(pathname.includes("/schools")) {
+        router.push(`/admin/hubs`);
+      }else{
+        revalidatePageAction(pathname);
+      }
     } catch (error) {
       console.error("Failed to switch membership:", error);
     } finally {

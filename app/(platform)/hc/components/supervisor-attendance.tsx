@@ -94,7 +94,8 @@ export default function SupervisorAttendance({
         <DialogPortal>
           <DialogContent className="w-5/6 max-w-none lg:w-4/5">
             <DialogHeader>
-              <span className="text-xl font-bold">Mark supervisor attendance</span>
+              <span className="text-xl font-bold">{role === ImplementerRole.ADMIN ? "View supervisor attendance" : "Mark supervisor attendance"}
+              </span>
             </DialogHeader>
             {session && (
               <SessionDetail
@@ -108,6 +109,7 @@ export default function SupervisorAttendance({
               data={attendances}
               toggleBulkMode={true}
               session={session}
+              role={role}
             />
           </DialogContent>
         </DialogPortal>
@@ -122,6 +124,7 @@ export function SupervisorAttendanceDataTable({
   overrideColumns,
   toggleBulkMode = false,
   session,
+  role,
 }: {
   data: SupervisorAttendanceTableData[];
   emptyStateMessage?: string;
@@ -131,6 +134,7 @@ export function SupervisorAttendanceDataTable({
   }) => ColumnDef<SupervisorAttendanceTableData>[];
   toggleBulkMode?: boolean;
   session?: Session | null;
+  role: ImplementerRole;
 }) {
   const [selectedRows, setSelectedRows] = useState<Row<SupervisorAttendanceTableData>[]>([]);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
@@ -139,7 +143,7 @@ export function SupervisorAttendanceDataTable({
 
   const renderTableActions = () => {
     return (
-      toggleBulkMode && (
+      toggleBulkMode && role === ImplementerRole.HUB_COORDINATOR && (
         <div className="flex gap-3">
           <Button
             variant="outline"
@@ -182,6 +186,10 @@ export function SupervisorAttendanceDataTable({
           row.original.sessionStatus !== SessionStatus.Cancelled
         }
         renderTableActions={renderTableActions()}
+        columnVisibilityState={{
+          checkbox: role === ImplementerRole.ADMIN ? false : true,
+          button: role === ImplementerRole.ADMIN ? false : true,
+        }}
       />
       <MarkAttendance
         title={"Mark supervisor attendance"}

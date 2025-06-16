@@ -10,7 +10,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useContext, useRef } from "react";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
-import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import SessionsOccurredWidget from "#/components/common/schools/sessions-occurred-widget";
 import { Icons } from "#/components/icons";
 import {
@@ -19,57 +18,55 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "#/components/ui/accordion";
-import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import { Skeleton } from "#/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "#/components/ui/tooltip";
+import { fetchSchool, SchoolData } from "#/lib/actions/school";
 import { cn, getSchoolInitials } from "#/lib/utils";
 import LocationIcon from "#/public/icons/location-pin-icon.svg";
 import MailIcon from "#/public/icons/mail-icon.svg";
 import PhoneIcon from "#/public/icons/telephone-icon.svg";
+import { useGSAP } from "@gsap/react";
+import { ImplementerRole } from "@prisma/client";
+import { format } from "date-fns";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { parsePhoneNumber } from "libphonenumber-js";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export default function SchoolLeftPanel({
-  selectedSchool,
   open = false,
+  role,
 }: {
-  selectedSchool: Prisma.SchoolGetPayload<{
-    include: {
-      interventionSessions: {
-        include: {
-          session: true;
-        };
-      };
-      schoolDropoutHistory: {
-        include: {
-          user: true;
-        };
-      };
-      hub: {
-        include: {
-          sessions: true;
-        };
-      };
-      _count: {
-        select: {
-          interventionSessions: true;
-          students: {
-            where: {
-              isClinicalCase: true;
-            };
-          };
-          interventionGroups: {
-            where: {
-              archivedAt: null;
-            };
-          };
-        };
-      };
-    };
-  }> | null;
   open?: boolean;
+  role?: ImplementerRole;
 }) {
-  const schoolContext = useContext(SchoolInfoContext);
-  const { school } = schoolContext;
   const panelRef: any = useRef(null);
+  const [loading, setLoading] = useState(!role ? true : false);
+  const [school, setSchool] = useState<SchoolData | null>(null);
+  const { visibleId } = useParams();
+
+  useEffect(() => {
+    const fetchSchoolData = async () => {
+      setLoading(true);
+      if (visibleId) {
+        const response = await fetchSchool(visibleId as string);
+        if (response.success && response.data) {
+          setSchool(response.data);
+        }
+      }
+      setLoading(false);
+    };
+    fetchSchoolData();
+  }, [visibleId]);
 
   useGSAP(
     () => {
@@ -128,29 +125,35 @@ export default function SchoolLeftPanel({
                 {getSchoolInitials(school?.schoolName ?? "")}
               </div>
               <h2 className="text-xl font-semibold text-black lg:text-left lg:text-[28px]">
-                {school?.schoolName}
+                {loading ? (
+                  <Skeleton className="h-6 w-32" />
+                ) : (
+                  school?.schoolName
+                )}
               </h2>
             </div>
           </AccordionTrigger>
           <AccordionContent className="flex flex-col gap-5 pt-6">
+            <div className="min-h-[15vh] flex items-center justify-center">
             <SessionsOccurredWidget
-              types={selectedSchool?.hub?.sessions}
-              sessions={selectedSchool?.interventionSessions ?? []}
+              types={school?.hub?.sessions}
+              sessions={school?.interventionSessions ?? []}
             />
+            </div>
             <div className="flex justify-center px-4">
               <CountWidget
                 stats={[
                   {
                     title: "Sessions",
-                    count: selectedSchool?._count.interventionSessions || 0,
+                    count: school?._count.interventionSessions || 0,
                   },
                   {
                     title: "Groups",
-                    count: selectedSchool?._count.interventionGroups || 0,
+                    count: school?._count.interventionGroups || 0,
                   },
                   {
                     title: "Students",
-                    count: selectedSchool?._count.students || 0,
+                    count: school?._count.students || 0,
                   },
                 ]}
               />
@@ -161,12 +164,12 @@ export default function SchoolLeftPanel({
                   <AccordionTrigger className="border-b">
                     <div className="flex w-full justify-between gap-2 text-base">
                       <span>Contact details</span>
-                      {!school?.droppedOut && (
+                      {!school?.droppedOut && role === "HUB_COORDINATOR" && (
                         <span
                           className="accordion-button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            schoolContext.setEditDialog(true);
+                            // schoolContext.setEditDialog(true);
                           }}
                         >
                           Edit
@@ -259,12 +262,12 @@ export default function SchoolLeftPanel({
                   <AccordionTrigger className="border-b">
                     <div className="flex w-full justify-between gap-2 text-base">
                       <span>Information</span>
-                      {!school?.droppedOut && (
+                      {!school?.droppedOut && role === "HUB_COORDINATOR" && (
                         <span
                           className="accordion-button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            schoolContext.setEditDialog(true);
+                            // schoolContext.setEditDialog(true);
                           }}
                         >
                           Edit
@@ -279,7 +282,7 @@ export default function SchoolLeftPanel({
                     </div>
                     <div>
                       <p className="text-shamiri-black">Hub</p>
-                      <p className="text-shamiri-text-grey">{selectedSchool?.hub?.hubName}</p>
+                      <p className="text-shamiri-text-grey">{school?.hub?.hubName}</p>
                     </div>
                     <div>
                       <p className="text-shamiri-black">Principal</p>
@@ -327,33 +330,35 @@ export default function SchoolLeftPanel({
                   <AccordionTrigger className="border-b">
                     <div className="flex w-full justify-between gap-2 text-base">
                       <span>Dropout History</span>
-                      {selectedSchool?.droppedOut ? (
-                        <span
-                          className="accordion-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            schoolContext.setUndoDropOutDialog(true);
-                          }}
-                        >
-                          Undo dropout
-                        </span>
-                      ) : (
-                        <span
-                          className="accordion-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            schoolContext.setSchoolDropOutDialog(true);
-                          }}
-                        >
-                          Dropout
-                        </span>
-                      )}
+                      {role === "HUB_COORDINATOR" ? (
+                        school?.droppedOut ? (
+                          <span
+                            className="accordion-button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // schoolContext.setUndoDropOutDialog(true);
+                            }}
+                          >
+                            Undo dropout
+                          </span>
+                        ) : (
+                          <span
+                            className="accordion-button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // schoolContext.setSchoolDropOutDialog(true);
+                            }}
+                          >
+                            Dropout
+                          </span>
+                        )
+                      ) : null}
                     </div>
                   </AccordionTrigger>
-                  {selectedSchool?.schoolDropoutHistory &&
-                  selectedSchool?.schoolDropoutHistory.length > 0 ? (
+                  {school?.schoolDropoutHistory &&
+                  school?.schoolDropoutHistory.length > 0 ? (
                     <AccordionContent className="pt-4 text-sm font-medium leading-5">
-                      {selectedSchool?.schoolDropoutHistory.map((history) => {
+                      {school?.schoolDropoutHistory.map((history) => {
                         return (
                           <div key={history.id} className="flex justify-between py-2.5">
                             <div>

@@ -25,7 +25,7 @@ import {
   markManySupervisorAttendance,
   markSupervisorAttendance,
 } from "#/lib/actions/supervisor";
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import {
@@ -39,6 +39,7 @@ import {
 export default function SupervisorsDataTable({
   supervisors,
   visibleId,
+  role,
 }: {
   supervisors: Prisma.SupervisorGetPayload<{
     include: {
@@ -52,6 +53,7 @@ export default function SupervisorsDataTable({
     };
   }>[];
   visibleId: string;
+  role: ImplementerRole;
 }) {
   const schoolContext = useContext(SchoolInfoContext);
   const [batchMode, setBatchMode] = useState<boolean>(false);
@@ -104,8 +106,7 @@ export default function SupervisorsDataTable({
           Gender: false,
           "Phone number": false,
           Status: false,
-          checkbox: !schoolContext.school?.droppedOut,
-          button: !schoolContext.school?.droppedOut,
+          checkbox: role === ImplementerRole.ADMIN || !schoolContext.school?.droppedOut ? true : false,
         }}
         renderTableActions={renderTableActions()}
         enableRowSelection={(row: Row<SupervisorsData>) =>

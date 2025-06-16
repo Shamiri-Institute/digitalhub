@@ -13,7 +13,7 @@ import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import RatingStarsInput from "#/components/common/rating-stars-input";
 import { SessionRatingsSchema } from "#/components/common/session/schema";
-import { SessionsContext } from "#/components/common/session/sessions-provider";
+import { Session, SessionsContext } from "#/components/common/session/sessions-provider";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
@@ -60,6 +60,7 @@ export default function SessionRatings({
   supervisorId,
   supervisors,
   role,
+  sessions,
 }: {
   selectedSession: Session;
   open: boolean;

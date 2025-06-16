@@ -1,11 +1,16 @@
 "use client";
 
-import { Icons } from "#/components/icons";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "#/components/ui/dropdown-menu";
-import { HubsWithSchools } from "./columns";
-import { useState } from "react";
-import HubCoordinatorProfileDialog from "./hub-coordinator-profile-dialog";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import { Icons } from "#/components/icons";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
+import { useState } from "react";
+import { HubsWithSchools } from "./columns";
+import HubCoordinatorProfileDialog from "./hub-coordinator-profile-dialog";
 
 interface HubDatatableMenuProps {
   row: HubsWithSchools;
@@ -22,7 +27,7 @@ export default function HubDatatableMenu({ row }: HubDatatableMenuProps) {
             <div className="flex h-full w-full items-center justify-center">
               <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
             </div>
-          </div>  
+          </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onClick={() => setShowProfile(true)}>
@@ -46,4 +51,4 @@ export default function HubDatatableMenu({ row }: HubDatatableMenuProps) {
       )}
     </>
   );
-} 
+}

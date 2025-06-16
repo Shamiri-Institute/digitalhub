@@ -7,6 +7,10 @@ import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-num
 import SchoolTableDropdown from "#/components/common/schools/school-table-dropdown";
 import { Badge } from "#/components/ui/badge";
 import { sessionDisplayName } from "#/lib/utils";
+import { ImplementerRole, Prisma } from "@prisma/client";
+import { ColumnDef } from "@tanstack/react-table";
+import { format, isAfter } from "date-fns";
+import { Dispatch, SetStateAction } from "react";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {
@@ -30,7 +34,24 @@ export type SchoolsTableData = Prisma.SchoolGetPayload<{
   };
 }>;
 
-export const columns = ({ role }: { role: ImplementerRole }): ColumnDef<SchoolsTableData>[] => {
+export const columns = ({
+  role,
+  state,
+}: {
+  role: ImplementerRole;
+  state: {
+    editDialog: boolean;
+    setEditDialog: Dispatch<SetStateAction<boolean>>;
+    pointSupervisorDialog: boolean;
+    setPointSupervisorDialog: Dispatch<SetStateAction<boolean>>;
+    schoolDropOutDialog: boolean;
+    setSchoolDropOutDialog: Dispatch<SetStateAction<boolean>>;
+    undoDropOutDialog: boolean;
+    setUndoDropOutDialog: Dispatch<SetStateAction<boolean>>;
+    school: SchoolsTableData | null;
+    setSchool: Dispatch<SetStateAction<SchoolsTableData | null>>;
+  };
+}): ColumnDef<SchoolsTableData>[] => {
   const defaultColumns: ColumnDef<SchoolsTableData>[] = [
     {
       accessorKey: "schoolName",
@@ -169,7 +190,13 @@ export const columns = ({ role }: { role: ImplementerRole }): ColumnDef<SchoolsT
     },
     {
       id: "button",
-      cell: ({ row }) => <SchoolTableDropdown schoolRow={row.original} role={role} />,
+      cell: ({ row }) => (
+        <SchoolTableDropdown
+          schoolRow={row.original}
+          role={role}
+          state={state}
+        />
+      ),
       enableHiding: false,
     },
   ];

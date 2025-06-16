@@ -14,7 +14,9 @@ export default function HubsDataTable() {
   const { data: session } = useSession();
   const [hubs, setHubs] = useState<HubsWithSchools[]>([]);
   const [loading, setLoading] = useState(true);
-  const implementerIds = session?.user?.memberships?.map((membership) => membership.implementerId);
+  const implementerIds = session?.user?.memberships?.map(
+    (membership) => membership.implementerId,
+  );
   const role = session?.user?.activeMembership?.role;
   const activeMembership = session?.user?.activeMembership;
 

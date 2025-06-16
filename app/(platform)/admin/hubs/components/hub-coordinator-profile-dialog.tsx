@@ -1,7 +1,5 @@
 "use client";
 
-import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -9,12 +7,11 @@ import {
   DialogFooter,
   DialogHeader,
 } from "#/components/ui/dialog";
+import { Input } from "#/components/ui/input";
 import { Separator } from "#/components/ui/separator";
-import { cn } from "#/lib/utils";
 import { format } from "date-fns";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { HubsWithSchools } from "./columns";
-import { Input } from "#/components/ui/input";
 
 interface HubCoordinatorProfileDialogProps {
   open: boolean;
@@ -47,35 +44,78 @@ export default function HubCoordinatorProfileDialog({
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <div className="font-medium">Full name</div>
-                <Input disabled value={coordinator?.coordinatorName} className="mt-1" />
+                <Input
+                  disabled
+                  value={coordinator?.coordinatorName}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <div className="font-medium">Email address</div>
-                <Input disabled value={coordinator?.coordinatorEmail ?? ""} className="mt-1" />
+                <Input
+                  disabled
+                  value={coordinator?.coordinatorEmail ?? ""}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <div className="font-medium">Phone Number</div>
-                <Input disabled value={(coordinator?.cellNumber && parsePhoneNumberFromString(coordinator?.cellNumber, "KE")?.formatNational()) ?? ""} className="mt-1" />
+                <Input
+                  disabled
+                  value={
+                    (coordinator?.cellNumber &&
+                      parsePhoneNumberFromString(
+                        coordinator?.cellNumber,
+                        "KE",
+                      )?.formatNational()) ??
+                    ""
+                  }
+                  className="mt-1"
+                />
               </div>
               <div>
                 <div className="font-medium">National ID</div>
-                <Input disabled value={coordinator?.idNumber ?? ""} className="mt-1" />
+                <Input
+                  disabled
+                  value={coordinator?.idNumber ?? ""}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <div className="font-medium">Gender</div>
-                <Input disabled value={coordinator?.gender ?? ""} className="mt-1" />
+                <Input
+                  disabled
+                  value={coordinator?.gender ?? ""}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <div className="font-medium">Date of Birth</div>
-                <Input disabled value={coordinator?.dateOfBirth ? format(coordinator?.dateOfBirth, "dd/MM/yyyy") : ""} className="mt-1" />
+                <Input
+                  disabled
+                  value={
+                    coordinator?.dateOfBirth
+                      ? format(coordinator?.dateOfBirth, "dd/MM/yyyy")
+                      : ""
+                  }
+                  className="mt-1"
+                />
               </div>
               <div>
                 <div className="font-medium">County</div>
-                <Input disabled value={coordinator?.county ?? ""} className="mt-1" />
+                <Input
+                  disabled
+                  value={coordinator?.county ?? ""}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <div className="font-medium">Sub-county</div>
-                <Input disabled value={coordinator?.subCounty ?? ""} className="mt-1" />
+                <Input
+                  disabled
+                  value={coordinator?.subCounty ?? ""}
+                  className="mt-1"
+                />
               </div>
             </div>
           </div>
@@ -89,19 +129,35 @@ export default function HubCoordinatorProfileDialog({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="font-medium">Bank name</div>
-                <Input disabled value={coordinator?.bankName ?? ""} className="mt-1" />
+                <Input
+                  disabled
+                  value={coordinator?.bankName ?? ""}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <div className="font-medium">Bank branch</div>
-                <Input disabled value={coordinator?.bankBranch ?? ""} className="mt-1" />
+                <Input
+                  disabled
+                  value={coordinator?.bankBranch ?? ""}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <div className="font-medium">Account number</div>
-                <Input disabled value={coordinator?.bankAccountNumber ?? ""} className="mt-1" />
+                <Input
+                  disabled
+                  value={coordinator?.bankAccountNumber ?? ""}
+                  className="mt-1"
+                />
               </div>
               <div>
                 <div className="font-medium">Account name</div>
-                <Input disabled value={coordinator?.bankAccountName ?? ""} className="mt-1" />
+                <Input
+                  disabled
+                  value={coordinator?.bankAccountName ?? ""}
+                  className="mt-1"
+                />
               </div>
             </div>
           </div>
@@ -120,4 +176,4 @@ export default function HubCoordinatorProfileDialog({
       </DialogContent>
     </Dialog>
   );
-} 
+}

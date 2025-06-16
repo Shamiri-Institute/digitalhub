@@ -1,6 +1,6 @@
 import SupervisorInfoProvider from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisor-info-provider";
 import SupervisorsDataTable from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
-import { currentHubCoordinator } from "#/app/auth";
+import { currentAdminUser, currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 
 export default async function SupervisorsPage({
@@ -8,10 +8,22 @@ export default async function SupervisorsPage({
 }: {
   params: { visibleId: string };
 }) {
-  const coordinator = await currentHubCoordinator();
+  const admin = await currentAdminUser();
+
+  const school = await db.school.findUnique({
+    where: {
+      visibleId,
+    },
+    include: {
+      interventionSessions: true,
+    },
+  });
+
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: coordinator?.assignedHubId,
+      hub: {
+        id: school?.hubId ?? ""
+      }
     },
     include: {
       assignedSchools: true,
@@ -34,10 +46,6 @@ export default async function SupervisorsPage({
   });
 
   return (
-    <>
-      <SupervisorInfoProvider>
-        <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} />
-      </SupervisorInfoProvider>
-    </>
+    <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} school={school ?? null} role={admin?.user.membership.role}/>
   );
 }
