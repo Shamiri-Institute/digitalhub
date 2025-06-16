@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.3.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.2.0...v1.3.0) (2025-06-16)
+
+### Features
+
+- add student headcount to session ratings form ([#482](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/482)) ([681fc13](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/681fc13c7059ad5c4362a242d4c8953d94dfbfdd))
+
+### Bug Fixes
+
+- enhance user existence in users table ([#481](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/481)) ([9647d2a](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/9647d2a3c93e728ade0653fbdae4e20c26bec775))
+- issue preventing creation of group reports ([#480](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/480)) ([a25720f](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/a25720f1d3b0d3192809f18a60399508bb77a971))
+
 ## [1.2.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.1.0...v1.2.0) (2025-06-06)
 
 ### Features
