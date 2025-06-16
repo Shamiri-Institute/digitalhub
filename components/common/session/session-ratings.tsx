@@ -300,7 +300,10 @@ export default function SessionRatings({
                           }
                           {...field}
                           onChange={(e) => {
-                            const value = e.target.value === '' ? undefined : Number(e.target.value);
+                            const value =
+                              e.target.value === ""
+                                ? undefined
+                                : Number(e.target.value);
                             field.onChange(value);
                           }}
                         />
