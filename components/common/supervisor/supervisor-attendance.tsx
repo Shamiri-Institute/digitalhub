@@ -57,14 +57,6 @@ export default function SupervisorAttendance({
   useEffect(() => {
     const tableData =
       supervisors?.map((supervisor) => {
-        const totalAttendedFellows = supervisor.fellows.filter((fellow) => {
-          const attended = fellow.fellowAttendances.find(
-            (attendance) => attendance.sessionId === session?.id,
-          );
-          if (attended) {
-            return fellow;
-          }
-        });
         const attendance = supervisor.supervisorAttendances.find(
           (_attendance) => _attendance.sessionId === session?.id,
         );
@@ -75,7 +67,8 @@ export default function SupervisorAttendance({
           pointSchools: supervisor.assignedSchools.map((school) => school.schoolName),
           attendance: attendance?.attended,
           phoneNumber: supervisor.cellNumber ?? "",
-          fellows: `${totalAttendedFellows.length}/${supervisor.fellows.length}`,
+          fellows:
+            supervisor.fellows.filter((fellow) => fellow.droppedOut !== true).length + "/" + supervisor.fellows.length,
           sessionId: attendance?.sessionId,
           schoolId: attendance?.schoolId,
           absenceReason: attendance?.absenceReason ?? "",
@@ -441,7 +434,7 @@ export function SupervisorAttendanceDataTableMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l bg-white">
+        <div className="absolute inset-0 border-l">
           <div className="flex h-full w-full items-center justify-center">
             <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
           </div>
