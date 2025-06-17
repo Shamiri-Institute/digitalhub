@@ -46,6 +46,10 @@ export default function FellowsDatatableSkeleton({ role }: { role: ImplementerRo
       className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
       renderTableActions={renderTableActions()}
+      columnVisibilityState={{
+        checkbox: role === ImplementerRole.HUB_COORDINATOR ? true : false,
+        "Supervisor": false
+      }}
     />
   );
 }

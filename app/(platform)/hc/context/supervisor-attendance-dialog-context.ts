@@ -1,5 +1,5 @@
 import { createContext, type Dispatch, type SetStateAction } from "react";
-import type { SupervisorAttendanceTableData } from "#/app/(platform)/hc/components/supervisor-attendance";
+import type { SupervisorAttendanceTableData } from "#/components/common/supervisor/supervisor-attendance";
 import type { Session } from "#/components/common/session/sessions-provider";
 
 type SupervisorAttendanceContextData = {

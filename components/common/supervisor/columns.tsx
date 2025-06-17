@@ -1,7 +1,7 @@
 "use client";
 
-import SessionHistoryWidget from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/sessions-history-widget";
-import { SupervisorsDataTableMenu } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
+import SessionHistoryWidget from "#/components/common/supervisor/sessions-history-widget";
+import { SupervisorsDataTableMenu } from "#/components/common/supervisor/supervisors-datatable";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import {
@@ -10,7 +10,7 @@ import {
   DropdownMenuPortal,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
 import { Dispatch, SetStateAction } from "react";
@@ -30,14 +30,15 @@ export type SupervisorsData = Prisma.SupervisorGetPayload<{
 export const columns = (state: {
   setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   sessions: Prisma.InterventionSessionGetPayload<{}>[];
+  setSupervisor: Dispatch<SetStateAction<SupervisorsData | null>>;
+  role: ImplementerRole;
 }): ColumnDef<SupervisorsData>[] => [
   {
     id: "checkbox",
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -92,9 +93,7 @@ export const columns = (state: {
                 <DropdownMenuContent>
                   <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
                     {schools.slice(1).map((school, index) => {
-                      return (
-                        <span key={index.toString()}>{school.schoolName}</span>
-                      );
+                      return <span key={index.toString()}>{school.schoolName}</span>;
                     })}
                   </div>
                 </DropdownMenuContent>
@@ -140,20 +139,15 @@ export const columns = (state: {
     header: "No. of fellows",
     id: "No. of fellows",
     cell: ({ row }) => {
-      const activeFellows = row.original.fellows.filter(
-        (fellow) => !fellow.droppedOut,
-      );
-      return activeFellows.length + "/" + row.original.fellows.length;
+      const activeFellows = row.original.fellows.filter((fellow) => !fellow.droppedOut);
+      return `${activeFellows.length}/${row.original.fellows.length}`;
     },
   },
   {
     header: "Phone Number",
     id: "Phone number",
     accessorFn: (row) => {
-      return (
-        row.cellNumber &&
-        parsePhoneNumber(row.cellNumber, "KE").formatNational()
-      );
+      return row.cellNumber && parsePhoneNumber(row.cellNumber, "KE").formatNational();
     },
   },
   {
@@ -163,9 +157,7 @@ export const columns = (state: {
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <SupervisorsDataTableMenu state={state} supervisor={row.original} />
-    ),
+    cell: ({ row }) => <SupervisorsDataTableMenu state={state} supervisor={row.original} />,
     enableHiding: false,
   },
 ];

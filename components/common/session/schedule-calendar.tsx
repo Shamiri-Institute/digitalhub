@@ -13,7 +13,7 @@ import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { type CalendarState, useCalendarState } from "react-stately";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
-import SupervisorAttendance from "#/app/(platform)/hc/components/supervisor-attendance";
+import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import {
   type DateRangeType,
   type Filters,
@@ -244,8 +244,8 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
                 monthProps={{ state: monthState, weekdayStyle: "long" }}
                 weekProps={{ state: weekState }}
                 dayProps={{ state: dayState }}
-                listProps={{ state: listState, hubId }}
-                tableProps={{ state: tableState, hubId }}
+                listProps={{ state: listState }}
+                tableProps={{ state: tableState }}
                 supervisors={props.supervisors}
                 fellowRatings={props.fellowRatings}
                 role={props.role}
@@ -397,7 +397,7 @@ function CalendarView({
   fellow?: CurrentFellow;
 }) {
   const { mode } = useMode();
-  const { loading } = useContext(SessionsContext);
+  const { loading, sessions } = useContext(SessionsContext);
   const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
     React.useState(false);
   const [fellowAttendanceDialog, setFellowAttendanceDialog] =
@@ -493,7 +493,7 @@ function CalendarView({
           />
         );
       case "table":
-        if (role === "HUB_COORDINATOR") {
+        if (role === ImplementerRole.HUB_COORDINATOR) {
           return (
             <TableView
               {...tableProps}
@@ -543,8 +543,8 @@ function CalendarView({
         </>
       ) : null}
       <FellowAttendance
-        supervisors={supervisors}
-        supervisorId={role === "SUPERVISOR" ? supervisorId : undefined}
+        supervisors={supervisors?.filter((supervisor) => supervisor.hubId === session?.hubId)}
+        supervisorId={role === ImplementerRole.SUPERVISOR ? supervisorId : undefined}
         fellowRatings={fellowRatings ?? []}
         role={role}
         session={session}
@@ -554,7 +554,7 @@ function CalendarView({
       <SupervisorAttendance
         isOpen={supervisorAttendanceDialog}
         setIsOpen={setSupervisorAttendanceDialog}
-        supervisors={supervisors}
+        supervisors={supervisors?.filter((supervisor) => supervisor.hubId === session?.hubId)}
         role={role}
         session={session}
       />
@@ -566,32 +566,34 @@ function CalendarView({
         fellows={supervisors?.find((supervisor) => supervisor.id === supervisorId)?.fellows ?? []}
         fellowId={fellow?.id}
       />
-      {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (
-        <SessionRatings
-          selectedSession={session}
-          supervisorId={supervisorId}
-          supervisors={supervisors}
-          open={ratingsDialog}
-          onOpenChange={setRatingsDialog}
-          mode={
-            role === ImplementerRole.HUB_COORDINATOR
-              ? "view"
-              : role === ImplementerRole.SUPERVISOR
-                ? "add"
-                : undefined
-          }
-          role={role}
-        >
-          {session && (
-            <SessionDetail
-              state={{ session }}
-              layout={"compact"}
-              withDropdown={false}
-              role={role}
-            />
-          )}
-        </SessionRatings>
-      )}
+      {session?.session?.sessionType === "INTERVENTION" &&
+        session?.schoolId && (
+          <SessionRatings
+            session={session}
+            sessions={sessions.filter((session) => session.schoolId === session?.schoolId)}
+            supervisorId={supervisorId}
+            supervisors={supervisors}
+            open={ratingsDialog}
+            onOpenChange={setRatingsDialog}
+            mode={
+              role === "HUB_COORDINATOR"
+                ? "view"
+                : role === "SUPERVISOR"
+                  ? "add"
+                  : undefined
+            }
+            role={role}
+          >
+            {session && (
+              <SessionDetail
+                state={{ session }}
+                layout={"compact"}
+                withDropdown={false}
+                role={role}
+              />
+            )}
+          </SessionRatings>
+        )}
       <MarkSessionOccurrence
         id={session?.id}
         defaultOccurrence={session?.occurred}

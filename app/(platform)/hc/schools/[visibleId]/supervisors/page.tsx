@@ -1,6 +1,5 @@
-import SupervisorInfoProvider from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisor-info-provider";
-import SupervisorsDataTable from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
 import { currentHubCoordinator } from "#/app/auth";
+import SupervisorsDataTable from "#/components/common/supervisor/supervisors-datatable";
 import { db } from "#/lib/db";
 
 export default async function SupervisorsPage({
@@ -34,8 +33,6 @@ export default async function SupervisorsPage({
   });
 
   return (
-    <SupervisorInfoProvider>
-      <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} />
-    </SupervisorInfoProvider>
+    <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} role={coordinator?.user.membership.role!}/>
   );
 }

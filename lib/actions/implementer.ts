@@ -150,3 +150,80 @@ export async function fetchImplementerSchools(implementerId: string) {
     return { success: false, message: "Error fetching implementer schools" };
   }
 }
+
+export async function fetchImplementerSupervisors(implementerId: string) {
+  const admin = await currentAdminUser();
+  if (admin === null) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const supervisors = await db.supervisor.findMany({
+      where: {
+        hub: {
+          implementerId: implementerId,
+        },
+      },
+      include: {
+        supervisorAttendances: {
+          include: {
+            session: true,
+          },
+        },
+        fellows: {
+          include: {
+            fellowAttendances: true,
+            groups: true,
+          },
+        },
+        assignedSchools: true,
+      },
+    });
+    return { success: true, data: supervisors };
+  } catch (error) {
+    console.error("Error fetching implementer supervisors:", error);
+    return {
+      success: false,
+      message: "Error fetching implementer supervisors",
+    };
+  }
+}
+
+export type ImplementerSupervisor = NonNullable<
+  Awaited<ReturnType<typeof fetchImplementerSupervisors>>["data"]
+>[number];
+
+export async function fetchImplementerFellowRatings(implementerId: string) {
+  const admin = await currentAdminUser();
+  if (admin === null) {
+    throw new Error("Unauthorized");
+  }
+
+  try {
+    const fellowRatings = await db.$queryRaw<
+    {
+      id: string;
+      averageRating: number;
+    }[]
+  >`SELECT
+  fel.id,
+  (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
+  FROM
+  fellows fel
+  LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
+  LEFT JOIN hubs h ON h.id = fel.hub_id
+  WHERE h.implementer_id=${implementerId}
+  GROUP BY fel.id`;
+    return { success: true, data: fellowRatings };
+  } catch (error) {
+    console.error("Error fetching implementer fellow ratings:", error);
+    return {
+      success: false,
+      message: "Error fetching implementer fellow ratings",
+    };
+  }
+}
+
+export type ImplementerFellowRating = NonNullable<
+  Awaited<ReturnType<typeof fetchImplementerFellowRatings>>["data"]
+>[number];

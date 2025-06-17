@@ -114,6 +114,13 @@ export const columns = ({
       id: "Group Name",
     },
     {
+      id: "Supervisor",
+      header: "Supervisor",
+      cell: ({ row }) => {
+        return role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN ? <div>{row.original.supervisorName}</div> : null;
+      },
+    },
+    {
       header: "Phone Number",
       accessorFn: (row) => {
         return row.cellNumber && parsePhoneNumber(row.cellNumber, "KE").formatNational();

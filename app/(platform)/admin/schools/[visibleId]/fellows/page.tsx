@@ -1,23 +1,18 @@
-import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentAdminUser } from "#/app/auth";
 import { SchoolFellowTableData } from "#/components/common/fellow/columns";
-import FellowInfoContextProvider from "#/components/common/fellow/fellow-info-context-provider";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
-import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
-import { Suspense } from "react";
+import { signOut } from "next-auth/react";
 
 export default async function FellowsPage({
   params: { visibleId },
 }: {
   params: { visibleId: string };
 }) {
-  const hc = await currentHubCoordinator();
-  if (!hc) {
-    return <InvalidPersonnelRole role="hub-coordinator" />;
+  const admin = await currentAdminUser();
+  if (!admin) {
+    await signOut({ callbackUrl: "/login" });
   }
-
-  const user = await getCurrentUser();
 
   const school = await db.school.findFirstOrThrow({
     where: {
@@ -101,7 +96,7 @@ export default async function FellowsPage({
 
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: hc?.assignedHubId as string,
+      hubId: school.hubId,
     },
     include: {
       fellows: true,
@@ -109,17 +104,13 @@ export default async function FellowsPage({
   });
 
   return (
-    <FellowInfoContextProvider>
-      <Suspense fallback={<Loading />}>
-        <FellowsDatatable
+    <FellowsDatatable
           fellows={data}
           supervisors={supervisors}
           schoolId={school.id}
-          role={user?.membership.role!}
+          role={admin?.user.membership.role!}
           hideActions={true}
           attendances={school.fellowAttendances}
         />
-      </Suspense>
-    </FellowInfoContextProvider>
   );
 }

@@ -17,8 +17,6 @@ export default async function SchoolFilesPage({
   });
 
   return (
-    <Suspense fallback={<Loading />}>
-      <SchoolFilesDatatable data={schoolFiles} schoolId={visibleId} />
-    </Suspense>
+    <SchoolFilesDatatable data={schoolFiles} schoolId={visibleId} />
   );
 }

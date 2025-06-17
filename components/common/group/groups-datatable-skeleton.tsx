@@ -60,6 +60,7 @@ export default function GroupsDatatableSkeleton({
       className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
       renderTableActions={renderTableActions()}
+      columnVisibilityState={{ "Active Status": false }}
     />
   );
 }

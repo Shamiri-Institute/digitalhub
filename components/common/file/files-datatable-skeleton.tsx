@@ -1,21 +1,29 @@
 "use client";
 
-import { columns, SupervisorsData } from "#/components/common/supervisor/columns";
+import { fileColumns, SchoolFilesTableData } from "#/components/common/files/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
 import { ImplementerRole } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 
-export default function SupervisorsDatatableSkeleton({
+interface FileTableData {
+  id: string;
+  name: string;
+  type: string;
+  size: string;
+  uploadedBy: string;
+  uploadedAt: string;
+}
+
+export default function FilesDatatableSkeleton({
   role,
 }: {
   role: ImplementerRole;
 }) {
-  const loadingColumns = columns({
-    setMarkAttendanceDialog: () => {},
-    setSupervisor: () => {},
-    role,
-    sessions: [],
+  const loadingColumns = fileColumns({
+    setRenameDialog: () => {},
+    setFile: () => {},
+    setDeleteDialog: () => {},
   })
     .map((column) => column.id ?? column.header)
     .map((column) => {
@@ -33,21 +41,11 @@ export default function SupervisorsDatatableSkeleton({
 
   return (
     <DataTable
-      columns={loadingColumns as ColumnDef<SupervisorsData>[]}
-      data={
-        Array.from(Array(10).keys()).map(() => {
-          return {};
-        }) as SupervisorsData[]
-      }
+      columns={loadingColumns as ColumnDef<SchoolFilesTableData>[]}
+      data={Array.from({ length: 10 }).map(() => ({})) as SchoolFilesTableData[]}
       className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
-      columnVisibilityState={{
-        Gender: false,
-        "Phone number": false,
-        Status: false,
-        checkbox: false,
-        button: false,
-      }}
+      columnVisibilityState={{}}
     />
   );
-} 
+}

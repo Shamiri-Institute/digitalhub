@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import * as React from "react";
 import { useState } from "react";
 import SupervisorAttendance, {
-  type SupervisorAttendanceTableData,
-} from "#/app/(platform)/hc/components/supervisor-attendance";
+  SupervisorAttendanceTableData,
+} from "#/components/common/supervisor/supervisor-attendance";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";

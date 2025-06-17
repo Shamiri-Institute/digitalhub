@@ -7,7 +7,7 @@ import { type Dispatch, type SetStateAction, useContext, useEffect, useState } f
 import {
   columns,
   type SupervisorsData,
-} from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/columns";
+} from "#/components/common/supervisor/columns";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -27,7 +27,7 @@ import {
   markManySupervisorAttendance,
   markSupervisorAttendance,
 } from "#/lib/actions/supervisor";
-import { ImplementerRole, Prisma, School } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import {
@@ -41,8 +41,8 @@ import {
 export default function SupervisorsDataTable({
   supervisors,
   visibleId,
-  school,
   role,
+  school,
 }: {
   supervisors: Prisma.SupervisorGetPayload<{
     include: {
@@ -56,29 +56,29 @@ export default function SupervisorsDataTable({
     };
   }>[];
   visibleId: string;
+  role: ImplementerRole;
   school: Prisma.SchoolGetPayload<{
     include: {
       interventionSessions: true;
     };
   }> | null;
-  role?: ImplementerRole;
 }) {
   const [batchMode, setBatchMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<SupervisorsData>[]>([]);
-  const [supervisor, setSupervisor] = useState<SupervisorsData>();
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
   const [selectedSession, setSelectedSession] = useState<string>();
+  const [supervisor, setSupervisor] = useState<SupervisorsData | null>(null);
 
-  // useEffect(() => {
-  //   if (!context.attendanceDialog) {
-  //     setBatchMode(false);
-  //   }
-  // }, [context.attendanceDialog]);
+  useEffect(() => {
+    if (!markAttendanceDialog) {
+      setBatchMode(false);
+    }
+  }, [markAttendanceDialog]);
 
   const renderTableActions = () => {
     return (
-      role === ImplementerRole.HUB_COORDINATOR && (
-        <div className="flex gap-3">
+      <div className="flex gap-3">
+        {role === ImplementerRole.HUB_COORDINATOR && (
         <Button
           variant="outline"
           className="flex gap-1"
@@ -94,8 +94,8 @@ export default function SupervisorsDataTable({
           <Icons.fileDown className="h-4 w-4 text-shamiri-text-grey" />
           <span>Mark supervisor attendance</span>
         </Button>
+        )}
       </div>
-      )
     );
   };
 
@@ -106,6 +106,8 @@ export default function SupervisorsDataTable({
         columns={columns({
           setMarkAttendanceDialog,
           sessions: school?.interventionSessions ?? [],
+          setSupervisor,
+          role,
         })}
         className={"data-table data-table-action lg:mt-4"}
         emptyStateMessage="No supervisors found for this hub"
@@ -113,7 +115,9 @@ export default function SupervisorsDataTable({
           Gender: false,
           "Phone number": false,
           Status: false,
-          checkbox: role === ImplementerRole.ADMIN || !school?.droppedOut ? false : true
+          checkbox:
+            role === ImplementerRole.HUB_COORDINATOR ? true : false,
+          button: role === ImplementerRole.HUB_COORDINATOR ? true : false
         }}
         renderTableActions={renderTableActions()}
         enableRowSelection={(row: Row<SupervisorsData>) =>
@@ -122,9 +126,9 @@ export default function SupervisorsDataTable({
         rowSelectionDescription={"supervisors"}
         onRowSelectionChange={setSelectedRows as () => {}}
       />
-      {role === ImplementerRole.ADMIN && (
+      {supervisor && (
         <DropoutSupervisor
-          supervisorId={supervisor?.id}
+          supervisorId={supervisor.id}
           setDropoutDialog={() => {}}
           dropoutDialog={false}
         >
@@ -144,7 +148,7 @@ export default function SupervisorsDataTable({
         </DropoutSupervisor>
       )}
       <UndropSupervisor
-        supervisorId={supervisor !== undefined ? supervisor.id : undefined
+        supervisorId={supervisor !== null ? supervisor.id : undefined
         }
         setUndropDialog={() => {}}
         undropDialog={false}
@@ -220,6 +224,8 @@ export function SupervisorsDataTableMenu({
   supervisor: SupervisorsData;
   state: {
     setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
+    setSupervisor: Dispatch<SetStateAction<SupervisorsData | null>>;
+    role: ImplementerRole;
   };
 }) {
   return (
@@ -239,18 +245,18 @@ export function SupervisorsDataTableMenu({
         <DropdownMenuItem
           disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
           onClick={() => {
-            // context.setSupervisor(supervisor);
-            // state.setMarkAttendanceDialog(true);
+            state.setSupervisor(supervisor);
+            state.setMarkAttendanceDialog(true);
           }}
         >
           Mark attendance
         </DropdownMenuItem>
         {/* TODO: Remove drop out option and refactor context*/}
-        {supervisor.droppedOut === null || !supervisor.droppedOut ? (
+        {state.role === ImplementerRole.HUB_COORDINATOR && ((supervisor.droppedOut === null || !supervisor.droppedOut) ? (
           <DropdownMenuItem
             onClick={() => {
-              // context.setSupervisor(supervisor);
-              // context.setDropoutDialog(true);
+              state.setSupervisor(supervisor);
+              // state.setDropoutDialog(true);
             }}
           >
             <div className="text-shamiri-red">Drop out supervisor</div>
@@ -258,13 +264,13 @@ export function SupervisorsDataTableMenu({
         ) : (
           <DropdownMenuItem
             onClick={() => {
-              // context.setSupervisor(supervisor);
-              // context.setUndropDialog(true);
+              state.setSupervisor(supervisor);
+              // state.setUndropDialog(true);
             }}
           >
             <div>Undo drop out</div>
           </DropdownMenuItem>
-        )}
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

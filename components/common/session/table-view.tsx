@@ -9,7 +9,7 @@ import {
   SupervisorAttendanceDataTable,
   SupervisorAttendanceDataTableMenu,
   type SupervisorAttendanceTableData,
-} from "#/app/(platform)/hc/components/supervisor-attendance";
+} from "#/components/common/supervisor/supervisor-attendance";
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import {

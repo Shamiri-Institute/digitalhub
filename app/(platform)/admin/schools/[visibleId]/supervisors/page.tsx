@@ -1,7 +1,7 @@
-import SupervisorInfoProvider from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisor-info-provider";
-import SupervisorsDataTable from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
-import { currentAdminUser, currentHubCoordinator } from "#/app/auth";
+import { currentAdminUser } from "#/app/auth";
+import SupervisorsDataTable from "#/components/common/supervisor/supervisors-datatable";
 import { db } from "#/lib/db";
+import { signOut } from "next-auth/react";
 
 export default async function SupervisorsPage({
   params: { visibleId },
@@ -9,6 +9,9 @@ export default async function SupervisorsPage({
   params: { visibleId: string };
 }) {
   const admin = await currentAdminUser();
+  if (admin === null) {
+    await signOut({ callbackUrl: "/login" });
+  }
 
   const school = await db.school.findUnique({
     where: {
@@ -46,6 +49,6 @@ export default async function SupervisorsPage({
   });
 
   return (
-    <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} school={school ?? null} role={admin?.user.membership.role}/>
+    <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} school={school ?? null} role={admin?.user.membership.role!}/>
   );
 }

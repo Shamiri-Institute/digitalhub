@@ -330,11 +330,11 @@ export function SessionDropDown({
         {role === ImplementerRole.ADMIN && (
           <>
             {isSchedulePage && (
-              <DropdownMenuItem>
-                <Link href={`/admin/schools/${session.school?.visibleId}/sessions`}>
-                  View school
-                </Link>
-              </DropdownMenuItem>
+              <Link
+                href={`/admin/schools/${session.school?.visibleId}/sessions`}
+              >
+                <DropdownMenuItem>View school</DropdownMenuItem>
+              </Link>
             )}
             <DropdownMenuItem
               onClick={() => {
@@ -367,7 +367,7 @@ export function SessionDropDown({
                 state.setRatingsDialog && state.setRatingsDialog(true);
               }}
             >
-              View weekly session reports
+              Weekly session report
             </DropdownMenuItem>
           </>
         )}

@@ -1,8 +1,13 @@
 "use client";
 
-import { toast } from "#/components/ui/use-toast";
-import { fetchImplementerSessionTypes } from "#/lib/actions/implementer";
-import { Prisma } from "@prisma/client";
+import {
+  fetchImplementerFellowRatings,
+  fetchImplementerSessionTypes,
+  fetchImplementerSupervisors,
+  ImplementerFellowRating,
+  ImplementerSupervisor,
+} from "#/lib/actions/implementer";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { ScheduleCalendar } from "./schedule-calendar";
@@ -10,38 +15,38 @@ import { ScheduleCalendar } from "./schedule-calendar";
 export function AdminScheduleCalendar() {
   const { data: session } = useSession();
   const implementerId = session?.user?.activeMembership?.implementerId;
+  const role = session?.user?.activeMembership?.role;
   const [hubSessionTypes, setHubSessionTypes] = useState<
     Prisma.SessionNameGetPayload<{}>[]
   >([]);
-  const [loading, setLoading] = useState(true);
+  const [supervisors, setSupervisors] = useState<ImplementerSupervisor[]>([]);
+  const [fellowRatings, setFellowRatings] = useState<ImplementerFellowRating[]>([]);
 
   useEffect(() => {
     const fetchSessionTypes = async () => {
-      if (!implementerId) return;
+      if (!implementerId || !role) return;
 
-      const result = await fetchImplementerSessionTypes(implementerId);
-      if (result.success) {
-        setHubSessionTypes(result.data || []);
-      } else {
-        toast({
-          description: result.message,
-          variant: "destructive",
-        });
-      }
-      setLoading(false);
+      const response = await Promise.all([
+        fetchImplementerSessionTypes(implementerId),
+        fetchImplementerSupervisors(implementerId),
+        fetchImplementerFellowRatings(implementerId),
+      ]);
+      setHubSessionTypes(response[0].data || []);
+      setSupervisors(response[1].data || []);
+      setFellowRatings(response[2].data || []);
     };
 
     fetchSessionTypes();
-  }, [implementerId]);
+  }, [implementerId, role]);
 
   return (
     <ScheduleCalendar
       implementerId={implementerId}
       aria-label="Session schedule"
       schools={[]}
-      supervisors={[]}
-      fellowRatings={[]}
-      role={"ADMIN"}
+      supervisors={supervisors}
+      fellowRatings={fellowRatings}
+      role={role ?? ImplementerRole.ADMIN}
       hubSessionTypes={hubSessionTypes}
     />
   );

@@ -7,7 +7,15 @@ import StudentDetailsForm from "#/components/common/student/student-details-form
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+} from "#/components/ui/dialog";
+import { ImplementerRole, Prisma } from "@prisma/client";
+import { ColumnDef } from "@tanstack/react-table";
+import React, { Dispatch, SetStateAction } from "react";
 
 export default function StudentsInGroup({
   children,
@@ -54,7 +62,8 @@ export default function StudentsInGroup({
             }}
             className="data-table lg:mt-4"
           />
-          <DialogFooter className="flex justify-end gap-2">
+          {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR || role === ImplementerRole.FELLOW && (
+            <DialogFooter className="flex justify-end gap-2">
             <Button
               variant="ghost"
               type="button"
@@ -76,6 +85,7 @@ export default function StudentsInGroup({
               Add Student
             </Button>
           </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
       <StudentDetailsForm
