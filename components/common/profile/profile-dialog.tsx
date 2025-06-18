@@ -3,6 +3,7 @@
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
   CurrentClinicalLead,
+  CurrentClinicalTeam,
   CurrentFellow,
   CurrentHubCoordinator,
   CurrentOpsUser,
@@ -69,6 +70,7 @@ interface ProfileDialogProps {
     | CurrentFellow
     | CurrentClinicalLead
     | CurrentOpsUser
+    | CurrentClinicalTeam
     | null;
 }
 

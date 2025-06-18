@@ -147,6 +147,7 @@ function LayoutV2({
     | CurrentFellow
     | CurrentClinicalLead
     | CurrentOpsUser
+    | CurrentClinicalTeam
     | null;
 }) {
   const [mainRoute, subRoute] = pathname.slice(1).split("/"); // get the path under the 'hc' route. fix this when we add other roles

@@ -287,6 +287,7 @@ export async function currentClinicalTeam() {
     where: { id: identifier },
     include: {
       assignedHub: true,
+      implementer: true,
     },
   });
 
@@ -294,7 +295,10 @@ export async function currentClinicalTeam() {
     return null;
   }
 
-  return { ...clinicalTeam, user };
+  return {
+    ...clinicalTeam,
+    user,
+  };
 }
 
 export type CurrentOpsUser = Awaited<ReturnType<typeof currentOpsUser>>;
