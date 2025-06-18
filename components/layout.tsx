@@ -35,6 +35,7 @@ import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 
 import {
   CurrentClinicalLead,
+  CurrentClinicalTeam,
   CurrentFellow,
   CurrentHubCoordinator,
   CurrentOpsUser,
@@ -78,6 +79,7 @@ export function Layout({
     | CurrentFellow
     | CurrentClinicalLead
     | CurrentOpsUser
+    | CurrentClinicalTeam
     | null;
 }) {
   const pathname = usePathname();
