@@ -105,6 +105,7 @@ model Implementer {
   projectImplementers ProjectImplementer[]
   clinicalLeads       ClinicalLead[]
   opsUser             OpsUser[]
+  clinicalTeam        ClinicalTeam[]
 
   @@map("implementers")
 }
@@ -166,6 +167,7 @@ enum ImplementerRole {
   OPERATIONS
   FELLOW
   CLINICAL_LEAD
+  CLINICAL_TEAM
 
   @@map("implementer_roles")
 }
@@ -797,6 +799,7 @@ model Hub {
   clinicalLeads           ClinicalLead[]
   opsUser                 OpsUser[]
   hubSessions             InterventionSession[]
+  clinicalTeam            ClinicalTeam[]
 
   @@map("hubs")
 }
@@ -1557,6 +1560,21 @@ model ClinicalLead {
   clinicalScreeningCases ClinicalScreeningInfo[]
 
   @@map("clinical_leads")
+}
+
+model ClinicalTeam {
+  id            String      @id @default(cuid())
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt     DateTime    @updatedAt @map("updated_at") @db.Timestamptz()
+  name          String      @map("name") @db.VarChar(255)
+  email         String      @map("email") @db.VarChar(255)
+  cellNumber    String?     @map("cell_number") @db.VarChar(255)
+  assignedHubId String?     @map("assigned_hub_id") @db.VarChar(255)
+  assignedHub   Hub?        @relation(fields: [assignedHubId], references: [id])
+  implementerId String      @map("implementer_id") @db.VarChar(255)
+  implementer   Implementer @relation(fields: [implementerId], references: [id])
+
+  @@map("clinical_teams")
 }
 
 enum FollowUpPlanOptions {

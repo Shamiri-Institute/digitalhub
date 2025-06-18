@@ -89,7 +89,8 @@ export function Layout({
     pathname.startsWith("/sc/") ||
     pathname.startsWith("/fel/") ||
     pathname.startsWith("/cl/") ||
-    pathname.startsWith("/ops/")
+    pathname.startsWith("/ops/") ||
+    pathname.startsWith("/ct/")
   ) {
     return (
       <LayoutV2
@@ -544,7 +545,7 @@ function getCurrentUserNavigationLinks(
   }
 
   // Clinical Lead links
-  if (mainRoute === "cl") {
+  if (mainRoute === "cl" || mainRoute === "ct") {
     links.push(
       <div
         key="cl-supervisors"
@@ -578,7 +579,7 @@ function getCurrentUserNavigationLinks(
   }
 
   // Add reporting to all roles except for fellows AND clinical leads
-  if (mainRoute !== "fel" && mainRoute !== "cl") {
+  if (mainRoute !== "fel" && mainRoute !== "cl" && mainRoute !== "ct") {
     links.push(
       <div
         className={`tab-link ${reportingActive ? "active" : ""}`}
