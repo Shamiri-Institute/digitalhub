@@ -14,7 +14,7 @@ export default function AllHubClinicalCasesTable({
   return (
     <>
       <h2 className="text-lg font-medium">
-        All Supervisor Cases In This Hub ({cases.length})
+        All Clinical Cases ({cases.length})
       </h2>
       <DataTable
         data={cases}
