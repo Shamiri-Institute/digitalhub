@@ -5,6 +5,7 @@ import { hubSessionTypes } from "#/prisma/scripts/generate-session-names";
 import { faker } from "@faker-js/faker";
 import {
   ClinicalLead,
+  ClinicalTeam,
   Fellow,
   Hub,
   HubCoordinator,
@@ -308,6 +309,7 @@ async function createCoreUsers(
   fellows: Fellow[],
   clinicalLeads: ClinicalLead[],
   operations: OpsUser[],
+  clinicalTeam: ClinicalTeam,
 ) {
   console.log("creating core users");
   const userData = [
@@ -334,7 +336,7 @@ async function createCoreUsers(
     {
       id: objectId("user"),
       email: "ichami.etyang@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
+      role: ImplementerRole.CLINICAL_TEAM,
     },
     {
       id: objectId("user"),
@@ -403,7 +405,9 @@ async function createCoreUsers(
                 ? faker.helpers.arrayElement(clinicalLeads).id
                 : role === "OPERATIONS"
                   ? faker.helpers.arrayElement(operations).id
-                  : null,
+                  : role === "CLINICAL_TEAM"
+                    ? clinicalTeam.id
+                    : null,
     };
   });
 
@@ -925,6 +929,48 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
       ...clinicalLead,
     })),
   });
+}
+
+async function createClinicalTeam(hubs: Hub[], implementers: Implementer[]) {
+  console.log("creating clinical team");
+  // Assign to Arsenal Hub (static hub) and same implementer
+  const staticHub = hubs[0];
+  const staticImplementer = implementers[0];
+  if (!staticHub) throw new Error("No static hub found for clinical team");
+  if (!staticImplementer)
+    throw new Error("No static implementer found for clinical team");
+
+  // Create user first
+  const userId = objectId("user");
+  const clinicalTeamId = objectId("clinicalteam");
+
+  await db.user.create({
+    data: {
+      id: userId,
+      email: "takehiro.tomiyasu@test.com",
+    },
+  });
+
+  // Create implementer member with identifier
+  await db.implementerMember.create({
+    data: {
+      userId,
+      implementerId: staticImplementer.id,
+      role: ImplementerRole.CLINICAL_TEAM,
+      identifier: clinicalTeamId,
+    },
+  });
+
+  // Create clinical team member with matching id
+  const clinicalTeamMember = {
+    id: clinicalTeamId,
+    name: "Takehiro Tomiyasu",
+    email: "takehiro.tomiyasu@test.com",
+    cellNumber: "254712345679",
+    assignedHubId: staticHub.id,
+    implementerId: staticImplementer.id,
+  };
+  return db.clinicalTeam.create({ data: clinicalTeamMember });
 }
 
 async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
@@ -1514,6 +1560,7 @@ async function main() {
   );
 
   const clinicalLeads = await createClinicalLeads(hubs, userEmailSet);
+  const clinicalTeam = await createClinicalTeam(hubs, implementers);
   const operations = await createOperations(hubs, userEmailSet);
   const fellows = await createFellows(supervisors, userEmailSet);
 
@@ -1525,6 +1572,7 @@ async function main() {
     fellows,
     clinicalLeads,
     operations,
+    clinicalTeam,
   );
 
   const schools = await createSchools(hubs, supervisors);
