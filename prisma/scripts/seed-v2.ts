@@ -336,7 +336,7 @@ async function createCoreUsers(
     {
       id: objectId("user"),
       email: "ichami.etyang@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
+      role: ImplementerRole.CLINICAL_TEAM,
     },
     {
       id: objectId("user"),
