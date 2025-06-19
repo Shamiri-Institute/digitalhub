@@ -35,6 +35,7 @@ import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 
 import {
   CurrentClinicalLead,
+  CurrentClinicalTeam,
   CurrentFellow,
   CurrentHubCoordinator,
   CurrentOpsUser,
@@ -78,6 +79,7 @@ export function Layout({
     | CurrentFellow
     | CurrentClinicalLead
     | CurrentOpsUser
+    | CurrentClinicalTeam
     | null;
 }) {
   const pathname = usePathname();
@@ -89,7 +91,8 @@ export function Layout({
     pathname.startsWith("/sc/") ||
     pathname.startsWith("/fel/") ||
     pathname.startsWith("/cl/") ||
-    pathname.startsWith("/ops/")
+    pathname.startsWith("/ops/") ||
+    pathname.startsWith("/ct/")
   ) {
     return (
       <LayoutV2
@@ -144,6 +147,7 @@ function LayoutV2({
     | CurrentFellow
     | CurrentClinicalLead
     | CurrentOpsUser
+    | CurrentClinicalTeam
     | null;
 }) {
   const [mainRoute, subRoute] = pathname.slice(1).split("/"); // get the path under the 'hc' route. fix this when we add other roles
@@ -544,7 +548,7 @@ function getCurrentUserNavigationLinks(
   }
 
   // Clinical Lead links
-  if (mainRoute === "cl") {
+  if (mainRoute === "cl" || mainRoute === "ct") {
     links.push(
       <div
         key="cl-supervisors"
@@ -578,7 +582,7 @@ function getCurrentUserNavigationLinks(
   }
 
   // Add reporting to all roles except for fellows AND clinical leads
-  if (mainRoute !== "fel" && mainRoute !== "cl") {
+  if (mainRoute !== "fel" && mainRoute !== "cl" && mainRoute !== "ct") {
     links.push(
       <div
         className={`tab-link ${reportingActive ? "active" : ""}`}

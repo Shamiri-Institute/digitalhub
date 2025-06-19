@@ -87,6 +87,10 @@ export default async function AppMiddleware(req: NextRequest) {
         return NextResponse.redirect(new URL("/ops", req.url));
       }
 
+      if (ifClinicalTeamUserAndUnprefixedPath(session, path)) {
+        return NextResponse.redirect(new URL("/ct", req.url));
+      }
+
       return NextResponse.redirect(new URL("/", req.url));
     }
 
@@ -100,6 +104,8 @@ export default async function AppMiddleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/cl", req.url));
     } else if (ifOpsUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/ops", req.url));
+    } else if (ifClinicalTeamUserAndUnprefixedPath(session, path)) {
+      return NextResponse.redirect(new URL("/ct", req.url));
     } else if (ifSupervisorAndHcRoute(session, path)) {
       return NextResponse.redirect(new URL("/", req.url));
     }
@@ -150,5 +156,15 @@ function ifOpsUserAndUnprefixedPath(session: JWT | null, path: string) {
   return (
     session?.activeMembership?.role === ImplementerRole.OPERATIONS &&
     !path.startsWith("/ops")
+  );
+}
+
+function ifClinicalTeamUserAndUnprefixedPath(
+  session: JWT | null,
+  path: string,
+) {
+  return (
+    session?.activeMembership?.role === ImplementerRole.CLINICAL_TEAM &&
+    !path.startsWith("/ct")
   );
 }

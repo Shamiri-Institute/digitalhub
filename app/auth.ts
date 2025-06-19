@@ -266,6 +266,41 @@ export async function currentClinicalLead() {
   return { ...clinicalLead, user };
 }
 
+export type CurrentClinicalTeam = Awaited<
+  ReturnType<typeof currentClinicalTeam>
+>;
+
+export async function currentClinicalTeam() {
+  const user = await getCurrentUser();
+  if (!user) {
+    return null;
+  }
+
+  const { membership } = user;
+
+  const { identifier } = membership;
+  if (!identifier) {
+    return null;
+  }
+
+  const clinicalTeam = await db.clinicalTeam.findFirst({
+    where: { id: identifier },
+    include: {
+      assignedHub: true,
+      implementer: true,
+    },
+  });
+
+  if (!clinicalTeam) {
+    return null;
+  }
+
+  return {
+    ...clinicalTeam,
+    user,
+  };
+}
+
 export type CurrentOpsUser = Awaited<ReturnType<typeof currentOpsUser>>;
 
 export async function currentOpsUser() {
@@ -331,6 +366,7 @@ export async function getCurrentPersonnel(): Promise<
   | CurrentFellow
   | CurrentClinicalLead
   | CurrentOpsUser
+  | CurrentClinicalTeam
   | null
 > {
   const user = await getCurrentUser();
@@ -357,6 +393,10 @@ export async function getCurrentPersonnel(): Promise<
 
   if (role === "OPERATIONS") {
     return await currentOpsUser();
+  }
+
+  if (role === "CLINICAL_TEAM") {
+    return await currentClinicalTeam();
   }
 
   return null;
