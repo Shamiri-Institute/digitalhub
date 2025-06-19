@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.4.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.3.0...v1.4.0) (2025-06-19)
+
+### Features
+
+- implement clinical team userflow ([#483](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/483)) ([a876a43](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/a876a43f79087f33c7dff0563e369a0a2ef34791))
+
 ## [1.3.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.2.0...v1.3.0) (2025-06-16)
 
 ### Features
