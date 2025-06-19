@@ -104,6 +104,25 @@ export async function fetchPersonnel() {
     project: ops.assignedHub?.project?.name,
   }));
 
+  const clinicalTeams: Personnel[] = (
+    await db.clinicalTeam.findMany({
+      orderBy: { name: "asc" },
+      include: {
+        assignedHub: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    })
+  ).map((ct) => ({
+    id: ct.id,
+    role: ImplementerRole.CLINICAL_TEAM,
+    label: `${ct.name}`,
+    hub: ct.assignedHub?.hubName,
+    project: ct.assignedHub?.project?.name,
+  }));
+
   const personnel = [
     ...hubCoordinators,
     ...supervisors,
