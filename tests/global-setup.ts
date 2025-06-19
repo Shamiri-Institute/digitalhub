@@ -24,6 +24,10 @@ const sessionFixtures = [
     userEmail: PersonnelFixtures.clinicalLead.email,
     stateFile: PersonnelFixtures.clinicalLead.stateFile,
   },
+  {
+    userEmail: PersonnelFixtures.clinicalTeam.email,
+    stateFile: PersonnelFixtures.clinicalTeam.stateFile,
+  },
 ];
 
 async function globalSetup() {
