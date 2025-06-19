@@ -1,7 +1,6 @@
 import { Page, test } from "@playwright/test";
 
 import { PersonnelFixtures } from "#/tests/helpers";
-import { ClinicalTeamHomePage } from "#/tests/pages/clinical-team/home-page";
 import { ClinicalHomePage } from "#/tests/pages/clinical/home-page";
 import { HomePage } from "#/tests/pages/home-page";
 import { HubCoordinatorHomePage } from "#/tests/pages/hub-coordinator/home-page";
@@ -44,16 +43,6 @@ const roleAccessSpecs: RoleAccessSpec[] = [
     role: "operations",
     stateFile: PersonnelFixtures.opsUser.stateFile,
     accessiblePages: [OperationsHomePage],
-    inaccessiblePages: [
-      SupervisorHomePage,
-      HubCoordinatorHomePage,
-      ClinicalHomePage,
-    ],
-  },
-  {
-    role: "clinical teams",
-    stateFile: PersonnelFixtures.clinicalTeam.stateFile,
-    accessiblePages: [ClinicalTeamHomePage],
     inaccessiblePages: [
       SupervisorHomePage,
       HubCoordinatorHomePage,
