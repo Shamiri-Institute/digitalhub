@@ -12,8 +12,13 @@ import { signOut } from "next-auth/react";
 
 export default async function ClinicalPage() {
   const cases = await getClinicalCases();
-  const { schools, fellowsInHub, supervisorsInHub, currentSupervisorId } =
-    await getSchoolsInHub();
+  const {
+    schools,
+    fellowsInProject,
+    supervisorsInHub,
+    currentSupervisorId,
+    hubs,
+  } = await getSchoolsInHub();
 
   if (!currentSupervisorId) {
     await signOut({ callbackUrl: "/login" });
@@ -35,9 +40,10 @@ export default async function ClinicalPage() {
             <ClinicalCasesTable
               cases={cases}
               schools={schools}
-              fellowsInHub={fellowsInHub}
+              fellowsInProject={fellowsInProject}
               supervisorsInHub={supervisorsInHub}
               currentSupervisorId={currentSupervisorId!}
+              hubs={hubs}
             />
           </div>
         </div>
