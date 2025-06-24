@@ -57,7 +57,7 @@ const riskLevels = ["no", "low", "medium", "high", "severe"] as const;
 const CaseReportSchema = z.object({
   sessionId: stringValidation("Session ID is required"),
   presentingIssues: stringValidation("Presenting issues are required"),
-  orsAssessment: stringValidation("ORS assessment is required"),
+  orsAssessment: z.string().optional(),
   riskLevel: z.enum(riskLevels, {
     required_error: "Risk level is required",
   }),
@@ -170,7 +170,7 @@ export default function CaseNotesForm({
         sessionId: data.sessionId,
         followUpPlanExplanation: data.followUpPlan.explanation,
         followUpPlan: data.followUpPlan.isGroupSession ? "GROUP" : "INDIVIDUAL",
-        orsAssessment: parseInt(data.orsAssessment),
+        orsAssessment: data.orsAssessment ? parseInt(data.orsAssessment) : 0,
         interventionExplanation: data.interventionExplanation,
         studentResponseExplanation: data.studentResponseExplanation,
         presentingIssues: data.presentingIssues,
@@ -311,10 +311,7 @@ export default function CaseNotesForm({
               name="orsAssessment"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    ORS Assessment
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                  <FormLabel>ORS Assessment</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
