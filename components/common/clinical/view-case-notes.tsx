@@ -83,6 +83,40 @@ export function ViewCaseNotes({
                     </div>
                   </div>
                   <Separator className="my-2" />
+                  <div className="space-y-2">
+                    <div>
+                      <p className="text-sm">
+                        <strong>Treatment Interventions:</strong>
+                      </p>
+                      <ul className="ml-4 mt-1 list-disc text-sm">
+                        {note.treatmentInterventions.map(
+                          (intervention, index) => (
+                            <li key={index}>{intervention}</li>
+                          ),
+                        )}
+                      </ul>
+                    </div>
+                    {note.otherIntervention && (
+                      <div>
+                        <p className="text-sm">
+                          <strong>Other Intervention:</strong>{" "}
+                          {note.otherIntervention}
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-sm">
+                        <strong>
+                          Intervention Explanation (what techniques, approaches
+                          and tools were used?):
+                        </strong>
+                      </p>
+                      <p className="mt-1 whitespace-pre-wrap text-sm">
+                        {note.interventionExplanation}
+                      </p>
+                    </div>
+                  </div>
+                  <Separator className="my-2" />
                   <p className="text-sm">
                     <strong>Overall Feedback:</strong> {note.overallFeedback}
                   </p>

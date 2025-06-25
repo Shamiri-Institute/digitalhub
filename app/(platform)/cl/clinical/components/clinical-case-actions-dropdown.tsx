@@ -1,6 +1,6 @@
 import { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
-import { ViewCaseNotes } from "#/app/(platform)/cl/clinical/components/view-case-notes";
 import { ViewTerminationReasons } from "#/app/(platform)/cl/clinical/components/view-termination-reasons";
+import { ViewCaseNotes } from "#/components/common/clinical/view-case-notes";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
