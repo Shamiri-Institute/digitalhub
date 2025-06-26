@@ -35,7 +35,7 @@ export default function GroupsDatatableSkeleton({
     });
 
   const renderTableActions = () => {
-    return role !== "FELLOW" ? (
+    return (role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR) ? (
       <CreateGroup
         supervisors={[]}
         school={

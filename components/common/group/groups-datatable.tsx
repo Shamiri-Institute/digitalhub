@@ -51,7 +51,7 @@ export default function GroupsDataTable({
 
   const renderTableActions = () => {
     return (
-      role !== "FELLOW" &&
+      (role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR) &&
       supervisors && (
         <CreateGroup supervisors={supervisors} school={school} groupCount={data.length} />
       )

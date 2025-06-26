@@ -30,7 +30,7 @@ export default function StudentsDataTableMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l bg-white">
+        <div className="absolute inset-0 border-l">
           <div className="flex h-full w-full items-center justify-center">
             <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
           </div>
@@ -47,16 +47,20 @@ export default function StudentsDataTableMenu({
             state.setEditDialog(true);
           }}
         >
-          Edit information
+          {state.role === ImplementerRole.ADMIN ? "View information" : "Edit information"}
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            state.setStudent(student);
-            state.setMarkAttendanceDialog(true);
-          }}
-        >
-          Mark student attendance
-        </DropdownMenuItem>
+        {
+          state.role !== ImplementerRole.ADMIN && (
+            <DropdownMenuItem
+              onClick={() => {
+                state.setStudent(student);
+                state.setMarkAttendanceDialog(true);
+              }}
+            >
+                Mark student attendance
+              </DropdownMenuItem>
+        )
+        }
         <DropdownMenuItem
           onClick={() => {
             state.setStudent(student);
@@ -73,7 +77,10 @@ export default function StudentsDataTableMenu({
         >
           View attendance history
         </DropdownMenuItem>
-        <DropdownMenuItem
+        {
+          state.role !== ImplementerRole.ADMIN && (
+            <>
+            <DropdownMenuItem
           onClick={() => {
             state.setStudent(student);
             state.setReportingNotesDialog(true);
@@ -93,6 +100,9 @@ export default function StudentsDataTableMenu({
             <div className="text-shamiri-red">Drop-out student</div>
           )}
         </DropdownMenuItem>
+        </>
+        )
+        }
       </DropdownMenuContent>
     </DropdownMenu>
   );

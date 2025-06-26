@@ -28,7 +28,7 @@ export function GroupsDatatableMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l bg-white">
+        <div className="absolute inset-0 border-l">
           <div className="flex h-full w-full items-center justify-center">
             <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
           </div>
@@ -39,7 +39,7 @@ export function GroupsDatatableMenu({
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {state.role !== "FELLOW" && (
+        {state.role === ImplementerRole.HUB_COORDINATOR || state.role === ImplementerRole.SUPERVISOR && (
           <DropdownMenuItem
             onClick={() => {
               state.setGroup(group);
@@ -65,7 +65,7 @@ export function GroupsDatatableMenu({
         >
           View student group evaluation
         </DropdownMenuItem>
-        {state.role !== "FELLOW" && (
+        {state.role === ImplementerRole.HUB_COORDINATOR || state.role === ImplementerRole.SUPERVISOR && (
           <DropdownMenuItem
             className="text-shamiri-red"
             onClick={() => {

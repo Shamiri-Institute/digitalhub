@@ -54,7 +54,7 @@ export default function StudentDetailsForm({
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   student?: SchoolStudentTableData;
-  mode: "add" | "edit";
+  mode: "add" | "edit" | "view";
   children: React.ReactNode;
   schoolId: string | null;
   assignedGroupId?: string;
@@ -161,6 +161,8 @@ export default function StudentDetailsForm({
   };
 
   const onSubmit = async (values: z.infer<typeof StudentDetailsSchema>) => {
+    if (mode === "view") return;
+
     const response = await submitStudentDetails(values);
     if (!response.success) {
       toast({
@@ -184,7 +186,11 @@ export default function StudentDetailsForm({
         <DialogContent>
           <DialogHeader>
             <h2 className="text-xl font-bold">
-              {mode === "edit" ? "Edit student information" : "Add student to group"}
+              {mode === "view"
+                ? "View student information"
+                : mode === "edit"
+                  ? "Edit student information"
+                  : "Add student to group"}
             </h2>
           </DialogHeader>
           {children}
@@ -204,7 +210,7 @@ export default function StudentDetailsForm({
                             Student name <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} disabled={mode === "view"}/>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -217,7 +223,7 @@ export default function StudentDetailsForm({
                         <FormItem>
                           <FormLabel>Contact number</FormLabel>
                           <FormControl>
-                            <Input {...field} type="tel" />
+                            <Input {...field} type="tel" disabled={mode === "view"}/>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -235,6 +241,7 @@ export default function StudentDetailsForm({
                             onValueChange={field.onChange}
                             value={field.value}
                             defaultValue={field.value}
+                            disabled={mode === "view"}
                           >
                             <FormControl>
                               <SelectTrigger>
@@ -268,6 +275,7 @@ export default function StudentDetailsForm({
                               min={1900}
                               max={new Date().getFullYear()}
                               placeholder="Enter year of birth"
+                              disabled={mode === "view"}
                             />
                           </FormControl>
                           <FormMessage />
@@ -284,7 +292,7 @@ export default function StudentDetailsForm({
                             Admission number <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} disabled={mode === "view"}/>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -299,7 +307,7 @@ export default function StudentDetailsForm({
                             Class/form <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input {...field} type="text" />
+                            <Input {...field} type="text" disabled={mode === "view"}/>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -314,7 +322,7 @@ export default function StudentDetailsForm({
                             Stream <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} disabled={mode === "view"}/>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -325,7 +333,7 @@ export default function StudentDetailsForm({
                       name="id"
                       render={({ field }) => (
                         <FormItem>
-                          <Input type="hidden" defaultValue={field.value} />
+                          <Input type="hidden" defaultValue={field.value} disabled={mode === "view"}/>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -336,23 +344,26 @@ export default function StudentDetailsForm({
               <Separator className="my-6" />
               <DialogFooter className="flex justify-end gap-2">
                 <Button
-                  variant="ghost"
+                  variant={mode === "view" ? "brand" : "ghost"}
                   type="button"
-                  className="text-shamiri-new-blue hover:text-shamiri-new-blue"
                   onClick={() => {
                     onOpenChange(false);
                   }}
                 >
-                  Cancel
+                  {mode === "view" ? "Done" : "Cancel"}
                 </Button>
-                <Button
-                  variant="brand"
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                  loading={form.formState.isSubmitting}
-                >
-                  {mode === "edit" ? "Update & save" : "Submit"}
-                </Button>
+                {
+                  mode !== "view" && (
+                    <Button
+                      variant="brand"
+                      type="submit"
+                      disabled={form.formState.isSubmitting}
+                      loading={form.formState.isSubmitting}
+                    >
+                      {mode === "edit" ? "Update & save" : "Submit"}
+                    </Button>
+                  )
+                }
               </DialogFooter>
             </form>
           </Form>

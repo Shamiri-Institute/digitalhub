@@ -36,23 +36,6 @@ export default function StudentsDatatable({
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
   const [selectedSession, setSelectedSession] = useState<string>();
 
-  const renderTableActions = () => {
-    // TODO: Refactor for client component
-    // return (
-    //   hubCoordinator?.assignedHubId &&
-    //   hubCoordinator.implementerId &&
-    //   hubCoordinator.assignedHub?.projectId && (
-    //     <BatchUploadDownloadStudents
-    //       hubId={hubCoordinator?.assignedHubId}
-    //       implementerId={hubCoordinator?.implementerId}
-    //       projectId={hubCoordinator?.assignedHub?.projectId}
-    //       schoolVisibleId={visibleId}
-    //     />
-    //   )
-    // );
-    return null;
-  };
-
   const markAttendance = async (data: z.infer<typeof MarkAttendanceSchema>) => {
     const [res] = await Promise.all([
       await markStudentAttendance(data),
@@ -63,7 +46,7 @@ export default function StudentsDatatable({
 
   const renderDialogAlert = () => {
     return (
-      <DialogAlertWidget>
+      <DialogAlertWidget separator={false}>
         <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
           <span className="capitalize">{student?.studentName?.toLowerCase()}</span>
           <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
@@ -91,7 +74,6 @@ export default function StudentsDatatable({
         })}
         emptyStateMessage="No students found"
         className="data-table data-table-action lg:mt-4"
-        renderTableActions={renderTableActions()}
         columnVisibilityState={{
           Gender: false,
           "Contact no.": false,
@@ -100,6 +82,7 @@ export default function StudentsDatatable({
           Stream: false,
           "Class/Form": false,
           "Date added": false,
+          checkbox: false
         }}
         rowSelectionDescription={"students"}
       />
@@ -112,7 +95,7 @@ export default function StudentsDatatable({
             schoolId={student.school?.id ?? null}
             assignedGroupId={student.assignedGroupId ?? undefined}
             groupName={student.assignedGroup?.groupName ?? undefined}
-            mode="edit"
+            mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
             role={role}
           >
             {renderDialogAlert()}

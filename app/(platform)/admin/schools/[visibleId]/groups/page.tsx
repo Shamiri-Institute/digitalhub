@@ -1,4 +1,4 @@
-import { currentHubCoordinator } from "#/app/auth";
+import { currentAdminUser, currentHubCoordinator } from "#/app/auth";
 import { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
 import GroupsTableSkeleton from "#/components/common/group/groups-datatable-skeleton";
@@ -11,10 +11,23 @@ export default async function GroupsPage({
 }: {
   params: { visibleId: string };
 }) {
-  const hc = await currentHubCoordinator();
-  if (!hc) {
+  const admin = await currentAdminUser();
+  if (!admin) {
     await signOut({ callbackUrl: "/login" });
   }
+
+  const school = await db.school.findFirstOrThrow({
+    where: {
+      visibleId,
+    },
+    include: {
+      interventionSessions: {
+        include: {
+          session: true,
+        },
+      },
+    },
+  });
 
   const data = await Promise.all([
     await db.$queryRaw<Omit<SchoolGroupDataTableData, "students">[]>`
@@ -35,7 +48,7 @@ export default async function GroupsPage({
       LEFT JOIN supervisors sup ON fel.supervisor_id = sup.id
       LEFT JOIN intervention_group_reports intgr ON intg.id = intgr.group_id
   WHERE
-      sch.visible_id = ${visibleId}
+      sch.id = ${school.id}
   GROUP BY
       intg.id,
       fel.fellow_name,
@@ -45,7 +58,7 @@ export default async function GroupsPage({
     db.student.findMany({
       where: {
         school: {
-          visibleId,
+          id: school.id,
         },
       },
       include: {
@@ -60,7 +73,7 @@ export default async function GroupsPage({
       where: {
         group: {
           school: {
-            visibleId,
+            id: school.id,
           },
         },
       },
@@ -84,36 +97,19 @@ export default async function GroupsPage({
 
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: hc?.assignedHubId as string,
+      hubId: school.hubId,
     },
     include: {
       fellows: true,
     },
   });
 
-  const school = await db.school.findFirstOrThrow({
-    where: {
-      visibleId,
-    },
-    include: {
-      interventionSessions: {
-        include: {
-          session: true,
-        },
-      },
-    },
-  });
-
   return (
-    <Suspense
-      fallback={<GroupsTableSkeleton role={hc?.user.membership.role!} />}
-    >
       <GroupsDataTable
         data={data}
         school={school}
         supervisors={supervisors}
-        role={hc?.user.membership.role!}
+        role={admin?.user.membership.role!}
       />
-    </Suspense>
   );
 }
