@@ -92,7 +92,7 @@ export const columns: ColumnDef<ClinicalCases>[] = [
     cell: ({ row }) => (
       <ClinicalCaseActionsDropdownMenu
         clinicalCase={row.original}
-        role="CLINICAL_LEAD"
+        role={row.original.role as "CLINICAL_LEAD" | "SUPERVISOR"}
       />
     ),
     enableHiding: false,
