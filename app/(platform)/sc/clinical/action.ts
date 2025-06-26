@@ -79,6 +79,7 @@ export async function getClinicalCases() {
       currentSupervisorId: caseInfo.currentSupervisorId,
       clinicalCaseNotes: caseInfo.clinicalCaseNotes,
       clinicalLeadId: caseInfo.clinicalLeadId,
+      role: "SUPERVISOR",
     };
   });
 }
