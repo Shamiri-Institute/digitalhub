@@ -16,16 +16,22 @@ export default async function ClinicalPage() {
   const cases = await getClinicalCasesInHub();
   const casesData = await getClinicalCasesData();
   const allClinicalLeadCases = await getClinicalCasesCreatedByClinicalLead();
-  const { schools, fellowsInHub, supervisorsInHub, currentClinicalLeadId } =
-    await getSchoolsInClinicalLeadHub();
+  const {
+    schools,
+    fellowsInProject,
+    supervisorsInHub,
+    currentClinicalLeadId,
+    hubs,
+  } = await getSchoolsInClinicalLeadHub();
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">
         <AddNewClinicalCaseForm
           schools={schools}
-          fellowsInHub={fellowsInHub}
+          fellowsInProject={fellowsInProject}
           supervisorsInHub={supervisorsInHub}
           creatorId={currentClinicalLeadId}
+          hubs={hubs}
           role="CLINICAL_LEAD"
         >
           <DialogTrigger asChild={true}>

@@ -1,6 +1,7 @@
 "use server";
 
 import { currentClinicalLead } from "#/app/auth";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export async function getClinicalCasesData() {
@@ -276,43 +277,64 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
 export async function getSchoolsInClinicalLeadHub() {
   const clinicalLead = await currentClinicalLead();
 
-  const [schools, supervisorsInHub, fellowsInHub] = await Promise.all([
-    db.school.findMany({
-      where: {
-        hubId: clinicalLead?.assignedHubId,
-      },
-      include: {
-        students: true,
-        interventionSessions: {
-          select: {
-            id: true,
-            session: {
-              select: {
-                sessionName: true,
-                sessionLabel: true,
+  const [schools, supervisorsInHub, fellowsInProject, hubs] = await Promise.all(
+    [
+      db.school.findMany({
+        where: {
+          hubId: clinicalLead?.assignedHubId,
+        },
+        include: {
+          students: true,
+          interventionSessions: {
+            select: {
+              id: true,
+              session: {
+                select: {
+                  sessionName: true,
+                  sessionLabel: true,
+                },
               },
             },
           },
         },
-      },
-    }),
-    db.supervisor.findMany({
-      where: {
-        hubId: clinicalLead?.assignedHubId,
-      },
-    }),
-    db.fellow.findMany({
-      where: {
-        hubId: clinicalLead?.assignedHubId,
-      },
-    }),
-  ]);
+      }),
+      db.supervisor.findMany({
+        where: {
+          hubId: clinicalLead?.assignedHubId,
+        },
+      }),
+      db.fellow.findMany({
+        where: {
+          hub: {
+            projectId: CURRENT_PROJECT_ID,
+          },
+        },
+        include: {
+          hub: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      }),
+      db.hub.findMany({
+        where: {
+          projectId: CURRENT_PROJECT_ID,
+        },
+        select: {
+          id: true,
+          hubName: true,
+        },
+      }),
+    ],
+  );
 
   return {
     schools,
     supervisorsInHub,
-    fellowsInHub,
+    fellowsInProject,
     currentClinicalLeadId: clinicalLead!.id,
+    hubs,
   };
 }
 

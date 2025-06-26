@@ -57,10 +57,11 @@ type FormValues = z.infer<typeof formSchema>;
 export function AddNewClinicalCaseForm({
   children,
   schools = [],
-  fellowsInHub = [],
+  fellowsInProject = [],
   supervisorsInHub = [],
   creatorId,
   role,
+  hubs = [],
 }: {
   children?: React.ReactNode;
   schools: Prisma.SchoolGetPayload<{
@@ -79,18 +80,28 @@ export function AddNewClinicalCaseForm({
       };
     };
   }>[];
-  fellowsInHub: Prisma.FellowGetPayload<{}>[];
+  fellowsInProject: Prisma.FellowGetPayload<{}>[];
   supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
   creatorId: string;
   role: "CLINICAL_LEAD" | "SUPERVISOR";
+  hubs: Prisma.HubGetPayload<{
+    select: {
+      id: true;
+      hubName: true;
+    };
+  }>[];
 }) {
   const [open, setOpen] = useState(false);
   const [initialContactType, setInitialContactType] = useState<string>("");
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>("");
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [selectedHubId, setSelectedHubId] = useState<string>("");
   const [students, setStudents] = useState<Prisma.StudentGetPayload<{}>[]>([]);
   const [availableSessions, setAvailableSessions] = useState<
     Array<{ id: string; sessionLabel: string }>
+  >([]);
+  const [fellowsInHub, setFellowsInHub] = useState<
+    Prisma.FellowGetPayload<{}>[]
   >([]);
 
   const form = useForm<FormValues>({
@@ -148,6 +159,27 @@ export function AddNewClinicalCaseForm({
     }
   };
 
+  const handleInitialContactChange = (value: string) => {
+    setInitialContactType(value);
+    if (value !== "fellow") {
+      setSelectedHubId("");
+      setFellowsInHub([]);
+      form.setValue("fellow", "");
+    }
+    if (value !== "supervisor") {
+      form.setValue("supervisor", "");
+    }
+  };
+
+  const handleHubSelect = (hubId: string) => {
+    setSelectedHubId(hubId);
+    const fellowsInSelectedHub = fellowsInProject.filter(
+      (fellow) => fellow.hubId === hubId,
+    );
+    setFellowsInHub(fellowsInSelectedHub);
+    form.setValue("fellow", "");
+  };
+
   const onSubmit = async (data: FormValues) => {
     if (!selectedSchoolId || !selectedStudentId) {
       toast({
@@ -182,8 +214,10 @@ export function AddNewClinicalCaseForm({
         form.reset();
         setSelectedSchoolId("");
         setSelectedStudentId("");
+        setSelectedHubId("");
         setAvailableSessions([]);
         setInitialContactType("");
+        setFellowsInHub([]);
         setOpen(false);
       } else {
         toast({
@@ -419,7 +453,7 @@ export function AddNewClinicalCaseForm({
                   <Select
                     onValueChange={(value) => {
                       field.onChange(value);
-                      setInitialContactType(value);
+                      handleInitialContactChange(value);
                     }}
                     defaultValue={field.value}
                   >
@@ -438,7 +472,7 @@ export function AddNewClinicalCaseForm({
               )}
             />
 
-            <div className="flex w-full flex-1 flex-row gap-4">
+            <div className="flex w-full flex-1 flex-col gap-4">
               {initialContactType === "supervisor" && (
                 <FormField
                   control={form.control}
@@ -469,31 +503,54 @@ export function AddNewClinicalCaseForm({
               )}
 
               {initialContactType === "fellow" && (
-                <FormField
-                  control={form.control}
-                  name="fellow"
-                  render={({ field }) => (
-                    <FormItem className="flex-1">
-                      <FormLabel>
-                        Select Fellow
-                        <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <div>
-                        <Combobox
-                          items={fellowsInHub.map((fellow) => ({
-                            id: fellow.id,
-                            label: fellow.fellowName || "Unknown Fellow",
-                          }))}
-                          activeItemId={field.value || ""}
-                          onSelectItem={field.onChange}
-                          placeholder="Select a fellow..."
-                          inputPlaceholder="Search fellows..."
-                        />
-                      </div>
-                      <FormMessage />
-                    </FormItem>
+                <>
+                  <div className="w-full">
+                    <FormLabel>
+                      Select Hub
+                      <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <div>
+                      <Combobox
+                        items={hubs.map((hub) => ({
+                          id: hub.id,
+                          label: hub.hubName || "Unknown Hub",
+                        }))}
+                        activeItemId={selectedHubId}
+                        onSelectItem={handleHubSelect}
+                        placeholder="Select a hub..."
+                        inputPlaceholder="Search hubs..."
+                      />
+                    </div>
+                  </div>
+
+                  {selectedHubId && (
+                    <FormField
+                      control={form.control}
+                      name="fellow"
+                      render={({ field }) => (
+                        <FormItem className="w-full">
+                          <FormLabel>
+                            Select Fellow
+                            <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <div>
+                            <Combobox
+                              items={fellowsInHub.map((fellow) => ({
+                                id: fellow.id,
+                                label: fellow.fellowName || "Unknown Fellow",
+                              }))}
+                              activeItemId={field.value || ""}
+                              onSelectItem={field.onChange}
+                              placeholder="Select a fellow..."
+                              inputPlaceholder="Search fellows..."
+                            />
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
-                />
+                </>
               )}
             </div>
 
@@ -534,7 +591,13 @@ export function AddNewClinicalCaseForm({
               >
                 Dismiss
               </Button>
-              <Button type="submit">Save</Button>
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                loading={form.formState.isSubmitting}
+              >
+                Save
+              </Button>
             </div>
           </form>
         </Form>

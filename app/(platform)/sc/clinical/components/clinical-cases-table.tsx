@@ -13,9 +13,10 @@ import { Plus } from "lucide-react";
 export default function ClinicalCasesTable({
   cases,
   schools,
-  fellowsInHub,
+  fellowsInProject,
   supervisorsInHub,
   currentSupervisorId,
+  hubs,
 }: {
   cases: ClinicalCases[];
   schools: Prisma.SchoolGetPayload<{
@@ -34,18 +35,33 @@ export default function ClinicalCasesTable({
       };
     };
   }>[];
-  fellowsInHub: Prisma.FellowGetPayload<{}>[];
+  fellowsInProject: Prisma.FellowGetPayload<{
+    include: {
+      hub: {
+        select: {
+          id: true;
+        };
+      };
+    };
+  }>[];
   supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
   currentSupervisorId: string;
+  hubs: Prisma.HubGetPayload<{
+    select: {
+      id: true;
+      hubName: true;
+    };
+  }>[];
 }) {
   const renderTableActions = (
     <>
       <AddNewClinicalCaseForm
         schools={schools}
-        fellowsInHub={fellowsInHub}
+        fellowsInProject={fellowsInProject}
         supervisorsInHub={supervisorsInHub}
         creatorId={currentSupervisorId}
         role="SUPERVISOR"
+        hubs={hubs}
       >
         <DialogTrigger asChild={true}>
           <Button variant="brand">
