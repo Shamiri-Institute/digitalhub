@@ -20,10 +20,10 @@ import { cn } from "#/lib/utils";
 
 export default function ClinicalCaseActionsDropdownMenu({
   clinicalCase,
-  role = "SUPERVISOR",
+  role = "CLINICAL_LEAD",
 }: {
   clinicalCase: ClinicalCases;
-  role: "CLINICAL_LEAD" | "SUPERVISOR";
+  role?: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   return (
     <DropdownMenu>
