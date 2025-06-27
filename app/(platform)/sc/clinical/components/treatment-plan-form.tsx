@@ -52,7 +52,7 @@ const treatmentInterventions = [
 ] as const;
 
 const TreatmentPlanSchema = z.object({
-  currentOrsScore: stringValidation("Current ORS score is required"),
+  currentOrsScore: z.string().optional(),
   plannedSessions: stringValidation("Number of planned sessions is required"),
   sessionFrequency: stringValidation("Session frequency is required"),
   treatmentInterventions: z
@@ -95,7 +95,9 @@ export default function TreatmentPlanForm({
       const responese = await createTreatmentPlan({
         caseId: clinicalCase.id,
         role,
-        currentOrsScore: parseInt(data.currentOrsScore),
+        currentOrsScore: data.currentOrsScore
+          ? parseInt(data.currentOrsScore)
+          : 0,
         plannedSessions: parseInt(data.plannedSessions),
         sessionFrequency: data.sessionFrequency,
         treatmentInterventions: data.treatmentInterventions,
@@ -137,10 +139,7 @@ export default function TreatmentPlanForm({
               name="currentOrsScore"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    Current ORS Score
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
+                  <FormLabel>Current ORS Score</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} />
                   </FormControl>
