@@ -1,11 +1,14 @@
 "use client";
 
+import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
 import { columns, SchoolsTableData } from "#/components/common/schools/columns";
+import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
 import SchoolDetailsForm from "#/components/common/schools/school-details-form";
+import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
 import SchoolsDataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
-import { ImplementerRole } from "@prisma/client";
+import { ImplementerRole, Supervisor } from "@prisma/client";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
@@ -41,17 +44,18 @@ export const handleSchoolsCSVTemplateDownload = () => {
 export default function SchoolsDatatable({
   role,
   schools,
+  supervisors,
   disablePagination = false,
   isSubComponent = false,
   className,
 }: {
   role: ImplementerRole;
   schools: SchoolsTableData[];
+  supervisors?: Supervisor[];
   disablePagination?: boolean;
   isSubComponent?: boolean;
   className?: string;
 }) {
-  // TODO: Refactor this component to not use context
   const [editDialog, setEditDialog] = useState(false);
   const [school, setSchool] = useState<SchoolsTableData | null>(null);
   const [pointSupervisorDialog, setPointSupervisorDialog] = useState(false);
@@ -79,6 +83,7 @@ export default function SchoolsDatatable({
   };
 
   return (
+    <>
     <SchoolsDataTable
       data={schools}
       columns={columns({
@@ -111,5 +116,16 @@ export default function SchoolsDatatable({
       disablePagination={disablePagination}
       isSubComponent={isSubComponent}
     />
+    {
+      role === "HUB_COORDINATOR" && (
+        <>
+          <SchoolDetailsForm school={school} open={editDialog} setOpen={setEditDialog} />
+          <AssignPointSupervisor supervisors={supervisors ?? []} open={pointSupervisorDialog} setOpen={setPointSupervisorDialog} school={school} />
+          <DropoutSchool school={school} open={schoolDropOutDialog} setOpen={setSchoolDropOutDialog} />
+          <UndoDropoutSchool school={school} open={undoDropOutDialog} setOpen={setUndoDropOutDialog} />
+        </>
+      )
+    }
+    </>
   );
 }

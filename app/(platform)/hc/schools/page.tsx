@@ -85,13 +85,7 @@ export default async function SchoolsPage(props: {
           schoolAttendances={schoolAttendanceData}
         />
         <Separator />
-        <SchoolInfoProvider>
-          <SchoolsDatatable role={user?.membership.role!} />
-          <SchoolDetailsForm />
-          <AssignPointSupervisor supervisors={supervisors} />
-          <DropoutSchool />
-          <UndoDropoutSchool />
-        </SchoolInfoProvider>
+        <SchoolsDatatable role={user?.membership.role!} schools={data} supervisors={supervisors}/>
       </div>
       <PageFooter />
     </div>

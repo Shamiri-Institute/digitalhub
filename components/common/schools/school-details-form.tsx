@@ -1,15 +1,4 @@
 "use client";
-
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { isValidPhoneNumber } from "libphonenumber-js";
-import { Loader2 } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
-import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
-import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import type { SchoolsTableData } from "#/components/common/schools/columns";
 import { Icons } from "#/components/icons";
@@ -42,7 +31,18 @@ import {
   SCHOOL_TYPES,
 } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
-import { AddSchoolSchema, EditSchoolSchema } from "../../../app/(platform)/hc/schemas";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { isValidPhoneNumber } from "libphonenumber-js";
+import { Loader2 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import {
+  AddSchoolSchema,
+  EditSchoolSchema,
+} from "../../../app/(platform)/hc/schemas";
 import {
   addSchool,
   editSchoolInformation,
@@ -51,14 +51,19 @@ import {
 
 type FormData = z.infer<typeof AddSchoolSchema>;
 
-export default function SchoolDetailsForm() {
-  // TODO: Refactor this component to not use context
-  const context = useContext(SchoolInfoContext);
-  const schoolsContext = useContext(SchoolsDataContext);
+export default function SchoolDetailsForm({
+  school,
+  open,
+  setOpen,
+}: {
+  school: SchoolsTableData | null;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) {
   const pathname = usePathname();
-  const isEditing = !!context.school;
+  const isEditing = !!school;
   const isCountySelectionValid = KENYAN_COUNTIES.some(
-    (county) => county.name === context.school?.schoolCounty,
+    (county) => county.name === school?.schoolCounty,
   );
   const [pointPersonPhone, setPointPersonPhone] = useState<string>("");
   const [pointPersonPhoneErrors, setPointPersonPhoneErrors] = useState<number[]>([]);
@@ -81,32 +86,32 @@ export default function SchoolDetailsForm() {
 
   useEffect(() => {
     const defaultValues: Partial<FormData> = {
-      numbersExpected: context.school?.numbersExpected ?? 0,
-      schoolEmail: context.school?.schoolEmail ?? "",
-      schoolDemographics: context.school?.schoolDemographics as
+      numbersExpected: school?.numbersExpected ?? 0,
+      schoolEmail: school?.schoolEmail ?? "",
+      schoolDemographics: school?.schoolDemographics as
         | (typeof SCHOOL_DEMOGRAPHICS)[number]
         | undefined,
-      schoolCounty: context.school?.schoolCounty as
+      schoolCounty: school?.schoolCounty as
         | (typeof KENYAN_COUNTIES)[number]["name"]
         | undefined,
-      schoolSubCounty: context.school?.schoolSubCounty ?? undefined,
-      schoolName: context.school?.schoolName ?? "",
-      boardingDay: context.school?.boardingDay as (typeof BOARDING_DAY_TYPES)[number] | undefined,
-      schoolType: context.school?.schoolType as (typeof SCHOOL_TYPES)[number] | undefined,
-      pointPersonPhone: context.school?.pointPersonPhone ?? undefined,
-      pointPersonEmail: context.school?.pointPersonEmail ?? undefined,
-      pointPersonName: context.school?.pointPersonName ?? undefined,
-      principalName: context.school?.principalName ?? undefined,
-      principalPhone: context.school?.principalPhone ?? undefined,
+      schoolSubCounty: school?.schoolSubCounty ?? undefined,
+      schoolName: school?.schoolName ?? "",
+      boardingDay: school?.boardingDay as (typeof BOARDING_DAY_TYPES)[number] | undefined,
+      schoolType: school?.schoolType as (typeof SCHOOL_TYPES)[number] | undefined,
+      pointPersonPhone: school?.pointPersonPhone ?? undefined,
+      pointPersonEmail: school?.pointPersonEmail ?? undefined,
+      pointPersonName: school?.pointPersonName ?? undefined,
+      principalName: school?.principalName ?? undefined,
+      principalPhone: school?.principalPhone ?? undefined,
       preSessionDate: undefined,
     };
-    if (context.editDialog) {
+    if (open) {
       form.reset(defaultValues);
     }
-  }, [context.editDialog, context.school, form]);
+  }, [open, school, form]);
 
   const onSubmit = async (data: FormData) => {
-    if (isEditing && context.school) {
+    if (isEditing && school) {
       // remove empty strings (removed phone numbers)
       const pointPersonPhoneNumbers = data.pointPersonPhone
         ?.split("/")
@@ -116,35 +121,23 @@ export default function SchoolDetailsForm() {
           ? pointPersonPhoneNumbers.join("/")
           : undefined;
 
-      const response = await editSchoolInformation(context.school.id, data);
+      const response = await editSchoolInformation(school.id, data);
 
       if (!response.success) {
         toast({
           variant: "destructive",
-          title: "Submission error",
           description:
-            response.message ?? "Something went wrong during submission, please try again",
+            response.message ?? "Something went wrong, please try again",
         });
         return;
       }
 
-      const copiedSchools = [...schoolsContext.schools];
-      const index = copiedSchools.findIndex((_school) => _school.id === context.school?.id);
-      if (index !== -1) {
-        copiedSchools[index] = {
-          ...copiedSchools[index],
-          ...(data as SchoolsTableData),
-        };
-        context.setSchool(copiedSchools[index] ?? copiedSchools[index]);
-        schoolsContext.setSchools(copiedSchools);
-        await revalidatePageAction(pathname, "layout");
-      }
+      await revalidatePageAction(pathname);
 
       toast({
         description: response.message,
       });
     } else {
-      // Add new school
       const response = await addSchool(data as z.infer<typeof AddSchoolSchema>);
 
       if (!response.success) {
@@ -156,11 +149,7 @@ export default function SchoolDetailsForm() {
         return;
       }
 
-      // Add the new school to the list
-      if (response.data) {
-        schoolsContext.setSchools([...schoolsContext.schools, response.data]);
-      }
-      await revalidatePageAction(pathname, "layout");
+      await revalidatePageAction(pathname);
 
       toast({
         description: response.message,
@@ -168,7 +157,7 @@ export default function SchoolDetailsForm() {
     }
 
     form.reset();
-    context.setEditDialog(false);
+    setOpen(false);
   };
 
   const validatePhoneNumber = (field: keyof typeof form.formState.defaultValues, value: string) => {
@@ -180,7 +169,7 @@ export default function SchoolDetailsForm() {
   };
 
   return (
-    <Dialog open={context.editDialog} onOpenChange={context.setEditDialog}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="w-1/2 max-w-none">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -191,7 +180,7 @@ export default function SchoolDetailsForm() {
             </DialogHeader>
             {isEditing && (
               <div className="pb-2 pt-4">
-                <DialogAlertWidget label={context.school?.schoolName} separator={false} />
+                <DialogAlertWidget label={school?.schoolName} separator={false} />
               </div>
             )}
             <div className="space-y-6">
@@ -287,7 +276,7 @@ export default function SchoolDetailsForm() {
                               {isCountySelectionValid ? (
                                 <SelectValue placeholder="Select county" />
                               ) : (
-                                <SelectValue>{context.school?.schoolCounty}</SelectValue>
+                                <SelectValue>{school?.schoolCounty}</SelectValue>
                               )}
                             </SelectTrigger>
                           </FormControl>
@@ -619,7 +608,7 @@ export default function SchoolDetailsForm() {
                 type="button"
                 className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
                 onClick={() => {
-                  context.setEditDialog(false);
+                  setOpen(false);
                 }}
               >
                 Cancel
