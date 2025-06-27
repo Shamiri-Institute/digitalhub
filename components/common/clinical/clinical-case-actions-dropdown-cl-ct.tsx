@@ -1,6 +1,7 @@
 import { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import { ViewTerminationReasons } from "#/app/(platform)/cl/clinical/components/view-termination-reasons";
 import { ViewCaseNotes } from "#/components/common/clinical/view-case-notes";
+import { ViewTreatmentPlan } from "#/components/common/clinical/view-treatment-plan";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -18,6 +19,7 @@ export default function ClinicalLeadCaseActionsDropdownMenu({
 }) {
   const isTerminated = clinicalCase.caseStatus === "Terminated";
   const hasNotes = clinicalCase.caseNotes && clinicalCase.caseNotes.length > 0;
+  const hasTreatmentPlan = clinicalCase.followUpTreatmentPlan !== null;
 
   return (
     <DropdownMenu>
@@ -48,6 +50,21 @@ export default function ClinicalLeadCaseActionsDropdownMenu({
         ) : (
           <div className="cursor-not-allowed px-2 py-1.5 text-sm text-gray-400">
             No case notes available
+          </div>
+        )}
+
+        {hasTreatmentPlan ? (
+          <ViewTreatmentPlan
+            treatmentPlan={clinicalCase.followUpTreatmentPlan}
+            pseudonym={clinicalCase.pseudonym}
+          >
+            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
+              View treatment plan
+            </div>
+          </ViewTreatmentPlan>
+        ) : (
+          <div className="cursor-not-allowed px-2 py-1.5 text-sm text-gray-400">
+            No treatment plan available
           </div>
         )}
 
