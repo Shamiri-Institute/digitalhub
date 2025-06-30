@@ -1,5 +1,9 @@
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
+import {
+  createAuditLog,
+  validateApiKeyMiddleware,
+} from "#/lib/middleware/api-key-auth";
 import { stringValidation } from "#/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -66,7 +70,23 @@ const SessionAnalysisSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  const clientIp = getClientIp(request);
+
   try {
+    const authResult = await validateApiKeyMiddleware(request);
+    if (authResult) {
+      createAuditLog("authentication_failed", clientIp, {
+        endpoint: "/api/session-analysis",
+        method: "POST",
+      });
+      return authResult;
+    }
+
+    createAuditLog("authentication_success", clientIp, {
+      endpoint: "/api/session-analysis",
+      method: "POST",
+    });
+
     const body = await request.json();
 
     const result = SessionAnalysisSchema.safeParse(body);
@@ -74,6 +94,13 @@ export async function POST(request: NextRequest) {
       const errorMessages = result.error.issues.map(
         (issue) => `${issue.path.join(".")}: ${issue.message}`,
       );
+
+      createAuditLog("validation_failed", clientIp, {
+        endpoint: "/api/session-analysis",
+        errors: errorMessages,
+        sessionId: body.sessionId,
+      });
+
       return NextResponse.json(
         {
           error: "Validation failed",
@@ -95,6 +122,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (!existingSession) {
+      createAuditLog("session_not_found", clientIp, {
+        endpoint: "/api/session-analysis",
+        sessionId: payload.sessionId,
+      });
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
@@ -103,6 +134,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingAnalysis) {
+      createAuditLog("duplicate_analysis_attempt", clientIp, {
+        endpoint: "/api/session-analysis",
+        sessionId: payload.sessionId,
+        existingAnalysisId: existingAnalysis.id,
+      });
       return NextResponse.json(
         { error: "Analysis already exists for this session" },
         { status: 400 },
@@ -132,6 +168,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    createAuditLog("analysis_created", clientIp, {
+      endpoint: "/api/session-analysis",
+      sessionId: payload.sessionId,
+      analysisId: sessionAnalysis.id,
+      schoolName: existingSession.school?.schoolName,
+    });
+
     return NextResponse.json(
       {
         message: "Session analysis created successfully",
@@ -141,6 +184,12 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Error creating session analysis:", error);
+
+    createAuditLog("system_error", clientIp, {
+      endpoint: "/api/session-analysis",
+      error: error instanceof Error ? error.message : "Unknown error",
+      errorType: error instanceof SyntaxError ? "syntax" : "internal",
+    });
 
     if (error instanceof SyntaxError) {
       return NextResponse.json(
@@ -154,4 +203,24 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+function getClientIp(request: NextRequest): string {
+  const xForwardedFor = request.headers.get("X-Forwarded-For");
+  const xRealIp = request.headers.get("X-Real-IP");
+  const xClientIp = request.headers.get("X-Client-IP");
+
+  if (xForwardedFor) {
+    return xForwardedFor.split(",")[0]?.trim() || "unknown";
+  }
+
+  if (xRealIp) {
+    return xRealIp;
+  }
+
+  if (xClientIp) {
+    return xClientIp;
+  }
+
+  return request.ip || "unknown";
 }
