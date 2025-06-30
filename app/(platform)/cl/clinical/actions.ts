@@ -359,7 +359,7 @@ export async function getSchoolsInClinicalLeadHub() {
     schools,
     supervisorsInHub,
     fellowsInProject,
-    currentClinicalLeadId: clinicalLead!.id,
+    currentClinicalLeadId: clinicalLead?.id,
     hubs,
   };
 }
