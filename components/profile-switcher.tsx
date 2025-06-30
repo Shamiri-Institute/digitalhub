@@ -27,17 +27,18 @@ export function ProfileSwitcher() {
 
   const implementerId = session?.user?.activeMembership?.implementerId;
 
-  const [implementerInfo, setImplementerInfo] = React.useState<
-    Prisma.ImplementerGetPayload<{
-      include: {
-        avatar: {
-          include: {
-            file: true;
+  const [implementerInfo, setImplementerInfo] =
+    React.useState<
+      Prisma.ImplementerGetPayload<{
+        include: {
+          avatar: {
+            include: {
+              file: true;
+            };
           };
         };
-      };
-    }>
-  >();
+      }>
+    >();
 
   React.useEffect(() => {
     if (implementerId) {
