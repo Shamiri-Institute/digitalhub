@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
-import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { signOut, useSession } from "next-auth/react";
 import React from "react";
 
 import { Icons } from "#/components/icons";

@@ -1,7 +1,3 @@
-import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
-import { objectId } from "#/lib/crypto";
-import { db } from "#/lib/db";
-import { hubSessionTypes } from "#/prisma/scripts/generate-session-names";
 import { faker } from "@faker-js/faker";
 import {
   type ClinicalLead,
@@ -15,11 +11,15 @@ import {
   type Prisma,
   type Project,
   type SessionName,
-  sessionTypes,
   type Supervisor,
+  sessionTypes,
 } from "@prisma/client";
 import { isBefore, startOfMonth } from "date-fns";
 import { zonedTimeToUtc } from "date-fns-tz";
+import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
+import { objectId } from "#/lib/crypto";
+import { db } from "#/lib/db";
+import { hubSessionTypes } from "#/prisma/scripts/generate-session-names";
 
 // GETTING STARTED WITH SEEDING
 // ===========================

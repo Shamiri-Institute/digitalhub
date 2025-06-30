@@ -1,5 +1,5 @@
 import type { Prisma, riskStatusOptions } from "@prisma/client";
-import { clsx, type ClassValue } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import type { Metadata } from "next";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";

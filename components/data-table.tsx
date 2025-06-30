@@ -1,4 +1,21 @@
 "use client";
+import { rankItem } from "@tanstack/match-sorter-utils";
+import {
+  type ColumnDef,
+  type FilterFn,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type OnChangeFn,
+  type Row,
+  type RowSelectionState,
+  type SortingState,
+  useReactTable,
+  type VisibilityState,
+} from "@tanstack/react-table";
+import { Fragment, type ReactNode, useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -24,23 +41,6 @@ import {
   TableRow,
 } from "#/components/ui/table";
 import { cn } from "#/lib/utils";
-import { rankItem } from "@tanstack/match-sorter-utils";
-import {
-  type ColumnDef,
-  type FilterFn,
-  type OnChangeFn,
-  type Row,
-  type RowSelectionState,
-  type SortingState,
-  type VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import { Fragment, type ReactNode, useEffect, useState } from "react";
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   // Rank the item

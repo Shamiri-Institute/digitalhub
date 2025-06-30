@@ -1,5 +1,5 @@
-import PageFooter from "#/components/ui/page-footer";
 import type React from "react";
+import PageFooter from "#/components/ui/page-footer";
 
 export default async function ClinicalLeadLayout({ children }: { children: React.ReactNode }) {
   return (

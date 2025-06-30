@@ -1,7 +1,7 @@
 "use client";
-import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 
 export type TabType = {
   name: string;

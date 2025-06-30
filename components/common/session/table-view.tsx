@@ -1,3 +1,10 @@
+import type { CalendarDate } from "@internationalized/date";
+import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
+import type { ColumnDef, Row } from "@tanstack/react-table";
+import { addDays, format, isBefore, isWithinInterval } from "date-fns";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { useDateFormatter } from "react-aria";
+import type { CalendarState } from "react-stately";
 import {
   SupervisorAttendanceDataTable,
   SupervisorAttendanceDataTableMenu,
@@ -17,13 +24,6 @@ import { Icons } from "#/components/icons";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { getCalendarDate } from "#/lib/date-utils";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import type { CalendarDate } from "@internationalized/date";
-import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
-import type { ColumnDef, Row } from "@tanstack/react-table";
-import { addDays, format, isBefore, isWithinInterval } from "date-fns";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
-import { useDateFormatter } from "react-aria";
-import type { CalendarState } from "react-stately";
 
 type Role = "supervisors" | "fellows";
 

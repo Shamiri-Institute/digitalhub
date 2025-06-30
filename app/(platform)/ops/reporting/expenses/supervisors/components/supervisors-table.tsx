@@ -1,9 +1,9 @@
 "use client";
-import DataTable from "#/components/data-table";
+import type { Prisma } from "@prisma/client";
 
 import type { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import SupervisorsFilterTab from "#/app/(platform)/hc/reporting/expenses/supervisors/components/supervisor-filter";
-import type { Prisma } from "@prisma/client";
+import DataTable from "#/components/data-table";
 import { columns } from "./columns";
 
 export default function HCSupervisorsDataTable({

@@ -1,5 +1,9 @@
 "use client";
 
+import type { Prisma } from "@prisma/client";
+import { MagnifyingGlassIcon, ResetIcon } from "@radix-ui/react-icons";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -9,10 +13,6 @@ import {
   CommandList,
   CommandSeparator,
 } from "#/components/ui/command";
-import type { Prisma } from "@prisma/client";
-import { MagnifyingGlassIcon, ResetIcon } from "@radix-ui/react-icons";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
 
 export function SearchCommand({
   data,

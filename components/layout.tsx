@@ -1,15 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
-import Link from "next/link";
-
-import { PersonnelTool } from "#/components/common/dev-personnel-switcher";
-import { Footer } from "#/components/footer";
-import { Header } from "#/components/header";
-import { Icons } from "#/components/icons";
-import { Navigation } from "#/components/navigation";
-import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
-import { APP_ENV, constants } from "#/lib/constants";
 import {
   BarChartIcon,
   CalendarIcon,
@@ -23,12 +13,14 @@ import {
   SchoolIcon,
   SignOutIcon,
 } from "components/icons";
+import { motion } from "framer-motion";
 import { Menu } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
-
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import type {
   CurrentClinicalLead,
   CurrentClinicalTeam,
@@ -37,7 +29,12 @@ import type {
   CurrentOpsUser,
   CurrentSupervisor,
 } from "#/app/auth";
+import { PersonnelTool } from "#/components/common/dev-personnel-switcher";
 import { ProfileDialog } from "#/components/common/profile/profile-dialog";
+import { Footer } from "#/components/footer";
+import { Header } from "#/components/header";
+import { Icons } from "#/components/icons";
+import { Navigation } from "#/components/navigation";
 import { Button } from "#/components/ui/button";
 import {
   DropdownMenu,
@@ -47,10 +44,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import { APP_ENV, constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
-import { useRouter } from "next/navigation";
-import type React from "react";
-import { useEffect, useState } from "react";
+import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface NavigationLinkProps {

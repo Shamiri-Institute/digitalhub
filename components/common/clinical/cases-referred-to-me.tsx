@@ -1,10 +1,10 @@
 "use client";
 
+import type { ClinicalScreeningInfo, Student } from "@prisma/client";
 import { AcceptRefferedClinicalCase, RejectRefferedClinicalCase } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
 import { useToast } from "#/components/ui/use-toast";
-import type { ClinicalScreeningInfo, Student } from "@prisma/client";
 
 type CasesType = ClinicalScreeningInfo & {
   student: Student;

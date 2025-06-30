@@ -1,5 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { usePathname } from "next/navigation";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
@@ -33,12 +39,6 @@ import {
 } from "#/lib/actions/student";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
-import { usePathname } from "next/navigation";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
 
 export default function StudentDetailsForm({
   open,

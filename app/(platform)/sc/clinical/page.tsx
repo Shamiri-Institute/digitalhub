@@ -1,3 +1,4 @@
+import { signOut } from "next-auth/react";
 import {
   getClinicalCases,
   getReferredCasesToSupervisor,
@@ -8,7 +9,6 @@ import ClinicalCasesTable from "#/app/(platform)/sc/clinical/components/clinical
 import { CasesReferredToMe } from "#/components/common/clinical/cases-referred-to-me";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
-import { signOut } from "next-auth/react";
 
 export default async function ClinicalPage() {
   const cases = await getClinicalCases();

@@ -1,5 +1,8 @@
 "use client";
 
+import type { Prisma } from "@prisma/client";
+import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
+import { useState } from "react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -8,9 +11,6 @@ import {
   CommandItem,
   CommandList,
 } from "#/components/ui/command";
-import type { Prisma } from "@prisma/client";
-import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
-import { useState } from "react";
 
 export function StudentSearchCommand({ data }: { data: Prisma.StudentGetPayload<{}>[] }) {
   const [open, setOpen] = useState(false);

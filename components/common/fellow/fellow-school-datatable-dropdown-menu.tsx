@@ -1,3 +1,5 @@
+import type { ImplementerRole } from "@prisma/client";
+import type { Dispatch, SetStateAction } from "react";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -7,8 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import type { ImplementerRole } from "@prisma/client";
-import type { Dispatch, SetStateAction } from "react";
 import type { FellowsData } from "../../../app/(platform)/sc/actions";
 
 export type FellowGroupData = FellowsData["groups"][number];

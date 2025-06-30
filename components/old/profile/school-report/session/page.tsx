@@ -1,9 +1,8 @@
+import { addBreadcrumb } from "@sentry/nextjs";
 import { notFound } from "next/navigation";
-
 import { currentSupervisor } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
-import { addBreadcrumb } from "@sentry/nextjs";
 import { SessionNavigationHeader } from "./session-navigation-header";
 import { SessionNotes } from "./session-notes";
 import { SessionRater } from "./session-rater";

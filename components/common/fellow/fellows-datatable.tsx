@@ -1,5 +1,7 @@
 "use client";
 
+import { type ImplementerRole, Prisma } from "@prisma/client";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
@@ -18,8 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { type ImplementerRole, Prisma } from "@prisma/client";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+
 import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
 export default function FellowsDatatable({

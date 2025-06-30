@@ -1,8 +1,8 @@
-import { GENDER_OPTIONS } from "#/lib/constants";
-import { stringValidation } from "#/lib/utils";
 import { ImplementerRole } from "@prisma/client";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
+import { GENDER_OPTIONS } from "#/lib/constants";
+import { stringValidation } from "#/lib/utils";
 
 const bankFieldsSchema = z.object({
   bankName: stringValidation("Please enter your bank name"),

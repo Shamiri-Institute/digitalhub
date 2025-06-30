@@ -1,10 +1,5 @@
 "use client";
 
-import ChartCard from "#/components/ui/chart-card";
-import {
-  SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
-  SCHOOL_DROPOUT_REASONS_MAPPING,
-} from "#/lib/app-constants/constants";
 import {
   Bar,
   BarChart,
@@ -21,11 +16,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import ChartCard from "#/components/ui/chart-card";
+import {
+  SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
+  SCHOOL_DROPOUT_REASONS_MAPPING,
+} from "#/lib/app-constants/constants";
 import type {
   DropoutReasonsGraphData,
+  fetchSchoolDataCompletenessData,
   SchoolAttendances,
   SessionRatingAverages,
-  fetchSchoolDataCompletenessData,
 } from "../actions";
 
 export default function ChartArea({

@@ -1,9 +1,9 @@
+import type React from "react";
+import type { Dispatch, SetStateAction } from "react";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowFilesUploader from "#/components/common/fellow/file-uploader";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
-import type React from "react";
-import type { Dispatch, SetStateAction } from "react";
 
 export default function UploadFellowID({
   fellow,

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { Command } from "#/commands";
-import { db as database, type Database } from "#/lib/db";
+import { type Database, db as database } from "#/lib/db";
 import { ImplementerModel } from "#/models/implementer";
 import { UserModel } from "#/models/user";
 

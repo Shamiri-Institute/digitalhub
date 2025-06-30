@@ -1,5 +1,9 @@
 "use client";
 
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
+import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import AssignFellowSupervisorSelect from "#/app/(platform)/hc/fellows/components/assign-fellow-supervisor-select";
 import MainFellowsDatatableMenu from "#/app/(platform)/hc/fellows/components/main-fellows-datatable-menu";
@@ -7,10 +11,6 @@ import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
-import type { Prisma } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
-import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
-import type { Dispatch, SetStateAction } from "react";
 
 export type MainFellowTableData = {
   id: string;

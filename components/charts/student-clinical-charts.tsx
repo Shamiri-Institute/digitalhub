@@ -1,11 +1,5 @@
 "use client";
 
-import {
-  clinicalCasesColors,
-  clinicaldataValue,
-  possibleSessions,
-} from "#/components/charts/constants";
-import ChartCard from "#/components/ui/chart-card";
 import type { Prisma } from "@prisma/client";
 import {
   Bar,
@@ -21,6 +15,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  clinicalCasesColors,
+  clinicaldataValue,
+  possibleSessions,
+} from "#/components/charts/constants";
+import ChartCard from "#/components/ui/chart-card";
 
 type CaseData = { name: "Active" | "FollowUp" | "Terminated"; value: number };
 

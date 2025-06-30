@@ -1,14 +1,13 @@
 "use client";
 
+import { use, useState } from "react";
 import { fileColumns, type SchoolFilesTableData } from "#/components/common/files/columns";
 import { RemoveUploadedFile } from "#/components/common/files/delete-file-modal";
 import UploadFileDialogue from "#/components/common/files/files-upload-dialogue";
 import RenameUploadedFile from "#/components/common/files/rename-file";
-
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { use, useState } from "react";
 
 export default function SchoolFilesDatatable({
   data,

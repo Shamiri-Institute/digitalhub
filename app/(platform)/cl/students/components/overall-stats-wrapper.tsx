@@ -1,5 +1,5 @@
-import { getOverallStudentsDataBreakdown } from "#/app/(platform)/cl/students/actions";
 import { Suspense } from "react";
+import { getOverallStudentsDataBreakdown } from "#/app/(platform)/cl/students/actions";
 import OverallStudentsClinicalStats from "./overall-stats";
 import OverallStatsLoader from "./overall-stats-loader";
 

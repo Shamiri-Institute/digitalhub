@@ -1,9 +1,9 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
 import { currentHubCoordinator } from "#/app/auth";
 import type { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
 import { db } from "#/lib/db";
-import type { Prisma } from "@prisma/client";
 
 export type HubReportComplaintsType = Awaited<ReturnType<typeof loadHubPaymentComplaints>>[number];
 

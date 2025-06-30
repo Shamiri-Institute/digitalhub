@@ -1,3 +1,4 @@
+import { signOut } from "next-auth/react";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
 import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
@@ -9,7 +10,6 @@ import { SearchCommand } from "#/components/search-command";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { signOut } from "next-auth/react";
 import {
   fetchDropoutReasons,
   fetchHubSupervisors,

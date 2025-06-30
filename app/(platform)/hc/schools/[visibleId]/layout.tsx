@@ -1,3 +1,5 @@
+import { signOut } from "next-auth/react";
+import type React from "react";
 import { fetchHubSupervisors } from "#/app/(platform)/hc/schools/actions";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
@@ -11,8 +13,6 @@ import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-scho
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
-import type React from "react";
 import SchoolsNav from "../../../../../components/common/schools/schools-nav";
 
 export default async function SchoolViewLayout({

@@ -1,13 +1,13 @@
 "use client";
 
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import React, { type Dispatch, type SetStateAction } from "react";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
-import type { Prisma } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
-import React, { type Dispatch, type SetStateAction } from "react";
 
 export default function StudentsInGroup({
   children,

@@ -1,12 +1,11 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
+import Link from "next/link";
 import { signOut } from "next-auth/react";
 import * as React from "react";
-
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import Link from "next/link";
 
 export default function Error({
   error,

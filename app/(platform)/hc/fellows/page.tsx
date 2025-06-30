@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import FellowsChartsWrapper from "#/app/(platform)/hc/fellows/components/fellows-charts-wrapper";
@@ -8,7 +9,6 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { Suspense } from "react";
 
 export default async function FellowPage() {
   const hc = await currentHubCoordinator();

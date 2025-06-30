@@ -1,8 +1,8 @@
+import { signOut } from "next-auth/react";
+import type { ReactNode } from "react";
 import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
 import { currentSupervisor } from "#/app/auth";
 import SchoolsDataProvider from "#/components/common/schools/schools-data-provider";
-import { signOut } from "next-auth/react";
-import type { ReactNode } from "react";
 
 export default async function SupervisorSchoolData({ children }: { children: ReactNode }) {
   const supervisor = await currentSupervisor();

@@ -1,18 +1,17 @@
 "use client";
 
-import { type DateValue, createCalendar, getLocalTimeZone, today } from "@internationalized/date";
+import { createCalendar, type DateValue, getLocalTimeZone, today } from "@internationalized/date";
+import { ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import type { AriaButtonProps } from "@react-aria/button";
 import { useButton } from "@react-aria/button";
 import { useFocusRing } from "@react-aria/focus";
 import { mergeProps } from "@react-aria/utils";
 import { useSearchParams } from "next/navigation";
+import * as React from "react";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { type CalendarState, useCalendarState } from "react-stately";
-
-import { Icons } from "#/components/icons";
-
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import SupervisorAttendance from "#/app/(platform)/hc/components/supervisor-attendance";
 import {
@@ -30,6 +29,7 @@ import { ScheduleNewSession } from "#/components/common/session/schedule-new-ses
 import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
 import StudentAttendance from "#/components/common/student/student-attendance";
+import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -40,11 +40,9 @@ import {
 } from "#/components/ui/dialog";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
 import { sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
-import * as React from "react";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
-import { ModeProvider, useMode, type Mode } from "./mode-provider";
+import { type Mode, ModeProvider, useMode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
 import { type Session, SessionsProvider, useSessions } from "./sessions-provider";

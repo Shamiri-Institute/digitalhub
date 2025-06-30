@@ -1,5 +1,10 @@
 "use client";
 
+import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
+import { addDays, addHours, format, isAfter, isBefore } from "date-fns";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { useDateFormatter } from "react-aria";
+import type { CalendarState } from "react-stately";
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { SessionDropDown } from "#/components/common/session/session-list";
 import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
@@ -7,11 +12,6 @@ import { useTitle } from "#/components/common/session/title-provider";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
-import { addDays, addHours, format, isAfter, isBefore } from "date-fns";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
-import { useDateFormatter } from "react-aria";
-import type { CalendarState } from "react-stately";
 
 export function ListView({
   state,

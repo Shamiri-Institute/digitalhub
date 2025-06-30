@@ -1,10 +1,10 @@
+import { signOut } from "next-auth/react";
 import { currentFellow } from "#/app/auth";
-import { Separator } from "#/components/ui/separator";
 
 import { ScheduleCalendar } from "#/components/common/session/schedule-calendar";
 import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
-import { signOut } from "next-auth/react";
+import { Separator } from "#/components/ui/separator";
 
 export default async function FellowSchedulePage() {
   const fellow = await currentFellow();

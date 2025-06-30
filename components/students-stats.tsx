@@ -1,5 +1,5 @@
-import InfoCard from "#/app/(platform)/hc/students/components/info-card";
 import type { Prisma } from "@prisma/client";
+import InfoCard from "#/app/(platform)/hc/students/components/info-card";
 
 export default function StudentsStats({
   totalNumberOfStudentsInHub,

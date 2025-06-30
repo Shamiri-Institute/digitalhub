@@ -1,5 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { usePathname } from "next/navigation";
+import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { StudentReportingNotesSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
@@ -18,11 +23,6 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitStudentReportingNotes } from "#/lib/actions/student";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { usePathname } from "next/navigation";
-import { type Dispatch, type SetStateAction, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
 
 export function AddReportingNote({
   isOpen,

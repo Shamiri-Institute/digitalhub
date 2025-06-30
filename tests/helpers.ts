@@ -1,5 +1,5 @@
-import { type JWT, encode } from "next-auth/jwt";
 import path from "node:path";
+import { encode, type JWT } from "next-auth/jwt";
 
 import { db } from "#/lib/db";
 

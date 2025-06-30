@@ -1,7 +1,7 @@
+import { signOut } from "next-auth/react";
 import { currentSupervisor } from "#/app/auth";
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
 
 export default async function SchoolSessionsPage({
   params: { visibleId },

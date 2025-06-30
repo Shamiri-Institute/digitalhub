@@ -1,7 +1,7 @@
 "use client";
+import { useState } from "react";
 import type { SupervisorsData } from "#/app/(platform)/hc/supervisors/components/columns";
 import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
-import { useState } from "react";
 
 export default function SupervisorProvider({ children }: { children: React.ReactNode }) {
   const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);

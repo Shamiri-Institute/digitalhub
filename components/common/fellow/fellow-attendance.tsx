@@ -1,3 +1,9 @@
+import type { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
+import type { ColumnDef, Row } from "@tanstack/react-table";
+import { format } from "date-fns";
+import { CheckCheck, InfoIcon } from "lucide-react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-menu";
@@ -31,12 +37,6 @@ import { Separator } from "#/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { markFellowAttendance, markManyFellowAttendance } from "#/lib/actions/fellow";
 import { sessionDisplayName } from "#/lib/utils";
-import type { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
-import type { ColumnDef, Row } from "@tanstack/react-table";
-import { format } from "date-fns";
-import { CheckCheck, InfoIcon } from "lucide-react";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 
 type SupervisorData = Prisma.SupervisorGetPayload<{
   include: {

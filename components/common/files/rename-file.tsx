@@ -1,5 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { usePathname } from "next/navigation";
+import type { Dispatch, SetStateAction } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import type { SchoolFilesTableData } from "#/components/common/files/columns";
@@ -14,15 +19,9 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { updateUploadedSchoolFile } from "#/lib/actions/file";
-
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { usePathname } from "next/navigation";
-import type { Dispatch, SetStateAction } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { updateUploadedSchoolFile } from "#/lib/actions/file";
 
 const FormSchema = z.object({
   fileName: z.string({

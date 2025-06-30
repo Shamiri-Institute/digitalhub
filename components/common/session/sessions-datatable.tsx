@@ -1,5 +1,9 @@
 "use client";
 
+import { ImplementerRole, type Prisma } from "@prisma/client";
+import { usePathname } from "next/navigation";
+import * as React from "react";
+import { useState } from "react";
 import SupervisorAttendance, {
   type SupervisorAttendanceTableData,
 } from "#/app/(platform)/hc/components/supervisor-attendance";
@@ -13,10 +17,6 @@ import SessionRatings from "#/components/common/session/session-ratings";
 import type { Session } from "#/components/common/session/sessions-provider";
 import StudentAttendance from "#/components/common/student/student-attendance";
 import DataTable from "#/components/data-table";
-import { ImplementerRole, type Prisma } from "@prisma/client";
-import { usePathname } from "next/navigation";
-import * as React from "react";
-import { useState } from "react";
 
 export default function SessionsDatatable({
   sessions,

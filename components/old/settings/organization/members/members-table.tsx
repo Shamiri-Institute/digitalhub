@@ -4,14 +4,14 @@ import { ChevronDownIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
 import {
   type ColumnDef,
   type ColumnFiltersState,
-  type SortingState,
-  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type SortingState,
   useReactTable,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import * as React from "react";
 
@@ -30,9 +30,8 @@ import { Table, TableBody, TableCell, TableRow } from "#/components/ui/table";
 import { cn } from "#/lib/utils";
 import { RoleTypes } from "#/models/role";
 import { constants } from "#/tests/constants";
-import type { Member } from "./page";
-
 import { AddMemberDialog } from "./add-member-dialog";
+import type { Member } from "./page";
 
 const MemberRolesOrStateList = [
   ...RoleTypes.map((role) => role.name),

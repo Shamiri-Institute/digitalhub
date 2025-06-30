@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import {
   getClinicalCasesCreatedByClinicalLead,
   getClinicalCasesData,
@@ -10,7 +11,6 @@ import AllHubClinicalCasesTable from "#/app/(platform)/cl/clinical/components/hu
 import { AddNewClinicalCaseForm } from "#/components/common/clinical/add-new-clinical-case-form";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
-import { Plus } from "lucide-react";
 
 export default async function ClinicalPage() {
   const cases = await getClinicalCasesInHub();

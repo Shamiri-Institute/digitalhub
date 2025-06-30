@@ -1,5 +1,5 @@
-import type { Session } from "#/components/common/session/sessions-provider";
 import { createContext, type Dispatch, type SetStateAction } from "react";
+import type { Session } from "#/components/common/session/sessions-provider";
 
 type CancelSessionContextData = {
   isOpen: boolean;

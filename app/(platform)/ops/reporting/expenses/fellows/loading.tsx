@@ -1,10 +1,10 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import type { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
 import { columns } from "#/components/common/expenses/fellows/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import type { ColumnDef } from "@tanstack/react-table";
 
 export default function FellowsTableSkeleton() {
   const loadingColumns: ColumnDef<HubFellowsAttendancesType>[] = columns.map((column) => {

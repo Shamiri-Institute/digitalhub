@@ -1,5 +1,6 @@
 "use server";
 
+import type { z } from "zod";
 import { currentHubCoordinator, currentSupervisor, getCurrentUser } from "#/app/auth";
 import {
   MarkSessionOccurrenceSchema,
@@ -9,7 +10,6 @@ import {
 } from "#/components/common/session/schema";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import type { z } from "zod";
 
 async function checkAuth() {
   const hubCoordinator = await currentHubCoordinator();

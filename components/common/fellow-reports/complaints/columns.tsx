@@ -1,12 +1,12 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 import type { FellowComplaintsType } from "#/components/common/fellow-reports/complaints/actions";
 import FellowComplaintsDropdownMenu from "#/components/common/fellow-reports/complaints/complaints-dropdown-actions";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import type { ColumnDef } from "@tanstack/react-table";
-import Image from "next/image";
 
 export const columns: ColumnDef<FellowComplaintsType>[] = [
   {

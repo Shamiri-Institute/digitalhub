@@ -1,6 +1,6 @@
+import { z } from "zod";
 import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
-import { z } from "zod";
 
 export const WeeklyFellowEvaluationSchema = z.object({
   week: z.coerce.date({ required_error: "Please select a week" }),

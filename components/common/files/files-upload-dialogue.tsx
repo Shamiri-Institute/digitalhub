@@ -1,7 +1,7 @@
-import SchoolFilesUploader from "#/components/common/files/upload-file";
-import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
 import type React from "react";
 import type { Dispatch, SetStateAction } from "react";
+import SchoolFilesUploader from "#/components/common/files/upload-file";
+import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
 
 export default function UploadFileDialogue({
   schoolId,

@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, createContext, useContext, useEffect, useRef } from "react";
+import { createContext, Suspense, useContext, useEffect, useRef } from "react";
 import { create } from "zustand";
 
 import { Header } from "#/components/header";

@@ -1,7 +1,7 @@
 "use client";
+import { useState } from "react";
 import type { SupervisorsData } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/columns";
 import { SupervisorInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/context/supervisor-info-context";
-import { useState } from "react";
 
 export default function SupervisorInfoProvider({ children }: { children: React.ReactNode }) {
   const [attendanceDialog, setAttendanceDialog] = useState<boolean>(false);

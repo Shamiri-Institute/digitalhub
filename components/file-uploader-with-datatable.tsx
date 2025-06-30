@@ -1,5 +1,9 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
+import clsx from "clsx";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
@@ -16,11 +20,6 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import { readFileContent } from "#/utils/file-utils";
-import type { ColumnDef } from "@tanstack/react-table";
-import clsx from "clsx";
-import { Loader2 } from "lucide-react";
-
-import { useState } from "react";
 
 const columns: ColumnDef<string, string>[] = [
   {

@@ -1,13 +1,13 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 import type { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
 import FellowComplaintsActionsDropdown from "#/components/common/expenses/complaints/complaints-actions-dropdown";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import type { ColumnDef } from "@tanstack/react-table";
-import Image from "next/image";
 
 export const columns: ColumnDef<HubReportComplaintsType>[] = [
   {

@@ -1,3 +1,9 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { usePathname } from "next/navigation";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { CreateGroupSchema } from "#/components/common/group/schema";
 import { Icons } from "#/components/icons";
@@ -29,12 +35,6 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { createInterventionGroup } from "#/lib/actions/group";
 import { getSchoolInitials } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
-import { usePathname } from "next/navigation";
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
 
 export default function CreateGroup({
   supervisors,

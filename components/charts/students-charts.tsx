@@ -1,7 +1,5 @@
 "use client";
 
-import { generateRandomColor, possibleInterventionSessions } from "#/components/charts/constants";
-import ChartCard from "#/components/ui/chart-card";
 import type { Prisma } from "@prisma/client";
 import {
   Bar,
@@ -18,6 +16,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { generateRandomColor, possibleInterventionSessions } from "#/components/charts/constants";
+import ChartCard from "#/components/ui/chart-card";
 
 export default function HubStudentsDetailsCharts({
   studentsAttendanceGroupedBySession,

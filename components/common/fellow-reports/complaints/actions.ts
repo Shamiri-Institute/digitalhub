@@ -1,8 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
-import { revalidatePath } from "next/cache";
 
 export type FellowComplaintsType = Awaited<ReturnType<typeof loadFellowComplaints>>[number];
 

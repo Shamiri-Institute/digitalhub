@@ -1,5 +1,5 @@
 import { useSearchParams } from "next/navigation";
-import { type PropsWithChildren, createContext, useContext, useState } from "react";
+import { createContext, type PropsWithChildren, useContext, useState } from "react";
 
 export type Mode = "day" | "week" | "month" | "list" | "table";
 

@@ -1,5 +1,9 @@
 "use client";
 
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { parsePhoneNumber } from "libphonenumber-js";
+import type { Dispatch, SetStateAction } from "react";
 import SessionHistoryWidget from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/sessions-history-widget";
 import { SupervisorsDataTableMenu } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/supervisors-datatable";
 import { Badge } from "#/components/ui/badge";
@@ -10,10 +14,6 @@ import {
   DropdownMenuPortal,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import type { Prisma } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
-import { parsePhoneNumber } from "libphonenumber-js";
-import type { Dispatch, SetStateAction } from "react";
 
 export type SupervisorsData = Prisma.SupervisorGetPayload<{
   include: {

@@ -1,6 +1,6 @@
+import type { ReactNode } from "react";
 import ChartSkeleton from "#/components/charts/chart-skeleton";
 import InfoCardSkeleton from "#/components/info-card-skeleton";
-import type { ReactNode } from "react";
 
 export default function HubStudentLoadingPage() {
   function renderChartWidgets(num: number) {

@@ -1,7 +1,7 @@
 "use client";
 
-import type { SchoolsTableData } from "#/components/common/schools/columns";
 import { createContext, type Dispatch, type SetStateAction } from "react";
+import type { SchoolsTableData } from "#/components/common/schools/columns";
 
 type SchoolInfoContextData = {
   editDialog: boolean;

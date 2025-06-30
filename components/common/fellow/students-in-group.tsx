@@ -1,5 +1,8 @@
 "use client";
 
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { useContext } from "react";
 import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -7,9 +10,6 @@ import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
-import type { Prisma } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
-import { useContext } from "react";
 
 export default function StudentsInGroup() {
   const context = useContext(FellowInfoContext);

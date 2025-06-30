@@ -1,15 +1,13 @@
+import { useGSAP } from "@gsap/react";
 import { type CalendarDate, getWeeksInMonth, isSameDay, isWeekend } from "@internationalized/date";
+import type { ImplementerRole } from "@prisma/client";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useDateFormatter, useLocale } from "react-aria";
 import type { CalendarGridProps } from "react-aria-components";
 import type { CalendarState } from "react-stately";
-
 import { cn } from "#/lib/utils";
-
-import { useGSAP } from "@gsap/react";
-import type { ImplementerRole } from "@prisma/client";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SessionList } from "./session-list";
 import { type Session, useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";

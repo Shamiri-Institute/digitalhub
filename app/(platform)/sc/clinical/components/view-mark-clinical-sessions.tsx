@@ -1,3 +1,6 @@
+import { format } from "date-fns";
+import { Calendar as CalendarIcon, Check, X } from "lucide-react";
+import { useState } from "react";
 import {
   type ClinicalCases,
   updateClinicalCaseAttendance,
@@ -16,9 +19,6 @@ import {
 } from "#/components/ui/table";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon, Check, X } from "lucide-react";
-import { useState } from "react";
 
 export const CLINICAL_SESSION_TYPES = [
   { key: "Pre", value: "Pre-session" },

@@ -1,3 +1,6 @@
+import type { ImplementerRole } from "@prisma/client";
+import Link from "next/link";
+import { useContext } from "react";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import type { SchoolsTableData } from "#/components/common/schools/columns";
 import { Icons } from "#/components/icons";
@@ -9,9 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import type { ImplementerRole } from "@prisma/client";
-import Link from "next/link";
-import { useContext } from "react";
 
 export default function SchoolTableDropdown({
   schoolRow,

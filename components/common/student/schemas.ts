@@ -1,6 +1,6 @@
-import { stringValidation } from "#/lib/utils";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
+import { stringValidation } from "#/lib/utils";
 
 export const StudentDetailsSchema = z
   .object({

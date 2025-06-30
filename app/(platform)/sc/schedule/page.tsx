@@ -1,12 +1,11 @@
-import { currentSupervisor } from "#/app/auth";
-import { Separator } from "#/components/ui/separator";
-
+import { signOut } from "next-auth/react";
 import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
+import { currentSupervisor } from "#/app/auth";
 import { ScheduleCalendar } from "#/components/common/session/schedule-calendar";
 import { ScheduleHeader } from "#/components/common/session/schedule-header";
 import PageFooter from "#/components/ui/page-footer";
+import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
 
 export default async function SupervisorSchedulePage() {
   const supervisor = await currentSupervisor();

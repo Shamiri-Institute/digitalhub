@@ -1,12 +1,10 @@
 "use server";
-import { currentSupervisor } from "#/app/auth";
-import { db } from "#/lib/db";
 import type { Fellow } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { SupervisorSchema } from "./schemas";
-
-import { DropoutFellowSchema, WeeklyFellowRatingSchema } from "./schemas";
+import { currentSupervisor } from "#/app/auth";
+import { db } from "#/lib/db";
+import { DropoutFellowSchema, SupervisorSchema, WeeklyFellowRatingSchema } from "./schemas";
 
 export type FellowsData = Awaited<ReturnType<typeof loadFellowsData>>[number];
 

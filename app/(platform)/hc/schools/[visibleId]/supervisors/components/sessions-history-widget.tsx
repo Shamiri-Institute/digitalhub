@@ -1,7 +1,7 @@
+import { format } from "date-fns";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { format } from "date-fns";
 
 export default function SessionHistoryWidget({
   attendedSessions,

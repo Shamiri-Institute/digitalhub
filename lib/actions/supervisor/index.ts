@@ -1,10 +1,10 @@
 "use server";
 
+import type { z } from "zod";
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
-import type { z } from "zod";
 
 async function checkAuth() {
   const hubCoordinator = await currentHubCoordinator();

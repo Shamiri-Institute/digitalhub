@@ -1,5 +1,7 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+import type { Dispatch, SetStateAction } from "react";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import type { SchoolFilesTableData } from "#/components/common/files/columns";
@@ -9,8 +11,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { removeUploadedSchoolFile } from "#/lib/actions/file";
-import { usePathname } from "next/navigation";
-import type { Dispatch, SetStateAction } from "react";
 
 export function RemoveUploadedFile({
   isOpen,

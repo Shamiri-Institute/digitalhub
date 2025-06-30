@@ -1,4 +1,9 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import {
   approveComplaint,
   rejectComplaint,
@@ -34,11 +39,6 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
 import { ReportFellowComplaintSchema } from "./schema";
 
 export default function ApproveRejectFellowComplaint({

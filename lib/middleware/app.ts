@@ -1,7 +1,7 @@
 import { ImplementerRole } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
-import { type JWT, getToken } from "next-auth/jwt";
 import { type NextRequest, NextResponse } from "next/server";
+import { getToken, type JWT } from "next-auth/jwt";
 
 import { parse } from "#/lib/middleware/utils";
 

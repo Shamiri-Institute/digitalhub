@@ -1,7 +1,7 @@
 "use client";
+import { useEffect, useState } from "react";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import type { SchoolsTableData } from "#/components/common/schools/columns";
-import { useEffect, useState } from "react";
 
 export default function SchoolInfoProvider({
   children,

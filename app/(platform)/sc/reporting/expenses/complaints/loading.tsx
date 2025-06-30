@@ -1,10 +1,10 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import type { FellowReportComplaintsType } from "#/app/(platform)/sc/reporting/expenses/complaints/actions";
 import { columns } from "#/components/common/expenses/complaints/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import type { ColumnDef } from "@tanstack/react-table";
 
 export default function ComplaintsTableSkeleton() {
   const loadingColumns: ColumnDef<FellowReportComplaintsType>[] = columns.map((column) => {

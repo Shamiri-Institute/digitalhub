@@ -1,13 +1,5 @@
 "use client";
 
-import type {
-  FellowDropoutReasonsGraphData,
-  FellowSessionRatingAverages,
-  fetchFellowDataCompletenessData,
-} from "#/app/(platform)/hc/fellows/actions";
-import { generateRandomColor } from "#/components/charts/constants";
-import ChartCard from "#/components/ui/chart-card";
-import { SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING } from "#/lib/app-constants/constants";
 import type { Prisma } from "@prisma/client";
 import {
   Bar,
@@ -25,6 +17,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type {
+  FellowDropoutReasonsGraphData,
+  FellowSessionRatingAverages,
+  fetchFellowDataCompletenessData,
+} from "#/app/(platform)/hc/fellows/actions";
+import { generateRandomColor } from "#/components/charts/constants";
+import ChartCard from "#/components/ui/chart-card";
+import { SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING } from "#/lib/app-constants/constants";
 
 export default function FellowsCharts({
   attendanceData,

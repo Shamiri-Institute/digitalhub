@@ -1,8 +1,8 @@
 "use client";
 
+import { Cell, Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { generateRandomColor, studentsGroupByColors } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
-import { Cell, Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 export default function HubStudentDemographicsCharts({
   studentsGroupedByAge,

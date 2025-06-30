@@ -1,6 +1,6 @@
+import { signOut } from "next-auth/react";
 import { getCurrentUser } from "#/app/auth";
 import FellowsDatatableSkeleton from "#/components/common/fellow/fellows-datatable-skeleton";
-import { signOut } from "next-auth/react";
 
 export default async function Loading() {
   const user = await getCurrentUser();

@@ -1,5 +1,14 @@
 "use client";
 
+import { useGSAP } from "@gsap/react";
+import type { Prisma } from "@prisma/client";
+import { format } from "date-fns";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { parsePhoneNumber } from "libphonenumber-js";
+import Image from "next/image";
+import Link from "next/link";
+import { useContext, useRef } from "react";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import SessionsOccurredWidget from "#/components/common/schools/sessions-occurred-widget";
@@ -15,15 +24,6 @@ import { cn, getSchoolInitials } from "#/lib/utils";
 import LocationIcon from "#/public/icons/location-pin-icon.svg";
 import MailIcon from "#/public/icons/mail-icon.svg";
 import PhoneIcon from "#/public/icons/telephone-icon.svg";
-import { useGSAP } from "@gsap/react";
-import type { Prisma } from "@prisma/client";
-import { format } from "date-fns";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { parsePhoneNumber } from "libphonenumber-js";
-import Image from "next/image";
-import Link from "next/link";
-import { useContext, useRef } from "react";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 

@@ -1,5 +1,7 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
+import type { z } from "zod";
 import {
   DropoutStudentSchema,
   MarkAttendanceSchema,
@@ -10,8 +12,6 @@ import { StudentDetailsSchema } from "#/components/common/student/schemas";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateStudentVisibleID } from "#/lib/utils";
-import type { Prisma } from "@prisma/client";
-import type { z } from "zod";
 
 async function checkAuth() {
   const user = await getCurrentPersonnel();

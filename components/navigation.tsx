@@ -1,13 +1,13 @@
 "use client";
 
 import { ImplementerRole } from "@prisma/client";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import type * as React from "react";
 
 import { PersonnelTool } from "#/components/common/dev-personnel-switcher";
-import { Icons, type Icon } from "#/components/icons";
+import { type Icon, Icons } from "#/components/icons";
 import { ProfileSwitcher } from "#/components/profile-switcher";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";

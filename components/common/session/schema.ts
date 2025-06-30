@@ -1,6 +1,6 @@
+import { z } from "zod";
 import { OCCURRENCE_STATUS, SESSION_NAME_TYPES } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
-import { z } from "zod";
 
 export const SessionRatingsSchema = z.object({
   mode: z.enum(["add", "view"]),

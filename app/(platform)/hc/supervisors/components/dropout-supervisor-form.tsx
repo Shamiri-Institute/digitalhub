@@ -1,3 +1,9 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { InfoIcon } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { DropoutSupervisorSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { dropoutSupervisor } from "#/app/(platform)/hc/supervisors/actions";
@@ -23,12 +29,6 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { SUPERVISOR_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { InfoIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
 
 export default function DropoutSupervisor({
   supervisorId,

@@ -1,3 +1,8 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { usePathname } from "next/navigation";
+import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { SubmitComplaintSchema } from "#/app/(platform)/hc/schemas";
 import { submitSupervisorComplaint } from "#/app/(platform)/hc/supervisors/actions";
 import { Button } from "#/components/ui/button";
@@ -22,11 +27,6 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { usePathname } from "next/navigation";
-import { type Dispatch, type SetStateAction, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
 
 export default function SubmitComplaint({
   supervisorId,

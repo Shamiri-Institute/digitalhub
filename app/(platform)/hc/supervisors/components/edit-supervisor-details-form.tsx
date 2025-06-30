@@ -1,5 +1,13 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { PopoverTrigger } from "@radix-ui/react-popover";
+import { format } from "date-fns";
+import parsePhoneNumberFromString, { isValidPhoneNumber } from "libphonenumber-js";
+import { usePathname } from "next/navigation";
+import { useContext, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { updateSupervisorDetails } from "#/app/(platform)/hc/supervisors/actions";
 import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
@@ -30,14 +38,6 @@ import { toast } from "#/components/ui/use-toast";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { PopoverTrigger } from "@radix-ui/react-popover";
-import { format } from "date-fns";
-import parsePhoneNumberFromString, { isValidPhoneNumber } from "libphonenumber-js";
-import { usePathname } from "next/navigation";
-import { useContext, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
 import { EditSupervisorSchema } from "../../schemas";
 
 export default function EditSupervisorDetails() {

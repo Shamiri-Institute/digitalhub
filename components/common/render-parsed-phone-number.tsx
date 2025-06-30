@@ -1,6 +1,6 @@
+import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import { Icons } from "#/components/icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
-import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 
 export default function RenderParsedPhoneNumber(number?: string) {
   try {

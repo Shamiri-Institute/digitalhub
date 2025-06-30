@@ -1,13 +1,13 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import type { StudentGroupEvaluationType } from "#/components/common/fellow-reports/student-group-evaluation/actions";
 import StudentGroupEvaluationDropdownMenu from "#/components/common/fellow-reports/student-group-evaluation/student-group-evaluation-dropdown-actions";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import type { ColumnDef } from "@tanstack/react-table";
-import Image from "next/image";
 
 export const columns: ColumnDef<StudentGroupEvaluationType>[] = [
   {

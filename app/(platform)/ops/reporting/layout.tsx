@@ -1,7 +1,7 @@
+import type React from "react";
 import RenderOpsReportingTabs from "#/app/(platform)/ops/components/render-reporting-tabs";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
-import type React from "react";
 
 export default async function ReportingViewLayout({ children }: { children: React.ReactNode }) {
   return (

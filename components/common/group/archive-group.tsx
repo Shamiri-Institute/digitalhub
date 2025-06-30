@@ -1,3 +1,7 @@
+import { InfoIcon } from "lucide-react";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
@@ -5,10 +9,6 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { archiveInterventionGroup } from "#/lib/actions/group";
-import { InfoIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
-import type React from "react";
-import { type Dispatch, type SetStateAction, useState } from "react";
 
 export default function ArchiveGroup({
   groupId,

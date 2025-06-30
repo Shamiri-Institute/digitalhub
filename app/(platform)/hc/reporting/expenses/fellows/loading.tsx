@@ -1,10 +1,10 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import type { HubPayoutHistoryType } from "#/app/(platform)/hc/reporting/expenses/payout-history/actions";
 import { columns } from "#/components/common/expenses/fellows/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import type { ColumnDef } from "@tanstack/react-table";
 
 export default function FellowsTableSkeleton() {
   const loadingColumns: ColumnDef<HubPayoutHistoryType>[] = columns.map((column) => {

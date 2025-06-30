@@ -1,5 +1,8 @@
 "use client";
 
+import clsx from "clsx";
+import { useS3Upload } from "next-s3-upload";
+import { useCallback, useState } from "react";
 import { revalidatePageAction } from "#/app/(platform)/sc/schools/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -7,10 +10,6 @@ import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import { addUploadedSchoolDocs } from "#/lib/actions/file";
-import clsx from "clsx";
-import { useS3Upload } from "next-s3-upload";
-
-import { useCallback, useState } from "react";
 
 export default function SchoolFilesUploader({
   schoolId,

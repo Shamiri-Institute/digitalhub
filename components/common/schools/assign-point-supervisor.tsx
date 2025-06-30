@@ -1,5 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { useContext, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { AssignPointSupervisorSchema } from "#/app/(platform)/hc/schemas";
 import { assignSchoolPointSupervisor } from "#/app/(platform)/hc/schools/actions";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
@@ -24,11 +29,6 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
-import { useContext, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
 
 export default function AssignPointSupervisor({
   supervisors,

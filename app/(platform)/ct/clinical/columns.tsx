@@ -1,13 +1,13 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import ClinicalLeadCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown-cl-ct";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import type { ColumnDef } from "@tanstack/react-table";
-import Image from "next/image";
 
 export const columns: ColumnDef<HubClinicalCases>[] = [
   {

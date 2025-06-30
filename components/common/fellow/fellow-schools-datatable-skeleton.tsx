@@ -1,12 +1,12 @@
 "use client";
 
+import type { ImplementerRole } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 import type { FellowsData } from "#/app/(platform)/sc/actions";
 import { fellowSchoolsColumns } from "#/components/common/fellow/fellow-schools-columns";
 import { BatchUploadDownloadFellow } from "#/components/common/fellow/upload-csv";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import type { ImplementerRole } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
 
 export default function FellowSchoolsDatatableSkeleton({ role }: { role: ImplementerRole }) {
   const loadingColumns = fellowSchoolsColumns({

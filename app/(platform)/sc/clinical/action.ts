@@ -1,11 +1,10 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentUser } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
-
 import { db } from "#/lib/db";
-import { revalidatePath } from "next/cache";
 
 export type ClinicalCases = Awaited<ReturnType<typeof getClinicalCases>>[number];
 

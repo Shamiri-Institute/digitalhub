@@ -1,5 +1,8 @@
 "use client";
 
+import type { ImplementerRole } from "@prisma/client";
+import { usePathname } from "next/navigation";
+import { type Dispatch, type SetStateAction, useContext, useState } from "react";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
@@ -8,9 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogPortal } from "#/components/
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { cancelSession } from "#/lib/actions/session/session";
-import type { ImplementerRole } from "@prisma/client";
-import { usePathname } from "next/navigation";
-import { type Dispatch, type SetStateAction, useContext, useState } from "react";
 
 export default function CancelSession({
   sessionId,

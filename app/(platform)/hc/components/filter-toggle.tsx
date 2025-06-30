@@ -1,5 +1,7 @@
 "use client";
 
+import type * as React from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -7,8 +9,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import type * as React from "react";
-import type { Dispatch, SetStateAction } from "react";
 
 export default function FilterToggle({
   children,

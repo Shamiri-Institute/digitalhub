@@ -1,4 +1,9 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { InfoIcon } from "lucide-react";
+import React, { useContext, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { dropoutSchool } from "#/app/(platform)/hc/schools/actions";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
@@ -25,11 +30,6 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { InfoIcon } from "lucide-react";
-import React, { useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
 import { DropoutSchoolSchema } from "../../../app/(platform)/hc/schemas";
 
 export function DropoutSchool() {

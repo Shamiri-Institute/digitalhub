@@ -1,7 +1,7 @@
+import { z } from "zod";
 import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { stringValidation } from "#/lib/utils";
-import { z } from "zod";
 
 export const FellowSchema = z.object({
   fellowName: stringValidation("Please enter the fellow's name."),

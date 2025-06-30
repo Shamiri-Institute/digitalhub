@@ -1,3 +1,7 @@
+import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
+import type { ColumnDef, Row } from "@tanstack/react-table";
+import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
@@ -19,10 +23,6 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { markManySupervisorAttendance, markSupervisorAttendance } from "#/lib/actions/supervisor";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
-import type { ColumnDef, Row } from "@tanstack/react-table";
-import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 
 export default function SupervisorAttendance({
   supervisors,

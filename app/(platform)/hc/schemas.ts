@@ -1,3 +1,5 @@
+import { isValidPhoneNumber } from "libphonenumber-js";
+import { z } from "zod";
 import {
   ATTENDANCE_STATUS,
   BOARDING_DAY_TYPES,
@@ -9,8 +11,6 @@ import {
   SUPERVISOR_DROP_OUT_REASONS,
 } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
-import { isValidPhoneNumber } from "libphonenumber-js";
-import { z } from "zod";
 
 export const DropoutSchoolSchema = z.object({
   schoolId: stringValidation("Missing school ID"),

@@ -1,3 +1,5 @@
+import { signOut } from "next-auth/react";
+import type React from "react";
 import { currentFellow } from "#/app/auth";
 import type { SchoolsTableData } from "#/components/common/schools/columns";
 import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
@@ -6,8 +8,6 @@ import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
-import type React from "react";
 import SchoolsNav from "../../../../../components/common/schools/schools-nav";
 
 export default async function SchoolViewLayout({

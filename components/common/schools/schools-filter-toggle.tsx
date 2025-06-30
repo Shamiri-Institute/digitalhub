@@ -1,5 +1,7 @@
 "use client";
 
+import { type Prisma, SessionStatus } from "@prisma/client";
+import { useContext, useState } from "react";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import {
   SchoolsFiltersContext,
@@ -15,8 +17,6 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
-import { type Prisma, SessionStatus } from "@prisma/client";
-import { useContext, useState } from "react";
 
 export default function SchoolsFilterToggle({
   schools,

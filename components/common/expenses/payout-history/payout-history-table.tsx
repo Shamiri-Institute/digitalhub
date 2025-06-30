@@ -1,11 +1,11 @@
 "use client";
-import DataTable from "#/components/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
 
 import type { HubPayoutHistoryType } from "#/app/(platform)/hc/reporting/expenses/payout-history/actions";
 import type { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import type { SupervisorPayoutHistoryType } from "#/app/(platform)/sc/reporting/expenses/payout-history/actions";
 import FellowPayoutFilterTab from "#/components/common/expenses/payout-history/payout-filter";
-import type { ColumnDef } from "@tanstack/react-table";
+import DataTable from "#/components/data-table";
 import { columns, subColumns } from "./columns";
 
 type PayoutHistoryType =

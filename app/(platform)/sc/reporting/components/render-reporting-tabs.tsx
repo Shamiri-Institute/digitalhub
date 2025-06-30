@@ -1,6 +1,6 @@
 "use client";
-import TabToggleNavigation, { type TabType } from "#/components/common/tabs/tab-navigation";
 import { usePathname } from "next/navigation";
+import TabToggleNavigation, { type TabType } from "#/components/common/tabs/tab-navigation";
 
 export default function RenderSCReportingTabs() {
   const pathname = usePathname();

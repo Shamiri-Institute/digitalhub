@@ -1,6 +1,5 @@
 "use client";
 
-import ChartCard from "#/components/ui/chart-card";
 import {
   Bar,
   BarChart,
@@ -14,6 +13,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import ChartCard from "#/components/ui/chart-card";
 
 const CASE_STATUS_COLORS = {
   Active: "#0085FF",

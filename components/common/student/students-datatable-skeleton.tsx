@@ -1,10 +1,10 @@
 "use client";
 
+import type { ImplementerRole } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 import { columns, type SchoolStudentTableData } from "#/components/common/student/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import type { ImplementerRole } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
 
 export default function StudentsDatatableSkeleton({ role }: { role: ImplementerRole }) {
   const loadingColumns = columns({

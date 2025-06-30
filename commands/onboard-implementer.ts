@@ -6,7 +6,7 @@ import { UploadImageCommand } from "#/commands/upload-image";
 import { sendEmail } from "#/emails";
 import implementerWelcomer from "#/emails/implementer-welcomer";
 import { objectId } from "#/lib/crypto";
-import { db as database, type Database } from "#/lib/db";
+import { type Database, db as database } from "#/lib/db";
 import { ImplementerModel } from "#/models/implementer";
 
 interface OnboardimplementerInput {

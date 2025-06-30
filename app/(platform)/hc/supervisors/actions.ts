@@ -1,5 +1,6 @@
 "use server";
 
+import type { z } from "zod";
 import {
   AddNewSupervisorSchema,
   DropoutSupervisorSchema,
@@ -10,11 +11,10 @@ import {
   WeeklyHubTeamMeetingSchema,
 } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
-import { db } from "#/lib/db";
 
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
-import type { z } from "zod";
+import { db } from "#/lib/db";
 
 export async function submitWeeklyTeamMeeting(data: z.infer<typeof WeeklyHubTeamMeetingSchema>) {
   try {

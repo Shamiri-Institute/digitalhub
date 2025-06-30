@@ -1,3 +1,11 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import parsePhoneNumberFromString from "libphonenumber-js";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { FellowDetailsSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
@@ -29,14 +37,6 @@ import { submitFellowDetails } from "#/lib/actions/fellow";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import parsePhoneNumberFromString from "libphonenumber-js";
-import { usePathname } from "next/navigation";
-import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
 
 export default function FellowDetailsForm({
   fellow,

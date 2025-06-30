@@ -1,16 +1,5 @@
 "use client";
 
-import type {
-  fetchSupervisorDataCompletenessData,
-  SessionRatingAverages,
-  SupervisorAttendanceData,
-  SupervisorDropoutReasonsGraphData,
-} from "#/app/(platform)/hc/supervisors/actions";
-import ChartCard from "#/components/ui/chart-card";
-import {
-  SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
-  SCHOOL_DROPOUT_REASONS_MAPPING,
-} from "#/lib/app-constants/constants";
 import {
   Bar,
   BarChart,
@@ -27,6 +16,17 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type {
+  fetchSupervisorDataCompletenessData,
+  SessionRatingAverages,
+  SupervisorAttendanceData,
+  SupervisorDropoutReasonsGraphData,
+} from "#/app/(platform)/hc/supervisors/actions";
+import ChartCard from "#/components/ui/chart-card";
+import {
+  SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
+  SCHOOL_DROPOUT_REASONS_MAPPING,
+} from "#/lib/app-constants/constants";
 
 export default function SupervisorCharts({
   attendanceData,

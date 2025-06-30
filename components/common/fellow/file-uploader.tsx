@@ -1,5 +1,9 @@
 "use client";
 
+import clsx from "clsx";
+import { Loader2 } from "lucide-react";
+import { useS3Upload } from "next-s3-upload";
+import { useCallback, useState } from "react";
 import { addUploadedFellowDocs } from "#/app/(platform)/hc/fellows/actions";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { Icons } from "#/components/icons";
@@ -7,11 +11,6 @@ import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
-import clsx from "clsx";
-import { Loader2 } from "lucide-react";
-import { useS3Upload } from "next-s3-upload";
-
-import { useCallback, useState } from "react";
 
 export default function FellowFilesUploader({
   fellow,

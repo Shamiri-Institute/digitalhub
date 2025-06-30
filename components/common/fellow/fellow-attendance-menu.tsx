@@ -1,5 +1,6 @@
 "use client";
 
+import type { Dispatch, SetStateAction } from "react";
 import type { FellowAttendancesTableData } from "#/components/common/fellow/fellow-attendance";
 import { Icons } from "#/components/icons";
 import {
@@ -10,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import type { Dispatch, SetStateAction } from "react";
 
 export default function FellowAttendanceMenu({
   state,

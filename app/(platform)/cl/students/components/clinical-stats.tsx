@@ -1,7 +1,5 @@
 "use client";
 
-import { clinicalCasesColors } from "#/components/charts/constants";
-import ChartCard from "#/components/ui/chart-card";
 import {
   Bar,
   BarChart,
@@ -15,6 +13,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { clinicalCasesColors } from "#/components/charts/constants";
+import ChartCard from "#/components/ui/chart-card";
 
 export default function ClinicalStats({
   clinicalData,

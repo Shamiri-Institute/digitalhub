@@ -1,6 +1,6 @@
+import { expect, test } from "@playwright/test";
 import { PersonnelFixtures } from "#/tests/helpers";
 import HubCoordinatorSchoolsPage from "#/tests/pages/hub-coordinator/school-page";
-import { expect, test } from "@playwright/test";
 
 test.use({ storageState: PersonnelFixtures.hubCoordinator.stateFile });
 test.describe.configure({ mode: "parallel" });

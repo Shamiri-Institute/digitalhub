@@ -1,5 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { format } from "date-fns";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 import { createStudentClinicalCase } from "#/app/(platform)/sc/clinical/action";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -26,12 +32,6 @@ import {
 import { toast } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn, stringValidation } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
-import { format } from "date-fns";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
 
 const formSchema = z.object({
   school: stringValidation("School"),

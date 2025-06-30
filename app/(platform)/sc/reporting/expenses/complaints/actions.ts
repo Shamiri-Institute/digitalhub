@@ -1,9 +1,9 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
 import { currentSupervisor } from "#/app/auth";
 import type { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
 import { db } from "#/lib/db";
-import type { Prisma } from "@prisma/client";
 
 export type FellowReportComplaintsType = Awaited<
   ReturnType<typeof loadFellowPaymentComplaints>

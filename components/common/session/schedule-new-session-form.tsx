@@ -1,3 +1,10 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import { format } from "date-fns";
+import { ChevronsUpDown } from "lucide-react";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import RescheduleSession from "#/components/common/session/reschedule-session";
 import { ScheduleNewSessionSchema } from "#/components/common/session/schema";
 import { SessionDetail } from "#/components/common/session/session-list";
@@ -27,13 +34,6 @@ import { ToastAction } from "#/components/ui/toast";
 import { useToast } from "#/components/ui/use-toast";
 import { createNewSession } from "#/lib/actions/session/session";
 import { cn, handleMinutesChange } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { ImplementerRole, Prisma } from "@prisma/client";
-import { format } from "date-fns";
-import { ChevronsUpDown } from "lucide-react";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
 import type { Session } from "./sessions-provider";
 
 export function ScheduleNewSession({

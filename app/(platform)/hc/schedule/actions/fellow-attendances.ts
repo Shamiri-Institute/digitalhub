@@ -1,9 +1,9 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import type { FellowAttendancesTableData } from "#/components/common/fellow/fellow-attendance";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
 
 export async function fetchSessionFellowAttendances({ sessionId }: { sessionId?: string }) {
   return await db.$queryRaw<FellowAttendancesTableData[]>`

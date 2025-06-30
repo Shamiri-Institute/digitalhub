@@ -1,5 +1,8 @@
 "use client";
 
+import type { Prisma } from "@prisma/client";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { assignFellowSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
@@ -11,9 +14,6 @@ import {
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import type { Prisma } from "@prisma/client";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export default function AssignFellowSupervisorSelect({
   fellowId,

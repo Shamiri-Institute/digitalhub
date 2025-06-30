@@ -1,5 +1,14 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ImplementerRole } from "@prisma/client";
+import { format } from "date-fns";
+import { isValidPhoneNumber } from "libphonenumber-js";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type {
   CurrentClinicalLead,
@@ -42,15 +51,6 @@ import {
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ImplementerRole } from "@prisma/client";
-import { format } from "date-fns";
-import { isValidPhoneNumber } from "libphonenumber-js";
-import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
 
 interface ProfileDialogProps {
   isOpen: boolean;

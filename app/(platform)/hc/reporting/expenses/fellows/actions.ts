@@ -1,8 +1,8 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
-import type { Prisma } from "@prisma/client";
 
 export type HubFellowsAttendancesType = Awaited<ReturnType<typeof loadHubFellowAttendance>>[number];
 

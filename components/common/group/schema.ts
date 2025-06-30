@@ -1,5 +1,5 @@
-import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
+import { stringValidation } from "#/lib/utils";
 
 export const StudentGroupEvaluationSchema = z.object({
   mode: z.enum(["add", "view"]),

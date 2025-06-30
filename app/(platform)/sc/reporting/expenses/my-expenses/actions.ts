@@ -1,9 +1,9 @@
 "use server";
 
+import { signOut } from "next-auth/react";
 import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
 
 export type SupervisorExpensesType = Awaited<ReturnType<typeof loadSupervisorExpenses>>[number];
 

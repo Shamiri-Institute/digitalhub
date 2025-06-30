@@ -1,14 +1,12 @@
+import { useGSAP } from "@gsap/react";
 import { type CalendarDate, isToday } from "@internationalized/date";
+import type { ImplementerRole } from "@prisma/client";
+import gsap from "gsap";
 import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
-
 import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
-
-import { useGSAP } from "@gsap/react";
-import type { ImplementerRole } from "@prisma/client";
-import gsap from "gsap";
 import { SessionList } from "./session-list";
 import { type Session, useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
@@ -5,7 +6,6 @@ import FellowInfoContextProvider from "#/components/common/fellow/fellow-info-co
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
-import { Suspense } from "react";
 
 export default async function FellowsPage({
   params: { visibleId },

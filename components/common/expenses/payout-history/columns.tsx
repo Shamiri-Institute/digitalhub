@@ -1,12 +1,12 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
+import Image from "next/image";
 import type { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import type { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
-import Image from "next/image";
 
 export const columns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
   {

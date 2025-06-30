@@ -1,13 +1,13 @@
 "use client";
 
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { format, isAfter } from "date-fns";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import SchoolTableDropdown from "#/components/common/schools/school-table-dropdown";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { sessionDisplayName } from "#/lib/utils";
-import type { ImplementerRole, Prisma } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
-import { format, isAfter } from "date-fns";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {

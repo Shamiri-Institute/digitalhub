@@ -1,4 +1,9 @@
 "use client";
+import type { ImplementerRole } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { format, isAfter } from "date-fns";
+import Image from "next/image";
+import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import type { FellowsData } from "#/app/(platform)/sc/actions";
 import FellowSchoolDatatableDropdownMenu, {
@@ -10,11 +15,6 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { sessionDisplayName } from "#/lib/utils";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import type { ImplementerRole } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
-import { format, isAfter } from "date-fns";
-import Image from "next/image";
-import type { Dispatch, SetStateAction } from "react";
 import FellowsTableDropdown from "./fellow-schools-datatable-dropdown-menu";
 
 export const fellowSchoolsColumns = ({

@@ -1,8 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
-import { useState } from "react";
 
 interface CaseNote {
   id: string;

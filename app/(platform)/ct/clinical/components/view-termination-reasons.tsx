@@ -1,9 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "#/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
-import { useState } from "react";
 
 interface TerminationData {
   id: string;

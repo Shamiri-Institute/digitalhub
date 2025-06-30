@@ -1,10 +1,9 @@
+import { ImplementerRole } from "@prisma/client";
 import { z } from "zod";
-
 import { Command } from "#/commands";
 import { sendEmail } from "#/emails";
 import UserWelcomer from "#/emails/user-welcomer";
-import { db as database, type Database } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
+import { type Database, db as database } from "#/lib/db";
 
 const InviteMaxAge = 1000 * 60 * 60 * 24 * 7; // 1 week
 

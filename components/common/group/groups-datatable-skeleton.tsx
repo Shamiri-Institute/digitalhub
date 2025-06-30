@@ -1,11 +1,11 @@
 "use client";
 
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 import { columns, type SchoolGroupDataTableData } from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import type { ImplementerRole, Prisma } from "@prisma/client";
-import type { ColumnDef } from "@tanstack/react-table";
 
 export default function GroupsDatatableSkeleton({
   role,

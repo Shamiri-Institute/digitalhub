@@ -25,6 +25,8 @@ import {
   LayoutDashboard,
   ListTodo,
   Loader2,
+  // StarIcon,
+  type LucideIcon,
   type LucideProps,
   Mail,
   MinusCircle,
@@ -43,8 +45,6 @@ import {
   UploadCloudIcon,
   Users2,
   XIcon,
-  // StarIcon,
-  type LucideIcon,
 } from "lucide-react";
 import type * as React from "react";
 
