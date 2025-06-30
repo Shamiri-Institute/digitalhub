@@ -19,20 +19,18 @@ export function LoginForm() {
   }, [searchParams, toast]);
 
   return (
-    <>
-      <Button
-        variant="brand"
-        disabled={clickedGoogle}
-        onClick={() => {
-          setClickedGoogle(true);
-          signIn("google", { callbackUrl: "/?login=1" });
-        }}
-        className="flex gap-2"
-        data-testid="google-login"
-      >
-        <Icons.google className="h-4 w-4" />
-        Continue with Google
-      </Button>
-    </>
+    <Button
+      variant="brand"
+      disabled={clickedGoogle}
+      onClick={() => {
+        setClickedGoogle(true);
+        signIn("google", { callbackUrl: "/?login=1" });
+      }}
+      className="flex gap-2"
+      data-testid="google-login"
+    >
+      <Icons.google className="h-4 w-4" />
+      Continue with Google
+    </Button>
   );
 }

@@ -16,13 +16,7 @@ export default function LoginPage() {
         <p className="text-sm text-gray-500">The platform powering the Shamiri Intervention</p>
       </div>
       <div className="flex flex-col space-y-3 bg-gray-50 px-4 py-8 sm:px-16">
-        <React.Suspense
-          fallback={
-            <>
-              <div className="mx-auto h-5 w-3/4 rounded-lg bg-gray-100" />
-            </>
-          }
-        >
+        <React.Suspense fallback={<div className="mx-auto h-5 w-3/4 rounded-lg bg-gray-100" />}>
           <LoginForm />
         </React.Suspense>
       </div>
