@@ -1643,14 +1643,12 @@ model OpsUser {
   @@map("ops_users")
 }
 
-/// Session analysis represents AI-generated analysis of intervention sessions
-/// based on recorded audio and grading rubric evaluation
 model SessionAnalysis {
-  id         String              @id @db.VarChar(255)
-  createdAt  DateTime            @default(now()) @map("created_at")
-  updatedAt  DateTime            @updatedAt @map("updated_at")
-  archivedAt DateTime?           @map("archived_at")
-  sessionId  String              @map("session_id") @db.VarChar(255)
+  id         String              @id @default(cuid())
+  createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
+  archivedAt DateTime?           @map("archived_at") @db.Timestamptz()
+  sessionId  String              @map("session_id") @db.Text
   session    InterventionSession @relation(fields: [sessionId], references: [id])
 
   // Grading rubric dimensions (1-7 scale)
@@ -1661,16 +1659,16 @@ model SessionAnalysis {
   contentClarity        Int? @map("content_clarity") // Q5: Delivered content clearly and accessibly
   protocolCompliance    Int? @map("protocol_compliance") // Q6: Did not add content outside protocol
 
-  // Analysis results
+  // Qualitative feedback
   strengths      String? @db.Text // Key strengths identified
   weaknesses     String? @db.Text // Areas for improvement
   flags          String? @db.Text // Important flags or concerns
   overallSummary String? @map("overall_summary") @db.Text // Comprehensive summary
 
   // Metadata
-  analysisDate     DateTime? @map("analysis_date") @db.Timestamptz(6) // When analysis was performed
-  transcriptionUrl String?   @map("transcription_url") @db.Text // Link to transcription
-  audioUrl         String?   @map("audio_url") @db.Text // Link to original audio
+  analysisDate     DateTime? @map("analysis_date") @db.Timestamptz(6) // When analysis was performed from the python code
+  transcriptionUrl String?   @map("transcription_url") @db.Text // TODO: do we actually need this
+  audioUrl         String?   @map("audio_url") @db.Text
   analysisVersion  String?   @map("analysis_version") @db.VarChar(50) // Version of analysis system used
 
   @@map("session_analyses")
