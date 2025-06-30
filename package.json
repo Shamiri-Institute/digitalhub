@@ -14,6 +14,7 @@
     "start": "next start",
     "format": "biome format --write",
     "stylecheck": "biome check",
+    "biome:ci": "biome ci",
     "typecheck": "tsc --noEmit",
     "lint": "next lint",
     "test:ci": "playwright test",
