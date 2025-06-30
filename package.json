@@ -25,6 +25,7 @@
     "test:db:load": "psql -d shamiri_db -h localhost -p 5432 -f ./tests/fixtures/dump.sql",
     "test:unit": "dotenv -c development -- vitest",
     "next-auth:session": "dotenv -c development -- tsx scripts/auth/get-next-session.ts",
+    "generate-api-key": "tsx scripts/generate-api-key.ts",
     "db:dev:up": "docker-compose down && docker-compose up db",
     "db:dev:seed": "dotenv -c development -- tsx prisma/scripts/seed.ts",
     "db:seed": "dotenv -c development -- tsx prisma/scripts/seed-v2.ts",

@@ -10,7 +10,7 @@ const schema = z.object({
   S3_UPLOAD_BUCKET: z.string(),
   S3_UPLOAD_REGION: z.string(),
 
-  SESSION_ANALYSIS_API_KEY: z.string().min(32),
+  SESSION_ANALYSIS_API_KEY: z.string().min(32).default("an-amazing-api-key"),
   SESSION_ANALYSIS_RATE_LIMIT: z
     .string()
     .regex(/^\d+$/, "Rate limit must be a number")
@@ -20,7 +20,11 @@ const schema = z.object({
     .string()
     .optional()
     .transform((val) => (val ? val.split(",").map((ip) => ip.trim()) : [])),
-  SESSION_ANALYSIS_SIGNATURE_SECRET: z.string().min(32).optional(),
+  SESSION_ANALYSIS_SIGNATURE_SECRET: z
+    .string()
+    .min(32)
+    .optional()
+    .default("shamiri is the best"),
 });
 
 export const env = schema.parse(process.env);

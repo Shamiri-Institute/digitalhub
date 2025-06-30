@@ -82,10 +82,7 @@ async function validateApiKey(
 }
 
 function isValidApiKey(providedKey: string): boolean {
-  const validKeys = [
-    env.SESSION_ANALYSIS_API_KEY,
-    env.SESSION_ANALYSIS_API_KEY_BACKUP,
-  ].filter(Boolean);
+  const validKeys = [env.SESSION_ANALYSIS_API_KEY].filter(Boolean);
 
   return validKeys.some((validKey) => {
     if (!validKey) return false;
