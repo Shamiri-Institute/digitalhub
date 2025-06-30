@@ -8,7 +8,7 @@ import { Prisma, sessionTypes } from "@prisma/client";
 import { format } from "date-fns";
 import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import type { z } from "zod";
 import {
   AddSchoolSchema,
   AssignPointSupervisorSchema,
@@ -659,7 +659,7 @@ export async function addSchool(
       const interventionSessions: Prisma.InterventionSessionCreateManyInput[] =
         [];
 
-      let currentDate = utcToZonedTime(
+      const currentDate = utcToZonedTime(
         parsedData.preSessionDate,
         "Africa/Nairobi",
       );

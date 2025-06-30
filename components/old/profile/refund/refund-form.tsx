@@ -1,13 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { School } from "@prisma/client";
+import type { School } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { useS3Upload } from "next-s3-upload";
 import { useCallback, useEffect, useState } from "react";
-import { UseFormReturn, useForm } from "react-hook-form";
+import { type UseFormReturn, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import {
@@ -509,5 +509,5 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+  return Number.parseFloat((bytes / k ** i).toFixed(dm)) + " " + sizes[i];
 }

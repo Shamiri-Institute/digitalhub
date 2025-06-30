@@ -1,12 +1,12 @@
 "use client";
 
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
+import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import WeeklyFellowEvaluationDropdownMenu from "#/components/common/fellow-reports/weekly-fellow-evaluation/weekly-fellow-evaluation-dropdown";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 
 export const columns: ColumnDef<WeeklyFellowEvaluation>[] = [

@@ -1,5 +1,5 @@
-import { Session } from "#/components/common/session/sessions-provider";
-import { createContext, Dispatch, SetStateAction } from "react";
+import type { Session } from "#/components/common/session/sessions-provider";
+import { createContext, type Dispatch, type SetStateAction } from "react";
 
 type RescheduleSessionContextData = {
   isOpen: boolean;

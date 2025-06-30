@@ -33,7 +33,7 @@ import { toast } from "#/components/ui/use-toast";
 import { submitWeeklyFellowEvaluation } from "#/lib/actions/fellow";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import {
   addDays,
   differenceInSeconds,
@@ -42,9 +42,10 @@ import {
   isEqual,
 } from "date-fns";
 import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react"
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 export default function WeeklyFellowEvaluation({
   fellowId,
@@ -297,7 +298,7 @@ export default function WeeklyFellowEvaluation({
                                 ? ""
                                 : "pertains to evaluating the fellow's demeanor, covering approachability, respectfulness, attitude, collaboration, communication style."
                             }
-                          ></Textarea>
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -348,7 +349,7 @@ export default function WeeklyFellowEvaluation({
                                 ? ""
                                 : "assesses adherence to protocols, ethical standards, confidentiality, cultural competence"
                             }
-                          ></Textarea>
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -398,7 +399,7 @@ export default function WeeklyFellowEvaluation({
                                 ? ""
                                 : "assesses the personal presentation of fellows considering appropriate attire and grooming standards in compliance with specific school administration requirements."
                             }
-                          ></Textarea>
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -449,7 +450,7 @@ export default function WeeklyFellowEvaluation({
                                 ? ""
                                 : "assesses the timely arrival and adherence to scheduled program sessions, including supervision and school sessions"
                             }
-                          ></Textarea>
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

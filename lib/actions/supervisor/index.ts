@@ -4,7 +4,7 @@ import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
-import { z } from "zod";
+import type { z } from "zod";
 
 async function checkAuth() {
   const hubCoordinator = await currentHubCoordinator();
@@ -63,7 +63,7 @@ export async function markSupervisorAttendance(
           success: true,
           message: `Successfully updated attendance for ${supervisor.supervisorName}`,
         };
-      } else {
+      }
         const session = await db.interventionSession.findFirstOrThrow({
           where: {
             id: sessionId,
@@ -90,13 +90,11 @@ export async function markSupervisorAttendance(
           success: true,
           message: `Successfully marked attendance for ${supervisor.supervisorName}`,
         };
-      }
-    } else {
+    }
       return {
         success: false,
-        message: `Supervisor details not found.`,
+        message: "Supervisor details not found.",
       };
-    }
   } catch (err) {
     console.error(err);
     return {

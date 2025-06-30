@@ -3,7 +3,7 @@
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { MarkSessionOccurrenceSchema } from "#/components/common/session/schema";
 import {
-  Session,
+  type Session,
   SessionsContext,
 } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
@@ -29,15 +29,16 @@ import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, isBefore } from "date-fns";
 import { usePathname } from "next/navigation";
-import React, {
-  Dispatch,
+import type React from "react";
+import {type 
+  Dispatch,type 
   SetStateAction,
   useContext,
   useEffect,
   useState,
-} from "react";
+} from "react"
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 export function MarkSessionOccurrence({
   children,
@@ -161,7 +162,7 @@ export function MarkSessionOccurrence({
                           value="attended"
                           id="mark_attended"
                           className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
-                        ></RadioGroupItem>
+                        />
                       </div>
                       <div className="relative">
                         <CustomIndicator className="blue" label={"Unmarked"} />
@@ -169,7 +170,7 @@ export function MarkSessionOccurrence({
                           value="unmarked"
                           id="Unmarked_"
                           className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
-                        ></RadioGroupItem>
+                        />
                       </div>
                     </RadioGroup>
                     <FormMessage />
@@ -301,7 +302,7 @@ function CustomIndicator({
             "indicator h-4 w-4 rounded-full border border-gray-300 bg-white shadow",
             className,
           )}
-        ></div>
+        />
         <span>{label}</span>
       </div>
     </div>

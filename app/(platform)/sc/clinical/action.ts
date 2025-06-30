@@ -1,6 +1,6 @@
 "use server";
 
-import { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
+import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentUser } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 
@@ -372,7 +372,7 @@ export async function createStudentClinicalCase(data: {
           id: data.studentId,
         },
         data: {
-          form: parseInt(data.classForm),
+          form: Number.parseInt(data.classForm),
           stream: data.stream,
           age: data.age,
           gender: data.gender,
@@ -507,7 +507,7 @@ export async function updateStudentInfo(data: EditStudentInfoFormValues) {
           studentName: data.studentName,
           gender: data.gender,
           admissionNumber: data.admissionNumber,
-          form: parseInt(data.classForm),
+          form: Number.parseInt(data.classForm),
           stream: data.stream,
         },
       });

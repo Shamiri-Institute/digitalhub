@@ -1,6 +1,6 @@
 "use client";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { ComplaintData } from "#/components/common/expenses/complaints/complaints-actions-dropdown";
+import type { ComplaintData } from "#/components/common/expenses/complaints/complaints-actions-dropdown";
 import { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
 import { FileUploaderWithDrop } from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
@@ -32,7 +32,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 export default function ViewFellowComplaint({
   children,

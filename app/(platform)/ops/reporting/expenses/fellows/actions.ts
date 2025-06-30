@@ -3,7 +3,7 @@
 import { currentOpsUser } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 export type HubFellowsAttendancesType = Awaited<
   ReturnType<typeof loadHubsFellowAttendance>

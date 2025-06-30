@@ -1,7 +1,7 @@
 "use server";
 
 import { getCurrentUser } from "#/app/auth";
-import { Personnel } from "#/components/common/dev-personnel-switcher";
+import type { Personnel } from "#/components/common/dev-personnel-switcher";
 import { db } from "#/lib/db";
 import { ImplementerRole } from "@prisma/client";
 

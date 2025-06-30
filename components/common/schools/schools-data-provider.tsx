@@ -1,7 +1,8 @@
 "use client";
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
-import { SchoolsTableData } from "#/components/common/schools/columns";
-import React, { useState } from "react";
+import type { SchoolsTableData } from "#/components/common/schools/columns";
+import type React from "react";
+import { useState } from "react";
 
 export default function SchoolsDataProvider({
   children,

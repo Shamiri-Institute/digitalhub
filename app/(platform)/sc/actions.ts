@@ -1,7 +1,7 @@
 "use server";
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
-import { Fellow } from "@prisma/client";
+import type { Fellow } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { SupervisorSchema } from "./schemas";

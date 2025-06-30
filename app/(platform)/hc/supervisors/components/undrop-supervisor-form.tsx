@@ -9,7 +9,7 @@ import {
 } from "#/components/ui/dialog";
 import { toast } from "#/components/ui/use-toast";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 
 export default function UndropSupervisor({
   supervisorId,

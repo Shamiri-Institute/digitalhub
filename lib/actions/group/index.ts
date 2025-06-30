@@ -14,7 +14,7 @@ import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getSchoolInitials } from "#/lib/utils";
 import { Prisma } from "@prisma/client";
-import { z } from "zod";
+import type { z } from "zod";
 
 async function checkAuth() {
   const hubCoordinator = await currentHubCoordinator();

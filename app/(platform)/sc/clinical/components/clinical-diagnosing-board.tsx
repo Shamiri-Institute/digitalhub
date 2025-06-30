@@ -1,5 +1,5 @@
 import {
-  ClinicalCases,
+  type ClinicalCases,
   updateClinicalCaseEmergencyPresentingIssue,
   updateClinicalCaseGeneralPresentingIssue,
 } from "#/app/(platform)/sc/clinical/action";

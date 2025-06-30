@@ -1,5 +1,5 @@
 import { currentFellow } from "#/app/auth";
-import { SchoolGroupDataTableData } from "#/components/common/group/columns";
+import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";

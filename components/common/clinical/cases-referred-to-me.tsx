@@ -7,7 +7,7 @@ import {
 import { Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
 import { useToast } from "#/components/ui/use-toast";
-import { ClinicalScreeningInfo, Student } from "@prisma/client";
+import type { ClinicalScreeningInfo, Student } from "@prisma/client";
 
 type CasesType = ClinicalScreeningInfo & {
   student: Student;

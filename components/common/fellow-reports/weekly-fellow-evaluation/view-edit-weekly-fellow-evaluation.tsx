@@ -2,7 +2,7 @@
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { updateWeeklyEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/action";
-import { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
+import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,

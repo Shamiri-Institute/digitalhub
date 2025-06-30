@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import {
-  ClinicalCases,
+  type ClinicalCases,
   createTreatmentPlan,
 } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -96,9 +96,9 @@ export default function TreatmentPlanForm({
         caseId: clinicalCase.id,
         role,
         currentOrsScore: data.currentOrsScore
-          ? parseInt(data.currentOrsScore)
+          ? Number.parseInt(data.currentOrsScore)
           : 0,
-        plannedSessions: parseInt(data.plannedSessions),
+        plannedSessions: Number.parseInt(data.plannedSessions),
         sessionFrequency: data.sessionFrequency,
         treatmentInterventions: data.treatmentInterventions,
         otherIntervention: data.otherIntervention,

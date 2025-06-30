@@ -1,7 +1,7 @@
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
-import { Session } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/components/common/session/sessions-provider";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -31,10 +31,10 @@ import {
   markSupervisorAttendance,
 } from "#/lib/actions/supervisor";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
-import { ColumnDef, Row } from "@tanstack/react-table";
+import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
+import type { ColumnDef, Row } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 
 export default function SupervisorAttendance({
   supervisors,
@@ -445,9 +445,8 @@ const columns = (state: {
               </Tooltip>
             )
           );
-        } else {
-          throw error;
         }
+          throw error;
       }
     },
     header: "Phone number",

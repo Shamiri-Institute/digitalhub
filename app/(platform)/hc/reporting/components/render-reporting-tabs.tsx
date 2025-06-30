@@ -1,6 +1,6 @@
 "use client";
 import TabToggleNavigation, {
-  TabType,
+  type TabType,
 } from "#/components/common/tabs/tab-navigation";
 import { usePathname } from "next/navigation";
 
@@ -13,28 +13,28 @@ export default function RenderReportingTabs() {
   const fellowReportOptions: TabType[] = [
     {
       name: "Weekly fellow evaluation",
-      href: `/hc/reporting/fellow-reports/weekly-fellow-evaluation`,
+      href: "/hc/reporting/fellow-reports/weekly-fellow-evaluation",
     },
     {
       name: "Student group evaluation",
-      href: `/hc/reporting/fellow-reports/student-group-evaluation`,
+      href: "/hc/reporting/fellow-reports/student-group-evaluation",
     },
-    { name: "Complaints", href: `/hc/reporting/fellow-reports/complaints` },
+    { name: "Complaints", href: "/hc/reporting/fellow-reports/complaints" },
   ];
 
   const schoolReportOptions: TabType[] = [
-    { name: "Session", href: `/hc/reporting/school-reports/session` },
+    { name: "Session", href: "/hc/reporting/school-reports/session" },
     {
       name: "School Feedback",
-      href: `/hc/reporting/school-reports/school-feedback`,
+      href: "/hc/reporting/school-reports/school-feedback",
     },
   ];
 
   const expensesReportOptions: TabType[] = [
-    { name: "Fellows", href: `/hc/reporting/expenses/fellows` },
-    { name: "Supervisors", href: `/hc/reporting/expenses/supervisors` },
-    { name: "Payout history", href: `/hc/reporting/expenses/payout-history` },
-    { name: "Complaints", href: `/hc/reporting/expenses/complaints` },
+    { name: "Fellows", href: "/hc/reporting/expenses/fellows" },
+    { name: "Supervisors", href: "/hc/reporting/expenses/supervisors" },
+    { name: "Payout history", href: "/hc/reporting/expenses/payout-history" },
+    { name: "Complaints", href: "/hc/reporting/expenses/complaints" },
   ];
   return (
     <>

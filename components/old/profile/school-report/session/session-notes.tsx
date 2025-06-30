@@ -1,6 +1,6 @@
 "use client";
 
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { formatInTimeZone } from "date-fns-tz";
 
 import { Button } from "#/components/ui/button";

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import type React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./card";
 
 export default function ChartCard({
@@ -20,7 +20,7 @@ export default function ChartCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="h-[275px] pt-6">
-        {!!children ? (
+        {children ? (
           children
         ) : (
           <div className="flex h-full items-center justify-center">

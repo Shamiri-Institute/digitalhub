@@ -5,7 +5,7 @@ import {
 } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { ComplaintData } from "#/components/common/expenses/complaints/complaints-actions-dropdown";
+import type { ComplaintData } from "#/components/common/expenses/complaints/complaints-actions-dropdown";
 import { FileUploaderWithDrop } from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
 import {
@@ -35,10 +35,10 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 import { ReportFellowComplaintSchema } from "./schema";
 
 export default function ApproveRejectFellowComplaint({

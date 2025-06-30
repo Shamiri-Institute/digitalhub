@@ -3,7 +3,7 @@
 import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";
 import {
   columns,
-  SupervisorsData,
+  type SupervisorsData,
 } from "#/app/(platform)/hc/supervisors/components/columns";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
 import { default as EditSupervisorDetails } from "#/app/(platform)/hc/supervisors/components/edit-supervisor-details-form";
@@ -22,8 +22,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { Prisma } from "@prisma/client";
-import { Row } from "@tanstack/react-table";
+import type { Prisma } from "@prisma/client";
+import type { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { useContext, useState } from "react";
 

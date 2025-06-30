@@ -1,7 +1,7 @@
 "use client";
 import FileUploader from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 
 export function BatchUploadDownloadFellow({
   disabled,

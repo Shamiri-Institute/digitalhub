@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  DateValue,
+  type DateValue,
   createCalendar,
   getLocalTimeZone,
   today,
@@ -12,8 +12,8 @@ import { useFocusRing } from "@react-aria/focus";
 import { mergeProps } from "@react-aria/utils";
 import { useSearchParams } from "next/navigation";
 import {
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useContext,
   useEffect,
   useRef,
@@ -21,20 +21,20 @@ import {
 } from "react";
 import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
-import { CalendarState, useCalendarState } from "react-stately";
+import { type CalendarState, useCalendarState } from "react-stately";
 
 import { Icons } from "#/components/icons";
 
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import SupervisorAttendance from "#/app/(platform)/hc/components/supervisor-attendance";
 import {
-  DateRangeType,
-  Filters,
+  type DateRangeType,
+  type Filters,
   FiltersContext,
   statusFilterOptions,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
-import { CurrentFellow } from "#/app/auth";
+import type { CurrentFellow } from "#/app/auth";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
 import RescheduleSession from "#/components/common/session/reschedule-session";
@@ -55,14 +55,14 @@ import {
   DropdownMenuLabel,
 } from "#/components/ui/dropdown-menu";
 import { sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
+import { ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import * as React from "react";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { ModeProvider, useMode, type Mode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import { Session, SessionsProvider, useSessions } from "./sessions-provider";
+import { type Session, SessionsProvider, useSessions } from "./sessions-provider";
 import { TableView } from "./table-view";
 import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
@@ -495,9 +495,8 @@ function CalendarView({
               supervisorId={supervisorId}
             />
           );
-        } else {
-          throw new Error(`User not authenticated: ${role}`);
         }
+          throw new Error(`User not authenticated: ${role}`);
       default:
         throw new Error(`Invalid mode: ${mode}`);
     }

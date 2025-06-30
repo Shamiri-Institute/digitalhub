@@ -19,7 +19,7 @@ import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
 import { format } from "date-fns";
-import { z } from "zod";
+import type { z } from "zod";
 
 async function checkAuth() {
   const hubCoordinator = await currentHubCoordinator();
@@ -123,7 +123,7 @@ export async function submitFellowDetails(
         success: true,
         message: `Successfully updated details for ${fellowName}`,
       };
-    } else if (mode === "add" && (hubCoordinator || supervisor)) {
+    }if (mode === "add" && (hubCoordinator || supervisor)) {
       // Check if email already exists
       const existingUser = await db.user.findFirst({
         where: {
@@ -200,15 +200,14 @@ export async function submitFellowDetails(
         success: true,
         message: `Successfully added ${fellowName}`,
       };
-    } else {
+    }
       return {
         success: false,
         message:
           hubCoordinator === null && supervisor === null
-            ? `User is not authorised to perform this action`
+            ? "User is not authorised to perform this action"
             : "Something went wrong",
       };
-    }
   } catch (err) {
     console.error(err);
     const { mode } = FellowDetailsSchema.parse(data);
@@ -277,9 +276,9 @@ export async function submitWeeklyFellowEvaluation(
           });
           return {
             success: true,
-            message: `Successfully submitted weekly evaluation`,
+            message: "Successfully submitted weekly evaluation",
           };
-        } else {
+        }
           await db.weeklyFellowRatings.update({
             where: {
               id: previousEvaluation.id,
@@ -299,23 +298,20 @@ export async function submitWeeklyFellowEvaluation(
             success: true,
             message: `Successfully updated fellow's weekly evaluation`,
           };
-        }
-      } else {
+      }
         return {
           success: false,
           message:
             "Submission failed. Fellow is assigned to a different supervisor.",
         };
-      }
-    } else {
+    }
       return {
         success: false,
         message:
           supervisor === null
-            ? `User is not authorised to perform this action`
+            ? "User is not authorised to perform this action"
             : "Something went wrong",
       };
-    }
   } catch (err) {
     console.error(err);
     return {
@@ -543,7 +539,7 @@ export async function markFellowAttendance(
           success: true,
           message: `Successfully updated attendance for ${fellow.fellowName}`,
         };
-      } else {
+      }
         let groupId;
         if (session.schoolId) {
           const group = await tx.interventionGroup.findFirst({
@@ -617,7 +613,6 @@ export async function markFellowAttendance(
           success: true,
           message: `Successfully marked attendance for ${fellow.fellowName}`,
         };
-      }
     });
   } catch (err) {
     console.error(err);

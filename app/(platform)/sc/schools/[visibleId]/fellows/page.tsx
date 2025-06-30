@@ -1,5 +1,5 @@
 import { currentSupervisor } from "#/app/auth";
-import { SchoolFellowTableData } from "#/components/common/fellow/columns";
+import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";

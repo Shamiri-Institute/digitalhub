@@ -1,4 +1,4 @@
-import { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
+import type { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import HCApproveSupervisorExpense from "#/app/(platform)/hc/reporting/expenses/supervisors/components/approve-expense";
 import HCDeleteExpenseRequest from "#/components/common/expenses/supervisor-expenses/delete-expense-request";
 import HCEditSupervisorExpense from "#/components/common/expenses/supervisor-expenses/edit-expense";

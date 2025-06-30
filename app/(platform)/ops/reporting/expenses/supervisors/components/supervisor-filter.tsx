@@ -2,7 +2,7 @@ import SupervisorFilterToggle from "#/app/(platform)/hc/reporting/expenses/super
 import AddSupervisorExpensesForm from "#/components/common/expenses/supervisor-expenses/add-expense";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 export default async function SupervisorExpensesFilterTab({
   supervisorsInHub,

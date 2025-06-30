@@ -26,13 +26,13 @@ import {
 import { cn } from "#/lib/utils";
 import { rankItem } from "@tanstack/match-sorter-utils";
 import {
-  ColumnDef,
-  FilterFn,
-  OnChangeFn,
-  Row,
-  RowSelectionState,
-  SortingState,
-  VisibilityState,
+  type ColumnDef,
+  type FilterFn,
+  type OnChangeFn,
+  type Row,
+  type RowSelectionState,
+  type SortingState,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -40,7 +40,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Fragment, ReactNode, useEffect, useState } from "react";
+import { Fragment, type ReactNode, useEffect, useState } from "react";
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   // Rank the item
@@ -207,7 +207,7 @@ export default function DataTable<TData, TValue>({
         )}
       >
         {!isSubComponent ? (
-          <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-lg shadow-inner-2 lg:hidden"></div>
+          <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-lg shadow-inner-2 lg:hidden" />
         ) : null}
         <Table
           className={cn(

@@ -1,4 +1,4 @@
-import { DatabaseCursor, db as database } from "#/lib/db";
+import { type DatabaseCursor, db as database } from "#/lib/db";
 
 export abstract class Command<Input, Output> {
   protected abstract perform(input: Input): Promise<Output>;

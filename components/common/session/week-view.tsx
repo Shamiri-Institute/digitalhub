@@ -1,7 +1,7 @@
-import { CalendarDate, isToday } from "@internationalized/date";
-import { Dispatch, SetStateAction, useEffect, useRef } from "react";
+import { type CalendarDate, isToday } from "@internationalized/date";
+import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useDateFormatter } from "react-aria";
-import { CalendarState } from "react-stately";
+import type { CalendarState } from "react-stately";
 
 import {
   Tooltip,
@@ -11,10 +11,10 @@ import {
 import { cn } from "#/lib/utils";
 
 import { useGSAP } from "@gsap/react";
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import gsap from "gsap";
 import { SessionList } from "./session-list";
-import { Session, useSessions } from "./sessions-provider";
+import { type Session, useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
 export function WeekView({
@@ -82,7 +82,7 @@ export function WeekView({
 
   useGSAP(
     () => {
-      let mm = gsap.matchMedia();
+      const mm = gsap.matchMedia();
 
       mm.add("(min-width: 768px)", () => {
         if (headerRowRef?.current) {
@@ -107,7 +107,7 @@ export function WeekView({
 
   return (
     <div className="relative">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden"></div>
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden" />
       <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
         <table
           ref={headerRowRef}
@@ -115,7 +115,7 @@ export function WeekView({
         >
           <thead {...headerProps}>
             <tr className="border-b border-grey-border">
-              <th className="time-cell"></th>
+              <th className="time-cell" />
               {state
                 .getDatesInWeek(0)
                 .map((date, i) =>
@@ -204,7 +204,7 @@ function WeekCalendarHeaderCell({
       {hasSessions && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-base"></span>
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-base" />
           </TooltipTrigger>
           <TooltipContent side="top">
             {sessions.length} sessions on this day

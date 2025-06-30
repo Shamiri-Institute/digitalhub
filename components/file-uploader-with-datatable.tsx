@@ -16,13 +16,13 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import { readFileContent } from "#/utils/file-utils";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import clsx from "clsx";
 import { Loader2 } from "lucide-react";
 
 import { useState } from "react";
 
-let columns: ColumnDef<string, string>[] = [
+const columns: ColumnDef<string, string>[] = [
   {
     accessorKey: "school_name",
     header: "School name",

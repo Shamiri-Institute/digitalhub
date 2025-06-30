@@ -2,7 +2,7 @@
 
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { SchoolStudentTableData } from "#/components/common/student/columns";
+import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { StudentDetailsSchema } from "#/components/common/student/schemas";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -39,11 +39,11 @@ import {
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 export default function StudentDetailsForm({
   open,
@@ -416,7 +416,7 @@ export default function StudentDetailsForm({
           <RadioGroup
             className="flex flex-col gap-3"
             onValueChange={(value) => {
-              setTransferOption(parseInt(value));
+              setTransferOption(Number.parseInt(value));
             }}
           >
             {matchedStudents.map((student, index) => {

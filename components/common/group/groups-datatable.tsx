@@ -5,13 +5,13 @@ import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import ArchiveGroup from "#/components/common/group/archive-group";
 import {
   columns,
-  SchoolGroupDataTableData,
+  type SchoolGroupDataTableData,
 } from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";
 import StudentGroupEvaluation from "#/components/common/group/student-group-evaluation";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
-import { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, Prisma } from "@prisma/client";
 import { useEffect, useState } from "react";
 
 export default function GroupsDataTable({
@@ -60,7 +60,7 @@ export default function GroupsDataTable({
           supervisors={supervisors}
           school={school}
           groupCount={data.length}
-        ></CreateGroup>
+        />
       )
     );
   };

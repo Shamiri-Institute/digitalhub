@@ -1,5 +1,5 @@
-import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
-import { SupervisorFellowsAttendancesType } from "#/app/(platform)/sc/reporting/expenses/fellows/actions";
+import type { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
+import type { SupervisorFellowsAttendancesType } from "#/app/(platform)/sc/reporting/expenses/fellows/actions";
 import ApproveSpecialSessionFellows from "#/components/common/expenses/fellows/approve-special-session";
 import ConfirmReversalFellows from "#/components/common/expenses/fellows/confirm-reversal";
 import RequestRepaymentFellows from "#/components/common/expenses/fellows/request-repayment";

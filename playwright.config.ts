@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const isCI = !!process.env.CI;
-const slowMo = process.env.SLOW ? parseInt(process.env.SLOW) : undefined;
+const slowMo = process.env.SLOW ? Number.parseInt(process.env.SLOW) : undefined;
 const showServerLogs = process.env.LOG ? "pipe" : undefined;
 const useHeadless = process.env.CI
   ? { headless: true }

@@ -1,7 +1,7 @@
 "use client";
 
 import { updateClinicalSessionAttendance } from "#/app/(platform)/sc/clinical/action";
-import { AttendanceRecord } from "#/app/(platform)/sc/clinical/components/columns";
+import type { AttendanceRecord } from "#/app/(platform)/sc/clinical/components/columns";
 import { CustomIndicator } from "#/components/common/mark-attendance";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -20,7 +20,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { toast } from "#/components/ui/use-toast";
-import { Row } from "@tanstack/react-table";
+import type { Row } from "@tanstack/react-table";
 import { revalidatePath } from "next/cache";
 import { useState } from "react";
 

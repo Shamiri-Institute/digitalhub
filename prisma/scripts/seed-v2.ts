@@ -4,19 +4,19 @@ import { db } from "#/lib/db";
 import { hubSessionTypes } from "#/prisma/scripts/generate-session-names";
 import { faker } from "@faker-js/faker";
 import {
-  ClinicalLead,
-  ClinicalTeam,
-  Fellow,
-  Hub,
-  HubCoordinator,
-  Implementer,
+  type ClinicalLead,
+  type ClinicalTeam,
+  type Fellow,
+  type Hub,
+  type HubCoordinator,
+  type Implementer,
   ImplementerRole,
-  OpsUser,
-  Prisma,
-  Project,
-  SessionName,
+  type OpsUser,
+  type Prisma,
+  type Project,
+  type SessionName,
   sessionTypes,
-  Supervisor,
+  type Supervisor,
 } from "@prisma/client";
 import { isBefore, startOfMonth } from "date-fns";
 import { zonedTimeToUtc } from "date-fns-tz";
@@ -715,7 +715,7 @@ async function createSupervisors(
   // Continue with dynamic supervisors
   const hubsWithoutStatic = hubs.slice(1);
   const dynamicSupervisors = hubsWithoutStatic
-    .map((hub) => {
+    .flatMap((hub) => {
       return Array.from(Array(n).keys()).map(() => {
         let uniqueEmail = faker.internet.email().toLowerCase();
         while (emails.has(uniqueEmail)) {
@@ -732,8 +732,7 @@ async function createSupervisors(
           visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
         };
       });
-    })
-    .flat();
+    });
 
   supervisors.push(...dynamicSupervisors);
 
@@ -1431,7 +1430,7 @@ async function createInterventionSessionsForSchools(
   );
 
   // Start from a fixed date for static sessions
-  let staticDate = new Date();
+  const staticDate = new Date();
   staticDate.setHours(16, 0, 0, 0); // Set to 4 PM today
 
   // Create a Set to track used session types for the static school
@@ -1479,7 +1478,7 @@ async function createInterventionSessionsForSchools(
     const fellowIds = new Set(fellowsInSchool.map((f) => f.id));
 
     // Start from current date for this school
-    let currentDate = startOfMonth(new Date());
+    const currentDate = startOfMonth(new Date());
     currentDate.setHours(9, 0, 0, 0); // Set to 9 AM
 
     for (const sessionName of schoolSessionNames) {

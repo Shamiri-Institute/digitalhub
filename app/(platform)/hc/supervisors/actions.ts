@@ -14,7 +14,7 @@ import { db } from "#/lib/db";
 
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
-import { z } from "zod";
+import type { z } from "zod";
 
 export async function submitWeeklyTeamMeeting(
   data: z.infer<typeof WeeklyHubTeamMeetingSchema>,
@@ -219,11 +219,10 @@ export async function markSupervisorAttendance(
         message: "Successfully marked supervisor attendance.",
         data: attendance,
       };
-    } else {
+    }
       return {
         error: "Something went wrong while updating supervisor attendance",
       };
-    }
   } catch (error: unknown) {
     console.error(error);
     return {
@@ -517,9 +516,9 @@ export async function submitMonthlySupervisorEvaluation(
       });
       return {
         success: true,
-        message: `Successfully submitted monthly evaluation.`,
+        message: "Successfully submitted monthly evaluation.",
       };
-    } else {
+    }
       await db.monthlySupervisorEvaluation.update({
         where: {
           id: match.id,
@@ -547,9 +546,8 @@ export async function submitMonthlySupervisorEvaluation(
       });
       return {
         success: true,
-        message: `Successfully updated monthly evaluation.`,
+        message: "Successfully updated monthly evaluation.",
       };
-    }
   } catch (err) {
     console.error(err);
     return {

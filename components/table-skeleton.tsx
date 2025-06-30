@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Skeleton } from "./ui/skeleton";
 
 export default function TableSkeleton({ numRows = 1 }: { numRows: number }) {

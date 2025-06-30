@@ -26,11 +26,12 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { replaceGroupLeader } from "#/lib/actions/fellow";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useEffect } from "react";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useEffect } from "react"
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 export default function ReplaceFellow({
   fellowId,

@@ -30,12 +30,13 @@ import { submitFellowComplaint } from "#/lib/actions/fellow";
 import { COMPLAINT_TYPES } from "#/lib/app-constants/constants";
 import { getInitials } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, Prisma } from "@prisma/client";
 import { format } from "date-fns";
 import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction } from "react";
+import type React from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 export default function SubmitComplaint({
   id,

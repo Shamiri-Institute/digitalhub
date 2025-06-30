@@ -12,8 +12,8 @@ import {
   DialogFooter,
   DialogHeader,
 } from "#/components/ui/dialog";
-import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 import { useContext } from "react";
 
 export default function StudentsInGroup() {

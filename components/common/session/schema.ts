@@ -55,7 +55,7 @@ export const ScheduleNewSessionSchema = z
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Please select a school.`,
+        message: "Please select a school.",
         fatal: true,
         path: ["schoolId"],
       });
@@ -69,7 +69,7 @@ export const ScheduleNewSessionSchema = z
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Please enter the venue location.`,
+        message: "Please enter the venue location.",
         fatal: true,
         path: ["venue"],
       });

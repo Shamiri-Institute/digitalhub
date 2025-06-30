@@ -2,9 +2,9 @@
 
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import type { z } from "zod";
 import {
   AssignPointSupervisorSchema,
   DropoutSchoolSchema,

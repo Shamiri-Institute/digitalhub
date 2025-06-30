@@ -31,14 +31,14 @@ import { toast } from "#/components/ui/use-toast";
 import { rescheduleSession } from "#/lib/actions/session/session";
 import { cn, handleMinutesChange } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useContext, useState } from "react";
+import { type Dispatch, type SetStateAction, useContext, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 import type { Session } from "./sessions-provider";
 
 export default function RescheduleSession({

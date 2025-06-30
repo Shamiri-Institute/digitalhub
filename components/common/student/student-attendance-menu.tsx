@@ -1,6 +1,6 @@
 "use client";
 
-import { StudentAttendanceData } from "#/components/common/student/student-attendance";
+import type { StudentAttendanceData } from "#/components/common/student/student-attendance";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 export default function StudentAttendanceMenu({
   state,

@@ -35,19 +35,20 @@ import { toast } from "#/components/ui/use-toast";
 import { submitSessionRatings } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, Prisma } from "@prisma/client";
 import { addDays, addHours, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
-import React, {
-  Dispatch,
+import type React from "react";
+import {type 
+  Dispatch,type 
   SetStateAction,
   useContext,
   useEffect,
   useState,
-} from "react";
+} from "react"
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Session } from "./sessions-provider";
+import type { z } from "zod";
+import type { Session } from "./sessions-provider";
 export { useSession } from "next-auth/react";
 
 type FormInput = {

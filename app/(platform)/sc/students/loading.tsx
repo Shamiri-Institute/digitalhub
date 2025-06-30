@@ -1,6 +1,6 @@
 import ChartSkeleton from "#/components/charts/chart-skeleton";
 import InfoCardSkeleton from "#/components/info-card-skeleton";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export default function SupervisorStudentLoadingPage() {
   function renderChartWidgets(num: number) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import {
+import type {
   CurrentClinicalLead,
   CurrentClinicalTeam,
   CurrentFellow,
@@ -59,7 +59,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 interface ProfileDialogProps {
   isOpen: boolean;

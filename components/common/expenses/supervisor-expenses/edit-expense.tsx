@@ -10,7 +10,7 @@ import {
 import { useEffect, useState } from "react";
 
 import {
-  HubSupervisorExpensesType,
+  type HubSupervisorExpensesType,
   updateSupervisorExpense,
 } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
@@ -41,7 +41,7 @@ import { z } from "zod";
 function generateWeekFieldValues() {
   const numWeeks = 4;
 
-  let selectValues = [];
+  const selectValues = [];
   const today = new Date();
 
   for (let i = numWeeks; i >= 0; i--) {

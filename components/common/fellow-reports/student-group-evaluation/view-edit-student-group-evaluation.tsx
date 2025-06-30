@@ -3,7 +3,7 @@ import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-ratin
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
   editStudentGroupEvaluation,
-  StudentGroupEvaluationType,
+  type StudentGroupEvaluationType,
 } from "#/components/common/fellow-reports/student-group-evaluation/actions";
 import { Button } from "#/components/ui/button";
 import {

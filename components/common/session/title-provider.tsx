@@ -1,4 +1,4 @@
-import { PropsWithChildren, createContext, useContext, useState } from "react";
+import { type PropsWithChildren, createContext, useContext, useState } from "react";
 
 interface TitleContextType {
   title: string;

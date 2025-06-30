@@ -9,7 +9,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "#/components/ui/command";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { MagnifyingGlassIcon, ResetIcon } from "@radix-ui/react-icons";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";

@@ -5,7 +5,7 @@ import {
   possibleInterventionSessions,
 } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import {
   Bar,
   BarChart,

@@ -1,11 +1,11 @@
 import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
-import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
+import type { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
 import {
-  Session,
+  type Session,
   SessionsContext,
 } from "#/components/common/session/sessions-provider";
 import StudentAttendanceMenu from "#/components/common/student/student-attendance-menu";
@@ -34,18 +34,18 @@ import {
   markStudentAttendance,
 } from "#/lib/actions/student";
 import { sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { ColumnDef, Row } from "@tanstack/react-table";
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ColumnDef, Row } from "@tanstack/react-table";
 import { usePathname } from "next/navigation";
 import {
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useContext,
   useEffect,
   useState,
 } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 export default function StudentAttendance({
   isOpen,

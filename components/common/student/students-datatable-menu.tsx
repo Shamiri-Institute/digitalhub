@@ -1,4 +1,4 @@
-import { SchoolStudentTableData } from "#/components/common/student/columns";
+import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -8,8 +8,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { ImplementerRole } from "@prisma/client";
-import { Dispatch, SetStateAction } from "react";
+import type { ImplementerRole } from "@prisma/client";
+import type { Dispatch, SetStateAction } from "react";
 
 export default function StudentsDataTableMenu({
   state,

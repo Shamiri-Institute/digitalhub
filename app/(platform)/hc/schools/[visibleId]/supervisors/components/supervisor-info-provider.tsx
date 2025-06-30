@@ -1,5 +1,5 @@
 "use client";
-import { SupervisorsData } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/columns";
+import type { SupervisorsData } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/columns";
 import { SupervisorInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/context/supervisor-info-context";
 import { useState } from "react";
 

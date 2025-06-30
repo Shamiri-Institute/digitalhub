@@ -1,6 +1,6 @@
 "use server";
 
-import {
+import type {
   Fellow,
   ImplementerRole,
   WeeklyFellowRatings,
@@ -17,7 +17,7 @@ import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getHighestValue } from "#/lib/utils";
 import { EditFellowSchema } from "#/lib/validators";
-import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
+import type { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 
 export async function inviteUserToImplementer(prevState: any, formData: any) {
   try {
@@ -259,7 +259,7 @@ export async function submitTransportReimbursementRequest(data: {
         supervisorId: data.supervisorId,
         hubId: data.hubId,
         incurredAt: data.receiptDate,
-        amount: parseInt(data.amount),
+        amount: Number.parseInt(data.amount),
         kind: "transport",
         mpesaName: data.mpesaName,
         mpesaNumber: data.mpesaNumber,
@@ -998,7 +998,7 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
     const emergencyPresentingIssues =
       result_data?.emergencyPresentingIssues ?? {};
 
-    let combinedPresentingIssues = {
+    const combinedPresentingIssues = {
       // ...(emergencyPresentingIssues as { [k: string]: string }),
       ...(emergencyPresentingIssues as Record<string, any>),
       ...data.presentingIssues,
@@ -1225,9 +1225,9 @@ export async function addNonShamiriStudentViaClinicalScreening(
         schoolId: data.schoolId,
         yearOfImplementation: new Date().getFullYear(),
         admissionNumber: data.admissionNumber,
-        age: parseInt(data.age),
+        age: Number.parseInt(data.age),
         gender: data.gender,
-        form: parseInt(data.form),
+        form: Number.parseInt(data.form),
         stream: data.stream,
         county: data.county,
         phoneNumber: data.contactNumber,
@@ -1296,7 +1296,7 @@ export async function editClinicalCaseSessionAttendanceDate(data: {
       },
     });
 
-    revalidatePath(`/screenings`);
+    revalidatePath("/screenings");
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -1314,7 +1314,7 @@ export async function deleteClinicalCaseSessionAttendanceDate(data: {
       },
     });
 
-    revalidatePath(`/screenings`);
+    revalidatePath("/screenings");
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -1370,9 +1370,9 @@ export async function editStudentInfoFromClinicalCaseScreen(
       data: {
         studentName: data.studentName,
         admissionNumber: data.admissionNumber,
-        age: parseInt(data.age),
+        age: Number.parseInt(data.age),
         gender: data.gender,
-        form: parseInt(data.form),
+        form: Number.parseInt(data.form),
         stream: data.stream,
         county: data.county,
         phoneNumber: data.contactNumber,

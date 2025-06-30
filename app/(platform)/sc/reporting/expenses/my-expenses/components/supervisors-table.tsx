@@ -1,5 +1,5 @@
 "use client";
-import { SupervisorExpensesType } from "#/app/(platform)/sc/reporting/expenses/my-expenses/actions";
+import type { SupervisorExpensesType } from "#/app/(platform)/sc/reporting/expenses/my-expenses/actions";
 import DataTable from "#/components/data-table";
 
 import { columns } from "./columns";

@@ -1,4 +1,4 @@
-import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
+import type { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
 import ViewEditQualitativeFeedback from "#/components/common/school-reports/session/view-edit-qualitative-feedback";
 import { Icons } from "#/components/icons";
 import {

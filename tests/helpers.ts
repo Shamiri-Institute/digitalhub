@@ -1,4 +1,4 @@
-import { JWT, encode } from "next-auth/jwt";
+import { type JWT, encode } from "next-auth/jwt";
 import path from "node:path";
 
 import { db } from "#/lib/db";
@@ -6,23 +6,23 @@ import { db } from "#/lib/db";
 export const PersonnelFixtures = {
   supervisor: {
     email: "shadrack.lilan@shamiri.institute",
-    stateFile: path.join(__dirname, `./fixtures/supervisor-state.json`),
+    stateFile: path.join(__dirname, "./fixtures/supervisor-state.json"),
   },
   hubCoordinator: {
     email: "abdulghani.noor@shamiri.institute",
-    stateFile: path.join(__dirname, `./fixtures/hub-coordinator-state.json`),
+    stateFile: path.join(__dirname, "./fixtures/hub-coordinator-state.json"),
   },
   fellow: {
     email: "wambugu.davis@shamiri.institute",
-    stateFile: path.join(__dirname, `./fixtures/fellow-state.json`),
+    stateFile: path.join(__dirname, "./fixtures/fellow-state.json"),
   },
   clinicalLead: {
     email: "stanley.george@shamiri.institute",
-    stateFile: path.join(__dirname, `./fixtures/clinical-lead-state.json`),
+    stateFile: path.join(__dirname, "./fixtures/clinical-lead-state.json"),
   },
   opsUser: {
     email: "benny@shamiri.institute",
-    stateFile: path.join(__dirname, `./fixtures/operations-state.json`),
+    stateFile: path.join(__dirname, "./fixtures/operations-state.json"),
   },
 };
 

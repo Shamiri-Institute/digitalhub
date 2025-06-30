@@ -1,5 +1,5 @@
 "use client";
-import { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
+import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import { columns } from "#/app/(platform)/cl/clinical/columns";
 import ViewCaseSessions from "#/app/(platform)/cl/clinical/components/view-case-session";
 import ViewEmergencyPresentingIssues from "#/app/(platform)/cl/clinical/components/view-emergency-presenting-issues";

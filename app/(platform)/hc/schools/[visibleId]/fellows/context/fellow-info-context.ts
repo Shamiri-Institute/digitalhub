@@ -1,7 +1,7 @@
 "use client";
 
-import { SchoolFellowTableData } from "#/components/common/fellow/columns";
-import { createContext, Dispatch, SetStateAction } from "react";
+import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
+import { createContext, type Dispatch, type SetStateAction } from "react";
 
 type FellowInfoContextData = {
   groupDialog: boolean;

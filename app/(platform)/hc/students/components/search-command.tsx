@@ -8,7 +8,7 @@ import {
   CommandItem,
   CommandList,
 } from "#/components/ui/command";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { MagnifyingGlassIcon } from "@radix-ui/react-icons";
 import { useState } from "react";
 

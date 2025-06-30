@@ -1,5 +1,5 @@
 import { currentHubCoordinator } from "#/app/auth";
-import { SchoolGroupDataTableData } from "#/components/common/group/columns";
+import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
 import GroupsTableSkeleton from "#/components/common/group/groups-datatable-skeleton";
 import { db } from "#/lib/db";

@@ -1,6 +1,6 @@
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import { useMode, type Mode } from "./mode-provider";
 
 export function ScheduleModeToggle({ role }: { role: ImplementerRole }) {

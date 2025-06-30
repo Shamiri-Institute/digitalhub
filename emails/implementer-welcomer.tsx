@@ -11,7 +11,7 @@ import {
   Tailwind,
   Text,
 } from "@react-email/components";
-import * as React from "react";
+import type * as React from "react";
 
 import { SDH_HERO_IMAGE, SDH_LOGO_BANNER } from "../lib/constants";
 import Footer from "./components/footer";

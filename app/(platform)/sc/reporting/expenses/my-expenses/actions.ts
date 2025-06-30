@@ -168,7 +168,7 @@ export async function addSupervisorExpense({
         hubId: hubCoordinator.assignedHubId!,
         hubCoordinatorId: hubCoordinator.id,
         incurredAt: new Date(data.week),
-        amount: parseInt(data.totalAmount),
+        amount: Number.parseInt(data.totalAmount),
         kind: data.expenseType,
         status: "PENDING",
         details: {
@@ -220,7 +220,7 @@ export async function updateSupervisorExpense({
       where: { id },
       data: {
         incurredAt: new Date(data.week),
-        amount: parseInt(data.totalAmount),
+        amount: Number.parseInt(data.totalAmount),
         kind: data.expenseType,
         details: {
           subtype: data.expenseType,

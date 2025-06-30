@@ -1,12 +1,12 @@
 "use client";
 
-import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
+import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import ClinicalCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 import Image from "next/image";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { SchoolStudentTableData } from "#/components/common/student/columns";
+import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -19,10 +19,10 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { type Dispatch, type SetStateAction, useEffect } from "react";
 
 export default function AttendanceHistory({
   open,

@@ -31,12 +31,13 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { addHours, format } from "date-fns";
 import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useEffect } from "react";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useEffect } from "react"
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 type Attendance = {
   id: string;
@@ -157,11 +158,10 @@ export function MarkAttendance({
           "Something went wrong during submission, please try again",
       });
       return;
-    } else {
+    }
       toast({
         description: response.message,
       });
-    }
 
     await revalidatePageAction(pathname);
     setIsOpen(false);
@@ -235,7 +235,7 @@ export function MarkAttendance({
                                       "dd MMM yyyy",
                                     )}
                                   </span>
-                                  <span className="h-1 w-1 rounded-full bg-black"></span>
+                                  <span className="h-1 w-1 rounded-full bg-black" />
                                   <span>{time}</span>
                                 </div>
                               </SelectItem>
@@ -269,7 +269,7 @@ export function MarkAttendance({
                         value="attended"
                         id="mark_attended"
                         className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
-                      ></RadioGroupItem>
+                      />
                     </div>
                     <div className="relative">
                       <CustomIndicator className="red" label={"Missed"} />
@@ -277,7 +277,7 @@ export function MarkAttendance({
                         value="missed"
                         id="mark_missed"
                         className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-red"
-                      ></RadioGroupItem>
+                      />
                     </div>
                     <div className="relative">
                       <CustomIndicator className="blue" label={"Unmarked"} />
@@ -285,7 +285,7 @@ export function MarkAttendance({
                         value="unmarked"
                         id="Unmarked_"
                         className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
-                      ></RadioGroupItem>
+                      />
                     </div>
                   </RadioGroup>
                   <FormMessage />
@@ -405,7 +405,7 @@ export function CustomIndicator({
             "indicator h-4 w-4 rounded-full border border-gray-300 bg-white shadow",
             className,
           )}
-        ></div>
+        />
         <span>{label}</span>
       </div>
     </div>

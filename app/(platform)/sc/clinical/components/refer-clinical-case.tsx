@@ -1,7 +1,7 @@
 "use client";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
-  ClinicalCases,
+  type ClinicalCases,
   getClinicalLeads,
   getSupervisorsInHub,
   referClinicalCaseToClinicalLead,

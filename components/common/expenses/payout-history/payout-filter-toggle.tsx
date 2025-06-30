@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { useState } from "react";
 
 export default function FellowPayoutFilterToggle({

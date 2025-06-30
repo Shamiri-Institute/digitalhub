@@ -1,4 +1,4 @@
-import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
+import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { FellowDetailsSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -42,9 +42,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useEffect } from "react";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useEffect } from "react"
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 export default function FellowDetailsForm({
   fellow,
@@ -147,7 +148,7 @@ export default function FellowDetailsForm({
                 <DialogAlertWidget separator={true}>
                   <div className="flex items-center gap-2">
                     <span>{fellow.fellowName}</span>
-                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
                     <span>
                       {fellow.cellNumber &&
                         parsePhoneNumberFromString(

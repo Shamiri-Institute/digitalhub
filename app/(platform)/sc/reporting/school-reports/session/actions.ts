@@ -110,13 +110,13 @@ export async function loadSessionReport() {
     }, []);
 
     groupedBySchool.forEach((school) => {
-      school.avgStudentBehaviour = parseFloat(
+      school.avgStudentBehaviour = Number.parseFloat(
         (school.avgStudentBehaviour / school.count).toFixed(2),
       );
-      school.avgAdminSupport = parseFloat(
+      school.avgAdminSupport = Number.parseFloat(
         (school.avgAdminSupport / school.count).toFixed(2),
       );
-      school.avgWorkload = parseFloat(
+      school.avgWorkload = Number.parseFloat(
         (school.avgWorkload / school.count).toFixed(2),
       );
 

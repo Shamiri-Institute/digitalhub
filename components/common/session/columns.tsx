@@ -1,14 +1,14 @@
 "use client";
 
 import { SessionDropDown } from "#/components/common/session/session-list";
-import { Session } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 export type SessionData = Prisma.InterventionSessionGetPayload<{
   include: {

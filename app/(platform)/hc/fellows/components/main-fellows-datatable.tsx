@@ -2,7 +2,7 @@
 
 import {
   columns,
-  MainFellowTableData,
+  type MainFellowTableData,
 } from "#/app/(platform)/hc/fellows/components/columns";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
@@ -15,7 +15,7 @@ import SubmitComplaint from "#/components/common/submit-complaint";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
-import { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, Prisma } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";

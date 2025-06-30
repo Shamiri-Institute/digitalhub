@@ -1,5 +1,5 @@
-import { Prisma } from "@prisma/client";
-import { createContext, Dispatch, SetStateAction } from "react";
+import type { Prisma } from "@prisma/client";
+import { createContext, type Dispatch, type SetStateAction } from "react";
 
 type FellowAttendanceContextData = {
   isOpen: boolean;

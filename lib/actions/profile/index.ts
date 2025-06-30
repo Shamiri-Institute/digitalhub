@@ -1,9 +1,9 @@
 "use server";
 
 import { getCurrentUser } from "#/app/auth";
-import { ProfileSchema } from "#/components/profile/schema";
+import type { ProfileSchema } from "#/components/profile/schema";
 import { db } from "#/lib/db";
-import { z } from "zod";
+import type { z } from "zod";
 
 export async function updateSupervisorProfile(
   data: z.infer<typeof ProfileSchema>,

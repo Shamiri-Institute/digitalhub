@@ -1,4 +1,4 @@
-import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
+import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import CaseNotesForm from "#/app/(platform)/sc/clinical/components/case-notes-form";
 import CaseTerminationForm from "#/app/(platform)/sc/clinical/components/case-termination-form";
 import ClinicalCaseSessionsAttendanceHistory from "#/app/(platform)/sc/clinical/components/cases-sessions-attendance-history";
@@ -89,7 +89,7 @@ export default function ClinicalCaseActionsDropdownMenu({
             )}
           >
             Treatment plan{" "}
-            {clinicalCase?.treatmentPlanUploaded ? `(Uploaded)` : ""}
+            {clinicalCase?.treatmentPlanUploaded ? "(Uploaded)" : ""}
           </div>
         </TreatmentPlanForm>
         <CaseNotesForm clinicalCase={clinicalCase} role={role}>

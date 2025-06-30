@@ -32,7 +32,7 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import {
   addDays,
   differenceInSeconds,
@@ -41,9 +41,10 @@ import {
   isEqual,
 } from "date-fns";
 import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react"
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 type FormInput = {
   section: string;
@@ -455,7 +456,7 @@ export default function MonthlySupervisorEvaluation({
                                     ? ""
                                     : "Type additional comments"
                                 }
-                              ></Textarea>
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

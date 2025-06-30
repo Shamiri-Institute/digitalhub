@@ -1,5 +1,5 @@
 "use client";
-import { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
+import type { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
 import DataTable from "#/components/data-table";
 
 import { columns, subColumns } from "./columns";

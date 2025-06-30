@@ -1,8 +1,8 @@
 "use client";
 
-import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
+import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
-import { SchoolFellowTableData } from "#/components/common/fellow/columns";
+import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import DataTable from "#/components/data-table";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
@@ -13,10 +13,11 @@ import {
   DialogHeader,
 } from "#/components/ui/dialog";
 import { Prisma } from "@prisma/client";
-import { ColumnDef, VisibilityState } from "@tanstack/react-table";
+import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import { format } from "date-fns";
 import parsePhoneNumberFromString from "libphonenumber-js";
-import React, { Dispatch, SetStateAction } from "react";
+import type React from "react";
+import type { Dispatch, SetStateAction } from "react";
 import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
 export default function AttendanceHistory({

@@ -3,7 +3,7 @@
 import HandleSessionAttendanceUpdate from "#/app/(platform)/sc/clinical/components/handle-session-attendance-update";
 import { Icons } from "#/components/icons";
 import { cn } from "#/lib/utils";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 
 export type AttendanceRecord = {

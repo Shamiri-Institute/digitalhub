@@ -33,7 +33,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 
-import {
+import type {
   CurrentClinicalLead,
   CurrentClinicalTeam,
   CurrentFellow,
@@ -53,7 +53,8 @@ import {
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface NavigationLinkProps {

@@ -1,7 +1,7 @@
 "use server";
 
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
-import { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
+import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import { db } from "#/lib/db";
 
 export async function loadHubWeeklyFellowEvaluation(): Promise<

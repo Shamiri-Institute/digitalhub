@@ -42,9 +42,9 @@ export const generateRandomColor = () => {
     return "#000000";
   }
 
-  const r = parseInt(baseColor.slice(1, 3), 16);
-  const g = parseInt(baseColor.slice(3, 5), 16);
-  const b = parseInt(baseColor.slice(5, 7), 16);
+  const r = Number.parseInt(baseColor.slice(1, 3), 16);
+  const g = Number.parseInt(baseColor.slice(3, 5), 16);
+  const b = Number.parseInt(baseColor.slice(5, 7), 16);
 
   const shade = 0.5 + Math.random();
 

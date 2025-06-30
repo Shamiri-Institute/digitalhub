@@ -1,7 +1,7 @@
 "use client";
 import DataTable from "#/components/data-table";
 
-import { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
+import type { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
 import {
   columns,
   subColumns,

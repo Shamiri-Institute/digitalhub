@@ -54,7 +54,7 @@ export const StudentDetailsSchema = z
     if (val.mode === "edit" && val.id === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Student Id is required.`,
+        message: "Student Id is required.",
         fatal: true,
         path: ["id"],
       });
@@ -76,7 +76,7 @@ export const StudentDetailsSchema = z
     if (val.mode === "add" && val.schoolId === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `School Id is required.`,
+        message: "School Id is required.",
         fatal: true,
         path: ["schoolId"],
       });
@@ -87,7 +87,7 @@ export const StudentDetailsSchema = z
     if (val.mode === "add" && val.assignedGroupId === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Group Id is required.`,
+        message: "Group Id is required.",
         fatal: true,
         path: ["assignedGroupId"],
       });

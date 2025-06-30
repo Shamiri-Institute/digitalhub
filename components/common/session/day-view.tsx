@@ -1,9 +1,9 @@
 "use client";
 
-import { CalendarDate, isToday } from "@internationalized/date";
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import { type CalendarDate, isToday } from "@internationalized/date";
+import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react";
 import { useCalendarCell, useDateFormatter } from "react-aria";
-import { CalendarState } from "react-stately";
+import type { CalendarState } from "react-stately";
 
 import {
   Tooltip,
@@ -13,10 +13,10 @@ import {
 import { cn } from "#/lib/utils";
 
 import { useGSAP } from "@gsap/react";
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import gsap from "gsap";
 import { SessionList } from "./session-list";
-import { Session, useSessions } from "./sessions-provider";
+import { type Session, useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
 export function DayView({
@@ -101,7 +101,7 @@ export function DayView({
       >
         <thead>
           <tr className="flex divide-x divide-grey-border border-b border-grey-border bg-grey-bg">
-            <th className="time-cell hidden lg:block"></th>
+            <th className="time-cell hidden lg:block" />
             <th
               className={cn(
                 "relative flex shrink-0 items-center justify-between gap-2",
@@ -114,7 +114,7 @@ export function DayView({
               {hasSessions && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="h-1.5 w-1.5 rounded-full bg-blue-base"></span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-blue-base" />
                   </TooltipTrigger>
                   <TooltipContent side="top">
                     {sessions.length} sessions on this day

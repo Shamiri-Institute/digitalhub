@@ -1,7 +1,7 @@
 "use client";
-import { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
+import type { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import { Badge } from "#/components/ui/badge";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import HCSupervisorExpenseDropdownMenu from "./supervisors-expenses-actions-dropdown-me";
 
 export const columns: ColumnDef<HubSupervisorExpensesType>[] = [

@@ -1,6 +1,6 @@
 import { ImplementerRole, SessionStatus } from "@prisma/client";
 import { addHours, addMinutes, format } from "date-fns";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { useSearchParams } from "next/navigation";
-import * as React from "react";
+import type * as React from "react";
 import type { Session } from "./sessions-provider";
 
 export function SessionList({

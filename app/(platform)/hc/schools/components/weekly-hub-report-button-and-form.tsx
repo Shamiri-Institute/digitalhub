@@ -34,7 +34,7 @@ import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 import AddCircleOutlined from "../../../../../public/icons/add-circle-outline.svg";
 import { WeeklyHubReportSchema } from "../../schemas";
 import { submitWeeklyHubReport } from "../actions";
@@ -42,7 +42,7 @@ import { submitWeeklyHubReport } from "../actions";
 function generateWeekFieldValues() {
   const numWeeks = 4;
 
-  let selectValues = [];
+  const selectValues = [];
   const today = new Date();
 
   for (let i = numWeeks; i >= 0; i--) {

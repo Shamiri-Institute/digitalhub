@@ -1,7 +1,7 @@
 "use client";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
+import type { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
 import { editSchoolFeedback } from "#/components/common/school-reports/school-feedback/actions";
 import { Button } from "#/components/ui/button";
 import {

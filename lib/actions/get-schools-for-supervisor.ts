@@ -1,6 +1,6 @@
 "use server";
 
-import { CurrentSupervisor } from "#/app/auth";
+import type { CurrentSupervisor } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 

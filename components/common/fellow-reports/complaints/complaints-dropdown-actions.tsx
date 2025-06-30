@@ -1,4 +1,4 @@
-import { FellowComplaintsType } from "#/components/common/fellow-reports/complaints/actions";
+import type { FellowComplaintsType } from "#/components/common/fellow-reports/complaints/actions";
 import ViewEditFellowComplaints from "#/components/common/fellow-reports/complaints/view-edit-complaints";
 import { Icons } from "#/components/icons";
 import {

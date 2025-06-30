@@ -13,7 +13,7 @@ import {
 } from "#/components/common/session/schema";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { z } from "zod";
+import type { z } from "zod";
 
 async function checkAuth() {
   const hubCoordinator = await currentHubCoordinator();
@@ -62,7 +62,7 @@ export async function createNewSession(
         return {
           success: false,
           data: existingSession,
-          message: `This session already exists for this hub`,
+          message: "This session already exists for this hub",
         };
       }
     } else {
@@ -343,15 +343,15 @@ export async function markSessionOccurrence(
       throw new Error(
         `Something went wrong. You are not assigned to ${session.school?.schoolName}`,
       );
-    } else if (
+    }if (
       session.session &&
       venueSessionTypes.includes(session.session?.sessionType) &&
       !auth.hubCoordinator
     ) {
       throw new Error(
-        `Something went wrong. You are not authorized to perform this action.`,
+        "Something went wrong. You are not authorized to perform this action.",
       );
-    } else if (!session.session) {
+    }if (!session.session) {
       throw new Error(
         `Something went wrong. Session details not found ${session.school?.schoolName}`,
       );

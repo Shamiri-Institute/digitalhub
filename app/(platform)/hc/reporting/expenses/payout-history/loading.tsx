@@ -1,10 +1,10 @@
 "use client";
 
-import { HubPayoutHistoryType } from "#/app/(platform)/hc/reporting/expenses/payout-history/actions";
+import type { HubPayoutHistoryType } from "#/app/(platform)/hc/reporting/expenses/payout-history/actions";
 import { columns } from "#/components/common/expenses/payout-history/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 
 export default function PayoutHistoryTableSkeleton() {
   const loadingColumns: ColumnDef<HubPayoutHistoryType>[] = columns.map(

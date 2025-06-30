@@ -2,13 +2,13 @@
 
 import {
   columns,
-  SchoolFellowTableData,
+  type SchoolFellowTableData,
 } from "#/components/common/fellow/columns";
 import { BatchUploadDownloadFellow } from "#/components/common/fellow/upload-csv";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import { ImplementerRole } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ImplementerRole } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 
 export default function FellowsDatatableSkeleton({
   role,

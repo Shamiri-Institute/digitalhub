@@ -1,4 +1,4 @@
-import { SupervisorClinicalCasesData } from "#/app/(platform)/cl/supervisors/actions";
+import type { SupervisorClinicalCasesData } from "#/app/(platform)/cl/supervisors/actions";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,

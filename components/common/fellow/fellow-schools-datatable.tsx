@@ -2,7 +2,7 @@
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
-import { FellowGroupData } from "#/components/common/fellow/fellow-school-datatable-dropdown-menu";
+import type { FellowGroupData } from "#/components/common/fellow/fellow-school-datatable-dropdown-menu";
 import UploadFellowContract from "#/components/common/fellow/upload-contract";
 import UploadFellowID from "#/components/common/fellow/upload-id";
 import UploadFellowQualification from "#/components/common/fellow/upload-qualification";
@@ -17,11 +17,11 @@ import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { markFellowAttendance } from "#/lib/actions/fellow";
-import { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, Prisma } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { FellowsData } from "../../../app/(platform)/sc/actions";
+import type { FellowsData } from "../../../app/(platform)/sc/actions";
 import { fellowSchoolsColumns, subColumns } from "./fellow-schools-columns";
 
 export default function FellowSchoolsDatatable({

@@ -31,9 +31,9 @@ import { SUPERVISOR_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 export default function DropoutSupervisor({
   supervisorId,

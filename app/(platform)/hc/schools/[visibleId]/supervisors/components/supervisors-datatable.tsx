@@ -2,7 +2,7 @@
 
 import {
   columns,
-  SupervisorsData,
+  type SupervisorsData,
 } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/components/columns";
 import { SupervisorInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/supervisors/context/supervisor-info-context";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
@@ -25,12 +25,12 @@ import {
   markManySupervisorAttendance,
   markSupervisorAttendance,
 } from "#/lib/actions/supervisor";
-import { Prisma } from "@prisma/client";
-import { Row } from "@tanstack/react-table";
+import type { Prisma } from "@prisma/client";
+import type { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import {
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useContext,
   useEffect,
   useState,

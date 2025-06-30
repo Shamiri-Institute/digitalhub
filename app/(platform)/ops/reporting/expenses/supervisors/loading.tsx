@@ -1,9 +1,9 @@
 "use client";
 
-import { HubSupervisorExpensesType } from "#/app/(platform)/ops/reporting/expenses/supervisors/actions";
+import type { HubSupervisorExpensesType } from "#/app/(platform)/ops/reporting/expenses/supervisors/actions";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { columns } from "./components/columns";
 
 export default function SupervisorsTableSkeleton() {

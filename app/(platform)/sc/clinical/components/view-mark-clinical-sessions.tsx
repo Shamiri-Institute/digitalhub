@@ -1,5 +1,5 @@
 import {
-  ClinicalCases,
+  type ClinicalCases,
   updateClinicalCaseAttendance,
 } from "#/app/(platform)/sc/clinical/action";
 import { Badge } from "#/components/ui/badge";

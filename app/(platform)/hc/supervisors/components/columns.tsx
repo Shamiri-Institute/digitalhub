@@ -10,8 +10,8 @@ import {
   DropdownMenuPortal,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
 
 export type SupervisorsData = Prisma.SupervisorGetPayload<{

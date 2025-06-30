@@ -1,6 +1,6 @@
 "use client";
 
-import { FellowComplaintsType } from "#/components/common/fellow-reports/complaints/actions";
+import type { FellowComplaintsType } from "#/components/common/fellow-reports/complaints/actions";
 import DataTable from "#/components/data-table";
 import { columns, subColumns } from "./columns";
 

@@ -1,7 +1,7 @@
 "use client";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
-  ClinicalCases,
+  type ClinicalCases,
   updateStudentInfo,
 } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";

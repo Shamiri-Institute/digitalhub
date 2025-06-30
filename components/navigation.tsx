@@ -4,7 +4,7 @@ import { ImplementerRole } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import * as React from "react";
+import type * as React from "react";
 
 import { PersonnelTool } from "#/components/common/dev-personnel-switcher";
 import { Icons, type Icon } from "#/components/icons";

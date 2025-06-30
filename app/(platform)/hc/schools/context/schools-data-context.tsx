@@ -1,5 +1,5 @@
-import { SchoolsTableData } from "#/components/common/schools/columns";
-import { createContext, Dispatch, SetStateAction } from "react";
+import type { SchoolsTableData } from "#/components/common/schools/columns";
+import { createContext, type Dispatch, type SetStateAction } from "react";
 
 type SchoolsDataContextDataType = {
   schools: SchoolsTableData[];

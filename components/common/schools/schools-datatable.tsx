@@ -6,7 +6,7 @@ import { columns } from "#/components/common/schools/columns";
 import SchoolDetailsForm from "#/components/common/schools/school-details-form";
 import SchoolsDataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import { Plus } from "lucide-react";
 import { useContext } from "react";
 

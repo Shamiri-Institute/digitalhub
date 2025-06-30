@@ -1,7 +1,7 @@
 import {
   SES,
-  SendEmailCommandInput,
-  SendRawEmailCommandInput,
+  type SendEmailCommandInput,
+  type SendRawEmailCommandInput,
 } from "@aws-sdk/client-ses";
 
 import { env } from "#/env";
@@ -47,7 +47,7 @@ async function sendWithRetry(
       if (attempt >= retries) {
         throw error;
       }
-      const delay = SLEEP_TIME_MS * Math.pow(2, attempt);
+      const delay = SLEEP_TIME_MS * 2 ** attempt;
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }

@@ -2,12 +2,12 @@
 
 import {
   columns,
-  SchoolStudentTableData,
+  type SchoolStudentTableData,
 } from "#/components/common/student/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import { ImplementerRole } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ImplementerRole } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 
 export default function StudentsDatatableSkeleton({
   role,

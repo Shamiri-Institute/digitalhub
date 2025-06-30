@@ -11,7 +11,7 @@ import {
 import { useState } from "react";
 
 import { submitRequestRepayment } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
-import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
+import type { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
 import {
   Form,
   FormControl,

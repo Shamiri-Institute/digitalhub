@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import {
-  ClinicalCases,
+  type ClinicalCases,
   createClinicalCaseNotes,
 } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -170,7 +170,7 @@ export default function CaseNotesForm({
         sessionId: data.sessionId,
         followUpPlanExplanation: data.followUpPlan.explanation,
         followUpPlan: data.followUpPlan.isGroupSession ? "GROUP" : "INDIVIDUAL",
-        orsAssessment: data.orsAssessment ? parseInt(data.orsAssessment) : 0,
+        orsAssessment: data.orsAssessment ? Number.parseInt(data.orsAssessment) : 0,
         interventionExplanation: data.interventionExplanation,
         studentResponseExplanation: data.studentResponseExplanation,
         presentingIssues: data.presentingIssues,

@@ -1,6 +1,6 @@
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 export default function SupervisorStudentsLayout({
   children,

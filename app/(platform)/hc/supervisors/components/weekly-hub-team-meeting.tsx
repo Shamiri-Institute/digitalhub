@@ -33,13 +33,13 @@ import { format, startOfWeek, subWeeks } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 import { WeeklyHubTeamMeetingSchema } from "../../schemas";
 
 function generateWeekFieldValues() {
   const numWeeks = 4;
 
-  let selectValues = [];
+  const selectValues = [];
   const today = new Date();
 
   for (let i = numWeeks; i >= 0; i--) {

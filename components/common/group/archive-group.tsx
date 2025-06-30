@@ -12,7 +12,8 @@ import { toast } from "#/components/ui/use-toast";
 import { archiveInterventionGroup } from "#/lib/actions/group";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useState } from "react";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useState } from "react"
 
 export default function ArchiveGroup({
   groupId,

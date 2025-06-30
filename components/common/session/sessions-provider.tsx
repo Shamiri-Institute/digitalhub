@@ -1,16 +1,16 @@
-import { CalendarDate, isSameDay } from "@internationalized/date";
-import { Prisma } from "@prisma/client";
+import { type CalendarDate, isSameDay } from "@internationalized/date";
+import type { Prisma } from "@prisma/client";
 import {
-  Dispatch,
-  PropsWithChildren,
-  SetStateAction,
+  type Dispatch,
+  type PropsWithChildren,
+  type SetStateAction,
   createContext,
   useContext,
   useEffect,
   useState,
 } from "react";
 
-import { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
+import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
 import { getCalendarDate } from "#/lib/date-utils";
 

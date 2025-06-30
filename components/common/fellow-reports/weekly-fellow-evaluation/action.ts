@@ -2,7 +2,7 @@
 
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { getCurrentUser } from "#/app/auth";
-import { WeeklyEvaluationFormValues } from "#/components/common/fellow-reports/weekly-fellow-evaluation/view-edit-weekly-fellow-evaluation";
+import type { WeeklyEvaluationFormValues } from "#/components/common/fellow-reports/weekly-fellow-evaluation/view-edit-weekly-fellow-evaluation";
 import { db } from "#/lib/db";
 
 export const updateWeeklyEvaluation = async (

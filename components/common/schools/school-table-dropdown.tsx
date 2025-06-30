@@ -1,5 +1,5 @@
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
-import { SchoolsTableData } from "#/components/common/schools/columns";
+import type { SchoolsTableData } from "#/components/common/schools/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import Link from "next/link";
 import { useContext } from "react";
 

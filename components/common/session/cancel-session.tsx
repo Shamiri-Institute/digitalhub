@@ -13,9 +13,9 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { cancelSession } from "#/lib/actions/session/session";
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useContext, useState } from "react";
+import { type Dispatch, type SetStateAction, useContext, useState } from "react";
 
 export default function CancelSession({
   sessionId,

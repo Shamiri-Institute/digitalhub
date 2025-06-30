@@ -1,7 +1,7 @@
 import AddSupervisorExpensesForm from "#/components/common/expenses/supervisor-expenses/add-expense";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 export default async function AddSupervisorExpenseTrigger({
   supervisorsInHub,

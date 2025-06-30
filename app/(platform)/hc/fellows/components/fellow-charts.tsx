@@ -1,6 +1,6 @@
 "use client";
 
-import {
+import type {
   FellowDropoutReasonsGraphData,
   FellowSessionRatingAverages,
   fetchFellowDataCompletenessData,
@@ -8,7 +8,7 @@ import {
 import { generateRandomColor } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
 import { SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING } from "#/lib/app-constants/constants";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import {
   Bar,
   BarChart,

@@ -31,8 +31,7 @@ export default function RenderParsedPhoneNumber(number?: string) {
           </Tooltip>
         )
       );
-    } else {
-      throw error;
     }
+      throw error;
   }
 }

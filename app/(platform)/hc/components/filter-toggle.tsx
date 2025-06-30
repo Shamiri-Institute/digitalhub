@@ -7,8 +7,8 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import * as React from "react";
-import { Dispatch, SetStateAction } from "react";
+import type * as React from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 export default function FilterToggle({
   children,

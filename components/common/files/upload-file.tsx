@@ -153,7 +153,7 @@ function FileUploaderWithDrop({
     if (files?.length) {
       if (onChange) onChange(files);
     } else {
-      window.alert(`Invalid file type.`);
+      window.alert("Invalid file type.");
     }
   };
 

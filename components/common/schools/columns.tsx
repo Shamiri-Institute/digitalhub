@@ -5,8 +5,8 @@ import SchoolTableDropdown from "#/components/common/schools/school-table-dropdo
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
@@ -153,9 +153,8 @@ export const columns = ({
             " - " +
             format(upcomingSessions[0]!.sessionDate, "dd MMM yyyy")
           );
-        } else {
-          return null;
         }
+          return null;
       },
     },
     {
@@ -181,17 +180,15 @@ export const columns = ({
                 ) + " - Report submitted"}
               </Badge>
             );
-          } else {
+          }
             return (
               <Badge variant="destructive">
                 {sessions[sessions.length - 1]?.sessionType?.toUpperCase() +
                   " - Not submitted"}
               </Badge>
             );
-          }
-        } else {
-          return <Badge variant="destructive">No report submitted</Badge>;
         }
+          return <Badge variant="destructive">No report submitted</Badge>;
       },
     },
     {

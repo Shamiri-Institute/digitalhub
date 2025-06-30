@@ -46,7 +46,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
   const endHourPlusBuffer = new Date(anchorDate);
   endHourPlusBuffer.setHours(lastSessionEndHour + calendarBuffer);
 
-  let scheduleHoursRange: number[] = [];
+  const scheduleHoursRange: number[] = [];
   for (
     let i = firstSessionStartHour - calendarBuffer;
     i <= lastSessionEndHour + calendarBuffer + 1;
@@ -122,7 +122,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
           <div className="p-4 pb-0 font-semibold">
             <span>{format(anchorDate, "MMM yyyy")}</span>
           </div>
-          <div></div>
+          <div />
           <div className="flex items-center gap-2 p-4 pb-0">
             <button
               className="rounded-full bg-active-card p-1.5 text-white transition-transform hover:bg-white/20 active:scale-95"
@@ -169,7 +169,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
                         "bg-shamiri-dark-blue/90": isAnchorDay,
                       },
                     )}
-                  ></span>
+                  />
                 )}
                 <span
                   className={cn("text-blue-300/80", {
@@ -230,7 +230,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
             <div className="w-20 px-4 pt-2 text-right font-medium">
               {format(new Date().setHours(hour), "h a")}
             </div>
-            <div className="relative flex-1 border-t border-gray-300/50"></div>
+            <div className="relative flex-1 border-t border-gray-300/50" />
           </div>
         ))}
         {!scheduleHoursRange.length && (

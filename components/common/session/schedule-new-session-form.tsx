@@ -32,18 +32,18 @@ import { useToast } from "#/components/ui/use-toast";
 import { createNewSession } from "#/lib/actions/session/session";
 import { cn, handleMinutesChange } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ImplementerRole, Prisma } from "@prisma/client";
+import type { ImplementerRole, Prisma } from "@prisma/client";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
 import {
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useContext,
   useEffect,
   useState,
 } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 import type { Session } from "./sessions-provider";
 
 export function ScheduleNewSession({
@@ -114,7 +114,7 @@ export function ScheduleNewSession({
       if (response.success) {
         toast({
           variant: "default",
-          description: `Successfully created new session`,
+          description: "Successfully created new session",
         });
         form.reset();
         toggleDialog(false);

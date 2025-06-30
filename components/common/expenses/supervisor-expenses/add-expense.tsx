@@ -20,7 +20,7 @@ import { stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { useCallback, useEffect, useState } from "react";
-import { UseFormReturn, useForm } from "react-hook-form";
+import { type UseFormReturn, useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { addSupervisorExpense } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
@@ -37,7 +37,7 @@ import {
 import { Input } from "#/components/ui/input";
 import { toast } from "#/components/ui/use-toast";
 import { formatBytes } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { Loader2 } from "lucide-react";
 import { useS3Upload } from "next-s3-upload";
 
@@ -55,7 +55,7 @@ export const AddAddSupervisorExpenseSchema = z.object({
 function generateWeekFieldValues() {
   const numWeeks = 4;
 
-  let selectValues = [];
+  const selectValues = [];
   const today = new Date();
 
   for (let i = numWeeks; i >= 0; i--) {

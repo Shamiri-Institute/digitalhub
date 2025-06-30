@@ -1,9 +1,9 @@
 import { currentHubCoordinator } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import * as fastCsv from "fast-csv";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
 
 const schoolsCSVHeaders = [
@@ -88,8 +88,8 @@ async function validateRow(
     });
 
     const studentsPerFellow = fellowsCount
-      ? parseInt(row.numbers_expected) / fellowsCount
-      : Infinity;
+      ? Number.parseInt(row.numbers_expected) / fellowsCount
+      : Number.POSITIVE_INFINITY;
 
     if (studentsPerFellow > 15) {
       errorSchools.push({
@@ -193,14 +193,14 @@ export async function POST(request: NextRequest) {
             });
 
             if (isValid) {
-              let schoolId = objectId("school");
+              const schoolId = objectId("school");
               const parsedPreSessionDate =
                 parseDate(row.presession_date) || null;
 
               parsedRows.push({
                 id: schoolId,
                 schoolName: row.school_name,
-                numbersExpected: parseInt(row.numbers_expected),
+                numbersExpected: Number.parseInt(row.numbers_expected),
                 schoolDemographics: row.school_demographics,
                 boardingDay: row.boardingorday,
                 schoolType: row.school_type,
@@ -210,8 +210,8 @@ export async function POST(request: NextRequest) {
                 principalPhone: row.principal_phone,
                 pointPersonName: row.point_person_name,
                 pointPersonPhone: row.point_person_phone,
-                latitude: parseFloat(row.latitude),
-                longitude: parseFloat(row.longitude),
+                latitude: Number.parseFloat(row.latitude),
+                longitude: Number.parseFloat(row.longitude),
                 hubId: hubId,
                 implementerId: implementerId,
                 preSessionDate: parsedPreSessionDate,

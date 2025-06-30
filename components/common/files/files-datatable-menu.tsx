@@ -1,4 +1,4 @@
-import { SchoolFilesTableData } from "#/components/common/files/columns";
+import type { SchoolFilesTableData } from "#/components/common/files/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 export default function SchoolFilesDataTableMenu({
   state,

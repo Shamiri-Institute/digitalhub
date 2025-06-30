@@ -3,7 +3,7 @@ import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import {
   editFellowComplaint,
-  FellowComplaintsType,
+  type FellowComplaintsType,
 } from "#/components/common/fellow-reports/complaints/actions";
 import { Button } from "#/components/ui/button";
 import {

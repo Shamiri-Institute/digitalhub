@@ -1,6 +1,6 @@
-import { SupervisorAttendanceTableData } from "#/app/(platform)/hc/components/supervisor-attendance";
-import { Session } from "#/components/common/session/sessions-provider";
-import { createContext, Dispatch, SetStateAction } from "react";
+import type { SupervisorAttendanceTableData } from "#/app/(platform)/hc/components/supervisor-attendance";
+import type { Session } from "#/components/common/session/sessions-provider";
+import { createContext, type Dispatch, type SetStateAction } from "react";
 
 type SupervisorAttendanceContextData = {
   isOpen: boolean;

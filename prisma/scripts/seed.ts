@@ -1,4 +1,4 @@
-import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
+import { ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import { addDays, addHours, setHours, setMinutes } from "date-fns";
 
 import { SESSION_TYPES } from "#/lib/app-constants/constants";

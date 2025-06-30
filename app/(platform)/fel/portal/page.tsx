@@ -1,4 +1,4 @@
-import { FellowsData } from "#/app/(platform)/sc/actions";
+import type { FellowsData } from "#/app/(platform)/sc/actions";
 import { currentFellow } from "#/app/auth";
 import FellowSchoolsDatatable from "#/components/common/fellow/fellow-schools-datatable";
 import PageFooter from "#/components/ui/page-footer";

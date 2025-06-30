@@ -2,7 +2,7 @@
 
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { SchoolFilesTableData } from "#/components/common/files/columns";
+import type { SchoolFilesTableData } from "#/components/common/files/columns";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -25,7 +25,7 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -92,7 +92,7 @@ export default function RenameUploadedFile({
         <DialogAlertWidget>
           <div className="flex items-center gap-2">
             <span>{document.fileName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
             <span>{document.type}</span>
           </div>
         </DialogAlertWidget>

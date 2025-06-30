@@ -1,5 +1,5 @@
 import PageFooter from "#/components/ui/page-footer";
-import React from "react";
+import type React from "react";
 
 export default async function ClinicalTeamLayout({
   children,

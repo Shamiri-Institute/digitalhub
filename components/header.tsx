@@ -24,7 +24,7 @@ export const Header = forwardRef<
           "absolute inset-x-0 top-full h-px bg-border/50 transition",
         )}
       />
-      <div className="search-placeholder hidden lg:block lg:max-w-md lg:flex-auto"></div>
+      <div className="search-placeholder hidden lg:block lg:max-w-md lg:flex-auto" />
       <div className="flex items-center gap-5 lg:hidden">
         <MobileNavigation />
         <Link href="/" aria-label="Home">

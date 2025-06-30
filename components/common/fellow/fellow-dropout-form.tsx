@@ -1,4 +1,4 @@
-import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
+import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
@@ -32,13 +32,13 @@ import { dropoutFellow } from "#/lib/actions/fellow";
 import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 type Group = Prisma.InterventionGroupGetPayload<{
   include: { school: true };
@@ -141,7 +141,7 @@ export default function FellowDropoutForm({
       <DialogAlertWidget separator={fellow.droppedOut ?? undefined}>
         <div className="flex items-center gap-2">
           <span>{fellow.fellowName}</span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
           <span>
             {(fellow.cellNumber &&
               parsePhoneNumberFromString(

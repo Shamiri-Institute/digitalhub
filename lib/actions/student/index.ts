@@ -10,8 +10,8 @@ import { StudentDetailsSchema } from "#/components/common/student/schemas";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateStudentVisibleID } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
-import { z } from "zod";
+import type { Prisma } from "@prisma/client";
+import type { z } from "zod";
 
 async function checkAuth() {
   const user = await getCurrentPersonnel();
@@ -69,7 +69,7 @@ export async function submitStudentDetails(
         success: true,
         message: `Successfully updated details for ${studentName}`,
       };
-    } else {
+    }
       const group = await db.interventionGroup.findFirstOrThrow({
         where: {
           id: assignedGroupId,
@@ -115,7 +115,6 @@ export async function submitStudentDetails(
         message: `Successfully added ${student.studentName} to group ${group.groupName}`,
         data: student,
       };
-    }
   } catch (err) {
     console.error(err);
     return {
@@ -145,7 +144,7 @@ export async function markStudentAttendance(
     if (!session.occurred) {
       return {
         success: false,
-        message: `This session has not occurred yet.`,
+        message: "This session has not occurred yet.",
       };
     }
 
@@ -207,12 +206,11 @@ export async function markStudentAttendance(
         success: true,
         message: `Successfully marked attendance for ${student.studentName}`,
       };
-    } else {
+    }
       return {
         success: false,
-        message: `Student details not found.`,
+        message: "Student details not found.",
       };
-    }
   } catch (err) {
     console.error(err);
     return {
@@ -242,7 +240,7 @@ export async function markManyStudentsAttendance(
     if (!session.occurred) {
       return {
         success: false,
-        message: `This session has not occurred yet.`,
+        message: "This session has not occurred yet.",
       };
     }
 
@@ -278,7 +276,7 @@ export async function markManyStudentsAttendance(
         },
       });
 
-      let createRecords: Prisma.StudentAttendanceCreateManyInput[] = [];
+      const createRecords: Prisma.StudentAttendanceCreateManyInput[] = [];
 
       students.forEach((student) => {
         if (!student.assignedGroup) {
@@ -387,7 +385,7 @@ export async function submitStudentReportingNotes(
     });
     return {
       success: true,
-      message: `Successfully submitted reporting notes`,
+      message: "Successfully submitted reporting notes",
     };
   } catch (err) {
     console.error(err);

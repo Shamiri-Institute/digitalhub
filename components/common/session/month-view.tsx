@@ -1,10 +1,10 @@
 import {
-  CalendarDate,
+  type CalendarDate,
   getWeeksInMonth,
   isSameDay,
   isWeekend,
 } from "@internationalized/date";
-import { Dispatch, SetStateAction, useEffect, useRef } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 import {
   useCalendarCell,
   useCalendarGrid,
@@ -12,16 +12,16 @@ import {
   useLocale,
 } from "react-aria";
 import type { CalendarGridProps } from "react-aria-components";
-import { CalendarState } from "react-stately";
+import type { CalendarState } from "react-stately";
 
 import { cn } from "#/lib/utils";
 
 import { useGSAP } from "@gsap/react";
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SessionList } from "./session-list";
-import { Session, useSessions } from "./sessions-provider";
+import { type Session, useSessions } from "./sessions-provider";
 import { useTitle } from "./title-provider";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -74,7 +74,7 @@ export function MonthView({
 
   useGSAP(
     () => {
-      let mm = gsap.matchMedia();
+      const mm = gsap.matchMedia();
 
       mm.add("(min-width: 768px)", () => {
         if (headerRowRef?.current) {
@@ -99,7 +99,7 @@ export function MonthView({
 
   return (
     <div className="relative">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden"></div>
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden" />
       <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
         <table
           ref={headerRowRef}

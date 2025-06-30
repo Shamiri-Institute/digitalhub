@@ -16,9 +16,8 @@ export default function CountdownTimer({ duration }: { duration: number }) {
         if (prevTime === 0) {
           clearInterval(timerInterval);
           return 0;
-        } else {
-          return prevTime - 1;
         }
+          return prevTime - 1;
       });
     }, 1000);
 

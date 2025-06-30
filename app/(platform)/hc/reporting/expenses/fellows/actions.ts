@@ -2,7 +2,7 @@
 
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 export type HubFellowsAttendancesType = Awaited<
   ReturnType<typeof loadHubFellowAttendance>

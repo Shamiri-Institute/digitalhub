@@ -11,10 +11,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "#/components/ui/tooltip";
-import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
-import { Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction } from "react";
 
 export type MainFellowTableData = {
   id: string;
@@ -146,9 +146,8 @@ export const columns = (
                 </Tooltip>
               )
             );
-          } else {
-            throw error;
           }
+            throw error;
         }
       },
     },

@@ -1,9 +1,9 @@
 "use server";
 
 import { currentSupervisor } from "#/app/auth";
-import { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
+import type { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 export type FellowReportComplaintsType = Awaited<
   ReturnType<typeof loadFellowPaymentComplaints>
@@ -215,7 +215,7 @@ export async function approveComplaint(data: {
 
     return {
       success: true,
-      message: `Complaint has been approved`,
+      message: "Complaint has been approved",
     };
   } catch (error) {
     console.error(error);

@@ -1,4 +1,4 @@
-import { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
+import type { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
 import ApproveRejectFellowComplaint from "#/components/common/expenses/complaints/approve-reject-complaint";
 import ViewFellowComplaint from "#/components/common/expenses/complaints/view-complaint";
 import { Icons } from "#/components/icons";

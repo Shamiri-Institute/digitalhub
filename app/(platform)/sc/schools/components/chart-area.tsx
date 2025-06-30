@@ -21,7 +21,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import {
+import type {
   DropoutReasonsGraphData,
   SchoolAttendances,
   SessionRatingAverages,

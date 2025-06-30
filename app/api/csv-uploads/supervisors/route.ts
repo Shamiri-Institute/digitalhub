@@ -1,8 +1,8 @@
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import * as fastCsv from "fast-csv";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
 
 const supervisorCSVHeaders = [
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
         dataStream
           .pipe(fastCsv.parse({ headers: true }))
           .on("data", (row) => {
-            let supervisorId = objectId("sup");
+            const supervisorId = objectId("sup");
 
             parsedRows.push({
               id: supervisorId,

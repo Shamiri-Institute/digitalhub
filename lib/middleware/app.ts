@@ -1,7 +1,7 @@
 import { ImplementerRole } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
-import { JWT, getToken } from "next-auth/jwt";
-import { NextRequest, NextResponse } from "next/server";
+import { type JWT, getToken } from "next-auth/jwt";
+import { type NextRequest, NextResponse } from "next/server";
 
 import { parse } from "#/lib/middleware/utils";
 
@@ -16,7 +16,7 @@ export default async function AppMiddleware(req: NextRequest) {
 
   // Check if authenticated and accessing authorized route
   if (!session?.email && path !== "/login" && path !== "/register") {
-    console.warn(`No email in session`, {
+    console.warn("No email in session", {
       session,
       pathname: req.nextUrl.pathname,
     });
@@ -26,10 +26,10 @@ export default async function AppMiddleware(req: NextRequest) {
         req.url,
       ),
     );
-  } else if (session?.email && path !== "/login") {
+  }if (session?.email && path !== "/login") {
     // Check for valid membership only when not on login page
     if (!session.activeMembership?.role) {
-      console.warn(`No valid membership found for user`, {
+      console.warn("No valid membership found for user", {
         email: session.email,
         pathname: req.nextUrl.pathname,
       });
@@ -96,17 +96,17 @@ export default async function AppMiddleware(req: NextRequest) {
 
     if (ifHcUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/hc", req.url));
-    } else if (ifSupervisorUserAndUnprefixedPath(session, path)) {
+    }if (ifSupervisorUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/sc", req.url));
-    } else if (ifFellowUserAndUnprefixedPath(session, path)) {
+    }if (ifFellowUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/fel", req.url));
-    } else if (ifClinicalLeadUserAndUnprefixedPath(session, path)) {
+    }if (ifClinicalLeadUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/cl", req.url));
-    } else if (ifOpsUserAndUnprefixedPath(session, path)) {
+    }if (ifOpsUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/ops", req.url));
-    } else if (ifClinicalTeamUserAndUnprefixedPath(session, path)) {
+    }if (ifClinicalTeamUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/ct", req.url));
-    } else if (ifSupervisorAndHcRoute(session, path)) {
+    }if (ifSupervisorAndHcRoute(session, path)) {
       return NextResponse.redirect(new URL("/", req.url));
     }
   }

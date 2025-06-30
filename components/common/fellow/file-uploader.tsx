@@ -1,7 +1,7 @@
 "use client";
 
 import { addUploadedFellowDocs } from "#/app/(platform)/hc/fellows/actions";
-import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
+import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { DialogFooter } from "#/components/ui/dialog";
@@ -147,7 +147,7 @@ function FileUploaderWithDrop({
     if (files?.length) {
       if (onChange) onChange(files);
     } else {
-      window.alert(`Invalid file type.`);
+      window.alert("Invalid file type.");
     }
   };
 

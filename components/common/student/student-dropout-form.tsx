@@ -1,6 +1,6 @@
 import { DropoutStudentSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { SchoolStudentTableData } from "#/components/common/student/columns";
+import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
 import {
@@ -32,9 +32,9 @@ import { cn } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 export default function StudentDropoutForm({
   student,

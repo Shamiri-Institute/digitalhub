@@ -59,7 +59,7 @@ export const DropoutStudentSchema = z
     if (val.dropoutReason === undefined && val.mode === "dropout") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Please select reason for drop out.`,
+        message: "Please select reason for drop out.",
         fatal: true,
         path: ["dropoutReason"],
       });
@@ -489,7 +489,7 @@ export const FellowDetailsSchema = z
     if (val.mode === "edit" && val.id === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Fellow Id is required.`,
+        message: "Fellow Id is required.",
         fatal: true,
         path: ["id"],
       });
@@ -500,7 +500,7 @@ export const FellowDetailsSchema = z
     if (val.county === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Please pick a county.`,
+        message: "Please pick a county.",
         fatal: true,
         path: ["county"],
       });
@@ -526,7 +526,7 @@ export const MarkAttendanceSchema = z
     if (val.attended === "missed" && val.absenceReason === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Please select reason for absence.`,
+        message: "Please select reason for absence.",
         fatal: true,
         path: ["absenceReason"],
       });
@@ -537,7 +537,7 @@ export const MarkAttendanceSchema = z
     if (!val.bulkMode && val.id === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `ID is required`,
+        message: "ID is required",
         fatal: true,
         path: ["id"],
       });

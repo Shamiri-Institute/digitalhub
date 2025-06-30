@@ -20,7 +20,7 @@ import LocationIcon from "#/public/icons/location-pin-icon.svg";
 import MailIcon from "#/public/icons/mail-icon.svg";
 import PhoneIcon from "#/public/icons/telephone-icon.svg";
 import { useGSAP } from "@gsap/react";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { format } from "date-fns";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -77,7 +77,7 @@ export default function SchoolLeftPanel({
 
   useGSAP(
     () => {
-      let mm = gsap.matchMedia();
+      const mm = gsap.matchMedia();
 
       mm.add("(min-width: 768px)", () => {
         if (panelRef?.current) {

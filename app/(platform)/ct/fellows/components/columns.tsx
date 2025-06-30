@@ -1,9 +1,9 @@
 "use client";
 
-import { FellowClinicalCasesData } from "#/app/(platform)/ct/fellows/actions";
+import type { FellowClinicalCasesData } from "#/app/(platform)/ct/fellows/actions";
 import FellowsClinicalCasesDropdownActions from "#/app/(platform)/ct/fellows/components/fellows-cases-dropdown-actions";
 import { Badge } from "#/components/ui/badge";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 
 export const columns: ColumnDef<FellowClinicalCasesData>[] = [
   {

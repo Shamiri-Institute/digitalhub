@@ -2,7 +2,7 @@
 
 import { StudentReportingNotesSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { SchoolStudentTableData } from "#/components/common/student/columns";
+import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -25,9 +25,9 @@ import { toast } from "#/components/ui/use-toast";
 import { submitStudentReportingNotes } from "#/lib/actions/student";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useEffect } from "react";
+import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 export function AddReportingNote({
   isOpen,
@@ -60,11 +60,10 @@ export function AddReportingNote({
           "Something went wrong during submission, please try again",
       });
       return;
-    } else {
+    }
       toast({
         description: response.message,
       });
-    }
 
     await revalidatePageAction(pathname);
     setIsOpen(false);

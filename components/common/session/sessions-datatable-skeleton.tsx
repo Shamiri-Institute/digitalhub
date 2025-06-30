@@ -1,10 +1,10 @@
 "use client";
 
-import { columns, SessionData } from "#/components/common/session/columns";
+import { columns, type SessionData } from "#/components/common/session/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import { ImplementerRole } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ImplementerRole } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 
 export default function SessionsDatatableSkeleton({
   role,

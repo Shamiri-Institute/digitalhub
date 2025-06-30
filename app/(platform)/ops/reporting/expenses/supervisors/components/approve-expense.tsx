@@ -1,7 +1,7 @@
 "use client";
 import {
   approveSupervisorExpense,
-  HubSupervisorExpensesType,
+  type HubSupervisorExpensesType,
 } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";

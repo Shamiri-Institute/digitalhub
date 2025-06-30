@@ -2,7 +2,7 @@
 
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 export type SupervisorFellowsAttendancesType = Awaited<
   ReturnType<typeof loadSupervisorFellowAttendance>

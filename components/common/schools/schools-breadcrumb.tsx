@@ -3,7 +3,7 @@
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import { Icons } from "#/components/icons";
 import { cn } from "#/lib/utils";
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
@@ -45,11 +45,11 @@ export default function SchoolsBreadcrumb({ role }: { role: ImplementerRole }) {
           <Link
             href={
               role === "HUB_COORDINATOR"
-                ? `/hc/schools`
+                ? "/hc/schools"
                 : role === "SUPERVISOR"
-                  ? `/sc/schools`
+                  ? "/sc/schools"
                   : role === "FELLOW"
-                    ? `/fel/schools`
+                    ? "/fel/schools"
                     : "#"
             }
             className="hover:text-shamiri-new-blue"

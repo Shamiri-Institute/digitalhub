@@ -3,24 +3,24 @@
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { SessionDropDown } from "#/components/common/session/session-list";
 import {
-  Session,
+  type Session,
   SessionsContext,
 } from "#/components/common/session/sessions-provider";
 import { useTitle } from "#/components/common/session/title-provider";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
+import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import { addDays, addHours, format, isAfter, isBefore } from "date-fns";
 import {
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useContext,
   useEffect,
   useState,
 } from "react";
 import { useDateFormatter } from "react-aria";
-import { CalendarState } from "react-stately";
+import type { CalendarState } from "react-stately";
 
 export function ListView({
   state,
@@ -122,7 +122,7 @@ export function ListView({
 
   return (
     <div className="relative">
-      <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden"></div>
+      <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden" />
       <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
         <table
           className={cn(

@@ -4,7 +4,7 @@ import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-m
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { SessionDetail } from "#/components/common/session/session-list";
-import { Session } from "#/components/common/session/sessions-provider";
+import type { Session } from "#/components/common/session/sessions-provider";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Alert, AlertTitle } from "#/components/ui/alert";
@@ -43,11 +43,11 @@ import {
   markManyFellowAttendance,
 } from "#/lib/actions/fellow";
 import { sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
-import { ColumnDef, Row } from "@tanstack/react-table";
+import type { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
+import type { ColumnDef, Row } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { CheckCheck, InfoIcon } from "lucide-react";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 type SupervisorData = Prisma.SupervisorGetPayload<{

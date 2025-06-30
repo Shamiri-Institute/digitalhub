@@ -1,9 +1,9 @@
 import { currentHubCoordinator } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import * as fastCsv from "fast-csv";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
 
 const fellowCSVHeaders = [
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         dataStream
           .pipe(fastCsv.parse({ headers: true }))
           .on("data", (row) => {
-            let fellowId = objectId("fellow");
+            const fellowId = objectId("fellow");
             parsedRows.push({
               visibleId: fellowId,
               id: fellowId,

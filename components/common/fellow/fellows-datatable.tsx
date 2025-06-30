@@ -5,7 +5,7 @@ import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fell
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import {
   columns,
-  SchoolFellowTableData,
+  type SchoolFellowTableData,
 } from "#/components/common/fellow/columns";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
@@ -21,8 +21,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { type ImplementerRole, Prisma } from "@prisma/client";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
 export default function FellowsDatatable({

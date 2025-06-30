@@ -31,7 +31,7 @@ import { toast } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn, stringValidation } from "#/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { format } from "date-fns";
 import { useState } from "react";
 import { useForm } from "react-hook-form";

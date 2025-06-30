@@ -1,8 +1,8 @@
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import * as fastCsv from "fast-csv";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
 
 const studentsCSVHeaders = [
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     dataStream
       .pipe(fastCsv.parse({ headers: true }))
       .on("data", async (row) => {
-        let studentId = objectId("stu");
+        const studentId = objectId("stu");
         rows.push({
           id: studentId,
           createdAt: new Date(),
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           groupName: row.GroupNumber,
           studentName: row.StudentName,
           admissionNumber: row.AdmissionNumber,
-          form: parseInt(row.Form),
+          form: Number.parseInt(row.Form),
           stream: row.Stream,
           gender: row.Gender,
           visibleId: studentId,

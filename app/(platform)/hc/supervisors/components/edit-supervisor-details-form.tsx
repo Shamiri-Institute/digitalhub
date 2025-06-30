@@ -44,7 +44,7 @@ import parsePhoneNumberFromString, {
 import { usePathname } from "next/navigation";
 import { useContext, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 import { EditSupervisorSchema } from "../../schemas";
 
 export default function EditSupervisorDetails() {
@@ -132,7 +132,7 @@ export default function EditSupervisorDetails() {
               <DialogAlertWidget separator={true}>
                 <div className="flex items-center gap-2">
                   <span>{context.supervisor?.supervisorName}</span>
-                  <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+                  <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
                   <span>
                     {context.supervisor?.cellNumber &&
                       parsePhoneNumberFromString(

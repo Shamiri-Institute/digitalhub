@@ -2,9 +2,9 @@
 
 import SchoolFilesDataTableMenu from "#/components/common/files/files-datatable-menu";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import { Dispatch, SetStateAction } from "react";
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { Dispatch, SetStateAction } from "react";
 
 export type SchoolFilesTableData = Prisma.SchoolDocumentsGetPayload<{}>;
 

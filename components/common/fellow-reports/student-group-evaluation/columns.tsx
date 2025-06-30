@@ -1,12 +1,12 @@
 "use client";
 
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { StudentGroupEvaluationType } from "#/components/common/fellow-reports/student-group-evaluation/actions";
+import type { StudentGroupEvaluationType } from "#/components/common/fellow-reports/student-group-evaluation/actions";
 import StudentGroupEvaluationDropdownMenu from "#/components/common/fellow-reports/student-group-evaluation/student-group-evaluation-dropdown-actions";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
 
 export const columns: ColumnDef<StudentGroupEvaluationType>[] = [

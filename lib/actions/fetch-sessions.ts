@@ -1,8 +1,8 @@
 "use server";
 
-import { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
+import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { db } from "#/lib/db";
-import { SessionStatus } from "@prisma/client";
+import type { SessionStatus } from "@prisma/client";
 
 export async function fetchInterventionSessions({
   hubId,

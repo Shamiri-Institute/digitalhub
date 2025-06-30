@@ -2,7 +2,7 @@
 
 import {
   fileColumns,
-  SchoolFilesTableData,
+  type SchoolFilesTableData,
 } from "#/components/common/files/columns";
 import { RemoveUploadedFile } from "#/components/common/files/delete-file-modal";
 import UploadFileDialogue from "#/components/common/files/files-upload-dialogue";

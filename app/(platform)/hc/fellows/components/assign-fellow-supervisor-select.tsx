@@ -11,7 +11,7 @@ import {
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 

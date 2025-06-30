@@ -1,24 +1,24 @@
 "use client";
 
 import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
-import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
+import type { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { AddReportingNote } from "#/components/common/student/add-reporting-note";
 import AttendanceHistory from "#/components/common/student/attendance-history";
 import {
   columns,
-  SchoolStudentTableData,
+  type SchoolStudentTableData,
 } from "#/components/common/student/columns";
 import GroupTransferHistory from "#/components/common/student/group-transfer-history";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import StudentDropoutForm from "#/components/common/student/student-dropout-form";
 import DataTable from "#/components/data-table";
 import { markStudentAttendance } from "#/lib/actions/student";
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { z } from "zod";
+import type { z } from "zod";
 
 export default function StudentsDatatable({
   students,
@@ -75,9 +75,9 @@ export default function StudentsDatatable({
           <span className="capitalize">
             {student?.studentName?.toLowerCase()}
           </span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
           <span>{student?.assignedGroup?.groupName}</span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
           <span>{student?.admissionNumber}</span>
         </div>
       </DialogAlertWidget>

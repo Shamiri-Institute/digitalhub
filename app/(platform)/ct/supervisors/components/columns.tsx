@@ -1,8 +1,8 @@
 "use client";
 
-import { SupervisorClinicalCasesData } from "#/app/(platform)/ct/supervisors/actions";
+import type { SupervisorClinicalCasesData } from "#/app/(platform)/ct/supervisors/actions";
 import { Badge } from "#/components/ui/badge";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 
 export const columns: ColumnDef<SupervisorClinicalCasesData>[] = [
   {

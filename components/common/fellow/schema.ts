@@ -59,7 +59,7 @@ export const DropoutFellowSchema = z
     if (val.dropoutReason === undefined && val.mode === "dropout") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Please select reason for drop out.`,
+        message: "Please select reason for drop out.",
         fatal: true,
         path: ["dropoutReason"],
       });

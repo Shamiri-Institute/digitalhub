@@ -10,9 +10,9 @@ import {
   DialogFooter,
   DialogHeader,
 } from "#/components/ui/dialog";
-import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import React, { Dispatch, SetStateAction } from "react";
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import React, { type Dispatch, type SetStateAction } from "react";
 
 export default function StudentsInGroup({
   children,

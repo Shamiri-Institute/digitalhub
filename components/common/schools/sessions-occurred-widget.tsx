@@ -2,7 +2,7 @@
 
 import { Icons } from "#/components/icons";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 export default function SessionsOccurredWidget({
   sessions,
