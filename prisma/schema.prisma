@@ -882,6 +882,7 @@ model InterventionSession {
   InterventionGroupReport InterventionGroupReport[]
   sessionComments         SessionComment[]
   clinicalCases           ClinicalScreeningInfo[]
+  sessionAnalyses         SessionAnalysis[]
 
   @@map("intervention_sessions")
 }
@@ -1507,7 +1508,7 @@ model ClinicalFollowUpTreatmentPlan {
   id                                      String                @id @default(cuid())
   createdAt                               DateTime              @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt                               DateTime              @updatedAt @map("updated_at") @db.Timestamptz()
-  currentORSScore                         Int?                   @map("current_ors_score")
+  currentORSScore                         Int?                  @map("current_ors_score")
   plannedSessions                         Int                   @map("planned_sessions")
   sessionFrequency                        String                @map("session_frequency")
   plannedTreatmentIntervention            String[]              @map("planned_treatment_intervention")
@@ -1640,4 +1641,37 @@ model OpsUser {
   assignedHub   Hub?        @relation(fields: [assignedHubId], references: [id])
 
   @@map("ops_users")
+}
+
+/// Session analysis represents AI-generated analysis of intervention sessions
+/// based on recorded audio and grading rubric evaluation
+model SessionAnalysis {
+  id         String              @id @db.VarChar(255)
+  createdAt  DateTime            @default(now()) @map("created_at")
+  updatedAt  DateTime            @updatedAt @map("updated_at")
+  archivedAt DateTime?           @map("archived_at")
+  sessionId  String              @map("session_id") @db.VarChar(255)
+  session    InterventionSession @relation(fields: [sessionId], references: [id])
+
+  // Grading rubric dimensions (1-7 scale)
+  protocolAdherence     Int? @map("protocol_adherence") // Q1: Followed study protocol
+  contentSpecifications Int? @map("content_specifications") // Q2: Adhered to content specifications
+  contentThoroughness   Int? @map("content_thoroughness") // Q3: Delivered content thoroughly
+  contentSkillfulness   Int? @map("content_skillfulness") // Q4: Delivered content skillfully
+  contentClarity        Int? @map("content_clarity") // Q5: Delivered content clearly and accessibly
+  protocolCompliance    Int? @map("protocol_compliance") // Q6: Did not add content outside protocol
+
+  // Analysis results
+  strengths      String? @db.Text // Key strengths identified
+  weaknesses     String? @db.Text // Areas for improvement
+  flags          String? @db.Text // Important flags or concerns
+  overallSummary String? @map("overall_summary") @db.Text // Comprehensive summary
+
+  // Metadata
+  analysisDate     DateTime? @map("analysis_date") @db.Timestamptz(6) // When analysis was performed
+  transcriptionUrl String?   @map("transcription_url") @db.Text // Link to transcription
+  audioUrl         String?   @map("audio_url") @db.Text // Link to original audio
+  analysisVersion  String?   @map("analysis_version") @db.VarChar(50) // Version of analysis system used
+
+  @@map("session_analyses")
 }
