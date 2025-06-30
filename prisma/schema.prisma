@@ -1651,19 +1651,18 @@ model SessionAnalysis {
   sessionId  String              @map("session_id") @db.Text
   session    InterventionSession @relation(fields: [sessionId], references: [id])
 
-  // Grading rubric dimensions (1-7 scale)
-  protocolAdherence     Int? @map("protocol_adherence") // Q1: Followed study protocol
-  contentSpecifications Int? @map("content_specifications") // Q2: Adhered to content specifications
-  contentThoroughness   Int? @map("content_thoroughness") // Q3: Delivered content thoroughly
-  contentSkillfulness   Int? @map("content_skillfulness") // Q4: Delivered content skillfully
-  contentClarity        Int? @map("content_clarity") // Q5: Delivered content clearly and accessibly
-  protocolCompliance    Int? @map("protocol_compliance") // Q6: Did not add content outside protocol
+  protocolAdherence     Int @map("protocol_adherence")
+  contentSpecifications Int @map("content_specifications")
+  contentThoroughness   Int @map("content_thoroughness")
+  contentSkillfulness   Int @map("content_skillfulness")
+  contentClarity        Int @map("content_clarity")
+  protocolCompliance    Int @map("protocol_compliance")
 
   // Qualitative feedback
-  strengths      String? @db.Text // Key strengths identified
-  weaknesses     String? @db.Text // Areas for improvement
-  flags          String? @db.Text // Important flags or concerns
-  overallSummary String? @map("overall_summary") @db.Text // Comprehensive summary
+  strengths      String? @db.Text
+  weaknesses     String? @db.Text
+  flags          String? @db.Text
+  overallSummary String? @map("overall_summary") @db.Text
 
   // Metadata
   analysisDate     DateTime? @map("analysis_date") @db.Timestamptz(6) // When analysis was performed from the python code
