@@ -584,6 +584,217 @@ refactor(components): extract reusable form validation
 
 ## Technical Excellence Guidelines
 
+### Zod Schema Validation Policy
+
+**ABSOLUTE RULE: ALWAYS USE ZOD FOR ALL PAYLOAD VALIDATION**
+
+#### Mandatory Zod Usage
+
+**REQUIRED for ALL:**
+
+- API route request body validation
+- Server action form data validation
+- React Hook Form schema validation
+- Any data parsing from external sources
+
+**PROHIBITED:**
+
+- Custom validation functions for structured data
+- Manual type checking for request payloads
+- Unvalidated `any` types from API requests
+- Direct use of `request.json()` without validation
+
+#### Zod Schema Patterns
+
+**API Route Validation:**
+
+```typescript
+import { z } from "zod";
+import { stringValidation } from "#/lib/utils";
+
+const CreateUserSchema = z.object({
+  name: stringValidation("Name is required"),
+  email: z.string().email("Invalid email format"),
+  age: z.number().int().min(1).max(120),
+  role: z.enum(["USER", "ADMIN"]),
+});
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    // Always use safeParse for validation
+    const result = CreateUserSchema.safeParse(body);
+    if (!result.success) {
+      const errorMessages = result.error.issues.map(
+        (issue) => `${issue.path.join(".")}: ${issue.message}`,
+      );
+      return NextResponse.json(
+        {
+          error: "Validation failed",
+          details: errorMessages,
+        },
+        { status: 400 },
+      );
+    }
+
+    const validatedData = result.data;
+    // Use validatedData instead of body
+  } catch (error) {
+    // Handle parsing errors
+  }
+}
+```
+
+**Server Action Validation:**
+
+```typescript
+"use server";
+
+import { z } from "zod";
+
+const UpdateProfileSchema = z.object({
+  name: stringValidation("Name is required"),
+  bio: z.string().max(500).optional(),
+});
+
+export async function updateProfile(formData: FormData) {
+  const result = UpdateProfileSchema.safeParse({
+    name: formData.get("name"),
+    bio: formData.get("bio"),
+  });
+
+  if (!result.success) {
+    return {
+      success: false,
+      errors: result.error.flatten().fieldErrors,
+    };
+  }
+
+  // Use result.data for validated input
+  const { name, bio } = result.data;
+}
+```
+
+**React Hook Form Integration:**
+
+```typescript
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+const FormSchema = z.object({
+  title: stringValidation("Title is required"),
+  description: z.string().min(10, "Description too short"),
+  priority: z.enum(["low", "medium", "high"]),
+});
+
+type FormData = z.infer<typeof FormSchema>;
+
+export function MyForm() {
+  const form = useForm<FormData>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      priority: "medium",
+    },
+  });
+
+  // Form implementation
+}
+```
+
+#### Schema Organization
+
+**Schema Location:**
+
+- Store schemas in `schema.ts` files alongside components
+- Export reusable validation patterns from `#/lib/validators.ts`
+- Use consistent naming: `[Entity][Action]Schema` (e.g., `UserCreateSchema`)
+
+**Common Validation Patterns:**
+
+```typescript
+// Use existing utility functions
+import { stringValidation } from "#/lib/utils";
+
+// Standard patterns for common fields
+const IdSchema = stringValidation("ID is required");
+const EmailSchema = z.string().email("Invalid email format");
+const UrlSchema = z.string().url("Invalid URL format");
+const DateSchema = z.string().datetime("Invalid date format");
+
+// Rating scales (common in this project)
+const RatingSchema = z
+  .number({ invalid_type_error: "Rating must be a number" })
+  .int("Rating must be an integer")
+  .min(1, "Rating must be between 1 and 5")
+  .max(5, "Rating must be between 1 and 5");
+
+// Optional fields with proper handling
+const OptionalTextSchema = z.string().max(1000).optional();
+```
+
+#### Error Handling Best Practices
+
+**Structured Error Responses:**
+
+```typescript
+// Good: Detailed validation errors
+if (!result.success) {
+  const errorMessages = result.error.issues.map(
+    (issue) => `${issue.path.join(".")}: ${issue.message}`,
+  );
+  return NextResponse.json(
+    {
+      error: "Validation failed",
+      details: errorMessages,
+    },
+    { status: 400 },
+  );
+}
+
+// Good: Form field errors
+if (!result.success) {
+  return {
+    success: false,
+    errors: result.error.flatten().fieldErrors,
+  };
+}
+```
+
+**Type Safety:**
+
+```typescript
+// Always use z.infer for type generation
+type CreateUserInput = z.infer<typeof CreateUserSchema>;
+
+// Never manually define types that match schemas
+// Bad: Manual type definition
+interface CreateUserInput {
+  name: string;
+  email: string;
+  age: number;
+}
+```
+
+#### Validation Quality Gates
+
+**MANDATORY CHECKS:**
+
+1. All API routes must validate request bodies with Zod
+2. All server actions must validate form data with Zod
+3. All forms must use `zodResolver` for validation
+4. All schemas must have descriptive error messages
+5. All validation errors must be properly handled and returned
+
+**CODE REVIEW CHECKLIST:**
+
+- [ ] No direct use of `request.json()` without validation
+- [ ] No custom validation functions for structured data
+- [ ] All schemas use appropriate validation rules
+- [ ] Error messages are user-friendly and specific
+- [ ] Types are generated from schemas using `z.infer<>`
+
 ### SQL and Database Optimization
 
 #### Prisma Query Patterns
