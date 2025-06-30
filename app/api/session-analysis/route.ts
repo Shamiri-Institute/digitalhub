@@ -69,7 +69,6 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Validate payload with Zod
     const result = SessionAnalysisSchema.safeParse(body);
     if (!result.success) {
       const errorMessages = result.error.issues.map(
