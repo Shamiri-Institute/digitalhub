@@ -4,11 +4,7 @@ import SchoolsDataProvider from "#/components/common/schools/schools-data-provid
 import { signOut } from "next-auth/react";
 import type { ReactNode } from "react";
 
-export default async function FellowSchoolLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default async function FellowSchoolLayout({ children }: { children: ReactNode }) {
   const fellow = await currentFellow();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });

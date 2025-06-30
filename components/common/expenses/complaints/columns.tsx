@@ -14,10 +14,7 @@ export const columns: ColumnDef<HubReportComplaintsType>[] = [
     id: "button",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -73,16 +70,13 @@ export const columns: ColumnDef<HubReportComplaintsType>[] = [
   },
 ];
 
-export const subColumns: ColumnDef<
-  HubReportComplaintsType["complaints"][number]
->[] = [
+export const subColumns: ColumnDef<HubReportComplaintsType["complaints"][number]>[] = [
   {
     id: "checkbox",
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -118,11 +112,7 @@ export const subColumns: ColumnDef<
   },
   {
     cell: ({ row }) => (
-      <a
-        href={row.original.statement}
-        download
-        className="text-shamiri-new-blue"
-      >
+      <a href={row.original.statement} download className="text-shamiri-new-blue">
         Download
       </a>
     ),
@@ -144,9 +134,7 @@ export const subColumns: ColumnDef<
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <FellowComplaintsActionsDropdown complaint={row.original} />
-    ),
+    cell: ({ row }) => <FellowComplaintsActionsDropdown complaint={row.original} />,
     enableHiding: false,
   },
 ];

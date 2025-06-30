@@ -23,16 +23,12 @@ export default async function ClinicalCasesStats() {
           <div className="h-4 w-px bg-gray-200" />
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-shamiri-light-orange" />
-            <span className="text-sm font-medium">
-              {followUpCases} Follow-up
-            </span>
+            <span className="text-sm font-medium">{followUpCases} Follow-up</span>
           </div>
           <div className="h-4 w-px bg-gray-200" />
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-shamiri-light-red" />
-            <span className="text-sm font-medium">
-              {completedCases} Terminated
-            </span>
+            <span className="text-sm font-medium">{completedCases} Terminated</span>
           </div>
         </div>
       </div>

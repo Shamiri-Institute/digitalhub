@@ -3,11 +3,7 @@ import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import type React from "react";
 
-export default async function ReportingViewLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function ReportingViewLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-full bg-white">
       <div className="flex flex-1 flex-col">

@@ -7,30 +7,22 @@ import { Skeleton } from "#/components/ui/skeleton";
 import type { ColumnDef } from "@tanstack/react-table";
 
 export default function FellowsTableSkeleton() {
-  const loadingColumns: ColumnDef<HubPayoutHistoryType>[] = columns.map(
-    (column) => {
-      const columnId =
-        typeof column.header === "string"
-          ? column.header
-          : (column.id ?? "unknown");
-      return {
-        accessorFn: () => null,
-        header:
-          columnId !== "checkbox" && columnId !== "button" ? columnId : "",
-        id: columnId,
-        cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
-      };
-    },
-  );
+  const loadingColumns: ColumnDef<HubPayoutHistoryType>[] = columns.map((column) => {
+    const columnId = typeof column.header === "string" ? column.header : (column.id ?? "unknown");
+    return {
+      accessorFn: () => null,
+      header: columnId !== "checkbox" && columnId !== "button" ? columnId : "",
+      id: columnId,
+      cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
+    };
+  });
 
-  const emptyData: HubPayoutHistoryType[] = Array.from(Array(10).keys()).map(
-    () => ({
-      dateAdded: new Date(),
-      duration: "",
-      totalPayoutAmount: 0,
-      fellowDetails: [],
-    }),
-  );
+  const emptyData: HubPayoutHistoryType[] = Array.from(Array(10).keys()).map(() => ({
+    dateAdded: new Date(),
+    duration: "",
+    totalPayoutAmount: 0,
+    fellowDetails: [],
+  }));
 
   return (
     <div className="space-y-3 px-6 py-10">

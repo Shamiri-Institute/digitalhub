@@ -24,9 +24,7 @@ async function main() {
     expires: futureTimestamp,
   };
 
-  console.log(
-    `Add the following cookie to your browser to simulate being logged in as ${email}`,
-  );
+  console.log(`Add the following cookie to your browser to simulate being logged in as ${email}`);
   console.log(JSON.stringify(cookie, null, 2));
 }
 

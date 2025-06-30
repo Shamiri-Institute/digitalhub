@@ -15,11 +15,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -100,9 +96,7 @@ export function AddNewClinicalCaseForm({
   const [availableSessions, setAvailableSessions] = useState<
     Array<{ id: string; sessionLabel: string }>
   >([]);
-  const [fellowsInHub, setFellowsInHub] = useState<
-    Prisma.FellowGetPayload<{}>[]
-  >([]);
+  const [fellowsInHub, setFellowsInHub] = useState<Prisma.FellowGetPayload<{}>[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -138,22 +132,14 @@ export function AddNewClinicalCaseForm({
     setSelectedStudentId(studentId);
     form.setValue("studentName", studentId);
 
-    const selectedStudent = students.find(
-      (student) => student.id === studentId,
-    );
+    const selectedStudent = students.find((student) => student.id === studentId);
     if (selectedStudent) {
       form.setValue("studentName", selectedStudent.studentName || "");
       form.setValue("admissionNumber", Number(selectedStudent.admissionNumber));
       if (selectedStudent.yearOfBirth) {
-        form.setValue(
-          "yearOfBirth",
-          new Date(selectedStudent.yearOfBirth, 0, 1),
-        );
+        form.setValue("yearOfBirth", new Date(selectedStudent.yearOfBirth, 0, 1));
       }
-      form.setValue(
-        "gender",
-        (selectedStudent.gender?.toLowerCase() as any) || "",
-      );
+      form.setValue("gender", (selectedStudent.gender?.toLowerCase() as any) || "");
       form.setValue("classForm", selectedStudent.form?.toString() || "");
       form.setValue("stream", selectedStudent.stream || "");
     }
@@ -173,9 +159,7 @@ export function AddNewClinicalCaseForm({
 
   const handleHubSelect = (hubId: string) => {
     setSelectedHubId(hubId);
-    const fellowsInSelectedHub = fellowsInProject.filter(
-      (fellow) => fellow.hubId === hubId,
-    );
+    const fellowsInSelectedHub = fellowsInProject.filter((fellow) => fellow.hubId === hubId);
     setFellowsInHub(fellowsInSelectedHub);
     form.setValue("fellow", "");
   };
@@ -313,9 +297,7 @@ export function AddNewClinicalCaseForm({
                       {...field}
                       value={field.value || ""}
                       onChange={(e) =>
-                        field.onChange(
-                          e.target.value ? Number(e.target.value) : undefined,
-                        )
+                        field.onChange(e.target.value ? Number(e.target.value) : undefined)
                       }
                     />
                   </FormControl>
@@ -373,10 +355,7 @@ export function AddNewClinicalCaseForm({
                       Gender
                       <span className="text-red-500">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select gender" />
                       </SelectTrigger>
@@ -404,10 +383,7 @@ export function AddNewClinicalCaseForm({
                       Class/Form
                       <span className="text-red-500">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select class" />
                       </SelectTrigger>
@@ -487,8 +463,7 @@ export function AddNewClinicalCaseForm({
                         <Combobox
                           items={supervisorsInHub.map((supervisor) => ({
                             id: supervisor.id,
-                            label:
-                              supervisor.supervisorName || "Unknown Supervisor",
+                            label: supervisor.supervisorName || "Unknown Supervisor",
                           }))}
                           activeItemId={field.value || ""}
                           onSelectItem={field.onChange}
@@ -563,10 +538,7 @@ export function AddNewClinicalCaseForm({
                     Select Session
                     <span className="text-red-500">*</span>
                   </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select session" />
                     </SelectTrigger>
@@ -584,11 +556,7 @@ export function AddNewClinicalCaseForm({
             />
 
             <div className="flex flex-row justify-end gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Dismiss
               </Button>
               <Button

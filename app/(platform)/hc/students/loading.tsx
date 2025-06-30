@@ -19,15 +19,9 @@ export default function HubStudentLoadingPage() {
         <InfoCardSkeleton />
         <InfoCardSkeleton />
       </div>
-      <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
-        {renderChartWidgets(4)}
-      </div>
-      <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
-        {renderChartWidgets(4)}
-      </div>
-      <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-3">
-        {renderChartWidgets(3)}
-      </div>
+      <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">{renderChartWidgets(4)}</div>
+      <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">{renderChartWidgets(4)}</div>
+      <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-3">{renderChartWidgets(3)}</div>
     </div>
   );
 }

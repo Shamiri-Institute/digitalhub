@@ -11,12 +11,7 @@ import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogPortal,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogPortal } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -33,15 +28,8 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "#/components/ui/tooltip";
-import {
-  markFellowAttendance,
-  markManyFellowAttendance,
-} from "#/lib/actions/fellow";
+import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import { markFellowAttendance, markManyFellowAttendance } from "#/lib/actions/fellow";
 import { sessionDisplayName } from "#/lib/utils";
 import type { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
@@ -98,18 +86,14 @@ export default function FellowAttendance({
   const watcher = form.watch("supervisor");
 
   useEffect(() => {
-    const supervisor = supervisors?.find(
-      (supervisor) => supervisor.id === watcher,
-    );
+    const supervisor = supervisors?.find((supervisor) => supervisor.id === watcher);
     if (supervisor) {
       const attendances = supervisor.fellows.map((fellow) => {
         const sessionAttendance = fellow.fellowAttendances.find(
           (attendance) => attendance.sessionId === session?.id,
         );
 
-        const group = fellow.groups.find(
-          (group) => group.schoolId === session?.schoolId,
-        );
+        const group = fellow.groups.find((group) => group.schoolId === session?.schoolId);
         return {
           id: sessionAttendance?.id.toString(),
           processedAt: sessionAttendance?.processedAt ?? null,
@@ -126,8 +110,7 @@ export default function FellowAttendance({
           groupType: group?.groupType,
           groupId: group?.id,
           averageRating:
-            fellowRatings.find((rating) => rating.id === fellow.id)
-              ?.averageRating ?? null,
+            fellowRatings.find((rating) => rating.id === fellow.id)?.averageRating ?? null,
           sessionType: session?.session?.sessionType,
           sessionName: session?.session?.sessionName,
           occurred: session?.occurred,
@@ -170,9 +153,7 @@ export default function FellowAttendance({
                   name="supervisor"
                   render={({ field }) => (
                     <FormItem className="space-y-2">
-                      <FormLabel className={"text-sm"}>
-                        Select a supervisor
-                      </FormLabel>
+                      <FormLabel className={"text-sm"}>Select a supervisor</FormLabel>
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
@@ -187,10 +168,7 @@ export default function FellowAttendance({
                         </FormControl>
                         <SelectContent>
                           {supervisors?.map((supervisor) => (
-                            <SelectItem
-                              key={supervisor.id}
-                              value={supervisor.id}
-                            >
+                            <SelectItem key={supervisor.id} value={supervisor.id}>
                               {supervisor.supervisorName}
                             </SelectItem>
                           ))}
@@ -207,11 +185,7 @@ export default function FellowAttendance({
               {/* TODO: https://github.com/TanStack/table/issues/4382 --> ColumnDef types gives typescript error */}
               <FellowAttendanceDataTable
                 data={fellows}
-                emptyStateMessage={
-                  watcher === undefined
-                    ? "Please select a supervisor"
-                    : undefined
-                }
+                emptyStateMessage={watcher === undefined ? "Please select a supervisor" : undefined}
                 enableRowSelection={(row: Row<FellowAttendancesTableData>) =>
                   !(
                     row.original.sessionType === "INTERVENTION" &&
@@ -219,8 +193,7 @@ export default function FellowAttendance({
                   ) &&
                   (row.original.sessionType !== "INTERVENTION" ||
                     row.original.groupType === "TREATMENT") &&
-                  (row.original.supervisorId === supervisorId ||
-                    role === "HUB_COORDINATOR") &&
+                  (row.original.supervisorId === supervisorId || role === "HUB_COORDINATOR") &&
                   !row.original.droppedOut &&
                   row.original.processedAt === null
                 }
@@ -262,23 +235,14 @@ export function FellowAttendanceDataTable({
   session?: Prisma.InterventionSessionGetPayload<{
     include: { school: true; sessionRatings: true; session: true };
   }> | null;
-  enableRowSelection?:
-    | boolean
-    | ((row: Row<FellowAttendancesTableData>) => boolean)
-    | undefined;
+  enableRowSelection?: boolean | ((row: Row<FellowAttendancesTableData>) => boolean) | undefined;
   overrideColumns?: (state: {
-    setAttendance: Dispatch<
-      SetStateAction<FellowAttendancesTableData | undefined>
-    >;
+    setAttendance: Dispatch<SetStateAction<FellowAttendancesTableData | undefined>>;
     setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   }) => ColumnDef<FellowAttendancesTableData>[];
 }) {
-  const [selectedRows, setSelectedRows] = useState<
-    Row<FellowAttendancesTableData>[]
-  >([]);
-  const [attendance, setAttendance] = useState<
-    FellowAttendancesTableData | undefined
-  >();
+  const [selectedRows, setSelectedRows] = useState<Row<FellowAttendancesTableData>[]>([]);
+  const [attendance, setAttendance] = useState<FellowAttendancesTableData | undefined>();
   const [bulkMode, setBulkMode] = useState<boolean>(false);
   const [attendanceDialog, setAttendanceDialog] = useState<boolean>(false);
 
@@ -363,34 +327,19 @@ export function FellowAttendanceDataTable({
               ) : (
                 <span>{attendance?.fellowName}</span>
               )}
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
               <span>
-                {sessionDisplayName(
-                  attendance?.sessionName ??
-                    session?.session?.sessionName ??
-                    "",
-                )}
+                {sessionDisplayName(attendance?.sessionName ?? session?.session?.sessionName ?? "")}
               </span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
-              <span>
-                {attendance?.schoolName ??
-                  session?.school?.schoolName ??
-                  session?.venue}
-              </span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span>{attendance?.schoolName ?? session?.school?.schoolName ?? session?.venue}</span>
             </div>
           </DialogAlertWidget>
           <Alert variant="destructive">
             <AlertTitle className="flex gap-2">
               <InfoIcon className="mt-1 h-4 w-4 shrink-0" />
               <span className="text-base">
-                Please confirm{" "}
-                {bulkMode
-                  ? "fellows' M-Pesa numbers"
-                  : "fellow's M-Pesa number"}{" "}
+                Please confirm {bulkMode ? "fellows' M-Pesa numbers" : "fellow's M-Pesa number"}{" "}
                 before marking attendance.
               </span>
             </AlertTitle>
@@ -440,9 +389,7 @@ export type FellowAttendancesTableData = {
 };
 
 export const columns = (state: {
-  setAttendance: Dispatch<
-    SetStateAction<FellowAttendancesTableData | undefined>
-  >;
+  setAttendance: Dispatch<SetStateAction<FellowAttendancesTableData | undefined>>;
   setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
 }): ColumnDef<FellowAttendancesTableData>[] => [
   {
@@ -450,8 +397,7 @@ export const columns = (state: {
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -500,8 +446,7 @@ export const columns = (state: {
               </TooltipTrigger>
               <TooltipContent className="border bg-background-secondary text-foreground drop-shadow">
                 <div className="px-2 py-1 text-sm">
-                  Processed on{" "}
-                  {format(row.original.processedAt, "dd-MM-yyyy HH:mm a")}
+                  Processed on {format(row.original.processedAt, "dd-MM-yyyy HH:mm a")}
                 </div>
               </TooltipContent>
             </Tooltip>
@@ -569,10 +514,7 @@ export const columns = (state: {
       const type = row.original.groupType;
       return (
         type && (
-          <Badge
-            variant={type === "TREATMENT" ? "default" : "outline"}
-            className="capitalize"
-          >
+          <Badge variant={type === "TREATMENT" ? "default" : "outline"} className="capitalize">
             {type?.toLowerCase()}
           </Badge>
         )

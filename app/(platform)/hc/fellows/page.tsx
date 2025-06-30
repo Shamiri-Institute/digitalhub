@@ -102,9 +102,7 @@ export default async function FellowPage() {
         <Separator />
 
         <Suspense fallback={<GraphLoadingIndicator />}>
-          <FellowsChartsWrapper
-            coordinator={{ assignedHubId: hc.assignedHubId ?? null }}
-          />
+          <FellowsChartsWrapper coordinator={{ assignedHubId: hc.assignedHubId ?? null }} />
         </Suspense>
         <MainFellowsDatatable
           fellows={data}

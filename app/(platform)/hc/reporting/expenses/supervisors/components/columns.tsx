@@ -41,9 +41,7 @@ export const columns: ColumnDef<HubSupervisorExpensesType>[] = [
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <HCSupervisorExpenseDropdownMenu expense={row.original} />
-    ),
+    cell: ({ row }) => <HCSupervisorExpenseDropdownMenu expense={row.original} />,
     enableHiding: false,
   },
 ];

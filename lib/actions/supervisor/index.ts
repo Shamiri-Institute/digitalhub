@@ -17,14 +17,11 @@ async function checkAuth() {
   return { hubCoordinator, user };
 }
 
-export async function markSupervisorAttendance(
-  data: z.infer<typeof MarkAttendanceSchema>,
-) {
+export async function markSupervisorAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
     const auth = await checkAuth();
 
-    const { id, sessionId, absenceReason, attended, comments } =
-      MarkAttendanceSchema.parse(data);
+    const { id, sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
     const supervisor = await db.supervisor.findUniqueOrThrow({
       where: {
         id,
@@ -51,12 +48,7 @@ export async function markSupervisorAttendance(
             supervisorId: id,
             absenceReason: attendanceStatus === false ? absenceReason : null,
             absenceComments: attendanceStatus === false ? comments : null,
-            attended:
-              attended === "attended"
-                ? true
-                : attended === "missed"
-                  ? false
-                  : null,
+            attended: attended === "attended" ? true : attended === "missed" ? false : null,
           },
         });
         return {
@@ -64,44 +56,37 @@ export async function markSupervisorAttendance(
           message: `Successfully updated attendance for ${supervisor.supervisorName}`,
         };
       }
-        const session = await db.interventionSession.findFirstOrThrow({
-          where: {
-            id: sessionId,
-          },
-        });
-        await db.supervisorAttendance.create({
-          data: {
-            supervisorId: id!,
-            schoolId: session.schoolId ?? undefined,
-            projectId: session.projectId ?? CURRENT_PROJECT_ID,
-            sessionId,
-            absenceReason,
-            absenceComments: comments,
-            markedBy: auth.user!.user.id,
-            attended:
-              attended === "attended"
-                ? true
-                : attended === "missed"
-                  ? false
-                  : null,
-          },
-        });
-        return {
-          success: true,
-          message: `Successfully marked attendance for ${supervisor.supervisorName}`,
-        };
-    }
+      const session = await db.interventionSession.findFirstOrThrow({
+        where: {
+          id: sessionId,
+        },
+      });
+      await db.supervisorAttendance.create({
+        data: {
+          supervisorId: id!,
+          schoolId: session.schoolId ?? undefined,
+          projectId: session.projectId ?? CURRENT_PROJECT_ID,
+          sessionId,
+          absenceReason,
+          absenceComments: comments,
+          markedBy: auth.user!.user.id,
+          attended: attended === "attended" ? true : attended === "missed" ? false : null,
+        },
+      });
       return {
-        success: false,
-        message: "Supervisor details not found.",
+        success: true,
+        message: `Successfully marked attendance for ${supervisor.supervisorName}`,
       };
+    }
+    return {
+      success: false,
+      message: "Supervisor details not found.",
+    };
   } catch (err) {
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ??
-        "Sorry, could not mark supervisor attendance.",
+      message: (err as Error)?.message ?? "Sorry, could not mark supervisor attendance.",
     };
   }
 }
@@ -112,8 +97,7 @@ export async function markManySupervisorAttendance(
 ) {
   const auth = await checkAuth();
 
-  const { sessionId, absenceReason, attended, comments } =
-    MarkAttendanceSchema.parse(data);
+  const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
   const session = await db.interventionSession.findFirstOrThrow({
     where: {
@@ -155,12 +139,7 @@ export async function markManySupervisorAttendance(
             absenceComments: comments,
             sessionId,
             markedBy: auth.user!.user.id,
-            attended:
-              attended === "attended"
-                ? true
-                : attended === "missed"
-                  ? false
-                  : null,
+            attended: attended === "attended" ? true : attended === "missed" ? false : null,
           },
         });
       }

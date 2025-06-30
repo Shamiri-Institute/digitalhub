@@ -101,10 +101,7 @@ export default function ConsultClinicalExpert({
         <DialogHeader className="bg-white">
           <h2>Consult clinical expert</h2>
         </DialogHeader>
-        <DialogAlertWidget
-          label={`${clinicalCase.pseudonym}`}
-          separator={true}
-        />
+        <DialogAlertWidget label={`${clinicalCase.pseudonym}`} separator={true} />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -118,17 +115,12 @@ export default function ConsultClinicalExpert({
                       <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a consultant" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="dr-sara">
-                            Clinical Expert
-                          </SelectItem>
+                          <SelectItem value="dr-sara">Clinical Expert</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormControl>
@@ -144,10 +136,7 @@ export default function ConsultClinicalExpert({
                   <FormItem>
                     <FormLabel>Message</FormLabel>
                     <FormControl>
-                      <Textarea
-                        {...field}
-                        className="min-h-[100px] resize-none"
-                      />
+                      <Textarea {...field} className="min-h-[100px] resize-none" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -155,11 +144,7 @@ export default function ConsultClinicalExpert({
               />
 
               <DialogFooter>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={() => setDialogOpen(false)}
-                >
+                <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button

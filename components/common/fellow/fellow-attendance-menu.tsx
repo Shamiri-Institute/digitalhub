@@ -18,9 +18,7 @@ export default function FellowAttendanceMenu({
   disabled,
 }: {
   state: {
-    setAttendance: Dispatch<
-      SetStateAction<FellowAttendancesTableData | undefined>
-    >;
+    setAttendance: Dispatch<SetStateAction<FellowAttendancesTableData | undefined>>;
     setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
   attendance: FellowAttendancesTableData;
@@ -37,9 +35,7 @@ export default function FellowAttendanceMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem

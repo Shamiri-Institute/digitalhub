@@ -81,10 +81,7 @@ export default async function SchoolViewLayout({
             <div className="flex flex-col gap-4 lg:hidden">
               <SchoolLeftPanel selectedSchool={school} />
             </div>
-            <SchoolsNav
-              visibleId={visibleId}
-              role={fellow!.user.membership.role}
-            />
+            <SchoolsNav visibleId={visibleId} role={fellow!.user.membership.role} />
             <Separator />
             {children}
           </div>

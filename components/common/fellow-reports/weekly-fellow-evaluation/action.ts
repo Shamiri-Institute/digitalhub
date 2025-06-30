@@ -26,9 +26,7 @@ export const updateWeeklyEvaluation = async (
       },
     });
 
-    await revalidatePageAction(
-      "sc/reporting/fellow-reports/weekly-fellow-evaluation",
-    );
+    await revalidatePageAction("sc/reporting/fellow-reports/weekly-fellow-evaluation");
     return {
       success: true,
       message: "Weekly evaluation updated successfully",

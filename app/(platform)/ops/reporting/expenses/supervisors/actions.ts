@@ -63,13 +63,7 @@ export async function loadHubsSupervisorExpenses() {
   });
 }
 
-export async function deleteSupervisorExpenseRequest({
-  id,
-  name,
-}: {
-  id: string;
-  name: string;
-}) {
+export async function deleteSupervisorExpenseRequest({ id, name }: { id: string; name: string }) {
   try {
     const opsUser = await currentOpsUser();
 

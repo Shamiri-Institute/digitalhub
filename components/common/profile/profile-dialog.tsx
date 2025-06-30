@@ -13,12 +13,7 @@ import { Icons } from "#/components/icons";
 import { ProfileSchema } from "#/components/profile/schema";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -28,11 +23,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -74,11 +65,7 @@ interface ProfileDialogProps {
     | null;
 }
 
-export function ProfileDialog({
-  isOpen,
-  onOpenChange,
-  profile,
-}: ProfileDialogProps) {
+export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogProps) {
   const pathname = usePathname();
   const router = useRouter();
   const counties = KENYAN_COUNTIES.map((c) => c.name);
@@ -102,12 +89,9 @@ export function ProfileDialog({
         "",
       email: profile?.user?.user?.email || "",
       idNumber: profile && "idNumber" in profile ? profile.idNumber || "" : "",
-      cellNumber:
-        profile && "cellNumber" in profile ? profile.cellNumber || "" : "",
-      mpesaNumber:
-        profile && "mpesaNumber" in profile ? profile.mpesaNumber || "" : "",
-      mpesaName:
-        profile && "mpesaName" in profile ? profile.mpesaName || "" : "",
+      cellNumber: profile && "cellNumber" in profile ? profile.cellNumber || "" : "",
+      mpesaNumber: profile && "mpesaNumber" in profile ? profile.mpesaNumber || "" : "",
+      mpesaName: profile && "mpesaName" in profile ? profile.mpesaName || "" : "",
       dateOfBirth:
         profile && "dateOfBirth" in profile && profile.dateOfBirth
           ? new Date(profile.dateOfBirth)
@@ -117,19 +101,12 @@ export function ProfileDialog({
           ? (profile.gender as "Male" | "Female" | "Other") || "Male"
           : "Male",
       county: profile && "county" in profile ? profile.county || "" : "",
-      subCounty:
-        profile && "subCounty" in profile ? profile.subCounty || "" : "",
+      subCounty: profile && "subCounty" in profile ? profile.subCounty || "" : "",
       bankName: profile && "bankName" in profile ? profile.bankName || "" : "",
-      bankBranch:
-        profile && "bankBranch" in profile ? profile.bankBranch || "" : "",
+      bankBranch: profile && "bankBranch" in profile ? profile.bankBranch || "" : "",
       bankAccountNumber:
-        profile && "bankAccountNumber" in profile
-          ? profile.bankAccountNumber || ""
-          : "",
-      bankAccountName:
-        profile && "bankAccountName" in profile
-          ? profile.bankAccountName || ""
-          : "",
+        profile && "bankAccountNumber" in profile ? profile.bankAccountNumber || "" : "",
+      bankAccountName: profile && "bankAccountName" in profile ? profile.bankAccountName || "" : "",
       kra: profile && "kra" in profile ? profile.kra || "" : "",
       role: profile?.user?.membership?.role || ImplementerRole.FELLOW,
     },
@@ -166,9 +143,7 @@ export function ProfileDialog({
     if (!response.success) {
       toast({
         variant: "destructive",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -180,10 +155,7 @@ export function ProfileDialog({
     onOpenChange(false);
   };
 
-  const validatePhoneNumber = (
-    field: keyof typeof form.formState.defaultValues,
-    value: string,
-  ) => {
+  const validatePhoneNumber = (field: keyof typeof form.formState.defaultValues, value: string) => {
     if (!isValidPhoneNumber(value, "KE") && value !== "") {
       form.setError(field, {
         message: value + " is not a valid kenyan number",
@@ -208,9 +180,7 @@ export function ProfileDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <span className="text-xl">
-                {isFellow ? "View profile" : "Edit profile"}
-              </span>
+              <span className="text-xl">{isFellow ? "View profile" : "Edit profile"}</span>
             </DialogHeader>
             <div className="flex items-center gap-2 pt-4">
               <div className="relative h-7 w-7 shrink-0">
@@ -241,8 +211,7 @@ export function ProfileDialog({
                   -{" "}
                   <span className="capitalize">
                     {profile &&
-                      (("assignedHub" in profile &&
-                        profile.assignedHub?.hubName) ||
+                      (("assignedHub" in profile && profile.assignedHub?.hubName) ||
                         ("hub" in profile && profile.hub?.hubName))}
                   </span>
                 </span>
@@ -263,8 +232,7 @@ export function ProfileDialog({
                     render={({ field }) => (
                       <FormItem className="col-span-2">
                         <FormLabel>
-                          Full name{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Full name <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} disabled />
@@ -279,8 +247,7 @@ export function ProfileDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Email address{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Email address <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="email" disabled />
@@ -295,8 +262,7 @@ export function ProfileDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Phone number{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Phone number <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -321,8 +287,7 @@ export function ProfileDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          National ID{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          National ID <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} disabled={isFellow} />
@@ -337,8 +302,7 @@ export function ProfileDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Gender{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Gender <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -369,8 +333,7 @@ export function ProfileDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Date of birth{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Date of birth <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -409,8 +372,7 @@ export function ProfileDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          County{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          County <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -445,8 +407,7 @@ export function ProfileDialog({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Sub-county{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Sub-county <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -462,8 +423,7 @@ export function ProfileDialog({
                           <SelectContent className="max-h-[200px]">
                             {form.getValues("county") ? (
                               KENYAN_COUNTIES.find(
-                                (county) =>
-                                  county.name === form.getValues("county"),
+                                (county) => county.name === form.getValues("county"),
                               )?.sub_counties.map((subCounty) => {
                                 return (
                                   <SelectItem key={subCounty} value={subCounty}>
@@ -472,9 +432,7 @@ export function ProfileDialog({
                                 );
                               })
                             ) : (
-                              <SelectItem value={" "}>
-                                Please pick a county first
-                              </SelectItem>
+                              <SelectItem value={" "}>Please pick a county first</SelectItem>
                             )}
                           </SelectContent>
                         </Select>
@@ -500,8 +458,7 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             M-Pesa number{" "}
-                            {profile?.user?.membership?.role ===
-                              ImplementerRole.FELLOW && (
+                            {profile?.user?.membership?.role === ImplementerRole.FELLOW && (
                               <span className="text-shamiri-light-red">*</span>
                             )}
                           </FormLabel>
@@ -529,8 +486,7 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             M-Pesa name{" "}
-                            {profile?.user?.membership?.role ===
-                              ImplementerRole.FELLOW && (
+                            {profile?.user?.membership?.role === ImplementerRole.FELLOW && (
                               <span className="text-shamiri-light-red">*</span>
                             )}
                           </FormLabel>
@@ -560,9 +516,7 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             Bank name
-                            {showBankInfo && (
-                              <span className="text-shamiri-light-red">*</span>
-                            )}
+                            {showBankInfo && <span className="text-shamiri-light-red">*</span>}
                           </FormLabel>
                           <FormControl>
                             <Input {...field} disabled={isFellow} />
@@ -578,9 +532,7 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             Bank branch
-                            {showBankInfo && (
-                              <span className="text-shamiri-light-red">*</span>
-                            )}
+                            {showBankInfo && <span className="text-shamiri-light-red">*</span>}
                           </FormLabel>
                           <FormControl>
                             <Input {...field} disabled={isFellow} />
@@ -596,9 +548,7 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             Account number
-                            {showBankInfo && (
-                              <span className="text-shamiri-light-red">*</span>
-                            )}
+                            {showBankInfo && <span className="text-shamiri-light-red">*</span>}
                           </FormLabel>
                           <FormControl>
                             <Input {...field} disabled={isFellow} />
@@ -614,9 +564,7 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             Account name
-                            {showBankInfo && (
-                              <span className="text-shamiri-light-red">*</span>
-                            )}
+                            {showBankInfo && <span className="text-shamiri-light-red">*</span>}
                           </FormLabel>
                           <FormControl>
                             <Input {...field} disabled={isFellow} />
@@ -632,9 +580,7 @@ export function ProfileDialog({
                         <FormItem>
                           <FormLabel>
                             KRA PIN
-                            {showBankInfo && (
-                              <span className="text-shamiri-light-red">*</span>
-                            )}
+                            {showBankInfo && <span className="text-shamiri-light-red">*</span>}
                           </FormLabel>
                           <FormControl>
                             <Input {...field} disabled={isFellow} />

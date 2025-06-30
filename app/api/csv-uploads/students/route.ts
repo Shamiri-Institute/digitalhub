@@ -96,10 +96,7 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           console.error("Error uploading to database:", error);
-          return NextResponse.json(
-            { error: "Error uploading to database" },
-            { status: 500 },
-          );
+          return NextResponse.json({ error: "Error uploading to database" }, { status: 500 });
         }
       });
 

@@ -14,11 +14,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -35,13 +31,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { ImplementerRole, Prisma } from "@prisma/client";
 import { format } from "date-fns";
 import { ChevronsUpDown } from "lucide-react";
-import {
-  type Dispatch,
-  type SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import type { Session } from "./sessions-provider";
@@ -153,8 +143,7 @@ export function ScheduleNewSession({
       toast({
         variant: "destructive",
         title: "Submission Error",
-        description:
-          "Something went wrong while scheduling a session, please try again",
+        description: "Something went wrong while scheduling a session, please try again",
       });
     }
   };
@@ -169,10 +158,7 @@ export function ScheduleNewSession({
             render={({ field }) => (
               <FormItem className="space-y-2">
                 <FormLabel>Select a session type</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue />
@@ -187,10 +173,7 @@ export function ScheduleNewSession({
                         <SelectItem key={sessionType.id} value={sessionType.id}>
                           <span className="">
                             {sessionType.sessionType.charAt(0).toUpperCase() +
-                              sessionType.sessionType
-                                .slice(1)
-                                .replace("_", " ")
-                                .toLowerCase()}{" "}
+                              sessionType.sessionType.slice(1).replace("_", " ").toLowerCase()}{" "}
                           </span>
                           session - <span>{sessionType.sessionLabel}</span>
                         </SelectItem>
@@ -209,13 +192,9 @@ export function ScheduleNewSession({
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel>
-                    Select school{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    Select school <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue />
@@ -241,8 +220,7 @@ export function ScheduleNewSession({
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel>
-                    Enter venue{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    Enter venue <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <Input {...field} type="text" />
                   <FormMessage />
@@ -270,11 +248,7 @@ export function ScheduleNewSession({
                         )}
                       >
                         <Icons.calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                        {field.value ? (
-                          format(field.value, "dd/MM/yyyy")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
+                        {field.value ? format(field.value, "dd/MM/yyyy") : <span>Pick a date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
@@ -386,8 +360,7 @@ export function ScheduleNewSession({
                             disabled={form.formState.isSubmitting}
                             loading={form.formState.isSubmitting}
                             onClick={() => {
-                              const timeString =
-                                hour + ":" + minutes + " " + time;
+                              const timeString = hour + ":" + minutes + " " + time;
                               field.onChange(timeString);
                               setTimePicker(false);
                             }}

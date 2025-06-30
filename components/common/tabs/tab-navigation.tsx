@@ -8,11 +8,7 @@ export type TabType = {
   href: string;
 };
 
-export default function TabToggleNavigation({
-  options = [],
-}: {
-  options: TabType[];
-}) {
+export default function TabToggleNavigation({ options = [] }: { options: TabType[] }) {
   const pathname = usePathname();
   const router = useRouter();
 

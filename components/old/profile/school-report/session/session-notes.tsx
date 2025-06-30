@@ -22,25 +22,18 @@ export function SessionNotes({
   return (
     <div className="mb-12 flex flex-col">
       <div className="mt-4 flex items-center justify-between pl-2 pr-8">
-        <h3 className="ml-6 mt-4 text-sm font-semibold text-muted-foreground">
-          Added Notes
-        </h3>
+        <h3 className="ml-6 mt-4 text-sm font-semibold text-muted-foreground">Added Notes</h3>
       </div>
 
       {notes.length === 0 && (
         <div className="text-center">
-          <p className="my-4 ml-6 text-sm font-normal text-brand">
-            No notes added yet.
-          </p>
+          <p className="my-4 ml-6 text-sm font-normal text-brand">No notes added yet.</p>
         </div>
       )}
       {notes.length > 0 &&
         notes.map((note) => {
           return (
-            <div
-              key={note.id}
-              className="my-4 grid grid-cols-[3fr,7fr] gap-2 pl-2 pr-8"
-            >
+            <div key={note.id} className="my-4 grid grid-cols-[3fr,7fr] gap-2 pl-2 pr-8">
               <div>
                 <h3 className="ml-6 mt-4 text-sm font-semibold text-muted-foreground">
                   {note.supervisor.supervisorName}
@@ -48,9 +41,7 @@ export function SessionNotes({
               </div>
 
               <div>
-                <p className="mt-4 text-sm font-normal text-brand">
-                  {note.content}
-                </p>
+                <p className="mt-4 text-sm font-normal text-brand">{note.content}</p>
                 <div className="mt-5 flex gap-1.5">
                   <p className="text-brand-light-gray text-xs font-normal">
                     {formatInTimeZone(
@@ -79,10 +70,7 @@ export function SessionNotes({
           supervisorId={supervisorId}
           sessionId={sessionId}
         >
-          <Button
-            type="submit"
-            className="mt-4 w-full bg-shamiri-blue hover:bg-brand"
-          >
+          <Button type="submit" className="mt-4 w-full bg-shamiri-blue hover:bg-brand">
             Add Note
           </Button>
         </AddNoteDialog>

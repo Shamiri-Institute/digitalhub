@@ -34,11 +34,7 @@ export default function SupervisorFilterToggle({
           <SelectContent>
             {supervisors.map((supervisor) => {
               return (
-                <SelectItem
-                  key={supervisor.id}
-                  value={supervisor.id}
-                  className="text-sm"
-                >
+                <SelectItem key={supervisor.id} value={supervisor.id} className="text-sm">
                   {supervisor.supervisorName}
                 </SelectItem>
               );

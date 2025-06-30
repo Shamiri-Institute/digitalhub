@@ -39,9 +39,7 @@ export default function FellowSchoolsDatatableDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {state.role === "SUPERVISOR" ? (

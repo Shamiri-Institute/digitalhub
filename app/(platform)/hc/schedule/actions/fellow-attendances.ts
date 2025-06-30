@@ -5,11 +5,7 @@ import type { FellowAttendancesTableData } from "#/components/common/fellow/fell
 import { db } from "#/lib/db";
 import { Prisma } from "@prisma/client";
 
-export async function fetchSessionFellowAttendances({
-  sessionId,
-}: {
-  sessionId?: string;
-}) {
+export async function fetchSessionFellowAttendances({ sessionId }: { sessionId?: string }) {
   return await db.$queryRaw<FellowAttendancesTableData[]>`
   SELECT
     f.id AS "fellowId", f.fellow_name AS "fellowName", f.cell_number AS "cellNumber", 
@@ -38,11 +34,9 @@ export async function fetchDayFellowAttendances({
   end: Date;
   filters: Filters;
 }) {
-  const sessionTypes = Object.keys(filters.sessionTypes).filter(
-    (sessionType) => {
-      return filters.sessionTypes[sessionType];
-    },
-  );
+  const sessionTypes = Object.keys(filters.sessionTypes).filter((sessionType) => {
+    return filters.sessionTypes[sessionType];
+  });
 
   const statusTypes = Object.keys(filters.statusTypes).filter((status) => {
     return filters.statusTypes[status];

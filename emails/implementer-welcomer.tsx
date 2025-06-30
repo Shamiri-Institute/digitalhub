@@ -48,8 +48,7 @@ export default function implementerWelcomer({
               <Img src={SDH_HERO_IMAGE} alt="Dub" className="max-w-[500px]" />
             </Section>
             <Text className="text-sm leading-6 text-black">
-              Let&apos;s get you started on the key operations platform that
-              powers the{" "}
+              Let&apos;s get you started on the key operations platform that powers the{" "}
               <Link
                 href="https://www.shamiri.institute/the-shamiri-intervention"
                 className="font-medium text-sky-600 no-underline"
@@ -59,21 +58,17 @@ export default function implementerWelcomer({
               .
             </Text>
             <Text className="text-sm leading-6 text-black">
-              This email (<span className="font-medium">{email}</span>) is
-              marked as the contact email for your organization,{" "}
-              <span className="font-medium">{name}</span>.{" "}
+              This email (<span className="font-medium">{email}</span>) is marked as the contact
+              email for your organization, <span className="font-medium">{name}</span>.{" "}
               <Link
                 href="https://shamiridigitalhub.vercel.app" // TODO: update this link to be env specific (local, preview, prod)
                 className="font-medium text-sky-600 no-underline"
               >
                 Log into
               </Link>{" "}
-              the Shamiri Digital Hub to get started and further setup your
-              organization.
+              the Shamiri Digital Hub to get started and further setup your organization.
             </Text>
-            <Text className="text-sm font-light leading-6 text-gray-400">
-              Shamiri Technology
-            </Text>
+            <Text className="text-sm font-light leading-6 text-gray-400">Shamiri Technology</Text>
             <Footer email={email} />
           </Container>
         </Body>

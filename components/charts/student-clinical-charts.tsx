@@ -76,22 +76,19 @@ export default function HubStudentClinicalDataCharts({
   }, 0);
 
   const filteredFormatedSessions = possibleSessions.map((session) => {
-    const found = hubClinicalSessionsBySession.find(
-      (item) => item.session === session,
-    );
+    const found = hubClinicalSessionsBySession.find((item) => item.session === session);
     return {
       session,
       count: found ? found._count.session : 0,
     };
   });
 
-  const filteredByInitialReferredFrom =
-    hubClinicalSessionsByInitialReferredFrom.map((item) => {
-      return {
-        initialReferredFrom: item.initialReferredFrom,
-        count: item._count.initialReferredFrom,
-      };
-    });
+  const filteredByInitialReferredFrom = hubClinicalSessionsByInitialReferredFrom.map((item) => {
+    return {
+      initialReferredFrom: item.initialReferredFrom,
+      count: item._count.initialReferredFrom,
+    };
+  });
 
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-4">
@@ -107,11 +104,7 @@ export default function HubStudentClinicalDataCharts({
               outerRadius={100}
               innerRadius={70}
             >
-              <Label
-                position="center"
-                className="text-2xl font-semibold leading-8"
-                fill="#000"
-              >
+              <Label position="center" className="text-2xl font-semibold leading-8" fill="#000">
                 {clinicaldataValue.reduce((acc, d) => acc + d.value, 0)}
               </Label>
               {clinicaldataValue.map((entry, index) => (
@@ -154,19 +147,11 @@ export default function HubStudentClinicalDataCharts({
             <YAxis dataKey="count" />
             <Tooltip />
             <Bar dataKey="count" stackId="a" fill="#E92C9D" label="Count" />
-            <Bar
-              dataKey="supervisorName"
-              stackId="a"
-              fill="#ffdfea"
-              label="Supervisor"
-            />
+            <Bar dataKey="supervisorName" stackId="a" fill="#ffdfea" label="Supervisor" />
           </BarChart>
         </ResponsiveContainer>
       </ChartCard>
-      <ChartCard
-        title="Clinical cases by initial contact"
-        showCardFooter={false}
-      >
+      <ChartCard title="Clinical cases by initial contact" showCardFooter={false}>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart width={250} height={250}>
             <Pie
@@ -178,15 +163,8 @@ export default function HubStudentClinicalDataCharts({
               outerRadius={100}
               innerRadius={70}
             >
-              <Label
-                position="center"
-                className="text-2xl font-semibold leading-8"
-                fill="#000"
-              >
-                {filteredByInitialReferredFrom.reduce(
-                  (acc, d) => acc + d.count,
-                  0,
-                )}
+              <Label position="center" className="text-2xl font-semibold leading-8" fill="#000">
+                {filteredByInitialReferredFrom.reduce((acc, d) => acc + d.count, 0)}
               </Label>
               {filteredByInitialReferredFrom.map((entry, index) => (
                 <Cell

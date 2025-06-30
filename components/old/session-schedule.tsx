@@ -24,9 +24,7 @@ interface SessionEvent {
 }
 
 export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
-  const sortedSessions = (sessions || []).sort(
-    (a, b) => a.date.getTime() - b.date.getTime(),
-  );
+  const sortedSessions = (sessions || []).sort((a, b) => a.date.getTime() - b.date.getTime());
   const [anchorDate, setAnchorDate] = React.useState<Date>(new Date());
   const anchorWeekStart = startOfWeek(anchorDate);
   const anchorWeekEnd = endOfWeek(anchorDate);
@@ -39,9 +37,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
   const firstSessionStartHour = getHours(firstSessionStartDate);
   const startHourMinusBuffer = new Date(anchorDate);
   startHourMinusBuffer.setHours(firstSessionStartHour - calendarBuffer);
-  const lastSessionEndDate = new Date(
-    sessionsOnAnchorDate[sessionsOnAnchorDate.length - 1]?.date!,
-  );
+  const lastSessionEndDate = new Date(sessionsOnAnchorDate[sessionsOnAnchorDate.length - 1]?.date!);
   const lastSessionEndHour = getHours(lastSessionEndDate);
   const endHourPlusBuffer = new Date(anchorDate);
   endHourPlusBuffer.setHours(lastSessionEndHour + calendarBuffer);
@@ -69,14 +65,9 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
     sessions: CalendarSession[];
   }[] = scheduleHoursRange.map((hour) => {
     const sessionsInHour = sortedSessions
-      .filter(
-        (session) =>
-          isSameDay(session.date, anchorDate) &&
-          session.date.getHours() === hour,
-      )
+      .filter((session) => isSameDay(session.date, anchorDate) && session.date.getHours() === hour)
       .map((session) => {
-        const offsetFromStartHour =
-          hour - (firstSessionStartHour - calendarBuffer);
+        const offsetFromStartHour = hour - (firstSessionStartHour - calendarBuffer);
         return {
           ...session,
           offsetFromStartHour,
@@ -146,9 +137,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
         </div>
         <div className="mt-2 grid grid-cols-7 gap-1 px-1 text-center">
           {daysOfWeek.map(({ date, dayOfMonth, dayName, isAnchorDay }) => {
-            const hasSessions = sortedSessions.some((session) =>
-              isSameDay(session.date, date),
-            );
+            const hasSessions = sortedSessions.some((session) => isSameDay(session.date, date));
             return (
               <div
                 key={dayOfMonth}
@@ -191,9 +180,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
               key={hour}
               className="absolute z-20 ml-[20%] flex gap-2 lg:ml-[12.5%] lg:gap-6"
               style={{
-                top: `${
-                  sessionOffsetFromHour * (calendarHourHeight + calendarHourGap)
-                }px`,
+                top: `${sessionOffsetFromHour * (calendarHourHeight + calendarHourGap)}px`,
               }}
             >
               {sessions.map((session) => {
@@ -204,15 +191,10 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
                     style={{ height: calendarHourHeight * 0.9 }}
                   >
                     <div className="h-full w-fit cursor-pointer rounded-md bg-active-card px-2 py-1 pb-2 text-white transition-all active:scale-90 lg:px-4 lg:py-2">
-                      <h2 className="text-sm font-semibold md:text-base">
-                        {session.title}
-                      </h2>
+                      <h2 className="text-sm font-semibold md:text-base">{session.title}</h2>
                       <span className="text-xs md:text-sm">
                         {format(session.date, "h:mm a")} -{" "}
-                        {format(
-                          addHours(session.date, session.duration),
-                          "h:mm a",
-                        )}
+                        {format(addHours(session.date, session.duration), "h:mm a")}
                       </span>
                     </div>
                   </Link>
@@ -234,10 +216,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
           </div>
         ))}
         {!scheduleHoursRange.length && (
-          <div
-            className="flex justify-center"
-            style={{ height: 40, gap: calendarHourGap }}
-          >
+          <div className="flex justify-center" style={{ height: 40, gap: calendarHourGap }}>
             <span className="text-center text-gray-400">No sessions found</span>
           </div>
         )}

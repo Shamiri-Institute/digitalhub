@@ -2,12 +2,7 @@ import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { SubmitComplaintSchema } from "#/components/common/schemas";
 import { Avatar, AvatarFallback } from "#/components/ui/avatar";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -74,8 +69,7 @@ export default function SubmitComplaint({
     const response = await submitFellowComplaint(data);
     if (!response.success) {
       toast({
-        description:
-          response.message ?? "Something went wrong, please try again",
+        description: response.message ?? "Something went wrong, please try again",
       });
       return;
     }
@@ -103,8 +97,7 @@ export default function SubmitComplaint({
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel>
-                    Select complaint{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    Select complaint <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <Select onValueChange={field.onChange}>
                     <FormControl>
@@ -131,11 +124,7 @@ export default function SubmitComplaint({
                 <FormItem className="space-y-2">
                   <FormLabel>Additional comments</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder=""
-                      className="resize-none"
-                      {...field}
-                    />
+                    <Textarea placeholder="" className="resize-none" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -166,10 +155,7 @@ export default function SubmitComplaint({
           <div className="flex flex-col divide-y">
             {complaints?.map((complaint) => {
               return (
-                <div
-                  key={complaint.id}
-                  className="flex flex-col space-y-2 py-3"
-                >
+                <div key={complaint.id} className="flex flex-col space-y-2 py-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Avatar className="h-10 w-10">
@@ -184,9 +170,7 @@ export default function SubmitComplaint({
                     </span>
                   </div>
                   <span>{complaint.complaint}</span>
-                  <span className="text-muted-foreground">
-                    {complaint.comments}
-                  </span>
+                  <span className="text-muted-foreground">{complaint.comments}</span>
                 </div>
               );
             })}

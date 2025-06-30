@@ -4,12 +4,7 @@ import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-in
 import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import { toast } from "#/components/ui/use-toast";
 import { useContext, useState } from "react";
 
@@ -24,22 +19,17 @@ export function UndoDropoutSchool() {
       const response = await undoDropoutSchool(context.school.id);
       if (!response.success) {
         toast({
-          description:
-            response.message ?? "Something went wrong, please try again",
+          description: response.message ?? "Something went wrong, please try again",
         });
         setLoading(false);
         return;
       }
 
       const copiedSchools = [...schoolsContext.schools];
-      const index = copiedSchools.findIndex(
-        (_school) => _school.id === context.school?.id,
-      );
+      const index = copiedSchools.findIndex((_school) => _school.id === context.school?.id);
       if (index !== -1) {
-        copiedSchools[index]!.dropoutReason =
-          response.data?.dropoutReason ?? null;
-        copiedSchools[index]!.droppedOutAt =
-          response.data?.droppedOutAt ?? null;
+        copiedSchools[index]!.dropoutReason = response.data?.dropoutReason ?? null;
+        copiedSchools[index]!.droppedOutAt = response.data?.droppedOutAt ?? null;
         copiedSchools[index]!.droppedOut = response.data?.droppedOut ?? false;
         schoolsContext.setSchools(copiedSchools);
       }
@@ -50,10 +40,7 @@ export function UndoDropoutSchool() {
   }
 
   return (
-    <Dialog
-      open={context.undoDropOutDialog}
-      onOpenChange={context.setUndoDropOutDialog}
-    >
+    <Dialog open={context.undoDropOutDialog} onOpenChange={context.setUndoDropOutDialog}>
       <DialogContent className="p-5 text-base font-medium leading-6">
         <DialogHeader>
           <h2>Undo school dropout?</h2>

@@ -21,10 +21,7 @@ interface OnboardUserOutput {
 export class InviterNotFoundError extends Error {}
 export class implementerNotFoundError extends Error {}
 
-export class OnboardUserCommand extends Command<
-  OnboardUserInput,
-  OnboardUserOutput
-> {
+export class OnboardUserCommand extends Command<OnboardUserInput, OnboardUserOutput> {
   private db: Database;
 
   constructor(db: Database = database) {
@@ -54,9 +51,7 @@ export class OnboardUserCommand extends Command<
         name: validInput.name,
       });
 
-      const implementer = await new ImplementerModel(tx).findUnique(
-        validInput.implementerId,
-      );
+      const implementer = await new ImplementerModel(tx).findUnique(validInput.implementerId);
       if (!implementer) {
         throw new implementerNotFoundError();
       }

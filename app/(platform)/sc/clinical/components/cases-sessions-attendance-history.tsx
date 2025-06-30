@@ -3,12 +3,7 @@ import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import { attendanceColumns } from "#/app/(platform)/sc/clinical/components/columns";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTrigger,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "#/components/ui/dialog";
 import { useState } from "react";
 
 export default function ClinicalCaseSessionsAttendanceHistory({

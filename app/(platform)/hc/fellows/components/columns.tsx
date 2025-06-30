@@ -6,11 +6,7 @@ import MainFellowsDatatableMenu from "#/app/(platform)/hc/fellows/components/mai
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "#/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import type { Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
@@ -121,10 +117,7 @@ export const columns = (
         try {
           return (
             row.original.cellNumber &&
-            parsePhoneNumberWithError(
-              row.original.cellNumber,
-              "KE",
-            ).formatNational()
+            parsePhoneNumberWithError(row.original.cellNumber, "KE").formatNational()
           );
         } catch (error) {
           if (error instanceof ParseError) {
@@ -147,7 +140,7 @@ export const columns = (
               )
             );
           }
-            throw error;
+          throw error;
         }
       },
     },

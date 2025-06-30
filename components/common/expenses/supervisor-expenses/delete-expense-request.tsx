@@ -101,15 +101,10 @@ export default function HCDeleteExpenseRequest({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Type your name to confirm{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Type your name to confirm <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Input placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

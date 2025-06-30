@@ -16,13 +16,8 @@ export default async function ClinicalPage() {
   const cases = await getClinicalCasesInHub();
   const casesData = await getClinicalCasesData();
   const allClinicalLeadCases = await getClinicalCasesCreatedByClinicalLead();
-  const {
-    schools,
-    fellowsInProject,
-    supervisorsInHub,
-    currentClinicalLeadId,
-    hubs,
-  } = await getSchoolsInClinicalLeadHub();
+  const { schools, fellowsInProject, supervisorsInHub, currentClinicalLeadId, hubs } =
+    await getSchoolsInClinicalLeadHub();
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">

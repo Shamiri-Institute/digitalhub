@@ -36,8 +36,7 @@ export const columns = (state: {
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -92,9 +91,7 @@ export const columns = (state: {
                 <DropdownMenuContent>
                   <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
                     {schools.slice(1).map((school, index) => {
-                      return (
-                        <span key={index.toString()}>{school.schoolName}</span>
-                      );
+                      return <span key={index.toString()}>{school.schoolName}</span>;
                     })}
                   </div>
                 </DropdownMenuContent>
@@ -140,9 +137,7 @@ export const columns = (state: {
     header: "No. of fellows",
     id: "No. of fellows",
     cell: ({ row }) => {
-      const activeFellows = row.original.fellows.filter(
-        (fellow) => !fellow.droppedOut,
-      );
+      const activeFellows = row.original.fellows.filter((fellow) => !fellow.droppedOut);
       return activeFellows.length + "/" + row.original.fellows.length;
     },
   },
@@ -150,10 +145,7 @@ export const columns = (state: {
     header: "Phone Number",
     id: "Phone number",
     accessorFn: (row) => {
-      return (
-        row.cellNumber &&
-        parsePhoneNumber(row.cellNumber, "KE").formatNational()
-      );
+      return row.cellNumber && parsePhoneNumber(row.cellNumber, "KE").formatNational();
     },
   },
   {
@@ -163,9 +155,7 @@ export const columns = (state: {
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <SupervisorsDataTableMenu state={state} supervisor={row.original} />
-    ),
+    cell: ({ row }) => <SupervisorsDataTableMenu state={state} supervisor={row.original} />,
     enableHiding: false,
   },
 ];

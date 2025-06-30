@@ -55,9 +55,7 @@ export default function ConfirmReversalFellows({
       toast({
         variant: "destructive",
         title: "Submission error",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -93,25 +91,17 @@ export default function ConfirmReversalFellows({
 
           <div className="px-1">
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-2"
-              >
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Type your name to confirm{" "}
-                        <span className="text-shamiri-light-red">*</span>
+                        Type your name to confirm <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder=""
-                          className="resize-none"
-                          {...field}
-                        />
+                        <Input placeholder="" className="resize-none" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

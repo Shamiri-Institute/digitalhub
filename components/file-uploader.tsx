@@ -123,9 +123,7 @@ export default function FileUploader({
         </Button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader className="text-xl font-semibold leading-7">
-          Upload {type} csv
-        </DialogHeader>
+        <DialogHeader className="text-xl font-semibold leading-7">Upload {type} csv</DialogHeader>
         <FileUploaderWithDrop
           label="Upload csv file"
           onChange={handleFileUpload}
@@ -186,9 +184,7 @@ export function FileUploaderWithDrop({
     let files: any;
 
     if (e.dataTransfer.items) {
-      files = Array.from(e.dataTransfer.items).map((item: any) =>
-        item.getAsFile(),
-      );
+      files = Array.from(e.dataTransfer.items).map((item: any) => item.getAsFile());
     } else {
       files = Array.from(e.dataTransfer.files);
     }
@@ -196,9 +192,7 @@ export function FileUploaderWithDrop({
     // check allowed file types and filter out
     if (accept && accept !== "*") {
       const allowedTypes = accept.split(",").map((type) => type.substring(1));
-      files = files.filter((file: any) =>
-        allowedTypes.includes(file.name.split(".").pop()),
-      );
+      files = files.filter((file: any) => allowedTypes.includes(file.name.split(".").pop()));
     }
 
     if (files?.length) {
@@ -233,15 +227,11 @@ export function FileUploaderWithDrop({
       >
         <div className=" flex w-full items-center space-x-6">
           <div className="cursor-pointer rounded-lg border border-gray-200 p-2">
-            <span className="text-normal cursor-pointer text-center">
-              {"Select Files"}
-            </span>
+            <span className="text-normal cursor-pointer text-center">{"Select Files"}</span>
           </div>
 
           <div className="flex space-x-2">
-            {files?.length === 0 && (
-              <Icons.uploadCloudIcon className="h-6 w-6" />
-            )}
+            {files?.length === 0 && <Icons.uploadCloudIcon className="h-6 w-6" />}
             <span className="text-normal text-center">Drop files here...</span>
             <input type="file" accept={accept} hidden onChange={handleUpload} />
           </div>

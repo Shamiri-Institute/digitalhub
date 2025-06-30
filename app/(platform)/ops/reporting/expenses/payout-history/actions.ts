@@ -22,9 +22,7 @@ export type OpsHubsPayoutHistoryType = {
   confirmedAt: Date | null;
 };
 
-export async function loadOpsHubsPayoutHistory(): Promise<
-  OpsHubsPayoutHistoryType[]
-> {
+export async function loadOpsHubsPayoutHistory(): Promise<OpsHubsPayoutHistoryType[]> {
   const opsUser = await currentOpsUser();
 
   if (!opsUser) {
@@ -159,32 +157,28 @@ export async function triggerPayoutAction() {
       if (fellowAttendanceIdsToProcess.length === 0) {
         return {
           success: true,
-          message:
-            "No payout statements found to process for the eligible attendances",
+          message: "No payout statements found to process for the eligible attendances",
         };
       }
 
-      const payoutStatementsUpdateResult = await tx.payoutStatements.updateMany(
-        {
-          where: {
-            fellowAttendanceId: { in: fellowAttendanceIdsToProcess },
-            executedAt: null,
-          },
-          data: {
-            executedAt: currentTime,
-          },
+      const payoutStatementsUpdateResult = await tx.payoutStatements.updateMany({
+        where: {
+          fellowAttendanceId: { in: fellowAttendanceIdsToProcess },
+          executedAt: null,
         },
-      );
+        data: {
+          executedAt: currentTime,
+        },
+      });
 
-      const fellowAttendancesUpdateResult =
-        await tx.fellowAttendance.updateMany({
-          where: {
-            id: { in: fellowAttendanceIdsToProcess },
-          },
-          data: {
-            processedAt: currentTime,
-          },
-        });
+      const fellowAttendancesUpdateResult = await tx.fellowAttendance.updateMany({
+        where: {
+          id: { in: fellowAttendanceIdsToProcess },
+        },
+        data: {
+          processedAt: currentTime,
+        },
+      });
 
       const processedCount = fellowAttendancesUpdateResult.count;
       const payoutStatementsCount = payoutStatementsUpdateResult.count;

@@ -36,10 +36,7 @@ export const fellowSchoolsColumns = ({
     id: "checkbox",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -92,9 +89,7 @@ export const fellowSchoolsColumns = ({
     id: "Sessions Attended",
     header: "Sessions Attended",
     cell: ({ row }) => {
-      const attendedSessions = row.original.attendances.filter(
-        (attendance) => attendance.attended,
-      );
+      const attendedSessions = row.original.attendances.filter((attendance) => attendance.attended);
       const groupSessions = row.original.groups.reduce((total, group) => {
         return total + group.school.interventionSessions.length;
       }, 0);
@@ -153,9 +148,7 @@ export const fellowSchoolsColumns = ({
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <FellowsTableDropdown fellowRow={row.original} state={state} />
-    ),
+    cell: ({ row }) => <FellowsTableDropdown fellowRow={row.original} state={state} />,
     enableHiding: false,
   },
 ];
@@ -177,8 +170,7 @@ export const subColumns = ({
       <Checkbox
         disabled={true}
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -228,7 +220,7 @@ export const subColumns = ({
           format(upcomingSessions[0]!.sessionDate, "dd MMM yyyy")
         );
       }
-        return null;
+      return null;
     },
   },
   {
@@ -244,9 +236,7 @@ export const subColumns = ({
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <FellowSchoolDatatableDropdownMenu group={row.original} state={state} />
-    ),
+    cell: ({ row }) => <FellowSchoolDatatableDropdownMenu group={row.original} state={state} />,
     enableHiding: false,
   },
 ];
@@ -259,8 +249,7 @@ export const studentsTableColumns: ColumnDef<
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"

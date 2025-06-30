@@ -6,10 +6,7 @@ import {
   sessionTypeFilterOptions,
   statusFilterOptions,
 } from "#/app/(platform)/hc/schools/context/schools-filters-context";
-import {
-  DropdownMenuCheckboxItem,
-  DropdownMenuLabel,
-} from "#/components/ui/dropdown-menu";
+import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -70,11 +67,7 @@ export default function SchoolsFilterToggle({
             <SelectContent>
               {schools.map((school) => {
                 return (
-                  <SelectItem
-                    key={school.id}
-                    value={school.id}
-                    className="text-sm"
-                  >
+                  <SelectItem key={school.id} value={school.id} className="text-sm">
                     {school.schoolName}
                   </SelectItem>
                 );
@@ -125,9 +118,7 @@ export default function SchoolsFilterToggle({
           </div>
           <div>
             <DropdownMenuLabel>
-              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-                Status
-              </span>
+              <span className="text-xs font-medium uppercase text-shamiri-text-grey">Status</span>
             </DropdownMenuLabel>
             {Object.keys(SessionStatus).map((status) => {
               return (

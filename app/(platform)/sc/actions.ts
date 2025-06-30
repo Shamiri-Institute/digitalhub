@@ -120,8 +120,8 @@ export async function loadFellowsData() {
     dateOfBirth: fellow.dateOfBirth ?? null,
     supervisorId: fellow.supervisorId,
     supervisorName:
-      supervisors.find((supervisor) => supervisor.id === fellow.supervisorId)
-        ?.supervisorName ?? null,
+      supervisors.find((supervisor) => supervisor.id === fellow.supervisorId)?.supervisorName ??
+      null,
     id: fellow.id,
     weeklyFellowRatings: fellow.weeklyFellowRatings,
     supervisors,
@@ -150,10 +150,7 @@ export async function loadFellowsData() {
     }),
     complaints: fellow.fellowComplaints,
     averageRating:
-      Number(
-        fellowAverageRatings.find((rating) => rating.id === fellow.id)
-          ?.averageRating,
-      ) ?? 0,
+      Number(fellowAverageRatings.find((rating) => rating.id === fellow.id)?.averageRating) ?? 0,
   }));
 }
 
@@ -277,9 +274,7 @@ export async function dropoutFellowWithReason(
   }
 }
 
-export async function updateSupervisorProfile(
-  formData: z.infer<typeof SupervisorSchema>,
-) {
+export async function updateSupervisorProfile(formData: z.infer<typeof SupervisorSchema>) {
   try {
     const user = await currentSupervisor();
     if (!user?.id) {

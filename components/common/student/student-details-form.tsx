@@ -6,12 +6,7 @@ import type { SchoolStudentTableData } from "#/components/common/student/columns
 import { StudentDetailsSchema } from "#/components/common/student/schemas";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -111,14 +106,9 @@ export default function StudentDetailsForm({
     }
   }, [transferDialog]);
 
-  const checkMatchingAdmissions = async (
-    values: z.infer<typeof StudentDetailsSchema>,
-  ) => {
+  const checkMatchingAdmissions = async (values: z.infer<typeof StudentDetailsSchema>) => {
     if (schoolId !== null && values.admissionNumber !== undefined) {
-      const students = await checkExistingStudents(
-        values.admissionNumber,
-        schoolId,
-      );
+      const students = await checkExistingStudents(values.admissionNumber, schoolId);
       if (students.length > 0) {
         setMatchedStudents(students);
         setTransferDialog(true);
@@ -128,8 +118,7 @@ export default function StudentDetailsForm({
     } else {
       toast({
         variant: "destructive",
-        description:
-          "Something went wrong during submission, school not found.",
+        description: "Something went wrong during submission, school not found.",
       });
     }
   };
@@ -146,16 +135,12 @@ export default function StudentDetailsForm({
       form.getValues("assignedGroupId") !== undefined
     ) {
       const data = matchedStudents[transferOption]!;
-      const response = await transferStudentToGroup(
-        data.id,
-        form.getValues("assignedGroupId")!,
-      );
+      const response = await transferStudentToGroup(data.id, form.getValues("assignedGroupId")!);
       if (!response.success) {
         toast({
           variant: "destructive",
           description:
-            response.message ??
-            "Something went wrong during submission, please try again",
+            response.message ?? "Something went wrong during submission, please try again",
         });
         return;
       }
@@ -177,9 +162,7 @@ export default function StudentDetailsForm({
     const response = await submitStudentDetails(values);
     if (!response.success) {
       toast({
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -199,17 +182,13 @@ export default function StudentDetailsForm({
         <DialogContent>
           <DialogHeader>
             <h2 className="text-xl font-bold">
-              {mode === "edit"
-                ? "Edit student information"
-                : "Add student to group"}
+              {mode === "edit" ? "Edit student information" : "Add student to group"}
             </h2>
           </DialogHeader>
           {children}
           <Form {...form}>
             <form
-              onSubmit={form.handleSubmit(
-                mode === "edit" ? onSubmit : checkMatchingAdmissions,
-              )}
+              onSubmit={form.handleSubmit(mode === "edit" ? onSubmit : checkMatchingAdmissions)}
             >
               <div className="space-y-6">
                 <div className="flex flex-col">
@@ -220,8 +199,7 @@ export default function StudentDetailsForm({
                       render={({ field }) => (
                         <FormItem className="col-span-2">
                           <FormLabel>
-                            Student name{" "}
-                            <span className="text-shamiri-light-red">*</span>
+                            Student name <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
                             <Input {...field} />
@@ -249,8 +227,7 @@ export default function StudentDetailsForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Gender{" "}
-                            <span className="text-shamiri-light-red">*</span>
+                            Gender <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
@@ -280,8 +257,7 @@ export default function StudentDetailsForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Year of birth{" "}
-                            <span className="text-shamiri-light-red">*</span>
+                            Year of birth <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -303,8 +279,7 @@ export default function StudentDetailsForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Admission number{" "}
-                            <span className="text-shamiri-light-red">*</span>
+                            Admission number <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
                             <Input {...field} />
@@ -319,8 +294,7 @@ export default function StudentDetailsForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Class/form{" "}
-                            <span className="text-shamiri-light-red">*</span>
+                            Class/form <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
                             <Input {...field} type="text" />
@@ -335,8 +309,7 @@ export default function StudentDetailsForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Stream{" "}
-                            <span className="text-shamiri-light-red">*</span>
+                            Stream <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
                             <Input {...field} />
@@ -390,16 +363,10 @@ export default function StudentDetailsForm({
           </DialogHeader>
           <DialogAlertWidget>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="capitalize">
-                {form.getValues("studentName")?.toLowerCase()}
-              </span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
+              <span className="capitalize">{form.getValues("studentName")?.toLowerCase()}</span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
               <span>Admission no. {form.getValues("admissionNumber")}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
               <div className="flex gap-1">
                 <span>Form {form.getValues("form")}</span>
                 <span>{form.getValues("stream")}</span>
@@ -409,8 +376,8 @@ export default function StudentDetailsForm({
           <div className="flex flex-col gap-1">
             <span>Duplicate admission number found.</span>
             <span className="text-shamiri-text-dark-grey">
-              Please select one of the students below if their information
-              matches one of the options
+              Please select one of the students below if their information matches one of the
+              options
             </span>
           </div>
           <RadioGroup
@@ -432,23 +399,15 @@ export default function StudentDetailsForm({
                     className="h-5 w-5 rounded border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue data-[state=checked]:text-white"
                   />
                   <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-                    <span className="capitalize">
-                      {student.studentName?.toLowerCase()}
-                    </span>
-                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">
-                      {""}
-                    </span>
+                    <span className="capitalize">{student.studentName?.toLowerCase()}</span>
+                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">{""}</span>
                     <span>Admission no. {student.admissionNumber}</span>
-                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">
-                      {""}
-                    </span>
+                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">{""}</span>
                     <div className="flex gap-1">
                       <span>Form {student.form}</span>
                       <span>{student.stream}</span>
                     </div>
-                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">
-                      {""}
-                    </span>
+                    <span className="hidden h-1 w-1 rounded-full bg-gray-900 lg:block">{""}</span>
                     <span>Group {student.assignedGroup?.groupName}</span>
                   </div>
                 </label>

@@ -33,8 +33,7 @@ export const columns: ColumnDef<SupervisorsData>[] = [
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -88,9 +87,7 @@ export const columns: ColumnDef<SupervisorsData>[] = [
                 <DropdownMenuContent>
                   <div className="flex flex-col gap-y-2 px-2 py-1 text-sm">
                     {schools.slice(1).map((school, index) => {
-                      return (
-                        <span key={index.toString()}>{school.schoolName}</span>
-                      );
+                      return <span key={index.toString()}>{school.schoolName}</span>;
                     })}
                   </div>
                 </DropdownMenuContent>
@@ -165,9 +162,7 @@ export const columns: ColumnDef<SupervisorsData>[] = [
     header: "No. of fellows",
     id: "No. of fellows",
     cell: ({ row }) => {
-      const activeFellows = row.original.fellows.filter(
-        (fellow) => !fellow.droppedOut,
-      );
+      const activeFellows = row.original.fellows.filter((fellow) => !fellow.droppedOut);
       return activeFellows.length + "/" + row.original.fellows.length;
     },
   },
@@ -175,10 +170,7 @@ export const columns: ColumnDef<SupervisorsData>[] = [
     header: "Phone Number",
     id: "Phone number",
     accessorFn: (row) => {
-      return (
-        row.cellNumber &&
-        parsePhoneNumber(row.cellNumber, "KE").formatNational()
-      );
+      return row.cellNumber && parsePhoneNumber(row.cellNumber, "KE").formatNational();
     },
   },
   {
@@ -198,9 +190,7 @@ export const columns: ColumnDef<SupervisorsData>[] = [
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <AllSupervisorsDataTableMenu supervisor={row.original} />
-    ),
+    cell: ({ row }) => <AllSupervisorsDataTableMenu supervisor={row.original} />,
     enableHiding: false,
   },
 ];

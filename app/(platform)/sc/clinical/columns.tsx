@@ -15,10 +15,7 @@ export const columns: ColumnDef<ClinicalCases>[] = [
     id: "button",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -56,9 +53,7 @@ export const columns: ColumnDef<ClinicalCases>[] = [
       return (
         <div className="flex items-center gap-1">
           <span>{row.original.pseudonym}</span>
-          {flagged ? (
-            <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
-          ) : null}
+          {flagged ? <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" /> : null}
         </div>
       );
     },
@@ -66,8 +61,7 @@ export const columns: ColumnDef<ClinicalCases>[] = [
   {
     accessorKey: "dateAdded",
     header: "Date added",
-    cell: ({ row }) =>
-      format(new Date(row.original.dateAdded || ""), "dd MMM yyyy"),
+    cell: ({ row }) => format(new Date(row.original.dateAdded || ""), "dd MMM yyyy"),
   },
   {
     accessorKey: "caseStatus",

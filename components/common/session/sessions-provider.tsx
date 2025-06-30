@@ -82,21 +82,13 @@ export function SessionsProvider({
   };
 
   return (
-    <SessionsContext.Provider
-      value={{ sessions, loading, setSessions, refresh }}
-    >
+    <SessionsContext.Provider value={{ sessions, loading, setSessions, refresh }}>
       {children}
     </SessionsContext.Provider>
   );
 }
 
-export function useSessions({
-  date,
-  hour,
-}: {
-  date?: CalendarDate;
-  hour?: number;
-}) {
+export function useSessions({ date, hour }: { date?: CalendarDate; hour?: number }) {
   const context = useContext(SessionsContext);
   if (context === undefined) {
     throw new Error("useSessions must be used within a SessionsProvider");

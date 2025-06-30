@@ -88,11 +88,7 @@ export default function FellowFilesUploader({
 
       <Separator />
       <DialogFooter className="flex justify-end">
-        <Button
-          className="text-shamiri-new-blue"
-          variant="ghost"
-          onClick={() => onClose(false)}
-        >
+        <Button className="text-shamiri-new-blue" variant="ghost" onClick={() => onClose(false)}>
           Cancel
         </Button>
         <Button
@@ -137,9 +133,7 @@ function FileUploaderWithDrop({
     let files: any;
 
     if (e.dataTransfer.items) {
-      files = Array.from(e.dataTransfer.items).map((item: any) =>
-        item.getAsFile(),
-      );
+      files = Array.from(e.dataTransfer.items).map((item: any) => item.getAsFile());
     } else {
       files = Array.from(e.dataTransfer.files);
     }
@@ -176,15 +170,11 @@ function FileUploaderWithDrop({
       >
         <div className=" flex w-full items-center space-x-6">
           <div className="cursor-pointer rounded-lg border border-gray-200 p-2">
-            <span className="text-normal cursor-pointer text-center">
-              {"Select Files"}
-            </span>
+            <span className="text-normal cursor-pointer text-center">{"Select Files"}</span>
           </div>
 
           <div className="flex space-x-2">
-            {files?.length === 0 && (
-              <Icons.uploadCloudIcon className="h-6 w-6" />
-            )}
+            {files?.length === 0 && <Icons.uploadCloudIcon className="h-6 w-6" />}
             <span className="text-normal text-center">Drop files here...</span>
             <input type="file" accept={accept} hidden onChange={handleUpload} />
           </div>

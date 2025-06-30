@@ -53,8 +53,7 @@ export default function ApproveRejectFellowComplaint({
   const [open, setDialogOpen] = useState<boolean>(false);
   const [rejectDialogOpen, setRejectDialogOpen] = useState<boolean>(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState<boolean>(false);
-  const [formData, setFormData] =
-    useState<z.infer<typeof ReportFellowComplaintSchema>>();
+  const [formData, setFormData] = useState<z.infer<typeof ReportFellowComplaintSchema>>();
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"reject" | "accept" | "none">("none");
 
@@ -113,8 +112,7 @@ export default function ApproveRejectFellowComplaint({
 
       if (!response.success) {
         toast({
-          description:
-            response.message ?? "Something went wrong, please try again",
+          description: response.message ?? "Something went wrong, please try again",
         });
         return;
       }
@@ -153,8 +151,7 @@ export default function ApproveRejectFellowComplaint({
         });
         if (!response.success) {
           toast({
-            description:
-              response.message ?? "Something went wrong, please try again",
+            description: response.message ?? "Something went wrong, please try again",
           });
           return;
         }
@@ -207,9 +204,7 @@ export default function ApproveRejectFellowComplaint({
 
           <DialogAlertWidget
             label={`${complaint.status}`}
-            variant={
-              complaint.status === "REJECTED" ? "destructive" : "primary"
-            }
+            variant={complaint.status === "REJECTED" ? "destructive" : "primary"}
           />
           <div className="min-w-max overflow-x-auto overflow-y-scroll px-1">
             <form className="space-y-2" onSubmit={form.handleSubmit(onSubmit)}>
@@ -244,15 +239,10 @@ export default function ApproveRejectFellowComplaint({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          M-Pesa name{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          M-Pesa name <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder=""
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input placeholder="" className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -266,15 +256,10 @@ export default function ApproveRejectFellowComplaint({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          M-Pesa number{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          M-Pesa number <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder=""
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input placeholder="" className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -290,8 +275,7 @@ export default function ApproveRejectFellowComplaint({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          No. of training sessions{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          No. of training sessions <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -338,8 +322,7 @@ export default function ApproveRejectFellowComplaint({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          No. of pre sessions{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          No. of pre sessions <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -361,8 +344,7 @@ export default function ApproveRejectFellowComplaint({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          No. of main sessions{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          No. of main sessions <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -410,8 +392,7 @@ export default function ApproveRejectFellowComplaint({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          Paid amount (KES){" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Paid amount (KES) <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -438,11 +419,7 @@ export default function ApproveRejectFellowComplaint({
                         <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder=""
-                          className="w-full flex-1"
-                          {...field}
-                        />
+                        <Input placeholder="" className="w-full flex-1" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -452,8 +429,7 @@ export default function ApproveRejectFellowComplaint({
 
               <div>
                 <div>
-                  Upload Mpesa statement{" "}
-                  <span className="text-shamiri-light-red">*</span>
+                  Upload Mpesa statement <span className="text-shamiri-light-red">*</span>
                 </div>
                 <FileUploaderWithDrop
                   label="Upload csv file"
@@ -505,8 +481,7 @@ export default function ApproveRejectFellowComplaint({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Additional comments{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Additional comments <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
                       <Textarea
@@ -579,8 +554,7 @@ export default function ApproveRejectFellowComplaint({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Reason for rejection{" "}
-                  <span className="text-shamiri-light-red">*</span>
+                  Reason for rejection <span className="text-shamiri-light-red">*</span>
                 </FormLabel>
                 <FormControl>
                   <Textarea
@@ -647,8 +621,7 @@ export default function ApproveRejectFellowComplaint({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>
-                  Reason for acceptance{" "}
-                  <span className="text-shamiri-light-red">*</span>
+                  Reason for acceptance <span className="text-shamiri-light-red">*</span>
                 </FormLabel>
                 <FormControl>
                   <Textarea

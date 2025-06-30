@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  columns,
-  type SchoolGroupDataTableData,
-} from "#/components/common/group/columns";
+import { columns, type SchoolGroupDataTableData } from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
@@ -32,9 +29,7 @@ export default function GroupsDatatableSkeleton({
         header: renderSkeleton ? column : "",
         id: column,
         cell: () => {
-          return renderSkeleton ? (
-            <Skeleton className="h-5 w-full bg-gray-200" />
-          ) : null;
+          return renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null;
         },
       };
     });

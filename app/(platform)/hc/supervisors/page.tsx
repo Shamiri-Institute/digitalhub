@@ -57,9 +57,7 @@ export default async function SupervisorsPage() {
         </div>
 
         <Suspense fallback={<GraphLoadingIndicator />}>
-          <SupervisorChartsWrapper
-            coordinator={{ assignedHubId: coordinator?.assignedHubId }}
-          />
+          <SupervisorChartsWrapper coordinator={{ assignedHubId: coordinator?.assignedHubId }} />
         </Suspense>
 
         <Separator />

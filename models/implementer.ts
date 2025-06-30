@@ -3,12 +3,8 @@ import type { Prisma } from "@prisma/client";
 import type { db } from "#/lib/db";
 import { Model } from "#/models";
 
-type implementerCreateOutput = Prisma.PromiseReturnType<
-  typeof db.implementer.create
->;
-type implementerFindUniqueOutput = Prisma.PromiseReturnType<
-  typeof db.implementer.findUnique
->;
+type implementerCreateOutput = Prisma.PromiseReturnType<typeof db.implementer.create>;
+type implementerFindUniqueOutput = Prisma.PromiseReturnType<typeof db.implementer.findUnique>;
 
 export const implementerPrefix = "impl";
 
@@ -21,9 +17,7 @@ export class ImplementerModel extends Model {
     });
   }
 
-  async create(
-    data: Omit<Prisma.ImplementerCreateInput, "id">,
-  ): Promise<implementerCreateOutput> {
+  async create(data: Omit<Prisma.ImplementerCreateInput, "id">): Promise<implementerCreateOutput> {
     return await this.cursor.implementer.create({
       data: {
         ...data,

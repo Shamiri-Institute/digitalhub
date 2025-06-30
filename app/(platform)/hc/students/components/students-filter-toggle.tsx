@@ -1,10 +1,7 @@
 "use client";
 
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
-import {
-  DropdownMenuCheckboxItem,
-  DropdownMenuLabel,
-} from "#/components/ui/dropdown-menu";
+import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -22,8 +19,9 @@ export default function StudentsFilterToggle({
   students: Prisma.StudentGetPayload<{}>[];
 }) {
   const [open, setOpen] = useState(false);
-  const [selectedStudents, setSelectedStudents] =
-    useState<Prisma.StudentGetPayload<{}> | null>(null);
+  const [selectedStudents, setSelectedStudents] = useState<Prisma.StudentGetPayload<{}> | null>(
+    null,
+  );
   const [filterIsActive, setFilterIsActive] = useState(false);
 
   return (
@@ -41,11 +39,7 @@ export default function StudentsFilterToggle({
           <SelectContent>
             {students.map((school) => {
               return (
-                <SelectItem
-                  key={school.id}
-                  value={school.id}
-                  className="text-sm"
-                >
+                <SelectItem key={school.id} value={school.id} className="text-sm">
                   {school.studentName}
                 </SelectItem>
               );
@@ -90,9 +84,7 @@ export default function StudentsFilterToggle({
         </div>
         <div>
           <DropdownMenuLabel>
-            <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-              Status
-            </span>
+            <span className="text-xs font-medium uppercase text-shamiri-text-grey">Status</span>
           </DropdownMenuLabel>
           {Object.keys(SessionStatus).map((status) => {
             return (

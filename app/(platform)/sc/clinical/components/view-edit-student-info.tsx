@@ -1,9 +1,6 @@
 "use client";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import {
-  type ClinicalCases,
-  updateStudentInfo,
-} from "#/app/(platform)/sc/clinical/action";
+import { type ClinicalCases, updateStudentInfo } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 
 import { Button } from "#/components/ui/button";
@@ -169,10 +166,7 @@ export default function ViewEditClinicalCaseStudentInfo({
                     <FormItem>
                       <FormLabel>Gender</FormLabel>
                       <FormControl>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select gender" />
                           </SelectTrigger>
@@ -264,11 +258,7 @@ export default function ViewEditClinicalCaseStudentInfo({
               />
 
               <DialogFooter>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={() => setDialogOpen(false)}
-                >
+                <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button

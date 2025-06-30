@@ -31,10 +31,7 @@ export default function AssignFellowSupervisorSelect({
   useEffect(() => {
     try {
       const assignSupervisor = async () => {
-        if (
-          selectedSupervisor !== supervisorId &&
-          selectedSupervisor !== null
-        ) {
+        if (selectedSupervisor !== supervisorId && selectedSupervisor !== null) {
           setLoading(true);
           const result = await assignFellowSupervisor({
             fellowId,
@@ -60,10 +57,7 @@ export default function AssignFellowSupervisorSelect({
 
   return (
     <div className="flex">
-      <Select
-        onValueChange={setSelectedSupervisor}
-        value={selectedSupervisor ?? undefined}
-      >
+      <Select onValueChange={setSelectedSupervisor} value={selectedSupervisor ?? undefined}>
         <SelectTrigger
           className={cn(
             "h-auto gap-1 px-2 py-0.5",

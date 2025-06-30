@@ -18,9 +18,6 @@ export default async function SupervisorsPage() {
   const supervisorsInHub = await getSupervisorsInHub();
 
   return (
-    <HCSupervisorsDataTable
-      supervisorExpenses={expensesData}
-      supervisorsInHub={supervisorsInHub}
-    />
+    <HCSupervisorsDataTable supervisorExpenses={expensesData} supervisorsInHub={supervisorsInHub} />
   );
 }

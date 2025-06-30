@@ -3,11 +3,7 @@ import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
 import { useCalendarCell, useCalendarGrid, useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "#/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 import { cn } from "#/lib/utils";
 
 import { useGSAP } from "@gsap/react";
@@ -40,10 +36,7 @@ export function WeekView({
   fellowId?: string;
 }) {
   const headerRowRef: any = useRef(null);
-  const { gridProps, headerProps } = useCalendarGrid(
-    { weekdayStyle: "long" },
-    state,
-  );
+  const { gridProps, headerProps } = useCalendarGrid({ weekdayStyle: "long" }, state);
 
   const startDate = state.visibleRange.start;
 
@@ -63,13 +56,7 @@ export function WeekView({
         state.visibleRange.end.toDate(state.timeZone),
       ),
     );
-  }, [
-    state.visibleRange.start,
-    state.visibleRange.end,
-    dateFormatter,
-    setTitle,
-    state.timeZone,
-  ]);
+  }, [state.visibleRange.start, state.visibleRange.end, dateFormatter, setTitle, state.timeZone]);
 
   // 6 AM - 6 PM session scheduling window
   const hours = Array.from({ length: 13 }, (_, i) => 6 + i);
@@ -109,10 +96,7 @@ export function WeekView({
     <div className="relative">
       <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden" />
       <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
-        <table
-          ref={headerRowRef}
-          className="schedule-table z-10 rounded-t-[0.4375rem]"
-        >
+        <table ref={headerRowRef} className="schedule-table z-10 rounded-t-[0.4375rem]">
           <thead {...headerProps}>
             <tr className="border-b border-grey-border">
               <th className="time-cell" />
@@ -137,10 +121,7 @@ export function WeekView({
         <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
           <tbody className="w-full">
             {hours.map((hour, rowIdx) => (
-              <tr
-                key={rowIdx}
-                className="table-row w-full divide-x divide-grey-border"
-              >
+              <tr key={rowIdx} className="table-row w-full divide-x divide-grey-border">
                 <td
                   className={cn(
                     "time-cell truncate",
@@ -206,9 +187,7 @@ function WeekCalendarHeaderCell({
           <TooltipTrigger asChild>
             <span className="h-1.5 w-1.5 rounded-full bg-blue-base" />
           </TooltipTrigger>
-          <TooltipContent side="top">
-            {sessions.length} sessions on this day
-          </TooltipContent>
+          <TooltipContent side="top">{sessions.length} sessions on this day</TooltipContent>
         </Tooltip>
       )}
     </th>

@@ -14,10 +14,7 @@ export const columns: ColumnDef<StudentGroupEvaluationType>[] = [
     id: "button",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -71,16 +68,13 @@ export const columns: ColumnDef<StudentGroupEvaluationType>[] = [
   },
 ];
 
-export const subColumns: ColumnDef<
-  StudentGroupEvaluationType["session"][number]
->[] = [
+export const subColumns: ColumnDef<StudentGroupEvaluationType["session"][number]>[] = [
   {
     id: "checkbox",
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -130,11 +124,7 @@ export const subColumns: ColumnDef<
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <StudentGroupEvaluationDropdownMenu
-        studentGroupEvaluation={row.original}
-      />
-    ),
+    cell: ({ row }) => <StudentGroupEvaluationDropdownMenu studentGroupEvaluation={row.original} />,
     enableHiding: false,
   },
 ];

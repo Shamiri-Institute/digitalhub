@@ -1,19 +1,12 @@
 "use client";
 
-import {
-  columns,
-  type SchoolStudentTableData,
-} from "#/components/common/student/columns";
+import { columns, type SchoolStudentTableData } from "#/components/common/student/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
 import type { ImplementerRole } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 
-export default function StudentsDatatableSkeleton({
-  role,
-}: {
-  role: ImplementerRole;
-}) {
+export default function StudentsDatatableSkeleton({ role }: { role: ImplementerRole }) {
   const loadingColumns = columns({
     setEditDialog: () => {},
     setStudent: () => {},
@@ -31,9 +24,7 @@ export default function StudentsDatatableSkeleton({
         header: renderSkeleton ? column : "",
         id: column,
         cell: () => {
-          return renderSkeleton ? (
-            <Skeleton className="h-5 w-full bg-gray-200" />
-          ) : null;
+          return renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null;
         },
       };
     });

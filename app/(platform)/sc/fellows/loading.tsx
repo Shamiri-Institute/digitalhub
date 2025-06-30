@@ -10,9 +10,7 @@ export default async function TableSkeleton() {
 
   return (
     <div className="px-6 py-5">
-      <FellowSchoolsDatatableSkeleton
-        role={supervisor?.user.membership.role!}
-      />
+      <FellowSchoolsDatatableSkeleton role={supervisor?.user.membership.role!} />
     </div>
   );
 }

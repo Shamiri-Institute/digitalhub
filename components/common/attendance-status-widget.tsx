@@ -1,11 +1,7 @@
 import { Icons } from "#/components/icons";
 import { cn } from "#/lib/utils";
 
-export default function AttendanceStatusWidget({
-  attended,
-}: {
-  attended: boolean | null;
-}) {
+export default function AttendanceStatusWidget({ attended }: { attended: boolean | null }) {
   return (
     <div
       className={cn(

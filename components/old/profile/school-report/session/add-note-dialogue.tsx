@@ -59,10 +59,7 @@ export function AddNoteDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="gap-0 p-0">
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="overflow-hidden text-ellipsis"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="overflow-hidden text-ellipsis">
             <div className="my-6 space-y-6">
               <div className="px-6">
                 <FormField

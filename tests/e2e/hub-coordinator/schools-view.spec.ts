@@ -12,9 +12,7 @@ test("Hub Coordinator can view the /schools page", async ({ page }) => {
   await hubCoordinatorSchoolsPage.visit();
   // then
   await hubCoordinatorSchoolsPage.isShown();
-  await expect(
-    page.getByRole("button", { name: "Weekly Hub Report" }),
-  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Weekly Hub Report" })).toBeVisible();
 
   const mainTag = page.getByRole("main");
   await expect(page.locator("h2")).toContainText("Schools");
@@ -91,9 +89,7 @@ test("Hub Coordinator can submit a weekly hub report", async ({ page }) => {
   //await page.getByRole('textbox', { name: 'Challenges' }).click();
   await page.getByRole("textbox", { name: "Challenges" }).fill(data.challenges);
   //await page.getByRole('textbox', { name: 'Recommendations' }).click();
-  await page
-    .getByRole("textbox", { name: "Recommendations" })
-    .fill(data.recommendations);
+  await page.getByRole("textbox", { name: "Recommendations" }).fill(data.recommendations);
   await page.getByRole("button", { name: "Submit" }).click();
 
   // then

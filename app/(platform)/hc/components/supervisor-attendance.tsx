@@ -6,12 +6,7 @@ import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogPortal,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogPortal } from "#/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,15 +16,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "#/components/ui/tooltip";
-import {
-  markManySupervisorAttendance,
-  markSupervisorAttendance,
-} from "#/lib/actions/supervisor";
+import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import { markManySupervisorAttendance, markSupervisorAttendance } from "#/lib/actions/supervisor";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
@@ -64,9 +52,7 @@ export default function SupervisorAttendance({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   session: Session | null;
 }) {
-  const [attendances, setAttendances] = useState<
-    SupervisorAttendanceTableData[]
-  >([]);
+  const [attendances, setAttendances] = useState<SupervisorAttendanceTableData[]>([]);
 
   useEffect(() => {
     const tableData =
@@ -86,19 +72,15 @@ export default function SupervisorAttendance({
           id: attendance?.id,
           supervisorId: supervisor.id,
           supervisorName: supervisor.supervisorName ?? "",
-          pointSchools: supervisor.assignedSchools.map(
-            (school) => school.schoolName,
-          ),
+          pointSchools: supervisor.assignedSchools.map((school) => school.schoolName),
           attendance: attendance?.attended,
           phoneNumber: supervisor.cellNumber ?? "",
-          fellows:
-            totalAttendedFellows.length + "/" + supervisor.fellows.length,
+          fellows: totalAttendedFellows.length + "/" + supervisor.fellows.length,
           sessionId: attendance?.sessionId,
           schoolId: attendance?.schoolId,
           absenceReason: attendance?.absenceReason ?? "",
           absenceComments: attendance?.absenceComments ?? "",
-          schoolName:
-            session?.school?.schoolName ?? session?.venue ?? undefined,
+          schoolName: session?.school?.schoolName ?? session?.venue ?? undefined,
           sessionType: session?.session?.sessionName,
           sessionStatus: session?.status,
         };
@@ -112,9 +94,7 @@ export default function SupervisorAttendance({
         <DialogPortal>
           <DialogContent className="w-5/6 max-w-none lg:w-4/5">
             <DialogHeader>
-              <span className="text-xl font-bold">
-                Mark supervisor attendance
-              </span>
+              <span className="text-xl font-bold">Mark supervisor attendance</span>
             </DialogHeader>
             {session && (
               <SessionDetail
@@ -146,23 +126,16 @@ export function SupervisorAttendanceDataTable({
   data: SupervisorAttendanceTableData[];
   emptyStateMessage?: string;
   overrideColumns?: (state: {
-    setAttendance: Dispatch<
-      SetStateAction<SupervisorAttendanceTableData | undefined>
-    >;
+    setAttendance: Dispatch<SetStateAction<SupervisorAttendanceTableData | undefined>>;
     setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   }) => ColumnDef<SupervisorAttendanceTableData>[];
   toggleBulkMode?: boolean;
   session?: Session | null;
 }) {
-  const [selectedRows, setSelectedRows] = useState<
-    Row<SupervisorAttendanceTableData>[]
-  >([]);
+  const [selectedRows, setSelectedRows] = useState<Row<SupervisorAttendanceTableData>[]>([]);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
-  const [attendance, setAttendance] = useState<
-    SupervisorAttendanceTableData | undefined
-  >();
-  const [markAttendanceDialog, setMarkAttendanceDialog] =
-    useState<boolean>(false);
+  const [attendance, setAttendance] = useState<SupervisorAttendanceTableData | undefined>();
+  const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
 
   const renderTableActions = () => {
     return (
@@ -245,22 +218,12 @@ export function SupervisorAttendanceDataTable({
             ) : (
               <span>{attendance?.supervisorName}</span>
             )}
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
             <span>
-              {sessionDisplayName(
-                attendance?.sessionType ?? session?.session?.sessionName ?? "",
-              )}
+              {sessionDisplayName(attendance?.sessionType ?? session?.session?.sessionName ?? "")}
             </span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
-            <span>
-              {attendance?.schoolName ??
-                session?.school?.schoolName ??
-                session?.venue}
-            </span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+            <span>{attendance?.schoolName ?? session?.school?.schoolName ?? session?.venue}</span>
           </div>
         </DialogAlertWidget>
       </MarkAttendance>
@@ -288,17 +251,14 @@ export type SupervisorAttendanceTableData = {
 };
 
 const columns = (state: {
-  setAttendance: Dispatch<
-    SetStateAction<SupervisorAttendanceTableData | undefined>
-  >;
+  setAttendance: Dispatch<SetStateAction<SupervisorAttendanceTableData | undefined>>;
   setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
 }): ColumnDef<SupervisorAttendanceTableData>[] => [
   {
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -308,8 +268,7 @@ const columns = (state: {
       />
     ),
     cell: ({ row }) => {
-      const sessionOccurredStatus =
-        row.original.sessionStatus === SessionStatus.Cancelled;
+      const sessionOccurredStatus = row.original.sessionStatus === SessionStatus.Cancelled;
       return (
         <div className="flex items-center justify-center">
           <Checkbox
@@ -343,8 +302,7 @@ const columns = (state: {
               {
                 "border-green-border": attended,
                 "border-red-border": !attended,
-                "border-blue-border":
-                  attended === undefined || attended === null,
+                "border-blue-border": attended === undefined || attended === null,
               },
               {
                 "bg-green-bg": attended,
@@ -365,10 +323,7 @@ const columns = (state: {
               </div>
             ) : (
               <div className="flex items-center gap-1 text-red-base">
-                <Icons.crossCircleFilled
-                  className="h-3 w-3"
-                  strokeWidth={2.5}
-                />
+                <Icons.crossCircleFilled className="h-3 w-3" strokeWidth={2.5} />
                 <span>Missed</span>
               </div>
             )}
@@ -420,10 +375,7 @@ const columns = (state: {
       try {
         return (
           row.original.phoneNumber &&
-          parsePhoneNumberWithError(
-            row.original.phoneNumber,
-            "KE",
-          ).formatNational()
+          parsePhoneNumberWithError(row.original.phoneNumber, "KE").formatNational()
         );
       } catch (error) {
         if (error instanceof ParseError) {
@@ -446,7 +398,7 @@ const columns = (state: {
             )
           );
         }
-          throw error;
+        throw error;
       }
     },
     header: "Phone number",
@@ -460,12 +412,7 @@ const columns = (state: {
   },
   {
     cell: (props) => {
-      return (
-        <SupervisorAttendanceDataTableMenu
-          attendance={props.row.original}
-          state={state}
-        />
-      );
+      return <SupervisorAttendanceDataTableMenu attendance={props.row.original} state={state} />;
     },
     id: "button",
     header: undefined,
@@ -479,9 +426,7 @@ export function SupervisorAttendanceDataTableMenu({
 }: {
   attendance: SupervisorAttendanceTableData | undefined;
   state: {
-    setAttendance: Dispatch<
-      SetStateAction<SupervisorAttendanceTableData | undefined>
-    >;
+    setAttendance: Dispatch<SetStateAction<SupervisorAttendanceTableData | undefined>>;
     setMarkAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
 }) {
@@ -497,9 +442,7 @@ export function SupervisorAttendanceDataTableMenu({
       <DropdownMenuPortal>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>
-            <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-              Actions
-            </span>
+            <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem

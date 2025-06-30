@@ -9,11 +9,7 @@ import {
   CommandInput,
   CommandItem,
 } from "#/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 
 type ComboboxProps = {
   items: { id: string; label: string }[];
@@ -53,9 +49,7 @@ export function Combobox({
         <PopoverContent className="w-[360px] p-0 md:w-64">
           <Command
             filter={(value: string, search: string) => {
-              const item = items.find(
-                (item) => item.id.toLowerCase() === value.toLowerCase(),
-              );
+              const item = items.find((item) => item.id.toLowerCase() === value.toLowerCase());
               if (!item) return 0;
 
               if (item.label.toLowerCase().includes(search.toLowerCase())) {
@@ -79,9 +73,7 @@ export function Combobox({
                     setOpen(false);
                   }}
                 >
-                  <span className="truncate text-ellipsis text-sm">
-                    {item.label}
-                  </span>
+                  <span className="truncate text-ellipsis text-sm">{item.label}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

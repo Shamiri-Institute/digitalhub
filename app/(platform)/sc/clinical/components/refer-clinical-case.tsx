@@ -67,9 +67,9 @@ export default function ReferClinicalCase({
 }) {
   const [open, setDialogOpen] = useState<boolean>(false);
   const [selectedReferTo, setSelectedReferTo] = useState<string>("");
-  const [supervisorsInHub, setSupervisorsInHub] = useState<
-    { id: string; name: string | null }[]
-  >([]);
+  const [supervisorsInHub, setSupervisorsInHub] = useState<{ id: string; name: string | null }[]>(
+    [],
+  );
   const [clinicalLeads, setClinicalLeads] = useState<
     { id: string; name: string | null; hubId: string | null }[]
   >([]);
@@ -234,10 +234,7 @@ export default function ReferClinicalCase({
                         Select Supervisor
                         <span className="ml-1 text-red-500">*</span>
                       </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select supervisor..." />
@@ -245,10 +242,7 @@ export default function ReferClinicalCase({
                         </FormControl>
                         <SelectContent>
                           {supervisorsInHub.map((supervisor) => (
-                            <SelectItem
-                              key={supervisor.id}
-                              value={supervisor.id}
-                            >
+                            <SelectItem key={supervisor.id} value={supervisor.id}>
                               {supervisor.name || "Unknown"}
                             </SelectItem>
                           ))}
@@ -273,9 +267,7 @@ export default function ReferClinicalCase({
                       <Select
                         onValueChange={(value) => {
                           field.onChange(value);
-                          const selectedLead = clinicalLeads.find(
-                            (lead) => lead.id === value,
-                          );
+                          const selectedLead = clinicalLeads.find((lead) => lead.id === value);
                           if (selectedLead) {
                             setSelectedClinicalLead({
                               id: selectedLead.id,
@@ -325,13 +317,13 @@ export default function ReferClinicalCase({
                       </FormControl>
                       <SelectContent>
                         {selectedReferTo &&
-                          REFERRAL_OPTIONS[
-                            selectedReferTo as keyof typeof REFERRAL_OPTIONS
-                          ].map((reason) => (
-                            <SelectItem key={reason} value={reason}>
-                              {reason}
-                            </SelectItem>
-                          ))}
+                          REFERRAL_OPTIONS[selectedReferTo as keyof typeof REFERRAL_OPTIONS].map(
+                            (reason) => (
+                              <SelectItem key={reason} value={reason}>
+                                {reason}
+                              </SelectItem>
+                            ),
+                          )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -354,11 +346,7 @@ export default function ReferClinicalCase({
               />
 
               <DialogFooter>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={() => setDialogOpen(false)}
-                >
+                <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button

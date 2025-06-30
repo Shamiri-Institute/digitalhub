@@ -32,8 +32,7 @@ const NavItem: React.FC<NavItemProps> = ({ href, Icon, children }) => {
           "text-base leading-5 lg:text-[1rem] lg:font-medium",
           "hover:bg-foreground/[0.035]",
           {
-            "bg-shamiri-blue/[0.075] hover:bg-shamiri-blue/[0.1]":
-              pathname === href,
+            "bg-shamiri-blue/[0.075] hover:bg-shamiri-blue/[0.1]": pathname === href,
           },
         )}
       >
@@ -44,10 +43,7 @@ const NavItem: React.FC<NavItemProps> = ({ href, Icon, children }) => {
   );
 };
 
-export function Navigation({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"nav">) {
+export function Navigation({ className, ...props }: React.ComponentPropsWithoutRef<"nav">) {
   const session = useSession();
   if (session.status !== "authenticated") {
     return null;
@@ -77,10 +73,7 @@ export function Navigation({
   }
 
   return (
-    <div
-      className={cn("flex h-full flex-col justify-between", className)}
-      {...props}
-    >
+    <div className={cn("flex h-full flex-col justify-between", className)} {...props}>
       <div className="flex flex-1 flex-col">{navigationDiv}</div>
       <div>
         <div className="mb-4">

@@ -54,8 +54,7 @@ export const columns = (state: {
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -138,28 +137,19 @@ export const columns = (state: {
               <div className="flex items-center gap-1">
                 {completed && !cancelled && (
                   <div className="flex items-center gap-1">
-                    <Icons.checkCircle
-                      className="h-3.5 w-3.5"
-                      strokeWidth={2.5}
-                    />
+                    <Icons.checkCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
                     <span>Attended</span>
                   </div>
                 )}
                 {!completed && !cancelled && (
                   <div className="flex items-center gap-1">
-                    <Icons.helpCircle
-                      className="h-3.5 w-3.5"
-                      strokeWidth={2.5}
-                    />
+                    <Icons.helpCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
                     <span>Not marked</span>
                   </div>
                 )}
                 {cancelled && (
                   <div className="flex items-center gap-1">
-                    <Icons.crossCircleFilled
-                      className="h-3.5 w-3.5"
-                      strokeWidth={2.5}
-                    />
+                    <Icons.crossCircleFilled className="h-3.5 w-3.5" strokeWidth={2.5} />
                     <span>Cancelled</span>
                   </div>
                 )}

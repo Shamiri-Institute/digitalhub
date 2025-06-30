@@ -1,7 +1,4 @@
-import {
-  OCCURRENCE_STATUS,
-  SESSION_NAME_TYPES,
-} from "#/lib/app-constants/constants";
+import { OCCURRENCE_STATUS, SESSION_NAME_TYPES } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
 
@@ -9,18 +6,9 @@ export const SessionRatingsSchema = z.object({
   mode: z.enum(["add", "view"]),
   ratingId: z.string().optional(),
   sessionId: stringValidation("Session ID required"),
-  studentBehaviorRating: z
-    .number({ required_error: "Please provide a rating" })
-    .min(1)
-    .max(5),
-  adminSupportRating: z
-    .number({ required_error: "Please provide a rating" })
-    .min(1)
-    .max(5),
-  workloadRating: z
-    .number({ required_error: "Please provide a rating" })
-    .min(1)
-    .max(5),
+  studentBehaviorRating: z.number({ required_error: "Please provide a rating" }).min(1).max(5),
+  adminSupportRating: z.number({ required_error: "Please provide a rating" }).min(1).max(5),
+  workloadRating: z.number({ required_error: "Please provide a rating" }).min(1).max(5),
   positiveHighlights: z.string().optional(),
   challenges: z.string().optional(),
   recommendations: z.string().optional(),

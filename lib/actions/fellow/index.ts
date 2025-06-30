@@ -1,14 +1,7 @@
 "use server";
 
-import {
-  FellowDetailsSchema,
-  MarkAttendanceSchema,
-} from "#/app/(platform)/hc/schemas";
-import {
-  currentHubCoordinator,
-  currentSupervisor,
-  getCurrentUser,
-} from "#/app/auth";
+import { FellowDetailsSchema, MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
+import { currentHubCoordinator, currentSupervisor, getCurrentUser } from "#/app/auth";
 import {
   DropoutFellowSchema,
   WeeklyFellowEvaluationSchema,
@@ -33,9 +26,7 @@ async function checkAuth() {
   return { hubCoordinator, supervisor, user };
 }
 
-export async function submitFellowDetails(
-  data: z.infer<typeof FellowDetailsSchema>,
-) {
+export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSchema>) {
   try {
     const { hubCoordinator, supervisor } = await checkAuth();
 
@@ -86,8 +77,7 @@ export async function submitFellowDetails(
       if (existingUser) {
         return {
           success: false,
-          message:
-            "Something went wrong. A user with this email already exists",
+          message: "Something went wrong. A user with this email already exists",
         };
       }
 
@@ -123,7 +113,8 @@ export async function submitFellowDetails(
         success: true,
         message: `Successfully updated details for ${fellowName}`,
       };
-    }if (mode === "add" && (hubCoordinator || supervisor)) {
+    }
+    if (mode === "add" && (hubCoordinator || supervisor)) {
       // Check if email already exists
       const existingUser = await db.user.findFirst({
         where: {
@@ -150,8 +141,7 @@ export async function submitFellowDetails(
       if (!implementerId || !hubId) {
         return {
           success: false,
-          message:
-            "Something went wrong. Missing implementer or hub information",
+          message: "Something went wrong. Missing implementer or hub information",
         };
       }
 
@@ -201,13 +191,13 @@ export async function submitFellowDetails(
         message: `Successfully added ${fellowName}`,
       };
     }
-      return {
-        success: false,
-        message:
-          hubCoordinator === null && supervisor === null
-            ? "User is not authorised to perform this action"
-            : "Something went wrong",
-      };
+    return {
+      success: false,
+      message:
+        hubCoordinator === null && supervisor === null
+          ? "User is not authorised to perform this action"
+          : "Something went wrong",
+    };
   } catch (err) {
     console.error(err);
     const { mode } = FellowDetailsSchema.parse(data);
@@ -279,46 +269,43 @@ export async function submitWeeklyFellowEvaluation(
             message: "Successfully submitted weekly evaluation",
           };
         }
-          await db.weeklyFellowRatings.update({
-            where: {
-              id: previousEvaluation.id,
-            },
-            data: {
-              behaviourNotes,
-              behaviourRating,
-              punctualityNotes,
-              punctualityRating,
-              programDeliveryNotes,
-              programDeliveryRating,
-              dressingAndGroomingNotes,
-              dressingAndGroomingRating,
-            },
-          });
-          return {
-            success: true,
-            message: `Successfully updated fellow's weekly evaluation`,
-          };
-      }
+        await db.weeklyFellowRatings.update({
+          where: {
+            id: previousEvaluation.id,
+          },
+          data: {
+            behaviourNotes,
+            behaviourRating,
+            punctualityNotes,
+            punctualityRating,
+            programDeliveryNotes,
+            programDeliveryRating,
+            dressingAndGroomingNotes,
+            dressingAndGroomingRating,
+          },
+        });
         return {
-          success: false,
-          message:
-            "Submission failed. Fellow is assigned to a different supervisor.",
+          success: true,
+          message: `Successfully updated fellow's weekly evaluation`,
         };
-    }
+      }
       return {
         success: false,
-        message:
-          supervisor === null
-            ? "User is not authorised to perform this action"
-            : "Something went wrong",
+        message: "Submission failed. Fellow is assigned to a different supervisor.",
       };
+    }
+    return {
+      success: false,
+      message:
+        supervisor === null
+          ? "User is not authorised to perform this action"
+          : "Something went wrong",
+    };
   } catch (err) {
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ??
-        "Sorry, could not submit fellow's evaluation.",
+      message: (err as Error)?.message ?? "Sorry, could not submit fellow's evaluation.",
     };
   }
 }
@@ -423,14 +410,11 @@ export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
   }
 }
 
-export async function markFellowAttendance(
-  data: z.infer<typeof MarkAttendanceSchema>,
-) {
+export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
     const auth = await checkAuth();
 
-    const { id, sessionId, absenceReason, attended, comments } =
-      MarkAttendanceSchema.parse(data);
+    const { id, sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
     return await db.$transaction(async (tx) => {
       const fellow = await tx.fellow.findUniqueOrThrow({
@@ -540,87 +524,79 @@ export async function markFellowAttendance(
           message: `Successfully updated attendance for ${fellow.fellowName}`,
         };
       }
-        let groupId;
-        if (session.schoolId) {
-          const group = await tx.interventionGroup.findFirst({
-            where: {
-              schoolId: session.schoolId,
-              leaderId: fellow.id,
-            },
-          });
-          if (group) {
-            if (
-              group.groupType !== "TREATMENT" &&
-              session.session?.sessionType === "INTERVENTION"
-            ) {
-              throw new Error(
-                "An error occurred while marking attendance. " +
-                  fellow.fellowName +
-                  "'s group is not a treatment group.",
-              );
-            }
-            groupId = group.id;
-          } else {
+      let groupId;
+      if (session.schoolId) {
+        const group = await tx.interventionGroup.findFirst({
+          where: {
+            schoolId: session.schoolId,
+            leaderId: fellow.id,
+          },
+        });
+        if (group) {
+          if (group.groupType !== "TREATMENT" && session.session?.sessionType === "INTERVENTION") {
             throw new Error(
               "An error occurred while marking attendance. " +
                 fellow.fellowName +
-                " has no assigned group",
+                "'s group is not a treatment group.",
             );
           }
-        }
-
-        if (
-          session.session?.amount === undefined ||
-          session.session?.amount === null
-        ) {
+          groupId = group.id;
+        } else {
           throw new Error(
-            "An error occurred while marking attendance for " +
+            "An error occurred while marking attendance. " +
               fellow.fellowName +
-              ". Session payout amount not found.",
+              " has no assigned group",
           );
         }
+      }
 
-        const attendanceStatus =
-          attended === "attended" ? true : attended === "missed" ? false : null;
+      if (session.session?.amount === undefined || session.session?.amount === null) {
+        throw new Error(
+          "An error occurred while marking attendance for " +
+            fellow.fellowName +
+            ". Session payout amount not found.",
+        );
+      }
 
-        await tx.fellowAttendance.create({
-          data: {
-            fellowId: fellow.id,
-            groupId,
-            schoolId: session.schoolId,
-            projectId: session.projectId ?? CURRENT_PROJECT_ID,
-            sessionId,
-            absenceReason,
-            absenceComments: comments,
-            markedBy: auth.user!.user.id,
-            attended: attendanceStatus,
-            PayoutStatements: attendanceStatus
-              ? {
-                  create: [
-                    {
-                      fellowId: fellow.id,
-                      createdBy: auth.user!.user.id,
-                      amount: session.session?.amount,
-                      reason: "MARK_SESSION_ATTENDANCE",
-                      mpesaNumber: fellow.mpesaNumber,
-                    },
-                  ],
-                }
-              : undefined,
-          },
-        });
-        return {
-          success: true,
-          message: `Successfully marked attendance for ${fellow.fellowName}`,
-        };
+      const attendanceStatus =
+        attended === "attended" ? true : attended === "missed" ? false : null;
+
+      await tx.fellowAttendance.create({
+        data: {
+          fellowId: fellow.id,
+          groupId,
+          schoolId: session.schoolId,
+          projectId: session.projectId ?? CURRENT_PROJECT_ID,
+          sessionId,
+          absenceReason,
+          absenceComments: comments,
+          markedBy: auth.user!.user.id,
+          attended: attendanceStatus,
+          PayoutStatements: attendanceStatus
+            ? {
+                create: [
+                  {
+                    fellowId: fellow.id,
+                    createdBy: auth.user!.user.id,
+                    amount: session.session?.amount,
+                    reason: "MARK_SESSION_ATTENDANCE",
+                    mpesaNumber: fellow.mpesaNumber,
+                  },
+                ],
+              }
+            : undefined,
+        },
+      });
+      return {
+        success: true,
+        message: `Successfully marked attendance for ${fellow.fellowName}`,
+      };
     });
   } catch (err) {
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ??
-        "An error occurred while marking attendance.",
+      message: (err as Error)?.message ?? "An error occurred while marking attendance.",
     };
   }
 }
@@ -632,8 +608,7 @@ export async function markManyFellowAttendance(
   try {
     const auth = await checkAuth();
 
-    const { sessionId, absenceReason, attended, comments } =
-      MarkAttendanceSchema.parse(data);
+    const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
     return await db.$transaction(async (tx) => {
       const session = await tx.interventionSession.findFirstOrThrow({
@@ -646,9 +621,7 @@ export async function markManyFellowAttendance(
       });
 
       if (!session.occurred) {
-        throw new Error(
-          "An error occurred while marking attendances. Session has not occurred.",
-        );
+        throw new Error("An error occurred while marking attendances. Session has not occurred.");
       }
 
       if (!Number.isInteger(session.session?.amount)) {
@@ -705,8 +678,7 @@ export async function markManyFellowAttendance(
         let payout: Prisma.PayoutStatementsUncheckedCreateInput | undefined;
         if (
           ((existingPayouts.length === 0 && attendanceStatus) ||
-            (existingPayouts.length !== 0 &&
-              existingPayouts[0]?.reason !== reason)) &&
+            (existingPayouts.length !== 0 && existingPayouts[0]?.reason !== reason)) &&
           amount
         ) {
           payout = {
@@ -727,9 +699,7 @@ export async function markManyFellowAttendance(
       });
 
       await tx.payoutStatements.createMany({
-        data: data
-          .filter((attendance) => attendance.payout !== undefined)
-          .map((x) => x.payout!),
+        data: data.filter((attendance) => attendance.payout !== undefined).map((x) => x.payout!),
       });
 
       await tx.fellowAttendance.updateMany({
@@ -747,9 +717,7 @@ export async function markManyFellowAttendance(
 
       // create new attendances
       const fellowIds = ids.filter((fellowId) => {
-        return !attendances.some(
-          (attendance) => attendance.fellowId === fellowId,
-        );
+        return !attendances.some((attendance) => attendance.fellowId === fellowId);
       });
 
       const fellows = await tx.fellow.findMany({
@@ -775,9 +743,7 @@ export async function markManyFellowAttendance(
           },
         });
 
-        const groupsByFellowId = new Map(
-          groups.map((group) => [group.leaderId, group]),
-        );
+        const groupsByFellowId = new Map(groups.map((group) => [group.leaderId, group]));
 
         for (const fellow of fellows) {
           const group = groupsByFellowId.get(fellow.id);
@@ -790,10 +756,7 @@ export async function markManyFellowAttendance(
             );
           }
 
-          if (
-            group.groupType !== "TREATMENT" &&
-            session.session?.sessionType === "INTERVENTION"
-          ) {
+          if (group.groupType !== "TREATMENT" && session.session?.sessionType === "INTERVENTION") {
             throw new Error(
               "An error occurred while marking attendance. " +
                 fellow.fellowName +
@@ -859,16 +822,12 @@ export async function markManyFellowAttendance(
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ??
-        "An error occurred while marking attendances.",
+      message: (err as Error)?.message ?? "An error occurred while marking attendances.",
     };
   }
 }
 
-export async function submitFellowComplaint(
-  data: z.infer<typeof SubmitComplaintSchema>,
-) {
+export async function submitFellowComplaint(data: z.infer<typeof SubmitComplaintSchema>) {
   try {
     const { user } = await checkAuth();
 

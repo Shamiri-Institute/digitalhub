@@ -3,12 +3,7 @@ import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { dropoutSupervisor } from "#/app/(platform)/hc/supervisors/actions";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -48,8 +43,7 @@ export default function DropoutSupervisor({
 }) {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] =
-    useState<z.infer<typeof DropoutSupervisorSchema>>();
+  const [formData, setFormData] = useState<z.infer<typeof DropoutSupervisorSchema>>();
   const pathname = usePathname();
 
   const form = useForm<z.infer<typeof DropoutSupervisorSchema>>({
@@ -59,14 +53,10 @@ export default function DropoutSupervisor({
   async function confirmSubmit() {
     setLoading(true);
     if (formData) {
-      const response = await dropoutSupervisor(
-        formData?.supervisorId,
-        formData?.dropoutReason,
-      );
+      const response = await dropoutSupervisor(formData?.supervisorId, formData?.dropoutReason);
       if (!response.success) {
         toast({
-          description:
-            response.message ?? "Something went wrong, please try again",
+          description: response.message ?? "Something went wrong, please try again",
         });
         return;
       }
@@ -108,8 +98,7 @@ export default function DropoutSupervisor({
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel>
-                    Select reason{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    Select reason <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <Select onValueChange={field.onChange}>
                     <FormControl>
@@ -134,12 +123,7 @@ export default function DropoutSupervisor({
               name="supervisorId"
               render={({ field }) => (
                 <FormItem>
-                  <Input
-                    id="supervisorId"
-                    name="supervisorId"
-                    type="hidden"
-                    value={field.value}
-                  />
+                  <Input id="supervisorId" name="supervisorId" type="hidden" value={field.value} />
                   <FormMessage />
                 </FormItem>
               )}
@@ -180,9 +164,8 @@ export default function DropoutSupervisor({
             <Alert variant="destructive">
               <AlertTitle className="flex gap-2">
                 <InfoIcon className="h-4 w-4 shrink-0" />
-                Once this change has been made it is irreversible and will need
-                you to contact support in order to modify. Please be sure of
-                your action before you confirm.
+                Once this change has been made it is irreversible and will need you to contact
+                support in order to modify. Please be sure of your action before you confirm.
               </AlertTitle>
             </Alert>
           </div>

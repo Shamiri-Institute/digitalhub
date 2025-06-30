@@ -11,13 +11,7 @@ import { cn } from "#/lib/utils";
 
 function MenuIcon(props: React.ComponentPropsWithoutRef<"svg">) {
   return (
-    <svg
-      viewBox="0 0 10 9"
-      fill="none"
-      strokeLinecap="round"
-      aria-hidden="true"
-      {...props}
-    >
+    <svg viewBox="0 0 10 9" fill="none" strokeLinecap="round" aria-hidden="true" {...props}>
       <path d="M.5 1h9M.5 8h9M.5 4.5h9" />
     </svg>
   );
@@ -25,13 +19,7 @@ function MenuIcon(props: React.ComponentPropsWithoutRef<"svg">) {
 
 function XIcon(props: React.ComponentPropsWithoutRef<"svg">) {
   return (
-    <svg
-      viewBox="0 0 10 9"
-      fill="none"
-      strokeLinecap="round"
-      aria-hidden="true"
-      {...props}
-    >
+    <svg viewBox="0 0 10 9" fill="none" strokeLinecap="round" aria-hidden="true" {...props}>
       <path d="m1.5 1 7 7M8.5 1l-7 7" />
     </svg>
   );
@@ -76,10 +64,7 @@ function MobileNavigationDialog({
 
   return (
     <>
-      <Sheet
-        open={isOpen}
-        onOpenChange={(openBool) => (openBool ? open() : close())}
-      >
+      <Sheet open={isOpen} onOpenChange={(openBool) => (openBool ? open() : close())}>
         <SheetContent side="left" className="left-0 w-full">
           <div
             className={cn(

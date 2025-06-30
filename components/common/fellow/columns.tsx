@@ -116,17 +116,12 @@ export const columns = ({
     {
       header: "Phone Number",
       accessorFn: (row) => {
-        return (
-          row.cellNumber &&
-          parsePhoneNumber(row.cellNumber, "KE").formatNational()
-        );
+        return row.cellNumber && parsePhoneNumber(row.cellNumber, "KE").formatNational();
       },
     },
     {
       id: "button",
-      cell: ({ row }) => (
-        <FellowsDatatableMenu fellow={row.original} state={state} role={role} />
-      ),
+      cell: ({ row }) => <FellowsDatatableMenu fellow={row.original} state={state} role={role} />,
       enableHiding: false,
     },
   ];

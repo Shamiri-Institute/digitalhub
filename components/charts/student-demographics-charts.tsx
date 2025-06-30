@@ -1,18 +1,8 @@
 "use client";
 
-import {
-  generateRandomColor,
-  studentsGroupByColors,
-} from "#/components/charts/constants";
+import { generateRandomColor, studentsGroupByColors } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
-import {
-  Cell,
-  Label,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { Cell, Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
 export default function HubStudentDemographicsCharts({
   studentsGroupedByAge,
@@ -23,30 +13,26 @@ export default function HubStudentDemographicsCharts({
   studentsGroupedByGender: Record<string, number>;
   studentsGroupedByForm: Record<string, number>;
 }) {
-  const formatedStudentsGroupedByAge = Object.entries(studentsGroupedByAge).map(
-    ([age, value]) => ({
-      age,
+  const formatedStudentsGroupedByAge = Object.entries(studentsGroupedByAge).map(([age, value]) => ({
+    age,
+    value,
+  }));
+
+  const formatedStudentsGroupedByGender = Object.entries(studentsGroupedByGender).map(
+    ([gender, value]) => ({
+      gender,
       value,
     }),
   );
 
-  const formatedStudentsGroupedByGender = Object.entries(
-    studentsGroupedByGender,
-  ).map(([gender, value]) => ({
-    gender,
-    value,
-  }));
-
-  const formatedStudentsGroupedByForm = Object.entries(
-    studentsGroupedByForm,
-  ).map(([form, value]) => ({
-    form,
-    value,
-  }));
-
-  const randomColors = formatedStudentsGroupedByAge.map(() =>
-    generateRandomColor(),
+  const formatedStudentsGroupedByForm = Object.entries(studentsGroupedByForm).map(
+    ([form, value]) => ({
+      form,
+      value,
+    }),
   );
+
+  const randomColors = formatedStudentsGroupedByAge.map(() => generateRandomColor());
 
   return (
     <div className="grid grid-cols-2 gap-5 py-5 md:grid-cols-3">
@@ -68,19 +54,12 @@ export default function HubStudentDemographicsCharts({
                   position="center"
                   className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {formatedStudentsGroupedByForm.reduce(
-                    (acc, val) => acc + val.value,
-                    0,
-                  )}
+                  {formatedStudentsGroupedByForm.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
                 {formatedStudentsGroupedByForm.map((val, index) => (
                   <Cell
                     key={index}
-                    fill={
-                      studentsGroupByColors[
-                        index % studentsGroupByColors.length
-                      ]
-                    }
+                    fill={studentsGroupByColors[index % studentsGroupByColors.length]}
                   />
                 ))}
               </Pie>
@@ -134,19 +113,12 @@ export default function HubStudentDemographicsCharts({
                   position="center"
                   className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {formatedStudentsGroupedByGender.reduce(
-                    (acc, val) => acc + val.value,
-                    0,
-                  )}
+                  {formatedStudentsGroupedByGender.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
                 {formatedStudentsGroupedByAge.map((val, index) => (
                   <Cell
                     key={index}
-                    fill={
-                      studentsGroupByColors[
-                        index % studentsGroupByColors.length
-                      ]
-                    }
+                    fill={studentsGroupByColors[index % studentsGroupByColors.length]}
                   />
                 ))}
               </Pie>

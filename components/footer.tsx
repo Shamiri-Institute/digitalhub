@@ -124,16 +124,10 @@ function SmallPrint() {
         <SocialLink href="https://twitter.com/ShamiriTeam" icon={TwitterIcon}>
           Follow us on Twitter
         </SocialLink>
-        <SocialLink
-          href="https://github.com/Shamiri-Institute"
-          icon={GitHubIcon}
-        >
+        <SocialLink href="https://github.com/Shamiri-Institute" icon={GitHubIcon}>
           Follow us on GitHub
         </SocialLink>
-        <SocialLink
-          href="https://www.linkedin.com/company/shamiri-institute"
-          icon={LinkedInIcon}
-        >
+        <SocialLink href="https://www.linkedin.com/company/shamiri-institute" icon={LinkedInIcon}>
           Follow us on LinkedIn
         </SocialLink>
       </div>

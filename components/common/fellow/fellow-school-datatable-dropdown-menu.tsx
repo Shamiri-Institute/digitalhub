@@ -19,9 +19,7 @@ export default function FellowSchoolDatatableDropdownMenu({
 }: {
   group?: FellowGroupData;
   state: {
-    setFellowGroup: Dispatch<
-      SetStateAction<FellowsData["groups"][number] | undefined>
-    >;
+    setFellowGroup: Dispatch<SetStateAction<FellowsData["groups"][number] | undefined>>;
     setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
     setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
@@ -39,9 +37,7 @@ export default function FellowSchoolDatatableDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {state.role === "SUPERVISOR" ? (

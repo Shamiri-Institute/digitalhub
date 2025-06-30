@@ -5,11 +5,7 @@ import { Separator } from "#/components/ui/separator";
 import { signOut } from "next-auth/react";
 import type React from "react";
 
-export default async function ReportingViewLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function ReportingViewLayout({ children }: { children: React.ReactNode }) {
   const supervisor = await currentSupervisor();
 
   if (!supervisor) {

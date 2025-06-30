@@ -17,11 +17,7 @@ export type FellowExpenseData =
   | HubFellowsAttendancesType["attendances"][number]
   | SupervisorFellowsAttendancesType["attendances"][number];
 
-export default function FellowExpenseTableDropdown({
-  expense,
-}: {
-  expense: FellowExpenseData;
-}) {
+export default function FellowExpenseTableDropdown({ expense }: { expense: FellowExpenseData }) {
   const isHub = "hub" in expense;
   return (
     <DropdownMenu>
@@ -39,9 +35,7 @@ export default function FellowExpenseTableDropdown({
         }}
       >
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ConfirmReversalFellows expense={expense}>

@@ -57,12 +57,11 @@ export async function loadHubsFellowAttendance() {
   });
 
   return fellows.map((fellow) => {
-    const { totalAmount, totalPaidAmount } = calculateAmounts(
+    const { totalAmount, totalPaidAmount } = calculateAmounts(fellow.fellowAttendances);
+
+    const { preCount, mainCount, supervisionCount, trainingCount } = calculateSessionCounts(
       fellow.fellowAttendances,
     );
-
-    const { preCount, mainCount, supervisionCount, trainingCount } =
-      calculateSessionCounts(fellow.fellowAttendances);
 
     const payoutStatements = fellow.fellowAttendances.flatMap((attendance) =>
       attendance.PayoutStatements.map((payout) => ({
@@ -115,41 +114,37 @@ function calculateAmounts(attendances: FellowAttendance[]) {
 
 function specialSessionCount(attendances: FellowAttendance[]) {
   return (
-    attendances.filter(
-      (attendance) => attendance.session?.session?.sessionType === "SPECIAL",
-    ).length || 0
+    attendances.filter((attendance) => attendance.session?.session?.sessionType === "SPECIAL")
+      .length || 0
   );
 }
 
 function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
-  const { preCount, mainCount, supervisionCount, trainingCount } =
-    fellowAttendances.reduce(
-      (counts, attendance) => {
-        const sessionLabel = attendance.session?.session?.sessionLabel;
-        const sessionType = attendance.session?.session?.sessionType;
+  const { preCount, mainCount, supervisionCount, trainingCount } = fellowAttendances.reduce(
+    (counts, attendance) => {
+      const sessionLabel = attendance.session?.session?.sessionLabel;
+      const sessionType = attendance.session?.session?.sessionType;
 
-        // For pre and main session counts
-        if (sessionLabel === "Pre-session") {
-          counts.preCount += 1;
-        } else if (
-          ["Session 1", "Session 2", "Session 3", "Session 4"].includes(
-            sessionLabel ?? "",
-          )
-        ) {
-          counts.mainCount += 1;
-        }
+      // For pre and main session counts
+      if (sessionLabel === "Pre-session") {
+        counts.preCount += 1;
+      } else if (
+        ["Session 1", "Session 2", "Session 3", "Session 4"].includes(sessionLabel ?? "")
+      ) {
+        counts.mainCount += 1;
+      }
 
-        // For training and supervision session counts
-        if (sessionType === "SUPERVISION") {
-          counts.supervisionCount += 1;
-        } else if (sessionType === "TRAINING") {
-          counts.trainingCount += 1;
-        }
+      // For training and supervision session counts
+      if (sessionType === "SUPERVISION") {
+        counts.supervisionCount += 1;
+      } else if (sessionType === "TRAINING") {
+        counts.trainingCount += 1;
+      }
 
-        return counts;
-      },
-      { preCount: 0, mainCount: 0, supervisionCount: 0, trainingCount: 0 },
-    );
+      return counts;
+    },
+    { preCount: 0, mainCount: 0, supervisionCount: 0, trainingCount: 0 },
+  );
 
   return { preCount, mainCount, supervisionCount, trainingCount };
 }
@@ -165,10 +160,7 @@ type FellowAttendance = Prisma.FellowAttendanceGetPayload<{
   };
 }>;
 
-export async function submitPaymentReversal(data: {
-  id: number;
-  name: string;
-}) {
+export async function submitPaymentReversal(data: { id: number; name: string }) {
   const opsUser = await currentOpsUser();
   if (!opsUser) {
     throw new Error("Unauthorised user");

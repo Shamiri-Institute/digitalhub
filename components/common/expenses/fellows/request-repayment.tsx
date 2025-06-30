@@ -60,9 +60,7 @@ export default function RequestRepaymentFellows({
       toast({
         variant: "destructive",
         title: "Submission error",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -102,15 +100,10 @@ export default function RequestRepaymentFellows({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Confirm M-Pesa no.{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Confirm M-Pesa no. <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Input placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -123,11 +116,7 @@ export default function RequestRepaymentFellows({
                   <FormItem>
                     <FormLabel>Additional comments</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Text area"
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="Text area" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

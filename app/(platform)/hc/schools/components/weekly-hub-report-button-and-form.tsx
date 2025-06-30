@@ -91,9 +91,7 @@ export default function WeeklyHubReportButtonAndForm({
       toast({
         variant: "destructive",
         title: "Submission error",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -172,19 +170,12 @@ export default function WeeklyHubReportButtonAndForm({
                         control={form.control}
                         name="hubRelatedIssuesAndObservationsRating"
                         render={({ field }) => (
-                          <RatingStarsInput
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
+                          <RatingStarsInput value={field.value} onChange={field.onChange} />
                         )}
                       />
                     </FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -201,19 +192,12 @@ export default function WeeklyHubReportButtonAndForm({
                         control={form.control}
                         name="schoolRelatedIssuesAndObservationRating"
                         render={({ field }) => (
-                          <RatingStarsInput
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
+                          <RatingStarsInput value={field.value} onChange={field.onChange} />
                         )}
                       />
                     </FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -230,19 +214,12 @@ export default function WeeklyHubReportButtonAndForm({
                         control={form.control}
                         name="supervisorRelatedIssuesAndObservationsRating"
                         render={({ field }) => (
-                          <RatingStarsInput
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
+                          <RatingStarsInput value={field.value} onChange={field.onChange} />
                         )}
                       />
                     </FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -260,19 +237,12 @@ export default function WeeklyHubReportButtonAndForm({
                         control={form.control}
                         name="fellowRelatedIssuesAndObservationsRating"
                         render={({ field }) => (
-                          <RatingStarsInput
-                            value={field.value}
-                            onChange={field.onChange}
-                          />
+                          <RatingStarsInput value={field.value} onChange={field.onChange} />
                         )}
                       />
                     </FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -285,11 +255,7 @@ export default function WeeklyHubReportButtonAndForm({
                   <FormItem>
                     <FormLabel>Successes</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -302,11 +268,7 @@ export default function WeeklyHubReportButtonAndForm({
                   <FormItem>
                     <FormLabel>Challenges</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -319,11 +281,7 @@ export default function WeeklyHubReportButtonAndForm({
                   <FormItem>
                     <FormLabel>Recommendations</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -366,12 +324,7 @@ function RatingStarsInput({
   disabled?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "flex flex-col",
-        disabled ? "pointer-events-none" : "pointer-events-auto",
-      )}
-    >
+    <div className={cn("flex flex-col", disabled ? "pointer-events-none" : "pointer-events-auto")}>
       <div className="rating-stars flex flex-row-reverse gap-1 py-2">
         {Array.from(Array(5).keys()).map((index) => {
           return (

@@ -64,30 +64,16 @@ export default function SessionsOccurredWidget({
               >
                 <div className="flex items-center gap-1">
                   {occurredStatus && !cancelledStatus && (
-                    <Icons.checkCircle
-                      className="h-3.5 w-3.5"
-                      strokeWidth={2.5}
-                    />
+                    <Icons.checkCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
                   )}
-                  {!occurredStatus &&
-                    !cancelledStatus &&
-                    !rescheduledStatus && (
-                      <Icons.helpCircle
-                        className="h-3.5 w-3.5"
-                        strokeWidth={2.5}
-                      />
-                    )}
+                  {!occurredStatus && !cancelledStatus && !rescheduledStatus && (
+                    <Icons.helpCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  )}
                   {rescheduledStatus && (
-                    <Icons.calendarCheck2
-                      className="h-3.5 w-3.5"
-                      strokeWidth={2.5}
-                    />
+                    <Icons.calendarCheck2 className="h-3.5 w-3.5" strokeWidth={2.5} />
                   )}
                   {cancelledStatus && (
-                    <Icons.crossCircleFilled
-                      className="h-3.5 w-3.5"
-                      strokeWidth={2.5}
-                    />
+                    <Icons.crossCircleFilled className="h-3.5 w-3.5" strokeWidth={2.5} />
                   )}
                 </div>
                 {sessionDisplayName(sessionType.sessionName)}

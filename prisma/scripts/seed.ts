@@ -12,8 +12,7 @@ const ids = {
       visibleId: "SHA",
       implementerName: "Shamiri Institute",
       implementerType: "NNGO",
-      implementerAddress:
-        "13th Floor, Pioneer Point (CMS-Africa)\nChania Avenue, Nairobi, Kenya",
+      implementerAddress: "13th Floor, Pioneer Point (CMS-Africa)\nChania Avenue, Nairobi, Kenya",
       pointPersonName: "Tom Osborn",
       pointPersonPhone: "+254 (0) 11 254 0760",
       pointPersonEmail: "team@shamiri.institute",
@@ -263,10 +262,7 @@ const ids = {
                       sessionType: "s0",
                       sessionName: "Presession",
                       sessionDate: setMinutes(addDays(new Date(), -2), 0),
-                      sessionEndTime: addHours(
-                        setMinutes(addDays(new Date(), -2), 0),
-                        1.5,
-                      ),
+                      sessionEndTime: addHours(setMinutes(addDays(new Date(), -2), 0), 1.5),
                       sessionRating: 4,
                       supervisorVisibleId: "SPV24_S_01",
                     },
@@ -275,10 +271,7 @@ const ids = {
                       sessionType: "s1",
                       sessionName: "Session 01",
                       sessionDate: setMinutes(addDays(new Date(), 0), 0),
-                      sessionEndTime: addHours(
-                        setMinutes(addDays(new Date(), 0), 0),
-                        1.5,
-                      ),
+                      sessionEndTime: addHours(setMinutes(addDays(new Date(), 0), 0), 1.5),
                       sessionRating: 5,
                       supervisorVisibleId: "SPV24_S_02",
                     },
@@ -287,10 +280,7 @@ const ids = {
                       sessionType: "s2",
                       sessionName: "Session 01",
                       sessionDate: setMinutes(addDays(new Date(), 2), 0),
-                      sessionEndTime: addHours(
-                        setMinutes(addDays(new Date(), 2), 0),
-                        1.5,
-                      ),
+                      sessionEndTime: addHours(setMinutes(addDays(new Date(), 2), 0), 1.5),
                       sessionRating: 3,
                       supervisorVisibleId: "SPV24_S_03",
                     },
@@ -421,10 +411,7 @@ const ids = {
                       sessionType: "s0",
                       status: SessionStatus.Cancelled,
                       sessionName: "Presession",
-                      sessionDate: setHours(
-                        setMinutes(addDays(new Date(), -1), 0),
-                        6,
-                      ),
+                      sessionDate: setHours(setMinutes(addDays(new Date(), -1), 0), 6),
                       sessionEndTime: addHours(
                         setHours(setMinutes(addDays(new Date(), -1), 0), 6),
                         2,
@@ -484,10 +471,7 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: setHours(
-                        setMinutes(addDays(new Date(), 1), 0),
-                        15,
-                      ),
+                      sessionDate: setHours(setMinutes(addDays(new Date(), 1), 0), 15),
                       sessionEndTime: addHours(
                         setHours(setMinutes(addDays(new Date(), 1), 0), 15),
                         1.5,
@@ -578,10 +562,7 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: setHours(
-                        setMinutes(addDays(new Date(), 1), 0),
-                        15,
-                      ),
+                      sessionDate: setHours(setMinutes(addDays(new Date(), 1), 0), 15),
                       sessionEndTime: addHours(
                         setHours(setMinutes(addDays(new Date(), 1), 0), 15),
                         1.5,
@@ -668,10 +649,7 @@ const ids = {
                       id: objectId("sess"),
                       sessionType: "s0",
                       sessionName: "Presession",
-                      sessionDate: setHours(
-                        setMinutes(addDays(new Date(), 1), 0),
-                        15,
-                      ),
+                      sessionDate: setHours(setMinutes(addDays(new Date(), 1), 0), 15),
                       sessionEndTime: addHours(
                         setHours(setMinutes(addDays(new Date(), 1), 0), 15),
                         1.5,
@@ -1000,10 +978,8 @@ async function seedDatabase() {
     }
 
     for (const user of Object.values(implementer.users)) {
-      let personnel:
-        | Prisma.SupervisorGetPayload<{}>
-        | Prisma.HubCoordinatorGetPayload<{}>
-        | null = null;
+      let personnel: Prisma.SupervisorGetPayload<{}> | Prisma.HubCoordinatorGetPayload<{}> | null =
+        null;
 
       if (user.role === ImplementerRole.SUPERVISOR) {
         personnel = await db.supervisor.findUniqueOrThrow({
@@ -1068,8 +1044,6 @@ async function truncateTables() {
     await db.$executeRawUnsafe(truncateCommand);
     console.log("Selected tables truncated successfully.");
   } else {
-    console.log(
-      "No tables to truncate. Make sure to run `npm run db:dev:migrate` first.",
-    );
+    console.log("No tables to truncate. Make sure to run `npm run db:dev:migrate` first.");
   }
 }

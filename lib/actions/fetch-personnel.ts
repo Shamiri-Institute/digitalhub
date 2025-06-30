@@ -123,13 +123,7 @@ export async function fetchPersonnel() {
     project: ct.assignedHub?.project?.name,
   }));
 
-  const personnel = [
-    ...hubCoordinators,
-    ...supervisors,
-    ...fellows,
-    ...clinicalLeads,
-    ...opsUsers,
-  ];
+  const personnel = [...hubCoordinators, ...supervisors, ...fellows, ...clinicalLeads, ...opsUsers];
 
   const user = await getCurrentUser();
   if (!user) {

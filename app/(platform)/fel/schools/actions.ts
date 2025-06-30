@@ -42,17 +42,12 @@ export async function fetchSchoolData(hubId: string) {
   });
 }
 
-export async function revalidatePageAction(
-  pathname: string,
-  mode?: "layout" | "page",
-) {
+export async function revalidatePageAction(pathname: string, mode?: "layout" | "page") {
   revalidatePath(pathname, mode);
 }
 
 export async function fetchSessionAttendanceData(hubId: string) {
-  const sessionAttendanceData = await db.$queryRaw<
-    { session_number: number; count: number }[]
-  >`
+  const sessionAttendanceData = await db.$queryRaw<{ session_number: number; count: number }[]>`
     SELECT
       fa.session_number AS session_number,
       COUNT(DISTINCT fa.school_id) AS count
@@ -220,15 +215,12 @@ export async function undoDropoutSchool(schoolId: string) {
     console.error(e);
     return {
       success: false,
-      message:
-        "Something went wrong while trying to update school drop out status",
+      message: "Something went wrong while trying to update school drop out status",
     };
   }
 }
 
-export async function submitWeeklyHubReport(
-  data: z.infer<typeof WeeklyHubReportSchema>,
-) {
+export async function submitWeeklyHubReport(data: z.infer<typeof WeeklyHubReportSchema>) {
   try {
     const parsedData = WeeklyHubReportSchema.parse(data);
 
@@ -305,9 +297,7 @@ export async function fetchSchoolAttendances(hubId: string) {
 
   const numSchools = Number(schoolCount?.count) ?? 0;
 
-  const schoolAttendances = await db.$queryRaw<
-    { count: number; session_type: string }[]
-  >`
+  const schoolAttendances = await db.$queryRaw<{ count: number; session_type: string }[]>`
     SELECT
       session_type,
       count(distinct sa.school_id) AS "count"
@@ -322,13 +312,11 @@ export async function fetchSchoolAttendances(hubId: string) {
     ORDER BY
       session_type ASC`;
 
-  return schoolAttendances.map<SchoolAttendances>(
-    ({ session_type, count }) => ({
-      session_type,
-      count_attendance_marked: Number(count),
-      count_attendance_unmarked: numSchools - Number(count),
-    }),
-  );
+  return schoolAttendances.map<SchoolAttendances>(({ session_type, count }) => ({
+    session_type,
+    count_attendance_marked: Number(count),
+    count_attendance_unmarked: numSchools - Number(count),
+  }));
 }
 
 export async function editSchoolInformation(
@@ -358,17 +346,12 @@ export async function editSchoolInformation(
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ?? "Sorry, could not update the school details",
+      message: (err as Error)?.message ?? "Sorry, could not update the school details",
     };
   }
 }
 
-export async function fetchHubSupervisors({
-  where,
-}: {
-  where: Prisma.SupervisorWhereInput;
-}) {
+export async function fetchHubSupervisors({ where }: { where: Prisma.SupervisorWhereInput }) {
   return await db.supervisor.findMany({
     where,
   });
@@ -401,9 +384,7 @@ export async function assignSchoolPointSupervisor(
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ??
-        "Sorry, could not assign the school point supervisor",
+      message: (err as Error)?.message ?? "Sorry, could not assign the school point supervisor",
     };
   }
 }

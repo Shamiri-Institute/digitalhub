@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  AcceptRefferedClinicalCase,
-  RejectRefferedClinicalCase,
-} from "#/app/actions";
+import { AcceptRefferedClinicalCase, RejectRefferedClinicalCase } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Card } from "#/components/ui/card";
 import { useToast } from "#/components/ui/use-toast";
@@ -22,9 +19,7 @@ export function CasesReferredToMe({
 }) {
   return (
     <div className="w-full">
-      <span className="text-sm font-medium">
-        Cases referred to you : {cases.length}
-      </span>
+      <span className="text-sm font-medium">Cases referred to you : {cases.length}</span>
       {cases.map((stud) => (
         <RefferedCasesTab
           key={stud.id}
@@ -57,11 +52,7 @@ export function RefferedCasesTab({
   const handleAcceptReferredCase = async () => {
     if (caseId) {
       try {
-        await AcceptRefferedClinicalCase(
-          currentSupervisorId,
-          referredToSupervisorId,
-          caseId,
-        );
+        await AcceptRefferedClinicalCase(currentSupervisorId, referredToSupervisorId, caseId);
         toast({
           variant: "default",
           title: "Referred case accepted",

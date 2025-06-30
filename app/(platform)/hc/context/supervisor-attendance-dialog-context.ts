@@ -13,14 +13,13 @@ type SupervisorAttendanceContextData = {
   setAttendance: Dispatch<SetStateAction<SupervisorAttendanceTableData | null>>;
 };
 
-export const SupervisorAttendanceContext =
-  createContext<SupervisorAttendanceContextData>({
-    isOpen: false,
-    setIsOpen: () => {},
-    session: null,
-    setSession: () => {},
-    markAttendanceDialog: false,
-    setMarkAttendanceDialog: () => {},
-    attendance: null,
-    setAttendance: () => {},
-  });
+export const SupervisorAttendanceContext = createContext<SupervisorAttendanceContextData>({
+  isOpen: false,
+  setIsOpen: () => {},
+  session: null,
+  setSession: () => {},
+  markAttendanceDialog: false,
+  setMarkAttendanceDialog: () => {},
+  attendance: null,
+  setAttendance: () => {},
+});

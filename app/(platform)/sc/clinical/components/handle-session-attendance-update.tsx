@@ -5,12 +5,7 @@ import type { AttendanceRecord } from "#/app/(platform)/sc/clinical/components/c
 import { CustomIndicator } from "#/components/common/mark-attendance";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,10 +37,7 @@ export default function HandleSessionAttendanceUpdate({
 
   const handleAttendanceUpdate = async (status: boolean | null) => {
     try {
-      const response = await updateClinicalSessionAttendance(
-        row.original.sessionId,
-        status,
-      );
+      const response = await updateClinicalSessionAttendance(row.original.sessionId, status);
       if (response.success) {
         toast({ description: response.message });
         if (role === "CLINICAL_LEAD") {
@@ -79,13 +71,9 @@ export default function HandleSessionAttendanceUpdate({
           }}
         >
           <DropdownMenuLabel>
-            <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-              Actions
-            </span>
+            <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
           </DropdownMenuLabel>
-          <DropdownMenuItem onSelect={() => setIsOpen(true)}>
-            Mark attendance
-          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setIsOpen(true)}>Mark attendance</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 

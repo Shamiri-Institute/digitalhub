@@ -1,12 +1,7 @@
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { undropSupervisor } from "#/app/(platform)/hc/supervisors/actions";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import { toast } from "#/components/ui/use-toast";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useState } from "react";
@@ -31,8 +26,7 @@ export default function UndropSupervisor({
       const response = await undropSupervisor(supervisorId);
       if (!response.success) {
         toast({
-          description:
-            response.message ?? "Something went wrong, please try again",
+          description: response.message ?? "Something went wrong, please try again",
         });
         return;
       }

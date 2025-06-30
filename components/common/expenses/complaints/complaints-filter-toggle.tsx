@@ -1,12 +1,7 @@
 "use client";
 
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
-import {
-  Select,
-  SelectContent,
-  SelectTrigger,
-  SelectValue,
-} from "#/components/ui/select";
+import { Select, SelectContent, SelectTrigger, SelectValue } from "#/components/ui/select";
 import { useState } from "react";
 
 export default function ComplaintsFilterToggle() {

@@ -4,12 +4,7 @@ import StudentDetailsForm from "#/components/common/student/student-details-form
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import type { Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import React, { type Dispatch, type SetStateAction } from "react";
@@ -50,9 +45,7 @@ export default function StudentsInGroup({
           {children}
           <DataTable
             columns={columns}
-            data={students.sort(
-              (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
-            )}
+            data={students.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())}
             emptyStateMessage={"No students associated to this group"}
             columnVisibilityState={{
               "Shamiri ID": false,
@@ -112,11 +105,7 @@ const columns: ColumnDef<
     id: "Student name",
     header: "Student name",
     cell: ({ row }) => {
-      return (
-        <span className="capitalize">
-          {row.original.studentName?.toLowerCase()}
-        </span>
-      );
+      return <span className="capitalize">{row.original.studentName?.toLowerCase()}</span>;
     },
   },
   {
@@ -132,8 +121,7 @@ const columns: ColumnDef<
   {
     header: "Age",
     id: "Age",
-    accessorFn: (row) =>
-      row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
+    accessorFn: (row) => row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
   },
   {
     header: "Clinical cases",

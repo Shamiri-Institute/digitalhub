@@ -68,9 +68,7 @@ export default function SchoolsBreadcrumb({ role }: { role: ImplementerRole }) {
           <div
             className={cn(
               "arrow-button rounded-l-lg",
-              selectedSchoolIndex === 0 || loading
-                ? "pointer-events-none opacity-50"
-                : "",
+              selectedSchoolIndex === 0 || loading ? "pointer-events-none opacity-50" : "",
             )}
             onClick={() => {
               if (selectedSchoolIndex !== 0) {
@@ -88,10 +86,7 @@ export default function SchoolsBreadcrumb({ role }: { role: ImplementerRole }) {
                 : "",
             )}
             onClick={() => {
-              if (
-                loading ||
-                selectedSchoolIndex !== context.schools.length - 1
-              ) {
+              if (loading || selectedSchoolIndex !== context.schools.length - 1) {
                 setSelectedSchoolIndex(selectedSchoolIndex + 1);
               }
             }}

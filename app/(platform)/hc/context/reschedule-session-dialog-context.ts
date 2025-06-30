@@ -8,10 +8,9 @@ type RescheduleSessionContextData = {
   setSession: Dispatch<SetStateAction<Session | null>>;
 };
 
-export const RescheduleSessionContext =
-  createContext<RescheduleSessionContextData>({
-    isOpen: false,
-    setIsOpen: () => {},
-    session: null,
-    setSession: () => {},
-  });
+export const RescheduleSessionContext = createContext<RescheduleSessionContextData>({
+  isOpen: false,
+  setIsOpen: () => {},
+  session: null,
+  setSession: () => {},
+});

@@ -96,10 +96,8 @@ export async function fetchFellowSessionRatingAverages(hubId: string) {
 
   ratingAverages.forEach((item) => {
     item.behaviour_rating = Math.round(Number(item.behaviour_rating)) || 0;
-    item.program_delivery_rating =
-      Math.round(Number(item.program_delivery_rating)) || 0;
-    item.dressing_and_grooming_rating =
-      Math.round(Number(item.dressing_and_grooming_rating)) || 0;
+    item.program_delivery_rating = Math.round(Number(item.program_delivery_rating)) || 0;
+    item.dressing_and_grooming_rating = Math.round(Number(item.dressing_and_grooming_rating)) || 0;
     item.punctuality_rating = Math.round(Number(item.punctuality_rating)) || 0;
   });
 

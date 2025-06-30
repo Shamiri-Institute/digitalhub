@@ -21,8 +21,7 @@ export const attendanceColumns: ColumnDef<AttendanceRecord>[] = [
   {
     accessorKey: "sessionDate",
     header: "Date",
-    cell: ({ row }) =>
-      format(new Date(row.original.sessionDate), "dd MMM yyyy"),
+    cell: ({ row }) => format(new Date(row.original.sessionDate), "dd MMM yyyy"),
   },
   {
     accessorKey: "attendanceStatus",
@@ -37,8 +36,7 @@ export const attendanceColumns: ColumnDef<AttendanceRecord>[] = [
               {
                 "border-green-border": attended,
                 "border-red-border": !attended,
-                "border-blue-border":
-                  attended === undefined || attended === null,
+                "border-blue-border": attended === undefined || attended === null,
               },
               {
                 "bg-green-bg": attended,
@@ -59,10 +57,7 @@ export const attendanceColumns: ColumnDef<AttendanceRecord>[] = [
               </div>
             ) : (
               <div className="flex items-center gap-1 text-red-base">
-                <Icons.crossCircleFilled
-                  className="h-3 w-3"
-                  strokeWidth={2.5}
-                />
+                <Icons.crossCircleFilled className="h-3 w-3" strokeWidth={2.5} />
                 <span>Missed</span>
               </div>
             )}

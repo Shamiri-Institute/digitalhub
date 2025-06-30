@@ -119,10 +119,7 @@ export const columns = (state: {
       cell: ({ row }) => {
         const type = row.original.groupType;
         return (
-          <Badge
-            variant={type === "TREATMENT" ? "default" : "outline"}
-            className="capitalize"
-          >
+          <Badge variant={type === "TREATMENT" ? "default" : "outline"} className="capitalize">
             {type.toLowerCase()}
           </Badge>
         );
@@ -130,9 +127,7 @@ export const columns = (state: {
     },
     {
       id: "button",
-      cell: ({ row }) => (
-        <GroupsDatatableMenu group={row.original} state={state} />
-      ),
+      cell: ({ row }) => <GroupsDatatableMenu group={row.original} state={state} />,
       enableHiding: false,
     },
   ];

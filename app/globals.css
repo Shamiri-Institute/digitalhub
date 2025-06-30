@@ -214,23 +214,19 @@
     @apply hidden;
   }
 
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"])
-    .indicator {
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator {
     @apply border-4;
   }
 
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"])
-    .indicator.green {
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator.green {
     @apply border-shamiri-green;
   }
 
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"])
-    .indicator.red {
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator.red {
     @apply border-shamiri-red;
   }
 
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"])
-    .indicator.blue {
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator.blue {
     @apply border-shamiri-new-blue;
   }
 

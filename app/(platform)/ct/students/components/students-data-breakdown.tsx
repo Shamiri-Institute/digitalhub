@@ -100,10 +100,7 @@ export default function StudentsDataBreakdown({
                   {completionData.find((d) => d.name === "actual")?.value}%
                 </Label>
                 {completionData.map((entry, index) => (
-                  <Cell
-                    key={entry.name}
-                    fill={entry.name === "actual" ? "#0085FF" : "#EFF6FF"}
-                  />
+                  <Cell key={entry.name} fill={entry.name === "actual" ? "#0085FF" : "#EFF6FF"} />
                 ))}
               </Pie>
               <Tooltip />

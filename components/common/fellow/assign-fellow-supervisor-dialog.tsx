@@ -6,13 +6,7 @@ import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "#/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "#/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -67,8 +61,7 @@ export default function AssignFellowSupervisorDialog({
       if (!response.success) {
         toast({
           description:
-            response.message ??
-            "Something went wrong during submission, please try again",
+            response.message ?? "Something went wrong during submission, please try again",
         });
         return;
       }
@@ -112,10 +105,7 @@ export default function AssignFellowSupervisorDialog({
                       <SelectContent>
                         {supervisors.map((supervisor) => {
                           return (
-                            <SelectItem
-                              key={supervisor.id}
-                              value={supervisor.id}
-                            >
+                            <SelectItem key={supervisor.id} value={supervisor.id}>
                               {supervisor.supervisorName}
                             </SelectItem>
                           );

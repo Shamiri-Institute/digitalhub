@@ -13,10 +13,7 @@ export const columns: ColumnDef<FellowComplaintsType>[] = [
     id: "button",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -52,16 +49,13 @@ export const columns: ColumnDef<FellowComplaintsType>[] = [
   },
 ];
 
-export const subColumns: ColumnDef<
-  FellowComplaintsType["complaints"][number]
->[] = [
+export const subColumns: ColumnDef<FellowComplaintsType["complaints"][number]>[] = [
   {
     id: "checkbox",
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -101,9 +95,7 @@ export const subColumns: ColumnDef<
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <FellowComplaintsDropdownMenu fellowComplaints={row.original} />
-    ),
+    cell: ({ row }) => <FellowComplaintsDropdownMenu fellowComplaints={row.original} />,
     enableHiding: false,
   },
 ];

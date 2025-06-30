@@ -6,18 +6,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import {
-  type ClinicalCases,
-  terminateClinicalCase,
-} from "#/app/(platform)/sc/clinical/action";
+import { type ClinicalCases, terminateClinicalCase } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTrigger,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -50,9 +42,7 @@ const CaseTerminationSchema = z.object({
   terminationReason: z.enum(terminationReasons, {
     required_error: "Termination reason is required",
   }),
-  terminationExplanation: stringValidation(
-    "Termination explanation is required",
-  ),
+  terminationExplanation: stringValidation("Termination explanation is required"),
 });
 
 type CaseTerminationFormValues = z.infer<typeof CaseTerminationSchema>;
@@ -123,24 +113,18 @@ export default function CaseTerminationForm({
                     Termination Session
                     <span className="text-red-500">*</span>
                   </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select session" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {clinicalCase.clinicalSessionAttendance?.map(
-                        (session) => (
-                          <SelectItem key={session.id} value={session.id}>
-                            {session.session} -{" "}
-                            {format(new Date(session.date), "dd MMM yyyy")}
-                          </SelectItem>
-                        ),
-                      )}
+                      {clinicalCase.clinicalSessionAttendance?.map((session) => (
+                        <SelectItem key={session.id} value={session.id}>
+                          {session.session} - {format(new Date(session.date), "dd MMM yyyy")}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -157,10 +141,7 @@ export default function CaseTerminationForm({
                     Termination Reason
                     <span className="text-red-500">*</span>
                   </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select termination reason" />
@@ -201,11 +182,7 @@ export default function CaseTerminationForm({
             />
 
             <div className="flex justify-end space-x-4">
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={() => setDialogOpen(false)}
-              >
+              <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
               <Button

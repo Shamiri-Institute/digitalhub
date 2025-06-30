@@ -8,11 +8,7 @@ import { Skeleton } from "#/components/ui/skeleton";
 import type { ImplementerRole } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 
-export default function FellowSchoolsDatatableSkeleton({
-  role,
-}: {
-  role: ImplementerRole;
-}) {
+export default function FellowSchoolsDatatableSkeleton({ role }: { role: ImplementerRole }) {
   const loadingColumns = fellowSchoolsColumns({
     state: {
       setFellow: () => null,
@@ -33,9 +29,7 @@ export default function FellowSchoolsDatatableSkeleton({
         header: renderSkeleton ? column : "",
         id: column,
         cell: () => {
-          return renderSkeleton ? (
-            <Skeleton className="h-5 w-full bg-gray-200" />
-          ) : null;
+          return renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null;
         },
       };
     });

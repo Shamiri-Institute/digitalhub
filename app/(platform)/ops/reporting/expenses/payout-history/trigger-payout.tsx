@@ -51,14 +51,11 @@ export default function TriggerPayout() {
           <DialogHeader>
             <DialogTitle>Confirm Payout Trigger</DialogTitle>
             <DialogDescription>
-              This action will initiate the payout process for all pending
-              payments.
+              This action will initiate the payout process for all pending payments.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Please be aware that this action:
-            </p>
+            <p className="text-sm text-muted-foreground">Please be aware that this action:</p>
             <ul className="list-disc space-y-2 pl-4 text-sm text-muted-foreground">
               <li>Cannot be reversed once initiated</li>
               <li>Will process all eligible pending payments</li>
@@ -66,11 +63,7 @@ export default function TriggerPayout() {
             </ul>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={loading}
-            >
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
               Cancel
             </Button>
             <Button

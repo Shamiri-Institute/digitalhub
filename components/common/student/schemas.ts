@@ -26,12 +26,7 @@ export const StudentDetailsSchema = z
       (val) => {
         const year = Number(val);
         const currentYear = new Date().getFullYear();
-        return (
-          !isNaN(year) &&
-          val.trim() !== "" &&
-          year >= 1900 &&
-          year <= currentYear
-        );
+        return !isNaN(year) && val.trim() !== "" && year >= 1900 && year <= currentYear;
       },
       {
         message: "Please enter a valid year between 1900 and current year",

@@ -7,29 +7,21 @@ import { Skeleton } from "#/components/ui/skeleton";
 import type { ColumnDef } from "@tanstack/react-table";
 
 export default function PayoutHistoryTableSkeleton() {
-  const loadingColumns: ColumnDef<SupervisorPayoutHistoryType>[] = columns.map(
-    (column) => {
-      const columnId =
-        typeof column.header === "string"
-          ? column.header
-          : (column.id ?? "unknown");
-      return {
-        accessorFn: () => null,
-        header:
-          columnId !== "checkbox" && columnId !== "button" ? columnId : "",
-        id: columnId,
-        cell: () => {
-          return columnId !== "checkbox" && columnId !== "button" ? (
-            <Skeleton className="h-5 w-full bg-gray-200" />
-          ) : null;
-        },
-      };
-    },
-  );
+  const loadingColumns: ColumnDef<SupervisorPayoutHistoryType>[] = columns.map((column) => {
+    const columnId = typeof column.header === "string" ? column.header : (column.id ?? "unknown");
+    return {
+      accessorFn: () => null,
+      header: columnId !== "checkbox" && columnId !== "button" ? columnId : "",
+      id: columnId,
+      cell: () => {
+        return columnId !== "checkbox" && columnId !== "button" ? (
+          <Skeleton className="h-5 w-full bg-gray-200" />
+        ) : null;
+      },
+    };
+  });
 
-  const emptyData: SupervisorPayoutHistoryType[] = Array.from(
-    Array(10).keys(),
-  ).map(() => ({
+  const emptyData: SupervisorPayoutHistoryType[] = Array.from(Array(10).keys()).map(() => ({
     id: "",
     dateAdded: new Date(),
     duration: "",

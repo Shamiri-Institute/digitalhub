@@ -14,10 +14,7 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
     id: "button",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -59,9 +56,7 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
       return (
         <div className="flex items-center gap-1">
           <span>{row.original.pseudonym}</span>
-          {flagged ? (
-            <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
-          ) : null}
+          {flagged ? <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" /> : null}
         </div>
       );
     },
@@ -109,9 +104,7 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
   {
     id: "button",
     cell: ({ row }) => {
-      return (
-        <ClinicalLeadCaseActionsDropdownMenu clinicalCase={row.original} />
-      );
+      return <ClinicalLeadCaseActionsDropdownMenu clinicalCase={row.original} />;
     },
     enableHiding: false,
   },

@@ -85,8 +85,7 @@ export default function ViewFellowComplaint({
                 render={({ field }) => (
                   <FormItem className="space-y-2">
                     <FormLabel>
-                      Select fellow (KES){" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Select fellow (KES) <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <Select disabled defaultValue={field.value}>
                       <FormControl>
@@ -95,10 +94,7 @@ export default function ViewFellowComplaint({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem
-                          key={complaint.fellowName}
-                          value={complaint.fellowName!}
-                        >
+                        <SelectItem key={complaint.fellowName} value={complaint.fellowName!}>
                           {complaint?.fellowName}
                         </SelectItem>
                       </SelectContent>
@@ -116,15 +112,10 @@ export default function ViewFellowComplaint({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          M-Pesa name{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          M-Pesa name <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            className="w-full flex-1"
-                            disabled
-                            {...field}
-                          />
+                          <Input className="w-full flex-1" disabled {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -138,15 +129,10 @@ export default function ViewFellowComplaint({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          M-Pesa number{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          M-Pesa number <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            disabled
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input disabled className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -162,15 +148,10 @@ export default function ViewFellowComplaint({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          No. of training sessions{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          No. of training sessions <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            disabled
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input disabled className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -188,11 +169,7 @@ export default function ViewFellowComplaint({
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            disabled
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input disabled className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -208,15 +185,10 @@ export default function ViewFellowComplaint({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          No. of pre sessions{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          No. of pre sessions <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            disabled
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input disabled className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -230,15 +202,10 @@ export default function ViewFellowComplaint({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          No. of main sessions{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          No. of main sessions <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            disabled
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input disabled className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -259,11 +226,7 @@ export default function ViewFellowComplaint({
                           <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            disabled
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input disabled className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -277,15 +240,10 @@ export default function ViewFellowComplaint({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          Paid amount (KES){" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Paid amount (KES) <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            disabled
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input disabled className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -314,8 +272,7 @@ export default function ViewFellowComplaint({
 
               <div>
                 <div>
-                  Upload Mpesa statement{" "}
-                  <span className="text-shamiri-light-red">*</span>
+                  Upload Mpesa statement <span className="text-shamiri-light-red">*</span>
                 </div>
                 <FileUploaderWithDrop
                   label="Upload csv file"
@@ -363,8 +320,7 @@ export default function ViewFellowComplaint({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Additional comments{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Additional comments <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
                       <Textarea
@@ -386,8 +342,7 @@ export default function ViewFellowComplaint({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Reasons for accepting{" "}
-                        <span className="text-shamiri-light-red">*</span>
+                        Reasons for accepting <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
                       <FormControl>
                         <Textarea
@@ -410,8 +365,7 @@ export default function ViewFellowComplaint({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Reasons for rejecting{" "}
-                        <span className="text-shamiri-light-red">*</span>
+                        Reasons for rejecting <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
                       <FormControl>
                         <Textarea

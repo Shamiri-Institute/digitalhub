@@ -94,11 +94,5 @@ export default async function GroupsPage({
     },
   });
 
-  return (
-    <GroupsDataTable
-      data={data}
-      school={school}
-      role={fellow?.user?.membership.role!}
-    />
-  );
+  return <GroupsDataTable data={data} school={school} role={fellow?.user?.membership.role!} />;
 }

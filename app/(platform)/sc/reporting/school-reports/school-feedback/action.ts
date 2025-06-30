@@ -42,8 +42,7 @@ export async function loadSchoolFeedback() {
           feedbackId: feedback.id,
           programImpactOnStudents: feedback.programImpactOnStudents,
           concernsRaisedByTeachers: feedback.concernsRaisedByTeachers,
-          factorsInfluencedStudentParticipation:
-            feedback.factorsInfluencedStudentParticipation,
+          factorsInfluencedStudentParticipation: feedback.factorsInfluencedStudentParticipation,
         })),
       };
     });
@@ -55,6 +54,4 @@ export async function loadSchoolFeedback() {
   }
 }
 
-export type SchoolFeedbackType = Awaited<
-  ReturnType<typeof loadSchoolFeedback>
->[number];
+export type SchoolFeedbackType = Awaited<ReturnType<typeof loadSchoolFeedback>>[number];

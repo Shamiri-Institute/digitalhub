@@ -49,22 +49,10 @@ export default async function SchoolsPage(props: {
     supervisors,
   ] = await Promise.all([
     await fetchSchoolData(hubCoordinator?.assignedHubId as string),
-    await fetchDropoutReasons(
-      hubCoordinator?.assignedHubId as string,
-      queryAsSchoolId,
-    ),
-    await fetchSchoolDataCompletenessData(
-      hubCoordinator?.assignedHubId as string,
-      queryAsSchoolId,
-    ),
-    await fetchSessionRatingAverages(
-      hubCoordinator?.assignedHubId as string,
-      queryAsSchoolId,
-    ),
-    await fetchSchoolAttendances(
-      hubCoordinator?.assignedHubId as string,
-      queryAsSchoolId,
-    ),
+    await fetchDropoutReasons(hubCoordinator?.assignedHubId as string, queryAsSchoolId),
+    await fetchSchoolDataCompletenessData(hubCoordinator?.assignedHubId as string, queryAsSchoolId),
+    await fetchSessionRatingAverages(hubCoordinator?.assignedHubId as string, queryAsSchoolId),
+    await fetchSchoolAttendances(hubCoordinator?.assignedHubId as string, queryAsSchoolId),
     await fetchHubSupervisors({
       where: {
         hubId: hubCoordinator?.assignedHubId as string,

@@ -1,16 +1,6 @@
-import {
-  type CalendarDate,
-  getWeeksInMonth,
-  isSameDay,
-  isWeekend,
-} from "@internationalized/date";
+import { type CalendarDate, getWeeksInMonth, isSameDay, isWeekend } from "@internationalized/date";
 import { type Dispatch, type SetStateAction, useEffect, useRef } from "react";
-import {
-  useCalendarCell,
-  useCalendarGrid,
-  useDateFormatter,
-  useLocale,
-} from "react-aria";
+import { useCalendarCell, useCalendarGrid, useDateFormatter, useLocale } from "react-aria";
 import type { CalendarGridProps } from "react-aria-components";
 import type { CalendarState } from "react-stately";
 
@@ -59,9 +49,7 @@ export function MonthView({
 
   useEffect(() => {
     if (state.value) {
-      setTitle(
-        `${titleFormatter.format(state.visibleRange.start.toDate(state.timeZone))}`,
-      );
+      setTitle(`${titleFormatter.format(state.visibleRange.start.toDate(state.timeZone))}`);
     }
   }, [
     setTitle,
@@ -101,10 +89,7 @@ export function MonthView({
     <div className="relative">
       <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[0.4375rem] shadow-inner-2 lg:hidden" />
       <div className="no-scrollbar w-full overflow-x-scroll rounded-t-[0.4375rem] border">
-        <table
-          ref={headerRowRef}
-          className="schedule-table z-20 rounded-t-[0.4375rem] bg-white"
-        >
+        <table ref={headerRowRef} className="schedule-table z-20 rounded-t-[0.4375rem] bg-white">
           <thead {...headerProps}>
             <tr>
               {weekDays.map((day, index) => (
@@ -201,10 +186,7 @@ export function MonthCalendarCell({
         {...buttonProps}
         ref={ref}
         className={cn("h-full w-full transition ease-in-out", {
-          "outline outline-2 outline-shamiri-new-blue": isSameDay(
-            date,
-            state.focusedDate,
-          ),
+          "outline outline-2 outline-shamiri-new-blue": isSameDay(date, state.focusedDate),
           selected: isSelected,
           disabled: isDisabled,
           unavailable: isUnavailable,
@@ -226,15 +208,9 @@ export function MonthCalendarCell({
             })}
           >
             <div
-              className={cn(
-                "flex h-6 w-6 items-center justify-center rounded-full p-0.5",
-                {
-                  "bg-shamiri-new-blue text-white": isSameDay(
-                    date,
-                    state.focusedDate,
-                  ),
-                },
-              )}
+              className={cn("flex h-6 w-6 items-center justify-center rounded-full p-0.5", {
+                "bg-shamiri-new-blue text-white": isSameDay(date, state.focusedDate),
+              })}
             >
               {formattedDate}
             </div>

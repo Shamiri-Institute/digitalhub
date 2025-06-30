@@ -93,8 +93,7 @@ export default async function FellowsPage() {
                   schoolName: group.school?.schoolName,
                   sessionType:
                     group.school?.interventionSessions[0]?.sessionDate &&
-                    group.school?.interventionSessions[0]?.sessionDate >
-                      new Date()
+                    group.school?.interventionSessions[0]?.sessionDate > new Date()
                       ? group.school?.interventionSessions[0]?.sessionType
                       : "No upcoming session",
                   groupName: group.groupName,
@@ -109,11 +108,9 @@ export default async function FellowsPage() {
                 fellowData?.groups.map((group) => {
                   return {
                     ...group,
-                    attendances: fellowData?.fellowAttendances.filter(
-                      (attendance) => {
-                        return attendance.groupId === group.id;
-                      },
-                    ),
+                    attendances: fellowData?.fellowAttendances.filter((attendance) => {
+                      return attendance.groupId === group.id;
+                    }),
                   };
                 }) ?? [],
               complaints: [],

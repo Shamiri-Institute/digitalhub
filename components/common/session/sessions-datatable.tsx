@@ -53,22 +53,17 @@ export default function SessionsDatatable({
 }) {
   const pathname = usePathname();
   const [_sessions, setSessions] = useState(sessions);
-  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
-    React.useState(false);
-  const [fellowAttendanceDialog, setFellowAttendanceDialog] =
-    React.useState(false);
+  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] = React.useState(false);
+  const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
-  const [rescheduleSessionDialog, setRescheduleSessionDialog] =
-    React.useState(false);
+  const [rescheduleSessionDialog, setRescheduleSessionDialog] = React.useState(false);
   const [session, setSession] = React.useState<Session | null>(null);
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
   const [markAttendanceDialog, setMarkAttendanceDialog] = React.useState(false);
   const [supervisorAttendance, setSupervisorAttendance] =
     React.useState<SupervisorAttendanceTableData | null>(null);
-  const [studentAttendanceDialog, setStudentAttendanceDialog] =
-    React.useState(false);
-  const [sessionOccurrenceDialog, setSessionOccurrenceDialog] =
-    useState<boolean>(false);
+  const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
+  const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
 
   return (
     <>
@@ -111,8 +106,7 @@ export default function SessionsDatatable({
             role={role}
             session={sessions.find((x) => x.id === session.id)!}
             fellows={
-              supervisors?.find((supervisor) => supervisor.id === supervisorId)
-                ?.fellows ?? []
+              supervisors?.find((supervisor) => supervisor.id === supervisorId)?.fellows ?? []
             }
             fellowId={fellowId}
           />

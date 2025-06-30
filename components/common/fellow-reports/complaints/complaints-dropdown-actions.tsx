@@ -26,32 +26,16 @@ export default function FellowComplaintsDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <ViewEditFellowComplaints
-          fellowComplaints={fellowComplaints}
-          action="view"
-        >
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+        <ViewEditFellowComplaints fellowComplaints={fellowComplaints} action="view">
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
             View fellow complaint
           </div>
         </ViewEditFellowComplaints>
-        <ViewEditFellowComplaints
-          fellowComplaints={fellowComplaints}
-          action="edit"
-        >
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+        <ViewEditFellowComplaints fellowComplaints={fellowComplaints} action="edit">
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
             Edit fellow complaint
           </div>
         </ViewEditFellowComplaints>

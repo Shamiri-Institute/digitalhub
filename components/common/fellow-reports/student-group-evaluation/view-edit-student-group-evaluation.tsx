@@ -41,9 +41,7 @@ const StudentGroupEvaluationSchema = z.object({
   contentComment: z.string().min(1, "Content comment is required"),
 });
 
-type StudentGroupEvaluationFormValues = z.infer<
-  typeof StudentGroupEvaluationSchema
->;
+type StudentGroupEvaluationFormValues = z.infer<typeof StudentGroupEvaluationSchema>;
 
 export default function ViewEditStudentGroupEvaluation({
   children,
@@ -67,18 +65,13 @@ export default function ViewEditStudentGroupEvaluation({
 
   const onSubmit = async (data: StudentGroupEvaluationFormValues) => {
     try {
-      const response = await editStudentGroupEvaluation(
-        studentGroupEvaluation.sessionId,
-        data,
-      );
+      const response = await editStudentGroupEvaluation(studentGroupEvaluation.sessionId, data);
       if (response.success) {
         toast({
           title: "Success",
           description: "Student group evaluation updated successfully",
         });
-        await revalidatePageAction(
-          "sc/reporting/fellow-reports/student-group-evaluation",
-        );
+        await revalidatePageAction("sc/reporting/fellow-reports/student-group-evaluation");
         setDialogOpen(false);
       } else {
         toast({
@@ -109,17 +102,12 @@ export default function ViewEditStudentGroupEvaluation({
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <div className="mb-2">
             <label className="text-sm font-medium">Session</label>
-            <Select
-              disabled
-              value={studentGroupEvaluation.session?.toString() ?? ""}
-            >
+            <Select disabled value={studentGroupEvaluation.session?.toString() ?? ""}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Session" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  value={studentGroupEvaluation.session?.toString() ?? ""}
-                >
+                <SelectItem value={studentGroupEvaluation.session?.toString() ?? ""}>
                   {studentGroupEvaluation.session?.toString() ?? "No session"}
                 </SelectItem>
               </SelectContent>
@@ -132,9 +120,7 @@ export default function ViewEditStudentGroupEvaluation({
               <span className="text-shamiri-light-red">*</span>
             </label>
             <div className="my-1">
-              <DataTableRatingStars
-                rating={studentGroupEvaluation.cooperation ?? 0}
-              />
+              <DataTableRatingStars rating={studentGroupEvaluation.cooperation ?? 0} />
             </div>
           </div>
           <div>
@@ -143,9 +129,7 @@ export default function ViewEditStudentGroupEvaluation({
               <span className="text-shamiri-light-red">*</span>
             </label>
             <div className="my-1">
-              <DataTableRatingStars
-                rating={studentGroupEvaluation.engagement ?? 0}
-              />
+              <DataTableRatingStars rating={studentGroupEvaluation.engagement ?? 0} />
             </div>
           </div>
 
@@ -157,8 +141,7 @@ export default function ViewEditStudentGroupEvaluation({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Engagement Comments{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Engagement Comments <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
                       <Textarea
@@ -178,8 +161,7 @@ export default function ViewEditStudentGroupEvaluation({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Cooperation Comments{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Cooperation Comments <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
                       <Textarea
@@ -199,8 +181,7 @@ export default function ViewEditStudentGroupEvaluation({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Content Comments{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Content Comments <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
                       <Textarea
@@ -216,11 +197,7 @@ export default function ViewEditStudentGroupEvaluation({
 
               {!isViewOnly && (
                 <DialogFooter>
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    onClick={() => setDialogOpen(false)}
-                  >
+                  <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
                     Cancel
                   </Button>
                   <Button

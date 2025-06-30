@@ -27,17 +27,12 @@ export async function sendEmailWithAttachment(input: SendRawEmailCommandInput) {
   return await sendWithRetry(() => ses.sendRawEmail(input));
 }
 
-async function sendWithRetry(
-  sendFunction: () => Promise<any>,
-  retries = MAX_RETRIES,
-) {
+async function sendWithRetry(sendFunction: () => Promise<any>, retries = MAX_RETRIES) {
   let attempt = 0;
   while (attempt < retries) {
     try {
       if (attempt > 5) {
-        console.warn(
-          `Email attempt #${attempt} of ${retries} failed. Retrying...`,
-        );
+        console.warn(`Email attempt #${attempt} of ${retries} failed. Retrying...`);
       }
       const response = await sendFunction();
       await throttle();

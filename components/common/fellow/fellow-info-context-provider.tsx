@@ -3,11 +3,7 @@ import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fello
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import { useState } from "react";
 
-export default function FellowInfoContextProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function FellowInfoContextProvider({ children }: { children: React.ReactNode }) {
   const [groupDialog, setGroupDialog] = useState(false);
   const [addStudentDialog, setAddStudentDialog] = useState(false);
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);

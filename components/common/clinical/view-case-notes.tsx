@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useState } from "react";
 
@@ -34,11 +29,7 @@ interface ViewCaseNotesProps {
   pseudonym: string;
 }
 
-export function ViewCaseNotes({
-  children,
-  caseNotes,
-  pseudonym,
-}: ViewCaseNotesProps) {
+export function ViewCaseNotes({ children, caseNotes, pseudonym }: ViewCaseNotesProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -77,8 +68,7 @@ export function ViewCaseNotes({
                         <strong>ORS Assessment:</strong> {note.orsAssessment}
                       </p>
                       <p>
-                        <strong>Necessary Conditions:</strong>{" "}
-                        {note.necessaryConditions}
+                        <strong>Necessary Conditions:</strong> {note.necessaryConditions}
                       </p>
                     </div>
                   </div>
@@ -89,26 +79,23 @@ export function ViewCaseNotes({
                         <strong>Treatment Interventions:</strong>
                       </p>
                       <ul className="ml-4 mt-1 list-disc text-sm">
-                        {note.treatmentInterventions.map(
-                          (intervention, index) => (
-                            <li key={index}>{intervention}</li>
-                          ),
-                        )}
+                        {note.treatmentInterventions.map((intervention, index) => (
+                          <li key={index}>{intervention}</li>
+                        ))}
                       </ul>
                     </div>
                     {note.otherIntervention && (
                       <div>
                         <p className="text-sm">
-                          <strong>Other Intervention:</strong>{" "}
-                          {note.otherIntervention}
+                          <strong>Other Intervention:</strong> {note.otherIntervention}
                         </p>
                       </div>
                     )}
                     <div>
                       <p className="text-sm">
                         <strong>
-                          Intervention Explanation (what techniques, approaches
-                          and tools were used?):
+                          Intervention Explanation (what techniques, approaches and tools were
+                          used?):
                         </strong>
                       </p>
                       <p className="mt-1 whitespace-pre-wrap text-sm">
@@ -121,8 +108,7 @@ export function ViewCaseNotes({
                     <strong>Overall Feedback:</strong> {note.overallFeedback}
                   </p>
                   <p className="mt-2 whitespace-pre-wrap text-sm">
-                    <strong>Student Response:</strong>{" "}
-                    {note.studentResponseExplanations}
+                    <strong>Student Response:</strong> {note.studentResponseExplanations}
                   </p>
                   <p className="mt-2 text-sm">
                     <strong>Follow-up Plan:</strong> {note.followUpPlan} -{" "}

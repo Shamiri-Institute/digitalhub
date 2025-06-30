@@ -66,9 +66,7 @@ export default function HCApproveSupervisorExpense({
       toast({
         variant: "destructive",
         title: "Submission error",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -107,11 +105,7 @@ export default function HCApproveSupervisorExpense({
                       <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Input placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

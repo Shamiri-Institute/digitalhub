@@ -24,17 +24,12 @@ export default async function SchoolsPage() {
               {
                 title: "Sessions",
                 count:
-                  fellow?.groups.reduce(
-                    (a, b) => a + b.school._count.interventionSessions,
-                    0,
-                  ) || 0,
+                  fellow?.groups.reduce((a, b) => a + b.school._count.interventionSessions, 0) || 0,
               },
               { title: "Groups", count: fellow?.groups.length || 0 },
               {
                 title: "Students",
-                count:
-                  fellow?.groups.reduce((a, b) => a + b._count.students, 0) ||
-                  0,
+                count: fellow?.groups.reduce((a, b) => a + b._count.students, 0) || 0,
               },
             ]}
           />

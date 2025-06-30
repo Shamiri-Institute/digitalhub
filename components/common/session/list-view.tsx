@@ -2,23 +2,14 @@
 
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { SessionDropDown } from "#/components/common/session/session-list";
-import {
-  type Session,
-  SessionsContext,
-} from "#/components/common/session/sessions-provider";
+import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
 import { useTitle } from "#/components/common/session/title-provider";
 import { Icons } from "#/components/icons";
 import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";
 import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import { addDays, addHours, format, isAfter, isBefore } from "date-fns";
-import {
-  type Dispatch,
-  type SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
 import { useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
 
@@ -68,13 +59,7 @@ export function ListView({
         state.visibleRange.end.toDate(state.timeZone),
       ),
     );
-  }, [
-    state.visibleRange.start,
-    state.visibleRange.end,
-    dateFormatter,
-    setTitle,
-    state.timeZone,
-  ]);
+  }, [state.visibleRange.start, state.visibleRange.end, dateFormatter, setTitle, state.timeZone]);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -127,18 +112,14 @@ export function ListView({
         <table
           className={cn(
             "z-10 table-auto bg-white",
-            sessionGroups.length != 0
-              ? "schedule-table padded rounded-t-[0.4375rem]"
-              : null,
+            sessionGroups.length != 0 ? "schedule-table padded rounded-t-[0.4375rem]" : null,
           )}
         >
           {sessionGroups.length == 0 ? (
             <tbody>
               <tr>
                 <td colSpan={3}>
-                  <div className="px-4 py-3 opacity-80">
-                    No sessions within this period.
-                  </div>
+                  <div className="px-4 py-3 opacity-80">No sessions within this period.</div>
                 </td>
               </tr>
             </tbody>
@@ -150,9 +131,7 @@ export function ListView({
                   <td
                     className={cn(
                       "!h-auto",
-                      groupDate === today
-                        ? "border-b !border-b-shamiri-new-blue"
-                        : "",
+                      groupDate === today ? "border-b !border-b-shamiri-new-blue" : "",
                     )}
                     colSpan={3}
                   >
@@ -165,30 +144,22 @@ export function ListView({
                       <div
                         className={cn(
                           "flex h-8 w-8 items-center justify-center rounded-full p-2",
-                          groupDate === today
-                            ? "bg-shamiri-new-blue text-white"
-                            : "bg-transparent",
+                          groupDate === today ? "bg-shamiri-new-blue text-white" : "bg-transparent",
                         )}
                       >
                         <span>{format(new Date(groupDate), "dd")}</span>
                       </div>
-                      <span
-                        className={cn(groupDate !== today ? "opacity-50" : "")}
-                      >
+                      <span className={cn(groupDate !== today ? "opacity-50" : "")}>
                         {format(new Date(groupDate), "EEEE")}
                       </span>
-                      <span
-                        className={cn(groupDate !== today ? "opacity-50" : "")}
-                      >
+                      <span className={cn(groupDate !== today ? "opacity-50" : "")}>
                         {format(new Date(groupDate), "LLLL")}
                       </span>
                     </div>
                   </td>
                 </tr>
                 {sessions.filter((session) => {
-                  return (
-                    format(session.sessionDate, "yyyy-MM-dd") === groupDate
-                  );
+                  return format(session.sessionDate, "yyyy-MM-dd") === groupDate;
                 }).length === 0 ? (
                   <tr>
                     <td colSpan={3} className="action-cell">
@@ -198,19 +169,15 @@ export function ListView({
                 ) : null}
                 {sessions
                   .filter((session) => {
-                    return (
-                      format(session.sessionDate, "yyyy-MM-dd") === groupDate
-                    );
+                    return format(session.sessionDate, "yyyy-MM-dd") === groupDate;
                   })
                   .map((session) => {
                     const time = `${format(session.sessionDate, "h:mm")} - ${format(
-                      session.sessionEndTime ??
-                        addHours(session.sessionDate, 1.5),
+                      session.sessionEndTime ?? addHours(session.sessionDate, 1.5),
                       "h:mm a",
                     )}`;
                     const completed = session.occurred;
-                    const cancelled =
-                      session.status === SessionStatus.Cancelled;
+                    const cancelled = session.status === SessionStatus.Cancelled;
 
                     return (
                       <tr key={session.id}>
@@ -228,12 +195,8 @@ export function ListView({
                         </td>
                         <td className="!h-auto">
                           <div className="flex items-center gap-5">
-                            <span className="whitespace-nowrap opacity-70">
-                              {time}
-                            </span>
-                            <span className="">
-                              {sessionDisplayName(session.sessionType!)}
-                            </span>
+                            <span className="whitespace-nowrap opacity-70">{time}</span>
+                            <span className="">{sessionDisplayName(session.sessionType!)}</span>
                             <span className="whitespace-nowrap opacity-50">
                               {session.school?.schoolName}
                             </span>
@@ -266,20 +229,13 @@ export function ListView({
                                         className="h-3.5 w-3.5"
                                         strokeWidth={2.5}
                                       />
-                                      <span className="hidden lg:block">
-                                        Attended
-                                      </span>
+                                      <span className="hidden lg:block">Attended</span>
                                     </div>
                                   )}
                                   {!completed && !cancelled && (
                                     <div className="flex items-center gap-1">
-                                      <Icons.helpCircle
-                                        className="h-3.5 w-3.5"
-                                        strokeWidth={2.5}
-                                      />
-                                      <span className="hidden lg:block">
-                                        Not marked
-                                      </span>
+                                      <Icons.helpCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                      <span className="hidden lg:block">Not marked</span>
                                     </div>
                                   )}
                                   {cancelled && (
@@ -288,9 +244,7 @@ export function ListView({
                                         className="h-3.5 w-3.5"
                                         strokeWidth={2.5}
                                       />
-                                      <span className="hidden lg:block">
-                                        Cancelled
-                                      </span>
+                                      <span className="hidden lg:block">Cancelled</span>
                                     </div>
                                   )}
                                 </div>

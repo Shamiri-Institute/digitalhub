@@ -18,9 +18,5 @@ export const useTitle = () => {
 export function TitleProvider({ children }: PropsWithChildren<{}>) {
   const [title, setTitle] = useState<string>("");
 
-  return (
-    <TitleContext.Provider value={{ title, setTitle }}>
-      {children}
-    </TitleContext.Provider>
-  );
+  return <TitleContext.Provider value={{ title, setTitle }}>{children}</TitleContext.Provider>;
 }

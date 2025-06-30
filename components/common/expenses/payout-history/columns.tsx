@@ -13,10 +13,7 @@ export const columns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
     id: "button",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -100,10 +97,7 @@ export const columns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
       };
 
       return (
-        <button
-          onClick={downloadCSV}
-          className="text-shamiri-new-blue hover:underline"
-        >
+        <button onClick={downloadCSV} className="text-shamiri-new-blue hover:underline">
           Download .csv
         </button>
       );
@@ -113,9 +107,7 @@ export const columns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
   },
 ];
 
-export const subColumns: ColumnDef<
-  OpsHubsPayoutHistoryType["fellowDetails"][number]
->[] = [
+export const subColumns: ColumnDef<OpsHubsPayoutHistoryType["fellowDetails"][number]>[] = [
   {
     accessorKey: "fellowName",
     header: "Fellow Name",

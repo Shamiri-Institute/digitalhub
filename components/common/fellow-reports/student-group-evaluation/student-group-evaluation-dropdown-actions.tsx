@@ -26,20 +26,14 @@ export default function StudentGroupEvaluationDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ViewEditStudentGroupEvaluation
           studentGroupEvaluation={studentGroupEvaluation}
           action="view"
         >
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
             View student group evaluation
           </div>
         </ViewEditStudentGroupEvaluation>
@@ -47,11 +41,7 @@ export default function StudentGroupEvaluationDropdownMenu({
           studentGroupEvaluation={studentGroupEvaluation}
           action="edit"
         >
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
             Edit student group evaluation
           </div>
         </ViewEditStudentGroupEvaluation>

@@ -305,57 +305,55 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
 export async function getSchoolsInClinicalLeadHub() {
   const clinicalLead = await currentClinicalLead();
 
-  const [schools, supervisorsInHub, fellowsInProject, hubs] = await Promise.all(
-    [
-      db.school.findMany({
-        where: {
-          hubId: clinicalLead?.assignedHubId,
-        },
-        include: {
-          students: true,
-          interventionSessions: {
-            select: {
-              id: true,
-              session: {
-                select: {
-                  sessionName: true,
-                  sessionLabel: true,
-                },
+  const [schools, supervisorsInHub, fellowsInProject, hubs] = await Promise.all([
+    db.school.findMany({
+      where: {
+        hubId: clinicalLead?.assignedHubId,
+      },
+      include: {
+        students: true,
+        interventionSessions: {
+          select: {
+            id: true,
+            session: {
+              select: {
+                sessionName: true,
+                sessionLabel: true,
               },
             },
           },
         },
-      }),
-      db.supervisor.findMany({
-        where: {
-          hubId: clinicalLead?.assignedHubId,
-        },
-      }),
-      db.fellow.findMany({
-        where: {
-          hub: {
-            projectId: CURRENT_PROJECT_ID,
-          },
-        },
-        include: {
-          hub: {
-            select: {
-              id: true,
-            },
-          },
-        },
-      }),
-      db.hub.findMany({
-        where: {
+      },
+    }),
+    db.supervisor.findMany({
+      where: {
+        hubId: clinicalLead?.assignedHubId,
+      },
+    }),
+    db.fellow.findMany({
+      where: {
+        hub: {
           projectId: CURRENT_PROJECT_ID,
         },
-        select: {
-          id: true,
-          hubName: true,
+      },
+      include: {
+        hub: {
+          select: {
+            id: true,
+          },
         },
-      }),
-    ],
-  );
+      },
+    }),
+    db.hub.findMany({
+      where: {
+        projectId: CURRENT_PROJECT_ID,
+      },
+      select: {
+        id: true,
+        hubName: true,
+      },
+    }),
+  ]);
 
   return {
     schools,
@@ -411,20 +409,15 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       caseStatus: caseInfo.caseStatus,
       risk: caseInfo.riskStatus,
       age,
-      referralFrom:
-        caseInfo.referredFrom ||
-        caseInfo.initialReferredFromSpecified ||
-        "Unknown",
+      referralFrom: caseInfo.referredFrom || caseInfo.initialReferredFromSpecified || "Unknown",
       hubId: clinicalLead?.assignedHubId,
       flagged: caseInfo.flagged,
       flaggedReason: caseInfo.flaggedReason,
       sessionAttendanceHistory: formattedSessions,
       student: caseInfo.student,
-      emergencyPresentingIssuesBaseline:
-        caseInfo.emergencyPresentingIssuesBaseline,
+      emergencyPresentingIssuesBaseline: caseInfo.emergencyPresentingIssuesBaseline,
       generalPresentingIssuesBaseline: caseInfo.generalPresentingIssuesBaseline,
-      emergencyPresentingIssuesEndpoint:
-        caseInfo.emergencyPresentingIssuesEndpoint,
+      emergencyPresentingIssuesEndpoint: caseInfo.emergencyPresentingIssuesEndpoint,
       generalPresentingIssuesEndpoint: caseInfo.generalPresentingIssuesEndpoint,
       generalPresentingIssuesOtherSpecifiedBaseline:
         caseInfo.generalPresentingIssuesOtherSpecifiedBaseline,

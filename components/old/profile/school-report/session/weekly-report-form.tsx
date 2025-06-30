@@ -42,14 +42,9 @@ export function WeeklyReportForm({
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      positiveHighlights:
-        notes.find((note) => note.kind === "positive-highlights")?.content ??
-        "",
-      reportedChallenges:
-        notes.find((note) => note.kind === "reported-challenges")?.content ??
-        "",
-      recommendations:
-        notes.find((note) => note.kind === "recommendations")?.content ?? "",
+      positiveHighlights: notes.find((note) => note.kind === "positive-highlights")?.content ?? "",
+      reportedChallenges: notes.find((note) => note.kind === "reported-challenges")?.content ?? "",
+      recommendations: notes.find((note) => note.kind === "recommendations")?.content ?? "",
     },
   });
 

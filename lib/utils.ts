@@ -73,19 +73,19 @@ export function ordinalSuffixOf(i: number): string {
   return i + "th";
 }
 
-export function getHighestValue(data: {
-  [k: string]: string;
-}): riskStatusOptions {
+export function getHighestValue(data: { [k: string]: string }): riskStatusOptions {
   const values = Object.values(data);
 
   if (values.includes("High")) {
     return "High";
-  }if (values.includes("Med")) {
+  }
+  if (values.includes("Med")) {
     return "Medium";
-  }if (values.includes("Low")) {
+  }
+  if (values.includes("Low")) {
     return "Low";
   }
-    return "No";
+  return "No";
 }
 
 export function isSessionScheduled(
@@ -93,8 +93,7 @@ export function isSessionScheduled(
   sessionType: string, // s0, s1, s2, ...
 ) {
   return sessions.some(
-    (session) =>
-      session.sessionType === sessionType && session.occurred === true,
+    (session) => session.sessionType === sessionType && session.occurred === true,
   );
 }
 
@@ -154,10 +153,7 @@ export function generateFellowVisibleID(lastNumber: number): string {
   return `${part1}_${part2}_${part3}`;
 }
 
-export function generateStudentVisibleID(
-  groupName: string,
-  lastNumber: number,
-) {
+export function generateStudentVisibleID(groupName: string, lastNumber: number) {
   return `${groupName}_${lastNumber}`;
 }
 

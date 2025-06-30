@@ -35,9 +35,7 @@ export default function ChartArea({
   schoolAttendances,
 }: {
   dropoutData: DropoutReasonsGraphData[];
-  schoolDataCompletenessData: Awaited<
-    ReturnType<typeof fetchSchoolDataCompletenessData>
-  >;
+  schoolDataCompletenessData: Awaited<ReturnType<typeof fetchSchoolDataCompletenessData>>;
   schoolAttendances: SchoolAttendances[];
   sessionRatingsData: SessionRatingAverages[];
 }) {
@@ -51,16 +49,8 @@ export default function ChartArea({
               <XAxis dataKey="session_type" />
               <YAxis />
               <Tooltip />
-              <Bar
-                dataKey="count_attendance_marked"
-                stackId="a"
-                fill="#0085FF"
-              />
-              <Bar
-                dataKey="count_attendance_unmarked"
-                stackId="a"
-                fill="#CCE7FF"
-              />
+              <Bar dataKey="count_attendance_marked" stackId="a" fill="#0085FF" />
+              <Bar dataKey="count_attendance_unmarked" stackId="a" fill="#CCE7FF" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -117,8 +107,7 @@ export default function ChartArea({
                   className="text text-2xl font-semibold leading-8"
                   fill="#fffff"
                 >
-                  {schoolDataCompletenessData.find((d) => (d.name = "actual"))
-                    ?.value + "%"}
+                  {schoolDataCompletenessData.find((d) => (d.name = "actual"))?.value + "%"}
                 </Label>
                 {schoolDataCompletenessData.map(({ name }) => (
                   <Cell

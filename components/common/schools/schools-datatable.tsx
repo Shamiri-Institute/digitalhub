@@ -28,8 +28,7 @@ const schoolsCSVHeaders = [
 ];
 
 export const handleSchoolsCSVTemplateDownload = () => {
-  const csvContent =
-    "data:text/csv;charset=utf-8," + schoolsCSVHeaders.join(",") + "\n";
+  const csvContent = "data:text/csv;charset=utf-8," + schoolsCSVHeaders.join(",") + "\n";
   const encodedUri = encodeURI(csvContent);
 
   const link = document.createElement("a");

@@ -21,11 +21,7 @@ const roleAccessSpecs: RoleAccessSpec[] = [
     role: "supervisors",
     stateFile: PersonnelFixtures.supervisor.stateFile,
     accessiblePages: [SupervisorHomePage],
-    inaccessiblePages: [
-      HubCoordinatorHomePage,
-      ClinicalHomePage,
-      OperationsHomePage,
-    ],
+    inaccessiblePages: [HubCoordinatorHomePage, ClinicalHomePage, OperationsHomePage],
   },
   {
     role: "hub coordinators",
@@ -43,38 +39,28 @@ const roleAccessSpecs: RoleAccessSpec[] = [
     role: "operations",
     stateFile: PersonnelFixtures.opsUser.stateFile,
     accessiblePages: [OperationsHomePage],
-    inaccessiblePages: [
-      SupervisorHomePage,
-      HubCoordinatorHomePage,
-      ClinicalHomePage,
-    ],
+    inaccessiblePages: [SupervisorHomePage, HubCoordinatorHomePage, ClinicalHomePage],
   },
 ];
 
-roleAccessSpecs.forEach(
-  ({ role, stateFile, accessiblePages, inaccessiblePages }) => {
-    test.describe(`${role} can only access routes based on their role`, () => {
-      test.use({ storageState: stateFile });
+roleAccessSpecs.forEach(({ role, stateFile, accessiblePages, inaccessiblePages }) => {
+  test.describe(`${role} can only access routes based on their role`, () => {
+    test.use({ storageState: stateFile });
 
-      accessiblePages.forEach((AccessiblePage) => {
-        test(`can access ${AccessiblePage.name.toLowerCase()}`, async ({
-          page,
-        }) => {
-          const accessiblePage = new AccessiblePage(page);
-          await accessiblePage.visit();
-          await accessiblePage.isShown();
-        });
-      });
-
-      inaccessiblePages.forEach((InaccessiblePage) => {
-        test(`cannot access ${InaccessiblePage.name.toLowerCase()}`, async ({
-          page,
-        }) => {
-          const inaccessiblePage = new InaccessiblePage(page);
-          await inaccessiblePage.visit();
-          await inaccessiblePage.isNotShown();
-        });
+    accessiblePages.forEach((AccessiblePage) => {
+      test(`can access ${AccessiblePage.name.toLowerCase()}`, async ({ page }) => {
+        const accessiblePage = new AccessiblePage(page);
+        await accessiblePage.visit();
+        await accessiblePage.isShown();
       });
     });
-  },
-);
+
+    inaccessiblePages.forEach((InaccessiblePage) => {
+      test(`cannot access ${InaccessiblePage.name.toLowerCase()}`, async ({ page }) => {
+        const inaccessiblePage = new InaccessiblePage(page);
+        await inaccessiblePage.visit();
+        await inaccessiblePage.isNotShown();
+      });
+    });
+  });
+});

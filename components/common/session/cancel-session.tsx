@@ -4,12 +4,7 @@ import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogPortal,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogPortal } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { cancelSession } from "#/lib/actions/session/session";
@@ -41,18 +36,13 @@ export default function CancelSession({
       onOpenChange(false);
       toast({
         variant: "destructive",
-        description:
-          response.message ??
-          "Something went wrong while trying to reschedule session.",
+        description: response.message ?? "Something went wrong while trying to reschedule session.",
       });
       setLoading(false);
       return;
     }
 
-    await Promise.all([
-      await revalidatePageAction(pathname),
-      await refresh(),
-    ]).then(() => {
+    await Promise.all([await revalidatePageAction(pathname), await refresh()]).then(() => {
       toast({
         description: response.message,
       });
@@ -76,9 +66,8 @@ export default function CancelSession({
               <div className="flex items-start gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-red-base">
                 <Icons.info className="h-4 w-4 shrink-0 stroke-2" />
                 <div>
-                  Once this change has been made it is irreversible and will
-                  need you to contact support in order to modify. Please be sure
-                  of your action before you confirm.
+                  Once this change has been made it is irreversible and will need you to contact
+                  support in order to modify. Please be sure of your action before you confirm.
                 </div>
               </div>
             </div>

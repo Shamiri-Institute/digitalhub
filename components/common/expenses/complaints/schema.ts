@@ -33,6 +33,4 @@ export const ReportFellowComplaintSchema = z.object({
   reasonForRejecting: stringValidation("Please enter the reason for rejecting"),
 });
 
-export type ReportFellowComplaintSchema = z.infer<
-  typeof ReportFellowComplaintSchema
->;
+export type ReportFellowComplaintSchema = z.infer<typeof ReportFellowComplaintSchema>;

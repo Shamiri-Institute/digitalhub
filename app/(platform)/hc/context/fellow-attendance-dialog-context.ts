@@ -14,10 +14,9 @@ type FellowAttendanceContextData = {
   >;
 };
 
-export const FellowAttendanceContext =
-  createContext<FellowAttendanceContextData>({
-    isOpen: false,
-    setIsOpen: () => {},
-    session: null,
-    setSession: () => {},
-  });
+export const FellowAttendanceContext = createContext<FellowAttendanceContextData>({
+  isOpen: false,
+  setIsOpen: () => {},
+  session: null,
+  setSession: () => {},
+});

@@ -319,10 +319,7 @@ export async function updateInterventionOccurrenceDate(
   }
 }
 
-export async function dropoutSchoolWithReason(
-  schoolVisibleId: string,
-  dropoutReason: string,
-) {
+export async function dropoutSchoolWithReason(schoolVisibleId: string, dropoutReason: string) {
   try {
     const school = await db.school.update({
       where: { visibleId: schoolVisibleId },
@@ -605,9 +602,7 @@ export async function editFellowDetails(
   const result = EditFellowSchema.safeParse(fellowDetails);
 
   if (!result.success) {
-    throw new Error(
-      "Invalid fields supplied, please review submission details",
-    );
+    throw new Error("Invalid fields supplied, please review submission details");
   }
 
   const { data: parsedFellow } = result;
@@ -755,10 +750,7 @@ export async function RejectRefferedClinicalCase(caseId: string) {
   }
 }
 
-export async function updateClinicalCaseStatus(
-  caseId: string,
-  status: caseStatusOptions,
-) {
+export async function updateClinicalCaseStatus(caseId: string, status: caseStatusOptions) {
   try {
     await db.clinicalScreeningInfo.update({
       where: {
@@ -935,8 +927,7 @@ export async function initialReferralFromClinicalCaseSupervisor(data: {
       });
 
       if (currentcase?.caseTransferTrail.length > 0) {
-        const initialCaseHistoryId =
-          currentcase?.caseTransferTrail[0]?.id ?? null;
+        const initialCaseHistoryId = currentcase?.caseTransferTrail[0]?.id ?? null;
 
         await db.clinicalScreeningInfo.update({
           where: {
@@ -995,8 +986,7 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
       },
     });
 
-    const emergencyPresentingIssues =
-      result_data?.emergencyPresentingIssues ?? {};
+    const emergencyPresentingIssues = result_data?.emergencyPresentingIssues ?? {};
 
     const combinedPresentingIssues = {
       // ...(emergencyPresentingIssues as { [k: string]: string }),
@@ -1004,9 +994,7 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
       ...data.presentingIssues,
     };
 
-    const highestValue: riskStatusOptions = getHighestValue(
-      combinedPresentingIssues,
-    );
+    const highestValue: riskStatusOptions = getHighestValue(combinedPresentingIssues);
 
     await db.clinicalScreeningInfo.update({
       where: {
@@ -1099,19 +1087,14 @@ export async function flagClinicalCaseForFollowUp(data: {
       },
     });
 
-    revalidatePath(
-      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
-    );
+    revalidatePath(`${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`);
     return { success: true };
   } catch (error) {
     return { error: "Something went wrong" };
   }
 }
 
-export async function storeSupervisorProgressNotes(
-  caseId: string,
-  documentURL: string,
-) {
+export async function storeSupervisorProgressNotes(caseId: string, documentURL: string) {
   try {
     await db.clinicalScreeningInfo.update({
       where: {
@@ -1251,10 +1234,7 @@ export async function addNonShamiriStudentViaClinicalScreening(
 
 // DEPRECATED
 export async function editWeeklyFellowRating(
-  data: Omit<
-    WeeklyFellowRatings,
-    "createdAt" | "updatedAt" | "fellowId" | "supervisorId" | "week"
-  >,
+  data: Omit<WeeklyFellowRatings, "createdAt" | "updatedAt" | "fellowId" | "supervisorId" | "week">,
 ) {
   try {
     const result = await db.weeklyFellowRatings.update({
@@ -1304,9 +1284,7 @@ export async function editClinicalCaseSessionAttendanceDate(data: {
   }
 }
 
-export async function deleteClinicalCaseSessionAttendanceDate(data: {
-  sessionId: string;
-}) {
+export async function deleteClinicalCaseSessionAttendanceDate(data: { sessionId: string }) {
   try {
     await db.clinicalSessionAttendance.delete({
       where: {

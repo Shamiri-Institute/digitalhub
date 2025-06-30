@@ -1,7 +1,5 @@
 "use client";
-import TabToggleNavigation, {
-  type TabType,
-} from "#/components/common/tabs/tab-navigation";
+import TabToggleNavigation, { type TabType } from "#/components/common/tabs/tab-navigation";
 import { usePathname } from "next/navigation";
 
 export default function RenderSCReportingTabs() {

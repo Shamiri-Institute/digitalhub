@@ -16,10 +16,7 @@ const mpesaFieldsSchema = z.object({
   mpesaNumber: z
     .string()
     .min(1, "Please enter your M-pesa number")
-    .refine(
-      (val) => !val || isValidPhoneNumber(val, "KE"),
-      "Invalid Kenyan phone number",
-    ),
+    .refine((val) => !val || isValidPhoneNumber(val, "KE"), "Invalid Kenyan phone number"),
   mpesaName: stringValidation("Please enter your M-pesa name"),
 });
 
@@ -37,10 +34,7 @@ export const ProfileSchema = z
     cellNumber: z
       .string()
       .min(1, "Please enter your phone number")
-      .refine(
-        (val) => !val || isValidPhoneNumber(val, "KE"),
-        "Invalid Kenyan phone number",
-      ),
+      .refine((val) => !val || isValidPhoneNumber(val, "KE"), "Invalid Kenyan phone number"),
     mpesaNumber: z.string().optional(),
     mpesaName: z.string().optional(),
     dateOfBirth: z.date().optional(),

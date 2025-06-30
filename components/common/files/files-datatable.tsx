@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  fileColumns,
-  type SchoolFilesTableData,
-} from "#/components/common/files/columns";
+import { fileColumns, type SchoolFilesTableData } from "#/components/common/files/columns";
 import { RemoveUploadedFile } from "#/components/common/files/delete-file-modal";
 import UploadFileDialogue from "#/components/common/files/files-upload-dialogue";
 import RenameUploadedFile from "#/components/common/files/rename-file";
@@ -52,23 +49,11 @@ export default function SchoolFilesDatatable({
       />
       {file && (
         <div>
-          <RenameUploadedFile
-            open={renameDialog}
-            onOpenChange={setRenameDialog}
-            document={file}
-          />
-          <RemoveUploadedFile
-            document={file}
-            isOpen={deleteDialog}
-            setIsOpen={setDeleteDialog}
-          />
+          <RenameUploadedFile open={renameDialog} onOpenChange={setRenameDialog} document={file} />
+          <RemoveUploadedFile document={file} isOpen={deleteDialog} setIsOpen={setDeleteDialog} />
         </div>
       )}
-      <UploadFileDialogue
-        schoolId={schoolId}
-        open={uploadDialog}
-        onOpenChange={setUploadDialog}
-      />
+      <UploadFileDialogue schoolId={schoolId} open={uploadDialog} onOpenChange={setUploadDialog} />
     </div>
   );
 }

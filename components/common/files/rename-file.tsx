@@ -4,12 +4,7 @@ import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import type { SchoolFilesTableData } from "#/components/common/files/columns";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -55,15 +50,11 @@ export default function RenameUploadedFile({
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     try {
-      const response = await updateUploadedSchoolFile(
-        document.id,
-        values.fileName,
-      );
+      const response = await updateUploadedSchoolFile(document.id, values.fileName);
       if (!response.success) {
         toast({
           description:
-            response.message ??
-            "Something went wrong during submission, please try again",
+            response.message ?? "Something went wrong during submission, please try again",
         });
         return;
       }
@@ -107,8 +98,7 @@ export default function RenameUploadedFile({
                     render={({ field }) => (
                       <FormItem className="col-span-2">
                         <FormLabel>
-                          File Name{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          File Name <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} />

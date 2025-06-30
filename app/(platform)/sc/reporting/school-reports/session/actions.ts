@@ -116,9 +116,7 @@ export async function loadSessionReport() {
       school.avgAdminSupport = Number.parseFloat(
         (school.avgAdminSupport / school.count).toFixed(2),
       );
-      school.avgWorkload = Number.parseFloat(
-        (school.avgWorkload / school.count).toFixed(2),
-      );
+      school.avgWorkload = Number.parseFloat((school.avgWorkload / school.count).toFixed(2));
 
       // @ts-ignore
       delete school.count;
@@ -131,6 +129,4 @@ export async function loadSessionReport() {
   }
 }
 
-export type SessionReportType = Awaited<
-  ReturnType<typeof loadSessionReport>
->[number];
+export type SessionReportType = Awaited<ReturnType<typeof loadSessionReport>>[number];

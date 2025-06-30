@@ -28,9 +28,7 @@ import { z } from "zod";
 
 const SchoolFeedbackSchema = z.object({
   studentTeacherSatisfactionRating: z.number().min(1).max(5),
-  factorsInfluencedStudentParticipation: z
-    .string()
-    .min(1, "This field is required"),
+  factorsInfluencedStudentParticipation: z.string().min(1, "This field is required"),
   concernsRaisedByTeachers: z.string().min(1, "This field is required"),
   programImpactOnStudents: z.string().min(1, "This field is required"),
 });
@@ -51,10 +49,8 @@ export default function ViewEditSchoolFeedback({
   const form = useForm<SchoolFeedbackFormValues>({
     resolver: zodResolver(SchoolFeedbackSchema),
     defaultValues: {
-      studentTeacherSatisfactionRating:
-        feedback.studentTeacherSatisfaction ?? 0,
-      factorsInfluencedStudentParticipation:
-        feedback.factorsInfluencedStudentParticipation ?? "",
+      studentTeacherSatisfactionRating: feedback.studentTeacherSatisfaction ?? 0,
+      factorsInfluencedStudentParticipation: feedback.factorsInfluencedStudentParticipation ?? "",
       concernsRaisedByTeachers: feedback.concernsRaisedByTeachers ?? "",
       programImpactOnStudents: feedback.programImpactOnStudents ?? "",
     },
@@ -62,20 +58,14 @@ export default function ViewEditSchoolFeedback({
 
   const onSubmit = async (data: SchoolFeedbackFormValues) => {
     try {
-      const response = await editSchoolFeedback(
-        feedback.userId,
-        feedback.feedbackId,
-        data,
-      );
+      const response = await editSchoolFeedback(feedback.userId, feedback.feedbackId, data);
       if (response.success) {
         toast({
           title: response.message,
           variant: "default",
         });
 
-        await revalidatePageAction(
-          "sc/reporting/school-reports/school-feedback",
-        );
+        await revalidatePageAction("sc/reporting/school-reports/school-feedback");
       } else {
         toast({
           title: response.message,
@@ -123,9 +113,7 @@ export default function ViewEditSchoolFeedback({
                 name="factorsInfluencedStudentParticipation"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Factors Influencing Student Participation
-                    </FormLabel>
+                    <FormLabel>Factors Influencing Student Participation</FormLabel>
                     <FormControl>
                       <Textarea
                         {...field}
@@ -176,11 +164,7 @@ export default function ViewEditSchoolFeedback({
 
               {!isViewOnly && (
                 <DialogFooter>
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    onClick={() => setDialogOpen(false)}
-                  >
+                  <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
                     Cancel
                   </Button>
                   <Button

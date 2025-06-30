@@ -6,12 +6,7 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import type { Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useContext } from "react";
@@ -28,9 +23,7 @@ export default function StudentsInGroup() {
         <DialogAlertWidget>
           <div className="flex items-center gap-2">
             <span>{context.fellow?.fellowName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
             <span>{context.fellow?.groupName}</span>
           </div>
         </DialogAlertWidget>
@@ -41,8 +34,7 @@ export default function StudentsInGroup() {
             data={
               schoolContext.school
                 ? schoolContext.school.students.filter(
-                    (student) =>
-                      student.assignedGroupId === context.fellow?.groupId,
+                    (student) => student.assignedGroupId === context.fellow?.groupId,
                   )
                 : []
             }
@@ -107,8 +99,7 @@ const columns: ColumnDef<
   {
     header: "Age",
     id: "Age",
-    accessorFn: (row) =>
-      row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
+    accessorFn: (row) => row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
   },
   {
     header: "Clinical cases",

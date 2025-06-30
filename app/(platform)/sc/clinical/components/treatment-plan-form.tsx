@@ -5,19 +5,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import {
-  type ClinicalCases,
-  createTreatmentPlan,
-} from "#/app/(platform)/sc/clinical/action";
+import { type ClinicalCases, createTreatmentPlan } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTrigger,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -55,13 +47,9 @@ const TreatmentPlanSchema = z.object({
   currentOrsScore: z.string().optional(),
   plannedSessions: stringValidation("Number of planned sessions is required"),
   sessionFrequency: stringValidation("Session frequency is required"),
-  treatmentInterventions: z
-    .array(z.string())
-    .min(1, "Select at least one intervention"),
+  treatmentInterventions: z.array(z.string()).min(1, "Select at least one intervention"),
   otherIntervention: z.string().optional(),
-  interventionExplanation: stringValidation(
-    "Treatment explanation is required",
-  ),
+  interventionExplanation: stringValidation("Treatment explanation is required"),
 });
 
 type TreatmentPlanFormValues = z.infer<typeof TreatmentPlanSchema>;
@@ -175,19 +163,14 @@ export default function TreatmentPlanForm({
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="once_week">Once a week</SelectItem>
                         <SelectItem value="twice_week">Twice a week</SelectItem>
-                        <SelectItem value="biweekly">
-                          Once every two weeks
-                        </SelectItem>
+                        <SelectItem value="biweekly">Once every two weeks</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -223,17 +206,11 @@ export default function TreatmentPlanForm({
                                   }
                                   return checked === true
                                     ? field.onChange([...field.value, value])
-                                    : field.onChange(
-                                        field.value?.filter(
-                                          (val) => val !== value,
-                                        ),
-                                      );
+                                    : field.onChange(field.value?.filter((val) => val !== value));
                                 }}
                               />
                             </FormControl>
-                            <FormLabel className="font-normal">
-                              {intervention}
-                            </FormLabel>
+                            <FormLabel className="font-normal">{intervention}</FormLabel>
                           </FormItem>
                         )}
                       />
@@ -281,11 +258,7 @@ export default function TreatmentPlanForm({
             />
 
             <div className="flex justify-end space-x-4">
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={() => setDialogOpen(false)}
-              >
+              <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
               <Button

@@ -25,9 +25,7 @@ export default function UploadFellowQualification({
       {children}
       <DialogContent className="w-2/5 max-w-none">
         <DialogHeader>
-          <span className="text-xl">
-            Upload KCSE Certificate or Result Slip
-          </span>
+          <span className="text-xl">Upload KCSE Certificate or Result Slip</span>
         </DialogHeader>
         {fellow && (
           <div className="pb-2 pt-4">

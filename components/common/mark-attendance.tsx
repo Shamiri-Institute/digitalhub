@@ -3,12 +3,7 @@
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -35,7 +30,7 @@ import type { Prisma } from "@prisma/client";
 import { addHours, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect } from "react"
+import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 
@@ -76,9 +71,7 @@ export function MarkAttendance({
   attendances: Attendance[];
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  markAttendanceAction: (
-    data: z.infer<typeof MarkAttendanceSchema>,
-  ) => Promise<{
+  markAttendanceAction: (data: z.infer<typeof MarkAttendanceSchema>) => Promise<{
     success: boolean;
     message: string;
   }>;
@@ -117,9 +110,7 @@ export function MarkAttendance({
     return {
       sessionId: defaultSession,
       id,
-      attended: defaultAttendance
-        ? getAttendanceStatus(defaultAttendance)
-        : "unmarked",
+      attended: defaultAttendance ? getAttendanceStatus(defaultAttendance) : "unmarked",
       absenceReason: defaultAttendance?.absenceReason ?? undefined,
       comments: defaultAttendance?.comments ?? undefined,
       bulkMode,
@@ -153,15 +144,13 @@ export function MarkAttendance({
     if (!response.success) {
       toast({
         variant: "destructive",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
-      toast({
-        description: response.message,
-      });
+    toast({
+      description: response.message,
+    });
 
     await revalidatePageAction(pathname);
     setIsOpen(false);
@@ -209,31 +198,20 @@ export function MarkAttendance({
                       </FormControl>
                       <SelectContent>
                         {sessions
-                          ?.sort(
-                            (a, b) =>
-                              a.sessionDate.getTime() - b.sessionDate.getTime(),
-                          )
+                          ?.sort((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime())
                           .filter((session) => session.occurred)
                           .map((session) => {
                             const time = `${format(session.sessionDate, "h:mm")} - ${format(
-                              session.sessionEndTime ??
-                                addHours(session.sessionDate, 1.5),
+                              session.sessionEndTime ?? addHours(session.sessionDate, 1.5),
                               "h:mm a",
                             )}`;
                             return (
                               <SelectItem key={session.id} value={session.id}>
                                 <div className="flex items-center gap-2">
-                                  <span>
-                                    {sessionDisplayName(
-                                      session.session?.sessionName!,
-                                    )}
-                                  </span>
+                                  <span>{sessionDisplayName(session.session?.sessionName!)}</span>
                                   <span>-</span>
                                   <span>
-                                    {format(
-                                      new Date(session.sessionDate),
-                                      "dd MMM yyyy",
-                                    )}
+                                    {format(new Date(session.sessionDate), "dd MMM yyyy")}
                                   </span>
                                   <span className="h-1 w-1 rounded-full bg-black" />
                                   <span>{time}</span>
@@ -341,11 +319,7 @@ export function MarkAttendance({
                     <FormItem className="space-y-2">
                       <FormLabel>Additional comments</FormLabel>
                       <FormControl>
-                        <Textarea
-                          placeholder=""
-                          className="resize-none"
-                          {...field}
-                        />
+                        <Textarea placeholder="" className="resize-none" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -390,13 +364,7 @@ export function MarkAttendance({
   );
 }
 
-export function CustomIndicator({
-  className,
-  label,
-}: {
-  className: string;
-  label: string;
-}) {
+export function CustomIndicator({ className, label }: { className: string; label: string }) {
   return (
     <div className="custom-indicator pointer-events-none absolute inset-0 flex h-20 items-center pl-6">
       <div className="flex items-center gap-3">

@@ -1,18 +1,13 @@
 "use client";
 import type { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
 import type { SupervisorFellowsAttendancesType } from "#/app/(platform)/sc/reporting/expenses/fellows/actions";
-import {
-  columns,
-  subColumns,
-} from "#/components/common/expenses/fellows/columns";
+import { columns, subColumns } from "#/components/common/expenses/fellows/columns";
 import DataTable from "#/components/data-table";
 
 export default function FellowsReportingDataTable({
   fellowAttendanceExpenses,
 }: {
-  fellowAttendanceExpenses:
-    | HubFellowsAttendancesType[]
-    | SupervisorFellowsAttendancesType[];
+  fellowAttendanceExpenses: HubFellowsAttendancesType[] | SupervisorFellowsAttendancesType[];
 }) {
   return (
     <DataTable

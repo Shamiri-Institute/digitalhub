@@ -18,10 +18,7 @@ export const useMode = () => {
   return context;
 };
 
-export function ModeProvider({
-  defaultMode,
-  children,
-}: PropsWithChildren<{ defaultMode: Mode }>) {
+export function ModeProvider({ defaultMode, children }: PropsWithChildren<{ defaultMode: Mode }>) {
   const [mode, setMode] = useState<Mode>(defaultMode);
   const searchParams = useSearchParams();
 

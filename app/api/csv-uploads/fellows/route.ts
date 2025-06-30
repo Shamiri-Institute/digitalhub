@@ -27,15 +27,11 @@ export async function POST(request: NextRequest) {
     const hc = await currentHubCoordinator();
 
     if (!hc) {
-      return NextResponse.json(
-        { error: "Hub coordinator not found." },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Hub coordinator not found." }, { status: 404 });
     }
 
     const hubId = hc.assignedHubId ?? (formData.get("hubId") as string);
-    const implementerId =
-      hc.implementerId ?? (formData.get("implementerId") as string);
+    const implementerId = hc.implementerId ?? (formData.get("implementerId") as string);
     const buffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(buffer);
 
@@ -63,46 +59,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rows: Prisma.FellowGetPayload<{}>[] = await new Promise(
-      (resolve, reject) => {
-        const parsedRows: Prisma.FellowGetPayload<{}>[] = [];
-        const dataStream = Readable.from([fileBuffer]);
+    const rows: Prisma.FellowGetPayload<{}>[] = await new Promise((resolve, reject) => {
+      const parsedRows: Prisma.FellowGetPayload<{}>[] = [];
+      const dataStream = Readable.from([fileBuffer]);
 
-        dataStream
-          .pipe(fastCsv.parse({ headers: true }))
-          .on("data", (row) => {
-            const fellowId = objectId("fellow");
-            parsedRows.push({
-              visibleId: fellowId,
-              id: fellowId,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              fellowName: row.fellow_name,
-              cellNumber: row.cell_no,
-              fellowEmail: row.email,
-              supervisorId: null,
-              hubId,
-              implementerId: implementerId,
-              yearOfImplementation: new Date().getFullYear(),
-              archivedAt: null,
-              mpesaName: row.mpesa_name ?? null,
-              mpesaNumber: row.mpesa_number ?? null,
-              idNumber: row.id_number ?? null,
-              county: row.county ?? null,
-              subCounty: row.sub_county ?? null,
-              dateOfBirth: null,
-              gender: row.gender ?? null,
-              transferred: null,
-              droppedOut: null,
-              droppedOutAt: null,
-              dropOutReason: null,
-            });
-          })
+      dataStream
+        .pipe(fastCsv.parse({ headers: true }))
+        .on("data", (row) => {
+          const fellowId = objectId("fellow");
+          parsedRows.push({
+            visibleId: fellowId,
+            id: fellowId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            fellowName: row.fellow_name,
+            cellNumber: row.cell_no,
+            fellowEmail: row.email,
+            supervisorId: null,
+            hubId,
+            implementerId: implementerId,
+            yearOfImplementation: new Date().getFullYear(),
+            archivedAt: null,
+            mpesaName: row.mpesa_name ?? null,
+            mpesaNumber: row.mpesa_number ?? null,
+            idNumber: row.id_number ?? null,
+            county: row.county ?? null,
+            subCounty: row.sub_county ?? null,
+            dateOfBirth: null,
+            gender: row.gender ?? null,
+            transferred: null,
+            droppedOut: null,
+            droppedOutAt: null,
+            dropOutReason: null,
+          });
+        })
 
-          .on("error", (err) => reject(err))
-          .on("end", () => resolve(parsedRows));
-      },
-    );
+        .on("error", (err) => reject(err))
+        .on("end", () => resolve(parsedRows));
+    });
 
     await db.$transaction(async (prisma) => {
       await prisma.fellow.createMany({ data: rows });
@@ -114,10 +108,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error processing file upload:", error);
-    return NextResponse.json(
-      { error: "Something went wrong. Please try again." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }
 

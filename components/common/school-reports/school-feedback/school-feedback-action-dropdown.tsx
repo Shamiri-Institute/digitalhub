@@ -26,26 +26,16 @@ export default function SchoolFeedbackDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ViewEditSchoolFeedback feedback={feedback} action="view">
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
             View school feedback
           </div>
         </ViewEditSchoolFeedback>
         <ViewEditSchoolFeedback feedback={feedback} action="edit">
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
             Edit school feedback
           </div>
         </ViewEditSchoolFeedback>

@@ -106,9 +106,7 @@ export default async function GroupsPage({
   });
 
   return (
-    <Suspense
-      fallback={<GroupsTableSkeleton role={hc?.user.membership.role!} />}
-    >
+    <Suspense fallback={<GroupsTableSkeleton role={hc?.user.membership.role!} />}>
       <GroupsDataTable
         data={data}
         school={school}

@@ -5,12 +5,7 @@ import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import { DropoutFellowSchema } from "#/components/common/fellow/schema";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -60,8 +55,7 @@ export default function FellowDropoutForm({
   const [loading, setLoading] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState(false);
   const [replaceDialog, setReplaceDialog] = useState(false);
-  const [replaceGroupLeaderDialog, setReplaceGroupLeaderDialog] =
-    useState(false);
+  const [replaceGroupLeaderDialog, setReplaceGroupLeaderDialog] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const pathname = usePathname();
 
@@ -91,11 +85,7 @@ export default function FellowDropoutForm({
 
   async function confirmSubmit() {
     setLoading(true);
-    if (
-      fellow.groups &&
-      fellow.groups.length > 0 &&
-      form.getValues("mode") === "dropout"
-    ) {
+    if (fellow.groups && fellow.groups.length > 0 && form.getValues("mode") === "dropout") {
       setReplaceDialog(true);
       setConfirmDialog(false);
       setLoading(false);
@@ -105,8 +95,7 @@ export default function FellowDropoutForm({
     if (!response.success) {
       toast({
         variant: "destructive",
-        description:
-          response.message ?? "Something went wrong, please try again",
+        description: response.message ?? "Something went wrong, please try again",
       });
       setConfirmDialog(false);
       setLoading(false);
@@ -144,10 +133,7 @@ export default function FellowDropoutForm({
           <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
           <span>
             {(fellow.cellNumber &&
-              parsePhoneNumberFromString(
-                fellow.cellNumber,
-                "KE",
-              )?.formatNational()) ??
+              parsePhoneNumberFromString(fellow.cellNumber, "KE")?.formatNational()) ??
               fellow.cellNumber}
           </span>
         </div>
@@ -175,8 +161,7 @@ export default function FellowDropoutForm({
                 render={({ field }) => (
                   <FormItem className="space-y-2">
                     <FormLabel>
-                      Select reason{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Select reason <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <Select onValueChange={field.onChange}>
                       <FormControl>
@@ -216,12 +201,8 @@ export default function FellowDropoutForm({
               <Button
                 variant={fellow.droppedOut ? "brand" : "destructive"}
                 type="submit"
-                disabled={
-                  fellow.droppedOut ? loading : form.formState.isSubmitting
-                }
-                loading={
-                  fellow.droppedOut ? loading : form.formState.isSubmitting
-                }
+                disabled={fellow.droppedOut ? loading : form.formState.isSubmitting}
+                loading={fellow.droppedOut ? loading : form.formState.isSubmitting}
               >
                 {fellow.droppedOut ? "Undo" : "Submit"}
               </Button>
@@ -241,9 +222,8 @@ export default function FellowDropoutForm({
             <Alert variant="destructive">
               <AlertTitle className="flex gap-2">
                 <InfoIcon className="h-4 w-4 shrink-0" />
-                Once this change has been made it is irreversible and will need
-                you to contact support in order to modify. Please be sure of
-                your action before you confirm.
+                Once this change has been made it is irreversible and will need you to contact
+                support in order to modify. Please be sure of your action before you confirm.
               </AlertTitle>
             </Alert>
           </div>
@@ -283,16 +263,10 @@ export default function FellowDropoutForm({
             <h3>Replace this fellow in the following groups:</h3>
             <div className="divide-shamiri-light-gray flex flex-col gap-2 divide-y">
               {fellow.groups?.map((group) => (
-                <div
-                  key={group.id}
-                  className="flex items-center justify-between gap-2 px-4 py-2"
-                >
+                <div key={group.id} className="flex items-center justify-between gap-2 px-4 py-2">
                   <p className="">
                     <span className="font-medium">{group.groupName}</span>
-                    <span className="text-muted-foreground">
-                      {" "}
-                      - {group.school.schoolName}
-                    </span>
+                    <span className="text-muted-foreground"> - {group.school.schoolName}</span>
                   </p>
                   <Button
                     variant="outline"
@@ -332,13 +306,9 @@ export default function FellowDropoutForm({
           <DialogAlertWidget>
             <div className="flex items-center gap-2">
               <span>{fellow.fellowName}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
               <span>{selectedGroup.groupName}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
               <span>{selectedGroup.school.schoolName}</span>
             </div>
           </DialogAlertWidget>

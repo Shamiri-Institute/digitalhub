@@ -21,20 +21,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import {
-  markManySupervisorAttendance,
-  markSupervisorAttendance,
-} from "#/lib/actions/supervisor";
+import { markManySupervisorAttendance, markSupervisorAttendance } from "#/lib/actions/supervisor";
 import type { Prisma } from "@prisma/client";
 import type { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
-import {
-  type Dispatch,
-  type SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
 
 export default function SupervisorsDataTable({
   supervisors,
@@ -57,8 +48,7 @@ export default function SupervisorsDataTable({
   const [batchMode, setBatchMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<SupervisorsData>[]>([]);
   const context = useContext(SupervisorInfoContext);
-  const [markAttendanceDialog, setMarkAttendanceDialog] =
-    useState<boolean>(false);
+  const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
   const [selectedSession, setSelectedSession] = useState<string>();
 
   useEffect(() => {
@@ -74,8 +64,7 @@ export default function SupervisorsDataTable({
           variant="outline"
           className="flex gap-1"
           disabled={
-            (schoolContext.school?.droppedOut !== null &&
-              schoolContext.school?.droppedOut) ||
+            (schoolContext.school?.droppedOut !== null && schoolContext.school?.droppedOut) ||
             selectedRows.length === 0
           }
           onClick={() => {
@@ -123,9 +112,7 @@ export default function SupervisorsDataTable({
           <DialogAlertWidget>
             <div className="flex items-center gap-2">
               <span>{context.supervisor?.supervisorName}</span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
               <span>
                 {context.supervisor?.cellNumber &&
                   parsePhoneNumberFromString(
@@ -138,24 +125,17 @@ export default function SupervisorsDataTable({
         </DropoutSupervisor>
       )}
       <UndropSupervisor
-        supervisorId={
-          context.supervisor !== null ? context.supervisor.id : undefined
-        }
+        supervisorId={context.supervisor !== null ? context.supervisor.id : undefined}
         setUndropDialog={context.setUndropDialog}
         undropDialog={context.undropDialog}
       >
         <DialogAlertWidget>
           <div className="flex items-center gap-2">
             <span>{context.supervisor?.supervisorName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
             <span>
               {context.supervisor?.cellNumber &&
-                parsePhoneNumberFromString(
-                  context.supervisor?.cellNumber,
-                  "KE",
-                )?.formatNational()}
+                parsePhoneNumberFromString(context.supervisor?.cellNumber, "KE")?.formatNational()}
             </span>
           </div>
         </DialogAlertWidget>
@@ -163,9 +143,7 @@ export default function SupervisorsDataTable({
       <MarkAttendance
         title={"Mark supervisor attendance"}
         sessions={
-          schoolContext.school?.interventionSessions.filter(
-            (session) => session.occurred,
-          ) ?? []
+          schoolContext.school?.interventionSessions.filter((session) => session.occurred) ?? []
         }
         selectedSessionId={selectedSession}
         attendances={
@@ -206,9 +184,7 @@ export default function SupervisorsDataTable({
             ) : (
               <span>{context.supervisor?.supervisorName}</span>
             )}
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
             <span>{schoolContext.school?.schoolName}</span>
           </div>
         </DialogAlertWidget>
@@ -238,9 +214,7 @@ export function SupervisorsDataTableMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem

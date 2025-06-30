@@ -7,29 +7,21 @@ import { Skeleton } from "#/components/ui/skeleton";
 import type { ColumnDef } from "@tanstack/react-table";
 
 export default function FellowsTableSkeleton() {
-  const loadingColumns: ColumnDef<HubFellowsAttendancesType>[] = columns.map(
-    (column) => {
-      const columnId =
-        typeof column.header === "string"
-          ? column.header
-          : (column.id ?? "unknown");
-      return {
-        accessorFn: () => null,
-        header:
-          columnId !== "checkbox" && columnId !== "button" ? columnId : "",
-        id: columnId,
-        cell: () => {
-          return columnId !== "checkbox" && columnId !== "button" ? (
-            <Skeleton className="h-5 w-full bg-gray-200" />
-          ) : null;
-        },
-      };
-    },
-  );
+  const loadingColumns: ColumnDef<HubFellowsAttendancesType>[] = columns.map((column) => {
+    const columnId = typeof column.header === "string" ? column.header : (column.id ?? "unknown");
+    return {
+      accessorFn: () => null,
+      header: columnId !== "checkbox" && columnId !== "button" ? columnId : "",
+      id: columnId,
+      cell: () => {
+        return columnId !== "checkbox" && columnId !== "button" ? (
+          <Skeleton className="h-5 w-full bg-gray-200" />
+        ) : null;
+      },
+    };
+  });
 
-  const emptyData: HubFellowsAttendancesType[] = Array.from(
-    Array(10).keys(),
-  ).map(() => ({
+  const emptyData: HubFellowsAttendancesType[] = Array.from(Array(10).keys()).map(() => ({
     id: "",
     fellowName: "",
     hub: "",

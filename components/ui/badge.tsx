@@ -16,10 +16,8 @@ const badgeVariants = cva(
         destructive:
           "text-shamiri-light-red bg-shamiri-light-red-background-base/[.1] border-red-border",
         outline: "text-foreground",
-        "shamiri-green":
-          "bg-shamiri-light-green border-green-border text-shamiri-green",
-        warning:
-          "bg-shamiri-light-orange/[0.1] border-[#F98600]/[0.3] text-shamiri-light-orange",
+        "shamiri-green": "bg-shamiri-light-green border-green-border text-shamiri-green",
+        warning: "bg-shamiri-light-orange/[0.1] border-[#F98600]/[0.3] text-shamiri-light-orange",
       },
     },
     defaultVariants: {
@@ -33,9 +31,7 @@ export interface BadgeProps
     VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {
-  return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
-  );
+  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
 
 export { Badge, badgeVariants };

@@ -3,9 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 const isCI = !!process.env.CI;
 const slowMo = process.env.SLOW ? Number.parseInt(process.env.SLOW) : undefined;
 const showServerLogs = process.env.LOG ? "pipe" : undefined;
-const useHeadless = process.env.CI
-  ? { headless: true }
-  : devices["Desktop Chrome"];
+const useHeadless = process.env.CI ? { headless: true } : devices["Desktop Chrome"];
 
 /**
  * See https://playwright.dev/docs/test-configuration.

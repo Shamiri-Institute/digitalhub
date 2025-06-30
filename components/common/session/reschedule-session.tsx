@@ -4,19 +4,8 @@ import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogPortal,
-} from "#/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormLabel,
-  FormMessage,
-} from "#/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogPortal } from "#/components/ui/dialog";
+import { Form, FormControl, FormField, FormLabel, FormMessage } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { Popover, PopoverContent } from "#/components/ui/popover";
 import {
@@ -82,16 +71,12 @@ export default function RescheduleSession({
       toast({
         variant: "destructive",
         description:
-          response.message ??
-          "Something went wrong while trying to reschedule the session.",
+          response.message ?? "Something went wrong while trying to reschedule the session.",
       });
       return;
     }
 
-    await Promise.all([
-      await revalidatePageAction(pathname),
-      await refresh(),
-    ]).then(() => {
+    await Promise.all([await revalidatePageAction(pathname), await refresh()]).then(() => {
       toast({
         description: response.message,
       });
@@ -109,10 +94,7 @@ export default function RescheduleSession({
             </DialogHeader>
             {children}
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -167,17 +149,10 @@ export default function RescheduleSession({
                               )}
                             >
                               <Icons.clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {field.value ? (
-                                field.value
-                              ) : (
-                                <span>Pick a time</span>
-                              )}
+                              {field.value ? field.value : <span>Pick a time</span>}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent
-                            className="w-auto px-4 py-3"
-                            align="start"
-                          >
+                          <PopoverContent className="w-auto px-4 py-3" align="start">
                             <div className="flex flex-col gap-2">
                               <span className="text-sm">Pick a start time</span>
                               <div className="flex items-center gap-2 py-2">
@@ -201,9 +176,7 @@ export default function RescheduleSession({
                                   <Input
                                     type="number"
                                     onChange={(e) => {
-                                      setMinutes(
-                                        handleMinutesChange(e.target.value),
-                                      );
+                                      setMinutes(handleMinutesChange(e.target.value));
                                     }}
                                     value={minutes}
                                     min={0}
@@ -256,8 +229,7 @@ export default function RescheduleSession({
                                   disabled={form.formState.isSubmitting}
                                   loading={form.formState.isSubmitting}
                                   onClick={() => {
-                                    const timeString =
-                                      hour + ":" + minutes + " " + time;
+                                    const timeString = hour + ":" + minutes + " " + time;
                                     field.onChange(timeString);
                                     setTimePicker(false);
                                   }}

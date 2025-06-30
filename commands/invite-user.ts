@@ -81,9 +81,7 @@ export class InviteUserCommand extends Command<
     });
 
     // TODO: add to audit log
-    console.log(
-      `user#${inviterId} invited ${email} to ${implementer.implementerName}`,
-    );
+    console.log(`user#${inviterId} invited ${email} to ${implementer.implementerName}`);
 
     return { invitationId: invitation.id };
   }

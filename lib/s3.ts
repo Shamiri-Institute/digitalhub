@@ -19,9 +19,7 @@ export async function getObject(input: Pick<GetObjectCommandInput, "Key">) {
   return response;
 }
 
-export async function putObject(
-  input: Pick<PutObjectCommandInput, "Body" | "Key">,
-) {
+export async function putObject(input: Pick<PutObjectCommandInput, "Body" | "Key">) {
   const command = new PutObjectCommand({
     ...input,
     Bucket: env.S3_UPLOAD_BUCKET,

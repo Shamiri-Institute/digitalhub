@@ -55,9 +55,7 @@ export default function ApproveSpecialSessionFellows({
     },
   });
 
-  const onSubmit = async (
-    data: z.infer<typeof RequestSpecialSessionSchema>,
-  ) => {
+  const onSubmit = async (data: z.infer<typeof RequestSpecialSessionSchema>) => {
     // todo: add action to approve special session
     form.reset();
     setDialogOpen(false);
@@ -86,11 +84,7 @@ export default function ApproveSpecialSessionFellows({
                       <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Input placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -101,9 +95,7 @@ export default function ApproveSpecialSessionFellows({
                 name="comments"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Confirm comments/reason for special session
-                    </FormLabel>
+                    <FormLabel>Confirm comments/reason for special session</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Extra transport cost to the school"

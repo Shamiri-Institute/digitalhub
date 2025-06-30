@@ -18,8 +18,7 @@ export const fileColumns = (state: {
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -62,9 +61,7 @@ export const fileColumns = (state: {
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <SchoolFilesDataTableMenu file={row.original} state={state} />
-    ),
+    cell: ({ row }) => <SchoolFilesDataTableMenu file={row.original} state={state} />,
     enableHiding: false,
   },
 ];

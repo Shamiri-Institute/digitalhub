@@ -152,8 +152,7 @@ export function SessionDetail({
   useEffect(() => {
     const startTimeLabel = format(session.sessionDate, "h:mma");
     const durationLabel = `${format(session.sessionDate, "h:mm")} - ${format(
-      session.sessionEndTime ??
-        addHours(addMinutes(session.sessionDate, 30), 1),
+      session.sessionEndTime ?? addHours(addMinutes(session.sessionDate, 30), 1),
       "h:mma",
     )}`;
 
@@ -212,16 +211,11 @@ export function SessionDetail({
               <Icons.helpCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
             )}
             {cancelled && <Icons.crossCircleFilled className="h-3.5 w-3.5" />}
-            {rescheduled && (
-              <Icons.calendarCheck2 className="h-3.5 w-3.5" strokeWidth={2.5} />
-            )}
-            {isExpanded && (
-              <div>{sessionDisplayName(session.session?.sessionName)}</div>
-            )}
+            {rescheduled && <Icons.calendarCheck2 className="h-3.5 w-3.5" strokeWidth={2.5} />}
+            {isExpanded && <div>{sessionDisplayName(session.session?.sessionName)}</div>}
             {isCompact && (
               <div className="flex gap-1 truncate">
-                {sessionDisplayName(session.session?.sessionName)} -{" "}
-                {timeLabels.startTimeLabel}
+                {sessionDisplayName(session.session?.sessionName)} - {timeLabels.startTimeLabel}
                 {(mode === "day" || !withDropdown) && (
                   <div className="truncate">- {schoolName}</div>
                 )}
@@ -236,9 +230,7 @@ export function SessionDetail({
                 <span className="invisible">t</span>
               </div>
               {session.status === "Rescheduled" && (
-                <span className="font-medium text-shamiri-light-red">
-                  RESCHEDULED
-                </span>
+                <span className="font-medium text-shamiri-light-red">RESCHEDULED</span>
               )}
             </div>
           )}
@@ -249,12 +241,7 @@ export function SessionDetail({
 
   return withDropdown ? (
     <div>
-      <SessionDropDown
-        state={state}
-        role={role}
-        fellowId={fellowId}
-        supervisorId={supervisorId}
-      >
+      <SessionDropDown state={state} role={role} fellowId={fellowId} supervisorId={supervisorId}>
         {renderSessionDetails()}
       </SessionDropDown>
     </div>
@@ -295,17 +282,14 @@ export function SessionDropDown({
       </DropdownMenuTrigger>
       <DropdownMenuContent align={"end"}>
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {role === ImplementerRole.HUB_COORDINATOR && (
           <DropdownMenuItem
             onClick={() => {
               state.setSession && state.setSession(session);
-              state.setSupervisorAttendanceDialog &&
-                state.setSupervisorAttendanceDialog(true);
+              state.setSupervisorAttendanceDialog && state.setSupervisorAttendanceDialog(true);
             }}
             disabled={session.status === "Cancelled" || !session.occurred}
           >
@@ -321,8 +305,7 @@ export function SessionDropDown({
                 <DropdownMenuItem
                   onClick={() => {
                     state.setSession && state.setSession(session);
-                    state.setStudentAttendanceDialog &&
-                      state.setStudentAttendanceDialog(true);
+                    state.setStudentAttendanceDialog && state.setStudentAttendanceDialog(true);
                   }}
                   disabled={
                     session.status === "Cancelled" ||
@@ -336,14 +319,12 @@ export function SessionDropDown({
             )}
           </>
         )}
-        {role === ImplementerRole.HUB_COORDINATOR ||
-        role === ImplementerRole.SUPERVISOR ? (
+        {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR ? (
           <>
             <DropdownMenuItem
               onClick={() => {
                 state.setSession && state.setSession(session);
-                state.setFellowAttendanceDialog &&
-                  state.setFellowAttendanceDialog(true);
+                state.setFellowAttendanceDialog && state.setFellowAttendanceDialog(true);
               }}
               disabled={
                 session.status === "Cancelled" ||
@@ -374,8 +355,7 @@ export function SessionDropDown({
             <DropdownMenuItem
               onClick={() => {
                 state.setSession && state.setSession(session);
-                state.setSessionOccurrenceDialog &&
-                  state.setSessionOccurrenceDialog(true);
+                state.setSessionOccurrenceDialog && state.setSessionOccurrenceDialog(true);
               }}
               disabled={
                 session.status === "Cancelled" ||
@@ -389,13 +369,11 @@ export function SessionDropDown({
             <DropdownMenuItem
               onClick={() => {
                 state.setSession && state.setSession(session);
-                state.setRescheduleSessionDialog &&
-                  state.setRescheduleSessionDialog(true);
+                state.setRescheduleSessionDialog && state.setRescheduleSessionDialog(true);
               }}
               disabled={
                 session.occurred ||
-                (role === "SUPERVISOR" &&
-                  session.school?.assignedSupervisorId !== supervisorId)
+                (role === "SUPERVISOR" && session.school?.assignedSupervisorId !== supervisorId)
               }
             >
               Reschedule session
@@ -404,14 +382,12 @@ export function SessionDropDown({
               className="text-shamiri-light-red"
               onClick={() => {
                 state.setSession && state.setSession(session);
-                state.setCancelSessionDialog &&
-                  state.setCancelSessionDialog(true);
+                state.setCancelSessionDialog && state.setCancelSessionDialog(true);
               }}
               disabled={
                 session.status === "Cancelled" ||
                 session.occurred ||
-                (role === "SUPERVISOR" &&
-                  session.school?.assignedSupervisorId !== supervisorId)
+                (role === "SUPERVISOR" && session.school?.assignedSupervisorId !== supervisorId)
               }
             >
               Cancel session
@@ -423,8 +399,7 @@ export function SessionDropDown({
             <DropdownMenuItem
               onClick={() => {
                 state.setSession && state.setSession(session);
-                state.setStudentAttendanceDialog &&
-                  state.setStudentAttendanceDialog(true);
+                state.setStudentAttendanceDialog && state.setStudentAttendanceDialog(true);
               }}
               disabled={
                 session.status === "Cancelled" ||

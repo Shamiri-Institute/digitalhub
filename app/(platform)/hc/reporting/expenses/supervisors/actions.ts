@@ -60,13 +60,7 @@ export async function loadHubSupervisorExpenses() {
   });
 }
 
-export async function deleteSupervisorExpenseRequest({
-  id,
-  name,
-}: {
-  id: string;
-  name: string;
-}) {
+export async function deleteSupervisorExpenseRequest({ id, name }: { id: string; name: string }) {
   try {
     const hubCoordinator = await currentHubCoordinator();
 

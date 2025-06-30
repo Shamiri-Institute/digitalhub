@@ -2,10 +2,7 @@
 import DataTable from "#/components/data-table";
 
 import type { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
-import {
-  columns,
-  subColumns,
-} from "#/components/common/expenses/complaints/columns";
+import { columns, subColumns } from "#/components/common/expenses/complaints/columns";
 import FellowComplaintsFilterTab from "#/components/common/expenses/complaints/complaints-filter";
 
 export default function FellowComplaintsDataTable({

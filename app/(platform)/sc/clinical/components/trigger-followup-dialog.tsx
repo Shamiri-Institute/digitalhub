@@ -20,10 +20,7 @@ interface TriggerFollowupDialogProps {
   caseId: string;
 }
 
-export default function TriggerFollowupDialog({
-  children,
-  caseId,
-}: TriggerFollowupDialogProps) {
+export default function TriggerFollowupDialog({ children, caseId }: TriggerFollowupDialogProps) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
   const handleConfirm = async () => {

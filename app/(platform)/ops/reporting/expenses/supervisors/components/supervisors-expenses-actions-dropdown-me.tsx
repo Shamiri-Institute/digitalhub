@@ -28,22 +28,16 @@ export default function HCSupervisorExpenseDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {expense.status !== "APPROVED" && (
           <HCApproveSupervisorExpense expense={expense}>
-            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-              Approve
-            </div>
+            <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">Approve</div>
           </HCApproveSupervisorExpense>
         )}
         <HCEditSupervisorExpense expense={expense}>
-          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-            Edit Request
-          </div>
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">Edit Request</div>
         </HCEditSupervisorExpense>
 
         <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
@@ -52,11 +46,7 @@ export default function HCSupervisorExpenseDropdownMenu({
         <DropdownMenuSeparator />
 
         <HCDeleteExpenseRequest expense={expense}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-red",
-            )}
-          >
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-red")}>
             Delete request
           </div>
         </HCDeleteExpenseRequest>

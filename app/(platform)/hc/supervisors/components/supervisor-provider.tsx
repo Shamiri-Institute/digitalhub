@@ -3,11 +3,7 @@ import type { SupervisorsData } from "#/app/(platform)/hc/supervisors/components
 import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
 import { useState } from "react";
 
-export default function SupervisorProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function SupervisorProvider({ children }: { children: React.ReactNode }) {
   const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
   const [editDialog, setEditDialog] = useState<boolean>(false);
   const [undropDialog, setUndropDialog] = useState<boolean>(false);
