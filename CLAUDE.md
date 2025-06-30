@@ -794,6 +794,211 @@ interface CreateUserInput {
 - [ ] All schemas use appropriate validation rules
 - [ ] Error messages are user-friendly and specific
 - [ ] Types are generated from schemas using `z.infer<>`
+- [ ] Code is self-documenting with minimal comments
+- [ ] Comments only explain WHY, not WHAT the code does
+
+### Code Documentation and Comments Policy
+
+**ABSOLUTE RULE: CODE SHOULD BE SELF-DOCUMENTING**
+
+#### Comment Usage Guidelines
+
+**REQUIRED COMMENTS:**
+
+- Complex business logic that isn't immediately obvious
+- Non-trivial algorithms or calculations
+- Workarounds for framework/library limitations
+- Security-sensitive operations
+- Performance-critical optimizations
+
+**PROHIBITED COMMENTS:**
+
+- Obvious code explanations
+- Restating what the code does
+- Outdated or redundant information
+- TODO comments (use proper issue tracking)
+- Commented-out code (use git history)
+
+#### Good vs Bad Examples
+
+**❌ BAD: Obvious comments**
+
+```typescript
+// Create a new user
+const user = await db.user.create({ data: userData });
+
+// Check if user exists
+if (!user) {
+  return { error: "User not found" };
+}
+
+// Return success response
+return { success: true, data: user };
+```
+
+**✅ GOOD: Self-documenting code**
+
+```typescript
+const user = await db.user.create({ data: userData });
+
+if (!user) {
+  return { error: "User not found" };
+}
+
+return { success: true, data: user };
+```
+
+**✅ GOOD: Necessary comments for complex logic**
+
+```typescript
+// Apply rate limiting to prevent abuse - max 5 requests per minute per IP
+const isRateLimited = await checkRateLimit(request.ip, 5, 60);
+
+// Complex business rule: Fellows can only be assigned to schools
+// within their designated hub unless supervisor explicitly overrides
+const isValidAssignment =
+  fellow.hubId === school.hubId || supervisorOverride === true;
+
+// Performance optimization: Batch database updates to reduce transaction overhead
+await db.$transaction(async (tx) => {
+  const updates = students.map((student) =>
+    tx.student.update({ where: { id: student.id }, data: student.data }),
+  );
+  await Promise.all(updates);
+});
+```
+
+#### Self-Documenting Code Principles
+
+**Use Descriptive Names:**
+
+```typescript
+// ❌ BAD: Unclear naming
+const data = await fetch(url);
+const result = process(data);
+
+// ✅ GOOD: Self-explanatory
+const sessionAnalysisData = await fetchSessionAnalysis(sessionId);
+const validatedAnalysis = validateSessionAnalysis(sessionAnalysisData);
+```
+
+**Extract Complex Logic:**
+
+```typescript
+// ❌ BAD: Inline complex logic
+if (
+  user.role === "FELLOW" &&
+  user.hubId === session.school.hubId &&
+  session.sessionDate >= user.startDate &&
+  !user.droppedOut
+) {
+  // Allow access
+}
+
+// ✅ GOOD: Extracted function
+const canFellowAccessSession = (
+  fellow: Fellow,
+  session: InterventionSession,
+) => {
+  return (
+    fellow.hubId === session.school.hubId &&
+    session.sessionDate >= fellow.startDate &&
+    !fellow.droppedOut
+  );
+};
+
+if (user.role === "FELLOW" && canFellowAccessSession(user, session)) {
+  // Allow access
+}
+```
+
+**Use Type Definitions for Clarity:**
+
+```typescript
+// ✅ GOOD: Types explain structure and purpose
+interface SessionAnalysisInput {
+  sessionId: string;
+  gradingScores: GradingRubricScores;
+  qualitativeFeedback: QualitativeFeedback;
+  metadata: AnalysisMetadata;
+}
+
+interface GradingRubricScores {
+  protocolAdherence: number; // 1-7 scale
+  contentSpecifications: number; // 1-7 scale
+  contentThoroughness: number; // 1-7 scale
+  contentSkillfulness: number; // 1-7 scale
+  contentClarity: number; // 1-7 scale
+  protocolCompliance: number; // 1-7 scale
+}
+```
+
+#### When Comments ARE Needed
+
+**Complex Business Rules:**
+
+```typescript
+// School dropout requires supervisor approval AND hub coordinator notification
+// This is mandated by the education ministry regulations (Policy XYZ-2024)
+const processSchoolDropout = async (schoolId: string, reason: string) => {
+  await requireSupervisorApproval(schoolId);
+  await notifyHubCoordinator(schoolId, reason);
+  await updateMinistryDatabase(schoolId, "DROPOUT");
+};
+```
+
+**Performance Optimizations:**
+
+```typescript
+// Debounce search to prevent excessive API calls during typing
+const debouncedSearch = useMemo(
+  () => debounce(performSearch, 300),
+  [performSearch],
+);
+```
+
+**Security Considerations:**
+
+```typescript
+// Hash passwords before storage - never store plaintext
+const hashedPassword = await bcrypt.hash(password, 12);
+
+// Sanitize user input to prevent XSS attacks
+const sanitizedBio = DOMPurify.sanitize(userBio);
+```
+
+**Framework Workarounds:**
+
+```typescript
+// NextJS App Router requires this pattern for dynamic imports
+// See: https://nextjs.org/docs/app/building-your-application/optimizing/lazy-loading
+const DynamicChart = dynamic(() => import("./Chart"), {
+  ssr: false, // Chart library not compatible with SSR
+});
+```
+
+#### JSDoc for Public APIs
+
+**Use JSDoc for exported functions/components:**
+
+```typescript
+/**
+ * Creates a new session analysis with validated grading scores.
+ *
+ * @param sessionId - ID of the intervention session to analyze
+ * @param analysisData - Raw analysis data from LLM service
+ * @returns Promise resolving to created analysis or error
+ *
+ * @throws {ValidationError} When grading scores are outside 1-7 range
+ * @throws {NotFoundError} When session doesn't exist
+ */
+export async function createSessionAnalysis(
+  sessionId: string,
+  analysisData: RawAnalysisData,
+): Promise<SessionAnalysis> {
+  // Implementation
+}
+```
 
 ### SQL and Database Optimization
 

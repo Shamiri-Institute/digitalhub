@@ -203,6 +203,68 @@ Before any code review or PR:
 - [ ] TailwindCSS only (no custom CSS)
 - [ ] Proper error handling implemented
 - [ ] Conventional commit format used
+- [ ] Code is self-documenting with minimal comments
+- [ ] Comments only explain WHY, not WHAT
+
+## Code Documentation Rules
+
+### Comment Policy - MANDATORY
+**ABSOLUTE RULE: CODE SHOULD BE SELF-DOCUMENTING**
+
+#### REQUIRED Comments:
+- Complex business logic that isn't obvious
+- Security-sensitive operations  
+- Performance optimizations
+- Framework workarounds
+- Non-trivial algorithms
+
+#### PROHIBITED Comments:
+- ❌ Obvious code explanations
+- ❌ Restating what code does
+- ❌ TODO comments (use issues)
+- ❌ Commented-out code (use git)
+- ❌ Outdated information
+
+#### Self-Documenting Code Patterns:
+
+```typescript
+// ❌ BAD: Obvious comments
+// Create user in database
+const user = await db.user.create({ data });
+
+// ✅ GOOD: Self-explanatory
+const user = await db.user.create({ data });
+
+// ✅ GOOD: Complex business rule needs explanation
+// Fellows can only access sessions in their assigned hub
+// unless supervisor grants explicit override permission
+const canAccess = fellow.hubId === session.hubId || supervisorOverride;
+```
+
+#### Use Descriptive Names:
+```typescript
+// ❌ BAD: Unclear
+const data = process(input);
+
+// ✅ GOOD: Self-explanatory
+const validatedSessionAnalysis = validateAnalysisData(rawInput);
+```
+
+#### Extract Complex Logic:
+```typescript
+// ❌ BAD: Inline complexity
+if (user.role === "FELLOW" && user.hubId === session.hubId && active) {
+  // logic
+}
+
+// ✅ GOOD: Extracted function  
+const canFellowAccessSession = (fellow, session) => 
+  fellow.hubId === session.hubId && fellow.active;
+
+if (user.role === "FELLOW" && canFellowAccessSession(user, session)) {
+  // logic
+}
+```
 
 ## Anti-Patterns to Avoid
 
@@ -235,6 +297,23 @@ interface User {
 
 // ❌ DON'T: Duplicate components
 function MyButton() { /* custom button logic */ }
+```
+
+### Comment Anti-Patterns:
+```typescript
+// ❌ DON'T: Obvious comments
+// Set the name variable to the user's name
+const name = user.name;
+
+// ❌ DON'T: Commented-out code
+// const oldFunction = () => { ... }
+
+// ❌ DON'T: TODO comments
+// TODO: Fix this later
+
+// ❌ DON'T: Redundant comments
+// Return true if valid, false if invalid
+return isValid;
 ```
 
 Follow these rules strictly to maintain code quality and consistency across the Shamiri Digital Hub platform.
