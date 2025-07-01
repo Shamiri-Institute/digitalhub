@@ -1,15 +1,14 @@
 "use client";
 
+import { type Prisma, SessionStatus } from "@prisma/client";
+import { useContext, useState } from "react";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import {
   SchoolsFiltersContext,
   sessionTypeFilterOptions,
   statusFilterOptions,
 } from "#/app/(platform)/hc/schools/context/schools-filters-context";
-import {
-  DropdownMenuCheckboxItem,
-  DropdownMenuLabel,
-} from "#/components/ui/dropdown-menu";
+import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -18,8 +17,6 @@ import {
   SelectValue,
 } from "#/components/ui/select";
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
-import { Prisma, SessionStatus } from "@prisma/client";
-import { useContext, useState } from "react";
 
 export default function SchoolsFilterToggle({
   schools,
@@ -70,11 +67,7 @@ export default function SchoolsFilterToggle({
             <SelectContent>
               {schools.map((school) => {
                 return (
-                  <SelectItem
-                    key={school.id}
-                    value={school.id}
-                    className="text-sm"
-                  >
+                  <SelectItem key={school.id} value={school.id} className="text-sm">
                     {school.schoolName}
                   </SelectItem>
                 );
@@ -125,9 +118,7 @@ export default function SchoolsFilterToggle({
           </div>
           <div>
             <DropdownMenuLabel>
-              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-                Status
-              </span>
+              <span className="text-xs font-medium uppercase text-shamiri-text-grey">Status</span>
             </DropdownMenuLabel>
             {Object.keys(SessionStatus).map((status) => {
               return (

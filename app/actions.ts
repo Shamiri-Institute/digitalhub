@@ -1,11 +1,11 @@
 "use server";
 
-import {
+import type {
+  caseStatusOptions,
   Fellow,
   ImplementerRole,
-  WeeklyFellowRatings,
-  caseStatusOptions,
   riskStatusOptions,
+  WeeklyFellowRatings,
 } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -17,7 +17,7 @@ import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getHighestValue } from "#/lib/utils";
 import { EditFellowSchema } from "#/lib/validators";
-import { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
+import type { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 
 export async function inviteUserToImplementer(prevState: any, formData: any) {
   try {
@@ -259,7 +259,7 @@ export async function submitTransportReimbursementRequest(data: {
         supervisorId: data.supervisorId,
         hubId: data.hubId,
         incurredAt: data.receiptDate,
-        amount: parseInt(data.amount),
+        amount: Number.parseInt(data.amount),
         kind: "transport",
         mpesaName: data.mpesaName,
         mpesaNumber: data.mpesaNumber,
@@ -319,10 +319,7 @@ export async function updateInterventionOccurrenceDate(
   }
 }
 
-export async function dropoutSchoolWithReason(
-  schoolVisibleId: string,
-  dropoutReason: string,
-) {
+export async function dropoutSchoolWithReason(schoolVisibleId: string, dropoutReason: string) {
   try {
     const school = await db.school.update({
       where: { visibleId: schoolVisibleId },
@@ -605,9 +602,7 @@ export async function editFellowDetails(
   const result = EditFellowSchema.safeParse(fellowDetails);
 
   if (!result.success) {
-    throw new Error(
-      "Invalid fields supplied, please review submission details",
-    );
+    throw new Error("Invalid fields supplied, please review submission details");
   }
 
   const { data: parsedFellow } = result;
@@ -755,10 +750,7 @@ export async function RejectRefferedClinicalCase(caseId: string) {
   }
 }
 
-export async function updateClinicalCaseStatus(
-  caseId: string,
-  status: caseStatusOptions,
-) {
+export async function updateClinicalCaseStatus(caseId: string, status: caseStatusOptions) {
   try {
     await db.clinicalScreeningInfo.update({
       where: {
@@ -935,8 +927,7 @@ export async function initialReferralFromClinicalCaseSupervisor(data: {
       });
 
       if (currentcase?.caseTransferTrail.length > 0) {
-        const initialCaseHistoryId =
-          currentcase?.caseTransferTrail[0]?.id ?? null;
+        const initialCaseHistoryId = currentcase?.caseTransferTrail[0]?.id ?? null;
 
         await db.clinicalScreeningInfo.update({
           where: {
@@ -995,18 +986,15 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
       },
     });
 
-    const emergencyPresentingIssues =
-      result_data?.emergencyPresentingIssues ?? {};
+    const emergencyPresentingIssues = result_data?.emergencyPresentingIssues ?? {};
 
-    let combinedPresentingIssues = {
+    const combinedPresentingIssues = {
       // ...(emergencyPresentingIssues as { [k: string]: string }),
       ...(emergencyPresentingIssues as Record<string, any>),
       ...data.presentingIssues,
     };
 
-    const highestValue: riskStatusOptions = getHighestValue(
-      combinedPresentingIssues,
-    );
+    const highestValue: riskStatusOptions = getHighestValue(combinedPresentingIssues);
 
     await db.clinicalScreeningInfo.update({
       where: {
@@ -1099,19 +1087,14 @@ export async function flagClinicalCaseForFollowUp(data: {
       },
     });
 
-    revalidatePath(
-      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
-    );
+    revalidatePath(`${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`);
     return { success: true };
   } catch (error) {
     return { error: "Something went wrong" };
   }
 }
 
-export async function storeSupervisorProgressNotes(
-  caseId: string,
-  documentURL: string,
-) {
+export async function storeSupervisorProgressNotes(caseId: string, documentURL: string) {
   try {
     await db.clinicalScreeningInfo.update({
       where: {
@@ -1225,9 +1208,9 @@ export async function addNonShamiriStudentViaClinicalScreening(
         schoolId: data.schoolId,
         yearOfImplementation: new Date().getFullYear(),
         admissionNumber: data.admissionNumber,
-        age: parseInt(data.age),
+        age: Number.parseInt(data.age),
         gender: data.gender,
-        form: parseInt(data.form),
+        form: Number.parseInt(data.form),
         stream: data.stream,
         county: data.county,
         phoneNumber: data.contactNumber,
@@ -1251,10 +1234,7 @@ export async function addNonShamiriStudentViaClinicalScreening(
 
 // DEPRECATED
 export async function editWeeklyFellowRating(
-  data: Omit<
-    WeeklyFellowRatings,
-    "createdAt" | "updatedAt" | "fellowId" | "supervisorId" | "week"
-  >,
+  data: Omit<WeeklyFellowRatings, "createdAt" | "updatedAt" | "fellowId" | "supervisorId" | "week">,
 ) {
   try {
     const result = await db.weeklyFellowRatings.update({
@@ -1296,7 +1276,7 @@ export async function editClinicalCaseSessionAttendanceDate(data: {
       },
     });
 
-    revalidatePath(`/screenings`);
+    revalidatePath("/screenings");
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -1304,9 +1284,7 @@ export async function editClinicalCaseSessionAttendanceDate(data: {
   }
 }
 
-export async function deleteClinicalCaseSessionAttendanceDate(data: {
-  sessionId: string;
-}) {
+export async function deleteClinicalCaseSessionAttendanceDate(data: { sessionId: string }) {
   try {
     await db.clinicalSessionAttendance.delete({
       where: {
@@ -1314,7 +1292,7 @@ export async function deleteClinicalCaseSessionAttendanceDate(data: {
       },
     });
 
-    revalidatePath(`/screenings`);
+    revalidatePath("/screenings");
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -1370,9 +1348,9 @@ export async function editStudentInfoFromClinicalCaseScreen(
       data: {
         studentName: data.studentName,
         admissionNumber: data.admissionNumber,
-        age: parseInt(data.age),
+        age: Number.parseInt(data.age),
         gender: data.gender,
-        form: parseInt(data.form),
+        form: Number.parseInt(data.form),
         stream: data.stream,
         county: data.county,
         phoneNumber: data.contactNumber,

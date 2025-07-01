@@ -1,7 +1,11 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import {
   deleteSupervisorExpenseRequest,
-  HubSupervisorExpensesType,
+  type HubSupervisorExpensesType,
 } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -24,10 +28,6 @@ import {
 import { Input } from "#/components/ui/input";
 import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export const DeleteExpenseRequestSchema = z.object({
   name: stringValidation("Please enter your name"),
@@ -101,15 +101,10 @@ export default function HCDeleteExpenseRequest({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Type your name to confirm{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Type your name to confirm <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Input placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

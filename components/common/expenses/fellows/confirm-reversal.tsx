@@ -1,7 +1,11 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { submitPaymentReversal } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
+import type { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -21,10 +25,6 @@ import {
 import { Input } from "#/components/ui/input";
 import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export const ConfirmReversalSchema = z.object({
   name: stringValidation("Please enter your name"),
@@ -55,9 +55,7 @@ export default function ConfirmReversalFellows({
       toast({
         variant: "destructive",
         title: "Submission error",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -93,25 +91,17 @@ export default function ConfirmReversalFellows({
 
           <div className="px-1">
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-2"
-              >
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
                 <FormField
                   control={form.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>
-                        Type your name to confirm{" "}
-                        <span className="text-shamiri-light-red">*</span>
+                        Type your name to confirm <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder=""
-                          className="resize-none"
-                          {...field}
-                        />
+                        <Input placeholder="" className="resize-none" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

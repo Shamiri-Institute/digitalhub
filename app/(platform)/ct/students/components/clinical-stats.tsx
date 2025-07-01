@@ -1,7 +1,5 @@
 "use client";
 
-import { clinicalCasesColors } from "#/components/charts/constants";
-import ChartCard from "#/components/ui/chart-card";
 import {
   Bar,
   BarChart,
@@ -15,6 +13,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { clinicalCasesColors } from "#/components/charts/constants";
+import ChartCard from "#/components/ui/chart-card";
 
 export default function ClinicalStats({
   clinicalData,
@@ -69,9 +69,7 @@ export default function ClinicalStats({
                 {casesByStatus.map((entry, index) => (
                   <Cell
                     key={entry.name}
-                    fill={
-                      clinicalCasesColors[index % clinicalCasesColors.length]
-                    }
+                    fill={clinicalCasesColors[index % clinicalCasesColors.length]}
                   />
                 ))}
               </Pie>
@@ -109,10 +107,7 @@ export default function ClinicalStats({
         ) : null}
       </ChartCard>
 
-      <ChartCard
-        showCardFooter={false}
-        title="Clinical Cases by Initial Contact"
-      >
+      <ChartCard showCardFooter={false} title="Clinical Cases by Initial Contact">
         {casesByInitialContact.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={307} height={307}>
@@ -129,17 +124,12 @@ export default function ClinicalStats({
                   position="center"
                   className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {casesByInitialContact.reduce(
-                    (acc, curr) => acc + curr.value,
-                    0,
-                  )}
+                  {casesByInitialContact.reduce((acc, curr) => acc + curr.value, 0)}
                 </Label>
                 {casesByInitialContact.map((entry, index) => (
                   <Cell
                     key={entry.name}
-                    fill={
-                      clinicalCasesColors[index % clinicalCasesColors.length]
-                    }
+                    fill={clinicalCasesColors[index % clinicalCasesColors.length]}
                   />
                 ))}
               </Pie>

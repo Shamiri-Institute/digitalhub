@@ -1,13 +1,11 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
 import { currentHubCoordinator } from "#/app/auth";
-import { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
+import type { ReportFellowComplaintSchema } from "#/components/common/expenses/complaints/schema";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
 
-export type HubReportComplaintsType = Awaited<
-  ReturnType<typeof loadHubPaymentComplaints>
->[number];
+export type HubReportComplaintsType = Awaited<ReturnType<typeof loadHubPaymentComplaints>>[number];
 
 export async function loadHubPaymentComplaints() {
   const hubCoordinator = await currentHubCoordinator();
@@ -45,12 +43,11 @@ export async function loadHubPaymentComplaints() {
   });
 
   return fellows.map((fellow) => {
-    const { totalAmount, totalPaidAmount } = calculateAmounts(
+    const { totalAmount, totalPaidAmount } = calculateAmounts(fellow.fellowAttendances);
+
+    const { preCount, mainCount, supervisionCount, trainingCount } = calculateSessionCounts(
       fellow.fellowAttendances,
     );
-
-    const { preCount, mainCount, supervisionCount, trainingCount } =
-      calculateSessionCounts(fellow.fellowAttendances);
 
     return {
       fellowName: fellow.fellowName,
@@ -107,37 +104,35 @@ function calculateAmounts(attendances: FellowAttendance[]) {
 
 function specialSessionCount(attendances: FellowAttendance[]) {
   return (
-    attendances.filter(
-      (attendance) => attendance.session?.session?.sessionType === "SPECIAL",
-    ).length || 0
+    attendances.filter((attendance) => attendance.session?.session?.sessionType === "SPECIAL")
+      .length || 0
   );
 }
 
 function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
-  const { preCount, mainCount, supervisionCount, trainingCount } =
-    fellowAttendances.reduce(
-      (counts, attendance) => {
-        const sessionLabel = attendance.session?.session?.sessionLabel;
-        const sessionType = attendance.session?.session?.sessionType;
+  const { preCount, mainCount, supervisionCount, trainingCount } = fellowAttendances.reduce(
+    (counts, attendance) => {
+      const sessionLabel = attendance.session?.session?.sessionLabel;
+      const sessionType = attendance.session?.session?.sessionType;
 
-        // For pre and main session counts
-        if (sessionLabel === "s0") {
-          counts.preCount += 1;
-        } else if (["s1", "s2", "s3", "s4"].includes(sessionLabel ?? "")) {
-          counts.mainCount += 1;
-        }
+      // For pre and main session counts
+      if (sessionLabel === "s0") {
+        counts.preCount += 1;
+      } else if (["s1", "s2", "s3", "s4"].includes(sessionLabel ?? "")) {
+        counts.mainCount += 1;
+      }
 
-        // For training and supervision session counts
-        if (sessionType === "SUPERVISION") {
-          counts.supervisionCount += 1;
-        } else if (sessionType === "TRAINING") {
-          counts.trainingCount += 1;
-        }
+      // For training and supervision session counts
+      if (sessionType === "SUPERVISION") {
+        counts.supervisionCount += 1;
+      } else if (sessionType === "TRAINING") {
+        counts.trainingCount += 1;
+      }
 
-        return counts;
-      },
-      { preCount: 0, mainCount: 0, supervisionCount: 0, trainingCount: 0 },
-    );
+      return counts;
+    },
+    { preCount: 0, mainCount: 0, supervisionCount: 0, trainingCount: 0 },
+  );
 
   return { preCount, mainCount, supervisionCount, trainingCount };
 }
@@ -152,10 +147,7 @@ type FellowAttendance = Prisma.FellowAttendanceGetPayload<{
   };
 }>;
 
-export async function rejectComplaint(data: {
-  id: string;
-  formData: ReportFellowComplaintSchema;
-}) {
+export async function rejectComplaint(data: { id: string; formData: ReportFellowComplaintSchema }) {
   const hubCoordinator = await currentHubCoordinator();
   if (!hubCoordinator) {
     throw new Error("Unauthorised user");
@@ -215,7 +207,7 @@ export async function approveComplaint(data: {
 
     return {
       success: true,
-      message: `Complaint has been approved`,
+      message: "Complaint has been approved",
     };
   } catch (error) {
     console.error(error);

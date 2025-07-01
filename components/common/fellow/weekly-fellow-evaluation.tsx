@@ -1,17 +1,20 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { addDays, differenceInSeconds, eachWeekOfInterval, format, isEqual } from "date-fns";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { WeeklyFellowEvaluationSchema } from "#/components/common/fellow/schema";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -32,19 +35,6 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitWeeklyFellowEvaluation } from "#/lib/actions/fellow";
 import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
-import {
-  addDays,
-  differenceInSeconds,
-  eachWeekOfInterval,
-  format,
-  isEqual,
-} from "date-fns";
-import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export default function WeeklyFellowEvaluation({
   fellowId,
@@ -63,9 +53,7 @@ export default function WeeklyFellowEvaluation({
   mode: "view" | "add";
   children: React.ReactNode;
 }) {
-  const _evaluation = evaluations.sort(
-    (a, b) => b.week.getTime() - a.week.getTime(),
-  )[0];
+  const _evaluation = evaluations.sort((a, b) => b.week.getTime() - a.week.getTime())[0];
   const [existingEvaluation, setExistingEvaluation] = useState<
     Prisma.WeeklyFellowRatingsGetPayload<{}> | undefined
   >(_evaluation);
@@ -92,10 +80,8 @@ export default function WeeklyFellowEvaluation({
       behaviourRating: existingEvaluation?.behaviourRating ?? 0,
       programDeliveryNotes: existingEvaluation?.programDeliveryNotes ?? "",
       programDeliveryRating: existingEvaluation?.programDeliveryRating ?? 0,
-      dressingAndGroomingNotes:
-        existingEvaluation?.dressingAndGroomingNotes ?? "",
-      dressingAndGroomingRating:
-        existingEvaluation?.dressingAndGroomingRating ?? 0,
+      dressingAndGroomingNotes: existingEvaluation?.dressingAndGroomingNotes ?? "",
+      dressingAndGroomingRating: existingEvaluation?.dressingAndGroomingRating ?? 0,
       punctualityNotes: existingEvaluation?.punctualityNotes ?? "",
       punctualityRating: existingEvaluation?.punctualityRating ?? 0,
     },
@@ -121,10 +107,8 @@ export default function WeeklyFellowEvaluation({
       behaviourRating: existingEvaluation?.behaviourRating ?? 0,
       programDeliveryNotes: existingEvaluation?.programDeliveryNotes ?? "",
       programDeliveryRating: existingEvaluation?.programDeliveryRating ?? 0,
-      dressingAndGroomingNotes:
-        existingEvaluation?.dressingAndGroomingNotes ?? "",
-      dressingAndGroomingRating:
-        existingEvaluation?.dressingAndGroomingRating ?? 0,
+      dressingAndGroomingNotes: existingEvaluation?.dressingAndGroomingNotes ?? "",
+      dressingAndGroomingRating: existingEvaluation?.dressingAndGroomingRating ?? 0,
       punctualityNotes: existingEvaluation?.punctualityNotes ?? "",
       punctualityRating: existingEvaluation?.punctualityRating ?? 0,
     };
@@ -132,22 +116,16 @@ export default function WeeklyFellowEvaluation({
 
     if (existingEvaluation) {
       setUpdateWindowDuration(
-        differenceInSeconds(
-          addDays(existingEvaluation.createdAt, 14),
-          new Date(),
-        ),
+        differenceInSeconds(addDays(existingEvaluation.createdAt, 14), new Date()),
       );
     }
   }, [existingEvaluation]);
 
-  const onSubmit = async (
-    data: z.infer<typeof WeeklyFellowEvaluationSchema>,
-  ) => {
+  const onSubmit = async (data: z.infer<typeof WeeklyFellowEvaluationSchema>) => {
     const response = await submitWeeklyFellowEvaluation(data);
     if (!response.success) {
       toast({
-        description:
-          response.message ?? "Something went wrong, please try again",
+        description: response.message ?? "Something went wrong, please try again",
       });
       return;
     }
@@ -194,14 +172,11 @@ export default function WeeklyFellowEvaluation({
                 render={({ field }) => (
                   <FormItem className="space-y-2">
                     <FormLabel>
-                      Select week{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Select week <span className="text-shamiri-light-red">*</span>
                     </FormLabel>{" "}
                     <Select
                       key={new Date().toISOString()}
-                      defaultValue={
-                        field.value ? format(field.value, "yyyy-MM-dd") : " "
-                      }
+                      defaultValue={field.value ? format(field.value, "yyyy-MM-dd") : " "}
                       onValueChange={(value) => {
                         field.onChange(new Date(value));
                         const match = evaluations.find((evaluation) =>
@@ -219,12 +194,9 @@ export default function WeeklyFellowEvaluation({
                       <SelectContent className="max-h-[200px]">
                         {weeks.map((week, index) => {
                           return (
-                            <SelectItem
-                              key={index.toString()}
-                              value={format(week, "yyyy-MM-dd")}
-                            >
-                              Week {index + 1} - {format(week, "dd MMM yyyy")}{" "}
-                              to {format(addDays(week, 6), "dd MMM yyyy")}
+                            <SelectItem key={index.toString()} value={format(week, "yyyy-MM-dd")}>
+                              Week {index + 1} - {format(week, "dd MMM yyyy")} to{" "}
+                              {format(addDays(week, 6), "dd MMM yyyy")}
                             </SelectItem>
                           );
                         })}
@@ -239,18 +211,12 @@ export default function WeeklyFellowEvaluation({
                   </FormItem>
                 )}
               />
-              {mode !== "view" &&
-              existingEvaluation &&
-              updateWindowDuration > 0 ? (
+              {mode !== "view" && existingEvaluation && updateWindowDuration > 0 ? (
                 <DialogAlertWidget separator={false}>
                   <div className="flex items-center gap-2">
                     <span>
                       Update ratings by{" "}
-                      {format(
-                        addDays(existingEvaluation.createdAt, 14),
-                        "dd-MM-yyyy",
-                      )}{" "}
-                      (
+                      {format(addDays(existingEvaluation.createdAt, 14), "dd-MM-yyyy")} (
                       <CountdownTimer duration={updateWindowDuration} />)
                     </span>
                   </div>
@@ -264,17 +230,14 @@ export default function WeeklyFellowEvaluation({
                   render={({ field }) => (
                     <FormItem className="flex flex-col space-y-2">
                       <FormLabel>
-                        <span>
-                          Rate behaviour (1-unacceptable to 5-outstanding)
-                        </span>{" "}
+                        <span>Rate behaviour (1-unacceptable to 5-outstanding)</span>{" "}
                         <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
                       <RatingStarsInput
                         value={field.value}
                         onChange={field.onChange}
                         disabled={
-                          mode === "view" ||
-                          (existingEvaluation && updateWindowDuration === 0)
+                          mode === "view" || (existingEvaluation && updateWindowDuration === 0)
                         }
                       />
                     </FormItem>
@@ -297,7 +260,7 @@ export default function WeeklyFellowEvaluation({
                                 ? ""
                                 : "pertains to evaluating the fellow's demeanor, covering approachability, respectfulness, attitude, collaboration, communication style."
                             }
-                          ></Textarea>
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -314,18 +277,14 @@ export default function WeeklyFellowEvaluation({
                   render={({ field }) => (
                     <FormItem className="flex flex-col space-y-2">
                       <FormLabel>
-                        <span>
-                          Rate program delivery (1-unacceptable to
-                          5-outstanding)
-                        </span>{" "}
+                        <span>Rate program delivery (1-unacceptable to 5-outstanding)</span>{" "}
                         <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
                       <RatingStarsInput
                         value={field.value}
                         onChange={field.onChange}
                         disabled={
-                          mode === "view" ||
-                          (existingEvaluation && updateWindowDuration === 0)
+                          mode === "view" || (existingEvaluation && updateWindowDuration === 0)
                         }
                       />
                     </FormItem>
@@ -348,7 +307,7 @@ export default function WeeklyFellowEvaluation({
                                 ? ""
                                 : "assesses adherence to protocols, ethical standards, confidentiality, cultural competence"
                             }
-                          ></Textarea>
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -365,17 +324,14 @@ export default function WeeklyFellowEvaluation({
                   render={({ field }) => (
                     <FormItem className="flex flex-col space-y-2">
                       <FormLabel>
-                        <span>
-                          Rate dressing and grooming (1-very bad to 5-very good)
-                        </span>{" "}
+                        <span>Rate dressing and grooming (1-very bad to 5-very good)</span>{" "}
                         <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
                       <RatingStarsInput
                         value={field.value}
                         onChange={field.onChange}
                         disabled={
-                          mode === "view" ||
-                          (existingEvaluation && updateWindowDuration === 0)
+                          mode === "view" || (existingEvaluation && updateWindowDuration === 0)
                         }
                       />
                     </FormItem>
@@ -398,7 +354,7 @@ export default function WeeklyFellowEvaluation({
                                 ? ""
                                 : "assesses the personal presentation of fellows considering appropriate attire and grooming standards in compliance with specific school administration requirements."
                             }
-                          ></Textarea>
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -416,8 +372,7 @@ export default function WeeklyFellowEvaluation({
                     <FormItem className="flex flex-col space-y-2">
                       <FormLabel>
                         <span>
-                          Rate session attendance and punctuality (1-very bad to
-                          5-very good)
+                          Rate session attendance and punctuality (1-very bad to 5-very good)
                         </span>{" "}
                         <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
@@ -425,8 +380,7 @@ export default function WeeklyFellowEvaluation({
                         value={field.value}
                         onChange={field.onChange}
                         disabled={
-                          mode === "view" ||
-                          (existingEvaluation && updateWindowDuration === 0)
+                          mode === "view" || (existingEvaluation && updateWindowDuration === 0)
                         }
                       />
                     </FormItem>
@@ -449,7 +403,7 @@ export default function WeeklyFellowEvaluation({
                                 ? ""
                                 : "assesses the timely arrival and adherence to scheduled program sessions, including supervision and school sessions"
                             }
-                          ></Textarea>
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

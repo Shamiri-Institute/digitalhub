@@ -38,16 +38,16 @@ function PageLink({
 }
 
 function PageNavigation() {
-  let pathname = usePathname();
-  let allPages = navigation.flatMap((group) => group.links);
-  let currentPageIndex = allPages.findIndex((page) => page.href === pathname);
+  const pathname = usePathname();
+  const allPages = navigation.flatMap((group) => group.links);
+  const currentPageIndex = allPages.findIndex((page) => page.href === pathname);
 
   if (currentPageIndex === -1) {
     return null;
   }
 
-  let previousPage = allPages[currentPageIndex - 1];
-  let nextPage = allPages[currentPageIndex + 1];
+  const previousPage = allPages[currentPageIndex - 1];
+  const nextPage = allPages[currentPageIndex + 1];
 
   if (!previousPage && !nextPage) {
     return null;
@@ -124,16 +124,10 @@ function SmallPrint() {
         <SocialLink href="https://twitter.com/ShamiriTeam" icon={TwitterIcon}>
           Follow us on Twitter
         </SocialLink>
-        <SocialLink
-          href="https://github.com/Shamiri-Institute"
-          icon={GitHubIcon}
-        >
+        <SocialLink href="https://github.com/Shamiri-Institute" icon={GitHubIcon}>
           Follow us on GitHub
         </SocialLink>
-        <SocialLink
-          href="https://www.linkedin.com/company/shamiri-institute"
-          icon={LinkedInIcon}
-        >
+        <SocialLink href="https://www.linkedin.com/company/shamiri-institute" icon={LinkedInIcon}>
           Follow us on LinkedIn
         </SocialLink>
       </div>

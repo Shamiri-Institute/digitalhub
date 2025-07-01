@@ -1,5 +1,8 @@
 "use client";
 
+import type { Prisma } from "@prisma/client";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { assignFellowSupervisor } from "#/app/(platform)/hc/schools/[visibleId]/fellows/actions";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
@@ -11,9 +14,6 @@ import {
 } from "#/components/ui/select";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export default function AssignFellowSupervisorSelect({
   fellowId,
@@ -31,10 +31,7 @@ export default function AssignFellowSupervisorSelect({
   useEffect(() => {
     try {
       const assignSupervisor = async () => {
-        if (
-          selectedSupervisor !== supervisorId &&
-          selectedSupervisor !== null
-        ) {
+        if (selectedSupervisor !== supervisorId && selectedSupervisor !== null) {
           setLoading(true);
           const result = await assignFellowSupervisor({
             fellowId,
@@ -60,10 +57,7 @@ export default function AssignFellowSupervisorSelect({
 
   return (
     <div className="flex">
-      <Select
-        onValueChange={setSelectedSupervisor}
-        value={selectedSupervisor ?? undefined}
-      >
+      <Select onValueChange={setSelectedSupervisor} value={selectedSupervisor ?? undefined}>
         <SelectTrigger
           className={cn(
             "h-auto gap-1 px-2 py-0.5",

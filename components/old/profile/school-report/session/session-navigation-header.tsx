@@ -40,9 +40,7 @@ export function SessionNavigationHeader({
         </LinkOrDiv>
         <div>
           <h3 className="text-xl font-bold text-brand">My School Report</h3>
-          <h4 className="text-brand-light-gray text-center text-sm">
-            {schoolName}
-          </h4>
+          <h4 className="text-brand-light-gray text-center text-sm">{schoolName}</h4>
           <div className="justify-items-center pl-8 pt-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -76,10 +74,7 @@ export function SessionNavigationHeader({
             </DropdownMenu>
           </div>
         </div>
-        <Link
-          href={`/profile/school-report?sid=${schoolVisibleId}`}
-          className="invisible"
-        >
+        <Link href={`/profile/school-report?sid=${schoolVisibleId}`} className="invisible">
           <Icons.xIcon className="h-6 w-6 align-baseline text-brand xl:h-7 xl:w-7" />
         </Link>
       </div>

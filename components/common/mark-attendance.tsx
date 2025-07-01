@@ -1,14 +1,17 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { addHours, format } from "date-fns";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -30,13 +33,6 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
-import { addHours, format } from "date-fns";
-import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 type Attendance = {
   id: string;
@@ -75,9 +71,7 @@ export function MarkAttendance({
   attendances: Attendance[];
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  markAttendanceAction: (
-    data: z.infer<typeof MarkAttendanceSchema>,
-  ) => Promise<{
+  markAttendanceAction: (data: z.infer<typeof MarkAttendanceSchema>) => Promise<{
     success: boolean;
     message: string;
   }>;
@@ -116,9 +110,7 @@ export function MarkAttendance({
     return {
       sessionId: defaultSession,
       id,
-      attended: defaultAttendance
-        ? getAttendanceStatus(defaultAttendance)
-        : "unmarked",
+      attended: defaultAttendance ? getAttendanceStatus(defaultAttendance) : "unmarked",
       absenceReason: defaultAttendance?.absenceReason ?? undefined,
       comments: defaultAttendance?.comments ?? undefined,
       bulkMode,
@@ -152,16 +144,13 @@ export function MarkAttendance({
     if (!response.success) {
       toast({
         variant: "destructive",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
-    } else {
-      toast({
-        description: response.message,
-      });
     }
+    toast({
+      description: response.message,
+    });
 
     await revalidatePageAction(pathname);
     setIsOpen(false);
@@ -209,33 +198,22 @@ export function MarkAttendance({
                       </FormControl>
                       <SelectContent>
                         {sessions
-                          ?.sort(
-                            (a, b) =>
-                              a.sessionDate.getTime() - b.sessionDate.getTime(),
-                          )
+                          ?.sort((a, b) => a.sessionDate.getTime() - b.sessionDate.getTime())
                           .filter((session) => session.occurred)
                           .map((session) => {
                             const time = `${format(session.sessionDate, "h:mm")} - ${format(
-                              session.sessionEndTime ??
-                                addHours(session.sessionDate, 1.5),
+                              session.sessionEndTime ?? addHours(session.sessionDate, 1.5),
                               "h:mm a",
                             )}`;
                             return (
                               <SelectItem key={session.id} value={session.id}>
                                 <div className="flex items-center gap-2">
-                                  <span>
-                                    {sessionDisplayName(
-                                      session.session?.sessionName!,
-                                    )}
-                                  </span>
+                                  <span>{sessionDisplayName(session.session?.sessionName!)}</span>
                                   <span>-</span>
                                   <span>
-                                    {format(
-                                      new Date(session.sessionDate),
-                                      "dd MMM yyyy",
-                                    )}
+                                    {format(new Date(session.sessionDate), "dd MMM yyyy")}
                                   </span>
-                                  <span className="h-1 w-1 rounded-full bg-black"></span>
+                                  <span className="h-1 w-1 rounded-full bg-black" />
                                   <span>{time}</span>
                                 </div>
                               </SelectItem>
@@ -269,7 +247,7 @@ export function MarkAttendance({
                         value="attended"
                         id="mark_attended"
                         className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
-                      ></RadioGroupItem>
+                      />
                     </div>
                     <div className="relative">
                       <CustomIndicator className="red" label={"Missed"} />
@@ -277,7 +255,7 @@ export function MarkAttendance({
                         value="missed"
                         id="mark_missed"
                         className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-red"
-                      ></RadioGroupItem>
+                      />
                     </div>
                     <div className="relative">
                       <CustomIndicator className="blue" label={"Unmarked"} />
@@ -285,7 +263,7 @@ export function MarkAttendance({
                         value="unmarked"
                         id="Unmarked_"
                         className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
-                      ></RadioGroupItem>
+                      />
                     </div>
                   </RadioGroup>
                   <FormMessage />
@@ -341,11 +319,7 @@ export function MarkAttendance({
                     <FormItem className="space-y-2">
                       <FormLabel>Additional comments</FormLabel>
                       <FormControl>
-                        <Textarea
-                          placeholder=""
-                          className="resize-none"
-                          {...field}
-                        />
+                        <Textarea placeholder="" className="resize-none" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -390,13 +364,7 @@ export function MarkAttendance({
   );
 }
 
-export function CustomIndicator({
-  className,
-  label,
-}: {
-  className: string;
-  label: string;
-}) {
+export function CustomIndicator({ className, label }: { className: string; label: string }) {
   return (
     <div className="custom-indicator pointer-events-none absolute inset-0 flex h-20 items-center pl-6">
       <div className="flex items-center gap-3">
@@ -405,7 +373,7 @@ export function CustomIndicator({
             "indicator h-4 w-4 rounded-full border border-gray-300 bg-white shadow",
             className,
           )}
-        ></div>
+        />
         <span>{label}</span>
       </div>
     </div>

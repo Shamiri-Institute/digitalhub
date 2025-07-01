@@ -1,15 +1,11 @@
-import { Prisma } from "@prisma/client";
-import { signOut, useSession } from "next-auth/react";
+import type { Prisma } from "@prisma/client";
 import Link from "next/link";
+import { signOut, useSession } from "next-auth/react";
 import React from "react";
 
 import { Icons } from "#/components/icons";
 import { OrganizationAvatar, UserAvatar } from "#/components/ui/avatar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { Separator } from "#/components/ui/separator";
 import { cn } from "#/lib/utils";
 import { constants } from "#/tests/constants";
@@ -27,17 +23,18 @@ export function ProfileSwitcher() {
 
   const implementerId = session?.user?.activeMembership?.implementerId;
 
-  const [implementerInfo, setImplementerInfo] = React.useState<
-    Prisma.ImplementerGetPayload<{
-      include: {
-        avatar: {
-          include: {
-            file: true;
+  const [implementerInfo, setImplementerInfo] =
+    React.useState<
+      Prisma.ImplementerGetPayload<{
+        include: {
+          avatar: {
+            include: {
+              file: true;
+            };
           };
         };
-      };
-    }>
-  >();
+      }>
+    >();
 
   React.useEffect(() => {
     if (implementerId) {
@@ -59,8 +56,7 @@ export function ProfileSwitcher() {
             fallback={fallbackProfile.organization.name}
           />
           <div className="text-sm font-medium">
-            {implementerInfo?.implementerName ??
-              fallbackProfile.organization.name}
+            {implementerInfo?.implementerName ?? fallbackProfile.organization.name}
           </div>
           <Icons.chevronsUpDown
             className={cn("h-5 text-foreground/50", "animate-in hover:fade-in")}
@@ -69,10 +65,7 @@ export function ProfileSwitcher() {
         </button>
       </OrganizationDialog>
       <button className="rounded p-1 transition hover:bg-card active:scale-95">
-        <UserAvatar
-          src={session?.user?.image || ""}
-          fallback={session?.user?.name || "??"}
-        />
+        <UserAvatar src={session?.user?.image || ""} fallback={session?.user?.name || "??"} />
       </button>
     </div>
   );
@@ -84,27 +77,17 @@ function OrganizationDialog({ children }: { children: React.ReactNode }) {
   return (
     <Popover>
       <PopoverTrigger asChild>{children}</PopoverTrigger>
-      <PopoverContent
-        className="p-0"
-        side="right"
-        sideOffset={-100}
-        align="end"
-        alignOffset={200}
-      >
+      <PopoverContent className="p-0" side="right" sideOffset={-100} align="end" alignOffset={200}>
         <div>
           <div className="flex w-full flex-col p-3 pl-3.5">
-            <div className="text-sm text-muted-foreground">
-              {session?.data?.user?.email}
-            </div>
+            <div className="text-sm text-muted-foreground">{session?.data?.user?.email}</div>
             <button className="my-2 flex w-full items-center justify-between rounded-md px-1.5 py-1 hover:bg-foreground/[0.025]">
               <div className="flex items-center gap-2">
                 <OrganizationAvatar
                   src={fallbackProfile.organization.avatarUrl}
                   fallback={fallbackProfile.organization.name}
                 />
-                <div className="text-sm font-medium">
-                  {fallbackProfile.organization.name}
-                </div>
+                <div className="text-sm font-medium">{fallbackProfile.organization.name}</div>
               </div>
               <Icons.check className="h-5 text-brand" strokeWidth={1} />
             </button>

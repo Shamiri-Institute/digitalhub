@@ -5,9 +5,7 @@ export default async function WeeklyFellowEvaluationPage() {
 
   return (
     <div className="container w-full grow space-y-3">
-      <WeeklyFellowEvaluationTable
-        weeklyFellowEvaluation={weeklyFellowEvaluationData}
-      />
+      <WeeklyFellowEvaluationTable weeklyFellowEvaluation={weeklyFellowEvaluationData} />
     </div>
   );
 }

@@ -1,22 +1,20 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { ImplementerRole } from "@prisma/client";
+import { PopoverTrigger } from "@radix-ui/react-popover";
+import { format } from "date-fns";
+import { ChevronsUpDown } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { type Dispatch, type SetStateAction, useContext, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { RescheduleSessionSchema } from "#/components/common/session/schema";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogPortal,
-} from "#/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormLabel,
-  FormMessage,
-} from "#/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogPortal } from "#/components/ui/dialog";
+import { Form, FormControl, FormField, FormLabel, FormMessage } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
 import { Popover, PopoverContent } from "#/components/ui/popover";
 import {
@@ -30,15 +28,6 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { rescheduleSession } from "#/lib/actions/session/session";
 import { cn, handleMinutesChange } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ImplementerRole } from "@prisma/client";
-import { PopoverTrigger } from "@radix-ui/react-popover";
-import { format } from "date-fns";
-import { ChevronsUpDown } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useContext, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import type { Session } from "./sessions-provider";
 
 export default function RescheduleSession({
@@ -82,16 +71,12 @@ export default function RescheduleSession({
       toast({
         variant: "destructive",
         description:
-          response.message ??
-          "Something went wrong while trying to reschedule the session.",
+          response.message ?? "Something went wrong while trying to reschedule the session.",
       });
       return;
     }
 
-    await Promise.all([
-      await revalidatePageAction(pathname),
-      await refresh(),
-    ]).then(() => {
+    await Promise.all([await revalidatePageAction(pathname), await refresh()]).then(() => {
       toast({
         description: response.message,
       });
@@ -109,10 +94,7 @@ export default function RescheduleSession({
             </DialogHeader>
             {children}
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -167,17 +149,10 @@ export default function RescheduleSession({
                               )}
                             >
                               <Icons.clock className="mr-2 h-4 w-4 text-muted-foreground" />
-                              {field.value ? (
-                                field.value
-                              ) : (
-                                <span>Pick a time</span>
-                              )}
+                              {field.value ? field.value : <span>Pick a time</span>}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent
-                            className="w-auto px-4 py-3"
-                            align="start"
-                          >
+                          <PopoverContent className="w-auto px-4 py-3" align="start">
                             <div className="flex flex-col gap-2">
                               <span className="text-sm">Pick a start time</span>
                               <div className="flex items-center gap-2 py-2">
@@ -201,9 +176,7 @@ export default function RescheduleSession({
                                   <Input
                                     type="number"
                                     onChange={(e) => {
-                                      setMinutes(
-                                        handleMinutesChange(e.target.value),
-                                      );
+                                      setMinutes(handleMinutesChange(e.target.value));
                                     }}
                                     value={minutes}
                                     min={0}
@@ -256,8 +229,7 @@ export default function RescheduleSession({
                                   disabled={form.formState.isSubmitting}
                                   loading={form.formState.isSubmitting}
                                   onClick={() => {
-                                    const timeString =
-                                      hour + ":" + minutes + " " + time;
+                                    const timeString = hour + ":" + minutes + " " + time;
                                     field.onChange(timeString);
                                     setTimePicker(false);
                                   }}

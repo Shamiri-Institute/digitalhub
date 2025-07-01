@@ -1,10 +1,10 @@
+import { signOut } from "next-auth/react";
+import { Suspense } from "react";
 import { currentHubCoordinator } from "#/app/auth";
-import { SchoolGroupDataTableData } from "#/components/common/group/columns";
+import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
 import GroupsTableSkeleton from "#/components/common/group/groups-datatable-skeleton";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
-import { Suspense } from "react";
 
 export default async function GroupsPage({
   params: { visibleId },
@@ -106,9 +106,7 @@ export default async function GroupsPage({
   });
 
   return (
-    <Suspense
-      fallback={<GroupsTableSkeleton role={hc?.user.membership.role!} />}
-    >
+    <Suspense fallback={<GroupsTableSkeleton role={hc?.user.membership.role!} />}>
       <GroupsDataTable
         data={data}
         school={school}

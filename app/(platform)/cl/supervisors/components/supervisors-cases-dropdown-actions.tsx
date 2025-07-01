@@ -1,4 +1,4 @@
-import { SupervisorClinicalCasesData } from "#/app/(platform)/cl/supervisors/actions";
+import type { SupervisorClinicalCasesData } from "#/app/(platform)/cl/supervisors/actions";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -9,7 +9,7 @@ import {
 } from "#/components/ui/dropdown-menu";
 
 export default function SupervisorClinicalCasesDropdownActions({
-  clinicalCase,
+  clinicalCase: _clinicalCase,
 }: {
   clinicalCase: SupervisorClinicalCasesData;
 }) {
@@ -24,9 +24,7 @@ export default function SupervisorClinicalCasesDropdownActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <div>

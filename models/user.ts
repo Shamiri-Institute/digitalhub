@@ -1,6 +1,6 @@
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
-import { SessionUser } from "#/app/api/auth/[...nextauth]/route";
+import type { SessionUser } from "#/app/api/auth/[...nextauth]/route";
 import type { db } from "#/lib/db";
 import { Model } from "#/models";
 
@@ -43,9 +43,7 @@ export class UserModel extends Model {
     });
   }
 
-  async create(
-    data: Omit<Prisma.UserCreateInput, "id">,
-  ): Promise<UserCreateOutput> {
+  async create(data: Omit<Prisma.UserCreateInput, "id">): Promise<UserCreateOutput> {
     return await this.cursor.user.create({
       data: {
         ...data,

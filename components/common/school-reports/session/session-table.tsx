@@ -1,5 +1,5 @@
 "use client";
-import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
+import type { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
 import DataTable from "#/components/data-table";
 
 import { columns, subColumns } from "./columns";

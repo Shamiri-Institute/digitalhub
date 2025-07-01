@@ -1,24 +1,21 @@
 "use client";
 
-import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
+import type { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
+import Image from "next/image";
+import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import ClinicalCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
-import Image from "next/image";
 
 export const columns: ColumnDef<ClinicalCases>[] = [
   {
     id: "button",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -56,9 +53,7 @@ export const columns: ColumnDef<ClinicalCases>[] = [
       return (
         <div className="flex items-center gap-1">
           <span>{row.original.pseudonym}</span>
-          {flagged ? (
-            <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
-          ) : null}
+          {flagged ? <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" /> : null}
         </div>
       );
     },
@@ -66,8 +61,7 @@ export const columns: ColumnDef<ClinicalCases>[] = [
   {
     accessorKey: "dateAdded",
     header: "Date added",
-    cell: ({ row }) =>
-      format(new Date(row.original.dateAdded || ""), "dd MMM yyyy"),
+    cell: ({ row }) => format(new Date(row.original.dateAdded || ""), "dd MMM yyyy"),
   },
   {
     accessorKey: "caseStatus",

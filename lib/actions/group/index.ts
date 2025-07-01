@@ -1,20 +1,13 @@
 "use server";
 
-import {
-  currentHubCoordinator,
-  currentSupervisor,
-  getCurrentUser,
-} from "#/app/auth";
-import {
-  CreateGroupSchema,
-  StudentGroupEvaluationSchema,
-} from "#/components/common/group/schema";
+import { Prisma } from "@prisma/client";
+import type { z } from "zod";
+import { currentHubCoordinator, currentSupervisor, getCurrentUser } from "#/app/auth";
+import { CreateGroupSchema, StudentGroupEvaluationSchema } from "#/components/common/group/schema";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getSchoolInitials } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
-import { z } from "zod";
 
 async function checkAuth() {
   const hubCoordinator = await currentHubCoordinator();
@@ -52,9 +45,7 @@ export async function archiveInterventionGroup(groupId: string) {
   }
 }
 
-export async function createInterventionGroup(
-  data: z.infer<typeof CreateGroupSchema>,
-) {
+export async function createInterventionGroup(data: z.infer<typeof CreateGroupSchema>) {
   try {
     const { hubCoordinator, supervisor } = await checkAuth();
     const { schoolId, fellowId } = CreateGroupSchema.parse(data);
@@ -114,9 +105,7 @@ export async function createInterventionGroup(
   }
 }
 
-export async function submitGroupEvaluation(
-  data: z.infer<typeof StudentGroupEvaluationSchema>,
-) {
+export async function submitGroupEvaluation(data: z.infer<typeof StudentGroupEvaluationSchema>) {
   try {
     await checkAuth();
     const {

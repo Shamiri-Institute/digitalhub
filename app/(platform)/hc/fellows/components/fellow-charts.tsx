@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  FellowDropoutReasonsGraphData,
-  FellowSessionRatingAverages,
-  fetchFellowDataCompletenessData,
-} from "#/app/(platform)/hc/fellows/actions";
-import { generateRandomColor } from "#/components/charts/constants";
-import ChartCard from "#/components/ui/chart-card";
-import { SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING } from "#/lib/app-constants/constants";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import {
   Bar,
   BarChart,
@@ -25,6 +17,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type {
+  FellowDropoutReasonsGraphData,
+  FellowSessionRatingAverages,
+  fetchFellowDataCompletenessData,
+} from "#/app/(platform)/hc/fellows/actions";
+import { generateRandomColor } from "#/components/charts/constants";
+import ChartCard from "#/components/ui/chart-card";
+import { SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING } from "#/lib/app-constants/constants";
 
 export default function FellowsCharts({
   attendanceData,
@@ -41,16 +41,11 @@ export default function FellowsCharts({
     };
   })[];
   dropoutData: FellowDropoutReasonsGraphData[];
-  fellowsDataCompletenessPercentage: Awaited<
-    ReturnType<typeof fetchFellowDataCompletenessData>
-  >;
+  fellowsDataCompletenessPercentage: Awaited<ReturnType<typeof fetchFellowDataCompletenessData>>;
   fellowsSessionRatings: FellowSessionRatingAverages[];
 }) {
   const formattedAttendanceData = attendanceData
-    .filter(
-      (session) =>
-        session?.sessionType && /^s[0-4]$/i.test(session.sessionType),
-    )
+    .filter((session) => session?.sessionType && /^s[0-4]$/i.test(session.sessionType))
     .map((session) => ({
       sessionType: session.sessionType,
       attendance: session._count.sessionType,
@@ -67,18 +62,8 @@ export default function FellowsCharts({
               <XAxis dataKey="sessionType" />
               <YAxis dataKey="attendance" />
               <Tooltip labelFormatter={(value) => `Session: ${value}`} />
-              <Bar
-                dataKey="attendance"
-                stackId="a"
-                fill="#0085FF"
-                label="Attendance count"
-              />
-              <Bar
-                dataKey="sessionType"
-                stackId="a"
-                fill="#CCE7FF"
-                label="Session type"
-              />
+              <Bar dataKey="attendance" stackId="a" fill="#0085FF" label="Attendance count" />
+              <Bar dataKey="sessionType" stackId="a" fill="#CCE7FF" label="Session type" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -130,9 +115,7 @@ export default function FellowsCharts({
                   className="text text-2xl font-semibold leading-8"
                   fill="#fffff"
                 >
-                  {fellowsDataCompletenessPercentage.find(
-                    (d) => (d.name = "actual"),
-                  )?.value + "%"}
+                  {fellowsDataCompletenessPercentage.find((d) => (d.name = "actual"))?.value + "%"}
                 </Label>
                 {fellowsDataCompletenessPercentage.map(({ name }) => (
                   <Cell
@@ -155,26 +138,14 @@ export default function FellowsCharts({
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line
-                dataKey="behaviour_rating"
-                stroke="#0085FF"
-                label="Behaviour"
-              />
-              <Line
-                dataKey="program_delivery_rating"
-                stroke="#00BA34"
-                label="Program delivery"
-              />
+              <Line dataKey="behaviour_rating" stroke="#0085FF" label="Behaviour" />
+              <Line dataKey="program_delivery_rating" stroke="#00BA34" label="Program delivery" />
               <Line
                 dataKey="dressing_and_grooming_rating"
                 stroke="#F98600"
                 label="Dressing and grooming"
               />
-              <Line
-                dataKey="punctuality_rating"
-                stroke="#8884d8"
-                label="Punctuality"
-              />
+              <Line dataKey="punctuality_rating" stroke="#8884d8" label="Punctuality" />
             </LineChart>
           </ResponsiveContainer>
         ) : null}

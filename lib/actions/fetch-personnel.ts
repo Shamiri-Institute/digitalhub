@@ -1,9 +1,9 @@
 "use server";
 
-import { getCurrentUser } from "#/app/auth";
-import { Personnel } from "#/components/common/dev-personnel-switcher";
-import { db } from "#/lib/db";
 import { ImplementerRole } from "@prisma/client";
+import { getCurrentUser } from "#/app/auth";
+import type { Personnel } from "#/components/common/dev-personnel-switcher";
+import { db } from "#/lib/db";
 
 export async function fetchPersonnel() {
   const supervisors: Personnel[] = (
@@ -123,13 +123,7 @@ export async function fetchPersonnel() {
     project: ct.assignedHub?.project?.name,
   }));
 
-  const personnel = [
-    ...hubCoordinators,
-    ...supervisors,
-    ...fellows,
-    ...clinicalLeads,
-    ...opsUsers,
-  ];
+  const personnel = [...hubCoordinators, ...supervisors, ...fellows, ...clinicalLeads, ...opsUsers];
 
   const user = await getCurrentUser();
   if (!user) {

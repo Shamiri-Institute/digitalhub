@@ -12,46 +12,34 @@ export class ClinicalScreeningPage extends AppPage {
   }
 
   async openClinicalCaseCreationDialogue() {
-    await this.page
-      .getByTestId(constants.OPEN_CLINICAL_CASE_DIALOGUE_BUTTON)
-      .click();
+    await this.page.getByTestId(constants.OPEN_CLINICAL_CASE_DIALOGUE_BUTTON).click();
   }
 
   async chooseSchoolInSelectDropdown(schoolVisibleId: string) {
     await this.page.getByTestId(constants.SELECT_CLINICAL_CASE_SCHOOL).click();
     await this.page
-      .getByTestId(
-        `${constants.SELECT_CLINICAL_CASE_SCHOOL}-${schoolVisibleId}`,
-      )
+      .getByTestId(`${constants.SELECT_CLINICAL_CASE_SCHOOL}-${schoolVisibleId}`)
       .click();
   }
 
   async chooseSupervisorInSelectDropdown(supervisorVisibleId: string) {
+    await this.page.getByTestId(constants.SELECT_CLINICAL_CASE_SUPERVISOR).click();
     await this.page
-      .getByTestId(constants.SELECT_CLINICAL_CASE_SUPERVISOR)
-      .click();
-    await this.page
-      .getByTestId(
-        `${constants.SELECT_CLINICAL_CASE_SUPERVISOR}-${supervisorVisibleId}`,
-      )
+      .getByTestId(`${constants.SELECT_CLINICAL_CASE_SUPERVISOR}-${supervisorVisibleId}`)
       .click();
   }
 
   async chooseFellowInSelectDropdown(fellowVisibleId: string) {
     await this.page.getByTestId(constants.SELECT_CLINICAL_CASE_FELLOW).click();
     await this.page
-      .getByTestId(
-        `${constants.SELECT_CLINICAL_CASE_FELLOW}-${fellowVisibleId}`,
-      )
+      .getByTestId(`${constants.SELECT_CLINICAL_CASE_FELLOW}-${fellowVisibleId}`)
       .click();
   }
 
   async chooseStudentInSelectDropdown(studentVisibleId: string) {
     await this.page.getByTestId(constants.SELECT_CLINICAL_CASE_STUDENT).click();
     await this.page
-      .getByTestId(
-        `${constants.SELECT_CLINICAL_CASE_STUDENT}-${studentVisibleId}`,
-      )
+      .getByTestId(`${constants.SELECT_CLINICAL_CASE_STUDENT}-${studentVisibleId}`)
       .click();
   }
 

@@ -1,7 +1,7 @@
 import {
   SES,
-  SendEmailCommandInput,
-  SendRawEmailCommandInput,
+  type SendEmailCommandInput,
+  type SendRawEmailCommandInput,
 } from "@aws-sdk/client-ses";
 
 import { env } from "#/env";
@@ -27,17 +27,12 @@ export async function sendEmailWithAttachment(input: SendRawEmailCommandInput) {
   return await sendWithRetry(() => ses.sendRawEmail(input));
 }
 
-async function sendWithRetry(
-  sendFunction: () => Promise<any>,
-  retries = MAX_RETRIES,
-) {
+async function sendWithRetry(sendFunction: () => Promise<any>, retries = MAX_RETRIES) {
   let attempt = 0;
   while (attempt < retries) {
     try {
       if (attempt > 5) {
-        console.warn(
-          `Email attempt #${attempt} of ${retries} failed. Retrying...`,
-        );
+        console.warn(`Email attempt #${attempt} of ${retries} failed. Retrying...`);
       }
       const response = await sendFunction();
       await throttle();
@@ -47,7 +42,7 @@ async function sendWithRetry(
       if (attempt >= retries) {
         throw error;
       }
-      const delay = SLEEP_TIME_MS * Math.pow(2, attempt);
+      const delay = SLEEP_TIME_MS * 2 ** attempt;
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }

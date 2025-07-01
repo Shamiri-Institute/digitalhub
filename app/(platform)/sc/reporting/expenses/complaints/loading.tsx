@@ -1,35 +1,27 @@
 "use client";
 
-import { FellowReportComplaintsType } from "#/app/(platform)/sc/reporting/expenses/complaints/actions";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { FellowReportComplaintsType } from "#/app/(platform)/sc/reporting/expenses/complaints/actions";
 import { columns } from "#/components/common/expenses/complaints/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import { ColumnDef } from "@tanstack/react-table";
 
 export default function ComplaintsTableSkeleton() {
-  const loadingColumns: ColumnDef<FellowReportComplaintsType>[] = columns.map(
-    (column) => {
-      const columnId =
-        typeof column.header === "string"
-          ? column.header
-          : (column.id ?? "unknown");
-      return {
-        accessorFn: () => null,
-        header:
-          columnId !== "checkbox" && columnId !== "button" ? columnId : "",
-        id: columnId,
-        cell: () => {
-          return columnId !== "checkbox" && columnId !== "button" ? (
-            <Skeleton className="h-5 w-full bg-gray-200" />
-          ) : null;
-        },
-      };
-    },
-  );
+  const loadingColumns: ColumnDef<FellowReportComplaintsType>[] = columns.map((column) => {
+    const columnId = typeof column.header === "string" ? column.header : (column.id ?? "unknown");
+    return {
+      accessorFn: () => null,
+      header: columnId !== "checkbox" && columnId !== "button" ? columnId : "",
+      id: columnId,
+      cell: () => {
+        return columnId !== "checkbox" && columnId !== "button" ? (
+          <Skeleton className="h-5 w-full bg-gray-200" />
+        ) : null;
+      },
+    };
+  });
 
-  const emptyData: FellowReportComplaintsType[] = Array.from(
-    Array(10).keys(),
-  ).map(() => ({
+  const emptyData: FellowReportComplaintsType[] = Array.from(Array(10).keys()).map(() => ({
     id: "",
     fellowName: "",
     hub: "",

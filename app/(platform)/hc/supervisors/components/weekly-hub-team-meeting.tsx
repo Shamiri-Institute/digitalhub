@@ -1,5 +1,11 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format, startOfWeek, subWeeks } from "date-fns";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { submitWeeklyTeamMeeting } from "#/app/(platform)/hc/supervisors/actions";
 import RatingStars from "#/components/rating-stars";
 import { Button } from "#/components/ui/button";
@@ -28,18 +34,12 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format, startOfWeek, subWeeks } from "date-fns";
-import { Loader2 } from "lucide-react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { WeeklyHubTeamMeetingSchema } from "../../schemas";
 
 function generateWeekFieldValues() {
   const numWeeks = 4;
 
-  let selectValues = [];
+  const selectValues = [];
   const today = new Date();
 
   for (let i = numWeeks; i >= 0; i--) {
@@ -86,9 +86,7 @@ export default function WeeklyHubReportButtonAndForm({
       toast({
         variant: "destructive",
         title: "Submission error",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -113,9 +111,7 @@ export default function WeeklyHubReportButtonAndForm({
         </DialogTrigger>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="text-xl font-semibold leading-7">
-          Weekly team meeting
-        </DialogHeader>
+        <DialogHeader className="text-xl font-semibold leading-7">Weekly team meeting</DialogHeader>
         <Separator />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -153,19 +149,12 @@ export default function WeeklyHubReportButtonAndForm({
                           control={form.control}
                           name="logisticsRelatedIssuesRating"
                           render={({ field }) => (
-                            <RatingStars
-                              rating={field.value}
-                              onSelect={field.onChange}
-                            />
+                            <RatingStars rating={field.value} onSelect={field.onChange} />
                           )}
                         />
                       </FormLabel>
                       <FormControl>
-                        <Textarea
-                          placeholder=""
-                          className="resize-none"
-                          {...field}
-                        />
+                        <Textarea placeholder="" className="resize-none" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -183,19 +172,12 @@ export default function WeeklyHubReportButtonAndForm({
                         control={form.control}
                         name="relationshipManagementRating"
                         render={({ field }) => (
-                          <RatingStars
-                            rating={field.value}
-                            onSelect={field.onChange}
-                          />
+                          <RatingStars rating={field.value} onSelect={field.onChange} />
                         )}
                       />
                     </FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -212,19 +194,12 @@ export default function WeeklyHubReportButtonAndForm({
                         control={form.control}
                         name="digitalHubIssuesRating"
                         render={({ field }) => (
-                          <RatingStars
-                            rating={field.value}
-                            onSelect={field.onChange}
-                          />
+                          <RatingStars rating={field.value} onSelect={field.onChange} />
                         )}
                       />
                     </FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -241,19 +216,12 @@ export default function WeeklyHubReportButtonAndForm({
                         control={form.control}
                         name="anyOtherChallengesRating"
                         render={({ field }) => (
-                          <RatingStars
-                            rating={field.value}
-                            onSelect={field.onChange}
-                          />
+                          <RatingStars rating={field.value} onSelect={field.onChange} />
                         )}
                       />
                     </FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -264,15 +232,9 @@ export default function WeeklyHubReportButtonAndForm({
                 name="recommendations"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Recommendations (to be followed up by the HQ team)
-                    </FormLabel>
+                    <FormLabel>Recommendations (to be followed up by the HQ team)</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

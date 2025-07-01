@@ -1,23 +1,18 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { flagClinicalCaseForFollowUp } from "#/app/actions";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTrigger,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "#/components/ui/dialog";
 import { Form, FormField } from "#/components/ui/form";
 import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { useToast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as React from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 const FormSchema = z.object({
   reason: stringValidation("Please enter the reason for flagging the case"),
@@ -87,9 +82,7 @@ export default function MarkCaseAsSpecial({
           >
             <DialogHeader className="space-y-0 px-6 py-4">
               <div className="flex items-center gap-2">
-                <span className="text-base font-medium">
-                  Reason for Flagging Clinical Case
-                </span>
+                <span className="text-base font-medium">Reason for Flagging Clinical Case</span>
               </div>
             </DialogHeader>
             <Separator />
@@ -116,12 +109,7 @@ export default function MarkCaseAsSpecial({
               </div>
             </div>
             <div className="flex justify-end px-6 pb-6">
-              <Button
-                form="modifyFlagAction"
-                variant="brand"
-                type="submit"
-                className="w-full"
-              >
+              <Button form="modifyFlagAction" variant="brand" type="submit" className="w-full">
                 Submit
               </Button>
             </div>

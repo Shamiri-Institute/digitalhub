@@ -1,15 +1,11 @@
+import { signOut } from "next-auth/react";
+import type React from "react";
 import RenderReportingTabs from "#/app/(platform)/hc/reporting/components/render-reporting-tabs";
 import { currentHubCoordinator } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
-import { signOut } from "next-auth/react";
-import React from "react";
 
-export default async function ReportingViewLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function ReportingViewLayout({ children }: { children: React.ReactNode }) {
   const hubCoordinator = await currentHubCoordinator();
 
   if (!hubCoordinator) {

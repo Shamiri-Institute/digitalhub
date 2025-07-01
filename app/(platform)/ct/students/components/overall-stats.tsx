@@ -44,9 +44,7 @@ export default function OverallStudentsClinicalStats({
 
       <Card key="clinical-sessions">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Clinical Sessions
-          </CardTitle>
+          <CardTitle className="text-sm font-medium">Clinical Sessions</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{clinicalSessions}</div>

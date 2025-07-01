@@ -1,9 +1,10 @@
 "use client";
 
-import {
-  columns,
-  MainFellowTableData,
-} from "#/app/(platform)/hc/fellows/components/columns";
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import parsePhoneNumberFromString from "libphonenumber-js";
+import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { columns, type MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import FellowDropoutForm from "#/components/common/fellow/fellow-dropout-form";
@@ -15,10 +16,7 @@ import SubmitComplaint from "#/components/common/submit-complaint";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import parsePhoneNumberFromString from "libphonenumber-js";
-import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+
 const fellowCSVHeaders = [
   "fellow_name",
   "cell_no",
@@ -48,17 +46,14 @@ export default function MainFellowsDatatable({
   const [editDialog, setEditDialog] = useState<boolean>(false);
   const [addDialog, setAddDialog] = useState<boolean>(false);
   const [uploadIdDialog, setUploadIdDialog] = useState<boolean>(false);
-  const [uploadContractDialog, setUploadContractDialog] =
-    useState<boolean>(false);
-  const [uploadQualificationDialog, setUploadQualificationDialog] =
-    useState<boolean>(false);
+  const [uploadContractDialog, setUploadContractDialog] = useState<boolean>(false);
+  const [uploadQualificationDialog, setUploadQualificationDialog] = useState<boolean>(false);
   const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
   const [viewComplaintsDialog, setViewComplaintsDialog] = useState(false);
   const [dropOutDialog, setDropOutDialog] = useState(false);
 
   const downloadFellowsCsvTemplate = () => {
-    const csvContent =
-      "data:text/csv;charset=utf-8," + fellowCSVHeaders.join(",") + "\n";
+    const csvContent = "data:text/csv;charset=utf-8," + fellowCSVHeaders.join(",") + "\n";
     const encodedUri = encodeURI(csvContent);
 
     const link = document.createElement("a");
@@ -71,11 +66,7 @@ export default function MainFellowsDatatable({
   const renderTableActions = () => {
     return (
       <div className="flex items-center gap-3">
-        <FellowDetailsForm
-          open={addDialog}
-          onOpenChange={setAddDialog}
-          mode={"add"}
-        >
+        <FellowDetailsForm open={addDialog} onOpenChange={setAddDialog} mode={"add"}>
           <DialogTrigger asChild={true}>
             <Button variant="outline" className="bg-white">
               <Plus className="h-4 w-4" />
@@ -133,15 +124,10 @@ export default function MainFellowsDatatable({
             <DialogAlertWidget>
               <div className="flex items-center gap-2">
                 <span>{fellow.fellowName}</span>
-                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                  {""}
-                </span>
+                <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
                 <span>
                   {fellow.cellNumber &&
-                    parsePhoneNumberFromString(
-                      fellow.cellNumber,
-                      "KE",
-                    )?.formatNational()}
+                    parsePhoneNumberFromString(fellow.cellNumber, "KE")?.formatNational()}
                 </span>
               </div>
             </DialogAlertWidget>
@@ -157,11 +143,7 @@ export default function MainFellowsDatatable({
             open={uploadContractDialog}
             onOpenChange={setUploadContractDialog}
           />
-          <UploadFellowID
-            fellow={fellow}
-            open={uploadIdDialog}
-            onOpenChange={setUploadIdDialog}
-          />
+          <UploadFellowID fellow={fellow} open={uploadIdDialog} onOpenChange={setUploadIdDialog} />
           <UploadFellowQualification
             fellow={fellow}
             open={uploadQualificationDialog}

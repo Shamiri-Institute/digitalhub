@@ -1,15 +1,15 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { usePathname } from "next/navigation";
+import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { StudentReportingNotesSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { SchoolStudentTableData } from "#/components/common/student/columns";
+import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -23,11 +23,6 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitStudentReportingNotes } from "#/lib/actions/student";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export function AddReportingNote({
   isOpen,
@@ -49,22 +44,17 @@ export function AddReportingNote({
     },
   });
 
-  const onSubmit = async (
-    data: z.infer<typeof StudentReportingNotesSchema>,
-  ) => {
+  const onSubmit = async (data: z.infer<typeof StudentReportingNotesSchema>) => {
     const response = await submitStudentReportingNotes(data);
     if (!response.success) {
       toast({
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
-    } else {
-      toast({
-        description: response.message,
-      });
     }
+    toast({
+      description: response.message,
+    });
 
     await revalidatePageAction(pathname);
     setIsOpen(false);
@@ -89,16 +79,10 @@ export function AddReportingNote({
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel>
-                    Report incident{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    Report incident <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder=""
-                      className="resize-none"
-                      rows={6}
-                      {...field}
-                    />
+                    <Textarea placeholder="" className="resize-none" rows={6} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -109,12 +93,7 @@ export function AddReportingNote({
               name="studentId"
               render={({ field }) => (
                 <FormItem>
-                  <Input
-                    id="studentId"
-                    name="studentId"
-                    type="hidden"
-                    value={field.value}
-                  />
+                  <Input id="studentId" name="studentId" type="hidden" value={field.value} />
                   <FormMessage />
                 </FormItem>
               )}

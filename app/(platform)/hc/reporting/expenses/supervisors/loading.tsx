@@ -1,31 +1,23 @@
 "use client";
 
-import { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { HubSupervisorExpensesType } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import { ColumnDef } from "@tanstack/react-table";
 import { columns } from "./components/columns";
 
 export default function SupervisorsTableSkeleton() {
-  const loadingColumns: ColumnDef<HubSupervisorExpensesType>[] = columns.map(
-    (column) => {
-      const columnId =
-        typeof column.header === "string"
-          ? column.header
-          : (column.id ?? "unknown");
-      return {
-        accessorFn: () => null,
-        header:
-          columnId !== "checkbox" && columnId !== "button" ? columnId : "",
-        id: columnId,
-        cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
-      };
-    },
-  );
+  const loadingColumns: ColumnDef<HubSupervisorExpensesType>[] = columns.map((column) => {
+    const columnId = typeof column.header === "string" ? column.header : (column.id ?? "unknown");
+    return {
+      accessorFn: () => null,
+      header: columnId !== "checkbox" && columnId !== "button" ? columnId : "",
+      id: columnId,
+      cell: () => <Skeleton className="h-5 w-full bg-gray-200" />,
+    };
+  });
 
-  const emptyData: HubSupervisorExpensesType[] = Array.from(
-    Array(10).keys(),
-  ).map(() => ({
+  const emptyData: HubSupervisorExpensesType[] = Array.from(Array(10).keys()).map(() => ({
     id: "",
     supervisorName: "",
     dateCreated: new Date(),

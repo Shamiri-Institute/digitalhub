@@ -1,26 +1,14 @@
-import {
-  OCCURRENCE_STATUS,
-  SESSION_NAME_TYPES,
-} from "#/lib/app-constants/constants";
-import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
+import { OCCURRENCE_STATUS, SESSION_NAME_TYPES } from "#/lib/app-constants/constants";
+import { stringValidation } from "#/lib/utils";
 
 export const SessionRatingsSchema = z.object({
   mode: z.enum(["add", "view"]),
   ratingId: z.string().optional(),
   sessionId: stringValidation("Session ID required"),
-  studentBehaviorRating: z
-    .number({ required_error: "Please provide a rating" })
-    .min(1)
-    .max(5),
-  adminSupportRating: z
-    .number({ required_error: "Please provide a rating" })
-    .min(1)
-    .max(5),
-  workloadRating: z
-    .number({ required_error: "Please provide a rating" })
-    .min(1)
-    .max(5),
+  studentBehaviorRating: z.number({ required_error: "Please provide a rating" }).min(1).max(5),
+  adminSupportRating: z.number({ required_error: "Please provide a rating" }).min(1).max(5),
+  workloadRating: z.number({ required_error: "Please provide a rating" }).min(1).max(5),
   positiveHighlights: z.string().optional(),
   challenges: z.string().optional(),
   recommendations: z.string().optional(),
@@ -55,7 +43,7 @@ export const ScheduleNewSessionSchema = z
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Please select a school.`,
+        message: "Please select a school.",
         fatal: true,
         path: ["schoolId"],
       });
@@ -69,7 +57,7 @@ export const ScheduleNewSessionSchema = z
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Please enter the venue location.`,
+        message: "Please enter the venue location.",
         fatal: true,
         path: ["venue"],
       });

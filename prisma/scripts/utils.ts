@@ -15,9 +15,7 @@ export async function parseCsvFile(
   const duplicatesDetectorHash = new Set();
   const filePath = path.resolve(`./prisma/scripts/data/${fileName}.csv`);
 
-  const parser = fs
-    .createReadStream(filePath)
-    .pipe(csv.parse({ delimiter: ",", columns: true }));
+  const parser = fs.createReadStream(filePath).pipe(csv.parse({ delimiter: ",", columns: true }));
 
   for await (const row of parser) {
     const dataRow = replaceEmptyStringsWithNull(row);
@@ -33,15 +31,11 @@ export async function parseCsvFile(
 
     if (fileName === "implementer_info") {
       if (dataRow["Implementer"] === null) {
-        console.warn(
-          "Warning: Implementer name is null. Setting to empty string.",
-        );
+        console.warn("Warning: Implementer name is null. Setting to empty string.");
         dataRow["Implementer"] = "";
       }
       if (dataRow["Implementer_Type"] === null) {
-        console.warn(
-          "Warning: Implementer type is null. Setting to empty string.",
-        );
+        console.warn("Warning: Implementer type is null. Setting to empty string.");
         dataRow["Implementer_Type"] = "";
       }
     }
@@ -69,9 +63,7 @@ export async function parseCsvFile(
       }
 
       if (duplicatesDetectorHash.has(dataRow["Attendance_ID"])) {
-        console.warn(
-          `Warning: Duplicate Attendance_ID (${dataRow["Attendance_ID"]}). Skipping.`,
-        );
+        console.warn(`Warning: Duplicate Attendance_ID (${dataRow["Attendance_ID"]}). Skipping.`);
         return;
       }
 
@@ -80,9 +72,7 @@ export async function parseCsvFile(
 
     if (fileName === "supervisor_info") {
       if (dataRow["Supervisor"] === null) {
-        console.warn(
-          "Warning: Supervisor name is null. Setting to empty string.",
-        );
+        console.warn("Warning: Supervisor name is null. Setting to empty string.");
         dataRow["Supervisor"] = "";
       }
       if (dataRow["Hub_ID"]?.includes(",")) {
@@ -95,9 +85,7 @@ export async function parseCsvFile(
 
     if (fileName === "student_info") {
       if (duplicatesDetectorHash.has(dataRow["Shamiri_ID"])) {
-        console.warn(
-          `Warning: Duplicate Shamiri_ID (${dataRow["Shamiri_ID"]}). Skipping.`,
-        );
+        console.warn(`Warning: Duplicate Shamiri_ID (${dataRow["Shamiri_ID"]}). Skipping.`);
         return;
       }
 

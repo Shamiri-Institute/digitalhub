@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import {
   getClinicalCasesCreatedByClinicalLead,
   getClinicalCasesData,
@@ -10,19 +11,13 @@ import AllHubClinicalCasesTable from "#/app/(platform)/cl/clinical/components/hu
 import { AddNewClinicalCaseForm } from "#/components/common/clinical/add-new-clinical-case-form";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
-import { Plus } from "lucide-react";
 
 export default async function ClinicalPage() {
   const cases = await getClinicalCasesInHub();
   const casesData = await getClinicalCasesData();
   const allClinicalLeadCases = await getClinicalCasesCreatedByClinicalLead();
-  const {
-    schools,
-    fellowsInProject,
-    supervisorsInHub,
-    currentClinicalLeadId,
-    hubs,
-  } = await getSchoolsInClinicalLeadHub();
+  const { schools, fellowsInProject, supervisorsInHub, currentClinicalLeadId, hubs } =
+    await getSchoolsInClinicalLeadHub();
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">

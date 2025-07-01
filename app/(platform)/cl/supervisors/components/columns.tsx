@@ -1,8 +1,8 @@
 "use client";
 
-import { SupervisorClinicalCasesData } from "#/app/(platform)/cl/supervisors/actions";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { SupervisorClinicalCasesData } from "#/app/(platform)/cl/supervisors/actions";
 import { Badge } from "#/components/ui/badge";
-import { ColumnDef } from "@tanstack/react-table";
 
 export const columns: ColumnDef<SupervisorClinicalCasesData>[] = [
   {
@@ -30,8 +30,7 @@ export const columns: ColumnDef<SupervisorClinicalCasesData>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex items-center gap-2 text-shamiri-black">
-          {String(row.original.noOfClinicalCases || 0)}/
-          {String(row.original.sessionsHad || 0)}
+          {String(row.original.noOfClinicalCases || 0)}/{String(row.original.sessionsHad || 0)}
         </div>
       );
     },

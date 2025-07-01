@@ -1,8 +1,13 @@
 "use client";
+import type { ImplementerRole } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { format, isAfter } from "date-fns";
+import Image from "next/image";
+import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import type { FellowsData } from "#/app/(platform)/sc/actions";
 import FellowSchoolDatatableDropdownMenu, {
-  FellowGroupData,
+  type FellowGroupData,
 } from "#/components/common/fellow/fellow-school-datatable-dropdown-menu";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { Badge } from "#/components/ui/badge";
@@ -10,11 +15,6 @@ import { Checkbox } from "#/components/ui/checkbox";
 import { sessionDisplayName } from "#/lib/utils";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { ImplementerRole } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import { format, isAfter } from "date-fns";
-import Image from "next/image";
-import { Dispatch, SetStateAction } from "react";
 import FellowsTableDropdown from "./fellow-schools-datatable-dropdown-menu";
 
 export const fellowSchoolsColumns = ({
@@ -36,10 +36,7 @@ export const fellowSchoolsColumns = ({
     id: "checkbox",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -92,9 +89,7 @@ export const fellowSchoolsColumns = ({
     id: "Sessions Attended",
     header: "Sessions Attended",
     cell: ({ row }) => {
-      const attendedSessions = row.original.attendances.filter(
-        (attendance) => attendance.attended,
-      );
+      const attendedSessions = row.original.attendances.filter((attendance) => attendance.attended);
       const groupSessions = row.original.groups.reduce((total, group) => {
         return total + group.school.interventionSessions.length;
       }, 0);
@@ -153,9 +148,7 @@ export const fellowSchoolsColumns = ({
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <FellowsTableDropdown fellowRow={row.original} state={state} />
-    ),
+    cell: ({ row }) => <FellowsTableDropdown fellowRow={row.original} state={state} />,
     enableHiding: false,
   },
 ];
@@ -177,8 +170,7 @@ export const subColumns = ({
       <Checkbox
         disabled={true}
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -227,9 +219,8 @@ export const subColumns = ({
           " - " +
           format(upcomingSessions[0]!.sessionDate, "dd MMM yyyy")
         );
-      } else {
-        return null;
       }
+      return null;
     },
   },
   {
@@ -245,9 +236,7 @@ export const subColumns = ({
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <FellowSchoolDatatableDropdownMenu group={row.original} state={state} />
-    ),
+    cell: ({ row }) => <FellowSchoolDatatableDropdownMenu group={row.original} state={state} />,
     enableHiding: false,
   },
 ];
@@ -260,8 +249,7 @@ export const studentsTableColumns: ColumnDef<
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"

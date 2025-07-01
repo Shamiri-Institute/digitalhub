@@ -1,5 +1,5 @@
 import { useSearchParams } from "next/navigation";
-import { PropsWithChildren, createContext, useContext, useState } from "react";
+import { createContext, type PropsWithChildren, useContext, useState } from "react";
 
 export type Mode = "day" | "week" | "month" | "list" | "table";
 
@@ -18,10 +18,7 @@ export const useMode = () => {
   return context;
 };
 
-export function ModeProvider({
-  defaultMode,
-  children,
-}: PropsWithChildren<{ defaultMode: Mode }>) {
+export function ModeProvider({ defaultMode, children }: PropsWithChildren<{ defaultMode: Mode }>) {
   const [mode, setMode] = useState<Mode>(defaultMode);
   const searchParams = useSearchParams();
 

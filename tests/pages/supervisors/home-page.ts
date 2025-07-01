@@ -1,4 +1,4 @@
-import { type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { AppPage } from "#/tests/pages/app-page";
 import { getUrl } from "#/tests/pages/helpers";

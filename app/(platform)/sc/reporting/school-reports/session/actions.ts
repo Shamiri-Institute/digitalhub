@@ -1,8 +1,8 @@
 "use server";
 
+import { format } from "date-fns";
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
-import { format } from "date-fns";
 
 type SchoolGroup = {
   schoolName: string;
@@ -110,15 +110,13 @@ export async function loadSessionReport() {
     }, []);
 
     groupedBySchool.forEach((school) => {
-      school.avgStudentBehaviour = parseFloat(
+      school.avgStudentBehaviour = Number.parseFloat(
         (school.avgStudentBehaviour / school.count).toFixed(2),
       );
-      school.avgAdminSupport = parseFloat(
+      school.avgAdminSupport = Number.parseFloat(
         (school.avgAdminSupport / school.count).toFixed(2),
       );
-      school.avgWorkload = parseFloat(
-        (school.avgWorkload / school.count).toFixed(2),
-      );
+      school.avgWorkload = Number.parseFloat((school.avgWorkload / school.count).toFixed(2));
 
       // @ts-ignore
       delete school.count;
@@ -131,6 +129,4 @@ export async function loadSessionReport() {
   }
 }
 
-export type SessionReportType = Awaited<
-  ReturnType<typeof loadSessionReport>
->[number];
+export type SessionReportType = Awaited<ReturnType<typeof loadSessionReport>>[number];

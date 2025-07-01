@@ -1,4 +1,4 @@
-import {
+import type {
   CLINICAL_SESSION_TYPES,
   DATA_FOLLOWUP_SESSION_TYPES,
   INTERVENTION_SESSION_TYPES,
@@ -16,13 +16,7 @@ type SessionType = {
     | CLINICAL_SESSION_TYPES
     | DATA_FOLLOWUP_SESSION_TYPES;
   label: string;
-  type:
-    | "INTERVENTION"
-    | "SUPERVISION"
-    | "TRAINING"
-    | "SPECIAL"
-    | "CLINICAL"
-    | "DATA_COLLECTION";
+  type: "INTERVENTION" | "SUPERVISION" | "TRAINING" | "SPECIAL" | "CLINICAL" | "DATA_COLLECTION";
   amount: number;
 };
 

@@ -1,13 +1,11 @@
 "use server";
 
+import { z } from "zod";
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
-import { z } from "zod";
 import { HubCoordinatorSchema } from "./schemas";
 
-export async function updateHubCoordinatorProfile(
-  formData: z.infer<typeof HubCoordinatorSchema>,
-) {
+export async function updateHubCoordinatorProfile(formData: z.infer<typeof HubCoordinatorSchema>) {
   try {
     const user = await currentHubCoordinator();
     if (!user?.id) {

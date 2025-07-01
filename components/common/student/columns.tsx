@@ -1,13 +1,13 @@
 "use client";
 
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import format from "date-fns/format";
+import { parsePhoneNumber } from "libphonenumber-js";
+import type { Dispatch, SetStateAction } from "react";
 import StudentsDataTableMenu from "#/components/common/student/students-datatable-menu";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import format from "date-fns/format";
-import { parsePhoneNumber } from "libphonenumber-js";
-import { Dispatch, SetStateAction } from "react";
 
 export type SchoolStudentTableData = Prisma.StudentGetPayload<{
   include: {
@@ -67,8 +67,7 @@ export const columns = (state: {
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -111,16 +110,14 @@ export const columns = (state: {
     accessorKey: "visibleId",
   },
   {
-    accessorFn: (row) =>
-      row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
+    accessorFn: (row) => row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
     header: "Age",
     id: "Age",
   },
   {
     header: "Clinical Sessions",
     id: "Clinical Sessions",
-    accessorFn: (row) =>
-      row.clinicalCases?.reduce((acc, val) => acc + val.sessions.length, 0),
+    accessorFn: (row) => row.clinicalCases?.reduce((acc, val) => acc + val.sessions.length, 0),
   },
   {
     header: "Gender",
@@ -131,8 +128,7 @@ export const columns = (state: {
     header: "Contact no.",
     id: "Contact no.",
     accessorFn: (row) =>
-      row.phoneNumber &&
-      parsePhoneNumber(row.phoneNumber, "KE").formatNational(),
+      row.phoneNumber && parsePhoneNumber(row.phoneNumber, "KE").formatNational(),
   },
   {
     header: "Admission number",
@@ -166,9 +162,7 @@ export const columns = (state: {
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <StudentsDataTableMenu student={row.original} state={state} />
-    ),
+    cell: ({ row }) => <StudentsDataTableMenu student={row.original} state={state} />,
     enableHiding: false,
   },
 ];

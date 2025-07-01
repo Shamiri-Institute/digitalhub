@@ -1,7 +1,7 @@
+import { z } from "zod";
 import { FELLOW_DROP_OUT_REASONS } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { stringValidation } from "#/lib/utils";
-import { z } from "zod";
 
 export const FellowSchema = z.object({
   fellowName: stringValidation("Please enter the fellow's name."),
@@ -26,18 +26,12 @@ export const WeeklyFellowRatingSchema = z.object({
   week: z.coerce.date({ required_error: "Please select a week" }),
   behaviourNotes: stringValidation("Please input behaviour notes"),
   programDeliveryNotes: stringValidation("Please input program delivery notes"),
-  dressingAndGroomingNotes: stringValidation(
-    "Please input dressing and grooming notes",
-  ),
+  dressingAndGroomingNotes: stringValidation("Please input dressing and grooming notes"),
   punctualityNotes: stringValidation("Please input punctuality notes"),
   fellowId: stringValidation(),
   behaviourRating: z.number().min(1, { message: "Please input a rating " }),
-  programDeliveryRating: z
-    .number()
-    .min(1, { message: "Please input a rating " }),
-  dressingAndGroomingRating: z
-    .number()
-    .min(1, { message: "Please input a rating " }),
+  programDeliveryRating: z.number().min(1, { message: "Please input a rating " }),
+  dressingAndGroomingRating: z.number().min(1, { message: "Please input a rating " }),
   punctualityRating: z.number().min(1, { message: "Please input a rating " }),
 });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { StudentGroupEvaluationType } from "#/components/common/fellow-reports/student-group-evaluation/actions";
+import type { StudentGroupEvaluationType } from "#/components/common/fellow-reports/student-group-evaluation/actions";
 import DataTable from "#/components/data-table";
 import { columns, subColumns } from "./columns";
 

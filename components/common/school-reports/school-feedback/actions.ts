@@ -1,7 +1,7 @@
 "use server";
 
 import { getCurrentUser } from "#/app/auth";
-import { SchoolFeedbackFormValues } from "#/components/common/school-reports/school-feedback/view-edit-school-feedback";
+import type { SchoolFeedbackFormValues } from "#/components/common/school-reports/school-feedback/view-edit-school-feedback";
 import { db } from "#/lib/db";
 
 export async function editSchoolFeedback(

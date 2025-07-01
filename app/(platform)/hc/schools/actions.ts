@@ -1,14 +1,14 @@
 "use server";
 
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
-import { objectId } from "#/lib/crypto";
-import { db } from "#/lib/db";
-import { getSchoolInitials } from "#/lib/utils";
 import { Prisma, sessionTypes } from "@prisma/client";
 import { format } from "date-fns";
 import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import type { z } from "zod";
+import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { objectId } from "#/lib/crypto";
+import { db } from "#/lib/db";
+import { getSchoolInitials } from "#/lib/utils";
 import {
   AddSchoolSchema,
   AssignPointSupervisorSchema,
@@ -81,17 +81,12 @@ export async function fetchSchoolData(hubId: string) {
   });
 }
 
-export async function revalidatePageAction(
-  pathname: string,
-  mode?: "layout" | "page",
-) {
+export async function revalidatePageAction(pathname: string, mode?: "layout" | "page") {
   revalidatePath(pathname, mode);
 }
 
 export async function fetchSessionAttendanceData(hubId: string) {
-  const sessionAttendanceData = await db.$queryRaw<
-    { session_number: number; count: number }[]
-  >`
+  const sessionAttendanceData = await db.$queryRaw<{ session_number: number; count: number }[]>`
     SELECT
       fa.session_number AS session_number,
       COUNT(DISTINCT fa.school_id) AS count
@@ -113,10 +108,7 @@ export async function fetchSessionAttendanceData(hubId: string) {
   return sessionAttendanceData;
 }
 
-export async function fetchSchoolDataCompletenessData(
-  hubId: string,
-  schoolId?: string,
-) {
+export async function fetchSchoolDataCompletenessData(hubId: string, schoolId?: string) {
   // TODO: uncomment the school_sub_county query and adjust division from 6.0 -> 7.0
   const [schoolAttendanceData] = await db.$queryRaw<{ percentage: number }[]>`
     SELECT
@@ -277,15 +269,12 @@ export async function undoDropoutSchool(schoolId: string) {
     console.error(e);
     return {
       success: false,
-      message:
-        "Something went wrong while trying to update school drop out status",
+      message: "Something went wrong while trying to update school drop out status",
     };
   }
 }
 
-export async function submitWeeklyHubReport(
-  data: z.infer<typeof WeeklyHubReportSchema>,
-) {
+export async function submitWeeklyHubReport(data: z.infer<typeof WeeklyHubReportSchema>) {
   try {
     const parsedData = WeeklyHubReportSchema.parse(data);
 
@@ -312,10 +301,7 @@ export type SessionRatingAverages = {
   workload: number;
 };
 
-export async function fetchSessionRatingAverages(
-  hubId: string,
-  schoolId?: string,
-) {
+export async function fetchSessionRatingAverages(hubId: string, schoolId?: string) {
   const ratingAverages = await db.$queryRaw<SessionRatingAverages[]>`
     ${
       schoolId
@@ -388,9 +374,7 @@ export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
 
   const numSchools = Number(schoolCount?.count) ?? 0;
 
-  const schoolAttendances = await db.$queryRaw<
-    { count: number; session_type: string }[]
-  >`
+  const schoolAttendances = await db.$queryRaw<{ count: number; session_type: string }[]>`
     SELECT
       session_type,
       count(distinct sa.school_id) AS "count"
@@ -406,13 +390,11 @@ export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
     ORDER BY
       session_type ASC`;
 
-  return schoolAttendances.map<SchoolAttendances>(
-    ({ session_type, count }) => ({
-      session_type,
-      count_attendance_marked: Number(count),
-      count_attendance_unmarked: numSchools - Number(count),
-    }),
-  );
+  return schoolAttendances.map<SchoolAttendances>(({ session_type, count }) => ({
+    session_type,
+    count_attendance_marked: Number(count),
+    count_attendance_unmarked: numSchools - Number(count),
+  }));
 }
 
 export async function editSchoolInformation(
@@ -458,17 +440,12 @@ export async function editSchoolInformation(
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ?? "Sorry, could not update the school details",
+      message: (err as Error)?.message ?? "Sorry, could not update the school details",
     };
   }
 }
 
-export async function fetchHubSupervisors({
-  where,
-}: {
-  where: Prisma.SupervisorWhereInput;
-}) {
+export async function fetchHubSupervisors({ where }: { where: Prisma.SupervisorWhereInput }) {
   return await db.supervisor.findMany({
     where,
   });
@@ -501,16 +478,12 @@ export async function assignSchoolPointSupervisor(
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ??
-        "Sorry, could not assign the school point supervisor",
+      message: (err as Error)?.message ?? "Sorry, could not assign the school point supervisor",
     };
   }
 }
 
-export async function addSchool(
-  data: z.infer<typeof AddSchoolSchema>,
-): Promise<AddSchoolResponse> {
+export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<AddSchoolResponse> {
   try {
     const hubCoordinator = await currentHubCoordinator();
     if (!hubCoordinator?.assignedHubId) {
@@ -561,10 +534,7 @@ export async function addSchool(
     const availableFellows = fellows.filter((fellow) => {
       const fellowDates = fellowSessionDates.get(fellow.id);
       return !fellowDates?.has(
-        format(
-          utcToZonedTime(parsedData.preSessionDate, "Africa/Nairobi"),
-          "yyyy-MM-dd",
-        ),
+        format(utcToZonedTime(parsedData.preSessionDate, "Africa/Nairobi"), "yyyy-MM-dd"),
       );
     });
 
@@ -656,13 +626,9 @@ export async function addSchool(
         },
       });
 
-      const interventionSessions: Prisma.InterventionSessionCreateManyInput[] =
-        [];
+      const interventionSessions: Prisma.InterventionSessionCreateManyInput[] = [];
 
-      let currentDate = utcToZonedTime(
-        parsedData.preSessionDate,
-        "Africa/Nairobi",
-      );
+      const currentDate = utcToZonedTime(parsedData.preSessionDate, "Africa/Nairobi");
       currentDate.setHours(16, 0, 0, 0); // Set to 4 PM Nairobi time
 
       for (const sessionName of sessionNames) {

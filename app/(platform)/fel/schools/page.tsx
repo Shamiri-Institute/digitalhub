@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import { currentFellow } from "#/app/auth";
 import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
@@ -5,7 +6,6 @@ import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { redirect } from "next/navigation";
 
 export default async function SchoolsPage() {
   const fellow = await currentFellow();
@@ -24,17 +24,12 @@ export default async function SchoolsPage() {
               {
                 title: "Sessions",
                 count:
-                  fellow?.groups.reduce(
-                    (a, b) => a + b.school._count.interventionSessions,
-                    0,
-                  ) || 0,
+                  fellow?.groups.reduce((a, b) => a + b.school._count.interventionSessions, 0) || 0,
               },
               { title: "Groups", count: fellow?.groups.length || 0 },
               {
                 title: "Students",
-                count:
-                  fellow?.groups.reduce((a, b) => a + b._count.students, 0) ||
-                  0,
+                count: fellow?.groups.reduce((a, b) => a + b._count.students, 0) || 0,
               },
             ]}
           />

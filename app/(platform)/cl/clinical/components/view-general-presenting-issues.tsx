@@ -27,30 +27,20 @@ export default function ViewGeneralPresentingIssues({
         <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow className="bg-gray-50">
-              <TableHead className="w-[50%] border">
-                General Presenting Issues
-              </TableHead>
-              <TableHead className="w-[25%] border text-center">
-                Baseline
-              </TableHead>
-              <TableHead className="w-[25%] border text-center">
-                Endline
-              </TableHead>
+              <TableHead className="w-[50%] border">General Presenting Issues</TableHead>
+              <TableHead className="w-[25%] border text-center">Baseline</TableHead>
+              <TableHead className="w-[25%] border text-center">Endline</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {general_presenting_issues.map((issue) => (
               <TableRow key={issue.id} className="hover:bg-gray-50">
-                <TableCell className="border font-medium">
-                  {issue.name}
-                </TableCell>
+                <TableCell className="border font-medium">{issue.name}</TableCell>
                 <TableCell className="border text-center">
                   <div className="flex justify-center">
                     <Checkbox
                       id={`baseline-${issue.id}`}
-                      checked={
-                        generalPresentingIssuesBaseline?.[issue.name] === "true"
-                      }
+                      checked={generalPresentingIssuesBaseline?.[issue.name] === "true"}
                       disabled
                     />
                   </div>
@@ -59,9 +49,7 @@ export default function ViewGeneralPresentingIssues({
                   <div className="flex justify-center">
                     <Checkbox
                       id={`endline-${issue.id}`}
-                      checked={
-                        generalPresentingIssuesEndpoint?.[issue.name] === "true"
-                      }
+                      checked={generalPresentingIssuesEndpoint?.[issue.name] === "true"}
                       disabled
                     />
                   </div>
@@ -73,8 +61,11 @@ export default function ViewGeneralPresentingIssues({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Other Issues</label>
+        <label htmlFor="other-issues" className="text-sm font-medium">
+          Other Issues
+        </label>
         <Textarea
+          id="other-issues"
           placeholder="Describe any other presenting issues..."
           className="min-h-[100px]"
           value={

@@ -1,6 +1,6 @@
-import { SupervisorAttendanceTableData } from "#/app/(platform)/hc/components/supervisor-attendance";
-import { Session } from "#/components/common/session/sessions-provider";
-import { createContext, Dispatch, SetStateAction } from "react";
+import { createContext, type Dispatch, type SetStateAction } from "react";
+import type { SupervisorAttendanceTableData } from "#/app/(platform)/hc/components/supervisor-attendance";
+import type { Session } from "#/components/common/session/sessions-provider";
 
 type SupervisorAttendanceContextData = {
   isOpen: boolean;
@@ -13,14 +13,13 @@ type SupervisorAttendanceContextData = {
   setAttendance: Dispatch<SetStateAction<SupervisorAttendanceTableData | null>>;
 };
 
-export const SupervisorAttendanceContext =
-  createContext<SupervisorAttendanceContextData>({
-    isOpen: false,
-    setIsOpen: () => {},
-    session: null,
-    setSession: () => {},
-    markAttendanceDialog: false,
-    setMarkAttendanceDialog: () => {},
-    attendance: null,
-    setAttendance: () => {},
-  });
+export const SupervisorAttendanceContext = createContext<SupervisorAttendanceContextData>({
+  isOpen: false,
+  setIsOpen: () => {},
+  session: null,
+  setSession: () => {},
+  markAttendanceDialog: false,
+  setMarkAttendanceDialog: () => {},
+  attendance: null,
+  setAttendance: () => {},
+});

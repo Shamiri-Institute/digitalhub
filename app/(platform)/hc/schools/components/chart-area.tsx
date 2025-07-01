@@ -1,10 +1,5 @@
 "use client";
 
-import ChartCard from "#/components/ui/chart-card";
-import {
-  SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
-  SCHOOL_DROPOUT_REASONS_MAPPING,
-} from "#/lib/app-constants/constants";
 import {
   Bar,
   BarChart,
@@ -21,11 +16,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import ChartCard from "#/components/ui/chart-card";
 import {
+  SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
+  SCHOOL_DROPOUT_REASONS_MAPPING,
+} from "#/lib/app-constants/constants";
+import type {
   DropoutReasonsGraphData,
+  fetchSchoolDataCompletenessData,
   SchoolAttendances,
   SessionRatingAverages,
-  fetchSchoolDataCompletenessData,
 } from "../actions";
 
 export default function ChartArea({
@@ -35,9 +35,7 @@ export default function ChartArea({
   schoolAttendances,
 }: {
   dropoutData: DropoutReasonsGraphData[];
-  schoolDataCompletenessData: Awaited<
-    ReturnType<typeof fetchSchoolDataCompletenessData>
-  >;
+  schoolDataCompletenessData: Awaited<ReturnType<typeof fetchSchoolDataCompletenessData>>;
   schoolAttendances: SchoolAttendances[];
   sessionRatingsData: SessionRatingAverages[];
 }) {
@@ -119,8 +117,7 @@ export default function ChartArea({
                   className="text text-2xl font-semibold leading-8"
                   fill="#fffff"
                 >
-                  {schoolDataCompletenessData.find((d) => (d.name = "actual"))
-                    ?.value + "%"}
+                  {schoolDataCompletenessData.find((d) => (d.name = "actual"))?.value + "%"}
                 </Label>
                 {schoolDataCompletenessData.map(({ name }) => (
                   <Cell
@@ -144,16 +141,8 @@ export default function ChartArea({
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line
-                dataKey="student_behaviour"
-                stroke="#0085FF"
-                label="Student behaviour"
-              />
-              <Line
-                dataKey="admin_support"
-                stroke="#00BA34"
-                label="Admin support"
-              />
+              <Line dataKey="student_behaviour" stroke="#0085FF" label="Student behaviour" />
+              <Line dataKey="admin_support" stroke="#00BA34" label="Admin support" />
               <Line dataKey="workload" stroke="#F98600" label="Workload" />
             </LineChart>
           </ResponsiveContainer>

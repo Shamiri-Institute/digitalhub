@@ -11,10 +11,7 @@ const Avatar = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <AvatarPrimitive.Root
     ref={ref}
-    className={cn(
-      "relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full",
-      className,
-    )}
+    className={cn("relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full", className)}
     {...props}
   />
 ));
@@ -59,10 +56,7 @@ const UserAvatar = React.forwardRef<
 >(({ className, src, fallback, fallbackClasses, ...props }, ref) => (
   <Avatar
     ref={ref}
-    className={cn(
-      "h-11 w-11 rounded-full bg-foreground/5 dark:bg-foreground/10",
-      className,
-    )}
+    className={cn("h-11 w-11 rounded-full bg-foreground/5 dark:bg-foreground/10", className)}
     {...props}
   >
     <AvatarImage src={src} />
@@ -83,10 +77,7 @@ const ImplementerAvatar = React.forwardRef<
 >(({ className, src, fallback, fallbackClasses, ...props }, ref) => (
   <Avatar
     ref={ref}
-    className={cn(
-      "h-11 w-11 rounded-lg bg-foreground/5 dark:bg-foreground/10",
-      className,
-    )}
+    className={cn("h-11 w-11 rounded-lg bg-foreground/5 dark:bg-foreground/10", className)}
     {...props}
   >
     <AvatarImage src={src} />

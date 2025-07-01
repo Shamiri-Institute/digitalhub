@@ -25,7 +25,9 @@ import {
   LayoutDashboard,
   ListTodo,
   Loader2,
-  LucideProps,
+  // StarIcon,
+  type LucideIcon,
+  type LucideProps,
   Mail,
   MinusCircle,
   Moon,
@@ -43,11 +45,8 @@ import {
   UploadCloudIcon,
   Users2,
   XIcon,
-
-  // StarIcon,
-  type LucideIcon,
 } from "lucide-react";
-import * as React from "react";
+import type * as React from "react";
 
 import { cn } from "#/lib/utils";
 
@@ -151,13 +150,7 @@ export const Icons = {
       className={className}
       {...props}
     >
-      <circle
-        cx="20"
-        cy="20"
-        r="19.75"
-        stroke="currentColor"
-        strokeWidth="0.5"
-      />
+      <circle cx="20" cy="20" r="19.75" stroke="currentColor" strokeWidth="0.5" />
       <path
         stroke="currentColor"
         d="M20 15.9586L25.3333 18.6069V29.2H14.6667V18.6069L20 15.9586ZM20 15.9586V10M10 29.2H30M12 29.2V21.2552H14.6667M28 29.2V21.2552H25.3333M18.6667 29.2V25.2276H21.3333V29.2M20 10.6621H24V13.3103H20M20 22.5793C19.6464 22.5793 19.3072 22.4398 19.0572 22.1915C18.8071 21.9432 18.6667 21.6064 18.6667 21.2552C18.6667 20.904 18.8071 20.5672 19.0572 20.3189C19.3072 20.0705 19.6464 19.931 20 19.931C20.3536 19.931 20.6928 20.0705 20.9428 20.3189C21.1929 20.5672 21.3333 20.904 21.3333 21.2552C21.3333 21.6064 21.1929 21.9432 20.9428 22.1915C20.6928 22.4398 20.3536 22.5793 20 22.5793Z"
@@ -214,14 +207,7 @@ export const Icons = {
       className={className}
       {...props}
     >
-      <circle
-        cx="20"
-        cy="20"
-        r="19.75"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="0.5"
-      />
+      <circle cx="20" cy="20" r="19.75" fill="none" stroke="currentColor" strokeWidth="0.5" />
       <path
         stroke="currentColor"
         strokeWidth="1.5"
@@ -544,12 +530,7 @@ export const Icons = {
       {...props}
     >
       <g clipPath="url(#clip0_2223_864)">
-        <path
-          d="M7.5 5V7.5"
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M7.5 5V7.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
         <path
           d="M7.5 10.0122V10"
           stroke="currentColor"
