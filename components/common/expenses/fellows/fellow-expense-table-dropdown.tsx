@@ -1,5 +1,5 @@
-import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
-import { SupervisorFellowsAttendancesType } from "#/app/(platform)/sc/reporting/expenses/fellows/actions";
+import type { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
+import type { SupervisorFellowsAttendancesType } from "#/app/(platform)/sc/reporting/expenses/fellows/actions";
 import ApproveSpecialSessionFellows from "#/components/common/expenses/fellows/approve-special-session";
 import ConfirmReversalFellows from "#/components/common/expenses/fellows/confirm-reversal";
 import RequestRepaymentFellows from "#/components/common/expenses/fellows/request-repayment";
@@ -17,11 +17,7 @@ export type FellowExpenseData =
   | HubFellowsAttendancesType["attendances"][number]
   | SupervisorFellowsAttendancesType["attendances"][number];
 
-export default function FellowExpenseTableDropdown({
-  expense,
-}: {
-  expense: FellowExpenseData;
-}) {
+export default function FellowExpenseTableDropdown({ expense }: { expense: FellowExpenseData }) {
   const isHub = "hub" in expense;
   return (
     <DropdownMenu>
@@ -39,9 +35,7 @@ export default function FellowExpenseTableDropdown({
         }}
       >
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ConfirmReversalFellows expense={expense}>

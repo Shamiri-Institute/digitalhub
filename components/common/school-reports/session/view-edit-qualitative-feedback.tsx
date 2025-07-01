@@ -1,6 +1,11 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
+import type { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import {
@@ -23,11 +28,6 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitQualitativeFeedback } from "#/lib/actions/session/session";
 import { stringValidation } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export const QualitativeFeedbackSchema = z.object({
   notes: stringValidation("Please enter your notes"),
@@ -60,9 +60,7 @@ export default function ViewEditQualitativeFeedback({
       toast({
         variant: "destructive",
         title: "Submission error",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -95,15 +93,11 @@ export default function ViewEditQualitativeFeedback({
             <DataTableRatingStars rating={sessionReport.avgStudentBehaviour} />
           </div>
           <div className="flex flex-col items-start gap-2">
-            <p className="text-shamiri-black">
-              Admin support (1 unacceptable to 5 outstanding)
-            </p>
+            <p className="text-shamiri-black">Admin support (1 unacceptable to 5 outstanding)</p>
             <DataTableRatingStars rating={sessionReport.avgAdminSupport} />
           </div>
           <div className="flex flex-col items-start gap-2">
-            <p className="text-shamiri-black">
-              Workload (1 unacceptable to 5 outstanding)
-            </p>
+            <p className="text-shamiri-black">Workload (1 unacceptable to 5 outstanding)</p>
             <DataTableRatingStars rating={sessionReport.avgWorkload} />
           </div>
         </div>
@@ -111,11 +105,7 @@ export default function ViewEditQualitativeFeedback({
         {sessionReport.sessionNotes.map((note) => (
           <div key={note.sessionNoteId}>
             <p className="capitalize">{note.kind.replace("-", " ")}</p>
-            <Textarea
-              value={note.content}
-              rows={5}
-              disabled={action === "view"}
-            />
+            <Textarea value={note.content} rows={5} disabled={action === "view"} />
           </div>
         ))}
 
@@ -131,11 +121,7 @@ export default function ViewEditQualitativeFeedback({
                   <FormItem>
                     <FormLabel>Add your notes</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

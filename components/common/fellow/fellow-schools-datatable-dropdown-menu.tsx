@@ -1,3 +1,5 @@
+import type { ImplementerRole } from "@prisma/client";
+import type { Dispatch, SetStateAction } from "react";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -7,8 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { ImplementerRole } from "@prisma/client";
-import { Dispatch, SetStateAction } from "react";
 import type { FellowsData } from "../../../app/(platform)/sc/actions";
 
 export default function FellowSchoolsDatatableDropdownMenu({
@@ -39,9 +39,7 @@ export default function FellowSchoolsDatatableDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {state.role === "SUPERVISOR" ? (

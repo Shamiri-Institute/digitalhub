@@ -1,3 +1,11 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { addDays, differenceInSeconds, eachMonthOfInterval, format, isEqual } from "date-fns";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
 import { MonthlySupervisorEvaluationSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
@@ -5,12 +13,7 @@ import { submitMonthlySupervisorEvaluation } from "#/app/(platform)/hc/superviso
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -31,19 +34,6 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
-import {
-  addDays,
-  differenceInSeconds,
-  eachMonthOfInterval,
-  format,
-  isEqual,
-} from "date-fns";
-import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 type FormInput = {
   section: string;
@@ -104,8 +94,7 @@ export default function MonthlySupervisorEvaluation({
         {
           label: "Reliability (1-unacceptable to 5-outstanding)",
           name: "reliability",
-          description:
-            "Assesses the supervisor's consistency, dependability, and trustworthiness",
+          description: "Assesses the supervisor's consistency, dependability, and trustworthiness",
         },
         {
           label: "Identification of issues (1-unacceptable to 5-outstanding)",
@@ -162,22 +151,19 @@ export default function MonthlySupervisorEvaluation({
       section: "Program execution",
       fields: [
         {
-          label:
-            "Fellow recruitment effectiveness (1-unacceptable to 5-outstanding)",
+          label: "Fellow recruitment effectiveness (1-unacceptable to 5-outstanding)",
           name: "fellowRecruitmentEffectiveness",
           description:
             "Assesses successful screening of fellow position candidates, effective conduction of fellow interviews, providing a final list of successful candidates, and timely completion of orientation and onboarding of fellows.",
         },
         {
-          label:
-            "Fellow training effectiveness (1-unacceptable to 5-outstanding)",
+          label: "Fellow training effectiveness (1-unacceptable to 5-outstanding)",
           name: "fellowTrainingEffectiveness",
           description:
             "Assesses the completion of fellow training tasks based on the number of half-days completed by fellows under a supervisor",
         },
         {
-          label:
-            "Program logistics co-ordination (1-unacceptable to 5-outstanding)",
+          label: "Program logistics co-ordination (1-unacceptable to 5-outstanding)",
           name: "programLogisticsCoordination",
           description:
             "Assesses supervisor’s management of physical attendance sheets, reporting absenteeism of fellows, coordinating logistics for their fellows, and handling the movement of program materials.",
@@ -223,14 +209,11 @@ export default function MonthlySupervisorEvaluation({
         })
       : [];
 
-  const onSubmit = async (
-    data: z.infer<typeof MonthlySupervisorEvaluationSchema>,
-  ) => {
+  const onSubmit = async (data: z.infer<typeof MonthlySupervisorEvaluationSchema>) => {
     const response = await submitMonthlySupervisorEvaluation(data);
     if (!response.success) {
       toast({
-        description:
-          response.message ?? "Something went wrong, please try again",
+        description: response.message ?? "Something went wrong, please try again",
       });
       return;
     }
@@ -252,10 +235,7 @@ export default function MonthlySupervisorEvaluation({
   useEffect(() => {
     if (existingEvaluation) {
       setUpdateWindowDuration(
-        differenceInSeconds(
-          addDays(existingEvaluation.createdAt, 14),
-          new Date(),
-        ),
+        differenceInSeconds(addDays(existingEvaluation.createdAt, 14), new Date()),
       );
     }
   }, [existingEvaluation]);
@@ -331,8 +311,7 @@ export default function MonthlySupervisorEvaluation({
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel>
-                    Select month{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    Select month <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <Select
                     onValueChange={(value) => {
@@ -348,10 +327,7 @@ export default function MonthlySupervisorEvaluation({
                     <SelectContent>
                       {months.map((month, index) => {
                         return (
-                          <SelectItem
-                            key={index.toString()}
-                            value={format(month, "yyyy-MM-dd")}
-                          >
+                          <SelectItem key={index.toString()} value={format(month, "yyyy-MM-dd")}>
                             Month {index + 1} - {format(month, "MMM yyyy")}
                           </SelectItem>
                         );
@@ -367,11 +343,7 @@ export default function MonthlySupervisorEvaluation({
                 <div className="flex items-center gap-2">
                   <span>
                     Update ratings by{" "}
-                    {format(
-                      addDays(existingEvaluation.createdAt, 14),
-                      "dd-MM-yyyy",
-                    )}{" "}
-                    (
+                    {format(addDays(existingEvaluation.createdAt, 14), "dd-MM-yyyy")} (
                     <CountdownTimer duration={updateWindowDuration} />)
                   </span>
                 </div>
@@ -382,12 +354,7 @@ export default function MonthlySupervisorEvaluation({
               name="supervisorId"
               render={({ field }) => (
                 <FormItem>
-                  <Input
-                    id="supervisorId"
-                    name="supervisorId"
-                    type="hidden"
-                    value={field.value}
-                  />
+                  <Input id="supervisorId" name="supervisorId" type="hidden" value={field.value} />
                   <FormMessage />
                 </FormItem>
               )}
@@ -396,10 +363,7 @@ export default function MonthlySupervisorEvaluation({
             <div className="flex flex-col space-y-4 divide-y">
               {formInputs.map((input) => {
                 return (
-                  <div
-                    key={input.section}
-                    className="flex flex-col space-y-2 py-4"
-                  >
+                  <div key={input.section} className="flex flex-col space-y-2 py-4">
                     <div>
                       <span className="text-bold text-lg">{input.section}</span>{" "}
                       <span className="text-shamiri-light-red">*</span>
@@ -409,16 +373,12 @@ export default function MonthlySupervisorEvaluation({
                         <FormField
                           key={inputField.name}
                           control={form.control}
-                          name={
-                            inputField.name as keyof typeof form.formState.defaultValues
-                          }
+                          name={inputField.name as keyof typeof form.formState.defaultValues}
                           render={({ field }) => (
                             <FormItem className="flex flex-col space-y-2">
                               <FormLabel>
                                 <span>{inputField.label}</span>{" "}
-                                <span className="text-shamiri-light-red">
-                                  *
-                                </span>
+                                <span className="text-shamiri-light-red">*</span>
                               </FormLabel>
                               <span className="text-shamiri-text-grey">
                                 {inputField.description}
@@ -426,10 +386,7 @@ export default function MonthlySupervisorEvaluation({
                               <RatingStarsInput
                                 value={field.value}
                                 onChange={field.onChange}
-                                disabled={
-                                  existingEvaluation &&
-                                  updateWindowDuration === 0
-                                }
+                                disabled={existingEvaluation && updateWindowDuration === 0}
                               />
                             </FormItem>
                           )}
@@ -437,12 +394,8 @@ export default function MonthlySupervisorEvaluation({
                       ))}
                       <FormField
                         control={form.control}
-                        name={
-                          input.commentsInputName as keyof typeof form.formState.defaultValues
-                        }
-                        disabled={
-                          existingEvaluation && updateWindowDuration <= 0
-                        }
+                        name={input.commentsInputName as keyof typeof form.formState.defaultValues}
+                        disabled={existingEvaluation && updateWindowDuration <= 0}
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
@@ -450,12 +403,11 @@ export default function MonthlySupervisorEvaluation({
                                 className="resize-none"
                                 {...field}
                                 placeholder={
-                                  existingEvaluation &&
-                                  updateWindowDuration <= 0
+                                  existingEvaluation && updateWindowDuration <= 0
                                     ? ""
                                     : "Type additional comments"
                                 }
-                              ></Textarea>
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

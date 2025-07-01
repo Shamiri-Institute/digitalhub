@@ -1,6 +1,6 @@
+import { type Prisma, SessionStatus } from "@prisma/client";
+import { createContext, type Dispatch, type SetStateAction } from "react";
 import { SESSION_TYPES } from "#/lib/app-constants/constants";
-import { Prisma, SessionStatus } from "@prisma/client";
-import { Dispatch, SetStateAction, createContext } from "react";
 
 const sessionTypeFilterOptions: { [key: string]: boolean } = {};
 SESSION_TYPES.forEach((sessionType) => {

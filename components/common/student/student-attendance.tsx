@@ -1,13 +1,16 @@
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ColumnDef, Row } from "@tanstack/react-table";
+import { usePathname } from "next/navigation";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
-import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
+import type { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { SessionDetail } from "#/components/common/session/session-list";
-import {
-  Session,
-  SessionsContext,
-} from "#/components/common/session/sessions-provider";
+import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
 import StudentAttendanceMenu from "#/components/common/student/student-attendance-menu";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -29,23 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import {
-  markManyStudentsAttendance,
-  markStudentAttendance,
-} from "#/lib/actions/student";
+import { markManyStudentsAttendance, markStudentAttendance } from "#/lib/actions/student";
 import { sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { ColumnDef, Row } from "@tanstack/react-table";
-import { usePathname } from "next/navigation";
-import {
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export default function StudentAttendance({
   isOpen,
@@ -89,9 +77,7 @@ export default function StudentAttendance({
   >([]);
   const { sessions, setSessions, refresh } = useContext(SessionsContext);
   const [bulkMode, setBulkMode] = useState<boolean>(false);
-  const [selectedRows, setSelectedRows] = useState<
-    Row<StudentAttendanceData>[]
-  >([]);
+  const [selectedRows, setSelectedRows] = useState<Row<StudentAttendanceData>[]>([]);
 
   const form = useForm<{ fellow: string }>({
     defaultValues: {
@@ -121,10 +107,7 @@ export default function StudentAttendance({
     return res;
   };
 
-  const markBulkAttendance = async (
-    ids: string[],
-    data: z.infer<typeof MarkAttendanceSchema>,
-  ) => {
+  const markBulkAttendance = async (ids: string[], data: z.infer<typeof MarkAttendanceSchema>) => {
     const [res] = await Promise.all([
       await markManyStudentsAttendance(ids, data),
       await revalidatePageAction(pathname),
@@ -165,12 +148,7 @@ export default function StudentAttendance({
           </span>
         </DialogHeader>
         {session && (
-          <SessionDetail
-            state={{ session }}
-            layout={"compact"}
-            withDropdown={false}
-            role={role}
-          />
+          <SessionDetail state={{ session }} layout={"compact"} withDropdown={false} role={role} />
         )}
 
         {role !== "FELLOW" ? (
@@ -202,9 +180,7 @@ export default function StudentAttendance({
                             disabled={!group.group}
                           >
                             {group.fellow.fellowName}{" "}
-                            {group.group
-                              ? `(${group.group.groupName})`
-                              : "- No group assigned"}
+                            {group.group ? `(${group.group.groupName})` : "- No group assigned"}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -225,16 +201,12 @@ export default function StudentAttendance({
           })}
           editColumns={true}
           data={
-            groups.find((group) => group.group?.id === selectedGroup)?.group
-              ?.students ??
+            groups.find((group) => group.group?.id === selectedGroup)?.group?.students ??
             sessions
               .find((x) => x.id === session?.id)
-              ?.school?.interventionGroups.find(
-                (group) => group.leaderId === fellowId,
-              )?.students ??
-            session?.school?.interventionGroups.find(
-              (group) => group.leaderId === fellowId,
-            )?.students ??
+              ?.school?.interventionGroups.find((group) => group.leaderId === fellowId)?.students ??
+            session?.school?.interventionGroups.find((group) => group.leaderId === fellowId)
+              ?.students ??
             []
           }
           columnVisibilityState={{
@@ -251,14 +223,7 @@ export default function StudentAttendance({
           title={"Mark student attendance"}
           attendances={
             attendance?.studentAttendances.map((_attendance) => {
-              const {
-                id,
-                studentId,
-                attended,
-                absenceReason,
-                sessionId,
-                comments,
-              } = _attendance;
+              const { id, studentId, attended, absenceReason, sessionId, comments } = _attendance;
               return {
                 attendanceId: id.toString(),
                 id: studentId,
@@ -290,15 +255,9 @@ export default function StudentAttendance({
                   <span>{attendance?.studentName}</span>
                 )}
               </span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
-              <span>
-                {sessionDisplayName(session?.session?.sessionName ?? "")}
-              </span>
-              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                {""}
-              </span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+              <span>{sessionDisplayName(session?.session?.sessionName ?? "")}</span>
+              <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
               <span>{session?.school?.schoolName ?? session?.venue}</span>
             </p>
           </DialogAlertWidget>
@@ -329,8 +288,7 @@ const columns = (state: {
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -360,11 +318,7 @@ const columns = (state: {
     id: "Student name",
     header: "Student name",
     cell: ({ row }) => {
-      return (
-        <span className="capitalize">
-          {row.original.studentName?.toLowerCase()}
-        </span>
-      );
+      return <span className="capitalize">{row.original.studentName?.toLowerCase()}</span>;
     },
   },
   {
@@ -380,8 +334,7 @@ const columns = (state: {
   {
     header: "Age",
     id: "Age",
-    accessorFn: (row) =>
-      row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
+    accessorFn: (row) => row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
   },
   {
     header: "Clinical cases",

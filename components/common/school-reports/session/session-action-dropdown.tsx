@@ -1,4 +1,4 @@
-import { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
+import type { SessionReportType } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
 import ViewEditQualitativeFeedback from "#/components/common/school-reports/session/view-edit-qualitative-feedback";
 import { Icons } from "#/components/icons";
 import {
@@ -26,32 +26,16 @@ export default function SessionDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <ViewEditQualitativeFeedback
-          sessionReport={sessionReportData}
-          action="view"
-        >
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+        <ViewEditQualitativeFeedback sessionReport={sessionReportData} action="view">
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
             View qualitative feedback
           </div>
         </ViewEditQualitativeFeedback>
-        <ViewEditQualitativeFeedback
-          sessionReport={sessionReportData}
-          action="edit"
-        >
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+        <ViewEditQualitativeFeedback sessionReport={sessionReportData} action="edit">
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
             Edit school report
           </div>
         </ViewEditQualitativeFeedback>

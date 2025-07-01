@@ -1,20 +1,15 @@
 "use client";
 
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { useContext } from "react";
 import { FellowInfoContext } from "#/app/(platform)/hc/schools/[visibleId]/fellows/context/fellow-info-context";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
-import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import { useContext } from "react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 
 export default function StudentsInGroup() {
   const context = useContext(FellowInfoContext);
@@ -28,9 +23,7 @@ export default function StudentsInGroup() {
         <DialogAlertWidget>
           <div className="flex items-center gap-2">
             <span>{context.fellow?.fellowName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
             <span>{context.fellow?.groupName}</span>
           </div>
         </DialogAlertWidget>
@@ -41,8 +34,7 @@ export default function StudentsInGroup() {
             data={
               schoolContext.school
                 ? schoolContext.school.students.filter(
-                    (student) =>
-                      student.assignedGroupId === context.fellow?.groupId,
+                    (student) => student.assignedGroupId === context.fellow?.groupId,
                   )
                 : []
             }
@@ -107,8 +99,7 @@ const columns: ColumnDef<
   {
     header: "Age",
     id: "Age",
-    accessorFn: (row) =>
-      row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
+    accessorFn: (row) => row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
   },
   {
     header: "Clinical cases",

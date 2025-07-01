@@ -1,5 +1,6 @@
 "use server";
 
+import type { z } from "zod";
 import {
   AddNewSupervisorSchema,
   DropoutSupervisorSchema,
@@ -10,15 +11,12 @@ import {
   WeeklyHubTeamMeetingSchema,
 } from "#/app/(platform)/hc/schemas";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
-import { db } from "#/lib/db";
 
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
-import { z } from "zod";
+import { db } from "#/lib/db";
 
-export async function submitWeeklyTeamMeeting(
-  data: z.infer<typeof WeeklyHubTeamMeetingSchema>,
-) {
+export async function submitWeeklyTeamMeeting(data: z.infer<typeof WeeklyHubTeamMeetingSchema>) {
   try {
     const parsedData = WeeklyHubTeamMeetingSchema.parse(data);
 
@@ -48,10 +46,7 @@ async function checkAuth() {
   }
 }
 
-export async function dropoutSupervisor(
-  supervisorId: string,
-  dropoutReason: string,
-) {
+export async function dropoutSupervisor(supervisorId: string, dropoutReason: string) {
   try {
     await checkAuth();
 
@@ -111,9 +106,7 @@ export async function undropSupervisor(supervisorId: string) {
   }
 }
 
-export async function submitSupervisorComplaint(
-  data: z.infer<typeof SubmitComplaintSchema>,
-) {
+export async function submitSupervisorComplaint(data: z.infer<typeof SubmitComplaintSchema>) {
   try {
     const hubCoordinator = await currentHubCoordinator();
     const user = await getCurrentUser();
@@ -193,11 +186,7 @@ export async function markSupervisorAttendance(
 
   const parsedData = MarkSupervisorAttendanceSchema.parse(data);
   const attended =
-    parsedData.attended === "attended"
-      ? true
-      : parsedData.attended === "missed"
-        ? false
-        : null;
+    parsedData.attended === "attended" ? true : parsedData.attended === "missed" ? false : null;
   try {
     const attendance = await db.supervisorAttendance.findFirst({
       where: { id },
@@ -219,11 +208,10 @@ export async function markSupervisorAttendance(
         message: "Successfully marked supervisor attendance.",
         data: attendance,
       };
-    } else {
-      return {
-        error: "Something went wrong while updating supervisor attendance",
-      };
     }
+    return {
+      error: "Something went wrong while updating supervisor attendance",
+    };
   } catch (error: unknown) {
     console.error(error);
     return {
@@ -265,9 +253,7 @@ export async function markBatchSupervisorAttendance(
   }
 }
 
-export async function updateSupervisorDetails(
-  data: z.infer<typeof EditSupervisorSchema>,
-) {
+export async function updateSupervisorDetails(data: z.infer<typeof EditSupervisorSchema>) {
   try {
     await checkAuth();
 
@@ -356,16 +342,12 @@ export async function updateSupervisorDetails(
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ??
-        "Sorry, could not update supervisor details.",
+      message: (err as Error)?.message ?? "Sorry, could not update supervisor details.",
     };
   }
 }
 
-export async function createNewSupervisor(
-  data: z.infer<typeof AddNewSupervisorSchema>,
-) {
+export async function createNewSupervisor(data: z.infer<typeof AddNewSupervisorSchema>) {
   try {
     const hc = await currentHubCoordinator();
     const user = await getCurrentUser();
@@ -440,9 +422,7 @@ export async function createNewSupervisor(
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ??
-        "Sorry, could not add new supervisor details.",
+      message: (err as Error)?.message ?? "Sorry, could not add new supervisor details.",
     };
   }
 }
@@ -517,46 +497,43 @@ export async function submitMonthlySupervisorEvaluation(
       });
       return {
         success: true,
-        message: `Successfully submitted monthly evaluation.`,
-      };
-    } else {
-      await db.monthlySupervisorEvaluation.update({
-        where: {
-          id: match.id,
-        },
-        data: {
-          respectfulness,
-          attitude,
-          collaboration,
-          reliability,
-          identificationOfIssues,
-          workplaceDemeanorComments,
-          leadership,
-          communicationStyle,
-          conflictResolution,
-          adaptability,
-          recognitionAndFeedback,
-          decisionMaking,
-          managementStyleComments,
-          fellowRecruitmentEffectiveness,
-          fellowTrainingEffectiveness,
-          programLogisticsCoordination,
-          programSessionAttendance,
-          programExecutionComments,
-        },
-      });
-      return {
-        success: true,
-        message: `Successfully updated monthly evaluation.`,
+        message: "Successfully submitted monthly evaluation.",
       };
     }
+    await db.monthlySupervisorEvaluation.update({
+      where: {
+        id: match.id,
+      },
+      data: {
+        respectfulness,
+        attitude,
+        collaboration,
+        reliability,
+        identificationOfIssues,
+        workplaceDemeanorComments,
+        leadership,
+        communicationStyle,
+        conflictResolution,
+        adaptability,
+        recognitionAndFeedback,
+        decisionMaking,
+        managementStyleComments,
+        fellowRecruitmentEffectiveness,
+        fellowTrainingEffectiveness,
+        programLogisticsCoordination,
+        programSessionAttendance,
+        programExecutionComments,
+      },
+    });
+    return {
+      success: true,
+      message: "Successfully updated monthly evaluation.",
+    };
   } catch (err) {
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ??
-        "Sorry, could not submit supervisor evaluation.",
+      message: (err as Error)?.message ?? "Sorry, could not submit supervisor evaluation.",
     };
   }
 }
@@ -658,9 +635,7 @@ export type SupervisorAttendanceData = {
 };
 
 export async function fetchSupervisorAttendanceData(hubId: string) {
-  const supervisorAttendanceData = await db.$queryRaw<
-    SupervisorAttendanceData[]
-  >`
+  const supervisorAttendanceData = await db.$queryRaw<SupervisorAttendanceData[]>`
     SELECT
       sup.supervisor_name AS supervisor_name,
       COUNT(sa.attended)::integer AS attended

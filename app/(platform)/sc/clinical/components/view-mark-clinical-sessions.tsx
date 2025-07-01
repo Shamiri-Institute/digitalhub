@@ -1,15 +1,14 @@
+import { format } from "date-fns";
+import { Calendar as CalendarIcon, Check, X } from "lucide-react";
+import { useState } from "react";
 import {
-  ClinicalCases,
+  type ClinicalCases,
   updateClinicalCaseAttendance,
 } from "#/app/(platform)/sc/clinical/action";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   Table,
   TableBody,
@@ -20,9 +19,6 @@ import {
 } from "#/components/ui/table";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon, Check, X } from "lucide-react";
-import { useState } from "react";
 
 export const CLINICAL_SESSION_TYPES = [
   { key: "Pre", value: "Pre-session" },
@@ -47,15 +43,13 @@ export default function ViewMarkClinicalSessions({
   currentcase: ClinicalCases;
   role: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
-  const [attendance, setAttendance] = useState<Record<string, boolean | null>>(
-    () => {
-      const initialState: Record<string, boolean | null> = {};
-      currentcase?.clinicalSessionAttendance?.forEach((record) => {
-        initialState[record.session] = record.attendanceStatus;
-      });
-      return initialState;
-    },
-  );
+  const [attendance, setAttendance] = useState<Record<string, boolean | null>>(() => {
+    const initialState: Record<string, boolean | null> = {};
+    currentcase?.clinicalSessionAttendance?.forEach((record) => {
+      initialState[record.session] = record.attendanceStatus;
+    });
+    return initialState;
+  });
 
   const [dates, setDates] = useState<Record<string, Date | undefined>>(() => {
     const initialDates: Record<string, Date | undefined> = {};
@@ -70,8 +64,7 @@ export default function ViewMarkClinicalSessions({
       toast({
         variant: "destructive",
         title: "Date is required",
-        description:
-          "Please select a date for this session before marking attendance",
+        description: "Please select a date for this session before marking attendance",
       });
       return;
     }
@@ -134,22 +127,15 @@ export default function ViewMarkClinicalSessions({
         </TableHeader>
         <TableBody>
           {CLINICAL_SESSION_TYPES.filter(
-            (
-              sessionType,
-            ): sessionType is (typeof CLINICAL_SESSION_TYPES)[number] => {
-              if (
-                sessionType.key.startsWith("S") ||
-                sessionType.key === "Pre"
-              ) {
+            (sessionType): sessionType is (typeof CLINICAL_SESSION_TYPES)[number] => {
+              if (sessionType.key.startsWith("S") || sessionType.key === "Pre") {
                 return true;
               }
               return currentcase.caseStatus === "FollowUp";
             },
           ).map((sessionType) => (
             <TableRow key={sessionType.key} className="hover:bg-gray-50">
-              <TableCell className="border font-medium">
-                {sessionType.value}
-              </TableCell>
+              <TableCell className="border font-medium">{sessionType.value}</TableCell>
               <TableCell className="border">
                 <Popover>
                   <PopoverTrigger asChild>
@@ -172,9 +158,7 @@ export default function ViewMarkClinicalSessions({
                     <Calendar
                       mode="single"
                       selected={dates[sessionType.key]}
-                      onSelect={(date) =>
-                        handleDateSelect(sessionType.key, date)
-                      }
+                      onSelect={(date) => handleDateSelect(sessionType.key, date)}
                       initialFocus
                     />
                   </PopoverContent>
@@ -185,11 +169,7 @@ export default function ViewMarkClinicalSessions({
                 attendance[sessionType.key] !== undefined ? (
                   <div className="p-2">
                     <Badge
-                      variant={
-                        attendance[sessionType.key]
-                          ? "shamiri-green"
-                          : "destructive"
-                      }
+                      variant={attendance[sessionType.key] ? "shamiri-green" : "destructive"}
                       className="w-20 justify-center"
                     >
                       {attendance[sessionType.key] ? (

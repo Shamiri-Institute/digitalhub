@@ -1,8 +1,8 @@
+import { signOut } from "next-auth/react";
 import { loadSupervisorExpenses } from "#/app/(platform)/sc/reporting/expenses/my-expenses/actions";
 import AddSupervisorExpenseTrigger from "#/app/(platform)/sc/reporting/expenses/my-expenses/components/add-supervisor-expense";
 import SupervisorExpensesDataTable from "#/app/(platform)/sc/reporting/expenses/my-expenses/components/supervisors-table";
 import { currentSupervisor } from "#/app/auth";
-import { signOut } from "next-auth/react";
 
 export default async function MyExpensesPage() {
   const expensesData = await loadSupervisorExpenses();

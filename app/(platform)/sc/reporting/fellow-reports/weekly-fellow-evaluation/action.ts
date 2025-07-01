@@ -1,12 +1,10 @@
 "use server";
 
 import { currentSupervisor } from "#/app/auth";
-import { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
+import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import { db } from "#/lib/db";
 
-export async function loadWeeklyFellowEvaluation(): Promise<
-  WeeklyFellowEvaluation[]
-> {
+export async function loadWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluation[]> {
   try {
     const supervisor = await currentSupervisor();
     if (!supervisor) {
@@ -27,20 +25,14 @@ export async function loadWeeklyFellowEvaluation(): Promise<
         id: fellow.id,
         fellowName: fellow.fellowName,
         avgBehaviour:
-          fellow.weeklyFellowRatings.reduce(
-            (a, b) => a + (b?.behaviourRating ?? 0),
-            0,
-          ) / fellow.weeklyFellowRatings.length,
+          fellow.weeklyFellowRatings.reduce((a, b) => a + (b?.behaviourRating ?? 0), 0) /
+          fellow.weeklyFellowRatings.length,
         avgProgramDelivery:
-          fellow.weeklyFellowRatings.reduce(
-            (a, b) => a + (b?.programDeliveryRating ?? 0),
-            0,
-          ) / fellow.weeklyFellowRatings.length,
+          fellow.weeklyFellowRatings.reduce((a, b) => a + (b?.programDeliveryRating ?? 0), 0) /
+          fellow.weeklyFellowRatings.length,
         avgDressingGrooming:
-          fellow.weeklyFellowRatings.reduce(
-            (a, b) => a + (b?.dressingAndGroomingRating ?? 0),
-            0,
-          ) / fellow.weeklyFellowRatings.length,
+          fellow.weeklyFellowRatings.reduce((a, b) => a + (b?.dressingAndGroomingRating ?? 0), 0) /
+          fellow.weeklyFellowRatings.length,
         week: fellow.weeklyFellowRatings.map((rating) => ({
           userId: supervisor.user.user.id,
           evaluationId: rating.id,

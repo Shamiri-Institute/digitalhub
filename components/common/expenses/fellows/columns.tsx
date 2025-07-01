@@ -1,28 +1,23 @@
 "use client";
 
-import { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
-import { SupervisorFellowsAttendancesType } from "#/app/(platform)/sc/reporting/expenses/fellows/actions";
+import type { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
+import Image from "next/image";
+import type { HubFellowsAttendancesType } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
+import type { SupervisorFellowsAttendancesType } from "#/app/(platform)/sc/reporting/expenses/fellows/actions";
 import FellowExpenseTableDropdown from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
-import Image from "next/image";
 
-export const columns: ColumnDef<
-  HubFellowsAttendancesType | SupervisorFellowsAttendancesType
->[] = [
+export const columns: ColumnDef<HubFellowsAttendancesType | SupervisorFellowsAttendancesType>[] = [
   {
     id: "button",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -91,8 +86,7 @@ export const subColumns: ColumnDef<
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -163,11 +157,7 @@ export const subColumns: ColumnDef<
     header: "Status",
     accessorKey: "status",
     cell: ({ row }) =>
-      renderPayoutStatus(
-        row.original.executedAt,
-        row.original.amount,
-        row.original.confirmedAt,
-      ),
+      renderPayoutStatus(row.original.executedAt, row.original.amount, row.original.confirmedAt),
   },
 
   {
@@ -177,11 +167,7 @@ export const subColumns: ColumnDef<
   },
 ];
 
-export function renderPayoutStatus(
-  status: null | Date,
-  amount: number,
-  confirmedAt: null | Date,
-) {
+export function renderPayoutStatus(status: null | Date, amount: number, confirmedAt: null | Date) {
   if (amount < 0) {
     if (confirmedAt !== null) {
       return (

@@ -21,10 +21,7 @@ interface UploadImageOutput {
 
 const ImageSize = 400;
 
-export class UploadImageCommand extends DatabaseCommand<
-  UploadImageInput,
-  UploadImageOutput
-> {
+export class UploadImageCommand extends DatabaseCommand<UploadImageInput, UploadImageOutput> {
   async perform(input: UploadImageInput) {
     // Download image from URL
     const imageResponse = await fetch(input.url);

@@ -1,13 +1,11 @@
 "use server";
 
+import type { z } from "zod";
 import { getCurrentUser } from "#/app/auth";
-import { ProfileSchema } from "#/components/profile/schema";
+import type { ProfileSchema } from "#/components/profile/schema";
 import { db } from "#/lib/db";
-import { z } from "zod";
 
-export async function updateSupervisorProfile(
-  data: z.infer<typeof ProfileSchema>,
-) {
+export async function updateSupervisorProfile(data: z.infer<typeof ProfileSchema>) {
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -71,9 +69,7 @@ export async function updateSupervisorProfile(
   }
 }
 
-export async function updateHubCoordinatorProfile(
-  data: z.infer<typeof ProfileSchema>,
-) {
+export async function updateHubCoordinatorProfile(data: z.infer<typeof ProfileSchema>) {
   try {
     const user = await getCurrentUser();
     if (!user) {
@@ -197,9 +193,7 @@ export async function updateFellowProfile(data: z.infer<typeof ProfileSchema>) {
   }
 }
 
-export async function updateClinicalLeadProfile(
-  data: z.infer<typeof ProfileSchema>,
-) {
+export async function updateClinicalLeadProfile(data: z.infer<typeof ProfileSchema>) {
   try {
     const user = await getCurrentUser();
     if (!user) {

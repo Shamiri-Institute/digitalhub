@@ -8,12 +8,7 @@ import { z } from "zod";
 import { inviteUserToImplementer } from "#/app/actions";
 import { OrganizationAvatar } from "#/components/ui/avatar";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTrigger,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -70,10 +65,7 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
     });
   }
 
-  const [state, formAction] = useFormState(
-    inviteUserToImplementer,
-    initialState,
-  );
+  const [state, formAction] = useFormState(inviteUserToImplementer, initialState);
 
   return (
     <Dialog>
@@ -92,9 +84,7 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                   fallback={organization.name}
                   className="h-7 w-7"
                 />
-                <span className="text-base font-medium">
-                  Invite to your organization
-                </span>
+                <span className="text-base font-medium">Invite to your organization</span>
               </div>
             </DialogHeader>
             <Separator />
@@ -126,16 +116,9 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                 render={({ field }) => (
                   <FormItem className="px-6">
                     <FormLabel>Invite as</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      name="role"
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} name="role" defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger
-                          className="bg-card"
-                          data-testid={constants.ADD_MEMBERS_ROLE}
-                        >
+                        <SelectTrigger className="bg-card" data-testid={constants.ADD_MEMBERS_ROLE}>
                           <SelectValue placeholder="Select a role" />
                         </SelectTrigger>
                       </FormControl>
@@ -149,9 +132,7 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                           >
                             <div className="flex gap-1 text-sm">
                               <span className="font-medium">{role.name}</span>
-                              <span className="text-muted-foreground">
-                                - {role.description}
-                              </span>
+                              <span className="text-muted-foreground">- {role.description}</span>
                             </div>
                           </SelectItem>
                         ))}
@@ -163,11 +144,7 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
               />
             </div>
             <div className="flex justify-end px-6 pb-6">
-              <Button
-                variant="brand"
-                type="submit"
-                data-testid={constants.ADD_MEMBERS_SUBMIT}
-              >
+              <Button variant="brand" type="submit" data-testid={constants.ADD_MEMBERS_SUBMIT}>
                 Submit
               </Button>
             </div>

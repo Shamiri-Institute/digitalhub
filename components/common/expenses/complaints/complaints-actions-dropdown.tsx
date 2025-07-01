@@ -1,4 +1,4 @@
-import { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
+import type { HubReportComplaintsType } from "#/app/(platform)/hc/reporting/expenses/complaints/actions";
 import ApproveRejectFellowComplaint from "#/components/common/expenses/complaints/approve-reject-complaint";
 import ViewFellowComplaint from "#/components/common/expenses/complaints/view-complaint";
 import { Icons } from "#/components/icons";
@@ -28,9 +28,7 @@ export default async function FellowComplaintsActionsDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 

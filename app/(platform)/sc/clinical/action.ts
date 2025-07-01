@@ -1,15 +1,12 @@
 "use server";
 
-import { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
+import { revalidatePath } from "next/cache";
+import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentUser } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
-
 import { db } from "#/lib/db";
-import { revalidatePath } from "next/cache";
 
-export type ClinicalCases = Awaited<
-  ReturnType<typeof getClinicalCases>
->[number];
+export type ClinicalCases = Awaited<ReturnType<typeof getClinicalCases>>[number];
 
 export async function getClinicalCases() {
   const supervisor = await currentSupervisor();
@@ -57,20 +54,15 @@ export async function getClinicalCases() {
       caseStatus: caseInfo.caseStatus,
       risk: caseInfo.riskStatus,
       age,
-      referralFrom:
-        caseInfo.referredFrom ||
-        caseInfo.initialReferredFromSpecified ||
-        "Unknown",
+      referralFrom: caseInfo.referredFrom || caseInfo.initialReferredFromSpecified || "Unknown",
       hubId: supervisor?.hubId,
       flagged: caseInfo.flagged,
       flaggedReason: caseInfo.flaggedReason,
       sessionAttendanceHistory: formattedSessions,
       student: caseInfo.student,
-      emergencyPresentingIssuesBaseline:
-        caseInfo.emergencyPresentingIssuesBaseline,
+      emergencyPresentingIssuesBaseline: caseInfo.emergencyPresentingIssuesBaseline,
       generalPresentingIssuesBaseline: caseInfo.generalPresentingIssuesBaseline,
-      emergencyPresentingIssuesEndpoint:
-        caseInfo.emergencyPresentingIssuesEndpoint,
+      emergencyPresentingIssuesEndpoint: caseInfo.emergencyPresentingIssuesEndpoint,
       generalPresentingIssuesEndpoint: caseInfo.generalPresentingIssuesEndpoint,
       generalPresentingIssuesOtherSpecifiedBaseline:
         caseInfo.generalPresentingIssuesOtherSpecifiedBaseline,
@@ -118,14 +110,11 @@ export async function getClinicalCasesStats() {
     },
   );
 
-  stats.totalCases =
-    stats.completedCases + stats.followUpCases + stats.activeCases;
+  stats.totalCases = stats.completedCases + stats.followUpCases + stats.activeCases;
 
   const activeCasesPercentage = (stats.activeCases / stats.totalCases) * 100;
-  const followUpCasesPercentage =
-    (stats.followUpCases / stats.totalCases) * 100;
-  const completedCasesPercentage =
-    (stats.completedCases / stats.totalCases) * 100;
+  const followUpCasesPercentage = (stats.followUpCases / stats.totalCases) * 100;
+  const completedCasesPercentage = (stats.completedCases / stats.totalCases) * 100;
 
   return {
     ...stats,
@@ -272,57 +261,55 @@ export async function getSupervisorsInHub() {
 export async function getSchoolsInHub() {
   const supervisor = await currentSupervisor();
 
-  const [schools, supervisorsInHub, fellowsInProject, hubs] = await Promise.all(
-    [
-      db.school.findMany({
-        where: {
-          hubId: supervisor?.hubId,
-        },
-        include: {
-          students: true,
-          interventionSessions: {
-            select: {
-              id: true,
-              session: {
-                select: {
-                  sessionName: true,
-                  sessionLabel: true,
-                },
+  const [schools, supervisorsInHub, fellowsInProject, hubs] = await Promise.all([
+    db.school.findMany({
+      where: {
+        hubId: supervisor?.hubId,
+      },
+      include: {
+        students: true,
+        interventionSessions: {
+          select: {
+            id: true,
+            session: {
+              select: {
+                sessionName: true,
+                sessionLabel: true,
               },
             },
           },
         },
-      }),
-      db.supervisor.findMany({
-        where: {
-          hubId: supervisor?.hubId,
-        },
-      }),
-      db.fellow.findMany({
-        where: {
-          hub: {
-            projectId: CURRENT_PROJECT_ID,
-          },
-        },
-        include: {
-          hub: {
-            select: {
-              id: true,
-            },
-          },
-        },
-      }),
-      db.hub.findMany({
-        where: {
+      },
+    }),
+    db.supervisor.findMany({
+      where: {
+        hubId: supervisor?.hubId,
+      },
+    }),
+    db.fellow.findMany({
+      where: {
+        hub: {
           projectId: CURRENT_PROJECT_ID,
         },
-        select: {
-          id: true,
-          hubName: true,
+      },
+      include: {
+        hub: {
+          select: {
+            id: true,
+          },
         },
-      }),
-    ],
-  );
+      },
+    }),
+    db.hub.findMany({
+      where: {
+        projectId: CURRENT_PROJECT_ID,
+      },
+      select: {
+        id: true,
+        hubName: true,
+      },
+    }),
+  ]);
 
   return {
     schools,
@@ -354,8 +341,7 @@ export async function createStudentClinicalCase(data: {
         data: {
           studentId: data.studentId,
           schoolId: data.schoolId,
-          currentSupervisorId:
-            data.role === "SUPERVISOR" ? data.creatorId : null,
+          currentSupervisorId: data.role === "SUPERVISOR" ? data.creatorId : null,
           pseudonym: data.pseudonym,
           initialReferredFromSpecified: data.initialContact,
           initialReferredFrom: data.fellowId ?? data.supervisorId,
@@ -372,7 +358,7 @@ export async function createStudentClinicalCase(data: {
           id: data.studentId,
         },
         data: {
-          form: parseInt(data.classForm),
+          form: Number.parseInt(data.classForm),
           stream: data.stream,
           age: data.age,
           gender: data.gender,
@@ -380,9 +366,7 @@ export async function createStudentClinicalCase(data: {
       });
     });
 
-    revalidatePath(
-      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
-    );
+    revalidatePath(`${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`);
     return { success: true, message: "Clinical case created successfully" };
   } catch (error) {
     console.error(error);
@@ -486,9 +470,7 @@ export async function createTreatmentPlan(
       });
     });
 
-    revalidatePath(
-      `${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`,
-    );
+    revalidatePath(`${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`);
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -507,7 +489,7 @@ export async function updateStudentInfo(data: EditStudentInfoFormValues) {
           studentName: data.studentName,
           gender: data.gender,
           admissionNumber: data.admissionNumber,
-          form: parseInt(data.classForm),
+          form: Number.parseInt(data.classForm),
           stream: data.stream,
         },
       });

@@ -1,7 +1,9 @@
+import { signOut } from "next-auth/react";
+import type React from "react";
 import { fetchHubSupervisors } from "#/app/(platform)/hc/schools/actions";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
-import { SchoolsTableData } from "#/components/common/schools/columns";
+import type { SchoolsTableData } from "#/components/common/schools/columns";
 import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
 import SchoolDetailsForm from "#/components/common/schools/school-details-form";
 import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
@@ -11,8 +13,6 @@ import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-scho
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
-import React from "react";
 import SchoolsNav from "../../../../../components/common/schools/schools-nav";
 
 export default async function SchoolViewLayout({

@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -42,14 +42,9 @@ export function WeeklyReportForm({
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      positiveHighlights:
-        notes.find((note) => note.kind === "positive-highlights")?.content ??
-        "",
-      reportedChallenges:
-        notes.find((note) => note.kind === "reported-challenges")?.content ??
-        "",
-      recommendations:
-        notes.find((note) => note.kind === "recommendations")?.content ?? "",
+      positiveHighlights: notes.find((note) => note.kind === "positive-highlights")?.content ?? "",
+      reportedChallenges: notes.find((note) => note.kind === "reported-challenges")?.content ?? "",
+      recommendations: notes.find((note) => note.kind === "recommendations")?.content ?? "",
     },
   });
 
@@ -65,12 +60,12 @@ export function WeeklyReportForm({
     });
 
     if (success) {
-      toast({ title: `Point supervisor report saved` });
+      toast({ title: "Point supervisor report saved" });
       window.location.href = revalidatePath;
     } else {
       toast({
         variant: "destructive",
-        title: `Point supervisor report failed to save`,
+        title: "Point supervisor report failed to save",
       });
     }
   }

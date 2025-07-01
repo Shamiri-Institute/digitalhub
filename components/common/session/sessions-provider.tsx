@@ -1,16 +1,16 @@
-import { CalendarDate, isSameDay } from "@internationalized/date";
-import { Prisma } from "@prisma/client";
+import { type CalendarDate, isSameDay } from "@internationalized/date";
+import type { Prisma } from "@prisma/client";
 import {
-  Dispatch,
-  PropsWithChildren,
-  SetStateAction,
   createContext,
+  type Dispatch,
+  type PropsWithChildren,
+  type SetStateAction,
   useContext,
   useEffect,
   useState,
 } from "react";
 
-import { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
+import type { Filters } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { fetchInterventionSessions } from "#/lib/actions/fetch-sessions";
 import { getCalendarDate } from "#/lib/date-utils";
 
@@ -82,21 +82,13 @@ export function SessionsProvider({
   };
 
   return (
-    <SessionsContext.Provider
-      value={{ sessions, loading, setSessions, refresh }}
-    >
+    <SessionsContext.Provider value={{ sessions, loading, setSessions, refresh }}>
       {children}
     </SessionsContext.Provider>
   );
 }
 
-export function useSessions({
-  date,
-  hour,
-}: {
-  date?: CalendarDate;
-  hour?: number;
-}) {
+export function useSessions({ date, hour }: { date?: CalendarDate; hour?: number }) {
   const context = useContext(SessionsContext);
   if (context === undefined) {
     throw new Error("useSessions must be used within a SessionsProvider");

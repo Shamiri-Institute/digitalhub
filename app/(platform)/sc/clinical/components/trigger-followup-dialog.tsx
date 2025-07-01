@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { triggerCaseStatusToFollowup } from "#/app/(platform)/sc/clinical/action";
 import { Button } from "#/components/ui/button";
 import {
@@ -13,17 +14,13 @@ import {
 } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { useState } from "react";
 
 interface TriggerFollowupDialogProps {
   children: React.ReactNode;
   caseId: string;
 }
 
-export default function TriggerFollowupDialog({
-  children,
-  caseId,
-}: TriggerFollowupDialogProps) {
+export default function TriggerFollowupDialog({ children, caseId }: TriggerFollowupDialogProps) {
   const [open, setDialogOpen] = useState<boolean>(false);
 
   const handleConfirm = async () => {

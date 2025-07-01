@@ -1,4 +1,4 @@
-import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
+import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import CaseNotesForm from "#/app/(platform)/sc/clinical/components/case-notes-form";
 import CaseTerminationForm from "#/app/(platform)/sc/clinical/components/case-termination-form";
 import ClinicalCaseSessionsAttendanceHistory from "#/app/(platform)/sc/clinical/components/cases-sessions-attendance-history";
@@ -36,9 +36,7 @@ export default function ClinicalCaseActionsDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ViewEditClinicalCaseStudentInfo clinicalCase={clinicalCase}>
@@ -60,16 +58,8 @@ export default function ClinicalCaseActionsDropdownMenu({
             </ConsultClinicalExpert>
           </>
         )}
-        <MarkCaseAsSpecial
-          caseId={clinicalCase.id}
-          reason={clinicalCase.flaggedReason}
-          role={role}
-        >
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+        <MarkCaseAsSpecial caseId={clinicalCase.id} reason={clinicalCase.flaggedReason} role={role}>
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
             Mark as special/ambiguous
           </div>
         </MarkCaseAsSpecial>
@@ -89,7 +79,7 @@ export default function ClinicalCaseActionsDropdownMenu({
             )}
           >
             Treatment plan{" "}
-            {clinicalCase?.treatmentPlanUploaded ? `(Uploaded)` : ""}
+            {clinicalCase?.treatmentPlanUploaded ? "(Uploaded)" : ""}
           </div>
         </TreatmentPlanForm>
         <CaseNotesForm clinicalCase={clinicalCase} role={role}>
@@ -108,8 +98,7 @@ export default function ClinicalCaseActionsDropdownMenu({
           <div
             className={cn(
               "px-2 py-1.5 text-sm",
-              clinicalCase.caseStatus === "FollowUp" ||
-                clinicalCase.caseStatus === "Terminated"
+              clinicalCase.caseStatus === "FollowUp" || clinicalCase.caseStatus === "Terminated"
                 ? "pointer-events-none cursor-not-allowed text-gray-400"
                 : "cursor-pointer text-shamiri-black",
             )}

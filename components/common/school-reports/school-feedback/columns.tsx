@@ -1,23 +1,20 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
+import type { SchoolFeedbackType } from "#/app/(platform)/sc/reporting/school-reports/school-feedback/action";
 import SchoolFeedbackDropdownMenu from "#/components/common/school-reports/school-feedback/school-feedback-action-dropdown";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { ColumnDef } from "@tanstack/react-table";
-import Image from "next/image";
 
 export const columns: ColumnDef<SchoolFeedbackType>[] = [
   {
     id: "button",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -51,24 +48,20 @@ export const columns: ColumnDef<SchoolFeedbackType>[] = [
     accessorKey: "studentTeacherSatisfaction",
     header: "(Avg). Student & teacher satisfaction",
     cell: ({ row }) => {
-      const studentTeacherSatisfaction =
-        row.original.studentTeacherSatisfaction;
+      const studentTeacherSatisfaction = row.original.studentTeacherSatisfaction;
       return <DataTableRatingStars rating={studentTeacherSatisfaction} />;
     },
     id: "Student teacher satisfaction",
   },
 ];
 
-export const subColumns: ColumnDef<
-  SchoolFeedbackType["supervisorRatings"][number]
->[] = [
+export const subColumns: ColumnDef<SchoolFeedbackType["supervisorRatings"][number]>[] = [
   {
     id: "checkbox",
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -102,9 +95,7 @@ export const subColumns: ColumnDef<
     accessorKey: "studentTeacherSatisfaction",
     header: "Student & teacher satisfaction",
     cell: ({ row }) => {
-      const studentTeacherSatisfaction = Number(
-        row.original.studentTeacherSatisfaction,
-      );
+      const studentTeacherSatisfaction = Number(row.original.studentTeacherSatisfaction);
       return <DataTableRatingStars rating={studentTeacherSatisfaction ?? 0} />;
     },
     id: "Student & teacher satisfaction",

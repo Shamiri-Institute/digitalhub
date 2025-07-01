@@ -1,3 +1,9 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { usePathname } from "next/navigation";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { CreateGroupSchema } from "#/components/common/group/schema";
 import { Icons } from "#/components/icons";
@@ -29,12 +35,6 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { createInterventionGroup } from "#/lib/actions/group";
 import { getSchoolInitials } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
-import { usePathname } from "next/navigation";
-import React, { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export default function CreateGroup({
   supervisors,
@@ -73,9 +73,7 @@ export default function CreateGroup({
     if (!response.success) {
       toast({
         variant: "destructive",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -133,8 +131,7 @@ export default function CreateGroup({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Select supervisor{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Select supervisor <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={(val) => {
@@ -152,10 +149,7 @@ export default function CreateGroup({
                           <SelectContent className="max-h-[200px]">
                             {supervisors.map((supervisor) => {
                               return (
-                                <SelectItem
-                                  key={supervisor.id}
-                                  value={supervisor.id}
-                                >
+                                <SelectItem key={supervisor.id} value={supervisor.id}>
                                   {supervisor.supervisorName}
                                 </SelectItem>
                               );
@@ -172,8 +166,7 @@ export default function CreateGroup({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Select fellow{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Select fellow <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -189,26 +182,18 @@ export default function CreateGroup({
                           <SelectContent className="max-h-[200px]">
                             {supervisorWatcher !== undefined
                               ? supervisors
-                                  .find(
-                                    (supervisor) =>
-                                      supervisorWatcher === supervisor.id,
-                                  )!
+                                  .find((supervisor) => supervisorWatcher === supervisor.id)!
                                   .fellows.map((fellow) => {
                                     return (
-                                      <SelectItem
-                                        key={fellow.id}
-                                        value={fellow.id}
-                                      >
+                                      <SelectItem key={fellow.id} value={fellow.id}>
                                         {fellow.fellowName}
                                       </SelectItem>
                                     );
                                   })
                               : []}
                             {supervisorWatcher !== undefined &&
-                            supervisors.find(
-                              (supervisor) =>
-                                supervisorWatcher === supervisor.id,
-                            )!.fellows.length === 0 ? (
+                            supervisors.find((supervisor) => supervisorWatcher === supervisor.id)!
+                              .fellows.length === 0 ? (
                               <SelectItem value={" "} disabled={true}>
                                 Supervisor has no fellows assigned.
                               </SelectItem>

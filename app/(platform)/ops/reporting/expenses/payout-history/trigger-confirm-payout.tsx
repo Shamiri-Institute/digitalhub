@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { confirmPayoutAction } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import { Button } from "#/components/ui/button";
 import {
@@ -11,17 +12,13 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { useToast } from "#/components/ui/use-toast";
-import { useState } from "react";
 
 interface TriggerConfirmPayoutProps {
   dateAdded: Date;
   disabled?: boolean;
 }
 
-export default function TriggerConfirmPayout({
-  dateAdded,
-  disabled,
-}: TriggerConfirmPayoutProps) {
+export default function TriggerConfirmPayout({ dateAdded, disabled }: TriggerConfirmPayoutProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -60,14 +57,11 @@ export default function TriggerConfirmPayout({
         <DialogHeader>
           <DialogTitle>Confirm Payout</DialogTitle>
           <DialogDescription>
-            This action will confirm the payout for all processed payments on
-            this date.
+            This action will confirm the payout for all processed payments on this date.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Please be aware that this action:
-          </p>
+          <p className="text-sm text-muted-foreground">Please be aware that this action:</p>
           <ul className="list-disc space-y-2 pl-4 text-sm text-muted-foreground">
             <li>Cannot be reversed once confirmed</li>
             <li>Will confirm all processed payments for this date</li>
@@ -75,19 +69,10 @@ export default function TriggerConfirmPayout({
           </ul>
         </div>
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-            disabled={loading}
-          >
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button
-            variant="brand"
-            onClick={handleConfirm}
-            disabled={loading}
-            loading={loading}
-          >
+          <Button variant="brand" onClick={handleConfirm} disabled={loading} loading={loading}>
             Confirm Payout
           </Button>
         </DialogFooter>

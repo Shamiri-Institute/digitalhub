@@ -1,9 +1,13 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import {
   editFellowComplaint,
-  FellowComplaintsType,
+  type FellowComplaintsType,
 } from "#/components/common/fellow-reports/complaints/actions";
 import { Button } from "#/components/ui/button";
 import {
@@ -23,10 +27,6 @@ import {
 } from "#/components/ui/form";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 const ComplaintSchema = z.object({
   complaint: z.string().min(1, "Complaint is required"),
@@ -54,10 +54,7 @@ export default function ViewEditFellowComplaints({
 
   const onSubmit = async (data: ComplaintFormValues) => {
     try {
-      const response = await editFellowComplaint(
-        fellowComplaints.complaintId,
-        data.complaint,
-      );
+      const response = await editFellowComplaint(fellowComplaints.complaintId, data.complaint);
 
       if (response.success) {
         toast({
@@ -92,10 +89,7 @@ export default function ViewEditFellowComplaints({
         <DialogHeader className="bg-white">
           <h2>{`${action === "view" ? "View" : "Edit"} Fellow Complaint`}</h2>
         </DialogHeader>
-        <DialogAlertWidget
-          label={`${fellowComplaints.fellowName}`}
-          separator={true}
-        />
+        <DialogAlertWidget label={`${fellowComplaints.fellowName}`} separator={true} />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <div className="mb-4 grid grid-cols-2 gap-4">
             <div>
@@ -126,11 +120,7 @@ export default function ViewEditFellowComplaints({
 
               {!isViewOnly && (
                 <DialogFooter>
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    onClick={() => setDialogOpen(false)}
-                  >
+                  <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
                     Cancel
                   </Button>
                   <Button

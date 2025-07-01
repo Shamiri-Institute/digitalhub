@@ -1,21 +1,15 @@
 "use client";
-import { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
+import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import { columns } from "#/app/(platform)/cl/clinical/columns";
 import ViewCaseSessions from "#/app/(platform)/cl/clinical/components/view-case-session";
 import ViewEmergencyPresentingIssues from "#/app/(platform)/cl/clinical/components/view-emergency-presenting-issues";
 import ViewGeneralPresentingIssues from "#/app/(platform)/cl/clinical/components/view-general-presenting-issues";
 import DataTable from "#/components/data-table";
 
-export default function AllHubClinicalCasesTable({
-  cases,
-}: {
-  cases: HubClinicalCases[];
-}) {
+export default function AllHubClinicalCasesTable({ cases }: { cases: HubClinicalCases[] }) {
   return (
     <>
-      <h2 className="text-lg font-medium">
-        All Supervisor Cases In This Hub ({cases.length})
-      </h2>
+      <h2 className="text-lg font-medium">All Supervisor Cases In This Hub ({cases.length})</h2>
       <DataTable
         data={cases}
         columns={columns}
@@ -29,20 +23,12 @@ export default function AllHubClinicalCasesTable({
               caseStatus={row.original.caseStatus ?? ""}
             />
             <ViewEmergencyPresentingIssues
-              emergencyPresentingIssuesBaseline={
-                row.original.emergencyPresentingIssuesBaseline
-              }
-              emergencyPresentingIssuesEndpoint={
-                row.original.emergencyPresentingIssuesEndpoint
-              }
+              emergencyPresentingIssuesBaseline={row.original.emergencyPresentingIssuesBaseline}
+              emergencyPresentingIssuesEndpoint={row.original.emergencyPresentingIssuesEndpoint}
             />
             <ViewGeneralPresentingIssues
-              generalPresentingIssuesBaseline={
-                row.original.generalPresentingIssuesBaseline
-              }
-              generalPresentingIssuesEndpoint={
-                row.original.generalPresentingIssuesEndpoint
-              }
+              generalPresentingIssuesBaseline={row.original.generalPresentingIssuesBaseline}
+              generalPresentingIssuesEndpoint={row.original.generalPresentingIssuesEndpoint}
               generalPresentingIssuesOtherSpecifiedBaseline={
                 row.original.generalPresentingIssuesOtherSpecifiedBaseline
               }

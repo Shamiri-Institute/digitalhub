@@ -1,11 +1,7 @@
+import type React from "react";
 import PageFooter from "#/components/ui/page-footer";
-import React from "react";
 
-export default async function ClinicalTeamLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function ClinicalTeamLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="w-full self-stretch">
       <div className="container w-full grow bg-white py-10">{children}</div>

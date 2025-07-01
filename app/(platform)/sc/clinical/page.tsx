@@ -1,3 +1,4 @@
+import { signOut } from "next-auth/react";
 import {
   getClinicalCases,
   getReferredCasesToSupervisor,
@@ -8,17 +9,11 @@ import ClinicalCasesTable from "#/app/(platform)/sc/clinical/components/clinical
 import { CasesReferredToMe } from "#/components/common/clinical/cases-referred-to-me";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
-import { signOut } from "next-auth/react";
 
 export default async function ClinicalPage() {
   const cases = await getClinicalCases();
-  const {
-    schools,
-    fellowsInProject,
-    supervisorsInHub,
-    currentSupervisorId,
-    hubs,
-  } = await getSchoolsInHub();
+  const { schools, fellowsInProject, supervisorsInHub, currentSupervisorId, hubs } =
+    await getSchoolsInHub();
 
   if (!currentSupervisorId) {
     await signOut({ callbackUrl: "/login" });
@@ -33,10 +28,7 @@ export default async function ClinicalPage() {
           <div className="flex flex-col items-center justify-between space-y-3">
             <ClinicalCasesStats />
             <Separator />
-            <CasesReferredToMe
-              cases={referredCases}
-              currentSupervisorId={currentSupervisorId!}
-            />
+            <CasesReferredToMe cases={referredCases} currentSupervisorId={currentSupervisorId!} />
             <ClinicalCasesTable
               cases={cases}
               schools={schools}

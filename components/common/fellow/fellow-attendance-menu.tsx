@@ -1,6 +1,7 @@
 "use client";
 
-import { FellowAttendancesTableData } from "#/components/common/fellow/fellow-attendance";
+import type { Dispatch, SetStateAction } from "react";
+import type { FellowAttendancesTableData } from "#/components/common/fellow/fellow-attendance";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -10,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { Dispatch, SetStateAction } from "react";
 
 export default function FellowAttendanceMenu({
   state,
@@ -18,9 +18,7 @@ export default function FellowAttendanceMenu({
   disabled,
 }: {
   state: {
-    setAttendance: Dispatch<
-      SetStateAction<FellowAttendancesTableData | undefined>
-    >;
+    setAttendance: Dispatch<SetStateAction<FellowAttendancesTableData | undefined>>;
     setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
   };
   attendance: FellowAttendancesTableData;
@@ -37,9 +35,7 @@ export default function FellowAttendanceMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem

@@ -32,30 +32,26 @@ export const createSupProgressNoteToGDriveAndSaveOnDb = async (inputData: {
 
     const mimeType = mime.lookup(filePath);
 
-    const { data } = await google
-      .drive({ version: "v3", auth: auth })
-      .files.create({
-        media: {
-          mimeType: mimeType || "application/octet-stream",
-          body: fs.createReadStream(filePath),
-        },
-        requestBody: {
-          name: `${inputData.supervisorName}_${inputData.studentId}_PN`,
-          parents: [process.env.PROGRESSNOTE_FILEID], //folder id in which file should be uploaded
-        },
-        fields: "id,name",
-      });
+    const { data } = await google.drive({ version: "v3", auth: auth }).files.create({
+      media: {
+        mimeType: mimeType || "application/octet-stream",
+        body: fs.createReadStream(filePath),
+      },
+      requestBody: {
+        name: `${inputData.supervisorName}_${inputData.studentId}_PN`,
+        parents: [process.env.PROGRESSNOTE_FILEID], //folder id in which file should be uploaded
+      },
+      fields: "id,name",
+    });
 
     await createDocumentPermission(data.id, inputData.supervisorEmail);
 
     const fileId = data.id;
 
-    const shareResponse = await google
-      .drive({ version: "v3", auth: auth })
-      .files.get({
-        fileId: fileId,
-        fields: "webViewLink",
-      });
+    const shareResponse = await google.drive({ version: "v3", auth: auth }).files.get({
+      fileId: fileId,
+      fields: "webViewLink",
+    });
 
     const shareableLink = shareResponse.data.webViewLink;
 
@@ -65,10 +61,7 @@ export const createSupProgressNoteToGDriveAndSaveOnDb = async (inputData: {
   }
 };
 
-export const createDocumentPermission = async (
-  fileId: string,
-  targetUserEmail: string,
-) => {
+export const createDocumentPermission = async (fileId: string, targetUserEmail: string) => {
   const service = google.drive({ version: "v3", auth });
 
   const permissionIds = [];

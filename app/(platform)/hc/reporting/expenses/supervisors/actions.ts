@@ -1,9 +1,9 @@
 "use server";
 
+import { signOut } from "next-auth/react";
 import { currentHubCoordinator } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
 
 export type HubSupervisorExpensesType = Awaited<
   ReturnType<typeof loadHubSupervisorExpenses>
@@ -60,13 +60,7 @@ export async function loadHubSupervisorExpenses() {
   });
 }
 
-export async function deleteSupervisorExpenseRequest({
-  id,
-  name,
-}: {
-  id: string;
-  name: string;
-}) {
+export async function deleteSupervisorExpenseRequest({ id, name }: { id: string; name: string }) {
   try {
     const hubCoordinator = await currentHubCoordinator();
 
@@ -165,7 +159,7 @@ export async function addSupervisorExpense({
         hubId: hubCoordinator.assignedHubId!,
         hubCoordinatorId: hubCoordinator.id,
         incurredAt: new Date(data.week),
-        amount: parseInt(data.totalAmount),
+        amount: Number.parseInt(data.totalAmount),
         kind: data.expenseType,
         status: "PENDING",
         details: {
@@ -217,7 +211,7 @@ export async function updateSupervisorExpense({
       where: { id },
       data: {
         incurredAt: new Date(data.week),
-        amount: parseInt(data.totalAmount),
+        amount: Number.parseInt(data.totalAmount),
         kind: data.expenseType,
         details: {
           subtype: data.expenseType,

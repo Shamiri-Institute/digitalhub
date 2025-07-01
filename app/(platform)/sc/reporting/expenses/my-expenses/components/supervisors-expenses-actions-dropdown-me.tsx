@@ -1,4 +1,4 @@
-import { SupervisorExpensesType } from "#/app/(platform)/sc/reporting/expenses/my-expenses/actions";
+import type { SupervisorExpensesType } from "#/app/(platform)/sc/reporting/expenses/my-expenses/actions";
 import HCDeleteExpenseRequest from "#/components/common/expenses/supervisor-expenses/delete-expense-request";
 import HCEditSupervisorExpense from "#/components/common/expenses/supervisor-expenses/edit-expense";
 import { Icons } from "#/components/icons";
@@ -27,14 +27,10 @@ export default function SupervisorExpenseDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <HCEditSupervisorExpense expense={expense}>
-          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
-            Edit Request
-          </div>
+          <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">Edit Request</div>
         </HCEditSupervisorExpense>
 
         <div className="cursor-pointer px-2 py-1.5 text-sm text-shamiri-black">
@@ -43,11 +39,7 @@ export default function SupervisorExpenseDropdownMenu({
         <DropdownMenuSeparator />
 
         <HCDeleteExpenseRequest expense={expense}>
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-red",
-            )}
-          >
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-red")}>
             Delete request
           </div>
         </HCDeleteExpenseRequest>

@@ -1,15 +1,15 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { usePathname } from "next/navigation";
+import type { Dispatch, SetStateAction } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { SchoolFilesTableData } from "#/components/common/files/columns";
+import type { SchoolFilesTableData } from "#/components/common/files/columns";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -19,15 +19,9 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import { updateUploadedSchoolFile } from "#/lib/actions/file";
-
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { updateUploadedSchoolFile } from "#/lib/actions/file";
 
 const FormSchema = z.object({
   fileName: z.string({
@@ -55,15 +49,11 @@ export default function RenameUploadedFile({
 
   const onSubmit = async (values: z.infer<typeof FormSchema>) => {
     try {
-      const response = await updateUploadedSchoolFile(
-        document.id,
-        values.fileName,
-      );
+      const response = await updateUploadedSchoolFile(document.id, values.fileName);
       if (!response.success) {
         toast({
           description:
-            response.message ??
-            "Something went wrong during submission, please try again",
+            response.message ?? "Something went wrong during submission, please try again",
         });
         return;
       }
@@ -92,7 +82,7 @@ export default function RenameUploadedFile({
         <DialogAlertWidget>
           <div className="flex items-center gap-2">
             <span>{document.fileName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
             <span>{document.type}</span>
           </div>
         </DialogAlertWidget>
@@ -107,8 +97,7 @@ export default function RenameUploadedFile({
                     render={({ field }) => (
                       <FormItem className="col-span-2">
                         <FormLabel>
-                          File Name{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          File Name <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} />

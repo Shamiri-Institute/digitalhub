@@ -1,7 +1,7 @@
 "use client";
-import { SupervisorExpensesType } from "#/app/(platform)/sc/reporting/expenses/my-expenses/actions";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { SupervisorExpensesType } from "#/app/(platform)/sc/reporting/expenses/my-expenses/actions";
 import { Badge } from "#/components/ui/badge";
-import { ColumnDef } from "@tanstack/react-table";
 import SupervisorExpenseDropdownMenu from "./supervisors-expenses-actions-dropdown-me";
 
 export const columns: ColumnDef<SupervisorExpensesType>[] = [

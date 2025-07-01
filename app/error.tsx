@@ -1,12 +1,11 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
+import Link from "next/link";
 import { signOut } from "next-auth/react";
 import * as React from "react";
-
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import Link from "next/link";
 
 export default function Error({
   error,
@@ -53,12 +52,10 @@ export default function Error({
       <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl border border-border bg-white shadow-xl">
         <div className="flex flex-col items-center justify-center space-y-3 border-b border-gray-200 bg-white px-4 py-6 pt-8 text-center sm:px-16">
           <Icons.logo className="h-9 text-sky-600 lg:h-10" />
-          <h2 className="text-lg font-semibold text-gray-900">
-            Oops! Something went wrong!
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900">Oops! Something went wrong!</h2>
           <p className="text-sm text-muted-foreground">
-            We couldn&apos;t complete your request. Please try refreshing the
-            page or clearing your browser cache.
+            We couldn&apos;t complete your request. Please try refreshing the page or clearing your
+            browser cache.
             <br />
             Need assistance? Our support team is ready to help!{" "}
             <Link

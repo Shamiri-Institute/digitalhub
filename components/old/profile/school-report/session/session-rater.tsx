@@ -36,10 +36,7 @@ export function SessionRater({
   const { toast } = useToast();
 
   const onRatingSelect = React.useCallback(
-    async (
-      kind: "student-behavior" | "admin-support" | "workload",
-      rating: number,
-    ) => {
+    async (kind: "student-behavior" | "admin-support" | "workload", rating: number) => {
       const { success } = await rateSession({
         kind,
         rating,
@@ -77,13 +74,9 @@ export function SessionRater({
           </AccordionTrigger>
 
           <AccordionContent>
-            <div
-              className={cn("pt-4", schoolNotAssigned && "pointer-events-none")}
-            >
+            <div className={cn("pt-4", schoolNotAssigned && "pointer-events-none")}>
               <div className="flex items-center justify-between">
-                <p className="text-sm font-normal text-brand">
-                  Student behavior
-                </p>
+                <p className="text-sm font-normal text-brand">Student behavior</p>
                 <RatingStars
                   onSelect={(rating) => {
                     onRatingSelect("student-behavior", rating);
@@ -121,13 +114,7 @@ export function SessionRater({
   );
 }
 
-function RatingStars({
-  rating,
-  onSelect,
-}: {
-  rating: number;
-  onSelect: (rating: number) => void;
-}) {
+function RatingStars({ rating, onSelect }: { rating: number; onSelect: (rating: number) => void }) {
   return (
     <div className="flex flex-1 justify-end">
       {[1, 2, 3, 4, 5].map((i) => {

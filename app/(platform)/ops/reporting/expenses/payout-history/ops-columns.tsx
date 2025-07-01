@@ -1,23 +1,20 @@
 "use client";
 
-import { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
+import type { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
+import Image from "next/image";
+import type { OpsHubsPayoutHistoryType } from "#/app/(platform)/ops/reporting/expenses/payout-history/actions";
 import TriggerConfirmPayout from "#/app/(platform)/ops/reporting/expenses/payout-history/trigger-confirm-payout";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
-import Image from "next/image";
 
 export const opsColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
   {
     id: "button",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -113,10 +110,7 @@ export const opsColumns: ColumnDef<OpsHubsPayoutHistoryType>[] = [
       };
 
       return (
-        <button
-          onClick={downloadCSV}
-          className="text-shamiri-new-blue hover:underline"
-        >
+        <button onClick={downloadCSV} className="text-shamiri-new-blue hover:underline">
           Download .csv
         </button>
       );

@@ -1,6 +1,10 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
+import type { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -20,10 +24,6 @@ import {
 import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { stringValidation } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export const RequestSpecialSessionSchema = z.object({
   comments: stringValidation("Please enter your comments"),
@@ -55,9 +55,7 @@ export default function ApproveSpecialSessionFellows({
     },
   });
 
-  const onSubmit = async (
-    data: z.infer<typeof RequestSpecialSessionSchema>,
-  ) => {
+  const onSubmit = async (data: z.infer<typeof RequestSpecialSessionSchema>) => {
     // todo: add action to approve special session
     form.reset();
     setDialogOpen(false);
@@ -86,11 +84,7 @@ export default function ApproveSpecialSessionFellows({
                       <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Input placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -101,9 +95,7 @@ export default function ApproveSpecialSessionFellows({
                 name="comments"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Confirm comments/reason for special session
-                    </FormLabel>
+                    <FormLabel>Confirm comments/reason for special session</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Extra transport cost to the school"

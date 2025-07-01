@@ -1,12 +1,11 @@
 "use client";
 
+import { type ImplementerRole, Prisma } from "@prisma/client";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
-import {
-  columns,
-  SchoolFellowTableData,
-} from "#/components/common/fellow/columns";
+import { columns, type SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import { BatchUploadDownloadFellow } from "#/components/common/fellow/upload-csv";
@@ -21,8 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+
 import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
 export default function FellowsDatatable({
@@ -99,13 +97,7 @@ export default function FellowsDatatable({
           <FellowDetailsForm
             open={detailsDialog}
             onOpenChange={setDetailsDialog}
-            mode={
-              role === "HUB_COORDINATOR"
-                ? "view"
-                : role === "SUPERVISOR"
-                  ? "edit"
-                  : null
-            }
+            mode={role === "HUB_COORDINATOR" ? "view" : role === "SUPERVISOR" ? "edit" : null}
             fellow={fellow}
           />
           <AttendanceHistory
@@ -140,9 +132,7 @@ export default function FellowsDatatable({
                 <DialogAlertWidget>
                   <div className="flex items-center gap-2">
                     <span>{fellow.fellowName}</span>
-                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                      {""}
-                    </span>
+                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
                     <span>{fellow.groupName}</span>
                   </div>
                 </DialogAlertWidget>
@@ -196,9 +186,7 @@ export function FellowsDatatableMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem

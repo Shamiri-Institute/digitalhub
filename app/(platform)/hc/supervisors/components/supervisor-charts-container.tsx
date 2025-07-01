@@ -19,12 +19,11 @@ export default async function SupervisorChartsWrapper({
       return null;
     }
 
-    const dropoutData = await fetchSupervisorDropoutReasons(
-      coordinator.assignedHubId,
-    );
+    const dropoutData = await fetchSupervisorDropoutReasons(coordinator.assignedHubId);
 
-    const supervisorDataCompletenessPercentage =
-      fetchSupervisorDataCompletenessData(coordinator?.assignedHubId);
+    const supervisorDataCompletenessPercentage = fetchSupervisorDataCompletenessData(
+      coordinator?.assignedHubId,
+    );
 
     const supervisorsSessionRatings = fetchSupervisorSessionRatingAverages(
       coordinator?.assignedHubId as string,
@@ -61,9 +60,7 @@ export default async function SupervisorChartsWrapper({
     <SupervisorCharts
       attendanceData={supervisorAttendanceData}
       dropoutData={dropoutData}
-      supervisorDataCompletenessPercentage={
-        supervisorDataCompletenessPercentage
-      }
+      supervisorDataCompletenessPercentage={supervisorDataCompletenessPercentage}
       supervisorsSessionRatings={supervisorsSessionRatings}
     />
   );
