@@ -78,8 +78,7 @@ export default function ClinicalCaseActionsDropdownMenu({
                 : "pointer-events-none  cursor-not-allowed text-gray-400",
             )}
           >
-            Treatment plan{" "}
-            {clinicalCase?.treatmentPlanUploaded ? "(Uploaded)" : ""}
+            Treatment plan {clinicalCase?.treatmentPlanUploaded ? "(Uploaded)" : ""}
           </div>
         </TreatmentPlanForm>
         <CaseNotesForm clinicalCase={clinicalCase} role={role}>

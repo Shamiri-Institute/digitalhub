@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useState } from "react";
 
@@ -26,11 +21,7 @@ interface ViewTreatmentPlanProps {
   pseudonym: string;
 }
 
-export function ViewTreatmentPlan({
-  children,
-  treatmentPlan,
-  pseudonym,
-}: ViewTreatmentPlanProps) {
+export function ViewTreatmentPlan({ children, treatmentPlan, pseudonym }: ViewTreatmentPlanProps) {
   const [open, setOpen] = useState(false);
 
   const formatSessionFrequency = (frequency: string) => {
@@ -64,9 +55,7 @@ export function ViewTreatmentPlan({
             <div className="space-y-4">
               <div className="rounded-lg border p-4">
                 <div className="mb-2 flex items-start justify-between">
-                  <span className="text-sm font-medium">
-                    Treatment Plan Details
-                  </span>
+                  <span className="text-sm font-medium">Treatment Plan Details</span>
                   <span className="text-xs text-muted-foreground">
                     {new Date(treatmentPlan.createdAt).toLocaleDateString()}
                   </span>
@@ -79,8 +68,7 @@ export function ViewTreatmentPlan({
                       {treatmentPlan.currentORSScore || "Not specified"}
                     </p>
                     <p>
-                      <strong>Planned Sessions:</strong>{" "}
-                      {treatmentPlan.plannedSessions}
+                      <strong>Planned Sessions:</strong> {treatmentPlan.plannedSessions}
                     </p>
                     <p>
                       <strong>Session Frequency:</strong>{" "}
@@ -95,11 +83,9 @@ export function ViewTreatmentPlan({
                       <strong>Planned Treatment Interventions:</strong>
                     </p>
                     <ul className="ml-4 mt-1 list-disc text-sm">
-                      {treatmentPlan.plannedTreatmentIntervention.map(
-                        (intervention, index) => (
-                          <li key={index}>{intervention}</li>
-                        ),
-                      )}
+                      {treatmentPlan.plannedTreatmentIntervention.map((intervention, index) => (
+                        <li key={index}>{intervention}</li>
+                      ))}
                     </ul>
                   </div>
                   {treatmentPlan.otherTreatmentIntervention && (
