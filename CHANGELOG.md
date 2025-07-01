@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.5.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.4.0...v1.5.0) (2025-07-01)
+
+
+### Features
+
+* add more clinical session options and cl view followup notes ([#487](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/487)) ([9773968](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/97739687dad2c7848a69533a0559c72a8c56f953))
+* make ors score optional and add more fields on view casenote ([#485](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/485)) ([c1bccc1](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c1bccc19180df4078d150e6d5e0442c4f8ed299a))
+* update clinical case creation to reflect fellow movement across hubs ([#484](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/484)) ([510136b](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/510136ba9be9e2c8bbb04793227bd3ca5e58303b))
+* update role for handling case referral ([#486](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/486)) ([beafcc1](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/beafcc19a7022c92c8a9829a953fb5ab9c77c78f))
+
 ## [1.4.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.3.0...v1.4.0) (2025-06-19)
 
 ### Features
