@@ -18,6 +18,11 @@ export default async function ClinicalPage() {
   const allClinicalLeadCases = await getClinicalCasesCreatedByClinicalLead();
   const { schools, fellowsInProject, supervisorsInHub, currentClinicalLeadId, hubs } =
     await getSchoolsInClinicalLeadHub();
+
+  if (!currentClinicalLeadId) {
+    throw new Error("Clinical lead not found");
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">
