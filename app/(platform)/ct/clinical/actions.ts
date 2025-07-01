@@ -227,6 +227,21 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
             'sessionId', cct.session_id
           ) AS termination_data
         FROM "clinical_case_termination" cct
+      ),
+      treatment_plan AS (
+        SELECT 
+          cftp.case_id,
+          json_build_object(
+            'id', cftp.id,
+            'createdAt', cftp.created_at,
+            'currentORSScore', cftp.current_ors_score,
+            'plannedSessions', cftp.planned_sessions,
+            'sessionFrequency', cftp.session_frequency,
+            'plannedTreatmentIntervention', cftp.planned_treatment_intervention,
+            'otherTreatmentIntervention', cftp.other_treatment_intervention,
+            'plannedTreatmentInterventionExplanation', cftp.planned_treatment_intervention_explanation
+          ) AS treatment_plan_data
+        FROM "clinical_follow_up_treatment_plan" cftp
       )
       SELECT 
         csi.id,
