@@ -35,9 +35,9 @@ export function ViewTerminationReasons({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <div onClick={() => setOpen(true)} className="cursor-pointer">
+      <button type="button" onClick={() => setOpen(true)}>
         {children}
-      </div>
+      </button>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Termination Details - {pseudonym}</DialogTitle>
