@@ -16,7 +16,7 @@ export default function ClinicalLeadCases({ clinicalLeadCases }: { clinicalLeadC
         renderSubComponent={({ row }) => (
           <div className="space-y-6 p-4">
             <ClinicalDiagnosingBoard currentcase={row.original} />
-            <ViewMarkClinicalSessions currentcase={row.original} role="CLINICAL_LEAD" />
+            <ViewMarkClinicalSessions currentcase={row.original} userRole="CLINICAL_LEAD" />
           </div>
         )}
         emptyStateMessage="No clinical cases created by you"
