@@ -163,6 +163,16 @@ export type HubClinicalCases = {
     terminationReasonExplanation: string;
     sessionId: string;
   } | null;
+  followUpTreatmentPlan: {
+    id: string;
+    createdAt: Date;
+    currentORSScore: number | null;
+    plannedSessions: number;
+    sessionFrequency: string;
+    plannedTreatmentIntervention: string[];
+    otherTreatmentIntervention: string | null;
+    plannedTreatmentInterventionExplanation: string;
+  } | null;
 };
 
 export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
@@ -206,6 +216,21 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
             'sessionId', cct.session_id
           ) AS termination_data
         FROM "clinical_case_termination" cct
+      ),
+      treatment_plan AS (
+        SELECT 
+          cftp.case_id,
+          json_build_object(
+            'id', cftp.id,
+            'createdAt', cftp.created_at,
+            'currentORSScore', cftp.current_ors_score,
+            'plannedSessions', cftp.planned_sessions,
+            'sessionFrequency', cftp.session_frequency,
+            'plannedTreatmentIntervention', cftp.planned_treatment_intervention,
+            'otherTreatmentIntervention', cftp.other_treatment_intervention,
+            'plannedTreatmentInterventionExplanation', cftp.planned_treatment_intervention_explanation
+          ) AS treatment_plan_data
+        FROM "clinical_follow_up_treatment_plan" cftp
       )
       SELECT 
         csi.id,
@@ -244,7 +269,8 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
           LIMIT 1
         ) as "upcomingSession",
         COALESCE(cn.notes_data, '[]'::json) as "caseNotes",
-        ct.termination_data as "termination"
+        ct.termination_data as "termination",
+        tp.treatment_plan_data as "followUpTreatmentPlan"
       FROM 
         "clinical_screening_info" csi
       LEFT JOIN 
@@ -261,6 +287,8 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
         case_notes cn ON csi.id = cn.case_id
       LEFT JOIN
         case_termination ct ON csi.id = ct.case_id
+      LEFT JOIN
+        treatment_plan tp ON csi.id = tp.case_id
       WHERE 
         (s."hub_id" = ${clinicalLead.assignedHubId})
       ORDER BY 
