@@ -35,6 +35,7 @@ export async function getClinicalCases() {
       },
       sessions: true,
       clinicalCaseNotes: true,
+      followUptreatmentPlan: true,
     },
   });
 
@@ -80,6 +81,7 @@ export async function getClinicalCases() {
       clinicalCaseNotes: caseInfo.clinicalCaseNotes,
       clinicalLeadId: caseInfo.clinicalLeadId,
       role: "SUPERVISOR",
+      treatmentPlanUploaded: caseInfo.followUptreatmentPlan ? true : false,
     };
   });
 }

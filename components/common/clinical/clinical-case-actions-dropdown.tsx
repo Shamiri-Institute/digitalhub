@@ -82,12 +82,14 @@ export default function ClinicalCaseActionsDropdownMenu({
           <div
             className={cn(
               "px-2 py-1.5 text-sm",
-              clinicalCase.caseStatus === "FollowUp"
+              clinicalCase.caseStatus === "FollowUp" &&
+                clinicalCase?.treatmentPlanUploaded === false
                 ? "cursor-pointer text-shamiri-black"
                 : "pointer-events-none  cursor-not-allowed text-gray-400",
             )}
           >
-            Treatment plan
+            Treatment plan{" "}
+            {clinicalCase?.treatmentPlanUploaded ? `(Uploaded)` : ""}
           </div>
         </TreatmentPlanForm>
         <CaseNotesForm clinicalCase={clinicalCase} role={role}>
