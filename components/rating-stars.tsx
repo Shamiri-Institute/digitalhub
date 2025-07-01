@@ -13,20 +13,14 @@ export default function RatingStars({
         if (i <= rating) {
           return (
             <button key={i} onClick={() => onSelect(i)}>
-              <Icons.star
-                key={i}
-                className="h-6 w-6 text-muted-yellow xl:h-7 xl:w-7"
-              />
+              <Icons.star key={i} className="h-6 w-6 text-muted-yellow xl:h-7 xl:w-7" />
             </button>
           );
         }
 
         return (
           <button key={i} onClick={() => onSelect(i)}>
-            <Icons.starOutline
-              key={i}
-              className="h-6 w-6 text-muted-foreground xl:h-7 xl:w-7"
-            />
+            <Icons.starOutline key={i} className="h-6 w-6 text-muted-foreground xl:h-7 xl:w-7" />
           </button>
         );
       })}

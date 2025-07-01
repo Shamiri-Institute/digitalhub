@@ -1,23 +1,20 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
-import { StudentGroupEvaluationType } from "#/components/common/fellow-reports/student-group-evaluation/actions";
+import type { StudentGroupEvaluationType } from "#/components/common/fellow-reports/student-group-evaluation/actions";
 import StudentGroupEvaluationDropdownMenu from "#/components/common/fellow-reports/student-group-evaluation/student-group-evaluation-dropdown-actions";
 import { Checkbox } from "#/components/ui/checkbox";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { ColumnDef } from "@tanstack/react-table";
-import Image from "next/image";
 
 export const columns: ColumnDef<StudentGroupEvaluationType>[] = [
   {
     id: "button",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
@@ -71,16 +68,13 @@ export const columns: ColumnDef<StudentGroupEvaluationType>[] = [
   },
 ];
 
-export const subColumns: ColumnDef<
-  StudentGroupEvaluationType["session"][number]
->[] = [
+export const subColumns: ColumnDef<StudentGroupEvaluationType["session"][number]>[] = [
   {
     id: "checkbox",
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -130,11 +124,7 @@ export const subColumns: ColumnDef<
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <StudentGroupEvaluationDropdownMenu
-        studentGroupEvaluation={row.original}
-      />
-    ),
+    cell: ({ row }) => <StudentGroupEvaluationDropdownMenu studentGroupEvaluation={row.original} />,
     enableHiding: false,
   },
 ];

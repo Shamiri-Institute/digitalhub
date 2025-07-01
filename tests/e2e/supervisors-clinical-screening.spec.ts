@@ -27,9 +27,7 @@ test.describe.skip("clinical screenings", () => {
     await page.waitForLoadState("networkidle");
 
     // Make sure to pick an option visible on the screen
-    await clinicalScreeningPage.chooseStudentInSelectDropdown(
-      "Stu_Adm_ANS23_School_17_13",
-    );
+    await clinicalScreeningPage.chooseStudentInSelectDropdown("Stu_Adm_ANS23_School_17_13");
     await expect(page.getByText("Student 12").nth(0)).toBeVisible();
 
     await clinicalScreeningPage.submitClinicalCaseDialogue();

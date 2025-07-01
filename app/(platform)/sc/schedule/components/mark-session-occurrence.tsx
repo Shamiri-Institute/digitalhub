@@ -1,43 +1,24 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format, isBefore } from "date-fns";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { MarkSessionOccurrenceSchema } from "#/components/common/session/schema";
-import {
-  Session,
-  SessionsContext,
-} from "#/components/common/session/sessions-provider";
+import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "#/components/ui/form";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import { Form, FormField, FormItem, FormLabel, FormMessage } from "#/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "#/components/ui/radio-group";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { markSessionOccurrence } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format, isBefore } from "date-fns";
-import { usePathname } from "next/navigation";
-import React, {
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export function MarkSessionOccurrence({
   children,
@@ -56,9 +37,7 @@ export function MarkSessionOccurrence({
   const { sessions, refresh } = useContext(SessionsContext);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [previousUnmarkedSessions, setPreviousUnmarkedSessions] = useState<
-    Session[]
-  >([]);
+  const [previousUnmarkedSessions, setPreviousUnmarkedSessions] = useState<Session[]>([]);
 
   const form = useForm<z.infer<typeof MarkSessionOccurrenceSchema>>({
     resolver: zodResolver(MarkSessionOccurrenceSchema),
@@ -79,8 +58,7 @@ export function MarkSessionOccurrence({
                 activeSession.schoolId === session.schoolId &&
                 !session.occurred &&
                 session.status !== "Cancelled" &&
-                session.session?.sessionType ===
-                  activeSession.session?.sessionType
+                session.session?.sessionType === activeSession.session?.sessionType
               );
             })
             .sort((a, b) => {
@@ -110,17 +88,12 @@ export function MarkSessionOccurrence({
     if (!response.success) {
       toast({
         variant: "destructive",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       setLoading(false);
       return;
     }
-    await Promise.all([
-      await refresh(),
-      await revalidatePageAction(pathname),
-    ]).then(() => {
+    await Promise.all([await refresh(), await revalidatePageAction(pathname)]).then(() => {
       setLoading(false);
       setConfirmDialogOpen(false);
       setIsOpen(false);
@@ -161,7 +134,7 @@ export function MarkSessionOccurrence({
                           value="attended"
                           id="mark_attended"
                           className="custom-radio border-gray-300 data-[state=checked]:border-shamiri-green"
-                        ></RadioGroupItem>
+                        />
                       </div>
                       <div className="relative">
                         <CustomIndicator className="blue" label={"Unmarked"} />
@@ -169,7 +142,7 @@ export function MarkSessionOccurrence({
                           value="unmarked"
                           id="Unmarked_"
                           className="custom-radio border-gray-300  data-[state=checked]:border-shamiri-new-blue"
-                        ></RadioGroupItem>
+                        />
                       </div>
                     </RadioGroup>
                     <FormMessage />
@@ -202,8 +175,7 @@ export function MarkSessionOccurrence({
               <div className="flex flex-col">
                 <span>Unmarked sessions found</span>
                 <span className="text-muted-foreground">
-                  Please mark attendances for the following sessions before
-                  proceeding:
+                  Please mark attendances for the following sessions before proceeding:
                 </span>
               </div>
               <div className="flex flex-col gap-2 py-2">
@@ -212,12 +184,8 @@ export function MarkSessionOccurrence({
                     key={index.toString()}
                     className="flex items-center gap-x-2 rounded-lg border bg-background-secondary px-4 py-3"
                   >
-                    <span>
-                      {sessionDisplayName(session.session?.sessionName)}
-                    </span>
-                    <span>
-                      - {session.school?.schoolName ?? session.venue} -
-                    </span>
+                    <span>{sessionDisplayName(session.session?.sessionName)}</span>
+                    <span>- {session.school?.schoolName ?? session.venue} -</span>
                     <span className="text-muted-foreground">
                       {format(session.sessionDate, "dd/MM/yyyy - h:mm a")}
                     </span>
@@ -252,9 +220,8 @@ export function MarkSessionOccurrence({
             <div className="flex gap-2 rounded-lg border border-shamiri-red/30 bg-red-bg px-4 py-2 text-red-base">
               <Icons.info className="mt-1 h-4 w-4 shrink-0 stroke-2" />
               <div>
-                Once this change has been made it is irreversible and will need
-                you to contact support in order to modify. Please be sure of
-                your action before you confirm.
+                Once this change has been made it is irreversible and will need you to contact
+                support in order to modify. Please be sure of your action before you confirm.
               </div>
             </div>
           </div>
@@ -286,13 +253,7 @@ export function MarkSessionOccurrence({
   );
 }
 
-function CustomIndicator({
-  className,
-  label,
-}: {
-  className: string;
-  label: string;
-}) {
+function CustomIndicator({ className, label }: { className: string; label: string }) {
   return (
     <div className="custom-indicator pointer-events-none absolute inset-0 flex h-20 items-center pl-6">
       <div className="flex items-center gap-3">
@@ -301,7 +262,7 @@ function CustomIndicator({
             "indicator h-4 w-4 rounded-full border border-gray-300 bg-white shadow",
             className,
           )}
-        ></div>
+        />
         <span>{label}</span>
       </div>
     </div>

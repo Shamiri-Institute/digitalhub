@@ -1,8 +1,8 @@
+import { signOut } from "next-auth/react";
 import { loadFellowsData } from "#/app/(platform)/sc/actions";
 import { currentSupervisor } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
 import FellowSchoolsDatatable from "../../../../components/common/fellow/fellow-schools-datatable";
 
 export default async function FellowsPage() {

@@ -6,10 +6,10 @@ import { Icons } from "#/components/icons";
 import { MobileNavigation } from "#/components/mobile-navigation";
 import { cn } from "#/lib/utils";
 
-export const Header = forwardRef<
-  React.ElementRef<"div">,
-  { className?: string }
->(function Header({ className }, ref) {
+export const Header = forwardRef<React.ElementRef<"div">, { className?: string }>(function Header(
+  { className },
+  ref,
+) {
   return (
     <motion.div
       ref={ref}
@@ -19,12 +19,8 @@ export const Header = forwardRef<
         className,
       )}
     >
-      <div
-        className={cn(
-          "absolute inset-x-0 top-full h-px bg-border/50 transition",
-        )}
-      />
-      <div className="search-placeholder hidden lg:block lg:max-w-md lg:flex-auto"></div>
+      <div className={cn("absolute inset-x-0 top-full h-px bg-border/50 transition")} />
+      <div className="search-placeholder hidden lg:block lg:max-w-md lg:flex-auto" />
       <div className="flex items-center gap-5 lg:hidden">
         <MobileNavigation />
         <Link href="/" aria-label="Home">

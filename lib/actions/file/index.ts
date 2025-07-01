@@ -26,10 +26,7 @@ export async function removeUploadedSchoolFile(documentId: string) {
   }
 }
 
-export async function updateUploadedSchoolFile(
-  documentId: string,
-  fileName: string,
-) {
+export async function updateUploadedSchoolFile(documentId: string, fileName: string) {
   try {
     const user = await getCurrentUser();
 

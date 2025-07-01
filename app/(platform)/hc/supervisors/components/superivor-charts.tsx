@@ -1,17 +1,6 @@
 "use client";
 
 import {
-  fetchSupervisorDataCompletenessData,
-  SessionRatingAverages,
-  SupervisorAttendanceData,
-  SupervisorDropoutReasonsGraphData,
-} from "#/app/(platform)/hc/supervisors/actions";
-import ChartCard from "#/components/ui/chart-card";
-import {
-  SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
-  SCHOOL_DROPOUT_REASONS_MAPPING,
-} from "#/lib/app-constants/constants";
-import {
   Bar,
   BarChart,
   CartesianGrid,
@@ -27,6 +16,17 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import type {
+  fetchSupervisorDataCompletenessData,
+  SessionRatingAverages,
+  SupervisorAttendanceData,
+  SupervisorDropoutReasonsGraphData,
+} from "#/app/(platform)/hc/supervisors/actions";
+import ChartCard from "#/components/ui/chart-card";
+import {
+  SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING,
+  SCHOOL_DROPOUT_REASONS_MAPPING,
+} from "#/lib/app-constants/constants";
 
 export default function SupervisorCharts({
   attendanceData,
@@ -56,18 +56,8 @@ export default function SupervisorCharts({
               <XAxis dataKey="supervisor_name" />
               <YAxis dataKey="attended" />
               <Tooltip />
-              <Bar
-                dataKey="attended"
-                stackId="a"
-                fill="#0085FF"
-                label="Attended"
-              />
-              <Bar
-                dataKey="supervisor_name"
-                stackId="a"
-                fill="#CCE7FF"
-                label="Supervisor name"
-              />
+              <Bar dataKey="attended" stackId="a" fill="#0085FF" label="Attended" />
+              <Bar dataKey="supervisor_name" stackId="a" fill="#CCE7FF" label="Supervisor name" />
             </BarChart>
           </ResponsiveContainer>
         ) : null}
@@ -105,10 +95,7 @@ export default function SupervisorCharts({
           </ResponsiveContainer>
         ) : null}
       </ChartCard>
-      <ChartCard
-        title="Supervisor information completion"
-        showCardFooter={false}
-      >
+      <ChartCard title="Supervisor information completion" showCardFooter={false}>
         {supervisorDataCompletenessPercentage.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250}>
@@ -126,9 +113,8 @@ export default function SupervisorCharts({
                   className="text text-2xl font-semibold leading-8"
                   fill="#fffff"
                 >
-                  {supervisorDataCompletenessPercentage.find(
-                    (d) => (d.name = "actual"),
-                  )?.value + "%"}
+                  {supervisorDataCompletenessPercentage.find((d) => (d.name = "actual"))?.value +
+                    "%"}
                 </Label>
                 {supervisorDataCompletenessPercentage.map(({ name }) => (
                   <Cell
@@ -145,26 +131,14 @@ export default function SupervisorCharts({
       <ChartCard title="Ratings" showCardFooter={false}>
         {supervisorsSessionRatings?.length ? (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              width={307}
-              height={307}
-              data={supervisorsSessionRatings}
-            >
+            <LineChart width={307} height={307} data={supervisorsSessionRatings}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="session_type" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line
-                dataKey="student_behaviour"
-                stroke="#0085FF"
-                label="Student behaviour"
-              />
-              <Line
-                dataKey="admin_support"
-                stroke="#00BA34"
-                label="Admin support"
-              />
+              <Line dataKey="student_behaviour" stroke="#0085FF" label="Student behaviour" />
+              <Line dataKey="admin_support" stroke="#00BA34" label="Admin support" />
               <Line dataKey="workload" stroke="#F98600" label="Workload" />
             </LineChart>
           </ResponsiveContainer>

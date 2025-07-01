@@ -1,5 +1,14 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { PopoverTrigger } from "@radix-ui/react-popover";
+import { format } from "date-fns";
+import { isValidPhoneNumber } from "libphonenumber-js";
+import { Plus } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { createNewSupervisor } from "#/app/(platform)/hc/supervisors/actions";
 import { Icons } from "#/components/icons";
@@ -34,15 +43,6 @@ import { toast } from "#/components/ui/use-toast";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { PopoverTrigger } from "@radix-ui/react-popover";
-import { format } from "date-fns";
-import { isValidPhoneNumber } from "libphonenumber-js";
-import { Plus } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { AddNewSupervisorSchema } from "../../schemas";
 
 export default function AddNewSupervisor() {
@@ -69,9 +69,7 @@ export default function AddNewSupervisor() {
     if (!response.success) {
       toast({
         variant: "destructive",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -84,10 +82,7 @@ export default function AddNewSupervisor() {
     setIsOpen(false);
   };
 
-  const validatePhoneNumber = (
-    field: keyof typeof form.formState.defaultValues,
-    value: string,
-  ) => {
+  const validatePhoneNumber = (field: keyof typeof form.formState.defaultValues, value: string) => {
     if (!isValidPhoneNumber(value, "KE") && value !== "") {
       form.setError(field, {
         message: value + " is not a valid kenyan number",
@@ -132,8 +127,7 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem className="col-span-2">
                         <FormLabel>
-                          Full name{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Full name <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} />
@@ -148,8 +142,7 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Phone number{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Phone number <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -173,8 +166,7 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Email address{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Email address <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
@@ -189,8 +181,7 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          National ID{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          National ID <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
@@ -205,8 +196,7 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Gender{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Gender <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -236,8 +226,7 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Date of birth{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Date of birth <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
@@ -275,8 +264,7 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          County{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          County <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -310,8 +298,7 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Sub-county{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Sub-county <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -326,8 +313,7 @@ export default function AddNewSupervisor() {
                           <SelectContent className="max-h-[200px]">
                             {form.getValues("county") ? (
                               KENYAN_COUNTIES.find(
-                                (county) =>
-                                  county.name === form.getValues("county"),
+                                (county) => county.name === form.getValues("county"),
                               )?.sub_counties.map((subCounty) => {
                                 return (
                                   <SelectItem key={subCounty} value={subCounty}>
@@ -336,9 +322,7 @@ export default function AddNewSupervisor() {
                                 );
                               })
                             ) : (
-                              <SelectItem value={" "}>
-                                Please pick a county first
-                              </SelectItem>
+                              <SelectItem value={" "}>Please pick a county first</SelectItem>
                             )}
                           </SelectContent>
                         </Select>
@@ -362,8 +346,7 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Full name{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Full name <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
@@ -378,8 +361,7 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          M-Pesa number{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          M-Pesa number <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input

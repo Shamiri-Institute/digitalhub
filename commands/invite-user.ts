@@ -1,10 +1,9 @@
+import { ImplementerRole } from "@prisma/client";
 import { z } from "zod";
-
 import { Command } from "#/commands";
 import { sendEmail } from "#/emails";
 import UserWelcomer from "#/emails/user-welcomer";
-import { db as database, Database } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
+import { type Database, db as database } from "#/lib/db";
 
 const InviteMaxAge = 1000 * 60 * 60 * 24 * 7; // 1 week
 
@@ -69,7 +68,7 @@ export class InviteUserCommand extends Command<
       throw new Error("Implementer not found");
     }
 
-    const subject = `Welcome to the Shamiri Digital Hub!`;
+    const subject = "Welcome to the Shamiri Digital Hub!";
     await sendEmail({
       to: email,
       subject: subject,
@@ -81,9 +80,7 @@ export class InviteUserCommand extends Command<
     });
 
     // TODO: add to audit log
-    console.log(
-      `user#${inviterId} invited ${email} to ${implementer.implementerName}`,
-    );
+    console.log(`user#${inviterId} invited ${email} to ${implementer.implementerName}`);
 
     return { invitationId: invitation.id };
   }

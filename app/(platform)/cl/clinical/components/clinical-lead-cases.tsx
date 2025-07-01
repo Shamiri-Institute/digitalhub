@@ -5,16 +5,10 @@ import { ClinicalDiagnosingBoard } from "#/app/(platform)/sc/clinical/components
 import ViewMarkClinicalSessions from "#/app/(platform)/sc/clinical/components/view-mark-clinical-sessions";
 import DataTable from "#/components/data-table";
 
-export default function ClinicalLeadCases({
-  clinicalLeadCases,
-}: {
-  clinicalLeadCases: any[];
-}) {
+export default function ClinicalLeadCases({ clinicalLeadCases }: { clinicalLeadCases: any[] }) {
   return (
     <div className="mt-4">
-      <h2 className="text-lg font-medium">
-        My Cases ({clinicalLeadCases.length})
-      </h2>
+      <h2 className="text-lg font-medium">My Cases ({clinicalLeadCases.length})</h2>
       <DataTable
         data={clinicalLeadCases}
         columns={columns}
@@ -22,10 +16,7 @@ export default function ClinicalLeadCases({
         renderSubComponent={({ row }) => (
           <div className="space-y-6 p-4">
             <ClinicalDiagnosingBoard currentcase={row.original} />
-            <ViewMarkClinicalSessions
-              currentcase={row.original}
-              role="CLINICAL_LEAD"
-            />
+            <ViewMarkClinicalSessions currentcase={row.original} role="CLINICAL_LEAD" />
           </div>
         )}
         emptyStateMessage="No clinical cases created by you"

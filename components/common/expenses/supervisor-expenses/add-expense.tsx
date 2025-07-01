@@ -1,5 +1,16 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { format, startOfWeek, subWeeks } from "date-fns";
+import { Loader2 } from "lucide-react";
+import { useS3Upload } from "next-s3-upload";
+import { useCallback, useEffect, useState } from "react";
+import { type UseFormReturn, useForm } from "react-hook-form";
+import { z } from "zod";
+import { addSupervisorExpense } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -9,24 +20,6 @@ import {
   DialogTrigger,
 } from "#/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "#/components/ui/select";
-import { Separator } from "#/components/ui/separator";
-import { stringValidation } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format, startOfWeek, subWeeks } from "date-fns";
-import { useCallback, useEffect, useState } from "react";
-import { UseFormReturn, useForm } from "react-hook-form";
-import { z } from "zod";
-
-import { addSupervisorExpense } from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { Icons } from "#/components/icons";
-import {
   Form,
   FormControl,
   FormField,
@@ -35,11 +28,16 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "#/components/ui/select";
+import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { formatBytes } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
-import { Loader2 } from "lucide-react";
-import { useS3Upload } from "next-s3-upload";
+import { formatBytes, stringValidation } from "#/lib/utils";
 
 export const AddAddSupervisorExpenseSchema = z.object({
   week: z.string(),
@@ -55,16 +53,14 @@ export const AddAddSupervisorExpenseSchema = z.object({
 function generateWeekFieldValues() {
   const numWeeks = 4;
 
-  let selectValues = [];
+  const selectValues = [];
   const today = new Date();
 
   for (let i = numWeeks; i >= 0; i--) {
     const date = subWeeks(today, i);
     const week = startOfWeek(date, { weekStartsOn: 1 });
     selectValues.push(
-      <SelectItem value={format(week, "yyyy-MM-dd")}>
-        {format(week, "dd/MM/yyyy")}
-      </SelectItem>,
+      <SelectItem value={format(week, "yyyy-MM-dd")}>{format(week, "dd/MM/yyyy")}</SelectItem>,
     );
   }
 
@@ -96,9 +92,7 @@ export default function AddSupervisorExpensesForm({
 
   const transportSubtype = form.getValues("expenseType");
 
-  const onSubmit = async (
-    data: z.infer<typeof AddAddSupervisorExpenseSchema>,
-  ) => {
+  const onSubmit = async (data: z.infer<typeof AddAddSupervisorExpenseSchema>) => {
     const response = await addSupervisorExpense({
       data,
     });
@@ -107,9 +101,7 @@ export default function AddSupervisorExpensesForm({
       toast({
         variant: "destructive",
         title: "Submission error",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -148,13 +140,9 @@ export default function AddSupervisorExpensesForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Select date /time{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Select date /time <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a date/time" />
@@ -189,9 +177,7 @@ export default function AddSupervisorExpensesForm({
                           defaultValue={field.value}
                           onChange={field.onChange}
                           placeholder={
-                            <span className="text-muted-foreground">
-                              Select supervisor
-                            </span>
+                            <span className="text-muted-foreground">Select supervisor</span>
                           }
                         />
                       </SelectTrigger>
@@ -230,9 +216,7 @@ export default function AddSupervisorExpensesForm({
                             defaultValue={field.value}
                             onChange={field.onChange}
                             placeholder={
-                              <span className="text-muted-foreground">
-                                Select reason
-                              </span>
+                              <span className="text-muted-foreground">Select reason</span>
                             }
                           />
                         </SelectTrigger>
@@ -264,9 +248,7 @@ export default function AddSupervisorExpensesForm({
                             defaultValue={field.value}
                             onChange={field.onChange}
                             placeholder={
-                              <span className="text-muted-foreground">
-                                Select session
-                              </span>
+                              <span className="text-muted-foreground">Select session</span>
                             }
                           />
                         </SelectTrigger>
@@ -281,9 +263,7 @@ export default function AddSupervisorExpensesForm({
                               <SelectItem value="F6">Follow-up 6</SelectItem>
                               <SelectItem value="F7">Follow-up 7</SelectItem>
                               <SelectItem value="F8">Follow-up 8</SelectItem>
-                              <SelectItem value="data-collection">
-                                Data collection
-                              </SelectItem>
+                              <SelectItem value="data-collection">Data collection</SelectItem>
                             </>
                           ) : (
                             <>
@@ -306,15 +286,10 @@ export default function AddSupervisorExpensesForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Total Amount (KES){" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Total Amount (KES) <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Input placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -328,15 +303,10 @@ export default function AddSupervisorExpensesForm({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          M-Pesa name.{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          M-Pesa name. <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder=""
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input placeholder="" className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -350,15 +320,10 @@ export default function AddSupervisorExpensesForm({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          M-Pesa no.{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          M-Pesa no. <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder=""
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input placeholder="" className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -401,11 +366,7 @@ export function ReceiptFileUpload({
   form,
   className,
 }: {
-  form: UseFormReturn<
-    z.infer<typeof AddAddSupervisorExpenseSchema>,
-    any,
-    undefined
-  >;
+  form: UseFormReturn<z.infer<typeof AddAddSupervisorExpenseSchema>, any, undefined>;
   className: string;
 }) {
   const { FileInput, openFileDialog, uploadToS3 } = useS3Upload();
@@ -463,9 +424,7 @@ export function ReceiptFileUpload({
       <FileInput onChange={handleFileChange} />
 
       {form.formState.errors.receiptFileKey && (
-        <p className="text-shamiri-light-red">
-          {form.formState.errors.receiptFileKey.message}
-        </p>
+        <p className="text-shamiri-light-red">{form.formState.errors.receiptFileKey.message}</p>
       )}
 
       {file && (

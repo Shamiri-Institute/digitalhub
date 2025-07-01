@@ -1,19 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { School } from "@prisma/client";
+import type { School } from "@prisma/client";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { useS3Upload } from "next-s3-upload";
 import { useCallback, useEffect, useState } from "react";
-import { UseFormReturn, useForm } from "react-hook-form";
+import { type UseFormReturn, useForm } from "react-hook-form";
 import { z } from "zod";
 
-import {
-  getSchoolsByHubId,
-  submitTransportReimbursementRequest,
-} from "#/app/actions";
+import { getSchoolsByHubId, submitTransportReimbursementRequest } from "#/app/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -77,13 +74,7 @@ export const FormSchema = z.object({
   }),
 });
 
-export function RefundForm({
-  supervisorId,
-  hubId,
-}: {
-  supervisorId: string;
-  hubId: string;
-}) {
+export function RefundForm({ supervisorId, hubId }: { supervisorId: string; hubId: string }) {
   const [transportSubtype, setTransportSubtype] = useState("");
   const [destination, setDestination] = useState("");
   const [hubSchools, setHubSchools] = useState<School[]>([]);
@@ -197,11 +188,7 @@ export function RefundForm({
                           className="text-muted-foreground"
                           defaultValue={field.value}
                           onChange={field.onChange}
-                          placeholder={
-                            <span className="text-muted-foreground">
-                              Select reason
-                            </span>
-                          }
+                          placeholder={<span className="text-muted-foreground">Select reason</span>}
                         />
                       </SelectTrigger>
                       <SelectContent>
@@ -231,9 +218,7 @@ export function RefundForm({
                           defaultValue={field.value}
                           onChange={field.onChange}
                           placeholder={
-                            <span className="text-muted-foreground">
-                              Select session
-                            </span>
+                            <span className="text-muted-foreground">Select session</span>
                           }
                         />
                       </SelectTrigger>
@@ -248,9 +233,7 @@ export function RefundForm({
                             <SelectItem value="F6">Follow-up 6</SelectItem>
                             <SelectItem value="F7">Follow-up 7</SelectItem>
                             <SelectItem value="F8">Follow-up 8</SelectItem>
-                            <SelectItem value="data-collection">
-                              Data collection
-                            </SelectItem>
+                            <SelectItem value="data-collection">Data collection</SelectItem>
                           </>
                         ) : (
                           <>
@@ -288,9 +271,7 @@ export function RefundForm({
                           defaultValue={field.value}
                           onChange={field.onChange}
                           placeholder={
-                            <span className="text-muted-foreground">
-                              Select destination
-                            </span>
+                            <span className="text-muted-foreground">Select destination</span>
                           }
                         />
                       </SelectTrigger>
@@ -298,9 +279,7 @@ export function RefundForm({
                         <SelectItem value="school">School</SelectItem>
                         <SelectItem value="hub">Hub</SelectItem>
                         <SelectItem value="main-office">Main Office</SelectItem>
-                        <SelectItem value="supervision-location">
-                          Supervision Location
-                        </SelectItem>
+                        <SelectItem value="supervision-location">Supervision Location</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -325,18 +304,13 @@ export function RefundForm({
                             defaultValue={field.value}
                             onChange={field.onChange}
                             placeholder={
-                              <span className="text-muted-foreground">
-                                Select school
-                              </span>
+                              <span className="text-muted-foreground">Select school</span>
                             }
                           />
                         </SelectTrigger>
                         <SelectContent>
                           {hubSchools.map((school: School) => (
-                            <SelectItem
-                              key={school.id}
-                              value={school.schoolName}
-                            >
+                            <SelectItem key={school.id} value={school.schoolName}>
                               {school.schoolName}
                             </SelectItem>
                           ))}
@@ -410,9 +384,7 @@ export function RefundForm({
                 className="relative rounded border border-red-300 bg-red-50 px-4 py-3 text-red-500"
                 role="alert"
               >
-                <strong className="font-bold">
-                  Please correct the following errors:
-                </strong>
+                <strong className="font-bold">Please correct the following errors:</strong>
                 <ul className="list-inside list-disc">
                   {Object.entries(form.formState.errors).map(([key, value]) => (
                     <li key={key}>{value.message}</li>
@@ -473,11 +445,7 @@ export function ReceiptFileUpload({
 
   return (
     <div className={className}>
-      <Button
-        type="button"
-        className="text-base font-medium"
-        onClick={openFileDialog}
-      >
+      <Button type="button" className="text-base font-medium" onClick={openFileDialog}>
         {uploading ? "Uploading receipt..." : "Upload receipt"}
       </Button>
       <FileInput onChange={handleFileChange} />
@@ -509,5 +477,5 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+  return Number.parseFloat((bytes / k ** i).toFixed(dm)) + " " + sizes[i];
 }

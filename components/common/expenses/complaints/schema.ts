@@ -1,5 +1,5 @@
-import { stringValidation } from "#/lib/utils";
 import { z } from "zod";
+import { stringValidation } from "#/lib/utils";
 
 export const ReportFellowComplaintSchema = z.object({
   fellow: stringValidation("Please select a fellow").optional(),
@@ -33,6 +33,4 @@ export const ReportFellowComplaintSchema = z.object({
   reasonForRejecting: stringValidation("Please enter the reason for rejecting"),
 });
 
-export type ReportFellowComplaintSchema = z.infer<
-  typeof ReportFellowComplaintSchema
->;
+export type ReportFellowComplaintSchema = z.infer<typeof ReportFellowComplaintSchema>;

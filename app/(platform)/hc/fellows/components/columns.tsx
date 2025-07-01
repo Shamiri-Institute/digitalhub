@@ -1,20 +1,16 @@
 "use client";
 
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
+import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import AssignFellowSupervisorSelect from "#/app/(platform)/hc/fellows/components/assign-fellow-supervisor-select";
 import MainFellowsDatatableMenu from "#/app/(platform)/hc/fellows/components/main-fellows-datatable-menu";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "#/components/ui/tooltip";
-import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
-import { Dispatch, SetStateAction } from "react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 
 export type MainFellowTableData = {
   id: string;
@@ -121,10 +117,7 @@ export const columns = (
         try {
           return (
             row.original.cellNumber &&
-            parsePhoneNumberWithError(
-              row.original.cellNumber,
-              "KE",
-            ).formatNational()
+            parsePhoneNumberWithError(row.original.cellNumber, "KE").formatNational()
           );
         } catch (error) {
           if (error instanceof ParseError) {
@@ -146,9 +139,8 @@ export const columns = (
                 </Tooltip>
               )
             );
-          } else {
-            throw error;
           }
+          throw error;
         }
       },
     },

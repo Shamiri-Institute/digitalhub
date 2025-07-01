@@ -1,7 +1,7 @@
 import { ImplementerRole } from "@prisma/client";
 import { addBreadcrumb } from "@sentry/nextjs";
-import { JWT, getToken } from "next-auth/jwt";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { getToken, type JWT } from "next-auth/jwt";
 
 import { parse } from "#/lib/middleware/utils";
 
@@ -16,20 +16,18 @@ export default async function AppMiddleware(req: NextRequest) {
 
   // Check if authenticated and accessing authorized route
   if (!session?.email && path !== "/login" && path !== "/register") {
-    console.warn(`No email in session`, {
+    console.warn("No email in session", {
       session,
       pathname: req.nextUrl.pathname,
     });
     return NextResponse.redirect(
-      new URL(
-        `/login${path !== "/" ? `?next=${encodeURIComponent(path)}` : ""}`,
-        req.url,
-      ),
+      new URL(`/login${path !== "/" ? `?next=${encodeURIComponent(path)}` : ""}`, req.url),
     );
-  } else if (session?.email && path !== "/login") {
+  }
+  if (session?.email && path !== "/login") {
     // Check for valid membership only when not on login page
     if (!session.activeMembership?.role) {
-      console.warn(`No valid membership found for user`, {
+      console.warn("No valid membership found for user", {
         email: session.email,
         pathname: req.nextUrl.pathname,
       });
@@ -96,17 +94,23 @@ export default async function AppMiddleware(req: NextRequest) {
 
     if (ifHcUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/hc", req.url));
-    } else if (ifSupervisorUserAndUnprefixedPath(session, path)) {
+    }
+    if (ifSupervisorUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/sc", req.url));
-    } else if (ifFellowUserAndUnprefixedPath(session, path)) {
+    }
+    if (ifFellowUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/fel", req.url));
-    } else if (ifClinicalLeadUserAndUnprefixedPath(session, path)) {
+    }
+    if (ifClinicalLeadUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/cl", req.url));
-    } else if (ifOpsUserAndUnprefixedPath(session, path)) {
+    }
+    if (ifOpsUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/ops", req.url));
-    } else if (ifClinicalTeamUserAndUnprefixedPath(session, path)) {
+    }
+    if (ifClinicalTeamUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/ct", req.url));
-    } else if (ifSupervisorAndHcRoute(session, path)) {
+    }
+    if (ifSupervisorAndHcRoute(session, path)) {
       return NextResponse.redirect(new URL("/", req.url));
     }
   }
@@ -116,55 +120,34 @@ export default async function AppMiddleware(req: NextRequest) {
 
 function ifHcUserAndUnprefixedPath(session: JWT | null, path: string) {
   return (
-    session?.activeMembership?.role === ImplementerRole.HUB_COORDINATOR &&
-    !path.startsWith("/hc")
+    session?.activeMembership?.role === ImplementerRole.HUB_COORDINATOR && !path.startsWith("/hc")
   );
 }
 
 function ifSupervisorUserAndUnprefixedPath(session: JWT | null, path: string) {
-  return (
-    session?.activeMembership?.role === ImplementerRole.SUPERVISOR &&
-    !path.startsWith("/sc")
-  );
+  return session?.activeMembership?.role === ImplementerRole.SUPERVISOR && !path.startsWith("/sc");
 }
 
 function ifFellowUserAndUnprefixedPath(session: JWT | null, path: string) {
-  return (
-    session?.activeMembership?.role === ImplementerRole.FELLOW &&
-    !path.startsWith("/fel")
-  );
+  return session?.activeMembership?.role === ImplementerRole.FELLOW && !path.startsWith("/fel");
 }
 
 function ifSupervisorAndHcRoute(session: JWT | null, path: string) {
-  return (
-    session?.activeMembership?.role === ImplementerRole.SUPERVISOR &&
-    path.startsWith("/hc")
-  );
+  return session?.activeMembership?.role === ImplementerRole.SUPERVISOR && path.startsWith("/hc");
 }
 
-function ifClinicalLeadUserAndUnprefixedPath(
-  session: JWT | null,
-  path: string,
-) {
+function ifClinicalLeadUserAndUnprefixedPath(session: JWT | null, path: string) {
   return (
-    session?.activeMembership?.role === ImplementerRole.CLINICAL_LEAD &&
-    !path.startsWith("/cl")
+    session?.activeMembership?.role === ImplementerRole.CLINICAL_LEAD && !path.startsWith("/cl")
   );
 }
 
 function ifOpsUserAndUnprefixedPath(session: JWT | null, path: string) {
-  return (
-    session?.activeMembership?.role === ImplementerRole.OPERATIONS &&
-    !path.startsWith("/ops")
-  );
+  return session?.activeMembership?.role === ImplementerRole.OPERATIONS && !path.startsWith("/ops");
 }
 
-function ifClinicalTeamUserAndUnprefixedPath(
-  session: JWT | null,
-  path: string,
-) {
+function ifClinicalTeamUserAndUnprefixedPath(session: JWT | null, path: string) {
   return (
-    session?.activeMembership?.role === ImplementerRole.CLINICAL_TEAM &&
-    !path.startsWith("/ct")
+    session?.activeMembership?.role === ImplementerRole.CLINICAL_TEAM && !path.startsWith("/ct")
   );
 }

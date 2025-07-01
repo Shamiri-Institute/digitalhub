@@ -1,7 +1,7 @@
 "use client";
+import type { ImplementerRole } from "@prisma/client";
 import FileUploader from "#/components/file-uploader";
 import { Button } from "#/components/ui/button";
-import { ImplementerRole } from "@prisma/client";
 
 export function BatchUploadDownloadFellow({
   disabled,
@@ -24,11 +24,7 @@ export function BatchUploadDownloadFellow({
         >
           Download fellow csv template
         </Button>
-        <FileUploader
-          disabled={disabled}
-          url="/api/csv-uploads/fellows"
-          type="fellows"
-        />
+        <FileUploader disabled={disabled} url="/api/csv-uploads/fellows" type="fellows" />
       </div>
     )
   );

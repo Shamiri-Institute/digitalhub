@@ -1,5 +1,13 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import { addDays, addHours, differenceInSeconds, format } from "date-fns";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -7,12 +15,7 @@ import RatingStarsInput from "#/components/common/rating-stars-input";
 import { SessionRatingsSchema } from "#/components/common/session/schema";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -34,20 +37,8 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitSessionRatings } from "#/lib/actions/session/session";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { addDays, addHours, differenceInSeconds, format } from "date-fns";
-import { usePathname } from "next/navigation";
-import React, {
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Session } from "./sessions-provider";
+import type { Session } from "./sessions-provider";
+
 export { useSession } from "next-auth/react";
 
 type FormInput = {
@@ -148,9 +139,7 @@ export default function SessionRatings({
     if (!response.success) {
       toast({
         variant: "destructive",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -193,10 +182,7 @@ export default function SessionRatings({
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className={cn(
-                "space-y-5",
-                mode === "view" ? "form-view-mode" : "",
-              )}
+              className={cn("space-y-5", mode === "view" ? "form-view-mode" : "")}
             >
               {mode === "view" && (
                 <FormField
@@ -228,35 +214,24 @@ export default function SessionRatings({
                             return (
                               <SelectItem key={_rating.id} value={_rating.id}>
                                 <span>
-                                  {sessionDisplayName(
-                                    selectedSession?.session?.sessionName,
-                                  )}
+                                  {sessionDisplayName(selectedSession?.session?.sessionName)}
                                 </span>{" "}
                                 -{" "}
                                 <span>
                                   {selectedSession?.sessionDate &&
-                                    format(
-                                      selectedSession?.sessionDate,
-                                      "dd MMM yyyy",
-                                    )}
+                                    format(selectedSession?.sessionDate, "dd MMM yyyy")}
                                 </span>{" "}
                                 -{" "}
                                 <span>
                                   {selectedSession?.sessionDate &&
-                                    format(
-                                      selectedSession?.sessionDate,
-                                      "h:mm a",
-                                    )}
+                                    format(selectedSession?.sessionDate, "h:mm a")}
                                 </span>{" "}
                                 -{" "}
                                 <span>
                                   {selectedSession?.sessionDate &&
                                     format(
                                       selectedSession?.sessionEndTime ??
-                                        addHours(
-                                          selectedSession?.sessionDate,
-                                          1,
-                                        ),
+                                        addHours(selectedSession?.sessionDate, 1),
                                       "h:mm a",
                                     )}
                                 </span>
@@ -266,9 +241,7 @@ export default function SessionRatings({
                                     -{" "}
                                     {
                                       supervisors?.find(
-                                        (supervisor) =>
-                                          supervisor.id ===
-                                          _rating?.supervisorId,
+                                        (supervisor) => supervisor.id === _rating?.supervisorId,
                                       )?.supervisorName
                                     }
                                   </span>
@@ -294,16 +267,11 @@ export default function SessionRatings({
                         <Input
                           type="number"
                           placeholder="No of. students who attended"
-                          disabled={
-                            mode === "view" ||
-                            (existingRating && updateWindowDuration < 0)
-                          }
+                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
                           {...field}
                           onChange={(e) => {
                             const value =
-                              e.target.value === ""
-                                ? undefined
-                                : Number(e.target.value);
+                              e.target.value === "" ? undefined : Number(e.target.value);
                             field.onChange(value);
                           }}
                         />
@@ -325,10 +293,7 @@ export default function SessionRatings({
                         <RatingStarsInput
                           value={field.value}
                           onChange={field.onChange}
-                          disabled={
-                            mode === "view" ||
-                            (existingRating && updateWindowDuration < 0)
-                          }
+                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
                         />
                       </FormItem>
                     )}
@@ -345,10 +310,7 @@ export default function SessionRatings({
                         <RatingStarsInput
                           value={field.value}
                           onChange={field.onChange}
-                          disabled={
-                            mode === "view" ||
-                            (existingRating && updateWindowDuration < 0)
-                          }
+                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
                         />
                       </FormItem>
                     )}
@@ -365,10 +327,7 @@ export default function SessionRatings({
                         <RatingStarsInput
                           value={field.value}
                           onChange={field.onChange}
-                          disabled={
-                            mode === "view" ||
-                            (existingRating && updateWindowDuration < 0)
-                          }
+                          disabled={mode === "view" || (existingRating && updateWindowDuration < 0)}
                         />
                       </FormItem>
                     )}
@@ -386,8 +345,7 @@ export default function SessionRatings({
                             className="resize-none"
                             rows={4}
                             disabled={
-                              mode === "view" ||
-                              (existingRating && updateWindowDuration < 0)
+                              mode === "view" || (existingRating && updateWindowDuration < 0)
                             }
                             {...field}
                           />
@@ -407,8 +365,7 @@ export default function SessionRatings({
                             className="resize-none"
                             rows={4}
                             disabled={
-                              mode === "view" ||
-                              (existingRating && updateWindowDuration < 0)
+                              mode === "view" || (existingRating && updateWindowDuration < 0)
                             }
                             {...field}
                           />
@@ -428,8 +385,7 @@ export default function SessionRatings({
                             className="resize-none"
                             rows={4}
                             disabled={
-                              mode === "view" ||
-                              (existingRating && updateWindowDuration < 0)
+                              mode === "view" || (existingRating && updateWindowDuration < 0)
                             }
                             {...field}
                           />
@@ -442,8 +398,7 @@ export default function SessionRatings({
               </div>
               <Separator />
               {mode !== "view" &&
-              (existingRating === undefined ||
-                (existingRating && updateWindowDuration > 0)) ? (
+              (existingRating === undefined || (existingRating && updateWindowDuration > 0)) ? (
                 <div className="space-y-5">
                   {existingRating && updateWindowDuration > 0 && (
                     <>
@@ -452,10 +407,7 @@ export default function SessionRatings({
                           <span>
                             Update ratings by{" "}
                             {existingRating &&
-                              format(
-                                addDays(existingRating.createdAt, 14),
-                                "dd-MM-yyyy",
-                              )}{" "}
+                              format(addDays(existingRating.createdAt, 14), "dd-MM-yyyy")}{" "}
                             (
                             <CountdownTimer duration={updateWindowDuration} />)
                           </span>
@@ -479,8 +431,7 @@ export default function SessionRatings({
                       variant="brand"
                       type="submit"
                       disabled={
-                        form.formState.isSubmitting ||
-                        (existingRating && updateWindowDuration < 0)
+                        form.formState.isSubmitting || (existingRating && updateWindowDuration < 0)
                       }
                       loading={form.formState.isSubmitting}
                     >

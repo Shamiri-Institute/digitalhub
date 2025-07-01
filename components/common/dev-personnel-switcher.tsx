@@ -1,6 +1,6 @@
 "use client";
 
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
 import { signOut } from "next-auth/react";
 import * as React from "react";
@@ -14,11 +14,7 @@ import {
   CommandInput,
   CommandItem,
 } from "#/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { fetchPersonnel } from "#/lib/actions/fetch-personnel";
 import { APP_ENV, constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
@@ -41,10 +37,7 @@ export function PersonnelSwitcher({
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
 
-  const onSelectPersonnel = async (
-    personnelId: string,
-    role: ImplementerRole,
-  ) => {
+  const onSelectPersonnel = async (personnelId: string, role: ImplementerRole) => {
     await selectPersonnel({ identifier: personnelId, role });
     setLoading(true);
     signOut({ callbackUrl: "/login" });
@@ -56,9 +49,7 @@ export function PersonnelSwitcher({
         <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-700">
           Impersonate Supervisor or HC
         </div>
-        {loading && (
-          <Spinner className="-ml-1 mr-3 h-5 w-5 animate-spin text-zinc-600" />
-        )}
+        {loading && <Spinner className="-ml-1 mr-3 h-5 w-5 animate-spin text-zinc-600" />}
       </div>
       <div className="mt-2">
         <Popover open={open} onOpenChange={setOpen}>
@@ -71,9 +62,7 @@ export function PersonnelSwitcher({
             >
               <span className="text-left">
                 {activePersonnelId
-                  ? personnel.find(
-                      (personnel) => personnel.id === activePersonnelId,
-                    )?.label
+                  ? personnel.find((personnel) => personnel.id === activePersonnelId)?.label
                   : loading
                     ? "Loading..."
                     : "Select personnel..."}
@@ -120,9 +109,7 @@ export function PersonnelSwitcher({
                     <CheckIcon
                       className={cn(
                         "ml-auto h-4 w-4",
-                        activePersonnelId === person.id
-                          ? "opacity-100"
-                          : "opacity-0",
+                        activePersonnelId === person.id ? "opacity-100" : "opacity-0",
                       )}
                     />
                   </CommandItem>
@@ -138,25 +125,13 @@ export function PersonnelSwitcher({
 
 function Spinner({ className }: { className: string }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      className={className}
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      ></circle>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" className={className}>
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path
         className="opacity-75"
         fill="currentColor"
         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      ></path>
+      />
     </svg>
   );
 }
@@ -177,18 +152,12 @@ export function PersonnelTool() {
     fetchData();
   }, []);
 
-  const visible =
-    constants.NEXT_PUBLIC_ENV !== "production" || APP_ENV === "testing";
+  const visible = constants.NEXT_PUBLIC_ENV !== "production" || APP_ENV === "testing";
 
   return (
     <>
       {/* TODO: enable devs to use this in prod for user support / debugging */}
-      {visible && (
-        <PersonnelSwitcher
-          personnel={personnel}
-          activePersonnelId={activePersonnelId}
-        />
-      )}
+      {visible && <PersonnelSwitcher personnel={personnel} activePersonnelId={activePersonnelId} />}
     </>
   );
 }

@@ -1,8 +1,8 @@
-import { GENDER_OPTIONS } from "#/lib/constants";
-import { stringValidation } from "#/lib/utils";
 import { ImplementerRole } from "@prisma/client";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
+import { GENDER_OPTIONS } from "#/lib/constants";
+import { stringValidation } from "#/lib/utils";
 
 const bankFieldsSchema = z.object({
   bankName: stringValidation("Please enter your bank name"),
@@ -16,10 +16,7 @@ const mpesaFieldsSchema = z.object({
   mpesaNumber: z
     .string()
     .min(1, "Please enter your M-pesa number")
-    .refine(
-      (val) => !val || isValidPhoneNumber(val, "KE"),
-      "Invalid Kenyan phone number",
-    ),
+    .refine((val) => !val || isValidPhoneNumber(val, "KE"), "Invalid Kenyan phone number"),
   mpesaName: stringValidation("Please enter your M-pesa name"),
 });
 
@@ -37,10 +34,7 @@ export const ProfileSchema = z
     cellNumber: z
       .string()
       .min(1, "Please enter your phone number")
-      .refine(
-        (val) => !val || isValidPhoneNumber(val, "KE"),
-        "Invalid Kenyan phone number",
-      ),
+      .refine((val) => !val || isValidPhoneNumber(val, "KE"), "Invalid Kenyan phone number"),
     mpesaNumber: z.string().optional(),
     mpesaName: z.string().optional(),
     dateOfBirth: z.date().optional(),

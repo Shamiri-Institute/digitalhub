@@ -1,5 +1,5 @@
-import { GENDER_OPTIONS } from "#/lib/constants";
 import { z } from "zod";
+import { GENDER_OPTIONS } from "#/lib/constants";
 
 export const BaseProfileSchema = z.object({
   idNumber: z.string().min(1),

@@ -3,9 +3,7 @@ import { getServerSession } from "next-auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
-export type CurrentHubCoordinator = Awaited<
-  ReturnType<typeof currentHubCoordinator>
->;
+export type CurrentHubCoordinator = Awaited<ReturnType<typeof currentHubCoordinator>>;
 
 export async function currentHubCoordinator() {
   const user = await getCurrentUser();
@@ -235,9 +233,7 @@ export async function currentFellow() {
 
 export type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>;
 
-export type CurrentClinicalLead = Awaited<
-  ReturnType<typeof currentClinicalLead>
->;
+export type CurrentClinicalLead = Awaited<ReturnType<typeof currentClinicalLead>>;
 
 export async function currentClinicalLead() {
   const user = await getCurrentUser();
@@ -266,9 +262,7 @@ export async function currentClinicalLead() {
   return { ...clinicalLead, user };
 }
 
-export type CurrentClinicalTeam = Awaited<
-  ReturnType<typeof currentClinicalTeam>
->;
+export type CurrentClinicalTeam = Awaited<ReturnType<typeof currentClinicalTeam>>;
 
 export async function currentClinicalTeam() {
   const user = await getCurrentUser();

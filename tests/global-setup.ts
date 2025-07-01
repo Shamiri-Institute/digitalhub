@@ -29,7 +29,7 @@ const sessionFixtures = [
 async function globalSetup() {
   const browser = await chromium.launch();
 
-  for (let { userEmail, stateFile } of sessionFixtures) {
+  for (const { userEmail, stateFile } of sessionFixtures) {
     console.log(`Adding session token for ${userEmail} to browser`);
 
     const sessionToken = await generateSessionToken(userEmail);
@@ -37,7 +37,7 @@ async function globalSetup() {
       storageState: stateFile,
     });
 
-    let futureDate = new Date();
+    const futureDate = new Date();
     futureDate.setFullYear(futureDate.getFullYear() + 1);
     const futureTimestamp = Math.floor(futureDate.getTime() / 1000);
 

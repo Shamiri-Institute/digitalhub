@@ -19,9 +19,7 @@ export type SupervisorPayoutHistoryType = {
   fellowDetails: FellowPayoutDetail[];
 };
 
-export async function loadSupervisorPayoutHistory(): Promise<
-  SupervisorPayoutHistoryType[]
-> {
+export async function loadSupervisorPayoutHistory(): Promise<SupervisorPayoutHistoryType[]> {
   const supervisor = await currentSupervisor();
 
   if (!supervisor) {

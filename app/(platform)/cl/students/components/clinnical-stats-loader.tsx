@@ -33,10 +33,7 @@ export default function ClinicalStatsLoader() {
         </div>
       </ChartCard>
 
-      <ChartCard
-        showCardFooter={false}
-        title="Clinical Cases by Initial Contact"
-      >
+      <ChartCard showCardFooter={false} title="Clinical Cases by Initial Contact">
         <div className="relative h-[220px] w-full">
           <Skeleton className="absolute left-1/2 top-1/2 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full" />
           <Skeleton className="absolute left-1/2 top-1/2 h-[140px] w-[140px] -translate-x-1/2 -translate-y-1/2 rounded-full" />

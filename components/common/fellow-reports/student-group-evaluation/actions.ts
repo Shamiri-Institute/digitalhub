@@ -20,9 +20,7 @@ export type StudentGroupEvaluationType = {
 };
 
 const transformEvaluationData = (data: any[]): StudentGroupEvaluationType[] => {
-  const groupedByFellow = data.reduce<
-    Record<string, StudentGroupEvaluationType>
-  >((acc, item) => {
+  const groupedByFellow = data.reduce<Record<string, StudentGroupEvaluationType>>((acc, item) => {
     const fellowId = item.group.leader.id;
     const groupName = item.group.groupName;
 
@@ -39,13 +37,8 @@ const transformEvaluationData = (data: any[]): StudentGroupEvaluationType[] => {
 
     const sessionData = {
       sessionId: item.id,
-      session:
-        item?.session?.sessionType ??
-        item.sessionType ??
-        item.sessionType ??
-        "-",
-      cooperation:
-        item.cooperation1 ?? item.cooperation2 ?? item.cooperation3 ?? 0,
+      session: item?.session?.sessionType ?? item.sessionType ?? item.sessionType ?? "-",
+      cooperation: item.cooperation1 ?? item.cooperation2 ?? item.cooperation3 ?? 0,
       engagement: item.engagement1 ?? item.engagement2 ?? item.engagement3 ?? 0,
       engagementComment: item.engagementComment ?? "",
       cooperationComment: item.cooperationComment ?? "",
@@ -55,12 +48,8 @@ const transformEvaluationData = (data: any[]): StudentGroupEvaluationType[] => {
     acc[fellowId].session.push(sessionData);
 
     const sessions = acc[fellowId].session;
-    acc[fellowId].avgCooperation = calculateAverage(
-      sessions.map((s) => s.cooperation),
-    );
-    acc[fellowId].avgEngagement = calculateAverage(
-      sessions.map((s) => s.engagement),
-    );
+    acc[fellowId].avgCooperation = calculateAverage(sessions.map((s) => s.cooperation));
+    acc[fellowId].avgEngagement = calculateAverage(sessions.map((s) => s.engagement));
 
     return acc;
   }, {});
@@ -95,10 +84,7 @@ export async function loadStudentGroupEvaluations() {
   }
 }
 
-export async function editStudentGroupEvaluation(
-  evaluationId: string,
-  data: any,
-) {
+export async function editStudentGroupEvaluation(evaluationId: string, data: any) {
   try {
     await db.interventionGroupReport.update({
       where: { id: evaluationId },

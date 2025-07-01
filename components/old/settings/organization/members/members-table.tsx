@@ -2,16 +2,16 @@
 
 import { ChevronDownIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
+  type ColumnDef,
+  type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type SortingState,
   useReactTable,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import * as React from "react";
 
@@ -30,9 +30,8 @@ import { Table, TableBody, TableCell, TableRow } from "#/components/ui/table";
 import { cn } from "#/lib/utils";
 import { RoleTypes } from "#/models/role";
 import { constants } from "#/tests/constants";
-import { Member } from "./page";
-
 import { AddMemberDialog } from "./add-member-dialog";
+import type { Member } from "./page";
 
 const MemberRolesOrStateList = [
   ...RoleTypes.map((role) => role.name),
@@ -86,10 +85,7 @@ const columns: ColumnDef<Member>[] = [
         <div className="flex justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-8 w-8 p-0 text-muted-foreground"
-              >
+              <Button variant="ghost" className="h-8 w-8 p-0 text-muted-foreground">
                 <span className="sr-only">Open menu</span>
                 <DotsHorizontalIcon className="h-4 w-4" />
               </Button>
@@ -107,11 +103,8 @@ const columns: ColumnDef<Member>[] = [
 
 export function MembersTable({ members }: { members: Member[] }) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
@@ -150,12 +143,8 @@ export function MembersTable({ members }: { members: Member[] }) {
             </div>
             <Input
               placeholder="Search by name or email"
-              value={
-                (table.getColumn("display")?.getFilterValue() as string) ?? ""
-              }
-              onChange={(event) =>
-                table.getColumn("display")?.setFilterValue(event.target.value)
-              }
+              value={(table.getColumn("display")?.getFilterValue() as string) ?? ""}
+              onChange={(event) => table.getColumn("display")?.setFilterValue(event.target.value)}
               className="max-w-sm bg-card pl-6 text-[0.8125rem] md:pl-8 md:text-sm"
             />
             <div className="ml-2">
@@ -165,8 +154,7 @@ export function MembersTable({ members }: { members: Member[] }) {
                     variant="outline"
                     className="ml-auto whitespace-nowrap px-2 py-1.5 text-[0.8125rem] font-medium md:px-4 md:py-2 md:text-sm"
                   >
-                    {roleFilter}{" "}
-                    <ChevronDownIcon className="ml-1 h-4 w-4 md:ml-2" />
+                    {roleFilter} <ChevronDownIcon className="ml-1 h-4 w-4 md:ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -177,9 +165,7 @@ export function MembersTable({ members }: { members: Member[] }) {
                         className="relative flex justify-between pr-10"
                         onSelect={() => {
                           setRoleFilter(role);
-                          table
-                            .getColumn("role")
-                            ?.setFilterValue(role === "All" ? "" : role);
+                          table.getColumn("role")?.setFilterValue(role === "All" ? "" : role);
                         }}
                       >
                         {role}
@@ -227,20 +213,14 @@ export function MembersTable({ members }: { members: Member[] }) {
                           "overflow-hidden text-ellipsis": idx === 0,
                         })}
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
                     No {getOptionDisplayName(roleFilter, tableCount)}.
                   </TableCell>
                 </TableRow>
@@ -253,19 +233,12 @@ export function MembersTable({ members }: { members: Member[] }) {
   );
 }
 
-function getOptionDisplayName(
-  name: (typeof MemberRolesOrStateList)[number],
-  count: number,
-) {
+function getOptionDisplayName(name: (typeof MemberRolesOrStateList)[number], count: number) {
   let displayName: (typeof MemberRolesOrStateList)[number] = name.toLowerCase();
   if (displayName === "all") {
     displayName = "member";
   }
-  if (
-    displayName === "external" ||
-    displayName === "operations" ||
-    displayName === "disabled"
-  ) {
+  if (displayName === "external" || displayName === "operations" || displayName === "disabled") {
     displayName = `${displayName} member`;
   }
 

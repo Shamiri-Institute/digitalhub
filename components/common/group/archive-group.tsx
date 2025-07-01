@@ -1,18 +1,14 @@
+import { InfoIcon } from "lucide-react";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { archiveInterventionGroup } from "#/lib/actions/group";
-import { InfoIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useState } from "react";
 
 export default function ArchiveGroup({
   groupId,
@@ -33,8 +29,7 @@ export default function ArchiveGroup({
     const response = await archiveInterventionGroup(groupId);
     if (!response.success) {
       toast({
-        description:
-          response.message ?? "Something went wrong, please try again",
+        description: response.message ?? "Something went wrong, please try again",
       });
       return;
     }
@@ -60,9 +55,8 @@ export default function ArchiveGroup({
           <Alert variant="destructive">
             <AlertTitle className="flex gap-2">
               <InfoIcon className="h-4 w-4 shrink-0" />
-              Once this change has been made it is irreversible and will need
-              you to contact support in order to modify. Please be sure of your
-              action before you confirm.
+              Once this change has been made it is irreversible and will need you to contact support
+              in order to modify. Please be sure of your action before you confirm.
             </AlertTitle>
           </Alert>
         </div>

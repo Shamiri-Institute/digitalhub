@@ -1,7 +1,7 @@
 "use client";
 
-import * as React from "react";
-
+import { format } from "date-fns";
+import type * as React from "react";
 import {
   Sheet,
   SheetContent,
@@ -10,7 +10,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "#/components/ui/sheet";
-import { format } from "date-fns";
 
 export function SchedulingDialog({ children }: { children: React.ReactNode }) {
   const sessions = [
@@ -54,8 +53,7 @@ export function SchedulingDialog({ children }: { children: React.ReactNode }) {
               <span className="ml-4">{session.title}</span>
             </div>
             <p className="mt-2 text-gray-500">
-              {format(session.date, "EEEE, MMM dd")} |{" "}
-              {format(session.date, "h:mm a")}
+              {format(session.date, "EEEE, MMM dd")} | {format(session.date, "h:mm a")}
             </p>
           </div>
         ))}

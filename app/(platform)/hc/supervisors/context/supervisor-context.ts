@@ -1,5 +1,5 @@
-import { SupervisorsData } from "#/app/(platform)/hc/supervisors/components/columns";
-import { createContext, Dispatch, SetStateAction } from "react";
+import { createContext, type Dispatch, type SetStateAction } from "react";
+import type { SupervisorsData } from "#/app/(platform)/hc/supervisors/components/columns";
 
 type SupervisorContextData = {
   editDialog: boolean;

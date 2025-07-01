@@ -1,4 +1,4 @@
-import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
+import { Suspense } from "react";
 
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
 import MainSupervisorsDataTable from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
@@ -6,11 +6,11 @@ import SupervisorChartsWrapper from "#/app/(platform)/hc/supervisors/components/
 import SupervisorProvider from "#/app/(platform)/hc/supervisors/components/supervisor-provider";
 import WeeklyHubTeamMeetingForm from "#/app/(platform)/hc/supervisors/components/weekly-hub-team-meeting";
 import { currentHubCoordinator } from "#/app/auth";
+import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { Suspense } from "react";
 
 export default async function SupervisorsPage() {
   const coordinator = await currentHubCoordinator();
@@ -57,9 +57,7 @@ export default async function SupervisorsPage() {
         </div>
 
         <Suspense fallback={<GraphLoadingIndicator />}>
-          <SupervisorChartsWrapper
-            coordinator={{ assignedHubId: coordinator?.assignedHubId }}
-          />
+          <SupervisorChartsWrapper coordinator={{ assignedHubId: coordinator?.assignedHubId }} />
         </Suspense>
 
         <Separator />

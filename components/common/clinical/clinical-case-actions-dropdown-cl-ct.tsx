@@ -1,4 +1,4 @@
-import { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
+import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import { ViewTerminationReasons } from "#/app/(platform)/cl/clinical/components/view-termination-reasons";
 import { ViewCaseNotes } from "#/components/common/clinical/view-case-notes";
 import { ViewTreatmentPlan } from "#/components/common/clinical/view-treatment-plan";
@@ -32,9 +32,7 @@ export default function ClinicalLeadCaseActionsDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 

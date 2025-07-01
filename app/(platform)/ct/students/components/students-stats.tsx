@@ -1,19 +1,8 @@
 "use client";
 
+import { Cell, Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { generateRandomColor, studentsGroupByColors } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";
-import {
-  Cell,
-  Label,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
-
-import {
-  generateRandomColor,
-  studentsGroupByColors,
-} from "#/components/charts/constants";
 
 export default function StudentsStatsBreakdown({
   studentsStats,
@@ -46,19 +35,12 @@ export default function StudentsStatsBreakdown({
                   position="center"
                   className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {studentsStats.formStats.reduce(
-                    (acc: number, val: any) => acc + val.value,
-                    0,
-                  )}
+                  {studentsStats.formStats.reduce((acc: number, val: any) => acc + val.value, 0)}
                 </Label>
                 {studentsStats.formStats.map((val: any, index: number) => (
                   <Cell
                     key={index}
-                    fill={
-                      studentsGroupByColors[
-                        index % studentsGroupByColors.length
-                      ]
-                    }
+                    fill={studentsGroupByColors[index % studentsGroupByColors.length]}
                   />
                 ))}
               </Pie>
@@ -112,19 +94,12 @@ export default function StudentsStatsBreakdown({
                   position="center"
                   className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {studentsStats.genderStats.reduce(
-                    (acc: number, val: any) => acc + val.value,
-                    0,
-                  )}
+                  {studentsStats.genderStats.reduce((acc: number, val: any) => acc + val.value, 0)}
                 </Label>
                 {studentsStats.genderStats.map((val, index) => (
                   <Cell
                     key={index}
-                    fill={
-                      studentsGroupByColors[
-                        index % studentsGroupByColors.length
-                      ]
-                    }
+                    fill={studentsGroupByColors[index % studentsGroupByColors.length]}
                   />
                 ))}
               </Pie>

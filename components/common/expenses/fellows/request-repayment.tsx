@@ -1,5 +1,12 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { submitRequestRepayment } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
+import type { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -8,10 +15,6 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { useState } from "react";
-
-import { submitRequestRepayment } from "#/app/(platform)/hc/reporting/expenses/fellows/actions";
-import { FellowExpenseData } from "#/components/common/expenses/fellows/fellow-expense-table-dropdown";
 import {
   Form,
   FormControl,
@@ -24,9 +27,6 @@ import { Input } from "#/components/ui/input";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export const RequestRepaymentSchema = z.object({
   comments: stringValidation("Please enter your comments"),
@@ -60,9 +60,7 @@ export default function RequestRepaymentFellows({
       toast({
         variant: "destructive",
         title: "Submission error",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -102,15 +100,10 @@ export default function RequestRepaymentFellows({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Confirm M-Pesa no.{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Confirm M-Pesa no. <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Input placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -123,11 +116,7 @@ export default function RequestRepaymentFellows({
                   <FormItem>
                     <FormLabel>Additional comments</FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Text area"
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Textarea placeholder="Text area" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

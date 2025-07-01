@@ -1,8 +1,8 @@
 "use client";
 
-import { Session } from "next-auth";
+import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
-import * as React from "react";
+import type * as React from "react";
 import { I18nProvider } from "react-aria";
 
 import { Toaster } from "#/components/ui/toaster";

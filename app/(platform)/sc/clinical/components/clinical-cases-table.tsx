@@ -1,5 +1,7 @@
 "use client";
-import { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
+import type { Prisma } from "@prisma/client";
+import { Plus } from "lucide-react";
+import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import { columns } from "#/app/(platform)/sc/clinical/columns";
 import { ClinicalDiagnosingBoard } from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
 import ViewMarkClinicalSessions from "#/app/(platform)/sc/clinical/components/view-mark-clinical-sessions";
@@ -7,8 +9,6 @@ import { AddNewClinicalCaseForm } from "#/components/common/clinical/add-new-cli
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
-import { Prisma } from "@prisma/client";
-import { Plus } from "lucide-react";
 
 export default function ClinicalCasesTable({
   cases,
@@ -82,10 +82,7 @@ export default function ClinicalCasesTable({
       renderSubComponent={({ row }) => (
         <div className="space-y-6 p-4">
           <ClinicalDiagnosingBoard currentcase={row.original} />
-          <ViewMarkClinicalSessions
-            currentcase={row.original}
-            role="SUPERVISOR"
-          />
+          <ViewMarkClinicalSessions currentcase={row.original} role="SUPERVISOR" />
         </div>
       )}
       emptyStateMessage="No clinical cases found"

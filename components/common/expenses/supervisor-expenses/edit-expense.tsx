@@ -1,4 +1,14 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format, startOfWeek, subWeeks } from "date-fns";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import {
+  type HubSupervisorExpensesType,
+  updateSupervisorExpense,
+} from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
+import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -7,13 +17,6 @@ import {
   DialogHeader,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import { useEffect, useState } from "react";
-
-import {
-  HubSupervisorExpensesType,
-  updateSupervisorExpense,
-} from "#/app/(platform)/hc/reporting/expenses/supervisors/actions";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import {
   Form,
   FormControl,
@@ -33,24 +36,18 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { stringValidation } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format, startOfWeek, subWeeks } from "date-fns";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 function generateWeekFieldValues() {
   const numWeeks = 4;
 
-  let selectValues = [];
+  const selectValues = [];
   const today = new Date();
 
   for (let i = numWeeks; i >= 0; i--) {
     const date = subWeeks(today, i);
     const week = startOfWeek(date, { weekStartsOn: 1 });
     selectValues.push(
-      <SelectItem value={format(week, "yyyy-MM-dd")}>
-        {format(week, "dd/MM/yyyy")}
-      </SelectItem>,
+      <SelectItem value={format(week, "yyyy-MM-dd")}>{format(week, "dd/MM/yyyy")}</SelectItem>,
     );
   }
 
@@ -89,9 +86,7 @@ export default function HCEditSupervisorExpense({
 
   const transportSubtype = form.getValues("expenseType");
 
-  const onSubmit = async (
-    data: z.infer<typeof EditSupervisorExpenseSchema>,
-  ) => {
+  const onSubmit = async (data: z.infer<typeof EditSupervisorExpenseSchema>) => {
     const response = await updateSupervisorExpense({
       id: expense.id,
       data,
@@ -101,9 +96,7 @@ export default function HCEditSupervisorExpense({
       toast({
         variant: "destructive",
         title: "Submission error",
-        description:
-          response.message ??
-          "Something went wrong during update, please try again",
+        description: response.message ?? "Something went wrong during update, please try again",
       });
       return;
     }
@@ -142,13 +135,9 @@ export default function HCEditSupervisorExpense({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Select date /time{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Select date /time <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a date/time" />
@@ -184,9 +173,7 @@ export default function HCEditSupervisorExpense({
                             defaultValue={field.value}
                             onChange={field.onChange}
                             placeholder={
-                              <span className="text-muted-foreground">
-                                Select reason
-                              </span>
+                              <span className="text-muted-foreground">Select reason</span>
                             }
                           />
                         </SelectTrigger>
@@ -207,11 +194,7 @@ export default function HCEditSupervisorExpense({
                         Select session
                         <span className="text-shamiri-light-red">*</span>
                       </FormLabel>
-                      <Select
-                        name="session"
-                        value={field.value}
-                        onValueChange={field.onChange}
-                      >
+                      <Select name="session" value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select session" />
                         </SelectTrigger>
@@ -226,9 +209,7 @@ export default function HCEditSupervisorExpense({
                               <SelectItem value="F6">Follow-up 6</SelectItem>
                               <SelectItem value="F7">Follow-up 7</SelectItem>
                               <SelectItem value="F8">Follow-up 8</SelectItem>
-                              <SelectItem value="data-collection">
-                                Data collection
-                              </SelectItem>
+                              <SelectItem value="data-collection">Data collection</SelectItem>
                             </>
                           ) : (
                             <>
@@ -251,15 +232,10 @@ export default function HCEditSupervisorExpense({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Total Amount (KES){" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Total Amount (KES) <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder=""
-                        className="resize-none"
-                        {...field}
-                      />
+                      <Input placeholder="" className="resize-none" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -273,15 +249,10 @@ export default function HCEditSupervisorExpense({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          M-Pesa name.{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          M-Pesa name. <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder=""
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input placeholder="" className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -295,15 +266,10 @@ export default function HCEditSupervisorExpense({
                     <div className="w-full">
                       <FormItem>
                         <FormLabel>
-                          M-Pesa no.{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          M-Pesa no. <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder=""
-                            className="w-full flex-1"
-                            {...field}
-                          />
+                          <Input placeholder="" className="w-full flex-1" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

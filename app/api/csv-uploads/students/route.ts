@@ -1,9 +1,9 @@
+import type { Prisma } from "@prisma/client";
+import * as fastCsv from "fast-csv";
+import { type NextRequest, NextResponse } from "next/server";
+import { Readable } from "stream";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
-import * as fastCsv from "fast-csv";
-import { NextRequest, NextResponse } from "next/server";
-import { Readable } from "stream";
 
 const studentsCSVHeaders = [
   "School", // prefer schoolId ?
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     dataStream
       .pipe(fastCsv.parse({ headers: true }))
       .on("data", async (row) => {
-        let studentId = objectId("stu");
+        const studentId = objectId("stu");
         rows.push({
           id: studentId,
           createdAt: new Date(),
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           groupName: row.GroupNumber,
           studentName: row.StudentName,
           admissionNumber: row.AdmissionNumber,
-          form: parseInt(row.Form),
+          form: Number.parseInt(row.Form),
           stream: row.Stream,
           gender: row.Gender,
           visibleId: studentId,
@@ -96,10 +96,7 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           console.error("Error uploading to database:", error);
-          return NextResponse.json(
-            { error: "Error uploading to database" },
-            { status: 500 },
-          );
+          return NextResponse.json({ error: "Error uploading to database" }, { status: 500 });
         }
       });
 

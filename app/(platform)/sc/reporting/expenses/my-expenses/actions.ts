@@ -1,13 +1,11 @@
 "use server";
 
+import { signOut } from "next-auth/react";
 import { currentHubCoordinator, currentSupervisor } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
 
-export type SupervisorExpensesType = Awaited<
-  ReturnType<typeof loadSupervisorExpenses>
->[number];
+export type SupervisorExpensesType = Awaited<ReturnType<typeof loadSupervisorExpenses>>[number];
 
 export async function loadSupervisorExpenses() {
   const supervisor = await currentSupervisor();
@@ -33,43 +31,35 @@ export async function loadSupervisorExpenses() {
     },
   });
 
-  return supervisorsExpenses.map(
-    (expense: (typeof supervisorsExpenses)[number]) => {
-      const details = expense.details;
-      const typeOfExpense =
-        typeof details === "object" && details !== null && "subtype" in details
-          ? details.subtype
-          : "N/A";
-      const session =
-        typeof details === "object" && details !== null && "session" in details
-          ? details.session
-          : "N/A";
-      return {
-        id: expense.id,
-        supervisorName: expense.supervisor.supervisorName,
-        dateCreated: expense.createdAt,
-        dateOfExpense: expense.incurredAt,
-        typeOfExpense,
-        session,
-        destination: "N/A",
-        amount: expense.amount,
-        status: expense.status,
-        // TODO: Add hub coordinator name
-        hubCoordinatorName: "N/A",
-        mpesaName: expense.mpesaName,
-        mpesaNumber: expense.mpesaNumber,
-      };
-    },
-  );
+  return supervisorsExpenses.map((expense: (typeof supervisorsExpenses)[number]) => {
+    const details = expense.details;
+    const typeOfExpense =
+      typeof details === "object" && details !== null && "subtype" in details
+        ? details.subtype
+        : "N/A";
+    const session =
+      typeof details === "object" && details !== null && "session" in details
+        ? details.session
+        : "N/A";
+    return {
+      id: expense.id,
+      supervisorName: expense.supervisor.supervisorName,
+      dateCreated: expense.createdAt,
+      dateOfExpense: expense.incurredAt,
+      typeOfExpense,
+      session,
+      destination: "N/A",
+      amount: expense.amount,
+      status: expense.status,
+      // TODO: Add hub coordinator name
+      hubCoordinatorName: "N/A",
+      mpesaName: expense.mpesaName,
+      mpesaNumber: expense.mpesaNumber,
+    };
+  });
 }
 
-export async function deleteSupervisorExpenseRequest({
-  id,
-  name,
-}: {
-  id: string;
-  name: string;
-}) {
+export async function deleteSupervisorExpenseRequest({ id, name }: { id: string; name: string }) {
   try {
     const supervisor = await currentSupervisor();
 
@@ -168,7 +158,7 @@ export async function addSupervisorExpense({
         hubId: hubCoordinator.assignedHubId!,
         hubCoordinatorId: hubCoordinator.id,
         incurredAt: new Date(data.week),
-        amount: parseInt(data.totalAmount),
+        amount: Number.parseInt(data.totalAmount),
         kind: data.expenseType,
         status: "PENDING",
         details: {
@@ -220,7 +210,7 @@ export async function updateSupervisorExpense({
       where: { id },
       data: {
         incurredAt: new Date(data.week),
-        amount: parseInt(data.totalAmount),
+        amount: Number.parseInt(data.totalAmount),
         kind: data.expenseType,
         details: {
           subtype: data.expenseType,

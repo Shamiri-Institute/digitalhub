@@ -1,5 +1,7 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
+import type { z } from "zod";
 import {
   DropoutStudentSchema,
   MarkAttendanceSchema,
@@ -10,8 +12,6 @@ import { StudentDetailsSchema } from "#/components/common/student/schemas";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { generateStudentVisibleID } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
-import { z } from "zod";
 
 async function checkAuth() {
   const user = await getCurrentPersonnel();
@@ -30,9 +30,7 @@ async function checkAuth() {
   // return { hubCoordinator, supervisor, fellow, user };
 }
 
-export async function submitStudentDetails(
-  data: z.infer<typeof StudentDetailsSchema>,
-) {
+export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSchema>) {
   // TODO: Add db transactions
   try {
     const user = await checkAuth();
@@ -69,72 +67,63 @@ export async function submitStudentDetails(
         success: true,
         message: `Successfully updated details for ${studentName}`,
       };
-    } else {
-      const group = await db.interventionGroup.findFirstOrThrow({
-        where: {
-          id: assignedGroupId,
-        },
-        include: {
-          leader: {
-            include: {
-              supervisor: true,
-            },
+    }
+    const group = await db.interventionGroup.findFirstOrThrow({
+      where: {
+        id: assignedGroupId,
+      },
+      include: {
+        leader: {
+          include: {
+            supervisor: true,
           },
         },
-      });
-      const school = await db.school.findFirstOrThrow({
-        where: {
-          id: schoolId,
-        },
-      });
+      },
+    });
+    const school = await db.school.findFirstOrThrow({
+      where: {
+        id: schoolId,
+      },
+    });
 
-      const studentCount = await db.student.count();
-      const student = await db.student.create({
-        data: {
-          id: objectId("stu"),
-          visibleId: generateStudentVisibleID(
-            group?.groupName ?? "NA",
-            studentCount,
-          ),
-          studentName,
-          schoolId: school.id,
-          admissionNumber,
-          yearOfBirth: Number(yearOfBirth),
-          gender,
-          form: Number(form),
-          stream,
-          assignedGroupId,
-          implementerId: user.implementerId,
-          fellowId: group.leader.id,
-          supervisorId: group.leader.supervisor?.id,
-        },
-      });
+    const studentCount = await db.student.count();
+    const student = await db.student.create({
+      data: {
+        id: objectId("stu"),
+        visibleId: generateStudentVisibleID(group?.groupName ?? "NA", studentCount),
+        studentName,
+        schoolId: school.id,
+        admissionNumber,
+        yearOfBirth: Number(yearOfBirth),
+        gender,
+        form: Number(form),
+        stream,
+        assignedGroupId,
+        implementerId: user.implementerId,
+        fellowId: group.leader.id,
+        supervisorId: group.leader.supervisor?.id,
+      },
+    });
 
-      return {
-        success: true,
-        message: `Successfully added ${student.studentName} to group ${group.groupName}`,
-        data: student,
-      };
-    }
+    return {
+      success: true,
+      message: `Successfully added ${student.studentName} to group ${group.groupName}`,
+      data: student,
+    };
   } catch (err) {
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ??
-        "Sorry, could not update student information.",
+      message: (err as Error)?.message ?? "Sorry, could not update student information.",
     };
   }
 }
 
-export async function markStudentAttendance(
-  data: z.infer<typeof MarkAttendanceSchema>,
-) {
+export async function markStudentAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
     const auth = await checkAuth();
 
-    const { id, sessionId, absenceReason, attended, comments } =
-      MarkAttendanceSchema.parse(data);
+    const { id, sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
     const session = await db.interventionSession.findUniqueOrThrow({
       where: {
@@ -145,7 +134,7 @@ export async function markStudentAttendance(
     if (!session.occurred) {
       return {
         success: false,
-        message: `This session has not occurred yet.`,
+        message: "This session has not occurred yet.",
       };
     }
 
@@ -183,43 +172,31 @@ export async function markStudentAttendance(
           groupId: student.assignedGroup.id,
           fellowId: student.assignedGroup.leaderId,
           markedBy: auth.user.user.id,
-          attended:
-            attended === "attended"
-              ? true
-              : attended === "missed"
-                ? false
-                : null,
+          attended: attended === "attended" ? true : attended === "missed" ? false : null,
         },
         update: {
           markedBy: auth.user.user.id,
           studentId: student.id,
           absenceReason,
           comments,
-          attended:
-            attended === "attended"
-              ? true
-              : attended === "missed"
-                ? false
-                : null,
+          attended: attended === "attended" ? true : attended === "missed" ? false : null,
         },
       });
       return {
         success: true,
         message: `Successfully marked attendance for ${student.studentName}`,
       };
-    } else {
-      return {
-        success: false,
-        message: `Student details not found.`,
-      };
     }
+    return {
+      success: false,
+      message: "Student details not found.",
+    };
   } catch (err) {
     console.error(err);
     return {
       success: false,
       message:
-        (err as Error)?.message ??
-        "Sorry, an error occurred while marking student attendance.",
+        (err as Error)?.message ?? "Sorry, an error occurred while marking student attendance.",
     };
   }
 }
@@ -230,8 +207,7 @@ export async function markManyStudentsAttendance(
 ) {
   try {
     const auth = await checkAuth();
-    const { sessionId, absenceReason, attended, comments } =
-      MarkAttendanceSchema.parse(data);
+    const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
     const session = await db.interventionSession.findUniqueOrThrow({
       where: {
@@ -242,12 +218,11 @@ export async function markManyStudentsAttendance(
     if (!session.occurred) {
       return {
         success: false,
-        message: `This session has not occurred yet.`,
+        message: "This session has not occurred yet.",
       };
     }
 
-    const status =
-      attended === "attended" ? true : attended === "missed" ? false : null;
+    const status = attended === "attended" ? true : attended === "missed" ? false : null;
 
     await db.$transaction(async (tx) => {
       // Create new attendance records
@@ -278,13 +253,11 @@ export async function markManyStudentsAttendance(
         },
       });
 
-      let createRecords: Prisma.StudentAttendanceCreateManyInput[] = [];
+      const createRecords: Prisma.StudentAttendanceCreateManyInput[] = [];
 
       students.forEach((student) => {
         if (!student.assignedGroup) {
-          throw new Error(
-            `${student.studentName} has not been assigned to a group.`,
-          );
+          throw new Error(`${student.studentName} has not been assigned to a group.`);
         }
 
         createRecords.push({
@@ -330,15 +303,12 @@ export async function markManyStudentsAttendance(
     return {
       success: false,
       message:
-        (err as Error)?.message ??
-        "Sorry, an error occurred while marking student attendance.",
+        (err as Error)?.message ?? "Sorry, an error occurred while marking student attendance.",
     };
   }
 }
 
-export async function dropoutStudent(
-  data: z.infer<typeof DropoutStudentSchema>,
-) {
+export async function dropoutStudent(data: z.infer<typeof DropoutStudentSchema>) {
   try {
     await checkAuth();
 
@@ -387,22 +357,18 @@ export async function submitStudentReportingNotes(
     });
     return {
       success: true,
-      message: `Successfully submitted reporting notes`,
+      message: "Successfully submitted reporting notes",
     };
   } catch (err) {
     console.error(err);
     return {
       success: false,
-      message:
-        (err as Error)?.message ?? "Sorry, could not submit reporting notes.",
+      message: (err as Error)?.message ?? "Sorry, could not submit reporting notes.",
     };
   }
 }
 
-export async function checkExistingStudents(
-  admissionNumber: string,
-  schoolId: string,
-) {
+export async function checkExistingStudents(admissionNumber: string, schoolId: string) {
   await checkAuth();
   return await db.student.findMany({
     where: {

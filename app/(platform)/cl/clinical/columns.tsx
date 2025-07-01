@@ -1,13 +1,13 @@
 "use client";
 
-import { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
+import type { ColumnDef } from "@tanstack/react-table";
+import Image from "next/image";
+import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import ClinicalLeadCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown-cl-ct";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { ColumnDef } from "@tanstack/react-table";
-import Image from "next/image";
 
 export const columns: ColumnDef<HubClinicalCases>[] = [
   {
@@ -15,6 +15,7 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
     cell: ({ row }) => {
       return (
         <button
+          type="button"
           onClick={row.getToggleExpandedHandler()}
           className="cursor-pointer px-4 py-2"
         >
@@ -59,9 +60,7 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
       return (
         <div className="flex items-center gap-1">
           <span>{row.original.pseudonym}</span>
-          {flagged ? (
-            <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" />
-          ) : null}
+          {flagged ? <Icons.flagTriangleRight className="h-4 w-4 text-shamiri-red" /> : null}
         </div>
       );
     },
@@ -109,9 +108,7 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
   {
     id: "button",
     cell: ({ row }) => {
-      return (
-        <ClinicalLeadCaseActionsDropdownMenu clinicalCase={row.original} />
-      );
+      return <ClinicalLeadCaseActionsDropdownMenu clinicalCase={row.original} />;
     },
     enableHiding: false,
   },

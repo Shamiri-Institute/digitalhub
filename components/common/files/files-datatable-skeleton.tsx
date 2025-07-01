@@ -1,21 +1,14 @@
 "use client";
 
-import {
-  fileColumns,
-  SchoolFilesTableData,
-} from "#/components/common/files/columns";
+import type { ImplementerRole } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { fileColumns, type SchoolFilesTableData } from "#/components/common/files/columns";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Skeleton } from "#/components/ui/skeleton";
-import { ImplementerRole } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
 
-export default function FilesDatatableSkeleton({
-  role,
-}: {
-  role: ImplementerRole;
-}) {
+export default function FilesDatatableSkeleton({ role }: { role: ImplementerRole }) {
   const loadingColumns = fileColumns({
     setRenameDialog: () => {},
     setFile: () => {},
@@ -28,9 +21,7 @@ export default function FilesDatatableSkeleton({
         header: renderSkeleton ? column : "",
         id: column,
         cell: () => {
-          return renderSkeleton ? (
-            <Skeleton className="h-5 w-full bg-gray-200" />
-          ) : null;
+          return renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null;
         },
       };
     });

@@ -1,9 +1,9 @@
+import type { Prisma } from "@prisma/client";
+import * as fastCsv from "fast-csv";
+import { type NextRequest, NextResponse } from "next/server";
+import { Readable } from "stream";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
-import * as fastCsv from "fast-csv";
-import { NextRequest, NextResponse } from "next/server";
-import { Readable } from "stream";
 
 const supervisorCSVHeaders = [
   "supervisor_name",
@@ -72,45 +72,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rows: SupervisorUpploadSchema = await new Promise(
-      (resolve, reject) => {
-        const parsedRows: SupervisorUpploadSchema = [];
-        const dataStream = Readable.from([fileBuffer]);
+    const rows: SupervisorUpploadSchema = await new Promise((resolve, reject) => {
+      const parsedRows: SupervisorUpploadSchema = [];
+      const dataStream = Readable.from([fileBuffer]);
 
-        dataStream
-          .pipe(fastCsv.parse({ headers: true }))
-          .on("data", (row) => {
-            let supervisorId = objectId("sup");
+      dataStream
+        .pipe(fastCsv.parse({ headers: true }))
+        .on("data", (row) => {
+          const supervisorId = objectId("sup");
 
-            parsedRows.push({
-              id: supervisorId,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              supervisorName: row.supervisor_name,
-              cellNumber: row.cell_number,
-              hubId,
-              personalEmail: row.personal_email,
-              supervisorEmail: row.shamiri_email,
-              implementerId,
-              visibleId: supervisorId,
-              county: row.county,
-              subCounty: row.sub_county,
-              mpesaName: row.mpesa_name,
-              mpesaNumber: row.mpesa_number,
-              trainingLevel: row.training_level,
-              kra: row.kra,
-              idNumber: row.id_number,
-              bankName: row.bank_name,
-              bankBranch: row.bank_branch,
-              bankAccountName: row.bank_account_name,
-              bankAccountNumber: row.bank_account_number,
-            });
-          })
+          parsedRows.push({
+            id: supervisorId,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            supervisorName: row.supervisor_name,
+            cellNumber: row.cell_number,
+            hubId,
+            personalEmail: row.personal_email,
+            supervisorEmail: row.shamiri_email,
+            implementerId,
+            visibleId: supervisorId,
+            county: row.county,
+            subCounty: row.sub_county,
+            mpesaName: row.mpesa_name,
+            mpesaNumber: row.mpesa_number,
+            trainingLevel: row.training_level,
+            kra: row.kra,
+            idNumber: row.id_number,
+            bankName: row.bank_name,
+            bankBranch: row.bank_branch,
+            bankAccountName: row.bank_account_name,
+            bankAccountNumber: row.bank_account_number,
+          });
+        })
 
-          .on("error", (err) => reject(err))
-          .on("end", () => resolve(parsedRows));
-      },
-    );
+        .on("error", (err) => reject(err))
+        .on("end", () => resolve(parsedRows));
+    });
 
     await db.$transaction(async (prisma) => {
       await prisma.supervisor.createMany({ data: rows });
@@ -122,10 +120,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error processing file upload:", error);
-    return NextResponse.json(
-      { error: "Something went wrong. Please try again." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }
 

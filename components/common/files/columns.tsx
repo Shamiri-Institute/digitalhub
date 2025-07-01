@@ -1,10 +1,10 @@
 "use client";
 
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { Dispatch, SetStateAction } from "react";
 import SchoolFilesDataTableMenu from "#/components/common/files/files-datatable-menu";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import { Dispatch, SetStateAction } from "react";
 
 export type SchoolFilesTableData = Prisma.SchoolDocumentsGetPayload<{}>;
 
@@ -18,8 +18,7 @@ export const fileColumns = (state: {
     header: ({ table }) => (
       <Checkbox
         checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
+          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
         }
         onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
         aria-label="Select all"
@@ -62,9 +61,7 @@ export const fileColumns = (state: {
   },
   {
     id: "button",
-    cell: ({ row }) => (
-      <SchoolFilesDataTableMenu file={row.original} state={state} />
-    ),
+    cell: ({ row }) => <SchoolFilesDataTableMenu file={row.original} state={state} />,
     enableHiding: false,
   },
 ];

@@ -1,5 +1,5 @@
-import { Session } from "#/components/common/session/sessions-provider";
-import { createContext, Dispatch, SetStateAction } from "react";
+import { createContext, type Dispatch, type SetStateAction } from "react";
+import type { Session } from "#/components/common/session/sessions-provider";
 
 type RescheduleSessionContextData = {
   isOpen: boolean;
@@ -8,10 +8,9 @@ type RescheduleSessionContextData = {
   setSession: Dispatch<SetStateAction<Session | null>>;
 };
 
-export const RescheduleSessionContext =
-  createContext<RescheduleSessionContextData>({
-    isOpen: false,
-    setIsOpen: () => {},
-    session: null,
-    setSession: () => {},
-  });
+export const RescheduleSessionContext = createContext<RescheduleSessionContextData>({
+  isOpen: false,
+  setIsOpen: () => {},
+  session: null,
+  setSession: () => {},
+});

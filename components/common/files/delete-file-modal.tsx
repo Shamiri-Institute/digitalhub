@@ -1,21 +1,16 @@
 "use client";
 
+import { usePathname } from "next/navigation";
+import type { Dispatch, SetStateAction } from "react";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-import { SchoolFilesTableData } from "#/components/common/files/columns";
+import type { SchoolFilesTableData } from "#/components/common/files/columns";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { removeUploadedSchoolFile } from "#/lib/actions/file";
-import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction } from "react";
 
 export function RemoveUploadedFile({
   isOpen,
@@ -52,9 +47,7 @@ export function RemoveUploadedFile({
         <DialogAlertWidget>
           <div className="flex items-center gap-2">
             <span>{document.fileName}</span>
-            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-              {""}
-            </span>
+            <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
             <span>{document.type}</span>
           </div>
         </DialogAlertWidget>
@@ -64,9 +57,8 @@ export function RemoveUploadedFile({
         <div className="flex items-center space-x-2 rounded-xl border-2 border-shamiri-light-red-background-base/50 bg-shamiri-light-red-background-base/15 p-2 px-4">
           <Icons.info className="h-4 w-4 shrink-0 text-shamiri-light-red" />
           <p className="text-shamiri-light-red">
-            Once this change has been made it is irreversible and will need you
-            to contact support in order to modify. Please be sure of your action
-            before you confirm.
+            Once this change has been made it is irreversible and will need you to contact support
+            in order to modify. Please be sure of your action before you confirm.
           </p>
         </div>
         <Separator />

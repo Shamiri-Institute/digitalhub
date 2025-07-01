@@ -1,12 +1,10 @@
 "use server";
 
-import { CurrentSupervisor } from "#/app/auth";
+import type { CurrentSupervisor } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
-export async function getSchoolsForSupervisor(
-  supervisor: NonNullable<CurrentSupervisor>,
-) {
+export async function getSchoolsForSupervisor(supervisor: NonNullable<CurrentSupervisor>) {
   const assignedSchools = await db.school.findMany({
     where: {
       assignedSupervisorId: supervisor.id,

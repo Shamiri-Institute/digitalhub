@@ -7,32 +7,28 @@ export async function getOverallStudentsDataBreakdown() {
   const clinicalLead = await currentClinicalLead();
   if (!clinicalLead) throw new Error("Unauthorized");
 
-  const [
-    totalStudentsResult,
-    groupSessionsResult,
-    clinicalCasesResult,
-    clinicalSessionsResult,
-  ] = await Promise.all([
-    db.$queryRaw<[{ count: bigint }]>`
+  const [totalStudentsResult, groupSessionsResult, clinicalCasesResult, clinicalSessionsResult] =
+    await Promise.all([
+      db.$queryRaw<[{ count: bigint }]>`
       SELECT COUNT(*) as count 
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
       WHERE sc.hub_id = ${clinicalLead.assignedHubId}
     `,
-    db.$queryRaw<[{ count: bigint }]>`
+      db.$queryRaw<[{ count: bigint }]>`
       SELECT COUNT(*) as count 
       FROM intervention_sessions ins
       JOIN session_names sn ON ins.session_id = sn.id
       WHERE sn.hub_id = ${clinicalLead.assignedHubId}
     `,
-    db.$queryRaw<[{ count: bigint }]>`
+      db.$queryRaw<[{ count: bigint }]>`
       SELECT COUNT(*) as count 
       FROM clinical_screening_info csi
       JOIN students sts ON sts.id = csi.student_id
       JOIN schools sc ON sts.school_id = sc.id
       WHERE sc.hub_id = ${clinicalLead.assignedHubId}
     `,
-    db.$queryRaw<[{ count: bigint }]>`
+      db.$queryRaw<[{ count: bigint }]>`
       SELECT COUNT(*) as count 
       FROM clinical_session_attendance cs
       JOIN clinical_screening_info csi ON csi.id = cs."caseId"
@@ -40,7 +36,7 @@ export async function getOverallStudentsDataBreakdown() {
       JOIN schools sc ON sts.school_id = sc.id
       WHERE sc.hub_id = ${clinicalLead.assignedHubId}
     `,
-  ]);
+    ]);
 
   return {
     totalStudents: Number(totalStudentsResult[0].count),
@@ -54,9 +50,8 @@ export async function getStudentsDataBreakdown() {
   const clinicalLead = await currentClinicalLead();
   if (!clinicalLead) throw new Error("Unauthorized");
 
-  const [attendanceData, dropoutData, completionData, ratingsData] =
-    await Promise.all([
-      db.$queryRaw<{ sessionName: string | null; count: bigint }[]>`
+  const [attendanceData, dropoutData, completionData, ratingsData] = await Promise.all([
+    db.$queryRaw<{ sessionName: string | null; count: bigint }[]>`
       SELECT 
         sn.session_name as "sessionName",
         COUNT(DISTINCT sa.student_id) as count
@@ -71,7 +66,7 @@ export async function getStudentsDataBreakdown() {
       ORDER BY sn.session_name ASC
     `,
 
-      db.$queryRaw<{ reason: string | null; count: bigint }[]>`
+    db.$queryRaw<{ reason: string | null; count: bigint }[]>`
       SELECT drop_out_reason as reason, COUNT(*) as count
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
@@ -81,7 +76,7 @@ export async function getStudentsDataBreakdown() {
       ORDER BY count DESC
     `,
 
-      db.$queryRaw<{ name: string; value: number }[]>`
+    db.$queryRaw<{ name: string; value: number }[]>`
       WITH total_students AS (
         SELECT COUNT(*) as total
         FROM students s
@@ -113,12 +108,12 @@ export async function getStudentsDataBreakdown() {
         0 as value
       `,
 
-      db.$queryRaw<
-        {
-          session_name: string | null;
-          avg_student_behavior_rating: number | null;
-        }[]
-      >`
+    db.$queryRaw<
+      {
+        session_name: string | null;
+        avg_student_behavior_rating: number | null;
+      }[]
+    >`
       SELECT sn.session_name, AVG(isr.student_behavior_rating) as avg_student_behavior_rating
       FROM intervention_session_ratings isr
       JOIN intervention_sessions ins ON ins.id = isr.session_id
@@ -127,7 +122,7 @@ export async function getStudentsDataBreakdown() {
       GROUP BY sn.session_name
       ORDER BY sn.session_name ASC
     `,
-    ]);
+  ]);
 
   return {
     attendanceData: attendanceData.map((item) => ({
@@ -141,9 +136,7 @@ export async function getStudentsDataBreakdown() {
     completionData: completionData,
     ratingsData: ratingsData.map((item) => ({
       session: item.session_name || "Unknown",
-      value: item.avg_student_behavior_rating
-        ? Number(item.avg_student_behavior_rating)
-        : 0,
+      value: item.avg_student_behavior_rating ? Number(item.avg_student_behavior_rating) : 0,
     })),
   };
 }
@@ -152,13 +145,9 @@ export async function clinicalSessionsDataBreakdown() {
   const clinicalLead = await currentClinicalLead();
   if (!clinicalLead) throw new Error("Unauthorized");
 
-  const [
-    casesByStatus,
-    casesBySession,
-    casesBySupervisor,
-    casesByInitialContact,
-  ] = await Promise.all([
-    db.$queryRaw<{ caseStatus: string | null; count: bigint }[]>`
+  const [casesByStatus, casesBySession, casesBySupervisor, casesByInitialContact] =
+    await Promise.all([
+      db.$queryRaw<{ caseStatus: string | null; count: bigint }[]>`
       SELECT case_status as "caseStatus", COUNT(*) as count
       FROM clinical_screening_info csi
       JOIN students s ON s.id = csi.student_id
@@ -168,7 +157,7 @@ export async function clinicalSessionsDataBreakdown() {
       ORDER BY count DESC
     `,
 
-    db.$queryRaw<{ session: string | null; count: bigint }[]>`
+      db.$queryRaw<{ session: string | null; count: bigint }[]>`
       SELECT session, COUNT(*) as count
       FROM clinical_session_attendance csa
       JOIN clinical_screening_info csi ON csi.id = csa."caseId"
@@ -179,7 +168,7 @@ export async function clinicalSessionsDataBreakdown() {
       ORDER BY count DESC
     `,
 
-    db.$queryRaw<{ supervisorName: string | null; count: bigint }[]>`
+      db.$queryRaw<{ supervisorName: string | null; count: bigint }[]>`
       SELECT sp.supervisor_name as "supervisorName", COUNT(*) as count
       FROM clinical_screening_info csi
       JOIN students s ON s.id = csi.student_id
@@ -189,7 +178,7 @@ export async function clinicalSessionsDataBreakdown() {
       ORDER BY count DESC
     `,
 
-    db.$queryRaw<{ initialReferredFrom: string | null; count: bigint }[]>`
+      db.$queryRaw<{ initialReferredFrom: string | null; count: bigint }[]>`
       SELECT initial_referred_from_specified as "initialReferredFrom", COUNT(*) as count
       FROM clinical_screening_info csi
       JOIN students s ON s.id = csi.student_id
@@ -198,7 +187,7 @@ export async function clinicalSessionsDataBreakdown() {
       GROUP BY initial_referred_from_specified
       ORDER BY count DESC
     `,
-  ]);
+    ]);
 
   return {
     casesByStatus: casesByStatus.map((item) => ({

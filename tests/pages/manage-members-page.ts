@@ -1,4 +1,4 @@
-import { Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { constants } from "#/tests/constants";
 import { AppPage } from "#/tests/pages/app-page";
@@ -20,18 +20,10 @@ export class ManageMembersPage extends AppPage {
   }
 
   async selectRole(
-    role:
-      | "admin"
-      | "operations"
-      | "hub-coordinator"
-      | "supervisor"
-      | "researcher"
-      | "external",
+    role: "admin" | "operations" | "hub-coordinator" | "supervisor" | "researcher" | "external",
   ) {
     await this.page.getByTestId(constants.ADD_MEMBERS_ROLE).click();
-    await this.page
-      .getByTestId(`${constants.ADD_MEMBERS_ROLE}-${role}`)
-      .click();
+    await this.page.getByTestId(`${constants.ADD_MEMBERS_ROLE}-${role}`).click();
   }
 
   async submit() {
