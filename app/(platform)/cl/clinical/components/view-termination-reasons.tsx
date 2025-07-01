@@ -50,14 +50,14 @@ export function ViewTerminationReasons({
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Termination Reason</label>
+                <p className="text-sm font-medium">Termination Reason</p>
                 <div className="mt-1">
                   <Badge variant="destructive">{termination.terminationReason}</Badge>
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium">Additional Information</label>
+                <p className="text-sm font-medium">Additional Information</p>
                 <div className="mt-1 rounded-md bg-gray-50 p-3">
                   <p className="whitespace-pre-wrap text-sm">
                     {termination.terminationReasonExplanation}
