@@ -174,6 +174,16 @@ export type HubClinicalCases = {
     terminationReasonExplanation: string;
     sessionId: string;
   } | null;
+  followUpTreatmentPlan: {
+    id: string;
+    createdAt: Date;
+    currentORSScore: number | null;
+    plannedSessions: number;
+    sessionFrequency: string;
+    plannedTreatmentIntervention: string[];
+    otherTreatmentIntervention: string | null;
+    plannedTreatmentInterventionExplanation: string;
+  } | null;
 };
 
 export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
@@ -255,7 +265,8 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
           LIMIT 1
         ) as "upcomingSession",
         COALESCE(cn.notes_data, '[]'::json) as "caseNotes",
-        ct.termination_data as "termination"
+        ct.termination_data as "termination",
+        tp.treatment_plan_data as "followUpTreatmentPlan"
       FROM 
         "clinical_screening_info" csi
       LEFT JOIN 
@@ -272,6 +283,8 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
         case_notes cn ON csi.id = cn.case_id
       LEFT JOIN
         case_termination ct ON csi.id = ct.case_id
+      LEFT JOIN
+        treatment_plan tp ON csi.id = tp.case_id
       WHERE h."project_id" = ${CURRENT_PROJECT_ID}
       ORDER BY 
         csi.id DESC
