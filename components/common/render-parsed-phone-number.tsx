@@ -1,16 +1,10 @@
-import { Icons } from "#/components/icons";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "#/components/ui/tooltip";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
+import { Icons } from "#/components/icons";
+import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
 
 export default function RenderParsedPhoneNumber(number?: string) {
   try {
-    return (
-      number && parsePhoneNumberWithError(number, "KE").formatInternational()
-    );
+    return number && parsePhoneNumberWithError(number, "KE").formatInternational();
   } catch (error) {
     if (error instanceof ParseError) {
       // Not a phone number, non-existent country, etc.
@@ -31,8 +25,7 @@ export default function RenderParsedPhoneNumber(number?: string) {
           </Tooltip>
         )
       );
-    } else {
-      throw error;
     }
+    throw error;
   }
 }

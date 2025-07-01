@@ -6,13 +6,10 @@ export const SCHOOL_DROPOUT_REASONS_MAPPING = {
     config.theme?.extend?.colors["shamiri-graph-purple"],
   "poor communication": config.theme?.extend?.colors["shamiri-light-red"],
   "lack of commitment": config.theme?.extend?.colors["shamiri-graph-yellow"],
-  "prioritizing school activities":
-    config.theme?.extend?.colors["shamiri-graph-green"],
+  "prioritizing school activities": config.theme?.extend?.colors["shamiri-graph-green"],
 } as const;
 
-export const SCHOOL_DROPOUT_REASONS = Object.keys(
-  SCHOOL_DROPOUT_REASONS_MAPPING,
-) as string[];
+export const SCHOOL_DROPOUT_REASONS = Object.keys(SCHOOL_DROPOUT_REASONS_MAPPING) as string[];
 
 export const SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING = {
   actual: config.theme?.extend?.colors["shamiri-new-blue"],
@@ -38,11 +35,7 @@ export const FELLOW_DROP_OUT_REASONS = [
 ] as const;
 
 // TODO: Confirm list of complaint types
-export const COMPLAINT_TYPES = [
-  "Dress Code",
-  "Prolonged Absence",
-  "Other",
-] as const;
+export const COMPLAINT_TYPES = ["Dress Code", "Prolonged Absence", "Other"] as const;
 
 export const SCHOOL_DEMOGRAPHICS = ["Girls", "Boys", "Mixed"] as const;
 
@@ -55,22 +48,8 @@ export const OCCURRENCE_STATUS = ["attended", "unmarked"] as const;
 export type INTERVENTION_SESSION_TYPES = "s0" | "s1" | "s2" | "s3" | "s4";
 export type SUPERVISION_SESSION_TYPES = "sv1" | "sv2" | "sv3" | "sv4" | "sv5";
 export type TRAINING_SESSION_TYPES = "t1" | "t2" | "t3" | "t4" | "t5";
-export type CLINICAL_SESSION_TYPES =
-  | "cl1"
-  | "cl2"
-  | "cl3"
-  | "cl4"
-  | "cl5"
-  | "cl6"
-  | "cl7"
-  | "cl8";
-export type DATA_FOLLOWUP_SESSION_TYPES =
-  | "dfu1"
-  | "dfu2"
-  | "dfu3"
-  | "dfu4"
-  | "dfu5"
-  | "dfu6";
+export type CLINICAL_SESSION_TYPES = "cl1" | "cl2" | "cl3" | "cl4" | "cl5" | "cl6" | "cl7" | "cl8";
+export type DATA_FOLLOWUP_SESSION_TYPES = "dfu1" | "dfu2" | "dfu3" | "dfu4" | "dfu5" | "dfu6";
 
 export type ALL_SESSION_TYPE =
   | INTERVENTION_SESSION_TYPES
@@ -108,13 +87,7 @@ export const KENYAN_COUNTIES = [
     name: "Bomet",
     capital: "Bomet",
     code: 36,
-    sub_counties: [
-      "Bomet central",
-      "Bomet east",
-      "Chepalungu",
-      "Konoin",
-      "Sotik",
-    ],
+    sub_counties: ["Bomet central", "Bomet east", "Chepalungu", "Konoin", "Sotik"],
   },
   {
     name: "Bungoma",
@@ -136,25 +109,13 @@ export const KENYAN_COUNTIES = [
     name: "Busia",
     capital: "Busia",
     code: 40,
-    sub_counties: [
-      "Budalangi",
-      "Butula",
-      "Funyula",
-      "Nambele",
-      "Teso North",
-      "Teso South",
-    ],
+    sub_counties: ["Budalangi", "Butula", "Funyula", "Nambele", "Teso North", "Teso South"],
   },
   {
     name: "Elgeyo-Marakwet",
     capital: "Iten",
     code: 28,
-    sub_counties: [
-      "Keiyo north",
-      "Keiyo south",
-      "Marakwet east",
-      "Marakwet west",
-    ],
+    sub_counties: ["Keiyo north", "Keiyo south", "Marakwet east", "Marakwet west"],
   },
   {
     name: "Embu",
@@ -166,14 +127,7 @@ export const KENYAN_COUNTIES = [
     name: "Garissa",
     capital: "Garissa",
     code: 7,
-    sub_counties: [
-      "Daadab",
-      "Fafi",
-      "Garissa",
-      "Hulugho",
-      "Ijara",
-      "Lagdera balambala",
-    ],
+    sub_counties: ["Daadab", "Fafi", "Garissa", "Hulugho", "Ijara", "Lagdera balambala"],
   },
   {
     name: "Homa Bay",
@@ -194,25 +148,12 @@ export const KENYAN_COUNTIES = [
     name: "Isiolo",
     capital: "Isiolo",
     code: 11,
-    sub_counties: [
-      "Central",
-      "Garba tula",
-      "Kina",
-      "Merit",
-      "Oldonyiro",
-      "Sericho",
-    ],
+    sub_counties: ["Central", "Garba tula", "Kina", "Merit", "Oldonyiro", "Sericho"],
   },
   {
     name: "Kajiado",
     code: 34,
-    sub_counties: [
-      "Isinya",
-      "Kajiado Central",
-      "Kajiado North",
-      "Loitokitok",
-      "Mashuuru",
-    ],
+    sub_counties: ["Isinya", "Kajiado Central", "Kajiado North", "Loitokitok", "Mashuuru"],
   },
   {
     name: "Kakamega",
@@ -372,28 +313,13 @@ export const KENYAN_COUNTIES = [
     name: "Machakos",
     capital: "Machakos",
     code: 16,
-    sub_counties: [
-      "Kathiani",
-      "Machakos town",
-      "Masinga",
-      "Matungulu",
-      "Mavoko",
-      "Mwala",
-      "Yatta",
-    ],
+    sub_counties: ["Kathiani", "Machakos town", "Masinga", "Matungulu", "Mavoko", "Mwala", "Yatta"],
   },
   {
     name: "Makueni",
     capital: "Wote",
     code: 17,
-    sub_counties: [
-      "Kaiti",
-      "Kibwei west",
-      "Kibwezi east",
-      "Kilome",
-      "Makueni",
-      "Mbooni",
-    ],
+    sub_counties: ["Kaiti", "Kibwei west", "Kibwezi east", "Kilome", "Makueni", "Mbooni"],
   },
   {
     name: "Mandera",
@@ -513,14 +439,7 @@ export const KENYAN_COUNTIES = [
     name: "Nandi",
     capital: "Kapsabet",
     code: 29,
-    sub_counties: [
-      "Aldai",
-      "Chesumei",
-      "Emgwen",
-      "Mosop",
-      "Namdi hills",
-      "Tindiret",
-    ],
+    sub_counties: ["Aldai", "Chesumei", "Emgwen", "Mosop", "Namdi hills", "Tindiret"],
   },
   {
     name: "Narok",
@@ -539,25 +458,13 @@ export const KENYAN_COUNTIES = [
     name: "Nyamira",
     capital: "Nyamira",
     code: 46,
-    sub_counties: [
-      "Borabu",
-      "Manga",
-      "Masaba north",
-      "Nyamira north",
-      "Nyamira south",
-    ],
+    sub_counties: ["Borabu", "Manga", "Masaba north", "Nyamira north", "Nyamira south"],
   },
   {
     name: "Nyandarua",
     capital: "Ol Kalou",
     code: 18,
-    sub_counties: [
-      "Kinangop",
-      "Kipipiri",
-      "Ndaragwa",
-      "Ol Kalou",
-      "Ol joro orok",
-    ],
+    sub_counties: ["Kinangop", "Kipipiri", "Ndaragwa", "Ol Kalou", "Ol joro orok"],
   },
   {
     name: "Nyeri",
@@ -584,14 +491,7 @@ export const KENYAN_COUNTIES = [
     name: "Siaya",
     capital: "Siaya",
     code: 41,
-    sub_counties: [
-      "Alego usonga",
-      "Bondo",
-      "Gem",
-      "Rarieda",
-      "Ugenya",
-      "Unguja",
-    ],
+    sub_counties: ["Alego usonga", "Bondo", "Gem", "Rarieda", "Ugenya", "Unguja"],
   },
   {
     name: "Taita-Taveta",
@@ -609,14 +509,7 @@ export const KENYAN_COUNTIES = [
     name: "Tharaka-Nithi",
     capital: "Chuka",
     code: 13,
-    sub_counties: [
-      "Chuka",
-      "Igambangobe",
-      "Maara",
-      "Muthambi",
-      "Tharak north",
-      "Tharaka south",
-    ],
+    sub_counties: ["Chuka", "Igambangobe", "Maara", "Muthambi", "Tharak north", "Tharaka south"],
   },
   {
     name: "Trans-Nzoia",
@@ -628,13 +521,7 @@ export const KENYAN_COUNTIES = [
     name: "Turkana",
     capital: "Lodwar",
     code: 23,
-    sub_counties: [
-      "Loima",
-      "Turkana central",
-      "Turkana east",
-      "Turkana north",
-      "Turkana south",
-    ],
+    sub_counties: ["Loima", "Turkana central", "Turkana east", "Turkana north", "Turkana south"],
   },
   {
     name: "Uasin Gishu",
@@ -652,14 +539,7 @@ export const KENYAN_COUNTIES = [
     name: "Wajir",
     capital: "Wajir",
     code: 8,
-    sub_counties: [
-      "Eldas",
-      "Tarbaj",
-      "Wajir East",
-      "Wajir North",
-      "Wajir South",
-      "Wajir West",
-    ],
+    sub_counties: ["Eldas", "Tarbaj", "Wajir East", "Wajir North", "Wajir South", "Wajir West"],
   },
   {
     name: "West Pokot",

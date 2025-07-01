@@ -1,11 +1,11 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import {
-  ClinicalCases,
-  updateStudentInfo,
-} from "#/app/(platform)/sc/clinical/action";
+import { type ClinicalCases, updateStudentInfo } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
-
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -33,10 +33,6 @@ import {
 import { toast } from "#/components/ui/use-toast";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { stringValidation } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 const EditStudentSchema = z.object({
   studentName: stringValidation("Student name is required"),
@@ -169,10 +165,7 @@ export default function ViewEditClinicalCaseStudentInfo({
                     <FormItem>
                       <FormLabel>Gender</FormLabel>
                       <FormControl>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <SelectTrigger>
                             <SelectValue placeholder="Select gender" />
                           </SelectTrigger>
@@ -264,11 +257,7 @@ export default function ViewEditClinicalCaseStudentInfo({
               />
 
               <DialogFooter>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={() => setDialogOpen(false)}
-                >
+                <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button

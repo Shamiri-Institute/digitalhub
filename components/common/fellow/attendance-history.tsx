@@ -1,22 +1,19 @@
 "use client";
 
-import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
+import { Prisma } from "@prisma/client";
+import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
+import { format } from "date-fns";
+import parsePhoneNumberFromString from "libphonenumber-js";
+import type React from "react";
+import type { Dispatch, SetStateAction } from "react";
+import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
-import { SchoolFellowTableData } from "#/components/common/fellow/columns";
+import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import DataTable from "#/components/data-table";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
-import { Prisma } from "@prisma/client";
-import { ColumnDef, VisibilityState } from "@tanstack/react-table";
-import { format } from "date-fns";
-import parsePhoneNumberFromString from "libphonenumber-js";
-import React, { Dispatch, SetStateAction } from "react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+
 import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
 export default function AttendanceHistory({
@@ -54,9 +51,7 @@ export default function AttendanceHistory({
         {children}
         <DataTable
           columns={columns}
-          data={attendances.filter(
-            (attendance) => attendance.fellowId === fellow?.id,
-          )}
+          data={attendances.filter((attendance) => attendance.fellowId === fellow?.id)}
           emptyStateMessage={"No sessions found"}
           columnVisibilityState={columnVisibilityState}
           className="data-table lg:mt-4"
@@ -135,10 +130,7 @@ const columns: ColumnDef<
       const payouts = row.original.PayoutStatements;
       return row.original.attended && payouts.length > 0
         ? payouts[0]!.mpesaNumber &&
-            parsePhoneNumberFromString(
-              payouts[0]!.mpesaNumber,
-              "KE",
-            )?.formatNational()
+            parsePhoneNumberFromString(payouts[0]!.mpesaNumber, "KE")?.formatNational()
         : null;
     },
   },

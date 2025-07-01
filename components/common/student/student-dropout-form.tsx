@@ -1,14 +1,15 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { InfoIcon } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { DropoutStudentSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { SchoolStudentTableData } from "#/components/common/student/columns";
+import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -29,12 +30,6 @@ import { toast } from "#/components/ui/use-toast";
 import { dropoutStudent } from "#/lib/actions/student";
 import { STUDENT_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { InfoIcon } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export default function StudentDropoutForm({
   student,
@@ -73,8 +68,7 @@ export default function StudentDropoutForm({
     const response = await dropoutStudent(form.getValues());
     if (!response.success) {
       toast({
-        description:
-          response.message ?? "Something went wrong, please try again",
+        description: response.message ?? "Something went wrong, please try again",
       });
       return;
     }
@@ -122,8 +116,7 @@ export default function StudentDropoutForm({
                 render={({ field }) => (
                   <FormItem className="space-y-2">
                     <FormLabel>
-                      Select reason{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Select reason <span className="text-shamiri-light-red">*</span>
                     </FormLabel>
                     <Select onValueChange={field.onChange}>
                       <FormControl>
@@ -163,12 +156,8 @@ export default function StudentDropoutForm({
               <Button
                 variant={student.droppedOut ? "brand" : "destructive"}
                 type="submit"
-                disabled={
-                  student.droppedOut ? loading : form.formState.isSubmitting
-                }
-                loading={
-                  student.droppedOut ? loading : form.formState.isSubmitting
-                }
+                disabled={student.droppedOut ? loading : form.formState.isSubmitting}
+                loading={student.droppedOut ? loading : form.formState.isSubmitting}
               >
                 {student.droppedOut ? "Undo" : "Submit"}
               </Button>
@@ -188,9 +177,8 @@ export default function StudentDropoutForm({
             <Alert variant="destructive">
               <AlertTitle className="flex gap-2">
                 <InfoIcon className="h-4 w-4 shrink-0" />
-                Once this change has been made it is irreversible and will need
-                you to contact support in order to modify. Please be sure of
-                your action before you confirm.
+                Once this change has been made it is irreversible and will need you to contact
+                support in order to modify. Please be sure of your action before you confirm.
               </AlertTitle>
             </Alert>
           </div>

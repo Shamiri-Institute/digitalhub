@@ -1,12 +1,12 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { usePathname } from "next/navigation";
+import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { SubmitComplaintSchema } from "#/app/(platform)/hc/schemas";
 import { submitSupervisorComplaint } from "#/app/(platform)/hc/supervisors/actions";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -27,11 +27,6 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { usePathname } from "next/navigation";
-import { Dispatch, SetStateAction, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export default function SubmitComplaint({
   supervisorId,
@@ -54,8 +49,7 @@ export default function SubmitComplaint({
     const response = await submitSupervisorComplaint(data);
     if (!response.success) {
       toast({
-        description:
-          response.message ?? "Something went wrong, please try again",
+        description: response.message ?? "Something went wrong, please try again",
       });
       return;
     }
@@ -87,8 +81,7 @@ export default function SubmitComplaint({
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel>
-                    Select complaint{" "}
-                    <span className="text-shamiri-light-red">*</span>
+                    Select complaint <span className="text-shamiri-light-red">*</span>
                   </FormLabel>
                   <Select onValueChange={field.onChange}>
                     <FormControl>
@@ -115,11 +108,7 @@ export default function SubmitComplaint({
                 <FormItem className="space-y-2">
                   <FormLabel>Additional comments</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder=""
-                      className="resize-none"
-                      {...field}
-                    />
+                    <Textarea placeholder="" className="resize-none" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -130,12 +119,7 @@ export default function SubmitComplaint({
               name="supervisorId"
               render={({ field }) => (
                 <FormItem>
-                  <Input
-                    id="supervisorId"
-                    name="supervisorId"
-                    type="hidden"
-                    value={field.value}
-                  />
+                  <Input id="supervisorId" name="supervisorId" type="hidden" value={field.value} />
                   <FormMessage />
                 </FormItem>
               )}

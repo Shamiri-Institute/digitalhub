@@ -1,12 +1,12 @@
 "use client";
 
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import { GroupsDatatableMenu } from "#/components/common/group/groups-datatable-menu";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import { Dispatch, SetStateAction } from "react";
 
 export type SchoolGroupDataTableData = {
   id: string;
@@ -119,10 +119,7 @@ export const columns = (state: {
       cell: ({ row }) => {
         const type = row.original.groupType;
         return (
-          <Badge
-            variant={type === "TREATMENT" ? "default" : "outline"}
-            className="capitalize"
-          >
+          <Badge variant={type === "TREATMENT" ? "default" : "outline"} className="capitalize">
             {type.toLowerCase()}
           </Badge>
         );
@@ -130,9 +127,7 @@ export const columns = (state: {
     },
     {
       id: "button",
-      cell: ({ row }) => (
-        <GroupsDatatableMenu group={row.original} state={state} />
-      ),
+      cell: ({ row }) => <GroupsDatatableMenu group={row.original} state={state} />,
       enableHiding: false,
     },
   ];

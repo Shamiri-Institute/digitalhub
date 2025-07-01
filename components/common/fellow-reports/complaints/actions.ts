@@ -1,12 +1,10 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "#/app/auth";
 import { db } from "#/lib/db";
-import { revalidatePath } from "next/cache";
 
-export type FellowComplaintsType = Awaited<
-  ReturnType<typeof loadFellowComplaints>
->[number];
+export type FellowComplaintsType = Awaited<ReturnType<typeof loadFellowComplaints>>[number];
 
 type FellowComplaintsGroupedByFellow = {
   id: string;
@@ -67,10 +65,7 @@ export async function loadFellowComplaints() {
   }
 }
 
-export async function editFellowComplaint(
-  complaintId: string,
-  complaint: string,
-) {
+export async function editFellowComplaint(complaintId: string, complaint: string) {
   try {
     const user = await getCurrentUser();
     if (!user) {

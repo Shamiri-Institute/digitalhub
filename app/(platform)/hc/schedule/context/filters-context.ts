@@ -1,5 +1,5 @@
 import { SessionStatus } from "@prisma/client";
-import { createContext, Dispatch, SetStateAction } from "react";
+import { createContext, type Dispatch, type SetStateAction } from "react";
 
 const sessionTypeFilterOptions: { [key: string]: boolean } = {};
 

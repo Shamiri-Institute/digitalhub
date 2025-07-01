@@ -1,5 +1,10 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { useContext, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { AssignPointSupervisorSchema } from "#/app/(platform)/hc/schemas";
 import { assignSchoolPointSupervisor } from "#/app/(platform)/hc/schools/actions";
 import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
@@ -24,11 +29,6 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
-import { useContext, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export default function AssignPointSupervisor({
   supervisors,
@@ -47,34 +47,24 @@ export default function AssignPointSupervisor({
     });
   }, [context.pointSupervisorDialog]);
 
-  const onSubmit = async (
-    data: z.infer<typeof AssignPointSupervisorSchema>,
-  ) => {
+  const onSubmit = async (data: z.infer<typeof AssignPointSupervisorSchema>) => {
     if (context.school) {
-      const response = await assignSchoolPointSupervisor(
-        context.school?.id,
-        data,
-      );
+      const response = await assignSchoolPointSupervisor(context.school?.id, data);
 
       if (!response.success) {
         toast({
           description:
-            response.message ??
-            "Something went wrong during submission, please try again",
+            response.message ?? "Something went wrong during submission, please try again",
         });
         return;
       }
 
       const copiedSchools = [...schoolsContext.schools];
-      const index = copiedSchools.findIndex(
-        (_school) => _school.id === context.school?.id,
-      );
+      const index = copiedSchools.findIndex((_school) => _school.id === context.school?.id);
       if (index !== -1) {
         copiedSchools[index]!.assignedSupervisorId = data.assignedSupervisorId;
         copiedSchools[index]!.assignedSupervisor =
-          supervisors.find(
-            (supervisor) => supervisor.id === data.assignedSupervisorId,
-          ) ?? null;
+          supervisors.find((supervisor) => supervisor.id === data.assignedSupervisorId) ?? null;
         schoolsContext.setSchools(copiedSchools);
       }
 
@@ -88,10 +78,7 @@ export default function AssignPointSupervisor({
   };
 
   return (
-    <Dialog
-      open={context.pointSupervisorDialog}
-      onOpenChange={context.setPointSupervisorDialog}
-    >
+    <Dialog open={context.pointSupervisorDialog} onOpenChange={context.setPointSupervisorDialog}>
       <DialogContent>
         <DialogHeader>
           <span className="text-xl">
@@ -119,10 +106,7 @@ export default function AssignPointSupervisor({
                       <SelectContent>
                         {supervisors.map((supervisor) => {
                           return (
-                            <SelectItem
-                              key={supervisor.id}
-                              value={supervisor.id}
-                            >
+                            <SelectItem key={supervisor.id} value={supervisor.id}>
                               {supervisor.supervisorName}
                             </SelectItem>
                           );

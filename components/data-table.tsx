@@ -1,4 +1,21 @@
 "use client";
+import { rankItem } from "@tanstack/match-sorter-utils";
+import {
+  type ColumnDef,
+  type FilterFn,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  type OnChangeFn,
+  type Row,
+  type RowSelectionState,
+  type SortingState,
+  useReactTable,
+  type VisibilityState,
+} from "@tanstack/react-table";
+import { Fragment, type ReactNode, useEffect, useState } from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
@@ -24,23 +41,6 @@ import {
   TableRow,
 } from "#/components/ui/table";
 import { cn } from "#/lib/utils";
-import { rankItem } from "@tanstack/match-sorter-utils";
-import {
-  ColumnDef,
-  FilterFn,
-  OnChangeFn,
-  Row,
-  RowSelectionState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
-import { Fragment, ReactNode, useEffect, useState } from "react";
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   // Rank the item
@@ -86,9 +86,7 @@ export default function DataTable<TData, TValue>({
   renderSubComponent,
 }: DataTableProps<TData, TValue> & { emptyStateMessage: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-    columnVisibilityState,
-  );
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(columnVisibilityState);
   const [rowSelection, setRowSelection] = useState({});
 
   const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (state) => {
@@ -136,8 +134,7 @@ export default function DataTable<TData, TValue>({
           {table.getSelectedRowModel().rows.length > 0 && (
             <div className="flex w-full items-center justify-between gap-4 lg:w-auto">
               <span className="text-sm">
-                {table.getSelectedRowModel().rows.length}{" "}
-                {rowSelectionDescription} selected
+                {table.getSelectedRowModel().rows.length} {rowSelectionDescription} selected
               </span>
               <Button
                 variant="ghost"
@@ -159,9 +156,7 @@ export default function DataTable<TData, TValue>({
                   strokeWidth={1.75}
                 />
                 <Input
-                  onChange={(e) =>
-                    table.setGlobalFilter(String(e.target.value))
-                  }
+                  onChange={(e) => table.setGlobalFilter(String(e.target.value))}
                   placeholder="Search..."
                   className="w-64 bg-white pl-10"
                 />
@@ -207,7 +202,7 @@ export default function DataTable<TData, TValue>({
         )}
       >
         {!isSubComponent ? (
-          <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-lg shadow-inner-2 lg:hidden"></div>
+          <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden rounded-lg shadow-inner-2 lg:hidden" />
         ) : null}
         <Table
           className={cn(
@@ -240,10 +235,7 @@ export default function DataTable<TData, TValue>({
                   >
                     {header.isPlaceholder
                       ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                      : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
               </TableRow>
@@ -270,10 +262,7 @@ export default function DataTable<TData, TValue>({
                             : "!px-4 py-2",
                         )}
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -326,8 +315,7 @@ export default function DataTable<TData, TValue>({
               >
                 <span>{table.getState().pagination.pageIndex + 1}</span>
               </button>
-              {table.getState().pagination.pageIndex + 2 <=
-              table.getPageCount() ? (
+              {table.getState().pagination.pageIndex + 2 <= table.getPageCount() ? (
                 <button
                   className="pagination"
                   onClick={() => table.nextPage()}
@@ -360,9 +348,7 @@ export default function DataTable<TData, TValue>({
                   max={table.getPageCount()}
                   defaultValue={table.getState().pagination.pageIndex + 1}
                   onChange={(e) => {
-                    const page = e.target.value
-                      ? Number(e.target.value) - 1
-                      : 0;
+                    const page = e.target.value ? Number(e.target.value) - 1 : 0;
                     table.setPageIndex(page);
                   }}
                   className="w-16 rounded border p-1"

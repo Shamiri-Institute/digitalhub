@@ -6,19 +6,11 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import {
-  ClinicalCases,
-  createClinicalCaseNotes,
-} from "#/app/(platform)/sc/clinical/action";
+import { type ClinicalCases, createClinicalCaseNotes } from "#/app/(platform)/sc/clinical/action";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTrigger,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -62,16 +54,10 @@ const CaseReportSchema = z.object({
     required_error: "Risk level is required",
   }),
   necessaryConditions: z.string().optional(),
-  treatmentInterventions: z
-    .array(z.string())
-    .min(1, "Select at least one intervention"),
+  treatmentInterventions: z.array(z.string()).min(1, "Select at least one intervention"),
   otherIntervention: z.string().optional(),
-  interventionExplanation: stringValidation(
-    "Treatment explanation is required",
-  ),
-  studentResponseExplanation: stringValidation(
-    "Student response explanation is required",
-  ),
+  interventionExplanation: stringValidation("Treatment explanation is required"),
+  studentResponseExplanation: stringValidation("Student response explanation is required"),
   followUpPlan: z.object({
     isGroupSession: z.boolean(),
     explanation: stringValidation("Follow-up plan explanation is required"),
@@ -170,7 +156,7 @@ export default function CaseNotesForm({
         sessionId: data.sessionId,
         followUpPlanExplanation: data.followUpPlan.explanation,
         followUpPlan: data.followUpPlan.isGroupSession ? "GROUP" : "INDIVIDUAL",
-        orsAssessment: data.orsAssessment ? parseInt(data.orsAssessment) : 0,
+        orsAssessment: data.orsAssessment ? Number.parseInt(data.orsAssessment) : 0,
         interventionExplanation: data.interventionExplanation,
         studentResponseExplanation: data.studentResponseExplanation,
         presentingIssues: data.presentingIssues,
@@ -241,42 +227,35 @@ export default function CaseNotesForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {clinicalCase.clinicalSessionAttendance?.map(
-                        (session) => {
-                          const hasNotes = clinicalCase.clinicalCaseNotes?.some(
-                            (note) => note.sessionId === session.id,
-                          );
-                          return (
-                            <SelectItem key={session.id} value={session.id}>
-                              <div className="flex w-full items-center justify-between">
-                                <span>
-                                  {session.session} -{" "}
-                                  {format(
-                                    new Date(session.date),
-                                    "dd MMM yyyy",
-                                  )}
+                      {clinicalCase.clinicalSessionAttendance?.map((session) => {
+                        const hasNotes = clinicalCase.clinicalCaseNotes?.some(
+                          (note) => note.sessionId === session.id,
+                        );
+                        return (
+                          <SelectItem key={session.id} value={session.id}>
+                            <div className="flex w-full items-center justify-between">
+                              <span>
+                                {session.session} - {format(new Date(session.date), "dd MMM yyyy")}
+                              </span>
+                              {hasNotes && (
+                                <span className="ml-2 text-sm text-muted-foreground">
+                                  (View only)
                                 </span>
-                                {hasNotes && (
-                                  <span className="ml-2 text-sm text-muted-foreground">
-                                    (View only)
-                                  </span>
-                                )}
-                              </div>
-                            </SelectItem>
-                          );
-                        },
-                      )}
+                              )}
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                   {!clinicalCase.clinicalSessionAttendance?.length ? (
                     <p className="text-sm text-muted-foreground">
-                      No sessions available. Please mark a session as done
-                      before creating case notes.
+                      No sessions available. Please mark a session as done before creating case
+                      notes.
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      Please ensure the session is marked as done before
-                      creating case notes.
+                      Please ensure the session is marked as done before creating case notes.
                     </p>
                   )}
                   <FormMessage />
@@ -289,8 +268,7 @@ export default function CaseNotesForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Situation: What issues did the student present and in what
-                    state?
+                    Situation: What issues did the student present and in what state?
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -353,9 +331,7 @@ export default function CaseNotesForm({
                                 }}
                               />
                             </FormControl>
-                            <FormLabel className="font-normal capitalize">
-                              {level}
-                            </FormLabel>
+                            <FormLabel className="font-normal capitalize">{level}</FormLabel>
                           </FormItem>
                         )}
                       />
@@ -415,17 +391,11 @@ export default function CaseNotesForm({
                                   }
                                   return checked === true
                                     ? field.onChange([...field.value, value])
-                                    : field.onChange(
-                                        field.value?.filter(
-                                          (val) => val !== value,
-                                        ),
-                                      );
+                                    : field.onChange(field.value?.filter((val) => val !== value));
                                 }}
                               />
                             </FormControl>
-                            <FormLabel className="font-normal">
-                              {intervention}
-                            </FormLabel>
+                            <FormLabel className="font-normal">{intervention}</FormLabel>
                           </FormItem>
                         )}
                       />
@@ -465,8 +435,7 @@ export default function CaseNotesForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Intervention: What techniques, approaches and tools did you
-                    use?
+                    Intervention: What techniques, approaches and tools did you use?
                     <span className="text-red-500">*</span>
                   </FormLabel>
                   <FormControl>
@@ -511,9 +480,7 @@ export default function CaseNotesForm({
                 name="followUpPlan.isGroupSession"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Plan: What is the plan for future session(s)?
-                    </FormLabel>
+                    <FormLabel>Plan: What is the plan for future session(s)?</FormLabel>
                     <div className="flex space-x-4">
                       <FormItem className="flex flex-row items-center space-x-3 space-y-0">
                         <FormControl>
@@ -527,9 +494,7 @@ export default function CaseNotesForm({
                             }}
                           />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Individual Session
-                        </FormLabel>
+                        <FormLabel className="font-normal">Individual Session</FormLabel>
                       </FormItem>
 
                       <FormItem className="flex flex-row items-center space-x-3 space-y-0">
@@ -544,9 +509,7 @@ export default function CaseNotesForm({
                             }}
                           />
                         </FormControl>
-                        <FormLabel className="font-normal">
-                          Group Session
-                        </FormLabel>
+                        <FormLabel className="font-normal">Group Session</FormLabel>
                       </FormItem>
                     </div>
                   </FormItem>
@@ -578,11 +541,7 @@ export default function CaseNotesForm({
             </div>
 
             <div className="flex justify-end space-x-4">
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={() => setDialogOpen(false)}
-              >
+              <Button variant="ghost" type="button" onClick={() => setDialogOpen(false)}>
                 {hasExistingNotes ? "Close" : "Cancel"}
               </Button>
               {!hasExistingNotes && (

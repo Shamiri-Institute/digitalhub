@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { currentSupervisor } from "#/app/auth";
 import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
 import HubStudentDemographicsCharts from "#/components/charts/student-demographics-charts";
@@ -5,7 +6,6 @@ import HubStudentsDetailsCharts from "#/components/charts/students-charts";
 import StudentsStats from "#/components/students-stats";
 import PageFooter from "#/components/ui/page-footer";
 import { db } from "#/lib/db";
-import { redirect } from "next/navigation";
 
 export default async function SupervisorStudentsPage({
   searchParams,
@@ -143,9 +143,7 @@ export default async function SupervisorStudentsPage({
     }),
   ]);
 
-  const supervisorIds = hubClinicalSessionsBySupervisor.map(
-    (item) => item.currentSupervisorId,
-  );
+  const supervisorIds = hubClinicalSessionsBySupervisor.map((item) => item.currentSupervisorId);
 
   const supervisors = await db.supervisor.findMany({
     where: {
@@ -159,31 +157,22 @@ export default async function SupervisorStudentsPage({
     },
   });
 
-  const supervisorMap = new Map(
-    supervisors.map((s) => [s.id, s.supervisorName]),
-  );
+  const supervisorMap = new Map(supervisors.map((s) => [s.id, s.supervisorName]));
 
-  const clinicalCasesBySupervisors = hubClinicalSessionsBySupervisor.map(
-    (item) => ({
-      supervisorName: supervisorMap.get(item.currentSupervisorId!) || "Unknown",
-      count: item._count.currentSupervisorId,
-    }),
-  );
+  const clinicalCasesBySupervisors = hubClinicalSessionsBySupervisor.map((item) => ({
+    supervisorName: supervisorMap.get(item.currentSupervisorId!) || "Unknown",
+    count: item._count.currentSupervisorId,
+  }));
 
   const studentsGroupedByAge: Record<string, number> = {};
   const studentsGroupedByGender: Record<string, number> = {};
   const studentsGroupedByForm: Record<string, number> = {};
 
   studentAggregations.forEach(({ age, gender, form, _count }) => {
-    if (age)
-      studentsGroupedByAge[age] =
-        (_count.id || 0) + (studentsGroupedByAge[age] || 0);
+    if (age) studentsGroupedByAge[age] = (_count.id || 0) + (studentsGroupedByAge[age] || 0);
     if (gender)
-      studentsGroupedByGender[gender] =
-        (_count.id || 0) + (studentsGroupedByGender[gender] || 0);
-    if (form)
-      studentsGroupedByForm[form] =
-        (_count.id || 0) + (studentsGroupedByForm[form] || 0);
+      studentsGroupedByGender[gender] = (_count.id || 0) + (studentsGroupedByGender[gender] || 0);
+    if (form) studentsGroupedByForm[form] = (_count.id || 0) + (studentsGroupedByForm[form] || 0);
   });
 
   return (
@@ -199,9 +188,7 @@ export default async function SupervisorStudentsPage({
 
       <HubStudentsDetailsCharts
         studentsAttendanceGroupedBySession={studentsAttendanceGroupedBySession}
-        studentsDropOutReasonsGroupedByReason={
-          studentsDropOutReasonsGroupedByReason
-        }
+        studentsDropOutReasonsGroupedByReason={studentsDropOutReasonsGroupedByReason}
       />
 
       <HubStudentClinicalDataCharts
@@ -209,9 +196,7 @@ export default async function SupervisorStudentsPage({
         hubClinicalCases={hubClinicalCases}
         hubClinicalSessionsBySession={hubClinicalSessionsBySession}
         clinicalCasesBySupervisors={clinicalCasesBySupervisors}
-        hubClinicalSessionsByInitialReferredFrom={
-          hubClinicalSessionsByInitialReferredFrom
-        }
+        hubClinicalSessionsByInitialReferredFrom={hubClinicalSessionsByInitialReferredFrom}
       />
 
       <HubStudentDemographicsCharts

@@ -1,12 +1,14 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { ReplaceGroupLeaderSchema } from "#/components/common/fellow/schema";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -25,12 +27,6 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { replaceGroupLeader } from "#/lib/actions/fellow";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
-import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export default function ReplaceFellow({
   fellowId,
@@ -76,9 +72,7 @@ export default function ReplaceFellow({
     if (!response.success) {
       toast({
         variant: "destructive",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -114,8 +108,7 @@ export default function ReplaceFellow({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Select supervisor{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Select supervisor <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={(val) => {
@@ -133,10 +126,7 @@ export default function ReplaceFellow({
                           <SelectContent className="max-h-[200px]">
                             {supervisors.map((supervisor) => {
                               return (
-                                <SelectItem
-                                  key={supervisor.id}
-                                  value={supervisor.id}
-                                >
+                                <SelectItem key={supervisor.id} value={supervisor.id}>
                                   {supervisor.supervisorName}
                                 </SelectItem>
                               );
@@ -169,31 +159,21 @@ export default function ReplaceFellow({
                           <SelectContent className="max-h-[200px]">
                             {supervisorWatcher !== undefined
                               ? supervisors
-                                  .find(
-                                    (supervisor) =>
-                                      supervisorWatcher === supervisor.id,
-                                  )!
+                                  .find((supervisor) => supervisorWatcher === supervisor.id)!
                                   .fellows.filter(
-                                    (fellow) =>
-                                      !fellow.droppedOut &&
-                                      fellow.id !== fellowId,
+                                    (fellow) => !fellow.droppedOut && fellow.id !== fellowId,
                                   )
                                   .map((fellow) => {
                                     return (
-                                      <SelectItem
-                                        key={fellow.id}
-                                        value={fellow.id}
-                                      >
+                                      <SelectItem key={fellow.id} value={fellow.id}>
                                         {fellow.fellowName}
                                       </SelectItem>
                                     );
                                   })
                               : []}
                             {supervisorWatcher !== undefined &&
-                            supervisors.find(
-                              (supervisor) =>
-                                supervisorWatcher === supervisor.id,
-                            )!.fellows.length === 0 ? (
+                            supervisors.find((supervisor) => supervisorWatcher === supervisor.id)!
+                              .fellows.length === 0 ? (
                               <SelectItem value={" "} disabled={true}>
                                 Supervisor has no fellows assigned.
                               </SelectItem>

@@ -1,13 +1,13 @@
 "use client";
 
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { format, isAfter } from "date-fns";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import SchoolTableDropdown from "#/components/common/schools/school-table-dropdown";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
 import { sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import { format, isAfter } from "date-fns";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {
@@ -31,11 +31,7 @@ export type SchoolsTableData = Prisma.SchoolGetPayload<{
   };
 }>;
 
-export const columns = ({
-  role,
-}: {
-  role: ImplementerRole;
-}): ColumnDef<SchoolsTableData>[] => {
+export const columns = ({ role }: { role: ImplementerRole }): ColumnDef<SchoolsTableData>[] => {
   const defaultColumns: ColumnDef<SchoolsTableData>[] = [
     {
       id: "checkbox",
@@ -108,8 +104,7 @@ export const columns = ({
       header: "Point teacher phone no.",
       id: "Point teacher phone no.",
       accessorKey: "pointPersonPhone",
-      accessorFn: (row) =>
-        RenderParsedPhoneNumber(row.pointPersonPhone ?? undefined),
+      accessorFn: (row) => RenderParsedPhoneNumber(row.pointPersonPhone ?? undefined),
     },
     {
       // TODO: this computation should be done during the fetch and possible user an accessor Function
@@ -125,10 +120,7 @@ export const columns = ({
     {
       header: "Point supervisor phone no.",
       id: "Point supervisor phone no.",
-      accessorFn: (row) =>
-        RenderParsedPhoneNumber(
-          row.assignedSupervisor?.cellNumber ?? undefined,
-        ),
+      accessorFn: (row) => RenderParsedPhoneNumber(row.assignedSupervisor?.cellNumber ?? undefined),
     },
     {
       header: "Point supervisor email",
@@ -153,9 +145,8 @@ export const columns = ({
             " - " +
             format(upcomingSessions[0]!.sessionDate, "dd MMM yyyy")
           );
-        } else {
-          return null;
         }
+        return null;
       },
     },
     {
@@ -176,22 +167,18 @@ export const columns = ({
           if (recent && recent.sessionRatings.length > 0) {
             return (
               <Badge variant="shamiri-green">
-                {sessionDisplayName(
-                  sessions[sessions.length - 1]!.session?.sessionName,
-                ) + " - Report submitted"}
-              </Badge>
-            );
-          } else {
-            return (
-              <Badge variant="destructive">
-                {sessions[sessions.length - 1]?.sessionType?.toUpperCase() +
-                  " - Not submitted"}
+                {sessionDisplayName(sessions[sessions.length - 1]!.session?.sessionName) +
+                  " - Report submitted"}
               </Badge>
             );
           }
-        } else {
-          return <Badge variant="destructive">No report submitted</Badge>;
+          return (
+            <Badge variant="destructive">
+              {sessions[sessions.length - 1]?.sessionType?.toUpperCase() + " - Not submitted"}
+            </Badge>
+          );
         }
+        return <Badge variant="destructive">No report submitted</Badge>;
       },
     },
     {
@@ -215,20 +202,14 @@ export const columns = ({
     },
     {
       id: "button",
-      cell: ({ row }) => (
-        <SchoolTableDropdown schoolRow={row.original} role={role} />
-      ),
+      cell: ({ row }) => <SchoolTableDropdown schoolRow={row.original} role={role} />,
       enableHiding: false,
     },
   ];
 
   return defaultColumns.filter((column) => {
     if (role === "FELLOW") {
-      const ids = [
-        "Point teacher",
-        "Point teacher phone no.",
-        "Report submission",
-      ];
+      const ids = ["Point teacher", "Point teacher phone no.", "Report submission"];
       return column.id && !ids.includes(column.id);
     }
 

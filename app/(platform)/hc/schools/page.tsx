@@ -1,3 +1,4 @@
+import { signOut } from "next-auth/react";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
 import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
@@ -9,7 +10,6 @@ import { SearchCommand } from "#/components/search-command";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { signOut } from "next-auth/react";
 import {
   fetchDropoutReasons,
   fetchHubSupervisors,
@@ -49,22 +49,10 @@ export default async function SchoolsPage(props: {
     supervisors,
   ] = await Promise.all([
     await fetchSchoolData(hubCoordinator?.assignedHubId as string),
-    await fetchDropoutReasons(
-      hubCoordinator?.assignedHubId as string,
-      queryAsSchoolId,
-    ),
-    await fetchSchoolDataCompletenessData(
-      hubCoordinator?.assignedHubId as string,
-      queryAsSchoolId,
-    ),
-    await fetchSessionRatingAverages(
-      hubCoordinator?.assignedHubId as string,
-      queryAsSchoolId,
-    ),
-    await fetchSchoolAttendances(
-      hubCoordinator?.assignedHubId as string,
-      queryAsSchoolId,
-    ),
+    await fetchDropoutReasons(hubCoordinator?.assignedHubId as string, queryAsSchoolId),
+    await fetchSchoolDataCompletenessData(hubCoordinator?.assignedHubId as string, queryAsSchoolId),
+    await fetchSessionRatingAverages(hubCoordinator?.assignedHubId as string, queryAsSchoolId),
+    await fetchSchoolAttendances(hubCoordinator?.assignedHubId as string, queryAsSchoolId),
     await fetchHubSupervisors({
       where: {
         hubId: hubCoordinator?.assignedHubId as string,

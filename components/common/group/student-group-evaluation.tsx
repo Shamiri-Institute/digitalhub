@@ -1,17 +1,20 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { Prisma } from "@prisma/client";
+import { addDays, differenceInSeconds, format } from "date-fns";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { StudentGroupEvaluationSchema } from "#/components/common/group/schema";
 import RatingStarsInput from "#/components/common/rating-stars-input";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -32,13 +35,6 @@ import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitGroupEvaluation } from "#/lib/actions/group";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
-import { addDays, differenceInSeconds, format } from "date-fns";
-import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 type FormInput = {
   section: string;
@@ -131,14 +127,9 @@ export default function StudentGroupEvaluation({
     },
   ];
   const _evaluation = evaluations
-    .filter(
-      (evaluation) =>
-        evaluation.session !== undefined && evaluation.session !== null,
-    )
+    .filter((evaluation) => evaluation.session !== undefined && evaluation.session !== null)
     .sort((a, b) => {
-      return (
-        b.session!.sessionDate.getTime() - a.session!.sessionDate.getTime()
-      );
+      return b.session!.sessionDate.getTime() - a.session!.sessionDate.getTime();
     })[0];
   const [existingEvaluation, setExistingEvaluation] = useState<
     | Prisma.InterventionGroupReportGetPayload<{
@@ -181,10 +172,7 @@ export default function StudentGroupEvaluation({
 
     if (existingEvaluation) {
       setUpdateWindowDuration(
-        differenceInSeconds(
-          addDays(existingEvaluation.createdAt, 14),
-          new Date(),
-        ),
+        differenceInSeconds(addDays(existingEvaluation.createdAt, 14), new Date()),
       );
     }
   }, [existingEvaluation, open]);
@@ -193,16 +181,12 @@ export default function StudentGroupEvaluation({
     setExistingEvaluation(_evaluation);
   }, [_evaluation, open]);
 
-  const onSubmit = async (
-    data: z.infer<typeof StudentGroupEvaluationSchema>,
-  ) => {
+  const onSubmit = async (data: z.infer<typeof StudentGroupEvaluationSchema>) => {
     const response = await submitGroupEvaluation(data);
     if (!response.success) {
       toast({
         variant: "destructive",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -246,10 +230,7 @@ export default function StudentGroupEvaluation({
           ) : (
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className={cn(
-                "space-y-5",
-                mode === "view" ? "form-view-mode" : "",
-              )}
+              className={cn("space-y-5", mode === "view" ? "form-view-mode" : "")}
             >
               <FormField
                 control={form.control}
@@ -257,8 +238,7 @@ export default function StudentGroupEvaluation({
                 render={({ field }) => (
                   <FormItem className="space-y-2">
                     <FormLabel>
-                      Select session{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      Select session <span className="text-shamiri-light-red">*</span>
                     </FormLabel>{" "}
                     <Select
                       defaultValue={field.value}
@@ -281,19 +261,9 @@ export default function StudentGroupEvaluation({
                           .map((session) => {
                             return (
                               <SelectItem key={session.id} value={session.id}>
-                                <span>
-                                  {sessionDisplayName(
-                                    session.session?.sessionName,
-                                  )}
-                                </span>{" "}
-                                -{" "}
-                                <span>
-                                  {format(session.sessionDate, "dd MMM yyyy")}
-                                </span>{" "}
-                                -{" "}
-                                <span>
-                                  {format(session.sessionDate, "h:mm a")}
-                                </span>{" "}
+                                <span>{sessionDisplayName(session.session?.sessionName)}</span> -{" "}
+                                <span>{format(session.sessionDate, "dd MMM yyyy")}</span> -{" "}
+                                <span>{format(session.sessionDate, "h:mm a")}</span>{" "}
                               </SelectItem>
                             );
                           })}
@@ -303,18 +273,12 @@ export default function StudentGroupEvaluation({
                   </FormItem>
                 )}
               />
-              {mode !== "view" &&
-              existingEvaluation &&
-              updateWindowDuration > 0 ? (
+              {mode !== "view" && existingEvaluation && updateWindowDuration > 0 ? (
                 <DialogAlertWidget separator={false}>
                   <div className="flex items-center gap-2">
                     <span>
                       Update ratings by{" "}
-                      {format(
-                        addDays(existingEvaluation.createdAt, 14),
-                        "dd-MM-yyyy",
-                      )}{" "}
-                      (
+                      {format(addDays(existingEvaluation.createdAt, 14), "dd-MM-yyyy")} (
                       <CountdownTimer duration={updateWindowDuration} />)
                     </span>
                   </div>
@@ -324,14 +288,9 @@ export default function StudentGroupEvaluation({
               <div className="flex flex-col space-y-4 divide-y">
                 {formInputs.map((input) => {
                   return (
-                    <div
-                      key={input.section}
-                      className="flex flex-col space-y-2 py-4"
-                    >
+                    <div key={input.section} className="flex flex-col space-y-2 py-4">
                       <div>
-                        <span className="text-bold text-lg">
-                          {input.section}
-                        </span>{" "}
+                        <span className="text-bold text-lg">{input.section}</span>{" "}
                         <span className="text-shamiri-light-red">*</span>
                       </div>
                       <span>{input.description}</span>
@@ -340,9 +299,7 @@ export default function StudentGroupEvaluation({
                           <FormField
                             key={inputField.name}
                             control={form.control}
-                            name={
-                              inputField.name as keyof typeof form.formState.defaultValues
-                            }
+                            name={inputField.name as keyof typeof form.formState.defaultValues}
                             render={({ field }) => (
                               <FormItem className="flex flex-col space-y-2">
                                 <FormLabel>
@@ -350,9 +307,7 @@ export default function StudentGroupEvaluation({
                                     {inputField.label}
                                   </span>{" "}
                                   {inputField.label && (
-                                    <span className="text-shamiri-light-red">
-                                      *
-                                    </span>
+                                    <span className="text-shamiri-light-red">*</span>
                                   )}
                                 </FormLabel>
                                 <RatingStarsInput
@@ -360,8 +315,7 @@ export default function StudentGroupEvaluation({
                                   onChange={field.onChange}
                                   disabled={
                                     mode === "view" ||
-                                    (existingEvaluation &&
-                                      updateWindowDuration === 0)
+                                    (existingEvaluation && updateWindowDuration === 0)
                                   }
                                 />
                               </FormItem>
@@ -380,12 +334,11 @@ export default function StudentGroupEvaluation({
                                   rows={mode === "view" ? 5 : 3}
                                   disabled={
                                     mode === "view" ||
-                                    (existingEvaluation &&
-                                      updateWindowDuration === 0)
+                                    (existingEvaluation && updateWindowDuration === 0)
                                   }
                                   className="resize-none"
                                   {...field}
-                                ></Textarea>
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

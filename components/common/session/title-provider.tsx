@@ -1,4 +1,4 @@
-import { PropsWithChildren, createContext, useContext, useState } from "react";
+import { createContext, type PropsWithChildren, useContext, useState } from "react";
 
 interface TitleContextType {
   title: string;
@@ -18,9 +18,5 @@ export const useTitle = () => {
 export function TitleProvider({ children }: PropsWithChildren<{}>) {
   const [title, setTitle] = useState<string>("");
 
-  return (
-    <TitleContext.Provider value={{ title, setTitle }}>
-      {children}
-    </TitleContext.Provider>
-  );
+  return <TitleContext.Provider value={{ title, setTitle }}>{children}</TitleContext.Provider>;
 }

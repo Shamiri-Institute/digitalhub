@@ -1,8 +1,8 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
 import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
-import { Prisma } from "@prisma/client";
 
 export type SupervisorFellowsAttendancesType = Awaited<
   ReturnType<typeof loadSupervisorFellowAttendance>
@@ -54,12 +54,11 @@ export async function loadSupervisorFellowAttendance() {
   });
 
   return fellows.map((fellow) => {
-    const { totalAmount, totalPaidAmount } = calculateAmounts(
+    const { totalAmount, totalPaidAmount } = calculateAmounts(fellow.fellowAttendances);
+
+    const { preCount, mainCount, supervisionCount, trainingCount } = calculateSessionCounts(
       fellow.fellowAttendances,
     );
-
-    const { preCount, mainCount, supervisionCount, trainingCount } =
-      calculateSessionCounts(fellow.fellowAttendances);
 
     const payoutStatements = fellow.fellowAttendances.flatMap((attendance) =>
       attendance.PayoutStatements.map((payout) => ({
@@ -111,37 +110,35 @@ function calculateAmounts(attendances: FellowAttendance[]) {
 
 function specialSessionCount(attendances: FellowAttendance[]) {
   return (
-    attendances.filter(
-      (attendance) => attendance.session?.session?.sessionType === "SPECIAL",
-    ).length || 0
+    attendances.filter((attendance) => attendance.session?.session?.sessionType === "SPECIAL")
+      .length || 0
   );
 }
 
 function calculateSessionCounts(fellowAttendances: FellowAttendance[]) {
-  const { preCount, mainCount, supervisionCount, trainingCount } =
-    fellowAttendances.reduce(
-      (counts, attendance) => {
-        const sessionName = attendance.session?.session?.sessionName;
-        const sessionType = attendance.session?.session?.sessionType;
+  const { preCount, mainCount, supervisionCount, trainingCount } = fellowAttendances.reduce(
+    (counts, attendance) => {
+      const sessionName = attendance.session?.session?.sessionName;
+      const sessionType = attendance.session?.session?.sessionType;
 
-        // For pre and main session counts
-        if (sessionName === "s0") {
-          counts.preCount += 1;
-        } else if (["s1", "s2", "s3", "s4"].includes(sessionName ?? "")) {
-          counts.mainCount += 1;
-        }
+      // For pre and main session counts
+      if (sessionName === "s0") {
+        counts.preCount += 1;
+      } else if (["s1", "s2", "s3", "s4"].includes(sessionName ?? "")) {
+        counts.mainCount += 1;
+      }
 
-        // For training and supervision session counts
-        if (sessionType === "SUPERVISION") {
-          counts.supervisionCount += 1;
-        } else if (sessionType === "TRAINING") {
-          counts.trainingCount += 1;
-        }
+      // For training and supervision session counts
+      if (sessionType === "SUPERVISION") {
+        counts.supervisionCount += 1;
+      } else if (sessionType === "TRAINING") {
+        counts.trainingCount += 1;
+      }
 
-        return counts;
-      },
-      { preCount: 0, mainCount: 0, supervisionCount: 0, trainingCount: 0 },
-    );
+      return counts;
+    },
+    { preCount: 0, mainCount: 0, supervisionCount: 0, trainingCount: 0 },
+  );
 
   return { preCount, mainCount, supervisionCount, trainingCount };
 }
@@ -157,10 +154,7 @@ type FellowAttendance = Prisma.FellowAttendanceGetPayload<{
   };
 }>;
 
-export async function submitPaymentReversal(data: {
-  id: number;
-  name: string;
-}) {
+export async function submitPaymentReversal(data: { id: number; name: string }) {
   const currentSupervisorData = await currentSupervisor();
   if (!currentSupervisorData) {
     throw new Error("Unauthorised user");

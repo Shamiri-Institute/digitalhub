@@ -1,7 +1,7 @@
 // https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
 
-import { constants } from "#/lib/constants";
 import * as Sentry from "@sentry/nextjs";
+import { constants } from "#/lib/constants";
 
 export async function register() {
   if (constants.NEXT_PUBLIC_ENV === "development") {

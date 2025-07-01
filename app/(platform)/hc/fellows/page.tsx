@@ -1,5 +1,6 @@
+import { Suspense } from "react";
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
-import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
+import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import FellowsChartsWrapper from "#/app/(platform)/hc/fellows/components/fellows-charts-wrapper";
 import MainFellowsDatatable from "#/app/(platform)/hc/fellows/components/main-fellows-datatable";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
@@ -8,7 +9,6 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { Suspense } from "react";
 
 export default async function FellowPage() {
   const hc = await currentHubCoordinator();
@@ -102,9 +102,7 @@ export default async function FellowPage() {
         <Separator />
 
         <Suspense fallback={<GraphLoadingIndicator />}>
-          <FellowsChartsWrapper
-            coordinator={{ assignedHubId: hc.assignedHubId ?? null }}
-          />
+          <FellowsChartsWrapper coordinator={{ assignedHubId: hc.assignedHubId ?? null }} />
         </Suspense>
         <MainFellowsDatatable
           fellows={data}

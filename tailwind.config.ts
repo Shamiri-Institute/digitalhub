@@ -137,8 +137,7 @@ export const config: Config = {
         xs: "375px",
       },
       boxShadow: {
-        "inner-2":
-          "6px 0 6px 0 rgba(0, 0, 0, 0.06) inset, -6px 0 6px 0 rgba(0, 0, 0, 0.1) inset",
+        "inner-2": "6px 0 6px 0 rgba(0, 0, 0, 0.06) inset, -6px 0 6px 0 rgba(0, 0, 0, 0.1) inset",
       },
     },
   },

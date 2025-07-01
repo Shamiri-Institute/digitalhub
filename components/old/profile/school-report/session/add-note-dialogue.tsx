@@ -1,5 +1,9 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { addNote } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "#/components/ui/dialog";
@@ -7,10 +11,6 @@ import { Form, FormField } from "#/components/ui/form";
 import { Label } from "#/components/ui/label";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as React from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 const FormSchema = z.object({
   content: z.string({
@@ -59,10 +59,7 @@ export function AddNoteDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="gap-0 p-0">
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="overflow-hidden text-ellipsis"
-          >
+          <form onSubmit={form.handleSubmit(onSubmit)} className="overflow-hidden text-ellipsis">
             <div className="my-6 space-y-6">
               <div className="px-6">
                 <FormField

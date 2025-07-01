@@ -1,12 +1,12 @@
 "use client";
 
-import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
-import { Icons } from "#/components/icons";
-import { cn } from "#/lib/utils";
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useContext, useEffect, useState } from "react";
+import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
+import { Icons } from "#/components/icons";
+import { cn } from "#/lib/utils";
 
 export default function SchoolsBreadcrumb({ role }: { role: ImplementerRole }) {
   const context = useContext(SchoolsDataContext);
@@ -45,11 +45,11 @@ export default function SchoolsBreadcrumb({ role }: { role: ImplementerRole }) {
           <Link
             href={
               role === "HUB_COORDINATOR"
-                ? `/hc/schools`
+                ? "/hc/schools"
                 : role === "SUPERVISOR"
-                  ? `/sc/schools`
+                  ? "/sc/schools"
                   : role === "FELLOW"
-                    ? `/fel/schools`
+                    ? "/fel/schools"
                     : "#"
             }
             className="hover:text-shamiri-new-blue"
@@ -68,9 +68,7 @@ export default function SchoolsBreadcrumb({ role }: { role: ImplementerRole }) {
           <div
             className={cn(
               "arrow-button rounded-l-lg",
-              selectedSchoolIndex === 0 || loading
-                ? "pointer-events-none opacity-50"
-                : "",
+              selectedSchoolIndex === 0 || loading ? "pointer-events-none opacity-50" : "",
             )}
             onClick={() => {
               if (selectedSchoolIndex !== 0) {
@@ -88,10 +86,7 @@ export default function SchoolsBreadcrumb({ role }: { role: ImplementerRole }) {
                 : "",
             )}
             onClick={() => {
-              if (
-                loading ||
-                selectedSchoolIndex !== context.schools.length - 1
-              ) {
+              if (loading || selectedSchoolIndex !== context.schools.length - 1) {
                 setSelectedSchoolIndex(selectedSchoolIndex + 1);
               }
             }}

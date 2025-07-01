@@ -1,10 +1,9 @@
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
-import { Separator } from "#/components/ui/separator";
-
-import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
-import PageFooter from "#/components/ui/page-footer";
-import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
+import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
+import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import PageFooter from "#/components/ui/page-footer";
+import { Separator } from "#/components/ui/separator";
+import { db } from "#/lib/db";
 import { ScheduleCalendar } from "../../../../components/common/session/schedule-calendar";
 import { ScheduleHeader } from "../../../../components/common/session/schedule-header";
 

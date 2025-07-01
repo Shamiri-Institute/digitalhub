@@ -1,4 +1,6 @@
-import { SchoolGroupDataTableData } from "#/components/common/group/columns";
+import type { ImplementerRole } from "@prisma/client";
+import type { Dispatch, SetStateAction } from "react";
+import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -8,8 +10,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { ImplementerRole } from "@prisma/client";
-import { Dispatch, SetStateAction } from "react";
 
 export function GroupsDatatableMenu({
   group,
@@ -36,9 +36,7 @@ export function GroupsDatatableMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {state.role !== "FELLOW" && (

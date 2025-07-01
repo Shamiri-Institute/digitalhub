@@ -1,14 +1,11 @@
 "use client";
 
-import {
-  columns,
-  SchoolGroupDataTableData,
-} from "#/components/common/group/columns";
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { columns, type SchoolGroupDataTableData } from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
 
 export default function GroupsDatatableSkeleton({
   role,
@@ -32,9 +29,7 @@ export default function GroupsDatatableSkeleton({
         header: renderSkeleton ? column : "",
         id: column,
         cell: () => {
-          return renderSkeleton ? (
-            <Skeleton className="h-5 w-full bg-gray-200" />
-          ) : null;
+          return renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null;
         },
       };
     });
@@ -50,7 +45,7 @@ export default function GroupsDatatableSkeleton({
         }
         groupCount={0}
         disabled={true}
-      ></CreateGroup>
+      />
     ) : null;
   };
 

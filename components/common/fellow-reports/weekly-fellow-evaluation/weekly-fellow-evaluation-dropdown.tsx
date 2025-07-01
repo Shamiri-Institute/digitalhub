@@ -1,4 +1,4 @@
-import { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
+import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import ViewEditWeeklyFellowEvaluation from "#/components/common/fellow-reports/weekly-fellow-evaluation/view-edit-weekly-fellow-evaluation";
 import { Icons } from "#/components/icons";
 import {
@@ -26,20 +26,14 @@ export default function WeeklyFellowEvaluationDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <ViewEditWeeklyFellowEvaluation
           weeklyFellowEvaluation={weeklyFellowEvaluation}
           action="view"
         >
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
             View weekly evaluation
           </div>
         </ViewEditWeeklyFellowEvaluation>
@@ -47,11 +41,7 @@ export default function WeeklyFellowEvaluationDropdownMenu({
           weeklyFellowEvaluation={weeklyFellowEvaluation}
           action="edit"
         >
-          <div
-            className={cn(
-              "cursor-pointer px-2 py-1.5 text-sm text-shamiri-black",
-            )}
-          >
+          <div className={cn("cursor-pointer px-2 py-1.5 text-sm text-shamiri-black")}>
             Edit weekly evaluation
           </div>
         </ViewEditWeeklyFellowEvaluation>

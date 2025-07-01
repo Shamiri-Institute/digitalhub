@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import { currentSupervisor, getCurrentUser } from "#/app/auth";
 import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
@@ -10,7 +11,6 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { redirect } from "next/navigation";
 import { fetchHubSupervisors } from "./actions";
 
 export default async function SchoolsPage() {

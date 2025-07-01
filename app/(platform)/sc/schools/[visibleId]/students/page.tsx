@@ -1,7 +1,7 @@
+import { signOut } from "next-auth/react";
 import { currentSupervisor } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
 
 export default async function StudentsPage({
   params: { visibleId },
@@ -59,10 +59,5 @@ export default async function StudentsPage({
     },
   });
 
-  return (
-    <StudentsDatatable
-      students={students}
-      role={supervisor?.user.membership.role!}
-    />
-  );
+  return <StudentsDatatable students={students} role={supervisor?.user.membership.role!} />;
 }

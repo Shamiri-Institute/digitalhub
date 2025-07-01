@@ -1,9 +1,9 @@
+import { signOut } from "next-auth/react";
 import { currentFellow } from "#/app/auth";
 import FellowSchoolsDatatableSkeleton from "#/components/common/fellow/fellow-schools-datatable-skeleton";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { signOut } from "next-auth/react";
 
 export default async function TableSkeleton() {
   const fellow = await currentFellow();

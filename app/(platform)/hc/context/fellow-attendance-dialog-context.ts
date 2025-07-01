@@ -1,5 +1,5 @@
-import { Prisma } from "@prisma/client";
-import { createContext, Dispatch, SetStateAction } from "react";
+import type { Prisma } from "@prisma/client";
+import { createContext, type Dispatch, type SetStateAction } from "react";
 
 type FellowAttendanceContextData = {
   isOpen: boolean;
@@ -14,10 +14,9 @@ type FellowAttendanceContextData = {
   >;
 };
 
-export const FellowAttendanceContext =
-  createContext<FellowAttendanceContextData>({
-    isOpen: false,
-    setIsOpen: () => {},
-    session: null,
-    setSession: () => {},
-  });
+export const FellowAttendanceContext = createContext<FellowAttendanceContextData>({
+  isOpen: false,
+  setIsOpen: () => {},
+  session: null,
+  setSession: () => {},
+});

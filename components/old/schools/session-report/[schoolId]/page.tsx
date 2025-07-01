@@ -55,9 +55,7 @@ export default async function ReportDetails({
     },
   });
 
-  const schoolNotAssigned = supervisor.assignedSchools?.every(
-    (school) => school.id !== schoolId,
-  );
+  const schoolNotAssigned = supervisor.assignedSchools?.every((school) => school.id !== schoolId);
   const pointSupervisor = session?.school?.assignedSupervisor ?? undefined;
   const schoolName = session?.school?.schoolName ?? "";
 
@@ -72,40 +70,32 @@ export default async function ReportDetails({
           href="/schools"
           schoolVisibleId={schoolId}
         />
-        <div className="py-6 text-center text-sm">
-          {sessionName} has not yet been created.
-        </div>
+        <div className="py-6 text-center text-sm">{sessionName} has not yet been created.</div>
       </div>
     );
   }
 
   // Session rating by the currently logged in supervisor if previously created
   const supervisorSessionRating =
-    session.sessionRatings?.find(
-      (sessionRating) => sessionRating.supervisorId === supervisor.id,
-    ) ?? null;
+    session.sessionRatings?.find((sessionRating) => sessionRating.supervisorId === supervisor.id) ??
+    null;
 
   // Weekly report comments by point supervisor
   const pointSupervisorSessionNotes = session.sessionNotes?.filter(
     (sessionNote) =>
       sessionNote.supervisorId === supervisor.id &&
-      [
-        "positive-highlights",
-        "reported-challenges",
-        "recommendations",
-      ].includes(sessionNote.kind),
+      ["positive-highlights", "reported-challenges", "recommendations"].includes(sessionNote.kind),
   );
 
   // Added notes by all supervisors
-  const allSupervisorSessionAddedNotes =
-    await db.interventionSessionNote.findMany({
-      where: {
-        sessionId: session.id,
-        kind: "added-notes",
-      },
-      orderBy: { createdAt: "desc" },
-      include: { supervisor: true },
-    });
+  const allSupervisorSessionAddedNotes = await db.interventionSessionNote.findMany({
+    where: {
+      sessionId: session.id,
+      kind: "added-notes",
+    },
+    orderBy: { createdAt: "desc" },
+    include: { supervisor: true },
+  });
 
   const revalidatePath = `/schools/session-report/${schoolId}?type=${sessionType}`;
 

@@ -1,10 +1,7 @@
 "use server";
 
-import {
-  currentHubCoordinator,
-  currentSupervisor,
-  getCurrentUser,
-} from "#/app/auth";
+import type { z } from "zod";
+import { currentHubCoordinator, currentSupervisor, getCurrentUser } from "#/app/auth";
 import {
   MarkSessionOccurrenceSchema,
   RescheduleSessionSchema,
@@ -13,7 +10,6 @@ import {
 } from "#/components/common/session/schema";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import { z } from "zod";
 
 async function checkAuth() {
   const hubCoordinator = await currentHubCoordinator();
@@ -27,9 +23,7 @@ async function checkAuth() {
   return { hubCoordinator, supervisor, user };
 }
 
-export async function createNewSession(
-  data: z.infer<typeof ScheduleNewSessionSchema>,
-) {
+export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSchema>) {
   try {
     await checkAuth();
     const parsedData = ScheduleNewSessionSchema.parse(data);
@@ -47,10 +41,7 @@ export async function createNewSession(
     }
 
     const { hub } = hubSessionType;
-    if (
-      hubSessionType.sessionType === "SUPERVISION" ||
-      hubSessionType.sessionType === "TRAINING"
-    ) {
+    if (hubSessionType.sessionType === "SUPERVISION" || hubSessionType.sessionType === "TRAINING") {
       const existingSession = await db.interventionSession.findFirst({
         where: {
           hubId: hub.id,
@@ -62,7 +53,7 @@ export async function createNewSession(
         return {
           success: false,
           data: existingSession,
-          message: `This session already exists for this hub`,
+          message: "This session already exists for this hub",
         };
       }
     } else {
@@ -76,9 +67,7 @@ export async function createNewSession(
         },
       });
       if (existingSession) {
-        console.error(
-          `This session already exists for ${existingSession?.school?.schoolName}`,
-        );
+        console.error(`This session already exists for ${existingSession?.school?.schoolName}`);
         return {
           success: false,
           data: existingSession,
@@ -91,8 +80,7 @@ export async function createNewSession(
         id: objectId("isess"),
         sessionId: parsedData.sessionId,
         sessionDate: parsedData.sessionDate,
-        yearOfImplementation:
-          parsedData.sessionDate.getFullYear() || new Date().getFullYear(),
+        yearOfImplementation: parsedData.sessionDate.getFullYear() || new Date().getFullYear(),
         schoolId: parsedData.schoolId !== "" ? parsedData.schoolId : undefined,
         occurred: false,
         projectId: hubSessionType.hub.projectId,
@@ -124,10 +112,7 @@ export async function cancelSession(id: string) {
       },
     });
 
-    if (
-      session.school?.assignedSupervisorId !== user.supervisor?.id &&
-      !user.hubCoordinator
-    ) {
+    if (session.school?.assignedSupervisorId !== user.supervisor?.id && !user.hubCoordinator) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
 
@@ -148,17 +133,12 @@ export async function cancelSession(id: string) {
     console.error(error);
     return {
       success: false,
-      message:
-        (error as Error)?.message ??
-        "An error occurred while marking attendance.",
+      message: (error as Error)?.message ?? "An error occurred while marking attendance.",
     };
   }
 }
 
-export async function rescheduleSession(
-  id: string,
-  data: z.infer<typeof RescheduleSessionSchema>,
-) {
+export async function rescheduleSession(id: string, data: z.infer<typeof RescheduleSessionSchema>) {
   try {
     const user = await checkAuth();
     const parsedData = RescheduleSessionSchema.parse(data);
@@ -170,10 +150,7 @@ export async function rescheduleSession(
       },
     });
 
-    if (
-      session.school?.assignedSupervisorId !== user.supervisor?.id &&
-      !user.hubCoordinator
-    ) {
+    if (session.school?.assignedSupervisorId !== user.supervisor?.id && !user.hubCoordinator) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
 
@@ -195,9 +172,7 @@ export async function rescheduleSession(
     console.error(error);
     return {
       success: false,
-      message:
-        (error as Error)?.message ??
-        "An error occurred while marking attendance.",
+      message: (error as Error)?.message ?? "An error occurred while marking attendance.",
     };
   }
 }
@@ -229,9 +204,7 @@ export async function submitQualitativeFeedback({
   }
 }
 
-export async function submitSessionRatings(
-  data: z.infer<typeof SessionRatingsSchema>,
-) {
+export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSchema>) {
   try {
     const { supervisor } = await checkAuth();
     if (!supervisor) {
@@ -300,16 +273,12 @@ export async function submitSessionRatings(
     console.error(error);
     return {
       success: false,
-      message:
-        (error as Error)?.message ??
-        "An error occurred while submitting session ratings.",
+      message: (error as Error)?.message ?? "An error occurred while submitting session ratings.",
     };
   }
 }
 
-export async function markSessionOccurrence(
-  data: z.infer<typeof MarkSessionOccurrenceSchema>,
-) {
+export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccurrenceSchema>) {
   try {
     const auth = await checkAuth();
     if (!auth.supervisor && !auth.hubCoordinator) {
@@ -327,9 +296,7 @@ export async function markSessionOccurrence(
     });
 
     if (session.sessionDate > new Date()) {
-      throw new Error(
-        "This session's date has not arrived yet. Please check the date and time.",
-      );
+      throw new Error("This session's date has not arrived yet. Please check the date and time.");
     }
 
     const schoolSessionTypes = ["INTERVENTION", "DATA_COLLECTION", "CLINICAL"];
@@ -343,15 +310,15 @@ export async function markSessionOccurrence(
       throw new Error(
         `Something went wrong. You are not assigned to ${session.school?.schoolName}`,
       );
-    } else if (
+    }
+    if (
       session.session &&
       venueSessionTypes.includes(session.session?.sessionType) &&
       !auth.hubCoordinator
     ) {
-      throw new Error(
-        `Something went wrong. You are not authorized to perform this action.`,
-      );
-    } else if (!session.session) {
+      throw new Error("Something went wrong. You are not authorized to perform this action.");
+    }
+    if (!session.session) {
       throw new Error(
         `Something went wrong. Session details not found ${session.school?.schoolName}`,
       );
@@ -372,9 +339,7 @@ export async function markSessionOccurrence(
     console.error(error);
     return {
       success: false,
-      message:
-        (error as Error)?.message ??
-        "An error occurred while marking attendance.",
+      message: (error as Error)?.message ?? "An error occurred while marking attendance.",
     };
   }
 }

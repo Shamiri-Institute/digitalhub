@@ -1,6 +1,7 @@
 "use client";
 
-import { StudentAttendanceData } from "#/components/common/student/student-attendance";
+import type { Dispatch, SetStateAction } from "react";
+import type { StudentAttendanceData } from "#/components/common/student/student-attendance";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -10,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { Dispatch, SetStateAction } from "react";
 
 export default function StudentAttendanceMenu({
   state,
@@ -35,9 +35,7 @@ export default function StudentAttendanceMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem

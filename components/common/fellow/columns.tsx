@@ -1,13 +1,13 @@
 "use client";
 
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { parsePhoneNumber } from "libphonenumber-js";
+import type { Dispatch, SetStateAction } from "react";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
 import { FellowsDatatableMenu } from "#/components/common/fellow/fellows-datatable";
 import { Badge } from "#/components/ui/badge";
 import { Checkbox } from "#/components/ui/checkbox";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import { parsePhoneNumber } from "libphonenumber-js";
-import { Dispatch, SetStateAction } from "react";
 
 export type SchoolFellowTableData = {
   id: string;
@@ -116,17 +116,12 @@ export const columns = ({
     {
       header: "Phone Number",
       accessorFn: (row) => {
-        return (
-          row.cellNumber &&
-          parsePhoneNumber(row.cellNumber, "KE").formatNational()
-        );
+        return row.cellNumber && parsePhoneNumber(row.cellNumber, "KE").formatNational();
       },
     },
     {
       id: "button",
-      cell: ({ row }) => (
-        <FellowsDatatableMenu fellow={row.original} state={state} role={role} />
-      ),
+      cell: ({ row }) => <FellowsDatatableMenu fellow={row.original} state={state} role={role} />,
       enableHiding: false,
     },
   ];

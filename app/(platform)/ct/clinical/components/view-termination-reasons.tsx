@@ -1,14 +1,9 @@
 "use client";
 
-import { Badge } from "#/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "#/components/ui/dialog";
-import { Separator } from "#/components/ui/separator";
 import { useState } from "react";
+import { Badge } from "#/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
+import { Separator } from "#/components/ui/separator";
 
 interface TerminationData {
   id: string;
@@ -55,20 +50,14 @@ export function ViewTerminationReasons({
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium">
-                  Termination Reason
-                </label>
+                <label className="text-sm font-medium">Termination Reason</label>
                 <div className="mt-1">
-                  <Badge variant="destructive">
-                    {termination.terminationReason}
-                  </Badge>
+                  <Badge variant="destructive">{termination.terminationReason}</Badge>
                 </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium">
-                  Additional Information
-                </label>
+                <label className="text-sm font-medium">Additional Information</label>
                 <div className="mt-1 rounded-md bg-gray-50 p-3">
                   <p className="whitespace-pre-wrap text-sm">
                     {termination.terminationReasonExplanation}
@@ -79,13 +68,9 @@ export function ViewTerminationReasons({
               <Separator />
 
               <div className="flex justify-between text-sm text-muted-foreground">
+                <span>Date Created: {new Date(termination.createdAt).toLocaleDateString()}</span>
                 <span>
-                  Date Created:{" "}
-                  {new Date(termination.createdAt).toLocaleDateString()}
-                </span>
-                <span>
-                  Termination Date:{" "}
-                  {new Date(termination.terminationDate).toLocaleDateString()}
+                  Termination Date: {new Date(termination.terminationDate).toLocaleDateString()}
                 </span>
               </div>
             </div>

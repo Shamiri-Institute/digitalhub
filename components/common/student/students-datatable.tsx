@@ -1,24 +1,21 @@
 "use client";
 
+import type { ImplementerRole } from "@prisma/client";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/fel/schools/actions";
-import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
+import type { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
 import { AddReportingNote } from "#/components/common/student/add-reporting-note";
 import AttendanceHistory from "#/components/common/student/attendance-history";
-import {
-  columns,
-  SchoolStudentTableData,
-} from "#/components/common/student/columns";
+import { columns, type SchoolStudentTableData } from "#/components/common/student/columns";
 import GroupTransferHistory from "#/components/common/student/group-transfer-history";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import StudentDropoutForm from "#/components/common/student/student-dropout-form";
 import DataTable from "#/components/data-table";
 import { markStudentAttendance } from "#/lib/actions/student";
-import { ImplementerRole } from "@prisma/client";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { z } from "zod";
 
 export default function StudentsDatatable({
   students,
@@ -31,14 +28,10 @@ export default function StudentsDatatable({
 }) {
   const pathname = usePathname();
   const [editDialog, setEditDialog] = useState<boolean>(false);
-  const [markAttendanceDialog, setMarkAttendanceDialog] =
-    useState<boolean>(false);
-  const [attendanceHistoryDialog, setAttendanceHistoryDialog] =
-    useState<boolean>(false);
-  const [reportingNotesDialog, setReportingNotesDialog] =
-    useState<boolean>(false);
-  const [groupTransferHistory, setGroupTransferHistory] =
-    useState<boolean>(false);
+  const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
+  const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState<boolean>(false);
+  const [reportingNotesDialog, setReportingNotesDialog] = useState<boolean>(false);
+  const [groupTransferHistory, setGroupTransferHistory] = useState<boolean>(false);
   const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
   const [student, setStudent] = useState<SchoolStudentTableData | null>(null);
   const [selectedSession, setSelectedSession] = useState<string>();
@@ -72,12 +65,10 @@ export default function StudentsDatatable({
     return (
       <DialogAlertWidget>
         <div className="flex flex-wrap items-center gap-2 whitespace-nowrap">
-          <span className="capitalize">
-            {student?.studentName?.toLowerCase()}
-          </span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+          <span className="capitalize">{student?.studentName?.toLowerCase()}</span>
+          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
           <span>{student?.assignedGroup?.groupName}</span>
-          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+          <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
           <span>{student?.admissionNumber}</span>
         </div>
       </DialogAlertWidget>
@@ -130,14 +121,7 @@ export default function StudentsDatatable({
             sessions={student.school ? student.school.interventionSessions : []}
             selectedSessionId={selectedSession}
             attendances={student.studentAttendances.map((attendance) => {
-              const {
-                id,
-                studentId,
-                attended,
-                absenceReason,
-                sessionId,
-                comments,
-              } = attendance;
+              const { id, studentId, attended, absenceReason, sessionId, comments } = attendance;
               return {
                 attendanceId: id.toString(),
                 id: studentId,
@@ -180,11 +164,7 @@ export default function StudentsDatatable({
           >
             {renderDialogAlert()}
           </GroupTransferHistory>
-          <StudentDropoutForm
-            student={student}
-            isOpen={dropoutDialog}
-            setIsOpen={setDropoutDialog}
-          >
+          <StudentDropoutForm student={student} isOpen={dropoutDialog} setIsOpen={setDropoutDialog}>
             {renderDialogAlert()}
           </StudentDropoutForm>
         </div>

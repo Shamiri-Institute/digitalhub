@@ -6,9 +6,7 @@ export default async function StudentGroupEvaluationPage() {
 
   return (
     <div className="container w-full grow space-y-3">
-      <StudentGroupEvaluationTable
-        studentGroupEvaluation={studentGroupEvaluationData}
-      />
+      <StudentGroupEvaluationTable studentGroupEvaluation={studentGroupEvaluationData} />
     </div>
   );
 }

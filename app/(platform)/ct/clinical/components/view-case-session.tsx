@@ -18,23 +18,15 @@ export default function ViewCaseSessions({
       <Table>
         <TableBody>
           <TableRow className="hover:bg-gray-50">
-            <TableCell className="border font-medium">
-              No. of clinical sessions
-            </TableCell>
+            <TableCell className="border font-medium">No. of clinical sessions</TableCell>
             <TableCell className="border">{noOfClinicalSessions}</TableCell>
           </TableRow>
           <TableRow className="hover:bg-gray-50">
-            <TableCell className="border font-medium">
-              Upcoming session
-            </TableCell>
-            <TableCell className="border">
-              {getNextSession(upcomingSession)}
-            </TableCell>
+            <TableCell className="border font-medium">Upcoming session</TableCell>
+            <TableCell className="border">{getNextSession(upcomingSession)}</TableCell>
           </TableRow>
           <TableRow className="hover:bg-gray-50">
-            <TableCell className="border font-medium">
-              Initial contact
-            </TableCell>
+            <TableCell className="border font-medium">Initial contact</TableCell>
             <TableCell className="border">{initialContact}</TableCell>
           </TableRow>
           <TableRow className="hover:bg-gray-50">

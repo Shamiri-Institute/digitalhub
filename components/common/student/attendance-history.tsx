@@ -1,15 +1,14 @@
 "use client";
 
-import { SchoolStudentTableData } from "#/components/common/student/columns";
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
+import { type Dispatch, type SetStateAction, useEffect } from "react";
+import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,10 +18,6 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import { format } from "date-fns";
-import { Dispatch, SetStateAction, useEffect } from "react";
 
 export default function AttendanceHistory({
   open,
@@ -49,9 +44,7 @@ export default function AttendanceHistory({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="lg:w-3/5 lg:max-w-none">
         <DialogHeader>
-          <h2 className="text-xl font-bold">
-            Student session attendance history
-          </h2>
+          <h2 className="text-xl font-bold">Student session attendance history</h2>
         </DialogHeader>
         {children}
         <DataTable
@@ -125,8 +118,7 @@ const columns = (
               {
                 "border-green-border": attended,
                 "border-red-border": !attended,
-                "border-blue-border":
-                  attended === undefined || attended === null,
+                "border-blue-border": attended === undefined || attended === null,
               },
               {
                 "bg-green-bg": attended,
@@ -147,10 +139,7 @@ const columns = (
               </div>
             ) : (
               <div className="flex items-center gap-1 text-red-base">
-                <Icons.crossCircleFilled
-                  className="h-3 w-3"
-                  strokeWidth={2.5}
-                />
+                <Icons.crossCircleFilled className="h-3 w-3" strokeWidth={2.5} />
                 <span>Missed</span>
               </div>
             )}
@@ -172,9 +161,7 @@ const columns = (
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>
-            <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-              Actions
-            </span>
+            <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem

@@ -53,9 +53,8 @@ export default function UserWelcomer({
               Hello 👋🏾,
             </Text>
             <Text className="text-sm leading-6 text-black">
-              <span className="font-medium">{implementerName}</span> has invited
-              you to get you started on the key operations platform that powers
-              the{" "}
+              <span className="font-medium">{implementerName}</span> has invited you to get you
+              started on the key operations platform that powers the{" "}
               <Link
                 href="https://www.shamiri.institute/the-shamiri-intervention"
                 className="font-medium text-sky-600 no-underline"
@@ -71,12 +70,9 @@ export default function UserWelcomer({
               >
                 Log into
               </Link>{" "}
-              the Shamiri Digital Hub to get started and continue setting up
-              your account.
+              the Shamiri Digital Hub to get started and continue setting up your account.
             </Text>
-            <Text className="text-sm font-light leading-6 text-gray-400">
-              Shamiri Technology
-            </Text>
+            <Text className="text-sm font-light leading-6 text-gray-400">Shamiri Technology</Text>
             <Footer email={email} />
           </Container>
         </Body>

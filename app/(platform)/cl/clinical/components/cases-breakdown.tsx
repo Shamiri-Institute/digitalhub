@@ -1,6 +1,5 @@
 "use client";
 
-import ChartCard from "#/components/ui/chart-card";
 import {
   Bar,
   BarChart,
@@ -14,6 +13,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import ChartCard from "#/components/ui/chart-card";
 
 const CASE_STATUS_COLORS = {
   Active: "#0085FF",
@@ -64,11 +64,7 @@ export default function CasesBreakdown({
                 {casesByStatus.map((entry) => (
                   <Cell
                     key={entry.name}
-                    fill={
-                      CASE_STATUS_COLORS[
-                        entry.name as keyof typeof CASE_STATUS_COLORS
-                      ]
-                    }
+                    fill={CASE_STATUS_COLORS[entry.name as keyof typeof CASE_STATUS_COLORS]}
                   />
                 ))}
               </Pie>
@@ -100,11 +96,7 @@ export default function CasesBreakdown({
                 {casesByRiskStatus.map((entry) => (
                   <Cell
                     key={entry.name}
-                    fill={
-                      RISK_STATUS_COLORS[
-                        entry.name as keyof typeof RISK_STATUS_COLORS
-                      ]
-                    }
+                    fill={RISK_STATUS_COLORS[entry.name as keyof typeof RISK_STATUS_COLORS]}
                   />
                 ))}
               </Pie>

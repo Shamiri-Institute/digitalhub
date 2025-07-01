@@ -32,9 +32,7 @@ export default function DataTableRatingStars({ rating }: { rating: number }) {
           </div>
         )}
       </div>
-      <div className="text-shamiri-text-grey">
-        {isNaN(rating) ? "0.0" : rounded}
-      </div>
+      <div className="text-shamiri-text-grey">{isNaN(rating) ? "0.0" : rounded}</div>
     </div>
   );
 }

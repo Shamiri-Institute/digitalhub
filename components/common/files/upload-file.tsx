@@ -1,5 +1,8 @@
 "use client";
 
+import clsx from "clsx";
+import { useS3Upload } from "next-s3-upload";
+import { useCallback, useState } from "react";
 import { revalidatePageAction } from "#/app/(platform)/sc/schools/actions";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -7,10 +10,6 @@ import { DialogFooter } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import { addUploadedSchoolDocs } from "#/lib/actions/file";
-import clsx from "clsx";
-import { useS3Upload } from "next-s3-upload";
-
-import { useCallback, useState } from "react";
 
 export default function SchoolFilesUploader({
   schoolId,
@@ -94,11 +93,7 @@ export default function SchoolFilesUploader({
 
       <Separator />
       <DialogFooter className="flex justify-end">
-        <Button
-          className="text-shamiri-new-blue"
-          variant="ghost"
-          onClick={() => onClose(false)}
-        >
+        <Button className="text-shamiri-new-blue" variant="ghost" onClick={() => onClose(false)}>
           Cancel
         </Button>
         <Button
@@ -143,9 +138,7 @@ function FileUploaderWithDrop({
     let files: any;
 
     if (e.dataTransfer.items) {
-      files = Array.from(e.dataTransfer.items).map((item: any) =>
-        item.getAsFile(),
-      );
+      files = Array.from(e.dataTransfer.items).map((item: any) => item.getAsFile());
     } else {
       files = Array.from(e.dataTransfer.files);
     }
@@ -153,7 +146,7 @@ function FileUploaderWithDrop({
     if (files?.length) {
       if (onChange) onChange(files);
     } else {
-      window.alert(`Invalid file type.`);
+      window.alert("Invalid file type.");
     }
   };
 
@@ -182,15 +175,11 @@ function FileUploaderWithDrop({
       >
         <div className=" flex w-full items-center space-x-6">
           <div className="cursor-pointer rounded-lg border border-gray-200 p-2">
-            <span className="text-normal cursor-pointer text-center">
-              {"Select Files"}
-            </span>
+            <span className="text-normal cursor-pointer text-center">{"Select Files"}</span>
           </div>
 
           <div className="flex space-x-2">
-            {files?.length === 0 && (
-              <Icons.uploadCloudIcon className="h-6 w-6" />
-            )}
+            {files?.length === 0 && <Icons.uploadCloudIcon className="h-6 w-6" />}
             <span className="text-normal text-center">Drop files here...</span>
             <input type="file" accept={accept} hidden onChange={handleUpload} />
           </div>

@@ -1,3 +1,5 @@
+import { isValidPhoneNumber } from "libphonenumber-js";
+import { z } from "zod";
 import {
   ATTENDANCE_STATUS,
   BOARDING_DAY_TYPES,
@@ -9,20 +11,14 @@ import {
   SUPERVISOR_DROP_OUT_REASONS,
 } from "#/lib/app-constants/constants";
 import { stringValidation } from "#/lib/utils";
-import { isValidPhoneNumber } from "libphonenumber-js";
-import { z } from "zod";
 
 export const DropoutSchoolSchema = z.object({
   schoolId: stringValidation("Missing school ID"),
-  dropoutReason: z.enum(
-    [SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)],
-    {
-      errorMap: (_issue, _ctx) => ({
-        message:
-          "Please select one of the supplied school dropout reason options",
-      }),
-    },
-  ),
+  dropoutReason: z.enum([SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)], {
+    errorMap: (_issue, _ctx) => ({
+      message: "Please select one of the supplied school dropout reason options",
+    }),
+  }),
 });
 
 export const DropoutSupervisorSchema = z.object({
@@ -32,8 +28,7 @@ export const DropoutSupervisorSchema = z.object({
     [SUPERVISOR_DROP_OUT_REASONS[0]!, ...SUPERVISOR_DROP_OUT_REASONS.slice(1)],
     {
       errorMap: (_issue, _ctx) => ({
-        message:
-          "Please select one of the supplied supervisor dropout reason options",
+        message: "Please select one of the supplied supervisor dropout reason options",
       }),
     },
   ),
@@ -44,22 +39,18 @@ export const DropoutStudentSchema = z
     studentId: stringValidation("Missing student ID"),
     mode: z.enum(["dropout", "undo"]),
     dropoutReason: z
-      .enum(
-        [STUDENT_DROPOUT_REASONS[0]!, ...STUDENT_DROPOUT_REASONS.slice(1)],
-        {
-          errorMap: (_issue, _ctx) => ({
-            message:
-              "Please select one of the supplied student dropout reason options",
-          }),
-        },
-      )
+      .enum([STUDENT_DROPOUT_REASONS[0]!, ...STUDENT_DROPOUT_REASONS.slice(1)], {
+        errorMap: (_issue, _ctx) => ({
+          message: "Please select one of the supplied student dropout reason options",
+        }),
+      })
       .optional(),
   })
   .superRefine((val, ctx) => {
     if (val.dropoutReason === undefined && val.mode === "dropout") {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Please select reason for drop out.`,
+        message: "Please select reason for drop out.",
         fatal: true,
         path: ["dropoutReason"],
       });
@@ -73,14 +64,11 @@ export const SubmitComplaintSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
   comments: stringValidation().optional(),
   // TODO: Replace with complaint types array
-  complaint: z.enum(
-    [SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)],
-    {
-      errorMap: (_issue, _ctx) => ({
-        message: "Please select a complaint",
-      }),
-    },
-  ),
+  complaint: z.enum([SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)], {
+    errorMap: (_issue, _ctx) => ({
+      message: "Please select a complaint",
+    }),
+  }),
 });
 
 export const WeeklyHubReportSchema = z.object({
@@ -197,11 +185,7 @@ const BaseSchoolSchema = z.object({
     .optional(),
   pointPersonName: z.string().optional(),
   pointPersonPhone: z.string().optional(),
-  pointPersonEmail: z
-    .string()
-    .email("Invalid email")
-    .optional()
-    .or(z.literal("")),
+  pointPersonEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   principalName: z.string().optional(),
   principalPhone: z.string().optional(),
   boardingDay: z
@@ -243,10 +227,7 @@ export const EditSchoolSchema = BaseSchoolSchema.extend({
       }
       return undefined;
     }),
-  numbersExpected: z
-    .number()
-    .min(1, "Number of students is required")
-    .optional(),
+  numbersExpected: z.number().min(1, "Number of students is required").optional(),
 });
 
 // For backward compatibility
@@ -300,14 +281,10 @@ export const EditSupervisorSchema = z
     }),
   })
   .superRefine((val, ctx) => {
-    const selectedCounty = KENYAN_COUNTIES.find(
-      (county) => county.name === val.county,
-    );
+    const selectedCounty = KENYAN_COUNTIES.find((county) => county.name === val.county);
     if (
       selectedCounty &&
-      !(selectedCounty.sub_counties as readonly string[]).includes(
-        val.subCounty,
-      )
+      !(selectedCounty.sub_counties as readonly string[]).includes(val.subCounty)
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -385,11 +362,7 @@ export const MarkSupervisorAttendanceSchema = z
   // TODO: Confirm if validation is required
   .superRefine((val, ctx) => {
     const ids = val.supervisorId.split(",");
-    if (
-      val.attended === "missed" &&
-      val.absenceReason === undefined &&
-      ids.length === 1
-    ) {
+    if (val.attended === "missed" && val.absenceReason === undefined && ids.length === 1) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Please add a reason for absence",
@@ -467,14 +440,10 @@ export const FellowDetailsSchema = z
     }),
   })
   .superRefine((val, ctx) => {
-    const selectedCounty = KENYAN_COUNTIES.find(
-      (county) => county.name === val.county,
-    );
+    const selectedCounty = KENYAN_COUNTIES.find((county) => county.name === val.county);
     if (
       selectedCounty &&
-      !(selectedCounty.sub_counties as readonly string[]).includes(
-        val.subCounty,
-      )
+      !(selectedCounty.sub_counties as readonly string[]).includes(val.subCounty)
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -489,7 +458,7 @@ export const FellowDetailsSchema = z
     if (val.mode === "edit" && val.id === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Fellow Id is required.`,
+        message: "Fellow Id is required.",
         fatal: true,
         path: ["id"],
       });
@@ -500,7 +469,7 @@ export const FellowDetailsSchema = z
     if (val.county === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Please pick a county.`,
+        message: "Please pick a county.",
         fatal: true,
         path: ["county"],
       });
@@ -526,7 +495,7 @@ export const MarkAttendanceSchema = z
     if (val.attended === "missed" && val.absenceReason === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Please select reason for absence.`,
+        message: "Please select reason for absence.",
         fatal: true,
         path: ["absenceReason"],
       });
@@ -537,7 +506,7 @@ export const MarkAttendanceSchema = z
     if (!val.bulkMode && val.id === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `ID is required`,
+        message: "ID is required",
         fatal: true,
         path: ["id"],
       });

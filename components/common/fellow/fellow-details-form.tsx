@@ -1,16 +1,19 @@
-import { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import parsePhoneNumberFromString from "libphonenumber-js";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type Dispatch, type SetStateAction, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
+import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { FellowDetailsSchema } from "#/app/(platform)/hc/schemas";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -20,11 +23,7 @@ import {
   FormMessage,
 } from "#/components/ui/form";
 import { Input } from "#/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -38,13 +37,6 @@ import { submitFellowDetails } from "#/lib/actions/fellow";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import parsePhoneNumberFromString from "libphonenumber-js";
-import { usePathname } from "next/navigation";
-import React, { Dispatch, SetStateAction, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 export default function FellowDetailsForm({
   fellow,
@@ -109,9 +101,7 @@ export default function FellowDetailsForm({
     if (!response.success) {
       toast({
         variant: "destructive",
-        description:
-          response.message ??
-          "Something went wrong during submission, please try again",
+        description: response.message ?? "Something went wrong during submission, please try again",
       });
       return;
     }
@@ -147,13 +137,10 @@ export default function FellowDetailsForm({
                 <DialogAlertWidget separator={true}>
                   <div className="flex items-center gap-2">
                     <span>{fellow.fellowName}</span>
-                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue"></span>
+                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue" />
                     <span>
                       {fellow.cellNumber &&
-                        parsePhoneNumberFromString(
-                          fellow.cellNumber,
-                          "KE",
-                        )?.formatNational()}
+                        parsePhoneNumberFromString(fellow.cellNumber, "KE")?.formatNational()}
                     </span>
                   </div>
                 </DialogAlertWidget>
@@ -175,8 +162,7 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem className="col-span-2">
                         <FormLabel>
-                          Full name{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Full name <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} />
@@ -192,8 +178,7 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Phone number{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Phone number <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
@@ -209,8 +194,7 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Email address{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Email address <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
@@ -226,8 +210,7 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          National ID{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          National ID <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
@@ -242,8 +225,7 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Gender{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Gender <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -253,11 +235,7 @@ export default function FellowDetailsForm({
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue
-                                placeholder={
-                                  mode !== "view" ? "Select gender" : ""
-                                }
-                              />
+                              <SelectValue placeholder={mode !== "view" ? "Select gender" : ""} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="max-h-[200px]">
@@ -278,8 +256,7 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Date of birth{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Date of birth <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         {mode !== "view" ? (
                           <Popover>
@@ -329,8 +306,7 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          County{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          County <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -341,11 +317,7 @@ export default function FellowDetailsForm({
                           <FormControl>
                             <SelectTrigger>
                               {!countyWatcher ? (
-                                <SelectValue
-                                  placeholder={
-                                    mode !== "view" ? "Select county" : ""
-                                  }
-                                />
+                                <SelectValue placeholder={mode !== "view" ? "Select county" : ""} />
                               ) : (
                                 <SelectValue />
                               )}
@@ -369,8 +341,7 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Sub-county{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Sub-county <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -381,17 +352,14 @@ export default function FellowDetailsForm({
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue
-                                placeholder={
-                                  mode !== "view" ? "Select sub-county" : ""
-                                }
+                                placeholder={mode !== "view" ? "Select sub-county" : ""}
                               />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent className="max-h-[200px]">
                             {form.getValues("county") ? (
                               KENYAN_COUNTIES.find(
-                                (county) =>
-                                  county.name === form.getValues("county"),
+                                (county) => county.name === form.getValues("county"),
                               )?.sub_counties.map((subCounty) => {
                                 return (
                                   <SelectItem key={subCounty} value={subCounty}>
@@ -400,9 +368,7 @@ export default function FellowDetailsForm({
                                 );
                               })
                             ) : (
-                              <SelectItem value={" "}>
-                                Please pick a county first
-                              </SelectItem>
+                              <SelectItem value={" "}>Please pick a county first</SelectItem>
                             )}
                           </SelectContent>
                         </Select>
@@ -427,8 +393,7 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Full name{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          Full name <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
@@ -444,8 +409,7 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          M-Pesa number{" "}
-                          <span className="text-shamiri-light-red">*</span>
+                          M-Pesa number <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />

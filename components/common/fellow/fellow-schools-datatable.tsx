@@ -1,8 +1,12 @@
 "use client";
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import parsePhoneNumberFromString from "libphonenumber-js";
+import { InfoIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AttendanceHistory from "#/components/common/fellow/attendance-history";
 import FellowDetailsForm from "#/components/common/fellow/fellow-details-form";
-import { FellowGroupData } from "#/components/common/fellow/fellow-school-datatable-dropdown-menu";
+import type { FellowGroupData } from "#/components/common/fellow/fellow-school-datatable-dropdown-menu";
 import UploadFellowContract from "#/components/common/fellow/upload-contract";
 import UploadFellowID from "#/components/common/fellow/upload-id";
 import UploadFellowQualification from "#/components/common/fellow/upload-qualification";
@@ -17,11 +21,7 @@ import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 import { markFellowAttendance } from "#/lib/actions/fellow";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import parsePhoneNumberFromString from "libphonenumber-js";
-import { InfoIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { FellowsData } from "../../../app/(platform)/sc/actions";
+import type { FellowsData } from "../../../app/(platform)/sc/actions";
 import { fellowSchoolsColumns, subColumns } from "./fellow-schools-columns";
 
 export default function FellowSchoolsDatatable({
@@ -41,8 +41,7 @@ export default function FellowSchoolsDatatable({
   const [attendanceHistoryDialog, setAttendanceHistoryDialog] = useState(false);
   const [uploadContractDialog, setUploadContractDialog] = useState(false);
   const [uploadIdDialog, setUploadIdDialog] = useState(false);
-  const [uploadQualificationDialog, setUploadQualificationDialog] =
-    useState(false);
+  const [uploadQualificationDialog, setUploadQualificationDialog] = useState(false);
   const [complaintsDialog, setComplaintsDialog] = useState(false);
   const [attendanceDialog, setAttendanceDialog] = useState(false);
   const [studentsDialog, setStudentsDialog] = useState(false);
@@ -51,11 +50,7 @@ export default function FellowSchoolsDatatable({
   function renderTableActions() {
     return role !== "FELLOW" ? (
       <div>
-        <FellowDetailsForm
-          open={addFellowDialog}
-          onOpenChange={setAddFellowDialog}
-          mode={"add"}
-        >
+        <FellowDetailsForm open={addFellowDialog} onOpenChange={setAddFellowDialog} mode={"add"}>
           <DialogTrigger asChild={true}>
             <Button variant="brand">Add new fellow</Button>
           </DialogTrigger>
@@ -72,10 +67,7 @@ export default function FellowSchoolsDatatable({
           <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
           <span>
             {fellow.cellNumber &&
-              parsePhoneNumberFromString(
-                fellow.cellNumber,
-                "KE",
-              )?.formatNational()}
+              parsePhoneNumberFromString(fellow.cellNumber, "KE")?.formatNational()}
           </span>
         </div>
       </DialogAlertWidget>
@@ -95,9 +87,7 @@ export default function FellowSchoolsDatatable({
   }
 
   useEffect(() => {
-    setFellow(
-      fellows.find((fellow) => fellow.id === fellowGroup?.leaderId) ?? null,
-    );
+    setFellow(fellows.find((fellow) => fellow.id === fellowGroup?.leaderId) ?? null);
   }, [fellowGroup, fellows]);
 
   useEffect(() => {
@@ -165,13 +155,7 @@ export default function FellowSchoolsDatatable({
           <FellowDetailsForm
             open={editFellowDialog}
             onOpenChange={setEditFellowDialog}
-            mode={
-              role === "HUB_COORDINATOR"
-                ? "view"
-                : role === "SUPERVISOR"
-                  ? "edit"
-                  : null
-            }
+            mode={role === "HUB_COORDINATOR" ? "view" : role === "SUPERVISOR" ? "edit" : null}
             fellow={fellow}
           />
           <WeeklyFellowEvaluation
@@ -200,11 +184,7 @@ export default function FellowSchoolsDatatable({
             open={uploadContractDialog}
             onOpenChange={setUploadContractDialog}
           />
-          <UploadFellowID
-            fellow={fellow}
-            open={uploadIdDialog}
-            onOpenChange={setUploadIdDialog}
-          />
+          <UploadFellowID fellow={fellow} open={uploadIdDialog} onOpenChange={setUploadIdDialog} />
           <UploadFellowQualification
             fellow={fellow}
             open={uploadQualificationDialog}
@@ -258,8 +238,7 @@ export default function FellowSchoolsDatatable({
                 <AlertTitle className="flex gap-2">
                   <InfoIcon className="mt-1 h-4 w-4 shrink-0" />
                   <span className="text-base">
-                    Please confirm fellow&apos;s M-Pesa number before marking
-                    attendance.
+                    Please confirm fellow&apos;s M-Pesa number before marking attendance.
                   </span>
                 </AlertTitle>
               </Alert>

@@ -1,18 +1,15 @@
 "use client";
 
+import type { ImplementerRole, Prisma } from "@prisma/client";
+import { useEffect, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import ReplaceFellow from "#/components/common/fellow/replace-fellow";
 import ArchiveGroup from "#/components/common/group/archive-group";
-import {
-  columns,
-  SchoolGroupDataTableData,
-} from "#/components/common/group/columns";
+import { columns, type SchoolGroupDataTableData } from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";
 import StudentGroupEvaluation from "#/components/common/group/student-group-evaluation";
 import StudentsInGroup from "#/components/common/student/students-in-group";
 import DataTable from "#/components/data-table";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { useEffect, useState } from "react";
 
 export default function GroupsDataTable({
   data,
@@ -56,11 +53,7 @@ export default function GroupsDataTable({
     return (
       role !== "FELLOW" &&
       supervisors && (
-        <CreateGroup
-          supervisors={supervisors}
-          school={school}
-          groupCount={data.length}
-        ></CreateGroup>
+        <CreateGroup supervisors={supervisors} school={school} groupCount={data.length} />
       )
     );
   };
@@ -123,19 +116,13 @@ export default function GroupsDataTable({
               <DialogAlertWidget>
                 <div className="flex items-center gap-2">
                   <span>{group.fellowName}</span>
-                  <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                    {""}
-                  </span>
+                  <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
                   <span>{group.groupName}</span>
                 </div>
               </DialogAlertWidget>
             </ReplaceFellow>
           )}
-          <ArchiveGroup
-            groupId={group.id}
-            open={archiveDialog}
-            onOpenChange={setArchiveDialog}
-          >
+          <ArchiveGroup groupId={group.id} open={archiveDialog} onOpenChange={setArchiveDialog}>
             <DialogAlertWidget>
               <div className="flex items-center gap-2">
                 <span>{group.groupName}</span>

@@ -10,7 +10,7 @@ async function main() {
 
   const token = await generateSessionToken(email);
 
-  let futureDate = new Date();
+  const futureDate = new Date();
   futureDate.setFullYear(futureDate.getFullYear() + 1);
   const futureTimestamp = Math.floor(futureDate.getTime() / 1000);
 
@@ -24,9 +24,7 @@ async function main() {
     expires: futureTimestamp,
   };
 
-  console.log(
-    `Add the following cookie to your browser to simulate being logged in as ${email}`,
-  );
+  console.log(`Add the following cookie to your browser to simulate being logged in as ${email}`);
   console.log(JSON.stringify(cookie, null, 2));
 }
 

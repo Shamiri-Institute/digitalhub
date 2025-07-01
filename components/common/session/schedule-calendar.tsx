@@ -1,40 +1,27 @@
 "use client";
 
-import {
-  DateValue,
-  createCalendar,
-  getLocalTimeZone,
-  today,
-} from "@internationalized/date";
+import { createCalendar, type DateValue, getLocalTimeZone, today } from "@internationalized/date";
+import { ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import type { AriaButtonProps } from "@react-aria/button";
 import { useButton } from "@react-aria/button";
 import { useFocusRing } from "@react-aria/focus";
 import { mergeProps } from "@react-aria/utils";
 import { useSearchParams } from "next/navigation";
-import {
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import * as React from "react";
+import { type Dispatch, type SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
-import { CalendarState, useCalendarState } from "react-stately";
-
-import { Icons } from "#/components/icons";
-
+import { type CalendarState, useCalendarState } from "react-stately";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import SupervisorAttendance from "#/app/(platform)/hc/components/supervisor-attendance";
 import {
-  DateRangeType,
-  Filters,
+  type DateRangeType,
+  type Filters,
   FiltersContext,
   statusFilterOptions,
 } from "#/app/(platform)/hc/schedule/context/filters-context";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
-import { CurrentFellow } from "#/app/auth";
+import type { CurrentFellow } from "#/app/auth";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
 import RescheduleSession from "#/components/common/session/reschedule-session";
@@ -42,6 +29,7 @@ import { ScheduleNewSession } from "#/components/common/session/schedule-new-ses
 import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
 import StudentAttendance from "#/components/common/student/student-attendance";
+import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -50,19 +38,14 @@ import {
   DialogPortal,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import {
-  DropdownMenuCheckboxItem,
-  DropdownMenuLabel,
-} from "#/components/ui/dropdown-menu";
+import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
 import { sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
-import * as React from "react";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
-import { ModeProvider, useMode, type Mode } from "./mode-provider";
+import { type Mode, ModeProvider, useMode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import { Session, SessionsProvider, useSessions } from "./sessions-provider";
+import { type Session, SessionsProvider, useSessions } from "./sessions-provider";
 import { TableView } from "./table-view";
 import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
@@ -109,9 +92,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
   const [filters, setFilters] = useState<Filters>({
     sessionTypes,
     statusTypes: statusFilterOptions,
-    dates: ["day", "week", "month"].includes(mode)
-      ? (mode as DateRangeType)
-      : "week",
+    dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
   });
   const [newScheduleDialog, setNewScheduleDialog] = useState<boolean>(false);
 
@@ -206,22 +187,16 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
             <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
               <div className="flex items-start justify-between gap-6 lg:items-center">
                 <ScheduleTitle fallbackTitle={title} />
-                <NavigationButtons
-                  prevProps={prevButtonProps}
-                  nextProps={nextButtonProps}
-                />
+                <NavigationButtons prevProps={prevButtonProps} nextProps={nextButtonProps} />
               </div>
               <div className="flex lg:mx-2">
                 <ScheduleModeToggle role={props.role} />
               </div>
               <FiltersContext.Provider value={{ filters, setFilters }}>
-                <ScheduleFilterToggle
-                  sessionFilters={props.hubSessionTypes ?? []}
-                />
+                <ScheduleFilterToggle sessionFilters={props.hubSessionTypes ?? []} />
               </FiltersContext.Provider>
             </div>
-            {(props.role === "HUB_COORDINATOR" ||
-              props.role === "SUPERVISOR") && (
+            {(props.role === "HUB_COORDINATOR" || props.role === "SUPERVISOR") && (
               <SessionsLoader>
                 <CreateSessionButton
                   open={newScheduleDialog}
@@ -296,11 +271,7 @@ function CreateSessionButton({
 function ScheduleTitle({ fallbackTitle }: { fallbackTitle: string }) {
   const { title } = useTitle();
 
-  return (
-    <div className="text-2xl font-semibold leading-8">
-      {title || fallbackTitle}
-    </div>
-  );
+  return <div className="text-2xl font-semibold leading-8">{title || fallbackTitle}</div>;
 }
 
 function SessionsLoader({ children }: { children: React.ReactNode }) {
@@ -389,18 +360,13 @@ function CalendarView({
   fellow?: CurrentFellow;
 }) {
   const { mode } = useMode();
-  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
-    React.useState(false);
-  const [fellowAttendanceDialog, setFellowAttendanceDialog] =
-    React.useState(false);
-  const [studentAttendanceDialog, setStudentAttendanceDialog] =
-    React.useState(false);
+  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] = React.useState(false);
+  const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
+  const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
-  const [rescheduleSessionDialog, setRescheduleSessionDialog] =
-    React.useState(false);
+  const [rescheduleSessionDialog, setRescheduleSessionDialog] = React.useState(false);
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
-  const [sessionOccurrenceDialog, setSessionOccurrenceDialog] =
-    useState<boolean>(false);
+  const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);
   const [session, setSession] = React.useState<Session | null>(null);
 
   const activeMode = () => {
@@ -495,9 +461,8 @@ function CalendarView({
               supervisorId={supervisorId}
             />
           );
-        } else {
-          throw new Error(`User not authenticated: ${role}`);
         }
+        throw new Error(`User not authenticated: ${role}`);
       default:
         throw new Error(`Invalid mode: ${mode}`);
     }
@@ -557,39 +522,35 @@ function CalendarView({
         setIsOpen={setStudentAttendanceDialog}
         role={role}
         session={session}
-        fellows={
-          supervisors?.find((supervisor) => supervisor.id === supervisorId)
-            ?.fellows ?? []
-        }
+        fellows={supervisors?.find((supervisor) => supervisor.id === supervisorId)?.fellows ?? []}
         fellowId={fellow?.id}
       />
-      {session?.session?.sessionType === "INTERVENTION" &&
-        session?.schoolId && (
-          <SessionRatings
-            selectedSession={session}
-            supervisorId={supervisorId}
-            supervisors={supervisors}
-            open={ratingsDialog}
-            onOpenChange={setRatingsDialog}
-            mode={
-              role === ImplementerRole.HUB_COORDINATOR
-                ? "view"
-                : role === ImplementerRole.SUPERVISOR
-                  ? "add"
-                  : undefined
-            }
-            role={role}
-          >
-            {session && (
-              <SessionDetail
-                state={{ session }}
-                layout={"compact"}
-                withDropdown={false}
-                role={role}
-              />
-            )}
-          </SessionRatings>
-        )}
+      {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (
+        <SessionRatings
+          selectedSession={session}
+          supervisorId={supervisorId}
+          supervisors={supervisors}
+          open={ratingsDialog}
+          onOpenChange={setRatingsDialog}
+          mode={
+            role === ImplementerRole.HUB_COORDINATOR
+              ? "view"
+              : role === ImplementerRole.SUPERVISOR
+                ? "add"
+                : undefined
+          }
+          role={role}
+        >
+          {session && (
+            <SessionDetail
+              state={{ session }}
+              layout={"compact"}
+              withDropdown={false}
+              role={role}
+            />
+          )}
+        </SessionRatings>
+      )}
       <MarkSessionOccurrence
         id={session?.id}
         defaultOccurrence={session?.occurred}
@@ -597,12 +558,7 @@ function CalendarView({
         setIsOpen={setSessionOccurrenceDialog}
       >
         {session && (
-          <SessionDetail
-            state={{ session }}
-            layout={"compact"}
-            withDropdown={false}
-            role={role}
-          />
+          <SessionDetail state={{ session }} layout={"compact"} withDropdown={false} role={role} />
         )}
       </MarkSessionOccurrence>
     </div>
@@ -632,12 +588,7 @@ function NavigationButtons({
   );
 }
 
-function NavigationButton({
-  children,
-  ...props
-}: {
-  children: React.ReactNode;
-}) {
+function NavigationButton({ children, ...props }: { children: React.ReactNode }) {
   const ref = useRef<HTMLButtonElement>(null);
   const { buttonProps } = useButton(props, ref);
   const { focusProps, isFocusVisible } = useFocusRing();
@@ -670,9 +621,7 @@ function ScheduleFilterToggle({
   const defaultFilterSettings = {
     sessionTypes: _sessionTypes,
     statusTypes: statusFilterOptions,
-    dates: ["day", "week", "month"].includes(mode)
-      ? (mode as DateRangeType)
-      : "week",
+    dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
   };
 
   const [sessionTypes, setSessionTypes] = useState(filters.sessionTypes);
@@ -686,20 +635,14 @@ function ScheduleFilterToggle({
   ];
   const [dates, setDates] = useState(filters.dates);
   useEffect(() => {
-    setDates(
-      ["day", "week", "month"].includes(mode)
-        ? (mode as DateRangeType)
-        : "week",
-    );
+    setDates(["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week");
   }, [mode]);
 
   useEffect(() => {
     const sessionTypes = Object.keys(filters.sessionTypes).filter(
       (key) => !filters.sessionTypes[key],
     );
-    const statusTypes = Object.keys(filters.statusTypes).filter(
-      (key) => !filters.statusTypes[key],
-    );
+    const statusTypes = Object.keys(filters.statusTypes).filter((key) => !filters.statusTypes[key]);
 
     if (sessionTypes.length > 0 || statusTypes.length > 0) {
       setFilterIsActive(true);
@@ -728,9 +671,7 @@ function ScheduleFilterToggle({
             <div className="gap-x-4 lg:grid lg:grid-cols-5">
               <div>
                 {sessionFilters
-                  .filter(
-                    (sessionType) => sessionType.sessionType === "INTERVENTION",
-                  )
+                  .filter((sessionType) => sessionType.sessionType === "INTERVENTION")
                   .map((sessionType) => {
                     return (
                       <DropdownMenuCheckboxItem
@@ -754,10 +695,7 @@ function ScheduleFilterToggle({
               </div>
               <div>
                 {sessionFilters
-                  .filter(
-                    (sessionType) =>
-                      sessionType.sessionType === "DATA_COLLECTION",
-                  )
+                  .filter((sessionType) => sessionType.sessionType === "DATA_COLLECTION")
                   .map((sessionType) => {
                     return (
                       <DropdownMenuCheckboxItem
@@ -781,9 +719,7 @@ function ScheduleFilterToggle({
               </div>
               <div>
                 {sessionFilters
-                  .filter(
-                    (sessionType) => sessionType.sessionType === "SUPERVISION",
-                  )
+                  .filter((sessionType) => sessionType.sessionType === "SUPERVISION")
                   .map((sessionType) => {
                     return (
                       <DropdownMenuCheckboxItem
@@ -807,9 +743,7 @@ function ScheduleFilterToggle({
               </div>
               <div>
                 {sessionFilters
-                  .filter(
-                    (sessionType) => sessionType.sessionType === "TRAINING",
-                  )
+                  .filter((sessionType) => sessionType.sessionType === "TRAINING")
                   .map((sessionType) => {
                     return (
                       <DropdownMenuCheckboxItem
@@ -833,9 +767,7 @@ function ScheduleFilterToggle({
               </div>
               <div>
                 {sessionFilters
-                  .filter(
-                    (sessionType) => sessionType.sessionType === "CLINICAL",
-                  )
+                  .filter((sessionType) => sessionType.sessionType === "CLINICAL")
                   .map((sessionType) => {
                     return (
                       <DropdownMenuCheckboxItem
@@ -861,9 +793,7 @@ function ScheduleFilterToggle({
           </div>
           <div>
             <DropdownMenuLabel>
-              <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-                Status
-              </span>
+              <span className="text-xs font-medium uppercase text-shamiri-text-grey">Status</span>
             </DropdownMenuLabel>
             {Object.keys(SessionStatus).map((status) => {
               return (
@@ -902,10 +832,7 @@ function ScheduleFilterToggle({
                     e.preventDefault();
                   }}
                   disabled={
-                    mode === "day" ||
-                    mode === "month" ||
-                    mode === "week" ||
-                    mode === "table"
+                    mode === "day" || mode === "month" || mode === "week" || mode === "table"
                   }
                 >
                   <span className="">{date.label}</span>

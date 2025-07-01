@@ -63,13 +63,7 @@ export async function loadHubsSupervisorExpenses() {
   });
 }
 
-export async function deleteSupervisorExpenseRequest({
-  id,
-  name,
-}: {
-  id: string;
-  name: string;
-}) {
+export async function deleteSupervisorExpenseRequest({ id, name }: { id: string; name: string }) {
   try {
     const opsUser = await currentOpsUser();
 
@@ -167,7 +161,7 @@ export async function addSupervisorExpense({
         hubId: opsUser.assignedHubId!,
         hubCoordinatorId: opsUser.id,
         incurredAt: new Date(data.week),
-        amount: parseInt(data.totalAmount),
+        amount: Number.parseInt(data.totalAmount),
         kind: data.expenseType,
         status: "PENDING",
         details: {
@@ -218,7 +212,7 @@ export async function updateSupervisorExpense({
       where: { id },
       data: {
         incurredAt: new Date(data.week),
-        amount: parseInt(data.totalAmount),
+        amount: Number.parseInt(data.totalAmount),
         kind: data.expenseType,
         details: {
           subtype: data.expenseType,

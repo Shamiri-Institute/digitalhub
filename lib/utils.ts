@@ -1,6 +1,6 @@
-import { Prisma, riskStatusOptions } from "@prisma/client";
-import { clsx, type ClassValue } from "clsx";
-import { Metadata } from "next";
+import type { Prisma, riskStatusOptions } from "@prisma/client";
+import { type ClassValue, clsx } from "clsx";
+import type { Metadata } from "next";
 import { twMerge } from "tailwind-merge";
 import { z } from "zod";
 
@@ -73,20 +73,19 @@ export function ordinalSuffixOf(i: number): string {
   return i + "th";
 }
 
-export function getHighestValue(data: {
-  [k: string]: string;
-}): riskStatusOptions {
+export function getHighestValue(data: { [k: string]: string }): riskStatusOptions {
   const values = Object.values(data);
 
   if (values.includes("High")) {
     return "High";
-  } else if (values.includes("Med")) {
-    return "Medium";
-  } else if (values.includes("Low")) {
-    return "Low";
-  } else {
-    return "No";
   }
+  if (values.includes("Med")) {
+    return "Medium";
+  }
+  if (values.includes("Low")) {
+    return "Low";
+  }
+  return "No";
 }
 
 export function isSessionScheduled(
@@ -94,8 +93,7 @@ export function isSessionScheduled(
   sessionType: string, // s0, s1, s2, ...
 ) {
   return sessions.some(
-    (session) =>
-      session.sessionType === sessionType && session.occurred === true,
+    (session) => session.sessionType === sessionType && session.occurred === true,
   );
 }
 
@@ -105,7 +103,7 @@ export function stringValidation(message: string | undefined = "Required*") {
 
 export function mapSessionTypeToSessionNumber(sessionType: string): number {
   if (sessionType[0] === "s" && sessionType.length === 2) {
-    return parseInt(sessionType[1]!);
+    return Number.parseInt(sessionType[1]!);
   }
 
   throw new Error(`Invalid session type: ${sessionType}`);
@@ -137,13 +135,13 @@ export function generateFellowVisibleID(lastNumber: number): string {
   const currentYear: number = new Date().getFullYear();
 
   // Extract last two digits of the current year
-  let yearDigits: string = String(currentYear).slice(-2);
+  const yearDigits: string = String(currentYear).slice(-2);
 
   // First part
-  let part1: string = `TFW${yearDigits}`;
+  const part1 = `TFW${yearDigits}`;
 
   // Second part
-  let part2: string = "S";
+  const part2 = "S";
 
   // Third part
   const newNumber = lastNumber + 1;
@@ -155,10 +153,7 @@ export function generateFellowVisibleID(lastNumber: number): string {
   return `${part1}_${part2}_${part3}`;
 }
 
-export function generateStudentVisibleID(
-  groupName: string,
-  lastNumber: number,
-) {
+export function generateStudentVisibleID(groupName: string, lastNumber: number) {
   return `${groupName}_${lastNumber}`;
 }
 
@@ -171,11 +166,11 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+  return `${Number.parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
 }
 
 export function handleMinutesChange(value: string): string {
-  const numericValue = parseInt(value);
+  const numericValue = Number.parseInt(value);
   if (isNaN(numericValue)) return "00";
   if (numericValue < 0) return "00";
   if (numericValue > 59) return "59";

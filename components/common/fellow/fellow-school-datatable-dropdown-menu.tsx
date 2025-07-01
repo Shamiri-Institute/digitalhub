@@ -1,3 +1,5 @@
+import type { ImplementerRole } from "@prisma/client";
+import type { Dispatch, SetStateAction } from "react";
 import { Icons } from "#/components/icons";
 import {
   DropdownMenu,
@@ -7,8 +9,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { ImplementerRole } from "@prisma/client";
-import { Dispatch, SetStateAction } from "react";
 import type { FellowsData } from "../../../app/(platform)/sc/actions";
 
 export type FellowGroupData = FellowsData["groups"][number];
@@ -19,9 +19,7 @@ export default function FellowSchoolDatatableDropdownMenu({
 }: {
   group?: FellowGroupData;
   state: {
-    setFellowGroup: Dispatch<
-      SetStateAction<FellowsData["groups"][number] | undefined>
-    >;
+    setFellowGroup: Dispatch<SetStateAction<FellowsData["groups"][number] | undefined>>;
     setAttendanceDialog: Dispatch<SetStateAction<boolean>>;
     setStudentsDialog: Dispatch<SetStateAction<boolean>>;
     setEvaluationDialog: Dispatch<SetStateAction<boolean>>;
@@ -39,9 +37,7 @@ export default function FellowSchoolDatatableDropdownMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>
-          <span className="text-xs font-medium uppercase text-shamiri-text-grey">
-            Actions
-          </span>
+          <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {state.role === "SUPERVISOR" ? (

@@ -1,9 +1,5 @@
-import React from "react";
+import type React from "react";
 
-export default function FellowLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function FellowLayout({ children }: { children: React.ReactNode }) {
   return <div className="w-full self-stretch bg-white">{children}</div>;
 }

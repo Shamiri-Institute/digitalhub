@@ -20,15 +20,9 @@ export default function ViewEmergencyPresentingIssues({
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50">
-            <TableHead className="w-[50%] border">
-              Emergency Presenting Issues
-            </TableHead>
-            <TableHead className="w-[25%] border text-center">
-              Baseline
-            </TableHead>
-            <TableHead className="w-[25%] border text-center">
-              Endline
-            </TableHead>
+            <TableHead className="w-[50%] border">Emergency Presenting Issues</TableHead>
+            <TableHead className="w-[25%] border text-center">Baseline</TableHead>
+            <TableHead className="w-[25%] border text-center">Endline</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -1,5 +1,7 @@
 "use client";
 
+import type { Prisma } from "@prisma/client";
+import { useState } from "react";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import {
   Select,
@@ -8,8 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "#/components/ui/select";
-import { Prisma } from "@prisma/client";
-import { useState } from "react";
 
 export default function SupervisorFilterToggle({
   supervisors,
@@ -34,11 +34,7 @@ export default function SupervisorFilterToggle({
           <SelectContent>
             {supervisors.map((supervisor) => {
               return (
-                <SelectItem
-                  key={supervisor.id}
-                  value={supervisor.id}
-                  className="text-sm"
-                >
+                <SelectItem key={supervisor.id} value={supervisor.id} className="text-sm">
                   {supervisor.supervisorName}
                 </SelectItem>
               );

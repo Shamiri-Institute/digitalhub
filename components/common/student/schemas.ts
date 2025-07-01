@@ -1,6 +1,6 @@
-import { stringValidation } from "#/lib/utils";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import { z } from "zod";
+import { stringValidation } from "#/lib/utils";
 
 export const StudentDetailsSchema = z
   .object({
@@ -26,12 +26,7 @@ export const StudentDetailsSchema = z
       (val) => {
         const year = Number(val);
         const currentYear = new Date().getFullYear();
-        return (
-          !isNaN(year) &&
-          val.trim() !== "" &&
-          year >= 1900 &&
-          year <= currentYear
-        );
+        return !isNaN(year) && val.trim() !== "" && year >= 1900 && year <= currentYear;
       },
       {
         message: "Please enter a valid year between 1900 and current year",
@@ -54,7 +49,7 @@ export const StudentDetailsSchema = z
     if (val.mode === "edit" && val.id === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Student Id is required.`,
+        message: "Student Id is required.",
         fatal: true,
         path: ["id"],
       });
@@ -76,7 +71,7 @@ export const StudentDetailsSchema = z
     if (val.mode === "add" && val.schoolId === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `School Id is required.`,
+        message: "School Id is required.",
         fatal: true,
         path: ["schoolId"],
       });
@@ -87,7 +82,7 @@ export const StudentDetailsSchema = z
     if (val.mode === "add" && val.assignedGroupId === undefined) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Group Id is required.`,
+        message: "Group Id is required.",
         fatal: true,
         path: ["assignedGroupId"],
       });

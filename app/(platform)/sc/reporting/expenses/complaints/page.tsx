@@ -1,7 +1,7 @@
+import { signOut } from "next-auth/react";
 import { loadFellowPaymentComplaints } from "#/app/(platform)/sc/reporting/expenses/complaints/actions";
 import { currentSupervisor } from "#/app/auth";
 import FellowComplaintsDataTable from "#/components/common/expenses/complaints/complaints-table";
-import { signOut } from "next-auth/react";
 
 export default async function ComplaintsPage() {
   const supervisor = await currentSupervisor();

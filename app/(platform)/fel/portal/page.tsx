@@ -1,4 +1,5 @@
-import { FellowsData } from "#/app/(platform)/sc/actions";
+import { signOut } from "next-auth/react";
+import type { FellowsData } from "#/app/(platform)/sc/actions";
 import { currentFellow } from "#/app/auth";
 import FellowSchoolsDatatable from "#/components/common/fellow/fellow-schools-datatable";
 import PageFooter from "#/components/ui/page-footer";
@@ -6,7 +7,6 @@ import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
 
 export default async function FellowsPage() {
   const fellow = await currentFellow();
@@ -93,8 +93,7 @@ export default async function FellowsPage() {
                   schoolName: group.school?.schoolName,
                   sessionType:
                     group.school?.interventionSessions[0]?.sessionDate &&
-                    group.school?.interventionSessions[0]?.sessionDate >
-                      new Date()
+                    group.school?.interventionSessions[0]?.sessionDate > new Date()
                       ? group.school?.interventionSessions[0]?.sessionType
                       : "No upcoming session",
                   groupName: group.groupName,
@@ -109,11 +108,9 @@ export default async function FellowsPage() {
                 fellowData?.groups.map((group) => {
                   return {
                     ...group,
-                    attendances: fellowData?.fellowAttendances.filter(
-                      (attendance) => {
-                        return attendance.groupId === group.id;
-                      },
-                    ),
+                    attendances: fellowData?.fellowAttendances.filter((attendance) => {
+                      return attendance.groupId === group.id;
+                    }),
                   };
                 }) ?? [],
               complaints: [],
