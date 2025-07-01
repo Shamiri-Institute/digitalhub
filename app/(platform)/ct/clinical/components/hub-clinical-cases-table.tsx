@@ -38,7 +38,7 @@ export default function AllHubClinicalCasesTable({ cases }: { cases: HubClinical
             />
           </div>
         )}
-        emptyStateMessage="No clinical cases created by supervisors in this hub yet"
+        emptyStateMessage="No clinical cases created by supervisors or clinical leads yet"
       />
     </>
   );
