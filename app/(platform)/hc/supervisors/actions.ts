@@ -65,7 +65,7 @@ export async function dropoutSupervisor(supervisorId: string, dropoutReason: str
 
     return {
       success: true,
-      message: result.supervisorName + " successfully dropped out.",
+      message: `${result.supervisorName} successfully dropped out.`,
       data: result,
     };
   } catch (e) {
@@ -94,7 +94,7 @@ export async function undropSupervisor(supervisorId: string) {
 
     return {
       success: true,
-      message: result.supervisorName + " successfully un-dropped.",
+      message: `${result.supervisorName} successfully un-dropped.`,
       data: result,
     };
   } catch (e) {

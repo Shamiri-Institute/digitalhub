@@ -115,7 +115,7 @@ export default function FellowsCharts({
                   className="text text-2xl font-semibold leading-8"
                   fill="#fffff"
                 >
-                  {fellowsDataCompletenessPercentage.find((d) => (d.name = "actual"))?.value + "%"}
+                  {`${fellowsDataCompletenessPercentage.find((d) => (d.name = "actual"))?.value}%`}
                 </Label>
                 {fellowsDataCompletenessPercentage.map(({ name }) => (
                   <Cell

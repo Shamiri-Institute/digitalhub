@@ -235,7 +235,7 @@ export default function SchoolLeftPanel({
                       </div>
                       <p className="text-shamiri-text-grey">
                         {school?.schoolSubCounty !== null
-                          ? school?.schoolSubCounty?.trim() + ","
+                          ? `${school?.schoolSubCounty?.trim()},`
                           : ""}{" "}
                         {school?.schoolCounty}
                       </p>

@@ -22,6 +22,7 @@ const supervisorCSVHeaders = [
 ];
 
 export const handleSupervisorCSVTemplateDownload = () => {
+  // biome-ignore lint/style/useTemplate: need for proper formatting for csv data type download
   const csvContent = "data:text/csv;charset=utf-8," + supervisorCSVHeaders.join(",") + "\n";
   const encodedUri = encodeURI(csvContent);
 
