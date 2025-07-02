@@ -138,7 +138,7 @@ export const columns = (state: {
     id: "No. of fellows",
     cell: ({ row }) => {
       const activeFellows = row.original.fellows.filter((fellow) => !fellow.droppedOut);
-      return activeFellows.length + "/" + row.original.fellows.length;
+      return `${activeFellows.length}/${row.original.fellows.length}`;
     },
   },
   {

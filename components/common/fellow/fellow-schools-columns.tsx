@@ -93,7 +93,7 @@ export const fellowSchoolsColumns = ({
       const groupSessions = row.original.groups.reduce((total, group) => {
         return total + group.school.interventionSessions.length;
       }, 0);
-      return attendedSessions.length + "/" + groupSessions;
+      return `${attendedSessions.length}/${groupSessions}`;
     },
   },
   {

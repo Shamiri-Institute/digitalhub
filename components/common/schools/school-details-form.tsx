@@ -174,7 +174,7 @@ export default function SchoolDetailsForm() {
   const validatePhoneNumber = (field: keyof typeof form.formState.defaultValues, value: string) => {
     if (!isValidPhoneNumber(value, "KE") && value !== "") {
       form.setError(field, {
-        message: value + " is not a valid kenyan number",
+        message: `${value} is not a valid kenyan number`,
       });
     }
   };
@@ -594,7 +594,7 @@ export default function SchoolDetailsForm() {
                                 className="flex items-center text-shamiri-new-blue"
                                 onClick={() => {
                                   if (isValidPhoneNumber(pointPersonPhone, "KE")) {
-                                    const newValue = field.value + "/" + pointPersonPhone;
+                                    const newValue = `${field.value}/${pointPersonPhone}`;
                                     form.setValue(
                                       "pointPersonPhone",
                                       field.value !== undefined ? newValue : pointPersonPhone,
