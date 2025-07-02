@@ -158,7 +158,7 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
   const validatePhoneNumber = (field: keyof typeof form.formState.defaultValues, value: string) => {
     if (!isValidPhoneNumber(value, "KE") && value !== "") {
       form.setError(field, {
-        message: value + " is not a valid kenyan number",
+        message: `${value} is not a valid kenyan number`,
       });
     } else {
       form.trigger(field);

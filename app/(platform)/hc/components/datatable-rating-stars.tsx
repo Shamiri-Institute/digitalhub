@@ -23,7 +23,7 @@ export default function DataTableRatingStars({ rating }: { rating: number }) {
                 <Icons.starRating className="h-full w-full text-transparent" />
                 <div
                   className="absolute inset-y-0 left-0 overflow-hidden"
-                  style={{ width: remainder * 100 + "%" }}
+                  style={{ width: `${remainder * 100}%` }}
                 >
                   <Icons.starRating className="h-5 w-5" />
                 </div>

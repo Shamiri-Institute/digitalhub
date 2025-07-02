@@ -477,5 +477,5 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return Number.parseFloat((bytes / k ** i).toFixed(dm)) + " " + sizes[i];
+  return `${Number.parseFloat((bytes / k ** i).toFixed(dm))} ${sizes[i]}`;
 }

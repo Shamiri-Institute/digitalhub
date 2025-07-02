@@ -174,7 +174,7 @@ export const columns = ({ role }: { role: ImplementerRole }): ColumnDef<SchoolsT
           }
           return (
             <Badge variant="destructive">
-              {sessions[sessions.length - 1]?.sessionType?.toUpperCase() + " - Not submitted"}
+              {`${sessions[sessions.length - 1]?.sessionType?.toUpperCase()} - Not submitted`}
             </Badge>
           );
         }

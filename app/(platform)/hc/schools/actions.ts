@@ -214,7 +214,7 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
 
     return {
       success: true,
-      message: result.schoolName + " successfully dropped out.",
+      message: `${result.schoolName} successfully dropped out.`,
       data: result,
     };
   } catch (e) {
@@ -262,7 +262,7 @@ export async function undoDropoutSchool(schoolId: string) {
 
     return {
       success: true,
-      message: result.schoolName + " status set to active",
+      message: `${result.schoolName} status set to active`,
       data: result,
     };
   } catch (e) {

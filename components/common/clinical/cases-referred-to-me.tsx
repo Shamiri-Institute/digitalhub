@@ -84,7 +84,7 @@ export function RefferedCasesTab({
   function handleWordLimit(text: string | null, limit: number) {
     if (!text) return "";
     if (text.length > limit) {
-      return text.slice(0, limit) + "...";
+      return `${text.slice(0, limit)}...`;
     }
     return text;
   }
