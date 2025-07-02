@@ -53,6 +53,7 @@ export default function MainFellowsDatatable({
   const [dropOutDialog, setDropOutDialog] = useState(false);
 
   const downloadFellowsCsvTemplate = () => {
+    // biome-ignore lint/style/useTemplate: need for proper formatting for csv data type download
     const csvContent = "data:text/csv;charset=utf-8," + fellowCSVHeaders.join(",") + "\n";
     const encodedUri = encodeURI(csvContent);
 

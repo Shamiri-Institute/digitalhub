@@ -378,7 +378,7 @@ export function TableView({
           pointSchools: supervisor.assignedSchools.map((school) => school.schoolName),
           attendance: attendance?.attended,
           phoneNumber: supervisor.cellNumber ?? "",
-          fellows: totalAttendedFellows.length + "/" + supervisor.fellows.length,
+          fellows: `${totalAttendedFellows.length}/${supervisor.fellows.length}`,
           sessionId: session?.id,
           schoolId: attendance?.schoolId,
           absenceReason: attendance?.absenceReason ?? "",
@@ -430,7 +430,7 @@ export function TableView({
                 <ToggleGroupItem
                   key={day}
                   value={format(date.toDate(state.timeZone), "yyyy-MM-dd")}
-                  aria-label={"Select " + day}
+                  aria-label={`Select ${day}`}
                   className="form-toggle-button"
                 >
                   {day}
