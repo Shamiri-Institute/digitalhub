@@ -75,7 +75,7 @@ export default function SupervisorAttendance({
           pointSchools: supervisor.assignedSchools.map((school) => school.schoolName),
           attendance: attendance?.attended,
           phoneNumber: supervisor.cellNumber ?? "",
-          fellows: totalAttendedFellows.length + "/" + supervisor.fellows.length,
+          fellows: `${totalAttendedFellows.length}/${supervisor.fellows.length}`,
           sessionId: attendance?.sessionId,
           schoolId: attendance?.schoolId,
           absenceReason: attendance?.absenceReason ?? "",

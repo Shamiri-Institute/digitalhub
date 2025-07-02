@@ -360,7 +360,7 @@ export function ScheduleNewSession({
                             disabled={form.formState.isSubmitting}
                             loading={form.formState.isSubmitting}
                             onClick={() => {
-                              const timeString = hour + ":" + minutes + " " + time;
+                              const timeString = `${hour}:${minutes} ${time}`;
                               field.onChange(timeString);
                               setTimePicker(false);
                             }}

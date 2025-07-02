@@ -99,7 +99,7 @@ const columns: ColumnDef<
   {
     header: "Age",
     id: "Age",
-    accessorFn: (row) => row.yearOfBirth && new Date().getFullYear() - row.yearOfBirth + " yrs",
+    accessorFn: (row) => row.yearOfBirth && `${new Date().getFullYear() - row.yearOfBirth} yrs`,
   },
   {
     header: "Clinical cases",
