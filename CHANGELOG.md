@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.5.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.5.0...v1.5.1) (2025-07-02)
+
+
+### Bug Fixes
+
+* correct type issue and runtime safety if the clinical lead is not found ([d93e197](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/d93e19775a40b0348e55b024f99f5ddc5d9a45d5))
+* Replace clickable div with button([#493](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/493)) ([cd1387a](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/cd1387ada72bf4c27541e10d68dbf907aee60263))
+
 ## [1.5.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.4.0...v1.5.0) (2025-07-01)
 
 
