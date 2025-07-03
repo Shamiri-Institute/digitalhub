@@ -38,10 +38,10 @@ export const CLINICAL_SESSION_TYPES = [
 
 export default function ViewMarkClinicalSessions({
   currentcase,
-  role = "SUPERVISOR",
+  userRole = "SUPERVISOR",
 }: {
   currentcase: ClinicalCases;
-  role: "CLINICAL_LEAD" | "SUPERVISOR";
+  userRole: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   const [attendance, setAttendance] = useState<Record<string, boolean | null>>(() => {
     const initialState: Record<string, boolean | null> = {};
@@ -76,7 +76,7 @@ export default function ViewMarkClinicalSessions({
         session: session,
         dateOfSession: dates[session]!,
         attendanceStatus: status,
-        role,
+        role: userRole,
         clinicalLeadId: currentcase?.clinicalLeadId || null,
       });
 

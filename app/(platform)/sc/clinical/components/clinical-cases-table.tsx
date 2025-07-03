@@ -60,7 +60,7 @@ export default function ClinicalCasesTable({
         fellowsInProject={fellowsInProject}
         supervisorsInHub={supervisorsInHub}
         creatorId={currentSupervisorId}
-        role="SUPERVISOR"
+        userRole="SUPERVISOR"
         hubs={hubs}
       >
         <DialogTrigger asChild={true}>
@@ -82,7 +82,7 @@ export default function ClinicalCasesTable({
       renderSubComponent={({ row }) => (
         <div className="space-y-6 p-4">
           <ClinicalDiagnosingBoard currentcase={row.original} />
-          <ViewMarkClinicalSessions currentcase={row.original} role="SUPERVISOR" />
+          <ViewMarkClinicalSessions currentcase={row.original} userRole="SUPERVISOR" />
         </div>
       )}
       emptyStateMessage="No clinical cases found"
