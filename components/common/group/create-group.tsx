@@ -209,26 +209,24 @@ export default function CreateGroup({
             </div>
             <Separator className="my-6" />
             <DialogFooter className="flex justify-end gap-2">
-              <>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
-                  onClick={() => {
-                    setOpen(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="brand"
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                  loading={form.formState.isSubmitting}
-                >
-                  Submit
-                </Button>
-              </>
+              <Button
+                variant="ghost"
+                type="button"
+                className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+                onClick={() => {
+                  setOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="brand"
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                loading={form.formState.isSubmitting}
+              >
+                Submit
+              </Button>
             </DialogFooter>
           </form>
         </Form>
