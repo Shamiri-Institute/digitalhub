@@ -41,7 +41,7 @@ export default async function HubCoordinatorSchedulePage() {
         students c ON sch.id = c.school_id AND c.is_clinical_case=TRUE
     LEFT JOIN 
         fellows f ON h.id = f.hub_id
-        WHERE h.id=${coordinator!.assignedHubId}
+        WHERE h.id=${coordinator?.assignedHubId}
     GROUP BY 
         h.id, h.hub_name`,
     await db.supervisor.findMany({
@@ -74,11 +74,11 @@ export default async function HubCoordinatorSchedulePage() {
     FROM
     fellows fel
     LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
-    WHERE fel.hub_id=${coordinator!.assignedHubId}
+    WHERE fel.hub_id=${coordinator?.assignedHubId}
     GROUP BY fel.id`,
     await db.sessionName.findMany({
       where: {
-        hubId: coordinator!.assignedHubId as string,
+        hubId: coordinator?.assignedHubId as string,
       },
     }),
   ]);

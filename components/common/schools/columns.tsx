@@ -141,9 +141,9 @@ export const columns = ({ role }: { role: ImplementerRole }): ColumnDef<SchoolsT
 
         if (upcomingSessions.length > 0) {
           return (
-            sessionDisplayName(upcomingSessions[0]!.session?.sessionName) +
+            sessionDisplayName(upcomingSessions[0]?.session?.sessionName) +
             " - " +
-            format(upcomingSessions[0]!.sessionDate, "dd MMM yyyy")
+            format(upcomingSessions[0]?.sessionDate, "dd MMM yyyy")
           );
         }
         return null;
@@ -167,7 +167,7 @@ export const columns = ({ role }: { role: ImplementerRole }): ColumnDef<SchoolsT
           if (recent && recent.sessionRatings.length > 0) {
             return (
               <Badge variant="shamiri-green">
-                {sessionDisplayName(sessions[sessions.length - 1]!.session?.sessionName) +
+                {sessionDisplayName(sessions[sessions.length - 1]?.session?.sessionName) +
                   " - Report submitted"}
               </Badge>
             );

@@ -129,8 +129,8 @@ const columns: ColumnDef<
     cell: ({ row }) => {
       const payouts = row.original.PayoutStatements;
       return row.original.attended && payouts.length > 0
-        ? payouts[0]!.mpesaNumber &&
-            parsePhoneNumberFromString(payouts[0]!.mpesaNumber, "KE")?.formatNational()
+        ? payouts[0]?.mpesaNumber &&
+            parsePhoneNumberFromString(payouts[0]?.mpesaNumber, "KE")?.formatNational()
         : null;
     },
   },
@@ -141,7 +141,7 @@ const columns: ColumnDef<
       const payouts = row.original.PayoutStatements;
       return row.original.attended && payouts.length > 0 ? (
         <div className="flex">
-          {payouts[0]!.executedAt !== null ? (
+          {payouts[0]?.executedAt !== null ? (
             <Badge variant="shamiri-green">Payment initiated</Badge>
           ) : (
             <Badge variant="warning">Payment pending</Badge>

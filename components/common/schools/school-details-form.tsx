@@ -520,7 +520,7 @@ export default function SchoolDetailsForm() {
                                         }
                                         type="tel"
                                         onChange={(e) => {
-                                          const newValue = field.value!.split("/");
+                                          const newValue = field.value?.split("/");
                                           newValue.splice(index, 1, e.target.value);
                                           form.setValue("pointPersonPhone", newValue.join("/"));
                                         }}

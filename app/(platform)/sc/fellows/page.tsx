@@ -28,7 +28,7 @@ export default async function FellowsPage() {
       <FellowSchoolsDatatable
         fellows={fellows}
         project={project ?? undefined}
-        role={supervisor!.user.membership.role}
+        role={supervisor?.user.membership.role}
       />
     </div>
   );

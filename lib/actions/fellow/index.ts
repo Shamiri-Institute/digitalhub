@@ -493,7 +493,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
               data: {
                 fellowId: fellow.id,
                 fellowAttendanceId: attendance.id,
-                createdBy: auth.user!.user.id,
+                createdBy: auth.user?.user.id,
                 amount,
                 reason,
                 mpesaNumber: fellow.mpesaNumber,
@@ -511,7 +511,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
             id: attendance.id,
           },
           data: {
-            markedBy: auth.user!.user.id,
+            markedBy: auth.user?.user.id,
             fellowId: fellow.id,
             absenceReason: attendanceStatus === false ? absenceReason : null,
             absenceComments: attendanceStatus === false ? comments : null,
@@ -570,14 +570,14 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
           sessionId,
           absenceReason,
           absenceComments: comments,
-          markedBy: auth.user!.user.id,
+          markedBy: auth.user?.user.id,
           attended: attendanceStatus,
           PayoutStatements: attendanceStatus
             ? {
                 create: [
                   {
                     fellowId: fellow.id,
-                    createdBy: auth.user!.user.id,
+                    createdBy: auth.user?.user.id,
                     amount: session.session?.amount,
                     reason: "MARK_SESSION_ATTENDANCE",
                     mpesaNumber: fellow.mpesaNumber,
@@ -684,7 +684,7 @@ export async function markManyFellowAttendance(
           payout = {
             fellowId: attendance.fellow.id,
             fellowAttendanceId: attendance.id,
-            createdBy: auth.user!.user.id,
+            createdBy: auth.user?.user.id,
             amount: _amount,
             reason,
             mpesaNumber: attendance.fellow.mpesaNumber,
@@ -783,7 +783,7 @@ export async function markManyFellowAttendance(
             absenceReason: attendanceStatus === false ? absenceReason : null,
             absenceComments: attendanceStatus === false ? comments : null,
             sessionId,
-            markedBy: auth.user!.user.id,
+            markedBy: auth.user?.user.id,
             attended: attendanceStatus,
           },
         };
@@ -801,7 +801,7 @@ export async function markManyFellowAttendance(
           return {
             fellowId: attendance.fellow.id,
             fellowAttendanceId: attendance.id,
-            createdBy: auth.user!.user.id,
+            createdBy: auth.user?.user.id,
             amount: amount,
             reason: "MARK_SESSION_ATTENDANCE",
             mpesaNumber: attendance.fellow.mpesaNumber,
@@ -837,7 +837,7 @@ export async function submitFellowComplaint(data: z.infer<typeof SubmitComplaint
         fellowId: id,
         complaint,
         comments,
-        createdBy: user!.user.id,
+        createdBy: user?.user.id,
       },
     });
 

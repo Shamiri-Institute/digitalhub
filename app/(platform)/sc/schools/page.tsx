@@ -48,7 +48,7 @@ export default async function SchoolsPage() {
         students c ON sch.id = c.school_id AND c.is_clinical_case=TRUE
     LEFT JOIN 
         fellows f ON h.id = f.hub_id
-        WHERE h.id=${supervisor!.hubId}
+        WHERE h.id=${supervisor?.hubId}
     GROUP BY 
         h.id, h.hub_name`,
   ]);

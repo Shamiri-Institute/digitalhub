@@ -44,7 +44,7 @@ export async function markSupervisorAttendance(data: z.infer<typeof MarkAttendan
             id: attendance.id,
           },
           data: {
-            markedBy: auth.user!.user.id,
+            markedBy: auth.user?.user.id,
             supervisorId: id,
             absenceReason: attendanceStatus === false ? absenceReason : null,
             absenceComments: attendanceStatus === false ? comments : null,
@@ -69,7 +69,7 @@ export async function markSupervisorAttendance(data: z.infer<typeof MarkAttendan
           sessionId,
           absenceReason,
           absenceComments: comments,
-          markedBy: auth.user!.user.id,
+          markedBy: auth.user?.user.id,
           attended: attended === "attended" ? true : attended === "missed" ? false : null,
         },
       });
@@ -122,7 +122,7 @@ export async function markManySupervisorAttendance(
             id: attendance.id,
           },
           data: {
-            markedBy: auth.user!.user.id,
+            markedBy: auth.user?.user.id,
             supervisorId,
             absenceReason: attendanceStatus === false ? absenceReason : null,
             absenceComments: attendanceStatus === false ? comments : null,
@@ -138,7 +138,7 @@ export async function markManySupervisorAttendance(
             absenceReason,
             absenceComments: comments,
             sessionId,
-            markedBy: auth.user!.user.id,
+            markedBy: auth.user?.user.id,
             attended: attended === "attended" ? true : attended === "missed" ? false : null,
           },
         });

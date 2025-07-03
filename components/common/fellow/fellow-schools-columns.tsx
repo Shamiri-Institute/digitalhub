@@ -219,9 +219,9 @@ export const subColumns = ({
 
       if (upcomingSessions.length > 0) {
         return (
-          sessionDisplayName(upcomingSessions[0]!.session?.sessionName) +
+          sessionDisplayName(upcomingSessions[0]?.session?.sessionName) +
           " - " +
-          format(upcomingSessions[0]!.sessionDate, "dd MMM yyyy")
+          format(upcomingSessions[0]?.sessionDate, "dd MMM yyyy")
         );
       }
       return null;

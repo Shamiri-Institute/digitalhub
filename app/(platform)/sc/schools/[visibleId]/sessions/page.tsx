@@ -74,7 +74,7 @@ export default async function SchoolSessionsPage({
     FROM
     fellows fel
     LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
-    WHERE fel.hub_id=${supervisor!.hubId}
+    WHERE fel.hub_id=${supervisor?.hubId}
     GROUP BY fel.id`,
   ]);
 

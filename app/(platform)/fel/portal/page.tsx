@@ -118,7 +118,7 @@ export default async function FellowsPage() {
             } as FellowsData,
           ]}
           project={project ?? undefined}
-          role={fellow!.user.membership.role}
+          role={fellow?.user.membership.role}
         />
       </div>
       <PageFooter />

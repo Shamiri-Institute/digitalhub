@@ -352,7 +352,7 @@ export async function submitStudentReportingNotes(
       data: {
         studentId,
         notes,
-        addedBy: auth.user!.user.id,
+        addedBy: auth.user?.user.id,
       },
     });
     return {

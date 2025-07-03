@@ -16,7 +16,7 @@ export default function TabToggleNavigation({ options = [] }: { options: TabType
 
   useEffect(() => {
     if (!options.find((tab) => tab.href === pathname) && options.length > 0) {
-      router.push(options[0]!.href);
+      router.push(options[0]?.href);
     }
   }, [pathname, options, router]);
 
@@ -25,11 +25,11 @@ export default function TabToggleNavigation({ options = [] }: { options: TabType
       <ToggleGroup
         type="single"
         className="form-toggle"
-        defaultValue={currentTab!.name}
+        defaultValue={currentTab?.name}
         onValueChange={(value) => {
           if (value) {
             const tab = options.find((tab) => tab.name === value);
-            router.push(tab!.href);
+            router.push(tab?.href);
           }
         }}
       >
