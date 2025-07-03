@@ -12,14 +12,14 @@ export default function RatingStars({
       {[1, 2, 3, 4, 5].map((i) => {
         if (i <= rating) {
           return (
-            <button key={i} onClick={() => onSelect(i)}>
+            <button type="button" key={i} onClick={() => onSelect(i)}>
               <Icons.star key={i} className="h-6 w-6 text-muted-yellow xl:h-7 xl:w-7" />
             </button>
           );
         }
 
         return (
-          <button key={i} onClick={() => onSelect(i)}>
+          <button type="button" key={i} onClick={() => onSelect(i)}>
             <Icons.starOutline key={i} className="h-6 w-6 text-muted-foreground xl:h-7 xl:w-7" />
           </button>
         );

@@ -96,10 +96,10 @@ export function RefferedCasesTab({
         {handleWordLimit(referralNotes, 50)}
       </span>
       <div className="flex items-center justify-between">
-        <button onClick={handleAcceptReferredCase} className="cursor-pointer">
+        <button type="button" onClick={handleAcceptReferredCase} className="cursor-pointer">
           <Icons.check className="mx-2 h-6 w-6 align-baseline text-muted-green xl:h-7 xl:w-7" />
         </button>
-        <button onClick={handleRejectReferredCase} className="cursor-pointer">
+        <button type="button" onClick={handleRejectReferredCase} className="cursor-pointer">
           <Icons.xIcon className="mx-2 h-6 w-6 align-baseline text-shamiri-red xl:h-7 xl:w-7" />
         </button>
       </div>

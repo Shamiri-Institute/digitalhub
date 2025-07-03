@@ -48,6 +48,7 @@ export function ProfileSwitcher() {
     <div className="-ml-1.5 flex justify-between">
       <OrganizationDialog>
         <button
+          type="button"
           className="flex items-center gap-1.5 rounded-lg px-1.5 py-1 transition hover:bg-card active:scale-95"
           data-testid={constants.ORGANIZATION_SWITCHER}
         >
@@ -64,7 +65,7 @@ export function ProfileSwitcher() {
           />
         </button>
       </OrganizationDialog>
-      <button className="rounded p-1 transition hover:bg-card active:scale-95">
+      <button type="button" className="rounded p-1 transition hover:bg-card active:scale-95">
         <UserAvatar src={session?.user?.image || ""} fallback={session?.user?.name || "??"} />
       </button>
     </div>
@@ -81,7 +82,10 @@ function OrganizationDialog({ children }: { children: React.ReactNode }) {
         <div>
           <div className="flex w-full flex-col p-3 pl-3.5">
             <div className="text-sm text-muted-foreground">{session?.data?.user?.email}</div>
-            <button className="my-2 flex w-full items-center justify-between rounded-md px-1.5 py-1 hover:bg-foreground/[0.025]">
+            <button
+              type="button"
+              className="my-2 flex w-full items-center justify-between rounded-md px-1.5 py-1 hover:bg-foreground/[0.025]"
+            >
               <div className="flex items-center gap-2">
                 <OrganizationAvatar
                   src={fallbackProfile.organization.avatarUrl}
@@ -106,6 +110,7 @@ function OrganizationDialog({ children }: { children: React.ReactNode }) {
             <Separator />
             <div className="flex flex-col p-1.5">
               <button
+                type="button"
                 className="flex-start flex rounded-md p-2 hover:bg-foreground/3"
                 onClick={() => {
                   signOut({
