@@ -25,6 +25,9 @@
       "correctness": {
         "useExhaustiveDependencies": "warn"
       },
+      "complexity": {
+        "useLiteralKeys": "off"
+      },
       "a11y": {
          "noSvgWithoutTitle": "off"
       },
