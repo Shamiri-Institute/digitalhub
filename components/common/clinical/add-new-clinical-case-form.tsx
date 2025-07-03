@@ -56,7 +56,7 @@ export function AddNewClinicalCaseForm({
   fellowsInProject = [],
   supervisorsInHub = [],
   creatorId,
-  role,
+  userRole,
   hubs = [],
 }: {
   children?: React.ReactNode;
@@ -79,7 +79,7 @@ export function AddNewClinicalCaseForm({
   fellowsInProject: Prisma.FellowGetPayload<{}>[];
   supervisorsInHub: Prisma.SupervisorGetPayload<{}>[];
   creatorId: string;
-  role: "CLINICAL_LEAD" | "SUPERVISOR";
+  userRole: "CLINICAL_LEAD" | "SUPERVISOR";
   hubs: Prisma.HubGetPayload<{
     select: {
       id: true;
@@ -188,7 +188,7 @@ export function AddNewClinicalCaseForm({
         supervisorId: data.supervisor,
         fellowId: data.fellow,
         sessionId: data.session,
-        role,
+        role: userRole,
       });
 
       if (response.success) {
