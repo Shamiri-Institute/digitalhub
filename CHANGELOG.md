@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.5.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.5.2...v1.5.3) (2025-07-03)
+
+
+### Bug Fixes
+
+* use === instead of == and !== instead of == when doing non null/undefined comparisons ([#496](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/496)) ([9dfa350](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/9dfa350549afdf28bd78c3659612678db917727b))
+* useButtonType accessibility violations across codebase ([#495](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/495)) ([36978c9](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/36978c9239c83d75f6c2f0cf3acb3910519e0b25))
+
 ## [1.5.2](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.5.1...v1.5.2) (2025-07-03)
 
 ## [1.5.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.5.0...v1.5.1) (2025-07-02)
