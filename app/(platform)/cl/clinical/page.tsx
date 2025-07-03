@@ -32,7 +32,7 @@ export default async function ClinicalPage() {
           supervisorsInHub={supervisorsInHub}
           creatorId={currentClinicalLeadId}
           hubs={hubs}
-          role="CLINICAL_LEAD"
+          userRole="CLINICAL_LEAD"
         >
           <DialogTrigger asChild={true}>
             <Button variant="brand">
