@@ -286,7 +286,7 @@ export function RefundForm({ supervisorId, hubId }: { supervisorId: string; hubI
                 )}
               />
             </div>
-            {destination == "school" && (
+            {destination === "school" && (
               <div>
                 <FormField
                   control={form.control}

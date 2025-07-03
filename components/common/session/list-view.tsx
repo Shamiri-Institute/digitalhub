@@ -112,10 +112,10 @@ export function ListView({
         <table
           className={cn(
             "z-10 table-auto bg-white",
-            sessionGroups.length != 0 ? "schedule-table padded rounded-t-[0.4375rem]" : null,
+            sessionGroups.length !== 0 ? "schedule-table padded rounded-t-[0.4375rem]" : null,
           )}
         >
-          {sessionGroups.length == 0 ? (
+          {sessionGroups.length === 0 ? (
             <tbody>
               <tr>
                 <td colSpan={3}>
