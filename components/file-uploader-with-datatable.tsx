@@ -190,7 +190,7 @@ export default function FileUploaderWithDataTable({
               className="bg-shamiri-new-blue"
             >
               {uploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {uploading ? "Uploading file..." : <>Submit</>}
+              {uploading ? "Uploading file..." : "Submit"}
             </Button>
           </DialogFooter>
         </DialogContent>
