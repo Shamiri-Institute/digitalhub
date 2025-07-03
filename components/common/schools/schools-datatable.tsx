@@ -28,6 +28,7 @@ const schoolsCSVHeaders = [
 ];
 
 export const handleSchoolsCSVTemplateDownload = () => {
+  // biome-ignore lint/style/useTemplate: need for proper formatting for csv data type download
   const csvContent = "data:text/csv;charset=utf-8," + schoolsCSVHeaders.join(",") + "\n";
   const encodedUri = encodeURI(csvContent);
 
