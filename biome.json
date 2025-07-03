@@ -22,6 +22,9 @@
     },
     "rules": {
       "recommended": true,
+      "a11y": {
+         "noSvgWithoutTitle": "off"
+      },
       "style": {
         "noInferrableTypes": "error",
         "noParameterAssign": "error",
