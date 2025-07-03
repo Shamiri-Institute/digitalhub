@@ -189,26 +189,24 @@ export default function ReplaceFellow({
             </div>
             <Separator className="my-6" />
             <DialogFooter className="flex justify-end gap-2">
-              <>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
-                  onClick={() => {
-                    onOpenChange(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="brand"
-                  type="submit"
-                  disabled={form.formState.isSubmitting}
-                  loading={form.formState.isSubmitting}
-                >
-                  Replace
-                </Button>
-              </>
+              <Button
+                variant="ghost"
+                type="button"
+                className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+                onClick={() => {
+                  onOpenChange(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="brand"
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                loading={form.formState.isSubmitting}
+              >
+                Replace
+              </Button>
             </DialogFooter>
           </form>
         </Form>
