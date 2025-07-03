@@ -82,7 +82,10 @@ function OrganizationDialog({ children }: { children: React.ReactNode }) {
         <div>
           <div className="flex w-full flex-col p-3 pl-3.5">
             <div className="text-sm text-muted-foreground">{session?.data?.user?.email}</div>
-            <button type="button" className="my-2 flex w-full items-center justify-between rounded-md px-1.5 py-1 hover:bg-foreground/[0.025]">
+            <button
+              type="button"
+              className="my-2 flex w-full items-center justify-between rounded-md px-1.5 py-1 hover:bg-foreground/[0.025]"
+            >
               <div className="flex items-center gap-2">
                 <OrganizationAvatar
                   src={fallbackProfile.organization.avatarUrl}

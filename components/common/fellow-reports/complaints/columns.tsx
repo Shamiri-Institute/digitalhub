@@ -13,7 +13,11 @@ export const columns: ColumnDef<FellowComplaintsType>[] = [
     id: "button",
     cell: ({ row }) => {
       return (
-        <button type="button" onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
+        <button
+          type="button"
+          onClick={row.getToggleExpandedHandler()}
+          className="cursor-pointer px-4 py-2"
+        >
           {row.getIsExpanded() ? (
             <Image
               unoptimized
