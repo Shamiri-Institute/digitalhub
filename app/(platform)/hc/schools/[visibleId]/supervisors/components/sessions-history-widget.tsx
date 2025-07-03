@@ -38,7 +38,7 @@ export default function SessionHistoryWidget({
                     "bg-green-bg": match?.attended === true,
                     "bg-white": match === undefined,
                     "bg-blue-bg": match?.attended === null,
-                    "bg-red-bg": match?.attended == false,
+                    "bg-red-bg": match?.attended === false,
                   },
                 )}
               >
