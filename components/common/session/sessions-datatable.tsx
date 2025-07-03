@@ -112,6 +112,7 @@ export default function SessionsDatatable({
           />
           {session.schoolId !== null && session.school && (
             <SessionRatings
+              sessions={sessions}
               open={ratingsDialog}
               onOpenChange={setRatingsDialog}
               mode={

@@ -1,11 +1,6 @@
 import { signOut } from "next-auth/react";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
-import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
-import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
-import SchoolDetailsForm from "#/components/common/schools/school-details-form";
-import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
-import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
 import { SearchCommand } from "#/components/search-command";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";

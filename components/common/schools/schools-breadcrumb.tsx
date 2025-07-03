@@ -15,8 +15,9 @@ import {
   PopoverTrigger,
 } from "#/components/ui/popover";
 import { fetchImplementerSchools } from "#/lib/actions/implementer";
+import { fetchHubSchools } from "#/lib/actions/school";
 import { cn } from "#/lib/utils";
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { CheckIcon } from "@radix-ui/react-icons";
 import { ChevronsUpDown } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -54,8 +55,14 @@ export default function SchoolsBreadcrumb() {
   useEffect(() => {
     const fetchSchools = async () => {
       setLoading(true);
-      if (implementerId) {
+      if (implementerId && role === ImplementerRole.ADMIN) {
         const response = await fetchImplementerSchools(implementerId);
+        if (response.success && response.data) {
+          setSchools(response.data);
+        }
+      }
+      if (role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR || role === ImplementerRole.FELLOW) {
+        const response = await fetchHubSchools();
         if (response.success && response.data) {
           setSchools(response.data);
         }
@@ -63,7 +70,7 @@ export default function SchoolsBreadcrumb() {
       setLoading(false);
     };
     fetchSchools();
-  }, [implementerId]);
+  }, [implementerId, role]);
 
   const handleSchoolSelect = (schoolVisibleId: string) => {
     const routeArray = pathname.split("/");

@@ -1,11 +1,8 @@
-import { Suspense } from "react";
-import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
 import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
-import FellowInfoContextProvider from "#/components/common/fellow/fellow-info-context-provider";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
-import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
+import { signOut } from "next-auth/react";
 
 export default async function FellowsPage({
   params: { visibleId },
@@ -14,7 +11,7 @@ export default async function FellowsPage({
 }) {
   const hc = await currentHubCoordinator();
   if (!hc) {
-    return <InvalidPersonnelRole userRole="hub-coordinator" />;
+    await signOut({ callbackUrl: "/login" });
   }
 
   const user = await getCurrentUser();
@@ -109,9 +106,7 @@ export default async function FellowsPage({
   });
 
   return (
-    <FellowInfoContextProvider>
-      <Suspense fallback={<Loading />}>
-        <FellowsDatatable
+    <FellowsDatatable
           fellows={data}
           supervisors={supervisors}
           schoolId={school.id}
@@ -119,7 +114,5 @@ export default async function FellowsPage({
           hideActions={true}
           attendances={school.fellowAttendances}
         />
-      </Suspense>
-    </FellowInfoContextProvider>
   );
 }

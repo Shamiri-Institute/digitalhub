@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import { currentFellow } from "#/app/auth";
-import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
@@ -42,9 +41,7 @@ export default async function SchoolsPage() {
         {/*    <SchoolsFilterToggle schools={data} />*/}
         {/*  </div>*/}
         {/*</div>*/}
-        <SchoolInfoProvider>
-          <SchoolsDatatable role={fellow.user.membership.role} />
-        </SchoolInfoProvider>
+        <SchoolsDatatable role={fellow.user.membership.role} />
       </div>
       <PageFooter />
     </div>

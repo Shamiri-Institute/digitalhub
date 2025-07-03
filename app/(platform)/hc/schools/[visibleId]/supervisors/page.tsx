@@ -31,8 +31,15 @@ export default async function SupervisorsPage({
       supervisorName: "asc",
     },
   });
-
+  const school = await db.school.findUnique({
+    where: {
+      visibleId,
+    },
+    include: {
+      interventionSessions: true,
+    },
+  });
   return (
-    <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} role={coordinator?.user.membership.role!}/>
+    <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} role={coordinator?.user.membership.role!} school={school ?? null}/>
   );
 }

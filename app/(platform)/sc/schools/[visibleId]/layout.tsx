@@ -6,7 +6,6 @@ import AssignPointSupervisor from "#/components/common/schools/assign-point-supe
 import type { SchoolsTableData } from "#/components/common/schools/columns";
 import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
 import SchoolDetailsForm from "#/components/common/schools/school-details-form";
-import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
 import SchoolLeftPanel from "#/components/common/schools/school-left-panel";
 import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";
 import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
@@ -80,8 +79,7 @@ export default async function SchoolViewLayout({
   });
 
   return (
-    <SchoolInfoProvider school={school as unknown as SchoolsTableData}>
-      <div className="flex h-full bg-white">
+    <div className="flex h-full bg-white">
         <div className="hidden lg:flex lg:w-1/4">
           <SchoolLeftPanel selectedSchool={school} open={true} />
         </div>
@@ -95,10 +93,5 @@ export default async function SchoolViewLayout({
           <PageFooter />
         </div>
       </div>
-      <SchoolDetailsForm />
-      <AssignPointSupervisor supervisors={supervisors} />
-      <DropoutSchool />
-      <UndoDropoutSchool />
-    </SchoolInfoProvider>
   );
 }
