@@ -22,6 +22,9 @@
     },
     "rules": {
       "recommended": true,
+      "correctness": {
+        "useExhaustiveDependencies": "warn"
+      },
       "style": {
         "noInferrableTypes": "error",
         "noParameterAssign": "error",
