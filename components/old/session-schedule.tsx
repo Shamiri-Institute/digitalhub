@@ -116,18 +116,21 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
           <div />
           <div className="flex items-center gap-2 p-4 pb-0">
             <button
+              type="button"
               className="rounded-full bg-active-card p-1.5 text-white transition-transform hover:bg-white/20 active:scale-95"
               onClick={() => setAnchorDate(new Date())}
             >
               <Icons.calendar />
             </button>
             <button
+              type="button"
               className="rounded-full bg-active-card p-1.5 text-white transition-transform hover:bg-white/20 active:scale-95"
               onClick={() => setAnchorDate(addDays(anchorDate, -7))}
             >
               <Icons.chevronLeft />
             </button>
             <button
+              type="button"
               className="rounded-full bg-active-card p-1.5 text-white transition-transform hover:bg-white/20 active:scale-95"
               onClick={() => setAnchorDate(addDays(anchorDate, 7))}
             >

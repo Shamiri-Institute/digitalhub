@@ -293,6 +293,7 @@ export default function DataTable<TData, TValue>({
           <div className="flex flex-col items-center gap-2 lg:flex-row">
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 className="pagination"
                 onClick={() => table.firstPage()}
                 disabled={!table.getCanPreviousPage()}
@@ -301,6 +302,7 @@ export default function DataTable<TData, TValue>({
               </button>
               {table.getState().pagination.pageIndex > 0 ? (
                 <button
+                  type="button"
                   className="pagination"
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
@@ -309,6 +311,7 @@ export default function DataTable<TData, TValue>({
                 </button>
               ) : null}
               <button
+                type="button"
                 className="pagination bg-shamiri-new-blue text-white"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
@@ -317,6 +320,7 @@ export default function DataTable<TData, TValue>({
               </button>
               {table.getState().pagination.pageIndex + 2 <= table.getPageCount() ? (
                 <button
+                  type="button"
                   className="pagination"
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
@@ -325,6 +329,7 @@ export default function DataTable<TData, TValue>({
                 </button>
               ) : null}
               <button
+                type="button"
                 className="pagination"
                 onClick={() => table.lastPage()}
                 disabled={!table.getCanNextPage()}
