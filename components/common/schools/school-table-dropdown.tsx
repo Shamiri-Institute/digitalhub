@@ -62,65 +62,63 @@ export default function SchoolTableDropdown({
           </Link>
         </DropdownMenuItem>
         {role === "HUB_COORDINATOR" || role === "SUPERVISOR" ? (
-          <>
-            {!schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
-              <div>
+          !schoolRow.droppedOut || !schoolRow.droppedOutAt ? (
+            <div>
+              <DropdownMenuItem
+                onClick={() => {
+                  context.setEditDialog(true);
+                }}
+              >
+                Edit school information
+              </DropdownMenuItem>
+              {role === "HUB_COORDINATOR" && (
                 <DropdownMenuItem
                   onClick={() => {
-                    context.setEditDialog(true);
+                    context.setPointSupervisorDialog(true);
                   }}
                 >
-                  Edit school information
+                  {context.school?.assignedSupervisorId !== null
+                    ? "Change point supervisor"
+                    : "Assign point supervisor"}
                 </DropdownMenuItem>
-                {role === "HUB_COORDINATOR" && (
+              )}
+              {role === "SUPERVISOR" && (
+                <>
                   <DropdownMenuItem
                     onClick={() => {
-                      context.setPointSupervisorDialog(true);
+                      // context.setPointSupervisorDialog(true);
                     }}
                   >
-                    {context.school?.assignedSupervisorId !== null
-                      ? "Change point supervisor"
-                      : "Assign point supervisor"}
+                    Submit school report
                   </DropdownMenuItem>
-                )}
-                {role === "SUPERVISOR" && (
-                  <>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        // context.setPointSupervisorDialog(true);
-                      }}
-                    >
-                      Submit school report
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        // context.setPointSupervisorDialog(true);
-                      }}
-                    >
-                      Submit school feedback
-                    </DropdownMenuItem>
-                  </>
-                )}
-                <DropdownMenuItem
-                  className="text-shamiri-red"
-                  onClick={() => {
-                    context.setSchoolDropOutDialog(true);
-                  }}
-                >
-                  Dropout school
-                </DropdownMenuItem>
-              </div>
-            ) : (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      // context.setPointSupervisorDialog(true);
+                    }}
+                  >
+                    Submit school feedback
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuItem
                 className="text-shamiri-red"
                 onClick={() => {
-                  context.setUndoDropOutDialog(true);
+                  context.setSchoolDropOutDialog(true);
                 }}
               >
-                Undo dropout
+                Dropout school
               </DropdownMenuItem>
-            )}
-          </>
+            </div>
+          ) : (
+            <DropdownMenuItem
+              className="text-shamiri-red"
+              onClick={() => {
+                context.setUndoDropOutDialog(true);
+              }}
+            >
+              Undo dropout
+            </DropdownMenuItem>
+          )
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
