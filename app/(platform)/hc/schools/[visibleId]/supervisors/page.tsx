@@ -34,10 +34,8 @@ export default async function SupervisorsPage({
   });
 
   return (
-    <>
-      <SupervisorInfoProvider>
-        <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} />
-      </SupervisorInfoProvider>
-    </>
+    <SupervisorInfoProvider>
+      <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} />
+    </SupervisorInfoProvider>
   );
 }

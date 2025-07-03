@@ -294,29 +294,24 @@ export function SessionDropDown({
             Mark supervisor attendance
           </DropdownMenuItem>
         )}
-        {role === ImplementerRole.SUPERVISOR && (
-          <>
-            {(session.session?.sessionType === "INTERVENTION" ||
-              session.session?.sessionType === "CLINICAL" ||
-              session.session?.sessionType === "DATA_COLLECTION") && (
-              <>
-                <DropdownMenuItem
-                  onClick={() => {
-                    state.setSession && state.setSession(session);
-                    state.setStudentAttendanceDialog && state.setStudentAttendanceDialog(true);
-                  }}
-                  disabled={
-                    session.status === "Cancelled" ||
-                    session.session?.sessionType === "DATA_COLLECTION" ||
-                    !session.occurred
-                  }
-                >
-                  Mark student attendance
-                </DropdownMenuItem>
-              </>
-            )}
-          </>
-        )}
+        {role === ImplementerRole.SUPERVISOR &&
+          (session.session?.sessionType === "INTERVENTION" ||
+            session.session?.sessionType === "CLINICAL" ||
+            session.session?.sessionType === "DATA_COLLECTION") && (
+            <DropdownMenuItem
+              onClick={() => {
+                state.setSession && state.setSession(session);
+                state.setStudentAttendanceDialog && state.setStudentAttendanceDialog(true);
+              }}
+              disabled={
+                session.status === "Cancelled" ||
+                session.session?.sessionType === "DATA_COLLECTION" ||
+                !session.occurred
+              }
+            >
+              Mark student attendance
+            </DropdownMenuItem>
+          )}
         {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR ? (
           <>
             <DropdownMenuItem
@@ -393,24 +388,22 @@ export function SessionDropDown({
           </>
         ) : null}
         {role === "FELLOW" ? (
-          <>
-            <DropdownMenuItem
-              onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setStudentAttendanceDialog && state.setStudentAttendanceDialog(true);
-              }}
-              disabled={
-                session.status === "Cancelled" ||
-                session.session?.sessionType === "DATA_COLLECTION" ||
-                !session.occurred ||
-                !session.school?.interventionGroups.find((group) => {
-                  return group.leaderId === fellowId;
-                })
-              }
-            >
-              Mark student attendance
-            </DropdownMenuItem>
-          </>
+          <DropdownMenuItem
+            onClick={() => {
+              state.setSession && state.setSession(session);
+              state.setStudentAttendanceDialog && state.setStudentAttendanceDialog(true);
+            }}
+            disabled={
+              session.status === "Cancelled" ||
+              session.session?.sessionType === "DATA_COLLECTION" ||
+              !session.occurred ||
+              !session.school?.interventionGroups.find((group) => {
+                return group.leaderId === fellowId;
+              })
+            }
+          >
+            Mark student attendance
+          </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>

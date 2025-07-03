@@ -63,20 +63,18 @@ function MobileNavigationDialog({
   }
 
   return (
-    <>
-      <Sheet open={isOpen} onOpenChange={(openBool) => (openBool ? open() : close())}>
-        <SheetContent side="left" className="left-0 w-full">
-          <div
-            className={cn(
-              "fixed bottom-0 left-0 top-14 w-full overflow-y-auto px-4 pb-4 pt-6 min-[416px]:max-w-sm sm:px-6 sm:pb-10",
-            )}
-          >
-            <Header className="pointer-events-auto z-100" />
-            <Navigation />
-          </div>
-        </SheetContent>
-      </Sheet>
-    </>
+    <Sheet open={isOpen} onOpenChange={(openBool) => (openBool ? open() : close())}>
+      <SheetContent side="left" className="left-0 w-full">
+        <div
+          className={cn(
+            "fixed bottom-0 left-0 top-14 w-full overflow-y-auto px-4 pb-4 pt-6 min-[416px]:max-w-sm sm:px-6 sm:pb-10",
+          )}
+        >
+          <Header className="pointer-events-auto z-100" />
+          <Navigation />
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 

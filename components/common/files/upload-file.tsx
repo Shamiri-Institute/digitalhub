@@ -104,7 +104,7 @@ export default function SchoolFilesUploader({
           className="bg-shamiri-new-blue"
           loading={uploading}
         >
-          {uploading ? "Uploading file..." : <>Submit</>}
+          {uploading ? "Uploading file..." : "Submit"}
         </Button>
       </DialogFooter>
     </div>
