@@ -5,6 +5,7 @@ import { Icons } from "#/components/icons";
 export function Back() {
   return (
     <button
+      type="button"
       className="flex items-center gap-1 text-sm font-semibold text-muted-foreground"
       onClick={() => window.history.back()}
     >
