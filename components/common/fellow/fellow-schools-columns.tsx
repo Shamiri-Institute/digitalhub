@@ -36,7 +36,7 @@ export const fellowSchoolsColumns = ({
     id: "checkbox",
     cell: ({ row }) => {
       return (
-        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
+        <button type="button" onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <Image
               unoptimized
