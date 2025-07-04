@@ -46,13 +46,18 @@ export async function getClinicalCases() {
       attendanceStatus: session.attendanceStatus,
     }));
 
+    const latestCaseNote = caseInfo.clinicalCaseNotes.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )[0];
+    const riskLevel = latestCaseNote?.riskLevel || "N/A";
+
     return {
       id: caseInfo.id,
       school: caseInfo.student?.school?.schoolName,
       pseudonym: caseInfo.pseudonym || "Anonymous",
       dateAdded: caseInfo.createdAt.toLocaleDateString(),
       caseStatus: caseInfo.caseStatus,
-      risk: caseInfo.riskStatus,
+      risk: riskLevel,
       age,
       referralFrom: caseInfo.referredFrom || caseInfo.initialReferredFromSpecified || "Unknown",
       hubId: supervisor?.hubId,

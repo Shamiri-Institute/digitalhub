@@ -8,6 +8,7 @@ import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
+import { ClinicalCaseNotes } from "@prisma/client";
 
 export const columns: ColumnDef<HubClinicalCases>[] = [
   {
@@ -72,7 +73,14 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
   {
     accessorKey: "riskStatus",
     header: "Risk Status",
-    cell: ({ row }) => renderRiskOrCaseStatus(row.original.riskStatus),
+    cell: ({ row }) => {
+      const riskLevel = row.original.riskStatus || "N/A";
+      return (
+        <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
+          {riskLevel}
+        </Badge>
+      );
+    },
   },
 
   {
@@ -134,7 +142,3 @@ const colors: Record<string, BadgeVariant> = {
   No: "shamiri-green",
   Medium: "warning",
 };
-
-function renderRiskOrCaseStatus(value: string) {
-  return <Badge variant={colors[value] || "shamiri-green"}>{value}</Badge>;
-}

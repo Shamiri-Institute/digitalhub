@@ -23,10 +23,10 @@ const CASE_STATUS_COLORS = {
 };
 
 const RISK_STATUS_COLORS = {
-  No: "#FF4D4F",
+  High: "#FF4D4F",
   Low: "#F98600",
-  Medium: "#00BA34",
-  High: "#0085FF",
+  No: "#00BA34",
+  Medium: "#0085FF",
 };
 
 export default function CasesBreakdown({
