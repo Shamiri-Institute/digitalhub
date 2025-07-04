@@ -31,7 +31,7 @@ export default async function ReportDetails({
 
   const supervisor = await currentSupervisor();
   if (!supervisor) {
-    return <InvalidPersonnelRole role="supervisor" />;
+    return <InvalidPersonnelRole userRole="supervisor" />;
   }
 
   const assignedSchool = await db.school.findUnique({
