@@ -388,6 +388,7 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       },
       sessions: true,
       clinicalCaseNotes: true,
+      followUptreatmentPlan: true,
     },
   });
 
@@ -427,6 +428,8 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       currentSupervisorId: caseInfo.currentSupervisorId,
       clinicalCaseNotes: caseInfo.clinicalCaseNotes,
       clinicalLeadId: caseInfo.clinicalLeadId,
+      role: "CLINICAL_LEAD",
+      treatmentPlanUploaded: !!caseInfo.followUptreatmentPlan,
     };
   });
 }
