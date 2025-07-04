@@ -9,7 +9,7 @@ export default async function PayoutHistoryPage() {
   const hubCoordinator = await currentHubCoordinator();
 
   if (!hubCoordinator) {
-    return <InvalidPersonnelRole role="hub-coordinator" />;
+    return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
 
   return <FellowPayoutHistoryDataTable payoutHistory={hubPayoutHistory} />;
