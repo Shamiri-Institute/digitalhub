@@ -14,7 +14,7 @@ export default async function FellowPage() {
   const hc = await currentHubCoordinator();
   const user = await getCurrentUser();
   if (!hc) {
-    return <InvalidPersonnelRole role="hub-coordinator" />;
+    return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
   const data = await Promise.all([
     await db.$queryRaw<Omit<MainFellowTableData, "complaints">[]>`

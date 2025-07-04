@@ -34,7 +34,7 @@ export default async function SupervisorsPage() {
   });
 
   if (!coordinator) {
-    return <InvalidPersonnelRole role="hub-coordinator" />;
+    return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
 
   if (!coordinator.assignedHubId) {
