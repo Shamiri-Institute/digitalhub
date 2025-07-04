@@ -238,7 +238,14 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
         csi.id,
         csi.pseudonym,
         csi.flagged,
-        csi.risk_status as "riskStatus",
+        COALESCE(
+          (SELECT ccn.risk_level 
+           FROM "clinical_case_notes" ccn 
+           WHERE ccn."case_id" = csi.id 
+           ORDER BY ccn.created_at DESC 
+           LIMIT 1), 
+          'N/A'
+        ) as "riskStatus",
         csi.case_report as "caseReport",
         csi.case_status as "caseStatus",
         csi.initial_referred_from_specified as "initialContact",
@@ -404,13 +411,18 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       attendanceStatus: session.attendanceStatus,
     }));
 
+    const latestCaseNote = caseInfo.clinicalCaseNotes.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )[0];
+    const riskLevel = latestCaseNote?.riskLevel || "N/A";
+
     return {
       id: caseInfo.id,
       school: caseInfo.student?.school?.schoolName,
       pseudonym: caseInfo.pseudonym || "Anonymous",
       dateAdded: caseInfo.createdAt.toLocaleDateString(),
       caseStatus: caseInfo.caseStatus,
-      risk: caseInfo.riskStatus,
+      risk: riskLevel,
       age,
       referralFrom: caseInfo.referredFrom || caseInfo.initialReferredFromSpecified || "Unknown",
       hubId: clinicalLead?.assignedHubId,

@@ -247,7 +247,14 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
         csi.id,
         csi.pseudonym,
         csi.flagged,
-        csi.risk_status as "riskStatus",
+        COALESCE(
+          (SELECT ccn.risk_level 
+           FROM "clinical_case_notes" ccn 
+           WHERE ccn."case_id" = csi.id 
+           ORDER BY ccn.created_at DESC 
+           LIMIT 1), 
+          'N/A'
+        ) as "riskStatus",
         csi.case_report as "caseReport",
         csi.case_status as "caseStatus",
         csi.initial_referred_from_specified as "initialContact",

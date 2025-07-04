@@ -8,7 +8,7 @@ import ClinicalCaseActionsDropdownMenu from "#/components/common/clinical/clinic
 import { Icons } from "#/components/icons";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { renderRiskOrCaseStatus } from "#/components/common/clinical/ct-cl-columns";
+import { Badge } from "#/components/ui/badge";
 
 export const columns: ColumnDef<ClinicalCases>[] = [
   {
@@ -70,26 +70,26 @@ export const columns: ColumnDef<ClinicalCases>[] = [
   {
     accessorKey: "caseStatus",
     header: "Case Status",
-    cell: ({ row }) =>
-      renderRiskOrCaseStatus(
-        row.original.caseStatus,
-        row.original.clinicalCaseNotes.map((note) => ({
-          createdAt: note.createdAt.toISOString(),
-          riskLevel: note.riskLevel,
-        })),
-      ),
+    cell: ({ row }) => {
+      const riskLevel = row.original.risk || "N/A";
+      return (
+        <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
+          {riskLevel}
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "risk",
     header: "Risk",
-    cell: ({ row }) =>
-      renderRiskOrCaseStatus(
-        row.original.risk,
-        row.original.clinicalCaseNotes.map((note) => ({
-          createdAt: note.createdAt.toISOString(),
-          riskLevel: note.riskLevel,
-        })),
-      ),
+    cell: ({ row }) => {
+      const riskLevel = row.original.risk || "N/A";
+      return (
+        <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
+          {riskLevel}
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "age",
