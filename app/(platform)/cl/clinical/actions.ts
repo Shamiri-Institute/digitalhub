@@ -4,6 +4,25 @@ import { currentClinicalLead } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
+export type CaseNotesResult = Array<{
+  id: string;
+  createdAt: Date;
+  presentingIssues: string;
+  orsAssessment: number;
+  riskLevel: string;
+  necessaryConditions: string;
+  treatmentInterventions: string[];
+  otherIntervention: string;
+  interventionExplanation: string;
+  emotionalResponse: string;
+  behavioralResponse: string;
+  overallFeedback: string;
+  studentResponseExplanations: string;
+  followUpPlan: string;
+  followUpPlanExplanation: string;
+  sessionId: string;
+}>;
+
 export async function getClinicalCasesData() {
   const clinicalLead = await currentClinicalLead();
   if (!clinicalLead) throw new Error("Unauthorized");
@@ -137,24 +156,7 @@ export type HubClinicalCases = {
   generalPresentingIssuesOtherSpecifiedEndpoint: string | null;
   clinicalLeadId: string;
   isClinicalLeadCase: boolean;
-  caseNotes: Array<{
-    id: string;
-    createdAt: Date;
-    presentingIssues: string;
-    orsAssessment: number;
-    riskLevel: string;
-    necessaryConditions: string;
-    treatmentInterventions: string[];
-    otherIntervention: string;
-    interventionExplanation: string;
-    emotionalResponse: string;
-    behavioralResponse: string;
-    overallFeedback: string;
-    studentResponseExplanations: string;
-    followUpPlan: string;
-    followUpPlanExplanation: string;
-    sessionId: string;
-  }>;
+  caseNotes: CaseNotesResult;
   termination: {
     id: string;
     createdAt: Date;

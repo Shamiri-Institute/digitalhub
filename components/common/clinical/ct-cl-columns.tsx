@@ -2,12 +2,18 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import Image from "next/image";
-import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
+import type { CaseNotesResult, HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
 import ClinicalLeadCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown-cl-ct";
 import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
+import { ClinicalCaseNotes } from "@prisma/client";
+
+type CaseNotesForRiskStatus = Array<{
+  createdAt: string;
+  riskLevel: string;
+}>;
 
 export const columns: ColumnDef<HubClinicalCases>[] = [
   {
@@ -72,7 +78,14 @@ export const columns: ColumnDef<HubClinicalCases>[] = [
   {
     accessorKey: "riskStatus",
     header: "Risk Status",
-    cell: ({ row }) => renderRiskOrCaseStatus(row.original.riskStatus),
+    cell: ({ row }) =>
+      renderRiskOrCaseStatus(
+        row.original.riskStatus,
+        row.original.caseNotes.map((note) => ({
+          createdAt: note.createdAt.toISOString(),
+          riskLevel: note.riskLevel,
+        })),
+      ),
   },
 
   {
@@ -135,6 +148,16 @@ const colors: Record<string, BadgeVariant> = {
   Medium: "warning",
 };
 
-function renderRiskOrCaseStatus(value: string) {
-  return <Badge variant={colors[value] || "shamiri-green"}>{value}</Badge>;
+export function renderRiskOrCaseStatus(value: string, caseNotes: CaseNotesForRiskStatus) {
+  if (caseNotes.length === 0) {
+    return <Badge variant="shamiri-green">N/A</Badge>;
+  }
+  const latestRiskLevel = caseNotes?.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  )[0]?.riskLevel;
+  return (
+    <Badge variant={colors[latestRiskLevel || "shamiri-green"]} className="uppercase">
+      {latestRiskLevel}
+    </Badge>
+  );
 }
