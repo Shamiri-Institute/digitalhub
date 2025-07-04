@@ -429,7 +429,7 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       clinicalCaseNotes: caseInfo.clinicalCaseNotes,
       clinicalLeadId: caseInfo.clinicalLeadId,
       role: "CLINICAL_LEAD",
-      treatmentPlanUploaded: caseInfo.followUptreatmentPlan ? true : false,
+      treatmentPlanUploaded: !!caseInfo.followUptreatmentPlan,
     };
   });
 }
