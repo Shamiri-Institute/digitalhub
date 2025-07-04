@@ -6,9 +6,9 @@ import Image from "next/image";
 import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import ClinicalCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown";
 import { Icons } from "#/components/icons";
-import { Badge } from "#/components/ui/badge";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
+import { Badge } from "#/components/ui/badge";
 
 export const columns: ColumnDef<ClinicalCases>[] = [
   {
@@ -70,12 +70,26 @@ export const columns: ColumnDef<ClinicalCases>[] = [
   {
     accessorKey: "caseStatus",
     header: "Case Status",
-    cell: ({ row }) => renderRiskOrCaseStatus(row.original.caseStatus),
+    cell: ({ row }) => {
+      const riskLevel = row.original.risk || "N/A";
+      return (
+        <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
+          {riskLevel}
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "risk",
     header: "Risk",
-    cell: ({ row }) => renderRiskOrCaseStatus(row.original.risk),
+    cell: ({ row }) => {
+      const riskLevel = row.original.risk || "N/A";
+      return (
+        <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
+          {riskLevel}
+        </Badge>
+      );
+    },
   },
   {
     accessorKey: "age",
@@ -117,7 +131,3 @@ const colors: Record<string, BadgeVariant> = {
   No: "shamiri-green",
   Medium: "warning",
 };
-
-function renderRiskOrCaseStatus(value: string) {
-  return <Badge variant={colors[value] || "shamiri-green"}>{value}</Badge>;
-}
