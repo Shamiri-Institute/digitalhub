@@ -29,7 +29,7 @@
         "useLiteralKeys": "off"
       },
       "a11y": {
-         "noSvgWithoutTitle": "off"
+        "noSvgWithoutTitle": "off"
       },
       "style": {
         "noInferrableTypes": "error",

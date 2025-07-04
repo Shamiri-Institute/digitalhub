@@ -4,6 +4,25 @@ import { currentClinicalLead } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
+export type CaseNotesResult = Array<{
+  id: string;
+  createdAt: Date;
+  presentingIssues: string;
+  orsAssessment: number;
+  riskLevel: string;
+  necessaryConditions: string;
+  treatmentInterventions: string[];
+  otherIntervention: string;
+  interventionExplanation: string;
+  emotionalResponse: string;
+  behavioralResponse: string;
+  overallFeedback: string;
+  studentResponseExplanations: string;
+  followUpPlan: string;
+  followUpPlanExplanation: string;
+  sessionId: string;
+}>;
+
 export async function getClinicalCasesData() {
   const clinicalLead = await currentClinicalLead();
   if (!clinicalLead) throw new Error("Unauthorized");
@@ -33,12 +52,26 @@ export async function getClinicalCasesData() {
 
     db.$queryRaw<StatusResult[]>`
       SELECT 
-        "risk_status" as name, 
+        COALESCE(
+          (SELECT ccn.risk_level 
+           FROM "clinical_case_notes" ccn 
+           WHERE ccn."case_id" = csi.id 
+           ORDER BY ccn.created_at DESC 
+           LIMIT 1), 
+          'N/A'
+        ) as name, 
         COUNT(*) as value
       FROM "clinical_screening_info" csi
       LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
       WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
-      GROUP BY "risk_status"
+      GROUP BY COALESCE(
+        (SELECT ccn.risk_level 
+         FROM "clinical_case_notes" ccn 
+         WHERE ccn."case_id" = csi.id 
+         ORDER BY ccn.created_at DESC 
+         LIMIT 1), 
+        'N/A'
+      )
     `,
 
     db.$queryRaw<StatusResult[]>`
@@ -106,7 +139,7 @@ export async function getClinicalCasesData() {
       value: Number(status.value),
     })),
     casesByRiskStatus: casesByRiskStatusResult.map((status) => ({
-      name: status.name,
+      name: status.name.charAt(0).toUpperCase() + status.name.slice(1),
       value: Number(status.value),
     })),
     casesBySession,
@@ -137,24 +170,7 @@ export type HubClinicalCases = {
   generalPresentingIssuesOtherSpecifiedEndpoint: string | null;
   clinicalLeadId: string;
   isClinicalLeadCase: boolean;
-  caseNotes: Array<{
-    id: string;
-    createdAt: Date;
-    presentingIssues: string;
-    orsAssessment: number;
-    riskLevel: string;
-    necessaryConditions: string;
-    treatmentInterventions: string[];
-    otherIntervention: string;
-    interventionExplanation: string;
-    emotionalResponse: string;
-    behavioralResponse: string;
-    overallFeedback: string;
-    studentResponseExplanations: string;
-    followUpPlan: string;
-    followUpPlanExplanation: string;
-    sessionId: string;
-  }>;
+  caseNotes: CaseNotesResult;
   termination: {
     id: string;
     createdAt: Date;
@@ -236,7 +252,14 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
         csi.id,
         csi.pseudonym,
         csi.flagged,
-        csi.risk_status as "riskStatus",
+        COALESCE(
+          (SELECT ccn.risk_level 
+           FROM "clinical_case_notes" ccn 
+           WHERE ccn."case_id" = csi.id 
+           ORDER BY ccn.created_at DESC 
+           LIMIT 1), 
+          'N/A'
+        ) as "riskStatus",
         csi.case_report as "caseReport",
         csi.case_status as "caseStatus",
         csi.initial_referred_from_specified as "initialContact",
@@ -402,13 +425,18 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       attendanceStatus: session.attendanceStatus,
     }));
 
+    const latestCaseNote = caseInfo.clinicalCaseNotes.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )[0];
+    const riskLevel = latestCaseNote?.riskLevel || "N/A";
+
     return {
       id: caseInfo.id,
       school: caseInfo.student?.school?.schoolName,
       pseudonym: caseInfo.pseudonym || "Anonymous",
       dateAdded: caseInfo.createdAt.toLocaleDateString(),
       caseStatus: caseInfo.caseStatus,
-      risk: caseInfo.riskStatus,
+      risk: riskLevel,
       age,
       referralFrom: caseInfo.referredFrom || caseInfo.initialReferredFromSpecified || "Unknown",
       hubId: clinicalLead?.assignedHubId,
