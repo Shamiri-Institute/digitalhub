@@ -134,10 +134,12 @@ export function MarkAttendance({
   }, [statusWatcher]);
 
   const onSubmit = async (data: z.infer<typeof MarkAttendanceSchema>) => {
-    let response: {
-      success: boolean;
-      message: string;
-    } | undefined;
+    let response:
+      | {
+          success: boolean;
+          message: string;
+        }
+      | undefined;
     if (bulkMode && markBulkAttendanceAction && selectedIds) {
       response = await markBulkAttendanceAction(selectedIds, data);
     } else {
