@@ -52,12 +52,26 @@ export async function getClinicalCasesData() {
 
     db.$queryRaw<StatusResult[]>`
       SELECT 
-        "risk_status" as name, 
+        COALESCE(
+          (SELECT ccn.risk_level 
+           FROM "clinical_case_notes" ccn 
+           WHERE ccn."case_id" = csi.id 
+           ORDER BY ccn.created_at DESC 
+           LIMIT 1), 
+          'N/A'
+        ) as name, 
         COUNT(*) as value
       FROM "clinical_screening_info" csi
       LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
       WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
-      GROUP BY "risk_status"
+      GROUP BY COALESCE(
+        (SELECT ccn.risk_level 
+         FROM "clinical_case_notes" ccn 
+         WHERE ccn."case_id" = csi.id 
+         ORDER BY ccn.created_at DESC 
+         LIMIT 1), 
+        'N/A'
+      )
     `,
 
     db.$queryRaw<StatusResult[]>`
@@ -125,7 +139,7 @@ export async function getClinicalCasesData() {
       value: Number(status.value),
     })),
     casesByRiskStatus: casesByRiskStatusResult.map((status) => ({
-      name: status.name,
+      name: status.name.charAt(0).toUpperCase() + status.name.slice(1),
       value: Number(status.value),
     })),
     casesBySession,
