@@ -14,7 +14,7 @@ export default async function FellowsPage({
 }) {
   const hc = await currentHubCoordinator();
   if (!hc) {
-    return <InvalidPersonnelRole role="hub-coordinator" />;
+    return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
 
   const user = await getCurrentUser();

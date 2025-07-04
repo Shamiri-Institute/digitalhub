@@ -21,10 +21,10 @@ import { toast } from "#/components/ui/use-toast";
 
 export default function HandleSessionAttendanceUpdate({
   row,
-  role = "SUPERVISOR",
+  userRole = "SUPERVISOR",
 }: {
   row: Row<AttendanceRecord>;
-  role: "CLINICAL_LEAD" | "SUPERVISOR";
+  userRole: "CLINICAL_LEAD" | "SUPERVISOR";
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>(
@@ -40,7 +40,7 @@ export default function HandleSessionAttendanceUpdate({
       const response = await updateClinicalSessionAttendance(row.original.sessionId, status);
       if (response.success) {
         toast({ description: response.message });
-        if (role === "CLINICAL_LEAD") {
+        if (userRole === "CLINICAL_LEAD") {
           revalidatePath("/cl/clinical");
         } else {
           revalidatePath("/sc/clinical");
