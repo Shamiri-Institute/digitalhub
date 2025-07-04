@@ -9,7 +9,7 @@ export default async function PayoutHistoryPage() {
   const supervisor = await currentSupervisor();
 
   if (!supervisor) {
-    return <InvalidPersonnelRole role="supervisor" />;
+    return <InvalidPersonnelRole userRole="supervisor" />;
   }
 
   return <FellowPayoutHistoryDataTable payoutHistory={fellowPayoutHistory} />;
