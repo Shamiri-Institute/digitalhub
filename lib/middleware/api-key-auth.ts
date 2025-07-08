@@ -1,6 +1,6 @@
 import { env } from "#/env";
 import { createHash, createHmac } from "crypto";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 interface ApiKeyValidationResult {
   isValid: boolean;

@@ -2,7 +2,7 @@ import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { createAuditLog, validateApiKeyMiddleware } from "#/lib/middleware/api-key-auth";
 import { stringValidation } from "#/lib/utils";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 const SessionAnalysisSchema = z.object({

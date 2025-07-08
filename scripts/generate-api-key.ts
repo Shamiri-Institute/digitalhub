@@ -2,11 +2,11 @@
 
 import { randomBytes } from "crypto";
 
-function generateApiKey(length: number = 32): string {
+function generateApiKey(length = 32): string {
   return randomBytes(length).toString("hex");
 }
 
-function generateHmacSecret(length: number = 32): string {
+function generateHmacSecret(length = 32): string {
   return randomBytes(length).toString("base64");
 }
 
