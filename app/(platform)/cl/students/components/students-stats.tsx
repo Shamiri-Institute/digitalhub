@@ -35,9 +35,12 @@ export default function StudentsStatsBreakdown({
                   position="center"
                   className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {studentsStats.formStats.reduce((acc: number, val: any) => acc + val.value, 0)}
+                  {studentsStats.formStats.reduce(
+                    (acc: number, val: { value: number }) => acc + val.value,
+                    0,
+                  )}
                 </Label>
-                {studentsStats.formStats.map((val: any, index: number) => (
+                {studentsStats.formStats.map((val: { value: number }, index: number) => (
                   <Cell
                     key={index}
                     fill={studentsGroupByColors[index % studentsGroupByColors.length]}
