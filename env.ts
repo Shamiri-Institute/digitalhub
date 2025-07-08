@@ -20,11 +20,7 @@ const schema = z.object({
     .string()
     .optional()
     .transform((val) => (val ? val.split(",").map((ip) => ip.trim()) : [])),
-  SESSION_ANALYSIS_SIGNATURE_SECRET: z
-    .string()
-    .min(32)
-    .optional()
-    .default("shamiri is the best"),
+  SESSION_ANALYSIS_SIGNATURE_SECRET: z.string().min(32).optional().default("shamiri is the best"),
 });
 
 export const env = schema.parse(process.env);

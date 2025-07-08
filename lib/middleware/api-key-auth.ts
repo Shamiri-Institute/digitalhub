@@ -17,9 +17,7 @@ interface RateLimitStore {
 
 const rateLimitStore: RateLimitStore = {};
 
-export async function validateApiKeyMiddleware(
-  request: NextRequest,
-): Promise<NextResponse | null> {
+export async function validateApiKeyMiddleware(request: NextRequest): Promise<NextResponse | null> {
   try {
     const authHeader = request.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -42,10 +40,7 @@ export async function validateApiKeyMiddleware(
     return null;
   } catch (error) {
     console.error("API key validation error:", error);
-    return NextResponse.json(
-      { error: "Authentication service unavailable" },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: "Authentication service unavailable" }, { status: 503 });
   }
 }
 
@@ -143,10 +138,7 @@ async function validateHmacSignature(request: NextRequest): Promise<boolean> {
     }
 
     const body = await request.text();
-    const expectedSignature = createHmac(
-      "sha256",
-      env.SESSION_ANALYSIS_SIGNATURE_SECRET!,
-    )
+    const expectedSignature = createHmac("sha256", env.SESSION_ANALYSIS_SIGNATURE_SECRET!)
       .update(body)
       .digest("hex");
 

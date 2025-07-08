@@ -1,9 +1,6 @@
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
-import {
-  createAuditLog,
-  validateApiKeyMiddleware,
-} from "#/lib/middleware/api-key-auth";
+import { createAuditLog, validateApiKeyMiddleware } from "#/lib/middleware/api-key-auth";
 import { stringValidation } from "#/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -57,14 +54,8 @@ const SessionAnalysisSchema = z.object({
   weaknesses: z.string(),
   flags: z.string().optional(),
   overallSummary: z.string(),
-  analysisDate: z
-    .string()
-    .datetime("Analysis date must be a valid ISO date string")
-    .optional(),
-  transcriptionUrl: z
-    .string()
-    .url("Transcription URL must be a valid URL")
-    .optional(),
+  analysisDate: z.string().datetime("Analysis date must be a valid ISO date string").optional(),
+  transcriptionUrl: z.string().url("Transcription URL must be a valid URL").optional(),
   audioUrl: z.string().url("Audio URL must be a valid URL").optional(),
   analysisVersion: z.string().optional(),
 });
@@ -159,9 +150,7 @@ export async function POST(request: NextRequest) {
         weaknesses: payload.weaknesses,
         flags: payload.flags,
         overallSummary: payload.overallSummary,
-        analysisDate: payload.analysisDate
-          ? new Date(payload.analysisDate)
-          : new Date(),
+        analysisDate: payload.analysisDate ? new Date(payload.analysisDate) : new Date(),
         transcriptionUrl: payload.transcriptionUrl,
         audioUrl: payload.audioUrl,
         analysisVersion: payload.analysisVersion,
@@ -192,16 +181,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (error instanceof SyntaxError) {
-      return NextResponse.json(
-        { error: "Invalid JSON payload" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid JSON payload" }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
