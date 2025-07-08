@@ -512,6 +512,7 @@ model Fellow {
   PayoutStatements        PayoutStatements[]
   studentAttendances      StudentAttendance[]
   fellowDocuments         FellowDocuments[]
+  sessionAnalyses         SessionAnalysis[]
 
   @@map("fellows")
 }
@@ -1644,13 +1645,17 @@ model OpsUser {
 }
 
 model SessionAnalysis {
-  id         String              @id @default(cuid())
-  createdAt  DateTime            @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt  DateTime            @updatedAt @map("updated_at") @db.Timestamptz()
-  archivedAt DateTime?           @map("archived_at") @db.Timestamptz()
-  sessionId  String              @map("session_id") @db.Text
-  session    InterventionSession @relation(fields: [sessionId], references: [id])
+  id         String    @id @default(cuid())
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz()
+  sessionId  String    @map("session_id") @db.Text
+  fellowId   String    @map("fellow_id") @db.Text
 
+  session InterventionSession @relation(fields: [sessionId], references: [id])
+  fellow  Fellow              @relation(fields: [fellowId], references: [id])
+
+  // Fidelity scores (1-7 scale)
   protocolAdherence     Int @map("protocol_adherence")
   contentSpecifications Int @map("content_specifications")
   contentThoroughness   Int @map("content_thoroughness")
@@ -1658,17 +1663,35 @@ model SessionAnalysis {
   contentClarity        Int @map("content_clarity")
   protocolCompliance    Int @map("protocol_compliance")
 
+  // Score justifications
+  protocolAdherenceJustification     String? @map("protocol_adherence_justification") @db.Text
+  contentSpecificationsJustification String? @map("content_specifications_justification") @db.Text
+  contentThoroughnessJustification   String? @map("content_thoroughness_justification") @db.Text
+  contentSkillfulnessJustification   String? @map("content_skillfulness_justification") @db.Text
+  contentClarityJustification        String? @map("content_clarity_justification") @db.Text
+  protocolComplianceJustification    String? @map("protocol_compliance_justification") @db.Text
+
+  // Overall assessment
+  overallScore      String? @map("overall_score") @db.Text
+  overallAssessment String? @map("overall_assessment") @db.Text
+
   // Qualitative feedback
-  strengths      String? @db.Text
-  weaknesses     String? @db.Text
-  flags          String? @db.Text
-  overallSummary String? @map("overall_summary") @db.Text
+  sessionSummary          String? @map("session_summary") @db.Text
+  strengthsJson           Json?   @map("strengths_json") @db.JsonB
+  areasForImprovementJson Json?   @map("areas_for_improvement_json") @db.JsonB
+  sessionFlowEngagement   String? @map("session_flow_engagement") @db.Text
+
+  // Safety flags and recommendations (queryable JSON)
+  safetyFlagsJson     Json? @map("safety_flags_json") @db.JsonB
+  recommendationsJson Json? @map("recommendations_json") @db.JsonB
+
+  // Original input data (storage only)
+  transcriptJson    String? @map("transcript_json") @db.Text
+  audioFeaturesJson Json?   @map("audio_features_json") @db.JsonB
 
   // Metadata
-  analysisDate     DateTime? @map("analysis_date") @db.Timestamptz(6) // When analysis was performed from the python code
-  transcriptionUrl String?   @map("transcription_url") @db.Text // TODO: do we actually need this
-  audioUrl         String?   @map("audio_url") @db.Text
-  analysisVersion  String?   @map("analysis_version") @db.VarChar(50) // Version of analysis system used
+  analysisDate    DateTime? @map("analysis_date") @db.Timestamptz(6) // When analysis was performed
+  analysisVersion String?   @map("analysis_version") @db.VarChar(50) // Version of analysis system used
 
   @@map("session_analyses")
 }
