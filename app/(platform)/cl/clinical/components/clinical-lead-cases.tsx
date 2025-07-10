@@ -1,11 +1,16 @@
 "use client";
 
+import { ClinicalLeadCasesType } from "#/app/(platform)/cl/clinical/actions";
 import { columns } from "#/app/(platform)/sc/clinical/columns";
 import { ClinicalDiagnosingBoard } from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
 import ViewMarkClinicalSessions from "#/app/(platform)/sc/clinical/components/view-mark-clinical-sessions";
 import DataTable from "#/components/data-table";
 
-export default function ClinicalLeadCases({ clinicalLeadCases }: { clinicalLeadCases: any[] }) {
+export default function ClinicalLeadCases({
+  clinicalLeadCases,
+}: {
+  clinicalLeadCases: ClinicalLeadCasesType[];
+}) {
   return (
     <div className="mt-4">
       <h2 className="text-lg font-medium">My Cases ({clinicalLeadCases.length})</h2>

@@ -387,6 +387,10 @@ export async function getSchoolsInClinicalLeadHub() {
   };
 }
 
+export type ClinicalLeadCasesType = Awaited<
+  ReturnType<typeof getClinicalCasesCreatedByClinicalLead>
+>[number];
+
 export async function getClinicalCasesCreatedByClinicalLead() {
   const clinicalLead = await currentClinicalLead();
 
