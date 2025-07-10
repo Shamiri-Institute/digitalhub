@@ -24,8 +24,8 @@ export default function SchoolFilesUploader({
 
   const { toast } = useToast();
 
-  const handleFileUpload = (files: any) => {
-    setSelectedFile(files[0]);
+  const handleFileUpload = (files: File[]) => {
+    setSelectedFile(files[0] || null);
   };
 
   const handleUpload = async () => {
@@ -119,26 +119,28 @@ function FileUploaderWithDrop({
   accept = "*",
 }: {
   label?: string;
-  onChange: (e: any) => void;
-  files: any[];
+  onChange: (files: File[]) => void;
+  files: File[];
   className?: string;
   accept?: string;
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
 
-  const handleUpload = async (e: any) => {
-    const files = Array.from(e.target.files);
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
     if (onChange) onChange(files);
   };
 
-  const handleDrop = async (e: any) => {
+  const handleDrop = async (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     setIsDragOver(false);
 
-    let files: any;
+    let files: File[];
 
     if (e.dataTransfer.items) {
-      files = Array.from(e.dataTransfer.items).map((item: any) => item.getAsFile());
+      files = Array.from(e.dataTransfer.items)
+        .map((item) => item.getAsFile())
+        .filter((file): file is File => file !== null);
     } else {
       files = Array.from(e.dataTransfer.files);
     }
@@ -150,7 +152,7 @@ function FileUploaderWithDrop({
     }
   };
 
-  const handleDragOver = (e: any) => {
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
   };
 
@@ -187,7 +189,7 @@ function FileUploaderWithDrop({
         <div className="mt-3 flex w-full border-t border-gray-500 ">
           {files?.length !== 0 && (
             <div className="text-normal flex items-center space-y-1 pt-2 text-center text-gray-700">
-              {files.map((file: any, index) => (
+              {files.map((file: File, index) => (
                 <div key={file.name} className="flex items-center space-x-2">
                   <Icons.check className="h-4 w-4" />
                   <span key={file.name}>{file.name}</span>
