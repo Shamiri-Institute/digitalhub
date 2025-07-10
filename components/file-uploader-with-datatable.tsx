@@ -21,7 +21,7 @@ import { Separator } from "#/components/ui/separator";
 import { useToast } from "#/components/ui/use-toast";
 import { readFileContent } from "#/utils/file-utils";
 
-const columns: ColumnDef<string, string>[] = [
+const columns: ColumnDef<Record<string, unknown>, unknown>[] = [
   {
     accessorKey: "school_name",
     header: "School name",
@@ -66,22 +66,22 @@ export default function FileUploaderWithDataTable({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(false);
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<Record<string, unknown>[]>([]);
   const [errorMessages, setErrorMessage] = useState<string[]>([]);
 
   const { toast } = useToast();
 
-  const handleFileUpload = (files: any) => {
-    // check if the file is a docx file using mime type
+  const handleFileUpload = (files: File[]) => {
+    // check if the file is a csv file using mime type
     if (
-      files[0].type !== "text/csv"
+      files[0]?.type !== "text/csv"
       //csv
     ) {
       window.alert("Invalid file type. Please upload a csv file");
       return;
     }
 
-    setSelectedFile(files[0]);
+    setSelectedFile(files[0] || null);
   };
 
   const handleUpload = async () => {
@@ -122,10 +122,13 @@ export default function FileUploaderWithDataTable({
       } else {
         setError(true);
         const { formatedData, errorMessages } = data.errors.reduce(
-          (acc: { formatedData: any[]; errorMessages: string[] }, row: any) => {
+          (
+            acc: { formatedData: Record<string, unknown>[]; errorMessages: string[] },
+            row: { rowData: Record<string, unknown>; rowNumber: number; error: string },
+          ) => {
             acc.formatedData.push(row?.rowData);
             acc.errorMessages.push(
-              `Row ${row?.rowNumber}: ${row?.rowData?.schoolName} ${row?.error}`,
+              `Row ${row?.rowNumber}: ${row?.rowData?.schoolName as string} ${row?.error}`,
             );
             return acc;
           },
@@ -215,27 +218,29 @@ export function FileUploaderWithDrop({
   accept = "*",
 }: {
   label?: string;
-  onChange: (e: any) => void;
-  files: any[];
+  onChange: (files: File[]) => void;
+  files: File[];
   className?: string;
   accept?: string;
 }) {
   const [isDragOver, setIsDragOver] = useState(false);
 
-  const handleUpload = async (e: any) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     // change to array of files
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files || []);
     if (onChange) onChange(files);
   };
 
-  const handleDrop = async (e: any) => {
+  const handleDrop = async (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
     setIsDragOver(false);
     // change to array of files
-    let files: any;
+    let files: File[];
 
     if (e.dataTransfer.items) {
-      files = Array.from(e.dataTransfer.items).map((item: any) => item.getAsFile());
+      files = Array.from(e.dataTransfer.items)
+        .map((item) => item.getAsFile())
+        .filter((file): file is File => file !== null);
     } else {
       files = Array.from(e.dataTransfer.files);
     }
@@ -243,7 +248,7 @@ export function FileUploaderWithDrop({
     // check allowed file types and filter out
     if (accept && accept !== "*") {
       const allowedTypes = accept.split(",").map((type) => type.substring(1));
-      files = files.filter((file: any) => allowedTypes.includes(file.name.split(".").pop()));
+      files = files.filter((file: File) => allowedTypes.includes(file.name.split(".").pop() || ""));
     }
 
     if (files?.length) {
@@ -253,7 +258,7 @@ export function FileUploaderWithDrop({
     }
   };
 
-  const handleDragOver = (e: any) => {
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
   };
 
@@ -290,7 +295,7 @@ export function FileUploaderWithDrop({
         <div className="mt-3 flex w-full border-t border-gray-500 ">
           {files?.length !== 0 && (
             <div className="text-normal flex items-center space-y-1 pt-2 text-center text-gray-700">
-              {files.map((file: any, index) => (
+              {files.map((file: File, index) => (
                 <div key={file.name} className="flex items-center space-x-2">
                   <Icons.check className="h-4 w-4" />
                   <span key={file.name}>{file.name}</span>
@@ -313,8 +318,8 @@ export function DataTableDialog({
   errorMessages,
 }: {
   title: string;
-  columns: ColumnDef<string, string>[];
-  data: any[];
+  columns: ColumnDef<Record<string, unknown>, unknown>[];
+  data: Record<string, unknown>[];
   dataTableOpen: boolean;
   setDataTableOpen: (open: boolean) => void;
   errorMessages: string[];
