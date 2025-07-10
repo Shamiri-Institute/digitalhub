@@ -35,10 +35,22 @@ export default function CasesBreakdown({
   casesBySession = [],
   casesBySupervisor = [],
 }: {
-  casesByStatus: any[];
-  casesByRiskStatus: any[];
-  casesBySession: any[];
-  casesBySupervisor: any[];
+  casesByStatus: {
+    name: string;
+    value: number;
+  }[];
+  casesByRiskStatus: {
+    name: string;
+    value: number;
+  }[];
+  casesBySession: {
+    name: string;
+    total: number;
+  }[];
+  casesBySupervisor: {
+    name: string;
+    total: number;
+  }[];
 }) {
   return (
     <div className="grid grid-cols-1 gap-5 py-2 sm:grid-cols-2 xl:grid-cols-4">
