@@ -7,11 +7,11 @@ import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
 
-export default async function FellowsPage({
-  params: { visibleId },
-}: {
-  params: { visibleId: string };
-}) {
+export default async function FellowsPage(props: { params: Promise<{ visibleId: string }> }) {
+  const params = await props.params;
+
+  const { visibleId } = params;
+
   const hc = await currentHubCoordinator();
   if (!hc) {
     return <InvalidPersonnelRole userRole="hub-coordinator" />;

@@ -1,7 +1,7 @@
-"use client";
+import { useActionState } from "react";
+("use client");
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useFormState } from "react-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -65,7 +65,7 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
     });
   }
 
-  const [state, formAction] = useFormState(inviteUserToImplementer, initialState);
+  const [state, formAction] = useActionState(inviteUserToImplementer, initialState);
 
   return (
     <Dialog>
