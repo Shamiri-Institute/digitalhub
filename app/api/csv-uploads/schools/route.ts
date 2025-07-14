@@ -26,7 +26,7 @@ const schoolsCSVHeaders = [
 interface SchoolError {
   schoolName: string;
   rowNumber: number;
-  rowData: Record<string, string>;
+  rowData: Record<string, unknown>;
   error: string;
 }
 
@@ -106,7 +106,10 @@ async function validateRow(row: Record<string, string>, context: ValidationConte
   return true;
 }
 
-async function validateExistingSchools(rows: any[], errorSchools: SchoolError[]) {
+async function validateExistingSchools(
+  rows: Prisma.SchoolGetPayload<{}>[],
+  errorSchools: SchoolError[],
+) {
   const schoolNames = rows.map((row) => row.schoolName);
   const existingSchools = await db.school.findMany({
     where: {
@@ -122,12 +125,15 @@ async function validateExistingSchools(rows: any[], errorSchools: SchoolError[])
   if (existingSchools.length > 0) {
     existingSchools.forEach((school) => {
       const rowIndex = rows.findIndex((r) => r.schoolName === school.schoolName);
-      errorSchools.push({
-        schoolName: school.schoolName,
-        error: "School already exists in the system",
-        rowNumber: rowIndex + 2,
-        rowData: rows[rowIndex],
-      });
+      const rowData = rows[rowIndex];
+      if (rowData) {
+        errorSchools.push({
+          schoolName: school.schoolName,
+          error: "School already exists in the system",
+          rowNumber: rowIndex + 2,
+          rowData: rowData,
+        });
+      }
     });
     return false;
   }
