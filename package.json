@@ -144,6 +144,7 @@
   },
   "overrides": {
     "@types/react": "19.1.8",
-    "@types/react-dom": "19.1.6"
+    "@types/react-dom": "19.1.6",
+    "react-is": "^19.0.0-rc-69d4b800-20241021"
   }
 }
