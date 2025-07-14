@@ -13,7 +13,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
-      captionLayout="dropdown-buttons"
+      captionLayout="dropdown"
       fromYear={1980}
       toYear={new Date().getFullYear()}
       reverseMonths={true}
@@ -63,8 +63,12 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ...props }) => <ChevronLeftIcon className="h-3 w-3" />,
-        IconRight: ({ ...props }) => <ChevronRightIcon className="h-3 w-3" />,
+        Chevron: (props) => {
+          if (props.orientation === "left") {
+            return <ChevronLeftIcon className="h-3 w-3" />;
+          }
+          return <ChevronRightIcon className="h-3 w-3" />;
+        },
       }}
       {...props}
     />
