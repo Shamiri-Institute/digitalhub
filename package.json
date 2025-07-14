@@ -86,7 +86,7 @@
     "csv-parse": "^5.5.3",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",
-    "eslint": "8.48.0",
+    "eslint": "8.57.0",
     "fast-csv": "^5.0.0",
     "framer-motion": "^12.23.5",
     "google-auth-library": "^9.4.2",
