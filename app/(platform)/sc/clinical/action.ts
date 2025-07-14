@@ -170,6 +170,10 @@ export async function updateClinicalSessionAttendance(
       },
     });
 
+    // Revalidate both clinical pages to ensure data consistency
+    revalidatePath("/cl/clinical");
+    revalidatePath("/sc/clinical");
+
     return {
       success: true,
       message: "Attendance updated successfully",
