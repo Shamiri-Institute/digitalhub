@@ -82,7 +82,7 @@
     "aws-crt": "^1.19.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
-    "cmdk": "^0.2.0",
+    "cmdk": "^1.1.1",
     "csv-parse": "^5.5.3",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",
