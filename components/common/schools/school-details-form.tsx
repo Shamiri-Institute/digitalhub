@@ -219,25 +219,25 @@ export default function SchoolDetailsForm() {
                     )}
                   />
                   <FormField
-                      control={form.control}
-                      name="numbersExpected"
-                      render={({ field }) => (
-                        <FormItem className="col-span-2">
-                          <FormLabel>
-                            Expected no. of students <span className="text-shamiri-light-red">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              min="1"
-                              onChange={(e) => field.onChange(Number(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    control={form.control}
+                    name="numbersExpected"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>
+                          Expected no. of students <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="number"
+                            min="1"
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="schoolEmail"
