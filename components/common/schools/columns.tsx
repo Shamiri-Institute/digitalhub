@@ -109,8 +109,8 @@ export const columns = ({ role }: { role: ImplementerRole }): ColumnDef<SchoolsT
     {
       // TODO: this computation should be done during the fetch and possible user an accessor Function
       accessorKey: "numbersExpected",
-      header: "No. of students",
-      id: "No. of students",
+      header: "Expected number of students",
+      id: "Expected number of students",
     },
     {
       accessorFn: (row) => row.assignedSupervisor?.supervisorName,

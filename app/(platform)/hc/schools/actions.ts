@@ -415,7 +415,8 @@ export async function editSchoolInformation(
         id: schoolId,
       },
       data: {
-        schoolName: parsedData.schoolName!,
+        schoolName: parsedData.schoolName ?? null,
+        numbersExpected: parsedData.numbersExpected ?? null,
         schoolType: parsedData.schoolType ?? null,
         schoolEmail: parsedData.schoolEmail ?? null,
         schoolCounty: parsedData.schoolCounty ?? null,
