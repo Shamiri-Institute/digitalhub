@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.6.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.5.4...v1.6.0) (2025-07-14)
+
+
+### Features
+
+* allow hcs to edit expected student number ([#506](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/506)) ([84c7404](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/84c74040cca0e2a4a79054de39c4872cfec96bef))
+
+
+### Bug Fixes
+
+* correct email address in error component and update clinical case treatment plan disabled state ([#502](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/502)) ([ae18455](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/ae184559dc55d5940ddd8754a928431e034bfb9f))
+* invalid aria role violations in component props ([#503](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/503)) ([70a6cec](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/70a6cec0b3944701364bbccad1e9fcce5029a8a5))
+
 ## [1.5.4](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.5.3...v1.5.4) (2025-07-03)
 
 
