@@ -207,7 +207,7 @@ export default function SchoolDetailsForm() {
                     control={form.control}
                     name="schoolName"
                     render={({ field }) => (
-                      <FormItem className={isEditing ? "col-span-6" : "col-span-4"}>
+                      <FormItem className="col-span-4">
                         <FormLabel>
                           School name <span className="text-shamiri-light-red">*</span>
                         </FormLabel>
@@ -218,28 +218,26 @@ export default function SchoolDetailsForm() {
                       </FormItem>
                     )}
                   />
-                  {!isEditing && (
-                    <FormField
-                      control={form.control}
-                      name="numbersExpected"
-                      render={({ field }) => (
-                        <FormItem className="col-span-2">
-                          <FormLabel>
-                            No. of students <span className="text-shamiri-light-red">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              min="1"
-                              onChange={(e) => field.onChange(Number(e.target.value))}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
+                  <FormField
+                    control={form.control}
+                    name="numbersExpected"
+                    render={({ field }) => (
+                      <FormItem className="col-span-2">
+                        <FormLabel>
+                          Expected no. of students <span className="text-shamiri-light-red">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            type="number"
+                            min="1"
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="schoolEmail"
