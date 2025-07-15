@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.7.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.6.0...v1.7.0) (2025-07-15)
+
+
+### Features
+
+* allow hub coordinators to edit student admission numbers ([#508](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/508)) ([1c48804](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/1c4880486b66f9c628530370f74a72fe893112c5))
+
 ## [1.6.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.5.4...v1.6.0) (2025-07-14)
 
 
