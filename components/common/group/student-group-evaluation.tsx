@@ -5,7 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { addDays, differenceInSeconds, format } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
@@ -140,14 +140,12 @@ export default function StudentGroupEvaluation({
     | undefined
   >(_evaluation);
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | undefined>(
+    _evaluation?.sessionId ?? undefined,
+  );
   const pathname = usePathname();
 
-  const form = useForm<z.infer<typeof StudentGroupEvaluationSchema>>({
-    resolver: zodResolver(StudentGroupEvaluationSchema),
-    defaultValues: getDefaultValues(),
-  });
-
-  function getDefaultValues() {
+  const getDefaultValues = useCallback(() => {
     return {
       mode,
       groupId,
@@ -161,12 +159,21 @@ export default function StudentGroupEvaluation({
       cooperation3: existingEvaluation?.cooperation3 ?? 0,
       contentComment: existingEvaluation?.contentComment ?? "",
       content: existingEvaluation?.content ?? 0,
-      sessionId: existingEvaluation?.sessionId ?? undefined,
+      sessionId: selectedSessionId ?? existingEvaluation?.sessionId ?? undefined,
     };
-  }
+  }, [mode, groupId, existingEvaluation, selectedSessionId]);
+
+  const form = useForm<z.infer<typeof StudentGroupEvaluationSchema>>({
+    resolver: zodResolver(StudentGroupEvaluationSchema),
+    defaultValues: getDefaultValues(),
+  });
 
   useEffect(() => {
     if (open) {
+      const match = evaluations.find((evaluation) => {
+        return evaluation.sessionId === selectedSessionId;
+      });
+      setExistingEvaluation(match);
       form.reset(getDefaultValues());
     }
 
@@ -175,11 +182,7 @@ export default function StudentGroupEvaluation({
         differenceInSeconds(addDays(existingEvaluation.createdAt, 14), new Date()),
       );
     }
-  }, [existingEvaluation, open]);
-
-  useEffect(() => {
-    setExistingEvaluation(_evaluation);
-  }, [_evaluation, open]);
+  }, [selectedSessionId, open, existingEvaluation, form, evaluations, getDefaultValues]);
 
   const onSubmit = async (data: z.infer<typeof StudentGroupEvaluationSchema>) => {
     const response = await submitGroupEvaluation(data);
@@ -244,10 +247,7 @@ export default function StudentGroupEvaluation({
                       defaultValue={field.value}
                       onValueChange={(value) => {
                         field.onChange(value);
-                        const match = evaluations.find((evaluation) => {
-                          return evaluation.sessionId === value;
-                        });
-                        setExistingEvaluation(match);
+                        setSelectedSessionId(value);
                       }}
                     >
                       <FormControl>
