@@ -84,6 +84,7 @@ export default function GroupsDataTable({
             schoolId={school.id}
             open={studentsDialog}
             onOpenChange={setStudentsDialog}
+            role={role}
           >
             <DialogAlertWidget>
               <div className="flex items-center gap-2">

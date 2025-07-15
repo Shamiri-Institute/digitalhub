@@ -113,6 +113,7 @@ export default function StudentsDatatable({
             assignedGroupId={student.assignedGroupId ?? undefined}
             groupName={student.assignedGroup?.groupName ?? undefined}
             mode="edit"
+            role={role}
           >
             {renderDialogAlert()}
           </StudentDetailsForm>
