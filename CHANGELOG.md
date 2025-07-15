@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.7.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.7.0...v1.7.1) (2025-07-15)
+
+
+### Bug Fixes
+
+* issue submitting group evaluations ([#509](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/509)) ([7f561d0](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/7f561d0c38fab692ac2a2e712cf246e551e019c1))
+
 ## [1.7.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.6.0...v1.7.0) (2025-07-15)
 
 
