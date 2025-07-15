@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { ImplementerRole, Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import React, { type Dispatch, type SetStateAction } from "react";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
@@ -17,6 +17,7 @@ export default function StudentsInGroup({
   schoolId,
   groupId,
   groupName,
+  role,
 }: {
   children: React.ReactNode;
   open: boolean;
@@ -33,6 +34,7 @@ export default function StudentsInGroup({
   schoolId: string;
   groupId: string;
   groupName: string | null;
+  role: ImplementerRole;
 }) {
   const [addStudentDialog, setAddStudentDialog] = React.useState(false);
   return (
@@ -83,6 +85,7 @@ export default function StudentsInGroup({
         schoolId={schoolId}
         assignedGroupId={groupId}
         groupName={groupName ?? undefined}
+        role={role}
       >
         {children}
       </StudentDetailsForm>

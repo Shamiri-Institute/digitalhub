@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
+import { ImplementerRole, type Prisma } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -49,6 +49,7 @@ export default function StudentDetailsForm({
   schoolId,
   assignedGroupId,
   groupName,
+  role,
 }: {
   open: boolean;
   onOpenChange: Dispatch<SetStateAction<boolean>>;
@@ -58,6 +59,7 @@ export default function StudentDetailsForm({
   schoolId: string | null;
   assignedGroupId?: string;
   groupName?: string;
+  role: ImplementerRole;
 }) {
   const pathname = usePathname();
   const [transferDialog, setTransferDialog] = useState(false);
@@ -275,7 +277,7 @@ export default function StudentDetailsForm({
                     <FormField
                       control={form.control}
                       name="admissionNumber"
-                      disabled={mode === "edit"}
+                      disabled={mode === "edit" && role !== ImplementerRole.HUB_COORDINATOR}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
