@@ -252,6 +252,7 @@ export default function FellowSchoolsDatatable({
             schoolId={fellowGroup.schoolId}
             open={studentsDialog}
             onOpenChange={setStudentsDialog}
+            role={role}
           >
             {renderFellowGroupDialogAlert(fellowGroup)}
           </StudentsInGroup>

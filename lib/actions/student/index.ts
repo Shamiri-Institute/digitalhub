@@ -19,15 +19,6 @@ async function checkAuth() {
     throw new Error("The session has not been authenticated");
   }
   return user;
-  // const hubCoordinator = await currentHubCoordinator();
-  // const supervisor = await currentSupervisor();
-  // const fellow = await currentFellow();
-  //
-  // if (!hubCoordinator && !supervisor && !fellow) {
-  //   throw new Error("The session has not been authenticated");
-  // }
-  //
-  // return { hubCoordinator, supervisor, fellow, user };
 }
 
 export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSchema>) {
@@ -61,6 +52,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
           form: Number(form),
           stream,
           phoneNumber,
+          admissionNumber,
         },
       });
       return {

@@ -144,6 +144,7 @@ export default function FellowsDatatable({
                 schoolId={schoolId}
                 open={studentsDialog}
                 onOpenChange={setStudentsDialog}
+                role={role}
               >
                 <DialogAlertWidget>
                   <div className="flex items-center gap-2">
