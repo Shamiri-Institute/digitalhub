@@ -148,7 +148,7 @@ export function AddMemberDialog({ children }: { children: React.ReactNode }) {
                 Submit
               </Button>
             </div>
-            <p aria-live="polite" className="sr-only" role="status">
+            <p aria-live="polite" className="sr-only">
               {state?.message}
             </p>
           </form>
