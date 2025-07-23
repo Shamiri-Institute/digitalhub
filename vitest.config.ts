@@ -8,7 +8,7 @@ export default defineConfig({
       "#": path.resolve(__dirname, "./"),
     },
   },
-  plugins: [react()],
+  plugins: [react() as any],
   test: {
     environment: "jsdom",
     include: ["./**/*.test.tsx"],

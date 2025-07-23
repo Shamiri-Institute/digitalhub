@@ -4,11 +4,11 @@ import type { SchoolGroupDataTableData } from "#/components/common/group/columns
 import GroupsDataTable from "#/components/common/group/groups-datatable";
 import { db } from "#/lib/db";
 
-export default async function GroupsPage({
-  params: { visibleId },
-}: {
-  params: { visibleId: string };
-}) {
+export default async function GroupsPage(props: { params: Promise<{ visibleId: string }> }) {
+  const params = await props.params;
+
+  const { visibleId } = params;
+
   const supervisor = await currentSupervisor();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
