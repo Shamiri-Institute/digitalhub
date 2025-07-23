@@ -29,7 +29,7 @@ import { SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING } from "#/lib/app-constants/cons
 export default function FellowsCharts({
   attendanceData,
   dropoutData,
-  fellowsDataCompletenessPercentage,
+  fellowsDataCompletenessPercentage = [],
   fellowsSessionRatings,
 }: {
   attendanceData: (Prisma.PickEnumerable<
@@ -98,7 +98,7 @@ export default function FellowsCharts({
         ) : null}
       </ChartCard>
       <ChartCard title="Fellows information completion" showCardFooter={false}>
-        {fellowsDataCompletenessPercentage.length ? (
+        {fellowsDataCompletenessPercentage?.length ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart width={250} height={250}>
               <Pie
@@ -115,9 +115,9 @@ export default function FellowsCharts({
                   className="text text-2xl font-semibold leading-8"
                   fill="#fffff"
                 >
-                  {`${fellowsDataCompletenessPercentage.find((d) => (d.name = "actual"))?.value}%`}
+                  {`${fellowsDataCompletenessPercentage.find((d) => d.name === "actual")?.value}%`}
                 </Label>
-                {fellowsDataCompletenessPercentage.map(({ name }) => (
+                {fellowsDataCompletenessPercentage?.map(({ name }) => (
                   <Cell
                     key={name}
                     // @ts-ignore
