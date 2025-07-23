@@ -65,7 +65,13 @@ export const columns: ColumnDef<ClinicalCases>[] = [
   {
     accessorKey: "dateAdded",
     header: "Date added",
-    cell: ({ row }) => format(new Date(row.original.dateAdded || ""), "dd MMM yyyy"),
+    cell: ({ row }) => {
+      const date = row.original.dateAdded;
+      if (!date) return "N/A";
+      const parsed = new Date(date);
+      if (isNaN(parsed.getTime())) return "N/A";
+      return format(parsed, "dd MMM yyyy");
+    },
   },
   {
     accessorKey: "caseStatus",

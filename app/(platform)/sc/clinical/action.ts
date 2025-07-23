@@ -160,6 +160,18 @@ export async function updateClinicalSessionAttendance(
   sessionId: string,
   attendanceStatus: boolean | null,
 ) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    throw new Error("User not found");
+  }
+
+  if (
+    currentUser.membership.role !== "CLINICAL_LEAD" &&
+    currentUser.membership.role !== "SUPERVISOR"
+  ) {
+    throw new Error("You are not authorized to update clinical session attendance");
+  }
+
   try {
     await db.clinicalSessionAttendance.update({
       where: {
@@ -169,6 +181,12 @@ export async function updateClinicalSessionAttendance(
         attendanceStatus: attendanceStatus,
       },
     });
+
+    if (currentUser.membership.role === "CLINICAL_LEAD") {
+      revalidatePath("/cl/clinical");
+    } else {
+      revalidatePath("/sc/clinical");
+    }
 
     return {
       success: true,

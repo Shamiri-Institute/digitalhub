@@ -3,11 +3,11 @@ import SupervisorsDataTable from "#/app/(platform)/hc/schools/[visibleId]/superv
 import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 
-export default async function SupervisorsPage({
-  params: { visibleId },
-}: {
-  params: { visibleId: string };
-}) {
+export default async function SupervisorsPage(props: { params: Promise<{ visibleId: string }> }) {
+  const params = await props.params;
+
+  const { visibleId } = params;
+
   const coordinator = await currentHubCoordinator();
   const supervisors = await db.supervisor.findMany({
     where: {

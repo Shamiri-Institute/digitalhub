@@ -3,11 +3,13 @@ import { currentSupervisor } from "#/app/auth";
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
 import { db } from "#/lib/db";
 
-export default async function SchoolSessionsPage({
-  params: { visibleId },
-}: {
-  params: { visibleId: string };
+export default async function SchoolSessionsPage(props: {
+  params: Promise<{ visibleId: string }>;
 }) {
+  const params = await props.params;
+
+  const { visibleId } = params;
+
   const supervisor = await currentSupervisor();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });

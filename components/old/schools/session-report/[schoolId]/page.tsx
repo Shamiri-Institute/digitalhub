@@ -18,13 +18,12 @@ const sessionTypeToDisplayName: {
   s4: "Session 04",
 };
 
-export default async function ReportDetails({
-  searchParams,
-  params,
-}: {
-  searchParams: { type: string };
-  params: { schoolId: string };
+export default async function ReportDetails(props: {
+  searchParams: Promise<{ type: string }>;
+  params: Promise<{ schoolId: string }>;
 }) {
+  const params = await props.params;
+  const searchParams = await props.searchParams;
   const { type: sessionType } = searchParams;
   const { schoolId } = params;
 

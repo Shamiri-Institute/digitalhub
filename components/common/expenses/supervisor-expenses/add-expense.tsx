@@ -366,7 +366,7 @@ export function ReceiptFileUpload({
   form,
   className,
 }: {
-  form: UseFormReturn<z.infer<typeof AddAddSupervisorExpenseSchema>, any, undefined>;
+  form: UseFormReturn<z.infer<typeof AddAddSupervisorExpenseSchema>>;
   className: string;
 }) {
   const { FileInput, openFileDialog, uploadToS3 } = useS3Upload();
