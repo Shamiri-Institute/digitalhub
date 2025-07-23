@@ -15,13 +15,16 @@ import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import SchoolsNav from "../../../../../components/common/schools/schools-nav";
 
-export default async function SchoolViewLayout({
-  children,
-  params: { visibleId },
-}: {
+export default async function SchoolViewLayout(props: {
   children: React.ReactNode;
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const params = await props.params;
+
+  const { visibleId } = params;
+
+  const { children } = props;
+
   const school = await db.school.findFirst({
     where: {
       visibleId,

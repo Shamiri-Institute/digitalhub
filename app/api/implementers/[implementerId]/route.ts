@@ -6,14 +6,13 @@ export const dynamic = "force-dynamic";
 
 export async function GET(
   request: NextRequest,
-  {
-    params,
-  }: {
-    params: {
+  props: {
+    params: Promise<{
       implementerId: string;
-    };
+    }>;
   },
 ) {
+  const params = await props.params;
   try {
     const implementer = await db.implementer.findUniqueOrThrow({
       where: { id: params.implementerId },
