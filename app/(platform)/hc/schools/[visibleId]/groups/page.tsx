@@ -6,11 +6,11 @@ import GroupsDataTable from "#/components/common/group/groups-datatable";
 import GroupsTableSkeleton from "#/components/common/group/groups-datatable-skeleton";
 import { db } from "#/lib/db";
 
-export default async function GroupsPage({
-  params: { visibleId },
-}: {
-  params: { visibleId: string };
-}) {
+export default async function GroupsPage(props: { params: Promise<{ visibleId: string }> }) {
+  const params = await props.params;
+
+  const { visibleId } = params;
+
   const hc = await currentHubCoordinator();
   if (!hc) {
     await signOut({ callbackUrl: "/login" });

@@ -6,7 +6,7 @@ import { Icons } from "#/components/icons";
 import { MobileNavigation } from "#/components/mobile-navigation";
 import { cn } from "#/lib/utils";
 
-export const Header = forwardRef<React.ElementRef<"div">, { className?: string }>(function Header(
+export const Header = forwardRef<HTMLDivElement, { className?: string }>(function Header(
   { className },
   ref,
 ) {
