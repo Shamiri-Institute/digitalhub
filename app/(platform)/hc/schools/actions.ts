@@ -110,7 +110,11 @@ export async function fetchSessionAttendanceData(hubId: string) {
 
 export async function fetchSchoolDataCompletenessData(hubId: string, schoolId?: string) {
   // TODO: uncomment the school_sub_county query and adjust division from 6.0 -> 7.0
-  const [schoolAttendanceData] = await db.$queryRaw<{ percentage: number }[]>`
+  const [schoolAttendanceData] = await db.$queryRaw<
+    {
+      percentage: number | string | bigint | null;
+    }[]
+  >`
     SELECT
       ${
         schoolId
@@ -142,11 +146,11 @@ export async function fetchSchoolDataCompletenessData(hubId: string, schoolId?: 
     return [];
   }
 
-  const percentage = +Math.round(schoolAttendanceData.percentage);
+  const percentage = Math.round(Number(schoolAttendanceData.percentage));
 
   return [
-    { name: "actual", value: Math.round(percentage) },
-    { name: "difference", value: 100 - Math.round(percentage) },
+    { name: "actual", value: percentage },
+    { name: "difference", value: 100 - percentage },
   ];
 }
 
@@ -156,7 +160,12 @@ export type DropoutReasonsGraphData = {
 };
 
 export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
-  const dropoutData = await db.$queryRaw<DropoutReasonsGraphData[]>`
+  const dropoutData = await db.$queryRaw<
+    {
+      name: string;
+      value: number | string | bigint | null;
+    }[]
+  >`
     SELECT
       COUNT(*) AS value,
       dropout_reason AS name
@@ -170,11 +179,12 @@ export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
       dropout_reason
   `;
 
-  dropoutData.forEach((data) => {
-    data.value = Number(data.value);
-  });
+  const mapped: Array<{ name: string; value: number }> = dropoutData.map((data) => ({
+    name: data.name,
+    value: Number(data.value),
+  }));
 
-  return dropoutData;
+  return mapped;
 }
 
 export async function dropoutSchool(schoolId: string, dropoutReason: string) {
@@ -302,7 +312,14 @@ export type SessionRatingAverages = {
 };
 
 export async function fetchSessionRatingAverages(hubId: string, schoolId?: string) {
-  const ratingAverages = await db.$queryRaw<SessionRatingAverages[]>`
+  const ratingAverages = await db.$queryRaw<
+    {
+      session_type: "s0" | "s1" | "s2" | "s3" | "s4";
+      student_behavior: number | string | bigint | null;
+      admin_support: number | string | bigint | null;
+      workload: number | string | bigint | null;
+    }[]
+  >`
     ${
       schoolId
         ? Prisma.sql`
@@ -345,14 +362,20 @@ export async function fetchSessionRatingAverages(hubId: string, schoolId?: strin
     return [];
   }
 
-  // @ts-ignore
-  ratingAverages.forEach((item) => {
-    item.student_behaviour = Math.round(item.student_behaviour) || 0;
-    item.admin_support = Math.round(item.admin_support) || 0;
-    item.workload = Math.round(item.workload) || 0;
-  });
+  // Map and convert all possible numeric fields to number, and only return camelCase keys
+  const mapped: Array<{
+    sessionType: "s0" | "s1" | "s2" | "s3" | "s4";
+    studentBehaviour: number;
+    adminSupport: number;
+    workload: number;
+  }> = ratingAverages.map((item) => ({
+    sessionType: item.session_type,
+    studentBehaviour: Math.round(Number(item.student_behavior)) || 0,
+    adminSupport: Math.round(Number(item.admin_support)) || 0,
+    workload: Math.round(Number(item.workload)) || 0,
+  }));
 
-  return ratingAverages;
+  return mapped;
 }
 
 export type SchoolAttendances = {
@@ -362,7 +385,11 @@ export type SchoolAttendances = {
 };
 
 export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
-  const [schoolCount] = await db.$queryRaw<{ count: number }[]>`
+  const [schoolCount] = await db.$queryRaw<
+    {
+      count: number | string | bigint | null;
+    }[]
+  >`
     SELECT
       COUNT(*) AS "count"
     FROM
@@ -374,7 +401,12 @@ export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
 
   const numSchools = Number(schoolCount?.count) ?? 0;
 
-  const schoolAttendances = await db.$queryRaw<{ count: number; session_type: string }[]>`
+  const schoolAttendances = await db.$queryRaw<
+    {
+      count: number | string | bigint | null;
+      session_type: string;
+    }[]
+  >`
     SELECT
       session_type,
       count(distinct sa.school_id) AS "count"
@@ -390,7 +422,11 @@ export async function fetchSchoolAttendances(hubId: string, schoolId?: string) {
     ORDER BY
       session_type ASC`;
 
-  return schoolAttendances.map<SchoolAttendances>(({ session_type, count }) => ({
+  return schoolAttendances.map<{
+    session_type: string;
+    count_attendance_marked: number;
+    count_attendance_unmarked: number;
+  }>(({ session_type, count }) => ({
     session_type,
     count_attendance_marked: Number(count),
     count_attendance_unmarked: numSchools - Number(count),
