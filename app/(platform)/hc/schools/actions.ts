@@ -306,9 +306,9 @@ export async function submitWeeklyHubReport(data: z.infer<typeof WeeklyHubReport
 
 export type SessionRatingAverages = {
   session_type: "s0" | "s1" | "s2" | "s3" | "s4";
-  student_behaviour: number;
-  admin_support: number;
-  workload: number;
+  student_behavior: number | string | bigint | null;
+  admin_support: number | string | bigint | null;
+  workload: number | string | bigint | null;
 };
 
 export async function fetchSessionRatingAverages(hubId: string, schoolId?: string) {
@@ -362,16 +362,10 @@ export async function fetchSessionRatingAverages(hubId: string, schoolId?: strin
     return [];
   }
 
-  // Map and convert all possible numeric fields to number, and only return camelCase keys
-  const mapped: Array<{
-    sessionType: "s0" | "s1" | "s2" | "s3" | "s4";
-    studentBehaviour: number;
-    adminSupport: number;
-    workload: number;
-  }> = ratingAverages.map((item) => ({
-    sessionType: item.session_type,
-    studentBehaviour: Math.round(Number(item.student_behavior)) || 0,
-    adminSupport: Math.round(Number(item.admin_support)) || 0,
+  const mapped: SessionRatingAverages[] = ratingAverages.map((item) => ({
+    session_type: item.session_type,
+    student_behavior: Math.round(Number(item.student_behavior)) || 0,
+    admin_support: Math.round(Number(item.admin_support)) || 0,
     workload: Math.round(Number(item.workload)) || 0,
   }));
 
