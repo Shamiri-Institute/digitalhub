@@ -46,8 +46,11 @@ export default function ChartArea({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart width={307} height={307} data={schoolAttendances}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="session_type" label="Session type" />
-              <YAxis label="Number of students" />
+              <XAxis
+                dataKey="session_type"
+                label="Session type"
+                tickFormatter={(value) => value.replace("s", "")}
+              />
               <Tooltip />
               <Bar
                 dataKey="count_attendance_marked"
