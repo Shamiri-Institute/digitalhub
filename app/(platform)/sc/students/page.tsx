@@ -91,7 +91,7 @@ export default async function SupervisorStudentsPage({
       },
     }),
     db.clinicalScreeningInfo.groupBy({
-      by: ["initialReferredFrom"],
+      by: ["initialReferredFromSpecified"],
       where: {
         OR: [
           {
