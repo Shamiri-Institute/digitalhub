@@ -22,17 +22,17 @@ export default function StudentGroupEvaluationTableSkeleton() {
   });
 
   const emptyData: StudentGroupEvaluationType[] = Array.from(Array(10).keys()).map(() => ({
-      id: "",
-      fellowName: "",
-      hub: "",
-      supervisorName: "",
-      specialSession: 0,
-      preVsMain: "",
-      trainingSupervision: "",
-      groupName: "",
-      avgCooperation: 0,
-      avgEngagement: 0,
-      session: [],
+    id: "",
+    fellowName: "",
+    hub: "",
+    supervisorName: "",
+    specialSession: 0,
+    preVsMain: "",
+    trainingSupervision: "",
+    groupName: "",
+    avgCooperation: 0,
+    avgEngagement: 0,
+    session: [],
   }));
 
   return (

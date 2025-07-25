@@ -22,14 +22,14 @@ export default function WeeklyFellowEvaluationTableSkeleton() {
   });
 
   const emptyData: WeeklyFellowEvaluation[] = Array.from(Array(10).keys()).map(() => ({
-      id: "",
-      fellowName: "",
-      hub: "",
-      supervisorName: "",
-      avgBehaviour: 0,
-      avgProgramDelivery: 0,
-      avgDressingGrooming: 0,
-      week: [],
+    id: "",
+    fellowName: "",
+    hub: "",
+    supervisorName: "",
+    avgBehaviour: 0,
+    avgProgramDelivery: 0,
+    avgDressingGrooming: 0,
+    week: [],
   }));
 
   return (
