@@ -8,11 +8,10 @@ import { Icons } from "#/components/icons";
 import { Badge } from "#/components/ui/badge";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { ClinicalCaseNotes } from "@prisma/client";
 
 export const columns: ColumnDef<HubClinicalCases>[] = [
   {
-    id: "button",
+    id: "checkbox",
     cell: ({ row }) => {
       return (
         <button

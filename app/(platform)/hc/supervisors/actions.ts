@@ -558,14 +558,14 @@ export async function fetchSupervisorDropoutReasons(hudId: string) {
   `;
 
   dropoutData.forEach((data) => {
-    data.value = Math.round(data.value);
+    data.value = Math.round(Number(data.value));
   });
 
   return dropoutData;
 }
 
 export async function fetchSupervisorDataCompletenessData(hubId: string) {
-  const [supervisorData] = await db.$queryRaw<{ percentage: number }[]>`
+  const [supervisorData] = await db.$queryRaw<{ percentage: number | string | bigint | null }[]>`
     SELECT
       AVG((
         (CASE WHEN supervisor_name IS NOT NULL THEN 1 ELSE 0 END)
@@ -583,7 +583,7 @@ export async function fetchSupervisorDataCompletenessData(hubId: string) {
     return [];
   }
 
-  const percentage = Math.round(supervisorData.percentage);
+  const percentage = Math.round(Number(supervisorData.percentage));
 
   return [
     { name: "actual", value: percentage },
@@ -599,7 +599,14 @@ export type SessionRatingAverages = {
 };
 
 export async function fetchSupervisorSessionRatingAverages(hubId: string) {
-  const ratingAverages = await db.$queryRaw<SessionRatingAverages[]>`
+  const ratingAverages = await db.$queryRaw<
+    {
+      session_type: "s0" | "s1" | "s2" | "s3" | "s4";
+      student_behavior: number | string | bigint | null;
+      admin_support: number | string | bigint | null;
+      workload: number | string | bigint | null;
+    }[]
+  >`
     SELECT
       ses.session_type AS session_type,
       AVG(isr.student_behavior_rating) AS student_behavior,
@@ -620,14 +627,14 @@ export async function fetchSupervisorSessionRatingAverages(hubId: string) {
     return [];
   }
 
-  // @ts-ignore
-  ratingAverages.forEach((item) => {
-    item.student_behaviour = Math.round(item.student_behaviour) || 0;
-    item.admin_support = Math.round(item.admin_support) || 0;
-    item.workload = Math.round(item.workload) || 0;
-  });
+  const mapped: SessionRatingAverages[] = ratingAverages.map((item) => ({
+    session_type: item.session_type,
+    student_behaviour: Math.round(Number(item.student_behavior)) || 0,
+    admin_support: Math.round(Number(item.admin_support)) || 0,
+    workload: Math.round(Number(item.workload)) || 0,
+  }));
 
-  return ratingAverages;
+  return mapped;
 }
 export type SupervisorAttendanceData = {
   supervisor_name: string;
@@ -635,7 +642,12 @@ export type SupervisorAttendanceData = {
 };
 
 export async function fetchSupervisorAttendanceData(hubId: string) {
-  const supervisorAttendanceData = await db.$queryRaw<SupervisorAttendanceData[]>`
+  const supervisorAttendanceData = await db.$queryRaw<
+    {
+      supervisor_name: string;
+      attended: number | string | bigint | null;
+    }[]
+  >`
     SELECT
       sup.supervisor_name AS supervisor_name,
       COUNT(sa.attended)::integer AS attended
@@ -645,5 +657,13 @@ export async function fetchSupervisorAttendanceData(hubId: string) {
     GROUP BY sup.supervisor_name
   `;
 
-  return supervisorAttendanceData;
+  const mapped: Array<{
+    supervisor_name: string;
+    attended: number;
+  }> = supervisorAttendanceData.map((data) => ({
+    supervisor_name: data.supervisor_name,
+    attended: Number(data.attended),
+  }));
+
+  return mapped;
 }

@@ -6,7 +6,7 @@ export default function HubStudentLoadingPage() {
   function renderChartWidgets(num: number) {
     const out: ReactNode[] = [];
     for (let i = 0; i < num; i++) {
-      out.push(<ChartSkeleton />);
+      out.push(<ChartSkeleton key={i} />);
     }
 
     return out;
