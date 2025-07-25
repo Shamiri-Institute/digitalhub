@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { currentSupervisor } from "#/app/auth";
-import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
+// import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
 import HubStudentDemographicsCharts from "#/components/charts/student-demographics-charts";
-import HubStudentsDetailsCharts from "#/components/charts/students-charts";
+// import HubStudentsDetailsCharts from "#/components/charts/students-charts";
 import StudentsStats from "#/components/students-stats";
 import PageFooter from "#/components/ui/page-footer";
 import { db } from "#/lib/db";
@@ -186,18 +186,18 @@ export default async function SupervisorStudentsPage({
         hubClinicalSessions={hubClinicalSessions}
       />
 
-      <HubStudentsDetailsCharts
+      {/* <HubStudentsDetailsCharts
         studentsAttendanceGroupedBySession={studentsAttendanceGroupedBySession}
         studentsDropOutReasonsGroupedByReason={studentsDropOutReasonsGroupedByReason}
-      />
+      /> */}
 
-      <HubStudentClinicalDataCharts
+      {/* <HubStudentClinicalDataCharts
         hubClinicalSessions={hubClinicalSessions}
         hubClinicalCases={hubClinicalCases}
         hubClinicalSessionsBySession={hubClinicalSessionsBySession}
         clinicalCasesBySupervisors={clinicalCasesBySupervisors}
         hubClinicalSessionsByInitialReferredFrom={hubClinicalSessionsByInitialReferredFrom}
-      />
+      /> */}
 
       <HubStudentDemographicsCharts
         studentsGroupedByAge={studentsGroupedByAge}
