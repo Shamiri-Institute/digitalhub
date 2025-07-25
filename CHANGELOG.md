@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.7.3](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.7.2...v1.7.3) (2025-07-25)
+
+
+### Bug Fixes
+
+* bug fixes and improvements ([#515](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/515)) ([dcc69ec](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/dcc69ec595dac25cb7462d0fd9c510e171482a84))
+* correct disabled state handling in CommandItem component ([#516](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/516)) ([33fc3e3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/33fc3e3d5f6333e6063a54d99c0e9d8f1a93fad2))
+* handle undefined and correct equality check ([#512](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/512)) ([88ad70a](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/88ad70a6156edf7b7d57d5023c5c93417f09ee9a))
+
 ## [1.7.2](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.7.1...v1.7.2) (2025-07-23)
 
 ## [1.7.1](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.7.0...v1.7.1) (2025-07-15)
