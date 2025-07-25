@@ -1,4 +1,4 @@
-import { loadSessionReport } from "#/app/(platform)/sc/reporting/school-reports/session/actions";
+import { loadSessionReport } from "#/app/(platform)/hc/reporting/school-reports/session/actions";
 import SessionReportDataTable from "#/components/common/school-reports/session/session-table";
 
 export default async function SessionPage() {

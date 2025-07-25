@@ -12,7 +12,7 @@ import { Badge } from "#/components/ui/badge";
 
 export const columns: ColumnDef<ClinicalCases>[] = [
   {
-    id: "button",
+    id: "checkbox",
     cell: ({ row }) => {
       return (
         <button
@@ -77,10 +77,10 @@ export const columns: ColumnDef<ClinicalCases>[] = [
     accessorKey: "caseStatus",
     header: "Case Status",
     cell: ({ row }) => {
-      const riskLevel = row.original.risk || "N/A";
+      const caseStatus = row.original.caseStatus;
       return (
-        <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
-          {riskLevel}
+        <Badge variant={colors[caseStatus || "shamiri-green"]} className="uppercase">
+          {caseStatus}
         </Badge>
       );
     },

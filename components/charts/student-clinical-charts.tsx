@@ -47,20 +47,26 @@ export default function HubStudentClinicalDataCharts({
   }[];
   hubClinicalSessionsByInitialReferredFrom: (Prisma.PickEnumerable<
     Prisma.ClinicalScreeningInfoGroupByOutputType,
-    "initialReferredFrom"[]
+    "initialReferredFromSpecified"[]
   > & {
     _count: {
       initialReferredFrom: number;
     };
   })[];
 }) {
+  const caseStatusCounts: CaseData[] = [
+    { name: "Active", value: 0 },
+    { name: "FollowUp", value: 0 },
+    { name: "Terminated", value: 0 },
+  ];
+
   hubClinicalCases.forEach((case_) => {
-    if (case_.caseStatus === "Active") {
-      (clinicaldataValue[0] as CaseData).value += 1;
-    } else if (case_.caseStatus === "FollowUp") {
-      (clinicaldataValue[1] as CaseData).value += 1;
-    } else if (case_.caseStatus === "Terminated") {
-      (clinicaldataValue[2] as CaseData).value += 1;
+    if (case_.caseStatus === "Active" && caseStatusCounts[0]) {
+      caseStatusCounts[0].value += 1;
+    } else if (case_.caseStatus === "FollowUp" && caseStatusCounts[1]) {
+      caseStatusCounts[1].value += 1;
+    } else if (case_.caseStatus === "Terminated" && caseStatusCounts[2]) {
+      caseStatusCounts[2].value += 1;
     }
   });
 
@@ -71,7 +77,7 @@ export default function HubStudentClinicalDataCharts({
     },
   ];
 
-  const sumOfCases = clinicaldataValue.reduce((a, b) => {
+  const sumOfCases = caseStatusCounts.reduce((a, b) => {
     return a + b.value;
   }, 0);
 
@@ -85,7 +91,7 @@ export default function HubStudentClinicalDataCharts({
 
   const filteredByInitialReferredFrom = hubClinicalSessionsByInitialReferredFrom.map((item) => {
     return {
-      initialReferredFrom: item.initialReferredFrom,
+      initialReferredFrom: item.initialReferredFromSpecified,
       count: item._count.initialReferredFrom,
     };
   });
@@ -96,7 +102,7 @@ export default function HubStudentClinicalDataCharts({
         <ResponsiveContainer width="100%" height="100%">
           <PieChart width={250} height={250}>
             <Pie
-              data={sumOfCases === 0 ? emptyDataObject : clinicaldataValue}
+              data={sumOfCases === 0 ? emptyDataObject : caseStatusCounts}
               dataKey="value"
               nameKey="name"
               startAngle={90}
@@ -105,9 +111,9 @@ export default function HubStudentClinicalDataCharts({
               innerRadius={70}
             >
               <Label position="center" className="text-2xl font-semibold leading-8" fill="#000">
-                {clinicaldataValue.reduce((acc, d) => acc + d.value, 0)}
+                {caseStatusCounts.reduce((acc, d) => acc + d.value, 0)}
               </Label>
-              {clinicaldataValue.map((entry, index) => (
+              {caseStatusCounts.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={
