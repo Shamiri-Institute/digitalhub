@@ -19,6 +19,7 @@ export default function RenderSCReportingTabs() {
       href: "/sc/reporting/fellow-reports/student-group-evaluation",
     },
     { name: "Complaints", href: "/sc/reporting/fellow-reports/complaints" },
+    { name: "AI Feedback (beta)", href: "/sc/reporting/fellow-reports/ai-feedback" },
   ];
 
   const schoolReportOptions: TabType[] = [
