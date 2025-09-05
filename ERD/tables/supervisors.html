@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>supervisors - shamiri_digitalhub.public</title>
+        <!-- Tell the browser to be responsive to screen width -->
+        <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+        <link rel="icon" type="image/png" sizes="16x16" href="../favicon.png">
+        <!-- Bootstrap 3.3.5 -->
+        <link rel="stylesheet" href="../bower/admin-lte/bootstrap/css/bootstrap.min.css">
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="../bower/font-awesome/css/font-awesome.min.css">
+        <!-- Ionicons -->
+        <link rel="stylesheet" href="../bower/ionicons/css/ionicons.min.css">
+        <!-- DataTables -->
+        <link rel="stylesheet" href="../bower/datatables.net-bs/css/dataTables.bootstrap.min.css">
+        <link rel="stylesheet" href="../bower/datatables.net-buttons-bs/css/buttons.bootstrap.min.css">
+        <!-- Code Mirror -->
+        <link rel="stylesheet" href="../bower/codemirror/codemirror.css">
+        <!-- Fonts -->
+        <link href='../fonts/indieflower/indie-flower.css' rel='stylesheet' type='text/css'>
+        <link href='../fonts/source-sans-pro/source-sans-pro.css' rel='stylesheet' type='text/css'>
+
+        <!-- Theme style -->
+        <link rel="stylesheet" href="../bower/admin-lte/dist/css/AdminLTE.min.css">
+        <!-- Salvattore -->
+        <link rel="stylesheet" href="../bower/salvattore/salvattore.css">
+        <!-- AdminLTE Skins. Choose a skin from the css/skins
+           folder instead of downloading all of them to reduce the load. -->
+        <link rel="stylesheet" href="../bower/admin-lte/dist/css/skins/_all-skins.min.css">
+        <!-- SchemaSpy -->
+        <link rel="stylesheet" href="../schemaSpy.css">
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+        <script src="../bower/html5shiv/html5shiv.min.js"></script>
+        <script src="../bower/respond/respond.min.js"></script>
+        <![endif]-->
+    </head>
+    <!-- ADD THE CLASS layout-top-nav TO REMOVE THE SIDEBAR. -->
+    <body class="hold-transition skin-blue layout-top-nav">
+        <div class="wrapper">
+            <header class="main-header">
+                <nav class="navbar navbar-static-top">
+                    <div class="container">
+                        <div class="navbar-header">
+                            <a href="../index.html" class="navbar-brand"><b>shamiri_digitalhub</b></a><span class="navbar-brand" style="padding-left: 0">.public</span>
+                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse"><i class="fa fa-bars"></i></button>
+                        </div>
+
+                        <!-- Collect the nav links, forms, and other content for toggling -->
+                        <div class="collapse navbar-collapse pull-left" id="navbar-collapse">
+                            <ul class="nav navbar-nav">
+                                <li><a href="../index.html">Tables <span class="sr-only">(current)</span></a></li>
+                                <li><a href="../columns.html" title="All of the columns in the schema">Columns</a></li>
+                                <li><a href="../constraints.html" title="Useful for diagnosing error messages that just give constraint name or number">Constraints</a></li>
+                                <li><a href="../relationships.html" title="Diagram of table relationships">Relationships</a></li>
+                                <li><a href="../orphans.html" title="View of tables with neither parents nor children">Orphan&nbsp;Tables</a></li>
+                                <li><a href="../anomalies.html" title="Things that might not be quite right">Anomalies</a></li>
+                                <li><a href="../routines.html" title="Procedures and functions">Routines</a></li>
+                            </ul>
+                        </div>
+                        <!-- /.navbar-collapse -->
+                        <!-- Navbar Right Menu -->
+                    </div>
+                    <!-- /.container-fluid -->
+                </nav>
+            </header>
+            <!-- Main content -->
+            <!-- Full Width Column -->
+            <div class="content-wrapper">
+                <!-- Content Header (Page header) -->
+                <section class="content-header">
+                    <h1>supervisors</h1><p><span id="recordNumber">-1</span> rows</p><br />
+                </section>
+                <!-- Main content -->
+                <section class="content">
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
+                            <h3 id="Columns" class="box-title">Columns</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <table
+                                    id="standard_table"
+                                    class="table table-bordered table-striped dataTable"
+                                    role="grid"
+                                    data-paging="true"
+                                    data-page-length="10"
+                                    data-length-change="false">
+                                <thead align='left'>
+                                <tr>
+                                    <th>Column</th>
+                                    <th>Type</th>
+                                    <th>Size</th>
+                                    <th title='Are nulls allowed?'>Nulls</th>
+                                    <th title='Is column automatically updated?'>Auto</th>
+                                    <th title='Default value'>Default</th>
+                                    <th title='Columns in tables that reference this column'>Children</th>
+                                    <th title='Columns in tables that are referenced by this column'>Parents</th>
+                                    <th title='Comments' class="toggle"><span>Comments</span></th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="id">id</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title=''></td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                            <tr>
+                                                <td title="clinical_screening_info.current_supervisor_id references supervisors.id via clinical_screening_info_current_supervisor_id_fkey"><a href='clinical_screening_info.html'>clinical_screening_info</a><span class='relatedKey'>.current_supervisor_id</span></td>
+                                                <td class="constraint detail">clinical_screening_info_current_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Null on delete:&#10;Foreign key to parent set to NULL when parent deleted'>N</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="clinical_screening_info.referredTo_supervisor_id references supervisors.id via clinical_screening_info_referredTo_supervisor_id_fkey"><a href='clinical_screening_info.html'>clinical_screening_info</a><span class='relatedKey'>.referredTo_supervisor_id</span></td>
+                                                <td class="constraint detail">clinical_screening_info_referredTo_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Null on delete:&#10;Foreign key to parent set to NULL when parent deleted'>N</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="delayed_payment_requests.supervisor_id references supervisors.id via delayed_payment_requests_supervisor_id_fkey"><a href='delayed_payment_requests.html'>delayed_payment_requests</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">delayed_payment_requests_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="fellow_attendances.supervisor_id references supervisors.id via fellow_attendances_supervisor_id_fkey"><a href='fellow_attendances.html'>fellow_attendances</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">fellow_attendances_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Null on delete:&#10;Foreign key to parent set to NULL when parent deleted'>N</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="fellow_complaints.supervisor_id references supervisors.id via fellow_complaints_supervisor_id_fkey"><a href='fellow_complaints.html'>fellow_complaints</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">fellow_complaints_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Null on delete:&#10;Foreign key to parent set to NULL when parent deleted'>N</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="fellow_reporting_notes.supervisor_id references supervisors.id via fellow_reporting_notes_supervisor_id_fkey"><a href='fellow_reporting_notes.html'>fellow_reporting_notes</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">fellow_reporting_notes_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="fellows.supervisor_id references supervisors.id via fellows_supervisor_id_fkey"><a href='fellows.html'>fellows</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">fellows_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Null on delete:&#10;Foreign key to parent set to NULL when parent deleted'>N</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="intervention_session_notes.supervisor_id references supervisors.id via intervention_session_notes_supervisor_id_fkey"><a href='intervention_session_notes.html'>intervention_session_notes</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">intervention_session_notes_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="intervention_session_ratings.supervisor_id references supervisors.id via intervention_session_ratings_supervisor_id_fkey"><a href='intervention_session_ratings.html'>intervention_session_ratings</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">intervention_session_ratings_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="monthly_supervisor_evaluation.supervisor_id references supervisors.id via monthly_supervisor_evaluation_supervisor_id_fkey"><a href='monthly_supervisor_evaluation.html'>monthly_supervisor_evaluation</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">monthly_supervisor_evaluation_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="overall_fellow_evaluations.supervisor_id references supervisors.id via overall_fellow_evaluations_supervisor_id_fkey"><a href='overall_fellow_evaluations.html'>overall_fellow_evaluations</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">overall_fellow_evaluations_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="reimbursement_requests.supervisor_id references supervisors.id via reimbursement_requests_supervisor_id_fkey"><a href='reimbursement_requests.html'>reimbursement_requests</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">reimbursement_requests_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="repayment_requests.supervisor_id references supervisors.id via repayment_requests_supervisor_id_fkey"><a href='repayment_requests.html'>repayment_requests</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">repayment_requests_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="schools.assigned_supervisor_id references supervisors.id via schools_assigned_supervisor_id_fkey"><a href='schools.html'>schools</a><span class='relatedKey'>.assigned_supervisor_id</span></td>
+                                                <td class="constraint detail">schools_assigned_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Null on delete:&#10;Foreign key to parent set to NULL when parent deleted'>N</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="special_session_approval_requests.created_by references supervisors.id via special_session_approval_requests_created_by_fkey"><a href='special_session_approval_requests.html'>special_session_approval_requests</a><span class='relatedKey'>.created_by</span></td>
+                                                <td class="constraint detail">special_session_approval_requests_created_by_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="student_reporting_notes.supervisor_id references supervisors.id via student_reporting_notes_supervisor_id_fkey"><a href='student_reporting_notes.html'>student_reporting_notes</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">student_reporting_notes_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Null on delete:&#10;Foreign key to parent set to NULL when parent deleted'>N</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="students.supervisor_id references supervisors.id via students_supervisor_id_fkey"><a href='students.html'>students</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">students_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Null on delete:&#10;Foreign key to parent set to NULL when parent deleted'>N</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="supervisor_attendances.supervisor_id references supervisors.id via supervisor_attendances_supervisor_id_fkey"><a href='supervisor_attendances.html'>supervisor_attendances</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">supervisor_attendances_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="supervisor_complaints.supervisor_id references supervisors.id via supervisor_complaints_supervisor_id_fkey"><a href='supervisor_complaints.html'>supervisor_complaints</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">supervisor_complaints_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td title="weekly_fellow_ratings.supervisor_id references supervisors.id via weekly_fellow_ratings_supervisor_id_fkey"><a href='weekly_fellow_ratings.html'>weekly_fellow_ratings</a><span class='relatedKey'>.supervisor_id</span></td>
+                                                <td class="constraint detail">weekly_fellow_ratings_supervisor_id_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="created_at">created_at</span></td>
+                                    <td>timestamp</td>
+                                    <td>26,3</td>
+                                    <td title=''></td>
+                                    <td title=''></td>
+                                    <td>CURRENT_TIMESTAMP</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="updated_at">updated_at</span></td>
+                                    <td>timestamp</td>
+                                    <td>26,3</td>
+                                    <td title=''></td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="archived_at">archived_at</span></td>
+                                    <td>timestamp</td>
+                                    <td>26,3</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="hub_id">hub_id</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                            <tr>
+                                                <td title="supervisors.hub_id references hubs.id via supervisors_hub_id_fkey"><a href='hubs.html'>hubs</a><span class='relatedKey'>.id</span></td>
+                                                <td class="constraint detail">supervisors_hub_id_fkey</td>
+                                                <td class="constraint detail"><span title='Null on delete:&#10;Foreign key to parent set to NULL when parent deleted'>N</span></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class='indexedColumn' title='Indexed'><i class='fa fa-sitemap fa-rotate-120' style='padding-right: 5px;'></i><span id="visible_id">visible_id</span></td>
+                                    <td>varchar</td>
+                                    <td>100</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="supervisor_name">supervisor_name</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="supervisor_email">supervisor_email</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="id_number">id_number</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="cell_number">cell_number</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="mpesa_number">mpesa_number</span></td>
+                                    <td>varchar</td>
+                                    <td>20</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td class='foreignKey' title='Foreign Key'><i class='icon ion-key iconkey' style='padding-left: 5px;'></i><span id="implementer_id">implementer_id</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title=''></td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                            <tr>
+                                                <td title="supervisors.implementer_id references implementers.id via supervisors_implementer_id_fkey"><a href='implementers.html'>implementers</a><span class='relatedKey'>.id</span></td>
+                                                <td class="constraint detail">supervisors_implementer_id_fkey</td>
+                                                <td class="constraint detail"><span title='Restrict delete:&#10;Parent cannot be deleted if children exist'>R</span></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="county">county</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="sub_county">sub_county</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="bank_name">bank_name</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="bank_branch">bank_branch</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="bank_account_name">bank_account_name</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="bank_account_number">bank_account_number</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="kra">kra</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="nhif">nhif</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="nssf">nssf</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="date_of_birth">date_of_birth</span></td>
+                                    <td>date</td>
+                                    <td>13</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="gender">gender</span></td>
+                                    <td>varchar</td>
+                                    <td>10</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="training_level">training_level</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="dropped_out">dropped_out</span></td>
+                                    <td>bool</td>
+                                    <td>1</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="mpesa_name">mpesa_name</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="personal_email">personal_email</span></td>
+                                    <td>varchar</td>
+                                    <td>255</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td><span id="drop_out_reason">drop_out_reason</span></td>
+                                    <td>text</td>
+                                    <td>2147483647</td>
+                                    <td title='nullable'>√</td>
+                                    <td title=''></td>
+                                    <td>null</td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table border='0' cellspacing='0' cellpadding='0'>
+                                        </table>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <i class="fa fa-sitemap"></i>
+                            <h3 id="Indexes" class="box-title">Indexes</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <table
+                                    id="indexes_table"
+                                    class="table table-bordered table-striped dataTable"
+                                    role="grid"
+                                    data-paging="true"
+                                    data-page-length="10"
+                                    data-length-change="false">
+                                <thead>
+                                <tr>
+                                    <th>Constraint Name</th>
+                                    <th>Type</th>
+                                    <th>Sort</th>
+                                    <th>Column(s)</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td class='primaryKey' title='Primary Key'><i class='icon ion-key iconkey'></i> supervisors_pkey</td>
+                                    <td>Primary key</td>
+                                    <td><span title='Ascending'>Asc</span></td>
+                                    <td>id</td>
+                                </tr>
+                                <tr>
+                                    <td class='uniqueKey' title='Unique Key'><i class='icon ion-key iconkey'></i> supervisors_visible_id_key</td>
+                                    <td>Must be unique</td>
+                                    <td><span title='Ascending'>Asc</span></td>
+                                    <td>visible_id</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div><!-- /.box-body -->
+                    </div>
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <i class="fa fa-code-fork"></i>
+                            <h3 id="Relationships" class="box-title">Relationships</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <div class="nav-tabs-custom"><!-- Tabs within a box -->
+                                <h5>Close relationships within degrees of separation</h5>
+                                <ul class="nav nav-tabs pull-left ui-sortable-handle">
+                                    <li class="active"><a href="#oneDegreeImg-chart" data-toggle="tab" aria-expanded="true">One</a></li>
+                                    <li class=""><a href="#twodegreesDegreeImg-chart" data-toggle="tab" aria-expanded="true">Two degrees</a></li>
+                                </ul>
+                                <div class="tab-content no-padding">
+                                    <div class="chart tab-pane active" id="oneDegreeImg-chart" style="position: relative; overflow-x:auto;">
+                                        <map id="oneDegreeRelationshipsDiagram" name="oneDegreeRelationshipsDiagram">
+<area shape="rect" id="node1" href="clinical_screening_info.html" target="_top" title="clinical_screening_info" alt="" coords="1744,177,2267,441">
+<area shape="rect" id="node2" href="supervisors.html" target="_top" title="supervisors" alt="" coords="527,720,923,1610">
+<area shape="rect" id="node3" href="students.html" target="_top" title="students" alt="" coords="1405,14,1670,308">
+<area shape="rect" id="node10" href="hubs.html" target="_top" title="hubs" alt="" coords="293,638,483,844">
+<area shape="rect" id="node11" href="implementers.html" target="_top" title="implementers" alt="" coords="5,697,249,844">
+<area shape="rect" id="node6" href="fellows.html" target="_top" title="fellows" alt="" coords="1016,1562,1281,1768">
+<area shape="rect" id="node7" href="schools.html" target="_top" title="schools" alt="" coords="979,60,1318,294">
+<area shape="rect" id="node4" href="delayed_payment_requests.html" target="_top" title="delayed_payment_requests" alt="" coords="1841,1544,2170,1778">
+<area shape="rect" id="node5" href="fellow_attendances.html" target="_top" title="fellow_attendances" alt="" coords="1405,792,1670,1144">
+<area shape="rect" id="node8" href="fellow_complaints.html" target="_top" title="fellow_complaints" alt="" coords="1415,1161,1660,1366">
+<area shape="rect" id="node9" href="fellow_reporting_notes.html" target="_top" title="fellow_reporting_notes" alt="" coords="1393,1384,1682,1560">
+<area shape="rect" id="node12" href="intervention_session_notes.html" target="_top" title="intervention_session_notes" alt="" coords="985,2137,1313,2313">
+<area shape="rect" id="node13" href="intervention_session_ratings.html" target="_top" title="intervention_session_ratings" alt="" coords="977,786,1320,962">
+<area shape="rect" id="node14" href="monthly_supervisor_evaluation.html" target="_top" title="monthly_supervisor_evaluation" alt="" coords="967,980,1331,1214">
+<area shape="rect" id="node15" href="overall_fellow_evaluations.html" target="_top" title="overall_fellow_evaluations" alt="" coords="1377,1649,1697,1825">
+<area shape="rect" id="node16" href="reimbursement_requests.html" target="_top" title="reimbursement_requests" alt="" coords="994,312,1303,517">
+<area shape="rect" id="node17" href="repayment_requests.html" target="_top" title="repayment_requests" alt="" coords="1871,681,2139,916">
+<area shape="rect" id="node18" href="special_session_approval_requests.html" target="_top" title="special_session_approval_requests" alt="" coords="1807,1898,2203,2104">
+<area shape="rect" id="node19" href="student_reporting_notes.html" target="_top" title="student_reporting_notes" alt="" coords="1853,458,2158,664">
+<area shape="rect" id="node20" href="supervisor_attendances.html" target="_top" title="supervisor_attendances" alt="" coords="1388,325,1687,589">
+<area shape="rect" id="node21" href="supervisor_complaints.html" target="_top" title="supervisor_complaints" alt="" coords="1006,1232,1291,1437">
+<area shape="rect" id="node22" href="weekly_fellow_ratings.html" target="_top" title="weekly_fellow_ratings" alt="" coords="1375,1842,1700,2048">
+</map>
+                                        <a name='diagram'><img id="oneDegreeImg" src="../diagrams/tables/supervisors.1degree.png" usemap="#oneDegreeRelationshipsDiagram" class="diagram" border="0" align="left"></a>
+                                    </div>
+                                    <div class="chart tab-pane " id="twodegreesDegreeImg-chart" style="position: relative; overflow-x:auto;">
+                                        <map id="twoDegreesRelationshipsDiagram" name="twoDegreesRelationshipsDiagram">
+<area shape="rect" id="node1" href="clinical_case_notes.html" target="_top" title="clinical_case_notes" alt="" coords="3179,1018,3432,1106">
+<area shape="rect" id="node2" href="clinical_screening_info.html" target="_top" title="clinical_screening_info" alt="" coords="2235,766,2521,854">
+<area shape="rect" id="node3" href="users.html" target="_top" title="users" alt="" coords="1523,1551,1655,1639">
+<area shape="rect" id="node4" href="clinical_session_attendance.html" target="_top" title="clinical_session_attendance" alt="" coords="2697,1027,3029,1115">
+<area shape="rect" id="node10" href="clinical_leads.html" target="_top" title="clinical_leads" alt="" coords="678,648,881,736">
+<area shape="rect" id="node13" href="supervisors.html" target="_top" title="supervisors" alt="" coords="581,1183,977,2074">
+<area shape="rect" id="node14" href="intervention_sessions.html" target="_top" title="intervention_sessions" alt="" coords="1449,963,1729,1051">
+<area shape="rect" id="node15" href="students.html" target="_top" title="students" alt="" coords="1883,2519,2046,2607">
+<area shape="rect" id="node5" href="clinical_case_termination.html" target="_top" title="clinical_case_termination" alt="" coords="3151,1123,3460,1211">
+<area shape="rect" id="node6" href="clinical_case_transfer_trail.html" target="_top" title="clinical_case_transfer_trail" alt="" coords="2703,711,3024,799">
+<area shape="rect" id="node7" href="clinical_expert_case_notes.html" target="_top" title="clinical_expert_case_notes" alt="" coords="2703,816,3023,904">
+<area shape="rect" id="node8" href="clinical_follow_up_treatment_plan.html" target="_top" title="clinical_follow_up_treatment_plan" alt="" coords="2670,922,3057,1010">
+<area shape="rect" id="node9" href="clinical_follow_up_treatment_pl_7e21b335.html" target="_top" title="clinical_follow_up_treatment_plan_audit_trail" alt="" coords="2620,1338,3107,1426">
+<area shape="rect" id="node11" href="hubs.html" target="_top" title="hubs" alt="" coords="334,1080,461,1168">
+<area shape="rect" id="node12" href="implementers.html" target="_top" title="implementers" alt="" coords="5,2378,213,2466">
+<area shape="rect" id="node21" href="projects.html" target="_top" title="projects" alt="" coords="31,570,187,658">
+<area shape="rect" id="node22" href="schools.html" target="_top" title="schools" alt="" coords="1128,2122,1279,2210">
+<area shape="rect" id="node33" href="session_names.html" target="_top" title="session_names" alt="" coords="671,1078,888,1166">
+<area shape="rect" id="node19" href="fellows.html" target="_top" title="fellows" alt="" coords="1129,1995,1277,2083">
+<area shape="rect" id="node20" href="intervention_groups.html" target="_top" title="intervention_groups" alt="" coords="1457,2339,1722,2427">
+<area shape="rect" id="node16" href="clinical_teams.html" target="_top" title="clinical_teams" alt="" coords="675,2412,884,2500">
+<area shape="rect" id="node17" href="delayed_payment_requests.html" target="_top" title="delayed_payment_requests" alt="" coords="2213,976,2543,1064">
+<area shape="rect" id="node18" href="fellow_attendances.html" target="_top" title="fellow_attendances" alt="" coords="1836,1334,2093,1422">
+<area shape="rect" id="node23" href="fellow_complaints.html" target="_top" title="fellow_complaints" alt="" coords="1842,1671,2087,1759">
+<area shape="rect" id="node24" href="fellow_documents.html" target="_top" title="fellow_documents" alt="" coords="1842,1776,2087,1864">
+<area shape="rect" id="node25" href="fellow_payment_complaints.html" target="_top" title="fellow_payment_complaints" alt="" coords="2212,1334,2544,1422">
+<area shape="rect" id="node26" href="fellow_reporting_notes.html" target="_top" title="fellow_reporting_notes" alt="" coords="1445,1338,1734,1426">
+<area shape="rect" id="node27" href="hub_coordinators.html" target="_top" title="hub_coordinators" alt="" coords="659,790,899,878">
+<area shape="rect" id="node28" href="implementer_avatars.html" target="_top" title="implementer_avatars" alt="" coords="260,2342,535,2430">
+<area shape="rect" id="node29" href="implementer_invites.html" target="_top" title="implementer_invites" alt="" coords="263,2483,531,2571">
+<area shape="rect" id="node30" href="implementer_members.html" target="_top" title="implementer_members" alt="" coords="1819,2414,2110,2502">
+<area shape="rect" id="node31" href="intervention_session_notes.html" target="_top" title="intervention_session_notes" alt="" coords="1801,1035,2129,1211">
+<area shape="rect" id="node32" href="intervention_session_ratings.html" target="_top" title="intervention_session_ratings" alt="" coords="1793,698,2136,874">
+<area shape="rect" id="node34" href="monthly_supervisor_evaluation.html" target="_top" title="monthly_supervisor_evaluation" alt="" coords="1021,538,1385,772">
+<area shape="rect" id="node35" href="ops_users.html" target="_top" title="ops_users" alt="" coords="693,2271,865,2359">
+<area shape="rect" id="node36" href="overall_fellow_evaluations.html" target="_top" title="overall_fellow_evaluations" alt="" coords="1429,1728,1749,1816">
+<area shape="rect" id="node37" href="payout_reconciliations.html" target="_top" title="payout_reconciliations" alt="" coords="1446,1975,1733,2063">
+<area shape="rect" id="node38" href="payout_statements.html" target="_top" title="payout_statements" alt="" coords="2735,1547,2991,1635">
+<area shape="rect" id="node39" href="special_session_approval_requests.html" target="_top" title="special_session_approval_requests" alt="" coords="2180,871,2576,959">
+<area shape="rect" id="node40" href="project_implementers.html" target="_top" title="project_implementers" alt="" coords="257,2164,537,2252">
+<area shape="rect" id="node41" href="reimbursement_requests.html" target="_top" title="reimbursement_requests" alt="" coords="1049,895,1358,983">
+<area shape="rect" id="node42" href="repayment_requests.html" target="_top" title="repayment_requests" alt="" coords="2244,2626,2512,2714">
+<area shape="rect" id="node43" href="school_documents.html" target="_top" title="school_documents" alt="" coords="1841,1954,2089,2042">
+<area shape="rect" id="node44" href="school_dropout_history.html" target="_top" title="school_dropout_history" alt="" coords="1819,2200,2111,2288">
+<area shape="rect" id="node45" href="school_feedbacks.html" target="_top" title="school_feedbacks" alt="" coords="1844,2095,2085,2183">
+<area shape="rect" id="node46" href="student_attendances.html" target="_top" title="student_attendances" alt="" coords="2241,2268,2515,2356">
+<area shape="rect" id="node47" href="student_group_transfer_trail.html" target="_top" title="student_group_transfer_trail" alt="" coords="2207,2444,2549,2532">
+<area shape="rect" id="node48" href="student_outcomes.html" target="_top" title="student_outcomes" alt="" coords="2253,2731,2503,2819">
+<area shape="rect" id="node49" href="student_reporting_notes.html" target="_top" title="student_reporting_notes" alt="" coords="2225,1812,2531,1900">
+<area shape="rect" id="node50" href="supervisor_attendances.html" target="_top" title="supervisor_attendances" alt="" coords="1815,1228,2114,1316">
+<area shape="rect" id="node51" href="supervisor_complaints.html" target="_top" title="supervisor_complaints" alt="" coords="1061,315,1346,520">
+<area shape="rect" id="node52" href="weekly_fellow_ratings.html" target="_top" title="weekly_fellow_ratings" alt="" coords="1449,1834,1730,1922">
+<area shape="rect" id="node53" href="weekly_hub_reports.html" target="_top" title="weekly_hub_reports" alt="" coords="1072,174,1335,262">
+<area shape="rect" id="node54" href="weekly_team_meeting_reports.html" target="_top" title="weekly_team_meeting_reports" alt="" coords="1025,790,1382,878">
+</map>
+                                        <a name='diagram'><img id="twodegreesDegreeImg" src="../diagrams/tables/supervisors.2degrees.png" usemap="#twoDegreesRelationshipsDiagram" class="diagram" border="0" align="left"></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div><!-- /.box-body -->
+                    </div>
+                </section>
+                <script>
+                    var config = {
+                        pagination: true
+                    }
+                </script>
+            </div>
+            <!-- /.content-wrapper -->
+            <footer class="main-footer">
+                <div>
+                    <div class="pull-right hidden-xs">
+                        <a href="https://github.com/schemaspy/schemaspy" title="GitHub for SchemaSpy"><i class="fa fa-github-square fa-2x"></i></a>
+                        <a href="http://stackoverflow.com/questions/tagged/schemaspy" title="StackOverflow for SchemaSpy"><i class="fa fa-stack-overflow fa-2x"></i></a>
+                    </div>
+                    <strong>Generated by <a href="http://schemaspy.org/" class="logo-text"><i class="fa fa-database"></i> SchemaSpy 6.2.2</a></strong>
+                </div>
+                <!-- /.container -->
+            </footer>
+        </div>
+        <!-- ./wrapper -->
+
+        <!-- jQuery 2.2.3 -->
+        <script src="../bower/admin-lte/plugins/jQuery/jquery-2.2.3.min.js"></script>
+        <script src="../bower/admin-lte/plugins/jQueryUI/jquery-ui.min.js"></script>
+        <!-- Bootstrap 3.3.5 -->
+        <script src="../bower/admin-lte/bootstrap/js/bootstrap.min.js"></script>
+        <!-- DataTables -->
+        <script src="../bower/datatables.net/jquery.dataTables.min.js"></script>
+        <script src="../bower/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+        <script src="../bower/datatables.net-buttons/dataTables.buttons.min.js"></script>
+        <script src="../bower/datatables.net-buttons-bs/js/buttons.bootstrap.min.js"></script>
+        <script src="../bower/datatables.net-buttons/buttons.html5.min.js"></script>
+        <script src="../bower/datatables.net-buttons/buttons.print.min.js"></script>
+        <script src="../bower/datatables.net-buttons/buttons.colVis.min.js"></script>
+        <!-- SheetJS -->
+        <script src="../bower/js-xlsx/xlsx.full.min.js"></script>
+        <!-- pdfmake -->
+        <script src="../bower/pdfmake/pdfmake.min.js"></script>
+        <script src="../bower/pdfmake/vfs_fonts.js"></script>
+        <!-- SlimScroll -->
+        <script src="../bower/admin-lte/plugins/slimScroll/jquery.slimscroll.min.js"></script>
+        <!-- FastClick -->
+        <script src="../bower/admin-lte/plugins/fastclick/fastclick.js"></script>
+        <!-- Salvattore -->
+        <script src="../bower/salvattore/salvattore.min.js"></script>
+        <!-- AnchorJS -->
+        <script src="../bower/anchor-js/anchor.min.js"></script>
+        <!-- CodeMirror -->
+        <script src="../bower/codemirror/codemirror.js"></script>
+        <script src="../bower/codemirror/sql.js"></script>
+        <!-- AdminLTE App -->
+        <script src="../bower/admin-lte/dist/js/app.min.js"></script>
+        <script src="table.js"></script>
+        <script src="../schemaSpy.js"></script>
+    </body>
+</html>

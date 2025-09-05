@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>shamiri_digitalhub.public</title>
+        <!-- Tell the browser to be responsive to screen width -->
+        <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+        <link rel="icon" type="image/png" sizes="16x16" href="favicon.png">
+        <!-- Bootstrap 3.3.5 -->
+        <link rel="stylesheet" href="bower/admin-lte/bootstrap/css/bootstrap.min.css">
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="bower/font-awesome/css/font-awesome.min.css">
+        <!-- Ionicons -->
+        <link rel="stylesheet" href="bower/ionicons/css/ionicons.min.css">
+        <!-- DataTables -->
+        <link rel="stylesheet" href="bower/datatables.net-bs/css/dataTables.bootstrap.min.css">
+        <link rel="stylesheet" href="bower/datatables.net-buttons-bs/css/buttons.bootstrap.min.css">
+        <!-- Code Mirror -->
+        <link rel="stylesheet" href="bower/codemirror/codemirror.css">
+        <!-- Fonts -->
+        <link href='fonts/indieflower/indie-flower.css' rel='stylesheet' type='text/css'>
+        <link href='fonts/source-sans-pro/source-sans-pro.css' rel='stylesheet' type='text/css'>
+
+        <!-- Theme style -->
+        <link rel="stylesheet" href="bower/admin-lte/dist/css/AdminLTE.min.css">
+        <!-- Salvattore -->
+        <link rel="stylesheet" href="bower/salvattore/salvattore.css">
+        <!-- AdminLTE Skins. Choose a skin from the css/skins
+           folder instead of downloading all of them to reduce the load. -->
+        <link rel="stylesheet" href="bower/admin-lte/dist/css/skins/_all-skins.min.css">
+        <!-- SchemaSpy -->
+        <link rel="stylesheet" href="schemaSpy.css">
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+        <script src="bower/html5shiv/html5shiv.min.js"></script>
+        <script src="bower/respond/respond.min.js"></script>
+        <![endif]-->
+    </head>
+    <!-- ADD THE CLASS layout-top-nav TO REMOVE THE SIDEBAR. -->
+    <body class="hold-transition skin-blue layout-top-nav">
+        <div class="wrapper">
+            <header class="main-header">
+                <nav class="navbar navbar-static-top">
+                    <div class="container">
+                        <div class="navbar-header">
+                            <a href="index.html" class="navbar-brand"><b>shamiri_digitalhub</b></a><span class="navbar-brand" style="padding-left: 0">.public</span>
+                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse"><i class="fa fa-bars"></i></button>
+                        </div>
+
+                        <!-- Collect the nav links, forms, and other content for toggling -->
+                        <div class="collapse navbar-collapse pull-left" id="navbar-collapse">
+                            <ul class="nav navbar-nav">
+                                <li><a href="index.html">Tables <span class="sr-only">(current)</span></a></li>
+                                <li><a href="columns.html" title="All of the columns in the schema">Columns</a></li>
+                                <li><a href="constraints.html" title="Useful for diagnosing error messages that just give constraint name or number">Constraints</a></li>
+                                <li><a href="relationships.html" title="Diagram of table relationships">Relationships</a></li>
+                                <li><a href="orphans.html" title="View of tables with neither parents nor children">Orphan&nbsp;Tables</a></li>
+                                <li><a href="anomalies.html" title="Things that might not be quite right">Anomalies</a></li>
+                                <li><a href="routines.html" title="Procedures and functions">Routines</a></li>
+                            </ul>
+                        </div>
+                        <!-- /.navbar-collapse -->
+                        <!-- Navbar Right Menu -->
+                    </div>
+                    <!-- /.container-fluid -->
+                </nav>
+            </header>
+            <!-- Main content -->
+            <!-- Full Width Column -->
+            <div class="content-wrapper">
+                <!-- Content Header (Page header) -->
+                <section class="content-header">
+                    <h1>All Relationships</h1>
+                </section>
+                <!-- Main content -->
+                <section class="content">
+                    <div class="box box-primary">
+                        <div class="box-header with-border">
+                            <i class="fa fa-code-fork"></i>
+                            <h3 class="box-title">Diagrams</h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="nav-tabs-custom">
+                                <!-- Tabs within a box -->
+                                <h5>By default only columns that are primary keys, foreign keys or indexes are shown.</h5>
+                                <ul class="nav nav-tabs pull-left ui-sortable-handle">
+                                    <li class="active"><a href="#compactDegreeImg-chart" data-toggle="tab" aria-expanded="true">Compact</a></li>
+                                    <li class=""><a href="#largeDegreeImg-chart" data-toggle="tab" aria-expanded="true">Large</a></li>
+                                </ul>
+                                <div class="tab-content no-padding">
+                                    <div class="chart tab-pane active" id="compactDegreeImg-chart" style="position: relative; overflow-x:auto;">
+                                        <map id="compactRelationshipsDiagram" name="compactRelationshipsDiagram">
+<area shape="rect" id="node1" href="tables/clinical_expert_case_notes.html" target="_top" title="clinical_expert_case_notes" alt="" coords="2945,891,3265,1038">
+<area shape="rect" id="node19" href="tables/clinical_screening_info.html" target="_top" title="clinical_screening_info" alt="" coords="2295,1002,2817,1266">
+<area shape="rect" id="node2" href="tables/clinical_follow_up_treatment_plan.html" target="_top" title="clinical_follow_up_treatment_plan" alt="" coords="2877,1055,3332,1202">
+<area shape="rect" id="node3" href="tables/delayed_payment_requests.html" target="_top" title="delayed_payment_requests" alt="" coords="2391,1283,2721,1518">
+<area shape="rect" id="node6" href="tables/fellows.html" target="_top" title="fellows" alt="" coords="1033,2807,1299,3012">
+<area shape="rect" id="node25" href="tables/intervention_sessions.html" target="_top" title="intervention_sessions" alt="" coords="1488,786,1768,1020">
+<area shape="rect" id="node28" href="tables/supervisors.html" target="_top" title="supervisors" alt="" coords="617,1596,867,1802">
+<area shape="rect" id="node38" href="tables/fellow_attendances.html" target="_top" title="fellow_attendances" alt="" coords="1910,1762,2175,2114">
+<area shape="rect" id="node4" href="tables/clinical_case_notes.html" target="_top" title="clinical_case_notes" alt="" coords="3395,1160,3728,1366">
+<area shape="rect" id="node11" href="tables/clinical_session_attendance.html" target="_top" title="clinical_session_attendance" alt="" coords="2939,1219,3271,1366">
+<area shape="rect" id="node35" href="tables/users.html" target="_top" title="users" alt="" coords="1540,3948,1716,4095">
+<area shape="rect" id="node5" href="tables/payout_statements.html" target="_top" title="payout_statements" alt="" coords="2962,2910,3247,3174">
+<area shape="rect" id="node17" href="tables/special_session_approval_requests.html" target="_top" title="special_session_approval_requests" alt="" coords="2358,1987,2754,2192">
+<area shape="rect" id="node31" href="tables/implementers.html" target="_top" title="implementers" alt="" coords="5,2111,249,2258">
+<area shape="rect" id="node34" href="tables/hubs.html" target="_top" title="hubs" alt="" coords="339,1052,528,1258">
+<area shape="rect" id="node7" href="tables/supervisor_attendances.html" target="_top" title="supervisor_attendances" alt="" coords="1893,1215,2192,1479">
+<area shape="rect" id="node39" href="tables/schools.html" target="_top" title="schools" alt="" coords="997,1818,1335,2052">
+<area shape="rect" id="node50" href="tables/projects.html" target="_top" title="projects" alt="" coords="7,188,247,335">
+<area shape="rect" id="node8" href="tables/session_comments.html" target="_top" title="session_comments" alt="" coords="1917,2131,2169,2307">
+<area shape="rect" id="node9" href="tables/implementer_invites.html" target="_top" title="implementer_invites" alt="" coords="299,2254,567,2459">
+<area shape="rect" id="node10" href="tables/clinical_case_termination.html" target="_top" title="clinical_case_termination" alt="" coords="3392,1478,3731,1683">
+<area shape="rect" id="node12" href="tables/school_dropout_history.html" target="_top" title="school_dropout_history" alt="" coords="1897,3044,2189,3220">
+<area shape="rect" id="node13" href="tables/fellow_complaints.html" target="_top" title="fellow_complaints" alt="" coords="1920,3624,2165,3830">
+<area shape="rect" id="node14" href="tables/fellow_payment_complaints.html" target="_top" title="fellow_payment_complaints" alt="" coords="2390,1787,2722,1934">
+<area shape="rect" id="node15" href="tables/fellow_reporting_notes.html" target="_top" title="fellow_reporting_notes" alt="" coords="1483,2635,1773,2811">
+<area shape="rect" id="node16" href="tables/intervention_session_ratings.html" target="_top" title="intervention_session_ratings" alt="" coords="1871,950,2214,1126">
+<area shape="rect" id="node40" href="tables/hub_coordinators.html" target="_top" title="hub_coordinators" alt="" coords="617,935,867,1170">
+<area shape="rect" id="node18" href="tables/student_reporting_notes.html" target="_top" title="student_reporting_notes" alt="" coords="2403,4148,2709,4354">
+<area shape="rect" id="node53" href="tables/students.html" target="_top" title="students" alt="" coords="1910,2504,2175,2798">
+<area shape="rect" id="node45" href="tables/clinical_leads.html" target="_top" title="clinical_leads" alt="" coords="617,336,867,512">
+<area shape="rect" id="node20" href="tables/accounts.html" target="_top" title="accounts" alt="" coords="1928,3919,2157,4124">
+<area shape="rect" id="node21" href="tables/monthly_supervisor_evaluation.html" target="_top" title="monthly_supervisor_evaluation" alt="" coords="984,723,1348,958">
+<area shape="rect" id="node22" href="tables/repayment_requests.html" target="_top" title="repayment_requests" alt="" coords="2422,1535,2690,1770">
+<area shape="rect" id="node23" href="tables/clinical_follow_up_treatment_pl_7e21b335.html" target="_top" title="clinical_follow_up_treatment_plan_audit_trail" alt="" coords="2861,2198,3348,2374">
+<area shape="rect" id="node24" href="tables/project_implementers.html" target="_top" title="project_implementers" alt="" coords="293,606,573,728">
+<area shape="rect" id="node46" href="tables/session_names.html" target="_top" title="session_names" alt="" coords="633,566,851,712">
+<area shape="rect" id="node26" href="tables/files.html" target="_top" title="files" alt="" coords="1545,5070,1711,5187">
+<area shape="rect" id="node27" href="tables/intervention_group_reports.html" target="_top" title="intervention_group_reports" alt="" coords="1877,1496,2208,1672">
+<area shape="rect" id="node58" href="tables/intervention_groups.html" target="_top" title="intervention_groups" alt="" coords="1495,1852,1761,2058">
+<area shape="rect" id="node29" href="tables/implementer_avatars.html" target="_top" title="implementer_avatars" alt="" coords="1905,5107,2180,5259">
+<area shape="rect" id="node30" href="tables/user_recent_opens.html" target="_top" title="user_recent_opens" alt="" coords="1917,4142,2168,4318">
+<area shape="rect" id="node32" href="tables/overall_fellow_evaluations.html" target="_top" title="overall_fellow_evaluations" alt="" coords="1468,2219,1788,2395">
+<area shape="rect" id="node33" href="tables/supervisor_complaints.html" target="_top" title="supervisor_complaints" alt="" coords="1023,1011,1309,1216">
+<area shape="rect" id="node36" href="tables/payout_reconciliations.html" target="_top" title="payout_reconciliations" alt="" coords="1485,3116,1771,3263">
+<area shape="rect" id="node37" href="tables/reimbursement_requests.html" target="_top" title="reimbursement_requests" alt="" coords="1011,1234,1321,1439">
+<area shape="rect" id="node41" href="tables/weekly_hub_reports.html" target="_top" title="weekly_hub_reports" alt="" coords="911,336,1421,512">
+<area shape="rect" id="node42" href="tables/school_documents.html" target="_top" title="school_documents" alt="" coords="1919,3238,2167,3414">
+<area shape="rect" id="node43" href="tables/school_feedbacks.html" target="_top" title="school_feedbacks" alt="" coords="1835,2815,2251,2991">
+<area shape="rect" id="node44" href="tables/student_group_transfer_trail.html" target="_top" title="student_group_transfer_trail" alt="" coords="2385,2550,2727,2726">
+<area shape="rect" id="node47" href="tables/intervention_session_notes.html" target="_top" title="intervention_session_notes" alt="" coords="1879,756,2207,932">
+<area shape="rect" id="node48" href="tables/student_outcomes.html" target="_top" title="student_outcomes" alt="" coords="2423,4407,2689,4583">
+<area shape="rect" id="node49" href="tables/fellow_documents.html" target="_top" title="fellow_documents" alt="" coords="1920,3431,2165,3607">
+<area shape="rect" id="node51" href="tables/ops_users.html" target="_top" title="ops_users" alt="" coords="644,1891,840,2067">
+<area shape="rect" id="node52" href="tables/clinical_teams.html" target="_top" title="clinical_teams" alt="" coords="637,2120,847,2296">
+<area shape="rect" id="node54" href="tables/weekly_fellow_ratings.html" target="_top" title="weekly_fellow_ratings" alt="" coords="1465,2412,1791,2618">
+<area shape="rect" id="node55" href="tables/clinical_case_transfer_trail.html" target="_top" title="clinical_case_transfer_trail" alt="" coords="2944,1383,3265,1530">
+<area shape="rect" id="node56" href="tables/sessions.html" target="_top" title="sessions" alt="" coords="1955,4407,2131,4583">
+<area shape="rect" id="node57" href="tables/implementer_members.html" target="_top" title="implementer_members" alt="" coords="1897,4744,2188,4920">
+<area shape="rect" id="node59" href="tables/weekly_team_meeting_reports.html" target="_top" title="weekly_team_meeting_reports" alt="" coords="987,530,1345,706">
+<area shape="rect" id="node60" href="tables/student_attendances.html" target="_top" title="student_attendances" alt="" coords="2419,2210,2693,2532">
+<area shape="rect" id="node61" href="tables/user_avatars.html" target="_top" title="user_avatars" alt="" coords="1943,4938,2142,5090">
+</map>
+                                        <a name='diagram'><img id="compactDegreeImg" src="diagrams/summary/relationships.real.compact.png" usemap="#compactRelationshipsDiagram" class="diagram" border="0" align="left"></a>
+                                    </div>
+                                    <div class="chart tab-pane " id="largeDegreeImg-chart" style="position: relative; overflow-x:auto;">
+                                        <map id="largeRelationshipsDiagram" name="largeRelationshipsDiagram">
+<area shape="rect" id="node1" href="tables/clinical_expert_case_notes.html" target="_top" title="clinical_expert_case_notes" alt="" coords="2945,5160,3265,5400">
+<area shape="rect" id="node19" href="tables/clinical_screening_info.html" target="_top" title="clinical_screening_info" alt="" coords="2295,5321,2817,6852">
+<area shape="rect" id="node2" href="tables/clinical_follow_up_treatment_plan.html" target="_top" title="clinical_follow_up_treatment_plan" alt="" coords="2877,5417,3332,5775">
+<area shape="rect" id="node3" href="tables/delayed_payment_requests.html" target="_top" title="delayed_payment_requests" alt="" coords="2391,387,2721,715">
+<area shape="rect" id="node6" href="tables/fellows.html" target="_top" title="fellows" alt="" coords="1033,1505,1299,2244">
+<area shape="rect" id="node25" href="tables/intervention_sessions.html" target="_top" title="intervention_sessions" alt="" coords="1488,2295,1768,2857">
+<area shape="rect" id="node28" href="tables/supervisors.html" target="_top" title="supervisors" alt="" coords="617,3416,867,4301">
+<area shape="rect" id="node38" href="tables/fellow_attendances.html" target="_top" title="fellow_attendances" alt="" coords="1910,459,2175,1080">
+<area shape="rect" id="node4" href="tables/clinical_case_notes.html" target="_top" title="clinical_case_notes" alt="" coords="3395,6240,3728,6773">
+<area shape="rect" id="node11" href="tables/clinical_session_attendance.html" target="_top" title="clinical_session_attendance" alt="" coords="2939,6167,3271,6495">
+<area shape="rect" id="node35" href="tables/users.html" target="_top" title="users" alt="" coords="1540,5944,1716,6243">
+<area shape="rect" id="node5" href="tables/payout_statements.html" target="_top" title="payout_statements" alt="" coords="2962,4588,3247,5063">
+<area shape="rect" id="node17" href="tables/special_session_approval_requests.html" target="_top" title="special_session_approval_requests" alt="" coords="2358,4911,2754,5268">
+<area shape="rect" id="node31" href="tables/implementers.html" target="_top" title="implementers" alt="" coords="5,6881,249,7297">
+<area shape="rect" id="node34" href="tables/hubs.html" target="_top" title="hubs" alt="" coords="339,5443,528,5741">
+<area shape="rect" id="node7" href="tables/supervisor_attendances.html" target="_top" title="supervisor_attendances" alt="" coords="1893,4256,2192,4643">
+<area shape="rect" id="node39" href="tables/schools.html" target="_top" title="schools" alt="" coords="997,3547,1335,4813">
+<area shape="rect" id="node50" href="tables/projects.html" target="_top" title="projects" alt="" coords="7,2923,247,3368">
+<area shape="rect" id="node8" href="tables/session_comments.html" target="_top" title="session_comments" alt="" coords="1917,4660,2169,4900">
+<area shape="rect" id="node9" href="tables/implementer_invites.html" target="_top" title="implementer_invites" alt="" coords="299,6715,567,7013">
+<area shape="rect" id="node10" href="tables/clinical_case_termination.html" target="_top" title="clinical_case_termination" alt="" coords="3392,5895,3731,6223">
+<area shape="rect" id="node12" href="tables/school_dropout_history.html" target="_top" title="school_dropout_history" alt="" coords="1897,6977,2189,7247">
+<area shape="rect" id="node13" href="tables/fellow_complaints.html" target="_top" title="fellow_complaints" alt="" coords="1920,1097,2165,1396">
+<area shape="rect" id="node14" href="tables/fellow_payment_complaints.html" target="_top" title="fellow_payment_complaints" alt="" coords="2390,768,2722,1213">
+<area shape="rect" id="node15" href="tables/fellow_reporting_notes.html" target="_top" title="fellow_reporting_notes" alt="" coords="1483,1245,1773,1485">
+<area shape="rect" id="node16" href="tables/intervention_session_ratings.html" target="_top" title="intervention_session_ratings" alt="" coords="1871,2072,2214,2517">
+<area shape="rect" id="node40" href="tables/hub_coordinators.html" target="_top" title="hub_coordinators" alt="" coords="617,5519,867,6287">
+<area shape="rect" id="node18" href="tables/student_reporting_notes.html" target="_top" title="student_reporting_notes" alt="" coords="2403,2951,2709,3220">
+<area shape="rect" id="node53" href="tables/students.html" target="_top" title="students" alt="" coords="1910,3031,2175,4239">
+<area shape="rect" id="node45" href="tables/clinical_leads.html" target="_top" title="clinical_leads" alt="" coords="617,7103,867,7783">
+<area shape="rect" id="node20" href="tables/accounts.html" target="_top" title="accounts" alt="" coords="1928,6039,2157,6455">
+<area shape="rect" id="node21" href="tables/monthly_supervisor_evaluation.html" target="_top" title="monthly_supervisor_evaluation" alt="" coords="984,4975,1348,5772">
+<area shape="rect" id="node22" href="tables/repayment_requests.html" target="_top" title="repayment_requests" alt="" coords="2422,5,2690,333">
+<area shape="rect" id="node23" href="tables/clinical_follow_up_treatment_pl_7e21b335.html" target="_top" title="clinical_follow_up_treatment_plan_audit_trail" alt="" coords="2861,6704,3348,6973">
+<area shape="rect" id="node24" href="tables/project_implementers.html" target="_top" title="project_implementers" alt="" coords="293,4267,573,4389">
+<area shape="rect" id="node46" href="tables/session_names.html" target="_top" title="session_names" alt="" coords="633,3035,851,3363">
+<area shape="rect" id="node26" href="tables/files.html" target="_top" title="files" alt="" coords="1545,7336,1711,7752">
+<area shape="rect" id="node27" href="tables/intervention_group_reports.html" target="_top" title="intervention_group_reports" alt="" coords="1877,1521,2208,2055">
+<area shape="rect" id="node58" href="tables/intervention_groups.html" target="_top" title="intervention_groups" alt="" coords="1495,1913,1761,2241">
+<area shape="rect" id="node29" href="tables/implementer_avatars.html" target="_top" title="implementer_avatars" alt="" coords="1905,7805,2180,7957">
+<area shape="rect" id="node30" href="tables/user_recent_opens.html" target="_top" title="user_recent_opens" alt="" coords="1917,6472,2168,6653">
+<area shape="rect" id="node32" href="tables/overall_fellow_evaluations.html" target="_top" title="overall_fellow_evaluations" alt="" coords="1468,1503,1788,1860">
+<area shape="rect" id="node33" href="tables/supervisor_complaints.html" target="_top" title="supervisor_complaints" alt="" coords="1023,5789,1309,6088">
+<area shape="rect" id="node36" href="tables/payout_reconciliations.html" target="_top" title="payout_reconciliations" alt="" coords="1485,900,1771,1228">
+<area shape="rect" id="node37" href="tables/reimbursement_requests.html" target="_top" title="reimbursement_requests" alt="" coords="1011,6105,1321,6609">
+<area shape="rect" id="node41" href="tables/weekly_hub_reports.html" target="_top" title="weekly_hub_reports" alt="" coords="911,6663,1421,7225">
+<area shape="rect" id="node42" href="tables/school_documents.html" target="_top" title="school_documents" alt="" coords="1919,5579,2167,5877">
+<area shape="rect" id="node43" href="tables/school_feedbacks.html" target="_top" title="school_feedbacks" alt="" coords="1835,5233,2251,5561">
+<area shape="rect" id="node44" href="tables/student_group_transfer_trail.html" target="_top" title="student_group_transfer_trail" alt="" coords="2385,2693,2727,2933">
+<area shape="rect" id="node47" href="tables/intervention_session_notes.html" target="_top" title="intervention_session_notes" alt="" coords="1879,2643,2207,2941">
+<area shape="rect" id="node48" href="tables/student_outcomes.html" target="_top" title="student_outcomes" alt="" coords="2423,6905,2689,12103">
+<area shape="rect" id="node49" href="tables/fellow_documents.html" target="_top" title="fellow_documents" alt="" coords="1920,4917,2165,5216">
+<area shape="rect" id="node51" href="tables/ops_users.html" target="_top" title="ops_users" alt="" coords="644,6376,840,6733">
+<area shape="rect" id="node52" href="tables/clinical_teams.html" target="_top" title="clinical_teams" alt="" coords="637,6787,847,7085">
+<area shape="rect" id="node54" href="tables/weekly_fellow_ratings.html" target="_top" title="weekly_fellow_ratings" alt="" coords="1465,2947,1791,3421">
+<area shape="rect" id="node55" href="tables/clinical_case_transfer_trail.html" target="_top" title="clinical_case_transfer_trail" alt="" coords="2944,5792,3265,6149">
+<area shape="rect" id="node56" href="tables/sessions.html" target="_top" title="sessions" alt="" coords="1955,6671,2131,6852">
+<area shape="rect" id="node57" href="tables/implementer_members.html" target="_top" title="implementer_members" alt="" coords="1897,7264,2188,7475">
+<area shape="rect" id="node59" href="tables/weekly_team_meeting_reports.html" target="_top" title="weekly_team_meeting_reports" alt="" coords="987,7243,1345,7747">
+<area shape="rect" id="node60" href="tables/student_attendances.html" target="_top" title="student_attendances" alt="" coords="2419,2231,2693,2676">
+<area shape="rect" id="node61" href="tables/user_avatars.html" target="_top" title="user_avatars" alt="" coords="1943,7492,2142,7644">
+</map>
+                                        <a name='diagram'><img id="largeDegreeImg" src="diagrams/summary/relationships.real.large.png" usemap="#largeRelationshipsDiagram" class="diagram" border="0" align="left"></a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div><!-- /.box-body -->
+                    </div>
+                </section>
+            </div>
+            <!-- /.content-wrapper -->
+            <footer class="main-footer">
+                <div>
+                    <div class="pull-right hidden-xs">
+                        <a href="https://github.com/schemaspy/schemaspy" title="GitHub for SchemaSpy"><i class="fa fa-github-square fa-2x"></i></a>
+                        <a href="http://stackoverflow.com/questions/tagged/schemaspy" title="StackOverflow for SchemaSpy"><i class="fa fa-stack-overflow fa-2x"></i></a>
+                    </div>
+                    <strong>Generated by <a href="http://schemaspy.org/" class="logo-text"><i class="fa fa-database"></i> SchemaSpy 6.2.2</a></strong>
+                </div>
+                <!-- /.container -->
+            </footer>
+        </div>
+        <!-- ./wrapper -->
+
+        <!-- jQuery 2.2.3 -->
+        <script src="bower/admin-lte/plugins/jQuery/jquery-2.2.3.min.js"></script>
+        <script src="bower/admin-lte/plugins/jQueryUI/jquery-ui.min.js"></script>
+        <!-- Bootstrap 3.3.5 -->
+        <script src="bower/admin-lte/bootstrap/js/bootstrap.min.js"></script>
+        <!-- DataTables -->
+        <script src="bower/datatables.net/jquery.dataTables.min.js"></script>
+        <script src="bower/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
+        <script src="bower/datatables.net-buttons/dataTables.buttons.min.js"></script>
+        <script src="bower/datatables.net-buttons-bs/js/buttons.bootstrap.min.js"></script>
+        <script src="bower/datatables.net-buttons/buttons.html5.min.js"></script>
+        <script src="bower/datatables.net-buttons/buttons.print.min.js"></script>
+        <script src="bower/datatables.net-buttons/buttons.colVis.min.js"></script>
+        <!-- SheetJS -->
+        <script src="bower/js-xlsx/xlsx.full.min.js"></script>
+        <!-- pdfmake -->
+        <script src="bower/pdfmake/pdfmake.min.js"></script>
+        <script src="bower/pdfmake/vfs_fonts.js"></script>
+        <!-- SlimScroll -->
+        <script src="bower/admin-lte/plugins/slimScroll/jquery.slimscroll.min.js"></script>
+        <!-- FastClick -->
+        <script src="bower/admin-lte/plugins/fastclick/fastclick.js"></script>
+        <!-- Salvattore -->
+        <script src="bower/salvattore/salvattore.min.js"></script>
+        <!-- AnchorJS -->
+        <script src="bower/anchor-js/anchor.min.js"></script>
+        <!-- CodeMirror -->
+        <script src="bower/codemirror/codemirror.js"></script>
+        <script src="bower/codemirror/sql.js"></script>
+        <!-- AdminLTE App -->
+        <script src="bower/admin-lte/dist/js/app.min.js"></script>
+        <script src="relationships.js"></script>
+        <script src="schemaSpy.js"></script>
+    </body>
+</html>
