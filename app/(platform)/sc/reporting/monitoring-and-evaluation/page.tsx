@@ -11,6 +11,10 @@ export default async function MonitoringAndEvaluationPage() {
     return <div>Access denied</div>;
   }
 
+  if (!supervisor.hub) {
+    return <div>Configuration error: Supervisor hub not found</div>;
+  }
+
   if (!METABASE_SECRET_KEY) {
     return <div>Configuration error: Metabase secret key not found</div>;
   }
