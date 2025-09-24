@@ -92,6 +92,7 @@
     "google-auth-library": "^9.4.2",
     "googleapis": "^131.0.0",
     "gsap": "^3.12.5",
+    "jsonwebtoken": "^9.0.0",
     "libphonenumber-js": "^1.10.49",
     "lucide-react": "^0.525.0",
     "mime-types": "^2.1.35",
