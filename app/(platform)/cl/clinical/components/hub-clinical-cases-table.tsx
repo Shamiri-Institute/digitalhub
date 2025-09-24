@@ -1,9 +1,9 @@
 "use client";
 import type { HubClinicalCases } from "#/app/(platform)/cl/clinical/actions";
-import { columns } from "#/components/common/clinical/ct-cl-columns";
 import ViewCaseSessions from "#/app/(platform)/cl/clinical/components/view-case-session";
 import ViewEmergencyPresentingIssues from "#/app/(platform)/cl/clinical/components/view-emergency-presenting-issues";
 import ViewGeneralPresentingIssues from "#/app/(platform)/cl/clinical/components/view-general-presenting-issues";
+import { columns } from "#/components/common/clinical/ct-cl-columns";
 import DataTable from "#/components/data-table";
 
 export default function AllHubClinicalCasesTable({ cases }: { cases: HubClinicalCases[] }) {
