@@ -391,6 +391,12 @@ function ReportingDropdown({
         >
           Fellow Reports
         </Link>
+        <Link
+          className="block px-4 py-2 hover:bg-gray-200"
+          href={`/${mainRoute}/reporting/monitoring-and-evaluation`}
+        >
+          Monitoring and Evaluation Report
+        </Link>
       </PopoverContent>
     </Popover>
   );
