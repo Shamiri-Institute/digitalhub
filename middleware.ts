@@ -16,7 +16,11 @@ export const config = {
 };
 
 export default async function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname.includes("monitoring")) {
+  // ensure we allow /monitoring endpoint used by vercel and we bypass /<role>/reporting/monitoring-and-evaluation for other authenticated functions
+  if (
+    request.nextUrl.pathname.includes("monitoring") &&
+    !request.nextUrl.pathname.includes("monitoring-and-evaluation")
+  ) {
     return NextResponse.next();
   }
 

@@ -376,7 +376,10 @@ function ReportingDropdown({
         />
       </PopoverTrigger>
       <PopoverContent className="absolute min-w-44 space-y-2 rounded-md  bg-white p-2 shadow-md">
-        <Link href={`/${mainRoute}/reporting`} className="block px-4 py-2 hover:bg-gray-200">
+        <Link
+          href={`/${mainRoute}/reporting/expenses/fellows`}
+          className="block px-4 py-2 hover:bg-gray-200"
+        >
           Expenses
         </Link>
         <Link
@@ -391,6 +394,14 @@ function ReportingDropdown({
         >
           Fellow Reports
         </Link>
+        {mainRoute === "sc" ? (
+          <Link
+            className="block px-4 py-2 hover:bg-gray-200"
+            href={`/${mainRoute}/reporting/monitoring-and-evaluation`}
+          >
+            Monitoring and Evaluation Report
+          </Link>
+        ) : null}
       </PopoverContent>
     </Popover>
   );
