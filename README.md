@@ -42,6 +42,9 @@ S3_UPLOAD_SECRET="your-s3-upload-secret"
 S3_UPLOAD_BUCKET="your-s3-bucket-name"
 S3_UPLOAD_REGION="your-s3-region"
 
+# Metabase Configuration
+METABASE_SECRET_KEY="your-metabase-secret-key" # Secret key for signing Metabase JWT tokens
+
 # Application Settings
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 NEXT_PUBLIC_ENV="development"
