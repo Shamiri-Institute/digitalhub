@@ -1,10 +1,10 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import type { SchoolFeedbackType } from "#/app/(platform)/hc/reporting/school-reports/school-feedback/action";
 import { columns } from "#/components/common/school-reports/school-feedback/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
-import { SchoolFeedbackType } from "#/app/(platform)/hc/reporting/school-reports/school-feedback/action";
 
 export default function SchoolFeedbackTableSkeleton() {
   const loadingColumns: ColumnDef<SchoolFeedbackType>[] = columns.map((column) => {

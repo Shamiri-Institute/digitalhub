@@ -1,8 +1,8 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { columns } from "#/components/common/fellow-reports/student-group-evaluation/columns";
 import type { StudentGroupEvaluationType } from "#/components/common/fellow-reports/student-group-evaluation/actions";
+import { columns } from "#/components/common/fellow-reports/student-group-evaluation/columns";
 import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
 
