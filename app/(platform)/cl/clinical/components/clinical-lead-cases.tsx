@@ -1,6 +1,6 @@
 "use client";
 
-import { ClinicalLeadCasesType } from "#/app/(platform)/cl/clinical/actions";
+import type { ClinicalLeadCasesType } from "#/app/(platform)/cl/clinical/actions";
 import { columns } from "#/app/(platform)/sc/clinical/columns";
 import { ClinicalDiagnosingBoard } from "#/app/(platform)/sc/clinical/components/clinical-diagnosing-board";
 import ViewMarkClinicalSessions from "#/app/(platform)/sc/clinical/components/view-mark-clinical-sessions";
