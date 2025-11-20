@@ -5,25 +5,23 @@ import { ImplementerRole } from "@prisma/client";
 import { format } from "date-fns";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import type {
-  CurrentClinicalLead,
-  CurrentClinicalTeam,
-  CurrentFellow,
-  CurrentHubCoordinator,
-  CurrentOpsUser,
-  CurrentSupervisor,
-  CurrentUser,
-} from "#/app/auth";
+import type { CurrentPersonnel } from "#/app/auth";
 import { Icons } from "#/components/icons";
 import { ProfileSchema } from "#/components/profile/schema";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -56,61 +54,73 @@ import { cn } from "#/lib/utils";
 interface ProfileDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  profile:
-    | CurrentHubCoordinator
-    | CurrentSupervisor
-    | CurrentFellow
-    | CurrentClinicalLead
-    | CurrentOpsUser
-    | CurrentClinicalTeam
-    | CurrentUser
-    | null;
+  profile: CurrentPersonnel | null;
 }
 
 export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const counties = KENYAN_COUNTIES.map((c) => c.name);
+  const personnelProfile = profile?.profile;
+  const session = profile?.session;
 
   const form = useForm<z.infer<typeof ProfileSchema>>({
     resolver: zodResolver(ProfileSchema),
     defaultValues: {
       name:
-        (profile &&
-          ("coordinatorName" in profile
-            ? profile.coordinatorName
-            : "supervisorName" in profile
-              ? profile.supervisorName
-              : "fellowName" in profile
-                ? profile.fellowName
-                : "clinicalLeadName" in profile
-                  ? profile.clinicalLeadName
-                  : "name" in profile
-                    ? profile.name
-                    : profile.user?.user?.name)) ||
+        (personnelProfile && "coordinatorName" in personnelProfile
+          ? personnelProfile.coordinatorName
+          : null) ||
+        (personnelProfile && "supervisorName" in personnelProfile
+          ? personnelProfile.supervisorName
+          : null) ||
+        (personnelProfile && "fellowName" in personnelProfile
+          ? personnelProfile.fellowName
+          : null) ||
+        (personnelProfile && "clinicalLeadName" in personnelProfile
+          ? personnelProfile.clinicalLeadName
+          : null) ||
+        (personnelProfile && "adminName" in personnelProfile ? personnelProfile.adminName : null) ||
         "",
-      email: profile?.user?.user?.email || "",
-      idNumber: profile && "idNumber" in profile ? profile.idNumber || "" : "",
-      cellNumber: profile && "cellNumber" in profile ? profile.cellNumber || "" : "",
-      mpesaNumber: profile && "mpesaNumber" in profile ? profile.mpesaNumber || "" : "",
-      mpesaName: profile && "mpesaName" in profile ? profile.mpesaName || "" : "",
+      email: session?.user?.email || "",
+      idNumber:
+        personnelProfile && "idNumber" in personnelProfile ? personnelProfile.idNumber || "" : "",
+      cellNumber:
+        personnelProfile && "cellNumber" in personnelProfile
+          ? personnelProfile.cellNumber || ""
+          : "",
+      mpesaNumber:
+        personnelProfile && "mpesaNumber" in personnelProfile
+          ? personnelProfile.mpesaNumber || ""
+          : "",
+      mpesaName:
+        personnelProfile && "mpesaName" in personnelProfile ? personnelProfile.mpesaName || "" : "",
       dateOfBirth:
-        profile && "dateOfBirth" in profile && profile.dateOfBirth
-          ? new Date(profile.dateOfBirth)
+        personnelProfile && "dateOfBirth" in personnelProfile && personnelProfile.dateOfBirth
+          ? new Date(personnelProfile.dateOfBirth)
           : undefined,
       gender:
-        profile && "gender" in profile
-          ? (profile.gender as "Male" | "Female" | "Other") || "Male"
+        personnelProfile && "gender" in personnelProfile
+          ? (personnelProfile.gender as "Male" | "Female" | "Other") || "Male"
           : "Male",
-      county: profile && "county" in profile ? profile.county || "" : "",
-      subCounty: profile && "subCounty" in profile ? profile.subCounty || "" : "",
-      bankName: profile && "bankName" in profile ? profile.bankName || "" : "",
-      bankBranch: profile && "bankBranch" in profile ? profile.bankBranch || "" : "",
+      county: personnelProfile && "county" in personnelProfile ? personnelProfile.county || "" : "",
+      subCounty:
+        personnelProfile && "subCounty" in personnelProfile ? personnelProfile.subCounty || "" : "",
+      bankName:
+        personnelProfile && "bankName" in personnelProfile ? personnelProfile.bankName || "" : "",
+      bankBranch:
+        personnelProfile && "bankBranch" in personnelProfile
+          ? personnelProfile.bankBranch || ""
+          : "",
       bankAccountNumber:
-        profile && "bankAccountNumber" in profile ? profile.bankAccountNumber || "" : "",
-      bankAccountName: profile && "bankAccountName" in profile ? profile.bankAccountName || "" : "",
-      kra: profile && "kra" in profile ? profile.kra || "" : "",
-      role: profile?.user?.membership?.role || ImplementerRole.FELLOW,
+        personnelProfile && "bankAccountNumber" in personnelProfile
+          ? personnelProfile.bankAccountNumber || ""
+          : "",
+      bankAccountName:
+        personnelProfile && "bankAccountName" in personnelProfile
+          ? personnelProfile.bankAccountName || ""
+          : "",
+      kra: personnelProfile && "kra" in personnelProfile ? personnelProfile.kra || "" : "",
+      role: session?.user?.activeMembership?.role || ImplementerRole.FELLOW,
     },
   });
 
@@ -123,9 +133,9 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
   }, [countyWatcher, form]);
 
   const onSubmit = async (data: z.infer<typeof ProfileSchema>) => {
-    if (!profile) return;
-    const role = profile.user?.membership?.role;
-    let response;
+    if (!session) return;
+    const role = session.user?.activeMembership?.role;
+    let response: { success: boolean; message?: string };
     switch (role) {
       case ImplementerRole.SUPERVISOR:
         response = await updateSupervisorProfile(data);
@@ -168,13 +178,13 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
   };
 
   const showBankInfo =
-    profile &&
-    profile.user?.membership?.role &&
-    (profile.user.membership.role === ImplementerRole.SUPERVISOR ||
-      profile.user.membership.role === ImplementerRole.HUB_COORDINATOR ||
-      profile.user.membership.role === ImplementerRole.CLINICAL_LEAD);
+    session &&
+    session.user?.activeMembership?.role &&
+    (session.user.activeMembership.role === ImplementerRole.SUPERVISOR ||
+      session.user.activeMembership.role === ImplementerRole.HUB_COORDINATOR ||
+      session.user.activeMembership.role === ImplementerRole.CLINICAL_LEAD);
 
-  const isFellow = profile?.user?.membership?.role === ImplementerRole.FELLOW;
+  const isFellow = session?.user?.activeMembership?.role === ImplementerRole.FELLOW;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -182,12 +192,14 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <span className="text-xl">{isFellow ? "View profile" : "Edit profile"}</span>
+              <DialogTitle className="text-xl">
+                {isFellow ? "View profile" : "Edit profile"}
+              </DialogTitle>
             </DialogHeader>
             <div className="flex items-center gap-2 pt-4">
               <div className="relative h-7 w-7 shrink-0">
                 <Image
-                  src={profile?.user?.user?.image || "/placeholder.png"}
+                  src={session?.user?.image || "/placeholder.png"}
                   alt="Profile"
                   fill
                   className="h-7 w-7 rounded-full border object-cover"
@@ -195,26 +207,27 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
               </div>
               <p className="text-wrap text-[20px] font-semibold text-gray-600">
                 <span>
-                  {profile &&
-                    ("coordinatorName" in profile
-                      ? profile.coordinatorName
-                      : "supervisorName" in profile
-                        ? profile.supervisorName
-                        : "fellowName" in profile
-                          ? profile.fellowName
-                          : "clinicalLeadName" in profile
-                            ? profile.clinicalLeadName
-                            : "name" in profile
-                              ? profile.name
-                              : profile.user?.user?.name)}
+                  {personnelProfile &&
+                    ("coordinatorName" in personnelProfile
+                      ? personnelProfile.coordinatorName
+                      : "supervisorName" in personnelProfile
+                        ? personnelProfile.supervisorName
+                        : "fellowName" in personnelProfile
+                          ? personnelProfile.fellowName
+                          : "clinicalLeadName" in personnelProfile
+                            ? personnelProfile.clinicalLeadName
+                            : "name" in personnelProfile
+                              ? personnelProfile.name
+                              : session?.user?.name)}
                 </span>
                 <span className="text-[20px] font-semibold text-gray-600">
                   {" "}
                   -{" "}
                   <span className="capitalize">
-                    {profile &&
-                      (("assignedHub" in profile && profile.assignedHub?.hubName) ||
-                        ("hub" in profile && profile.hub?.hubName))}
+                    {personnelProfile &&
+                      (("assignedHub" in personnelProfile &&
+                        personnelProfile.assignedHub?.hubName) ||
+                        ("hub" in personnelProfile && personnelProfile.hub?.hubName))}
                   </span>
                 </span>
               </p>
@@ -444,7 +457,7 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
                   />
                 </div>
               </div>
-              {profile && "fellowName" in profile && (
+              {personnelProfile && "fellowName" in personnelProfile && (
                 <div className="flex flex-col">
                   <div className="col-span-2 py-2">
                     <span className="pb-2 text-xs uppercase text-shamiri-text-grey">
@@ -460,7 +473,7 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
                         <FormItem>
                           <FormLabel>
                             M-Pesa number{" "}
-                            {profile?.user?.membership?.role === ImplementerRole.FELLOW && (
+                            {session?.user?.activeMembership?.role === ImplementerRole.FELLOW && (
                               <span className="text-shamiri-light-red">*</span>
                             )}
                           </FormLabel>
@@ -488,7 +501,7 @@ export function ProfileDialog({ isOpen, onOpenChange, profile }: ProfileDialogPr
                         <FormItem>
                           <FormLabel>
                             M-Pesa name{" "}
-                            {profile?.user?.membership?.role === ImplementerRole.FELLOW && (
+                            {session?.user?.activeMembership?.role === ImplementerRole.FELLOW && (
                               <span className="text-shamiri-light-red">*</span>
                             )}
                           </FormLabel>

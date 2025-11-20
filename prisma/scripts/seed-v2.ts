@@ -375,6 +375,14 @@ async function createCoreUsers(
 
   const membershipData = users.map((user) => {
     const role = userData.find((u) => u.id === user.id)?.role as ImplementerRole;
+    if (role === ImplementerRole.ADMIN) {
+      return implementers.flatMap((implementer) => ({
+        userId: user.id,
+        implementerId: implementer.id,
+        role,
+        identifier: admins.find((admin) => admin.email === "admin@shamiri.institute")?.id,
+      }));
+    }
     return {
       userId: user.id,
       implementerId: faker.helpers.arrayElement(implementers).id,
@@ -392,9 +400,7 @@ async function createCoreUsers(
                   ? faker.helpers.arrayElement(operations).id
                   : role === "CLINICAL_TEAM"
                     ? clinicalTeam.id
-                    : role === "ADMIN"
-                      ? faker.helpers.arrayElement(admins).id
-                      : null,
+                    : null,
     };
   });
 

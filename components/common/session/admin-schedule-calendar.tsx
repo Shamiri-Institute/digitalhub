@@ -13,8 +13,8 @@ import { ScheduleCalendar } from "./schedule-calendar";
 import type { CurrentAdminUser } from "#/app/auth";
 
 export function AdminScheduleCalendar({ adminUser }: { adminUser: CurrentAdminUser }) {
-  const implementerId = adminUser?.user.membership?.implementerId;
-  const role = adminUser?.user.membership?.role;
+  const implementerId = adminUser?.session.user.activeMembership?.implementerId;
+  const role = adminUser?.session.user.activeMembership?.role;
   const [hubSessionTypes, setHubSessionTypes] = useState<Prisma.SessionNameGetPayload<{}>[]>([]);
   const [supervisors, setSupervisors] = useState<ImplementerSupervisor[]>([]);
   const [fellowRatings, setFellowRatings] = useState<ImplementerFellowRating[]>([]);

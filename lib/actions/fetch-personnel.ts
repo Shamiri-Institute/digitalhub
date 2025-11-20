@@ -2,7 +2,7 @@
 
 import { ImplementerRole } from "@prisma/client";
 import { JWTMembership } from "#/app/api/auth/[...nextauth]/route";
-import { getCurrentUser } from "#/app/auth";
+import { getCurrentUserSession } from "#/app/auth";
 import type { Personnel } from "#/lib/types/personnel";
 import { db } from "#/lib/db";
 
@@ -126,21 +126,21 @@ export async function fetchPersonnel() {
 
   const personnel = [...hubCoordinators, ...supervisors, ...fellows, ...clinicalLeads, ...opsUsers];
 
-  const user = await getCurrentUser();
-  if (!user) {
+  const session = await getCurrentUserSession();
+  if (!session) {
     return null;
   }
-  const { membership } = user;
+  const { activeMembership } = session.user;
 
-  const activePersonnelId = membership.identifier || "";
+  const activePersonnelId = activeMembership?.identifier || "";
 
   return { personnel, activePersonnelId };
 }
 
 export async function fetchImplementerPersonnel(membership: JWTMembership) {
-  const user = await getCurrentUser();
-  if (!user) {
-    throw new Error("User not found");
+  const session = await getCurrentUserSession();
+  if (!session) {
+    throw new Error("Session not found");
   }
 
   const implementerMembers = await db.implementerMember.findMany({
@@ -304,9 +304,9 @@ export async function fetchImplementerPersonnel(membership: JWTMembership) {
 export type ImplementerPersonnel = Awaited<ReturnType<typeof fetchImplementerPersonnel>>;
 
 export async function fetchPersonnelMemberships(membership: JWTMembership) {
-  const user = await getCurrentUser();
-  if (!user) {
-    throw new Error("User not found");
+  const session = await getCurrentUserSession();
+  if (!session) {
+    throw new Error("Session not found");
   }
 
   const memberships = await db.implementerMember.findMany({

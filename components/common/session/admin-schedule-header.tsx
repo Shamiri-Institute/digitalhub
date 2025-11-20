@@ -21,7 +21,7 @@ export function AdminScheduleHeader({ adminUser }: { adminUser: CurrentAdminUser
   const [loading, setLoading] = useState(adminUser === null);
 
   useEffect(() => {
-    const implementerId = adminUser?.user.membership?.implementerId;
+    const implementerId = adminUser?.session.user.activeMembership?.implementerId;
     if (!implementerId || adminUser === null) return;
 
     const loadStats = async () => {

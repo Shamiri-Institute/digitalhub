@@ -16,16 +16,6 @@ import { usePathname } from "next/navigation";
 import { Building2, Menu } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
-import type {
-  CurrentAdminUser,
-  CurrentClinicalLead,
-  CurrentClinicalTeam,
-  CurrentFellow,
-  CurrentHubCoordinator,
-  CurrentOpsUser,
-  CurrentSupervisor,
-  CurrentUser,
-} from "#/app/auth";
 import { MembershipSwitcher } from "#/components/common/membership-switcher";
 import { ProfileDialog } from "#/components/common/profile/profile-dialog";
 import { RoleSwitcher } from "#/components/common/role-switcher";
@@ -42,6 +32,7 @@ import { cn } from "#/lib/utils";
 import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import type { Session } from "next-auth";
+import { CurrentPersonnel } from "#/app/auth";
 
 interface NavigationLinkProps {
   scheduleActive: boolean;
@@ -58,21 +49,12 @@ interface NavigationLinkProps {
 
 export function LayoutClient({
   children,
-  profile,
   session,
+  profile,
 }: {
   children: React.ReactNode;
-  profile:
-    | CurrentHubCoordinator
-    | CurrentSupervisor
-    | CurrentFellow
-    | CurrentClinicalLead
-    | CurrentOpsUser
-    | CurrentAdminUser
-    | CurrentUser
-    | CurrentClinicalTeam
-    | null;
   session: Session | null;
+  profile: CurrentPersonnel | null;
 }) {
   const pathname = usePathname();
   const [mainRoute, subRoute] = pathname.slice(1).split("/");

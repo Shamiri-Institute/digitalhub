@@ -8,11 +8,11 @@ import { ImplementerRole } from "@prisma/client";
 export type CurrentHubCoordinator = Awaited<ReturnType<typeof currentHubCoordinator>>;
 
 export async function currentHubCoordinator() {
-  const user = await getCurrentUser();
-  if (!user) {
+  const session = await getCurrentUserSession();
+  if (!session) {
     return null;
   }
-  const membership = user.session.user.activeMembership;
+  const membership = session.user.activeMembership;
   if (!membership) {
     return null;
   }
@@ -33,17 +33,17 @@ export async function currentHubCoordinator() {
     },
   });
 
-  return { ...hubCoordinator, user };
+  return { profile: hubCoordinator, session };
 }
 
 export type CurrentSupervisor = Awaited<ReturnType<typeof currentSupervisor>>;
 
 export async function currentSupervisor() {
-  const user = await getCurrentUser();
-  if (!user) {
+  const session = await getCurrentUserSession();
+  if (!session) {
     return null;
   }
-  const membership = user.session.user.activeMembership;
+  const membership = session.user.activeMembership;
   if (!membership) {
     return null;
   }
@@ -139,17 +139,17 @@ export async function currentSupervisor() {
     };
   });
 
-  return { ...supervisor, user, fellows: newFellowsData };
+  return { profile: supervisor, session, fellows: newFellowsData };
 }
 
 export type CurrentFellow = Awaited<ReturnType<typeof currentFellow>>;
 
 export async function currentFellow() {
-  const user = await getCurrentUser();
-  if (!user) {
+  const session = await getCurrentUserSession();
+  if (!session) {
     return null;
   }
-  const membership = user.session.user.activeMembership;
+  const membership = session.user.activeMembership;
   if (!membership) {
     return null;
   }
@@ -238,19 +238,17 @@ export async function currentFellow() {
     return null;
   }
 
-  return { ...fellow, user };
+  return { profile: fellow, session };
 }
-
-export type CurrentUser = Awaited<ReturnType<typeof getCurrentUser>>;
 
 export type CurrentClinicalLead = Awaited<ReturnType<typeof currentClinicalLead>>;
 
 export async function currentClinicalLead() {
-  const user = await getCurrentUser();
-  if (!user) {
+  const session = await getCurrentUserSession();
+  if (!session) {
     return null;
   }
-  const membership = user.session.user.activeMembership;
+  const membership = session.user.activeMembership;
   if (!membership) {
     return null;
   }
@@ -272,18 +270,18 @@ export async function currentClinicalLead() {
     return null;
   }
 
-  return { ...clinicalLead, user };
+  return { profile: clinicalLead, session };
 }
 
 export type CurrentClinicalTeam = Awaited<ReturnType<typeof currentClinicalTeam>>;
 
 export async function currentClinicalTeam() {
-  const user = await getCurrentUser();
-  if (!user) {
+  const session = await getCurrentUserSession();
+  if (!session) {
     return null;
   }
 
-  const membership = user.session.user.activeMembership;
+  const membership = session.user.activeMembership;
   if (!membership) {
     return null;
   }
@@ -306,20 +304,20 @@ export async function currentClinicalTeam() {
   }
 
   return {
-    ...clinicalTeam,
-    user,
+    profile: clinicalTeam,
+    session,
   };
 }
 
 export type CurrentOpsUser = Awaited<ReturnType<typeof currentOpsUser>>;
 
 export async function currentOpsUser() {
-  const user = await getCurrentUser();
-  if (!user) {
+  const session = await getCurrentUserSession();
+  if (!session) {
     return null;
   }
 
-  const membership = user.session.user.activeMembership;
+  const membership = session.user.activeMembership;
   if (!membership) {
     return null;
   }
@@ -341,18 +339,18 @@ export async function currentOpsUser() {
     return null;
   }
 
-  return { ...opsUser, user };
+  return { profile: opsUser, session };
 }
 
 export type CurrentAdminUser = Awaited<ReturnType<typeof currentAdminUser>>;
 
 export async function currentAdminUser() {
-  const user = await getCurrentUser();
-  if (!user) {
+  const session = await getCurrentUserSession();
+  if (!session) {
     return null;
   }
 
-  const membership = user.session.user.activeMembership;
+  const membership = session.user.activeMembership;
   if (!membership) {
     return null;
   }
@@ -370,10 +368,10 @@ export async function currentAdminUser() {
     return null;
   }
 
-  return { ...adminUser, user };
+  return { profile: adminUser, session };
 }
 
-export async function getCurrentUser() {
+export async function getCurrentUserSession() {
   const session = await getServerSession(authOptions);
   if (!session) {
     return null;
@@ -384,12 +382,10 @@ export async function getCurrentUser() {
     throw new Error("No memberships");
   }
 
-  const user = await db.user.findUniqueOrThrow({
-    where: { email: session.user.email ?? undefined },
-  });
-
-  return { session, user };
+  return session;
 }
+
+export type CurrentPersonnel = Awaited<ReturnType<typeof getCurrentPersonnel>>;
 
 export async function getCurrentPersonnel(): Promise<
   | CurrentSupervisor
@@ -397,16 +393,15 @@ export async function getCurrentPersonnel(): Promise<
   | CurrentFellow
   | CurrentClinicalLead
   | CurrentOpsUser
-  | CurrentUser
   | CurrentClinicalTeam
   | CurrentAdminUser
   | null
 > {
-  const user = await getCurrentUser();
-  if (!user) {
+  const session = await getCurrentUserSession();
+  if (!session) {
     return null;
   }
-  const role = user.session.user.activeMembership?.role;
+  const role = session.user.activeMembership?.role;
   if (!role) {
     return null;
   }

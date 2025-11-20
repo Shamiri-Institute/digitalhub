@@ -175,6 +175,8 @@ export const authOptions: AuthOptions = {
           },
         });
 
+        console.log("memberships", memberships, currentUser);
+
         if (memberships.length > 0) {
           const processedMemberships = memberships.map((m) => ({
             id: m.id,

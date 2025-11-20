@@ -10,7 +10,7 @@ import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogPortal } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogPortal } from "#/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,11 +89,11 @@ export default function SupervisorAttendance({
         <DialogPortal>
           <DialogContent className="w-5/6 max-w-none lg:w-4/5">
             <DialogHeader>
-              <span className="text-xl font-bold">
+              <DialogTitle className="text-xl font-bold">
                 {role === ImplementerRole.ADMIN
                   ? "View supervisor attendance"
                   : "Mark supervisor attendance"}
-              </span>
+              </DialogTitle>
             </DialogHeader>
             {session && (
               <SessionDetail

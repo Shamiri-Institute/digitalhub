@@ -17,7 +17,7 @@ import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogPortal } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogPortal } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -129,13 +129,13 @@ export default function FellowAttendance({
         <DialogPortal>
           <DialogContent className="w-3/4 max-w-none">
             <DialogHeader>
-              <span className="text-xl font-bold">
+              <DialogTitle className="text-xl font-bold">
                 {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
                   ? "View fellow attendance"
                   : role === ImplementerRole.SUPERVISOR
                     ? "Mark fellow attendance"
                     : null}
-              </span>
+              </DialogTitle>
             </DialogHeader>
             {session && (
               <SessionDetail
