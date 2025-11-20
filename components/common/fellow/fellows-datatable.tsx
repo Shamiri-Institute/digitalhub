@@ -93,7 +93,7 @@ export default function FellowsDatatable({
         renderTableActions={!hideActions && renderTableActions()}
         columnVisibilityState={{
           checkbox: role === ImplementerRole.HUB_COORDINATOR ? true : false,
-          "Supervisor": false
+          Supervisor: false,
         }}
       />
       {fellow && (
@@ -101,7 +101,10 @@ export default function FellowsDatatable({
           <FellowDetailsForm
             open={detailsDialog}
             onOpenChange={setDetailsDialog}
-            mode={role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN ? "view" : role === ImplementerRole.SUPERVISOR
+            mode={
+              role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
+                ? "view"
+                : role === ImplementerRole.SUPERVISOR
                   ? "edit"
                   : null
             }
@@ -156,9 +159,7 @@ export default function FellowsDatatable({
                 <DialogAlertWidget separator={false}>
                   <div className="flex items-center gap-2">
                     <span>{fellow.fellowName}</span>
-                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">
-                      {""}
-                    </span>
+                    <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
                     <span>{fellow.groupName}</span>
                   </div>
                 </DialogAlertWidget>
@@ -233,17 +234,18 @@ export function FellowsDatatableMenu({
         >
           View students in group
         </DropdownMenuItem>
-        {role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR && (
-          <DropdownMenuItem
-            disabled={fellow.groupId === null}
-            onClick={() => {
-              state.setFellow(fellow);
-              state.setReplaceDialog(true);
-            }}
-          >
-            Replace fellow
-          </DropdownMenuItem>
-        )}
+        {role === ImplementerRole.HUB_COORDINATOR ||
+          (role === ImplementerRole.SUPERVISOR && (
+            <DropdownMenuItem
+              disabled={fellow.groupId === null}
+              onClick={() => {
+                state.setFellow(fellow);
+                state.setReplaceDialog(true);
+              }}
+            >
+              Replace fellow
+            </DropdownMenuItem>
+          ))}
         <DropdownMenuItem
           onClick={() => {
             state.setFellow(fellow);

@@ -1,12 +1,7 @@
 "use client";
 
 import { Button } from "#/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-} from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import { Input } from "#/components/ui/input";
 import { Separator } from "#/components/ui/separator";
 import { format } from "date-fns";
@@ -44,19 +39,11 @@ export default function HubCoordinatorProfileDialog({
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <div className="font-medium">Full name</div>
-                <Input
-                  disabled
-                  value={coordinator?.coordinatorName}
-                  className="mt-1"
-                />
+                <Input disabled value={coordinator?.coordinatorName} className="mt-1" />
               </div>
               <div>
                 <div className="font-medium">Email address</div>
-                <Input
-                  disabled
-                  value={coordinator?.coordinatorEmail ?? ""}
-                  className="mt-1"
-                />
+                <Input disabled value={coordinator?.coordinatorEmail ?? ""} className="mt-1" />
               </div>
               <div>
                 <div className="font-medium">Phone Number</div>
@@ -75,47 +62,29 @@ export default function HubCoordinatorProfileDialog({
               </div>
               <div>
                 <div className="font-medium">National ID</div>
-                <Input
-                  disabled
-                  value={coordinator?.idNumber ?? ""}
-                  className="mt-1"
-                />
+                <Input disabled value={coordinator?.idNumber ?? ""} className="mt-1" />
               </div>
               <div>
                 <div className="font-medium">Gender</div>
-                <Input
-                  disabled
-                  value={coordinator?.gender ?? ""}
-                  className="mt-1"
-                />
+                <Input disabled value={coordinator?.gender ?? ""} className="mt-1" />
               </div>
               <div>
                 <div className="font-medium">Date of Birth</div>
                 <Input
                   disabled
                   value={
-                    coordinator?.dateOfBirth
-                      ? format(coordinator?.dateOfBirth, "dd/MM/yyyy")
-                      : ""
+                    coordinator?.dateOfBirth ? format(coordinator?.dateOfBirth, "dd/MM/yyyy") : ""
                   }
                   className="mt-1"
                 />
               </div>
               <div>
                 <div className="font-medium">County</div>
-                <Input
-                  disabled
-                  value={coordinator?.county ?? ""}
-                  className="mt-1"
-                />
+                <Input disabled value={coordinator?.county ?? ""} className="mt-1" />
               </div>
               <div>
                 <div className="font-medium">Sub-county</div>
-                <Input
-                  disabled
-                  value={coordinator?.subCounty ?? ""}
-                  className="mt-1"
-                />
+                <Input disabled value={coordinator?.subCounty ?? ""} className="mt-1" />
               </div>
             </div>
           </div>
@@ -129,35 +98,19 @@ export default function HubCoordinatorProfileDialog({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="font-medium">Bank name</div>
-                <Input
-                  disabled
-                  value={coordinator?.bankName ?? ""}
-                  className="mt-1"
-                />
+                <Input disabled value={coordinator?.bankName ?? ""} className="mt-1" />
               </div>
               <div>
                 <div className="font-medium">Bank branch</div>
-                <Input
-                  disabled
-                  value={coordinator?.bankBranch ?? ""}
-                  className="mt-1"
-                />
+                <Input disabled value={coordinator?.bankBranch ?? ""} className="mt-1" />
               </div>
               <div>
                 <div className="font-medium">Account number</div>
-                <Input
-                  disabled
-                  value={coordinator?.bankAccountNumber ?? ""}
-                  className="mt-1"
-                />
+                <Input disabled value={coordinator?.bankAccountNumber ?? ""} className="mt-1" />
               </div>
               <div>
                 <div className="font-medium">Account name</div>
-                <Input
-                  disabled
-                  value={coordinator?.bankAccountName ?? ""}
-                  className="mt-1"
-                />
+                <Input disabled value={coordinator?.bankAccountName ?? ""} className="mt-1" />
               </div>
             </div>
           </div>

@@ -2,9 +2,9 @@
 
 import { toast } from "#/components/ui/use-toast";
 import { fetchImplementerStats } from "#/lib/actions/implementer";
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { ScheduleHeader } from "./schedule-header";
+import type { CurrentAdminUser } from "#/app/auth";
 
 interface ImplementerStats {
   hub_count: number;
@@ -12,26 +12,23 @@ interface ImplementerStats {
   student_count: number;
 }
 
-export function AdminScheduleHeader() {
-  const { data: session } = useSession();
+export function AdminScheduleHeader({ adminUser }: { adminUser: CurrentAdminUser }) {
   const [stats, setStats] = useState<ImplementerStats>({
     hub_count: 0,
     school_count: 0,
     student_count: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(adminUser === null);
 
   useEffect(() => {
-    const implementerId = session?.user?.activeMembership?.implementerId;
-    if (!implementerId) return;
+    const implementerId = adminUser?.user.membership?.implementerId;
+    if (!implementerId || adminUser === null) return;
 
     const loadStats = async () => {
       try {
         const data = await fetchImplementerStats(implementerId);
         if (data.success) {
-          setStats(
-            data.data || { hub_count: 0, school_count: 0, student_count: 0 },
-          );
+          setStats(data.data || { hub_count: 0, school_count: 0, student_count: 0 });
         } else {
           toast({
             description: data.message,
@@ -46,27 +43,25 @@ export function AdminScheduleHeader() {
     };
 
     loadStats();
-  }, [session]);
+  }, [adminUser]);
 
   return (
-    <>
-      <ScheduleHeader
-        loading={loading}
-        stats={[
-          {
-            title: "Hubs",
-            count: stats.hub_count,
-          },
-          {
-            title: "Schools",
-            count: stats.school_count,
-          },
-          {
-            title: "Students",
-            count: stats.student_count,
-          },
-        ]}
-      />
-    </>
+    <ScheduleHeader
+      loading={loading}
+      stats={[
+        {
+          title: "Hubs",
+          count: stats.hub_count,
+        },
+        {
+          title: "Schools",
+          count: stats.school_count,
+        },
+        {
+          title: "Students",
+          count: stats.student_count,
+        },
+      ]}
+    />
   );
 }

@@ -1,7 +1,9 @@
 import { getServerSession } from "next-auth";
 
+import { authOptions } from "#/app/api/auth/[...nextauth]/route";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 
 export type CurrentHubCoordinator = Awaited<ReturnType<typeof currentHubCoordinator>>;
 
@@ -10,10 +12,12 @@ export async function currentHubCoordinator() {
   if (!user) {
     return null;
   }
-  const {
-    membership: { identifier },
-  } = user;
+  const membership = user.session.user.activeMembership;
+  if (!membership) {
+    return null;
+  }
 
+  const { identifier } = membership;
   if (!identifier) {
     return null;
   }
@@ -39,7 +43,10 @@ export async function currentSupervisor() {
   if (!user) {
     return null;
   }
-  const { membership } = user;
+  const membership = user.session.user.activeMembership;
+  if (!membership) {
+    return null;
+  }
 
   const { identifier } = membership;
   if (!identifier) {
@@ -142,7 +149,10 @@ export async function currentFellow() {
   if (!user) {
     return null;
   }
-  const { membership } = user;
+  const membership = user.session.user.activeMembership;
+  if (!membership) {
+    return null;
+  }
 
   const { identifier } = membership;
   if (!identifier) {
@@ -240,7 +250,10 @@ export async function currentClinicalLead() {
   if (!user) {
     return null;
   }
-  const { membership } = user;
+  const membership = user.session.user.activeMembership;
+  if (!membership) {
+    return null;
+  }
 
   const { identifier } = membership;
   if (!identifier) {
@@ -270,7 +283,10 @@ export async function currentClinicalTeam() {
     return null;
   }
 
-  const { membership } = user;
+  const membership = user.session.user.activeMembership;
+  if (!membership) {
+    return null;
+  }
 
   const { identifier } = membership;
   if (!identifier) {
@@ -303,7 +319,10 @@ export async function currentOpsUser() {
     return null;
   }
 
-  const { membership } = user;
+  const membership = user.session.user.activeMembership;
+  if (!membership) {
+    return null;
+  }
 
   const { identifier } = membership;
   if (!identifier) {
@@ -333,7 +352,10 @@ export async function currentAdminUser() {
     return null;
   }
 
-  const { membership } = user;
+  const membership = user.session.user.activeMembership;
+  if (!membership) {
+    return null;
+  }
 
   const { identifier } = membership;
   if (!identifier) {
@@ -352,32 +374,21 @@ export async function currentAdminUser() {
 }
 
 export async function getCurrentUser() {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session) {
     return null;
   }
 
+  const { memberships } = session.user;
+  if (!memberships || memberships.length === 0) {
+    throw new Error("No memberships");
+  }
+
   const user = await db.user.findUniqueOrThrow({
     where: { email: session.user.email ?? undefined },
-    include: { memberships: true },
   });
 
-  // TODO: add membership to next-auth session to know which implementer, a user is logged in for
-  const membership = user.memberships[0];
-  if (!membership) {
-    throw new Error("No membership");
-  }
-
-  let personnelRole: "supervisor" | "hc" | null = null;
-  if (membership.identifier) {
-    if (membership.identifier.startsWith("sup")) {
-      personnelRole = "supervisor";
-    } else if (membership.identifier.startsWith("hc")) {
-      personnelRole = "hc";
-    }
-  }
-
-  return { session, user, membership, personnelRole };
+  return { session, user };
 }
 
 export async function getCurrentPersonnel(): Promise<
@@ -395,33 +406,36 @@ export async function getCurrentPersonnel(): Promise<
   if (!user) {
     return null;
   }
-  const { role } = user.membership;
+  const role = user.session.user.activeMembership?.role;
+  if (!role) {
+    return null;
+  }
 
-  if (role === "SUPERVISOR") {
+  if (role === ImplementerRole.SUPERVISOR) {
     return await currentSupervisor();
   }
 
-  if (role === "HUB_COORDINATOR") {
+  if (role === ImplementerRole.HUB_COORDINATOR) {
     return await currentHubCoordinator();
   }
 
-  if (role === "FELLOW") {
+  if (role === ImplementerRole.FELLOW) {
     return await currentFellow();
   }
 
-  if (role === "CLINICAL_LEAD") {
+  if (role === ImplementerRole.CLINICAL_LEAD) {
     return await currentClinicalLead();
   }
 
-  if (role === "OPERATIONS") {
+  if (role === ImplementerRole.OPERATIONS) {
     return await currentOpsUser();
   }
 
-  if (role === "CLINICAL_TEAM") {
+  if (role === ImplementerRole.CLINICAL_TEAM) {
     return await currentClinicalTeam();
   }
 
-  if (role === "ADMIN") {
+  if (role === ImplementerRole.ADMIN) {
     return await currentAdminUser();
   }
 

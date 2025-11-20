@@ -48,7 +48,7 @@ export default function FellowsDatatableSkeleton({ role }: { role: ImplementerRo
       renderTableActions={renderTableActions()}
       columnVisibilityState={{
         checkbox: role === ImplementerRole.HUB_COORDINATOR ? true : false,
-        "Supervisor": false
+        Supervisor: false,
       }}
     />
   );

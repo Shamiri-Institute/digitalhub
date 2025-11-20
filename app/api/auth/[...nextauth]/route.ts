@@ -14,7 +14,7 @@ const config = z
   })
   .parse(process.env);
 
-const authOptions: AuthOptions = {
+export const authOptions: AuthOptions = {
   debug: process.env.DEBUG === "1",
   session: {
     strategy: "jwt",
@@ -124,8 +124,8 @@ const authOptions: AuthOptions = {
       }
 
       // Use token data if available (for updates), otherwise use database data
-      const memberships = token.memberships || parseMembershipsForJWT(user);
-      const activeMembership = token.activeMembership || memberships[0];
+      const memberships: JWTMembership[] = token.memberships || parseMembershipsForJWT(user);
+      const activeMembership: JWTMembership | undefined = token.activeMembership || memberships[0];
 
       const sessionUser: SessionUser = {
         id: token.sub || null,

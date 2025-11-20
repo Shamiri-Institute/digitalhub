@@ -9,11 +9,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "#/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { fetchImplementerSchools } from "#/lib/actions/implementer";
 import { fetchHubSchools } from "#/lib/actions/school";
 import { cn } from "#/lib/utils";
@@ -44,9 +40,7 @@ export default function SchoolsBreadcrumb() {
   const schoolVisibleId = pathname.split("/")[3];
 
   const [schools, setSchools] = useState<School[]>([]);
-  const selectedSchool = schools.find(
-    (school) => school.visibleId === schoolVisibleId,
-  );
+  const selectedSchool = schools.find((school) => school.visibleId === schoolVisibleId);
   const [loading, setLoading] = useState(false);
 
   const role = session?.user?.activeMembership?.role;
@@ -61,7 +55,11 @@ export default function SchoolsBreadcrumb() {
           setSchools(response.data);
         }
       }
-      if (role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR || role === ImplementerRole.FELLOW) {
+      if (
+        role === ImplementerRole.HUB_COORDINATOR ||
+        role === ImplementerRole.SUPERVISOR ||
+        role === ImplementerRole.FELLOW
+      ) {
         const response = await fetchHubSchools();
         if (response.success && response.data) {
           setSchools(response.data);
@@ -82,9 +80,7 @@ export default function SchoolsBreadcrumb() {
     revalidatePageAction(pathname);
   }, [pathname]);
 
-  const schoolIndex = schools.findIndex(
-    (school) => school.visibleId === schoolVisibleId,
-  );
+  const schoolIndex = schools.findIndex((school) => school.visibleId === schoolVisibleId);
   const previousSchool = schools[schoolIndex - 1];
   const nextSchool = schools[schoolIndex + 1];
 
@@ -119,17 +115,12 @@ export default function SchoolsBreadcrumb() {
           {role === "ADMIN" && (
             <>
               <span>/</span>
-              <span className="text-shamiri-text-dark-grey">
-                {selectedSchool?.hub?.hubName}
-              </span>
+              <span className="text-shamiri-text-dark-grey">{selectedSchool?.hub?.hubName}</span>
             </>
           )}
           <span>/</span>
           <Popover>
-            <PopoverTrigger
-              asChild
-              className="flex cursor-pointer items-center gap-2"
-            >
+            <PopoverTrigger asChild className="flex cursor-pointer items-center gap-2">
               <div className="flex items-center gap-2 text-shamiri-text-dark-grey">
                 {selectedSchool?.schoolName}
                 <ChevronsUpDown className="h-3.5 w-3.5 opacity-60" />
@@ -142,10 +133,7 @@ export default function SchoolsBreadcrumb() {
                     switch school
                   </span>
                   <CommandSeparator />
-                  <CommandInput
-                    placeholder="Search schools..."
-                    className="h-9"
-                  />
+                  <CommandInput placeholder="Search schools..." className="h-9" />
                   <CommandList className="max-h-[300px] overflow-y-scroll">
                     {schools.map((school) => (
                       <CommandItem
@@ -155,9 +143,7 @@ export default function SchoolsBreadcrumb() {
                         className="flex items-center justify-between gap-3 rounded-none border-b border-gray-200 px-3 last:border-b-0"
                       >
                         <div className="flex flex-col">
-                          <span className="font-medium">
-                            {school.schoolName}
-                          </span>
+                          <span className="font-medium">{school.schoolName}</span>
                           <span className="text-[9px] uppercase tracking-widest text-muted-foreground text-shamiri-new-blue">
                             {school.hub?.hubName ?? "No Hub"}
                           </span>
@@ -199,9 +185,7 @@ export default function SchoolsBreadcrumb() {
         <div
           className={cn(
             "arrow-button rounded-r-lg",
-            schoolIndex === schools.length - 1
-              ? "pointer-events-none opacity-50"
-              : "",
+            schoolIndex === schools.length - 1 ? "pointer-events-none opacity-50" : "",
           )}
           onClick={() => {
             if (nextSchool) {

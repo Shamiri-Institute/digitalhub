@@ -10,9 +10,5 @@ export default async function SchoolsLayout({ children }: { children: React.Reac
   if (!coordinator?.assignedHubId) {
     return <div>Hub coordinator has no assigned hub</div>;
   }
-  return (
-    <div className="w-full self-stretch">
-      {children}
-    </div>
-  );
+  return <div className="w-full self-stretch">{children}</div>;
 }

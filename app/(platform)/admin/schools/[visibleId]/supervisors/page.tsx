@@ -25,8 +25,8 @@ export default async function SupervisorsPage({
   const supervisors = await db.supervisor.findMany({
     where: {
       hub: {
-        id: school?.hubId ?? ""
-      }
+        id: school?.hubId ?? "",
+      },
     },
     include: {
       assignedSchools: true,
@@ -49,6 +49,11 @@ export default async function SupervisorsPage({
   });
 
   return (
-    <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} school={school ?? null} role={admin?.user.membership.role!}/>
+    <SupervisorsDataTable
+      supervisors={supervisors}
+      visibleId={visibleId}
+      school={school ?? null}
+      role={admin?.user.membership.role!}
+    />
   );
 }

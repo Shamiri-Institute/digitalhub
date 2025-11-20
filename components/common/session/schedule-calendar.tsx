@@ -38,24 +38,14 @@ import {
   DialogPortal,
   DialogTrigger,
 } from "#/components/ui/dialog";
-import {
-  DropdownMenuCheckboxItem,
-  DropdownMenuLabel,
-} from "#/components/ui/dropdown-menu";
+import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
 import { cn, sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
-import * as React from "react";
 import { DayView } from "./day-view";
 import { ListView } from "./list-view";
 import { type Mode, ModeProvider, useMode } from "./mode-provider";
 import { MonthView } from "./month-view";
 import { ScheduleModeToggle } from "./schedule-mode-toggle";
-import {
- type Session,
-  SessionsContext,
-  SessionsProvider,
-  useSessions,
-} from "./sessions-provider";
+import { type Session, SessionsContext, SessionsProvider, useSessions } from "./sessions-provider";
 import { TableView } from "./table-view";
 import { TitleProvider, useTitle } from "./title-provider";
 import { WeekView } from "./week-view";
@@ -112,9 +102,7 @@ export function ScheduleCalendar(props: ScheduleCalendarProps) {
     setFilters({
       sessionTypes,
       statusTypes: statusFilterOptions,
-      dates: ["day", "week", "month"].includes(mode)
-        ? (mode as DateRangeType)
-        : "week",
+      dates: ["day", "week", "month"].includes(mode) ? (mode as DateRangeType) : "week",
     });
   }, [props.hubSessionTypes]);
 
@@ -277,11 +265,7 @@ function CreateSessionButton({
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="brand"
-          disabled={loading}
-          className="flex items-center gap-2 text-base"
-        >
+        <Button variant="brand" disabled={loading} className="flex items-center gap-2 text-base">
           <Icons.plusCircle className="h-4 w-4" />
           <span>Schedule a session</span>
         </Button>
@@ -397,13 +381,10 @@ function CalendarView({
   fellow?: CurrentFellow;
 }) {
   const { mode } = useMode();
-  const { loading, sessions } = useContext(SessionsContext);
-  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] =
-    React.useState(false);
-  const [fellowAttendanceDialog, setFellowAttendanceDialog] =
-    React.useState(false);
-  const [studentAttendanceDialog, setStudentAttendanceDialog] =
-    React.useState(false);
+  const { loading } = useContext(SessionsContext);
+  const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] = React.useState(false);
+  const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
+  const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
   const [rescheduleSessionDialog, setRescheduleSessionDialog] = React.useState(false);
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
@@ -566,34 +547,26 @@ function CalendarView({
         fellows={supervisors?.find((supervisor) => supervisor.id === supervisorId)?.fellows ?? []}
         fellowId={fellow?.id}
       />
-      {session?.session?.sessionType === "INTERVENTION" &&
-        session?.schoolId && (
-          <SessionRatings
-            session={session}
-            sessions={sessions.filter((session) => session.schoolId === session?.schoolId)}
-            supervisorId={supervisorId}
-            supervisors={supervisors}
-            open={ratingsDialog}
-            onOpenChange={setRatingsDialog}
-            mode={
-              role === "HUB_COORDINATOR"
-                ? "view"
-                : role === "SUPERVISOR"
-                  ? "add"
-                  : undefined
-            }
-            role={role}
-          >
-            {session && (
-              <SessionDetail
-                state={{ session }}
-                layout={"compact"}
-                withDropdown={false}
-                role={role}
-              />
-            )}
-          </SessionRatings>
-        )}
+      {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (
+        <SessionRatings
+          selectedSession={session}
+          supervisorId={supervisorId}
+          supervisors={supervisors}
+          open={ratingsDialog}
+          onOpenChange={setRatingsDialog}
+          mode={role === "HUB_COORDINATOR" ? "view" : role === "SUPERVISOR" ? "add" : undefined}
+          role={role}
+        >
+          {session && (
+            <SessionDetail
+              state={{ session }}
+              layout={"compact"}
+              withDropdown={false}
+              role={role}
+            />
+          )}
+        </SessionRatings>
+      )}
       <MarkSessionOccurrence
         id={session?.id}
         defaultOccurrence={session?.occurred}
@@ -616,10 +589,7 @@ function NavigationButtons({
   nextProps: AriaButtonProps;
 }) {
   return (
-    <div
-      className="inline-flex shrink-0 divide-x divide-gray-300 overflow-auto rounded-xl border border-gray-300 shadow-sm"
-      role="group"
-    >
+    <div className="inline-flex shrink-0 divide-x divide-gray-300 overflow-auto rounded-xl border border-gray-300 shadow-sm">
       <NavigationButton aria-label="Previous Month" {...prevProps}>
         <Icons.chevronLeft className="h-5 w-5" />
       </NavigationButton>

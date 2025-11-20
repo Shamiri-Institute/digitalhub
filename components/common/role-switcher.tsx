@@ -10,20 +10,13 @@ import {
   CommandItem,
   CommandSeparator,
 } from "#/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "#/components/ui/popover";
-import {
-  fetchImplementerPersonnel,
-  ImplementerPersonnel,
-} from "#/lib/actions/fetch-personnel";
-import { Personnel } from "#/lib/types/personnel";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import { fetchImplementerPersonnel, type ImplementerPersonnel } from "#/lib/actions/fetch-personnel";
+import type { Personnel } from "#/lib/types/personnel";
 import { cn } from "#/lib/utils";
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
-import { signOut, useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 interface JWTMembership {
@@ -37,23 +30,21 @@ interface JWTMembership {
 export function RoleSwitcher({
   loading,
   setLoading,
+  activeMembership,
 }: {
   loading: boolean;
   setLoading: (loading: boolean) => void;
+  activeMembership: JWTMembership | null;
 }) {
-  const { data: session, update } = useSession();
   const [open, setOpen] = useState(false);
-  const [implementerMembers, setImplementerMembers] =
-    useState<ImplementerPersonnel | null>(null);
-  const activeMembership = session?.user?.activeMembership;
+  const [implementerMembers, setImplementerMembers] = useState<ImplementerPersonnel | null>(null);
 
   useEffect(() => {
     const fetchImplementerMembers = async () => {
       if (!activeMembership) {
         return;
       }
-      const implementerMembers =
-        await fetchImplementerPersonnel(activeMembership);
+      const implementerMembers = await fetchImplementerPersonnel(activeMembership);
 
       setImplementerMembers(implementerMembers);
     };
@@ -77,7 +68,6 @@ export function RoleSwitcher({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          role="combobox"
           aria-expanded={open}
           className="-mt-1 w-full min-w-[250px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
           disabled={loading || !activeMembership}
@@ -89,8 +79,7 @@ export function RoleSwitcher({
                   <span className="font-medium">
                     {
                       implementerMembers?.personnel?.find(
-                        (member) =>
-                          member.id === implementerMembers.activePersonnelId,
+                        (member) => member.id === implementerMembers.activePersonnelId,
                       )?.label
                     }
                   </span>
@@ -122,13 +111,7 @@ export function RoleSwitcher({
             {implementerMembers?.personnel?.map((member) => (
               <CommandItem
                 key={member.id}
-                value={
-                  member.role.replace("_", " ") +
-                  " " +
-                  member.label +
-                  " " +
-                  member.hub
-                }
+                value={`${member.role.replace("_", " ")} ${member.label} ${member.hub}`}
                 onSelect={() => {
                   handleRoleChange(member);
                   setOpen(false);
@@ -138,9 +121,7 @@ export function RoleSwitcher({
                 <div className="flex flex-col">
                   <div className="flex flex-col">
                     <span className="text-[9px] uppercase tracking-widest text-muted-foreground">
-                      <span className="text-shamiri-new-blue">
-                        {member.role.replace("_", " ")}
-                      </span>
+                      <span className="text-shamiri-new-blue">{member.role.replace("_", " ")}</span>
                     </span>
                     <span className="font-medium">{member.label}</span>
                     <span className="min-h-[10px] text-[8px] uppercase tracking-widest text-muted-foreground">

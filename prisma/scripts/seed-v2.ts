@@ -6,7 +6,7 @@ import {
   type Hub,
   type HubCoordinator,
   type Implementer,
-    type AdminUser,
+  type AdminUser,
   ImplementerRole,
   type OpsUser,
   type Prisma,
@@ -304,8 +304,8 @@ async function createCoreUsers(
   fellows: Fellow[],
   clinicalLeads: ClinicalLead[],
   operations: OpsUser[],
-  admins: AdminUser[],
   clinicalTeam: ClinicalTeam,
+  admins: AdminUser[],
 ) {
   console.log("creating core users");
   const userData = [
@@ -374,8 +374,7 @@ async function createCoreUsers(
   });
 
   const membershipData = users.map((user) => {
-    const role = userData.find((u) => u.id === user.id)
-      ?.role as ImplementerRole;
+    const role = userData.find((u) => u.id === user.id)?.role as ImplementerRole;
     return {
       userId: user.id,
       implementerId: faker.helpers.arrayElement(implementers).id,
@@ -394,8 +393,8 @@ async function createCoreUsers(
                   : role === "CLINICAL_TEAM"
                     ? clinicalTeam.id
                     : role === "ADMIN"
-                    ? faker.helpers.arrayElement(admins).id
-                    : null,
+                      ? faker.helpers.arrayElement(admins).id
+                      : null,
     };
   });
 
@@ -468,10 +467,7 @@ async function createCoreUsers(
   ]);
 }
 
-async function createAdminUsers(
-  implementers: Implementer[],
-  emails: Set<string>,
-) {
+async function createAdminUsers(implementers: Implementer[], emails: Set<string>) {
   console.log("creating admin users");
 
   // create admin user for all implementers

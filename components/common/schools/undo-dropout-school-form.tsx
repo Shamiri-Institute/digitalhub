@@ -1,13 +1,10 @@
 "use client";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { revalidatePageAction, undoDropoutSchool } from "#/app/(platform)/hc/schools/actions";
-import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
-import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
 import { toast } from "#/components/ui/use-toast";
-import { useContext, useState } from "react";
 import { SchoolsTableData } from "./columns";
 import { usePathname } from "next/navigation";
 

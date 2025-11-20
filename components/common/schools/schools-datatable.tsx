@@ -84,48 +84,59 @@ export default function SchoolsDatatable({
 
   return (
     <>
-    <SchoolsDataTable
-      data={schools}
-      columns={columns({
-        role,
-        state: {
-          editDialog,
-          setEditDialog,
-          pointSupervisorDialog,
-          setPointSupervisorDialog,
-          schoolDropOutDialog,
-          setSchoolDropOutDialog,
-          undoDropOutDialog,
-          setUndoDropOutDialog,
-          school,
-          setSchool,
-        },
-      })}
-      emptyStateMessage="No schools found for this hub"
-      className={cn("data-table bg-white lg:mt-4", className)}
-      columnVisibilityState={{
-        "School ID": false,
-        "Sub - county": false,
-        "Point teacher": false,
-        "Point teacher phone no.": false,
-        "Point teacher email": false,
-        "Point supervisor phone no.": false,
-        "Point supervisor email": false,
-      }}
-      renderTableActions={renderTableActions()}
-      disablePagination={disablePagination}
-      isSubComponent={isSubComponent}
-    />
-    {
-      role === "HUB_COORDINATOR" && (
+      <SchoolsDataTable
+        data={schools}
+        columns={columns({
+          role,
+          state: {
+            editDialog,
+            setEditDialog,
+            pointSupervisorDialog,
+            setPointSupervisorDialog,
+            schoolDropOutDialog,
+            setSchoolDropOutDialog,
+            undoDropOutDialog,
+            setUndoDropOutDialog,
+            school,
+            setSchool,
+          },
+        })}
+        emptyStateMessage="No schools found for this hub"
+        className={cn("data-table bg-white lg:mt-4", className)}
+        columnVisibilityState={{
+          "School ID": false,
+          "Sub - county": false,
+          "Point teacher": false,
+          "Point teacher phone no.": false,
+          "Point teacher email": false,
+          "Point supervisor phone no.": false,
+          "Point supervisor email": false,
+        }}
+        renderTableActions={renderTableActions()}
+        disablePagination={disablePagination}
+        isSubComponent={isSubComponent}
+      />
+      {role === "HUB_COORDINATOR" && (
         <>
           <SchoolDetailsForm school={school} open={editDialog} setOpen={setEditDialog} />
-          <AssignPointSupervisor supervisors={supervisors ?? []} open={pointSupervisorDialog} setOpen={setPointSupervisorDialog} school={school} />
-          <DropoutSchool school={school} open={schoolDropOutDialog} setOpen={setSchoolDropOutDialog} />
-          <UndoDropoutSchool school={school} open={undoDropOutDialog} setOpen={setUndoDropOutDialog} />
+          <AssignPointSupervisor
+            supervisors={supervisors ?? []}
+            open={pointSupervisorDialog}
+            setOpen={setPointSupervisorDialog}
+            school={school}
+          />
+          <DropoutSchool
+            school={school}
+            open={schoolDropOutDialog}
+            setOpen={setSchoolDropOutDialog}
+          />
+          <UndoDropoutSchool
+            school={school}
+            open={undoDropOutDialog}
+            setOpen={setUndoDropOutDialog}
+          />
         </>
-      )
-    }
+      )}
     </>
   );
 }

@@ -105,12 +105,12 @@ export default async function FellowsPage({
 
   return (
     <FellowsDatatable
-          fellows={data}
-          supervisors={supervisors}
-          schoolId={school.id}
-          role={admin?.user.membership.role!}
-          hideActions={true}
-          attendances={school.fellowAttendances}
-        />
+      fellows={data}
+      supervisors={supervisors}
+      schoolId={school.id}
+      role={admin?.user.membership.role!}
+      hideActions={true}
+      attendances={school.fellowAttendances}
+    />
   );
 }

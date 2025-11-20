@@ -117,7 +117,9 @@ export const columns = ({
       id: "Supervisor",
       header: "Supervisor",
       cell: ({ row }) => {
-        return role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN ? <div>{row.original.supervisorName}</div> : null;
+        return role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN ? (
+          <div>{row.original.supervisorName}</div>
+        ) : null;
       },
     },
     {

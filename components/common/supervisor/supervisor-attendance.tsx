@@ -1,4 +1,4 @@
-import { type ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
+import { ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
@@ -68,7 +68,9 @@ export default function SupervisorAttendance({
           attendance: attendance?.attended,
           phoneNumber: supervisor.cellNumber ?? "",
           fellows:
-            supervisor.fellows.filter((fellow) => fellow.droppedOut !== true).length + "/" + supervisor.fellows.length,
+            supervisor.fellows.filter((fellow) => fellow.droppedOut !== true).length +
+            "/" +
+            supervisor.fellows.length,
           sessionId: attendance?.sessionId,
           schoolId: attendance?.schoolId,
           absenceReason: attendance?.absenceReason ?? "",
@@ -87,7 +89,10 @@ export default function SupervisorAttendance({
         <DialogPortal>
           <DialogContent className="w-5/6 max-w-none lg:w-4/5">
             <DialogHeader>
-              <span className="text-xl font-bold">{role === ImplementerRole.ADMIN ? "View supervisor attendance" : "Mark supervisor attendance"}
+              <span className="text-xl font-bold">
+                {role === ImplementerRole.ADMIN
+                  ? "View supervisor attendance"
+                  : "Mark supervisor attendance"}
               </span>
             </DialogHeader>
             {session && (
@@ -136,7 +141,8 @@ export function SupervisorAttendanceDataTable({
 
   const renderTableActions = () => {
     return (
-      toggleBulkMode && role === ImplementerRole.HUB_COORDINATOR && (
+      toggleBulkMode &&
+      role === ImplementerRole.HUB_COORDINATOR && (
         <div className="flex gap-3">
           <Button
             variant="outline"

@@ -105,11 +105,11 @@ export default async function GroupsPage({
   });
 
   return (
-      <GroupsDataTable
-        data={data}
-        school={school}
-        supervisors={supervisors}
-        role={admin?.user.membership.role!}
-      />
+    <GroupsDataTable
+      data={data}
+      school={school}
+      supervisors={supervisors}
+      role={admin?.user.membership.role!}
+    />
   );
 }

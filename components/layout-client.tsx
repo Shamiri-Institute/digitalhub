@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-
 import {
   BarChartIcon,
   CalendarIcon,
@@ -12,13 +10,11 @@ import {
   SchoolIcon,
   SignOutIcon,
 } from "components/icons";
-import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Building2, Menu } from "lucide-react";
-import { signOut, useSession } from "next-auth/react";
-import type React from "react";
+import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import type {
   CurrentAdminUser,
@@ -28,14 +24,10 @@ import type {
   CurrentHubCoordinator,
   CurrentOpsUser,
   CurrentSupervisor,
+  CurrentUser,
 } from "#/app/auth";
-import { PersonnelTool } from "#/components/common/dev-personnel-switcher";
 import { MembershipSwitcher } from "#/components/common/membership-switcher";
 import { ProfileDialog } from "#/components/common/profile/profile-dialog";
-import { Footer } from "#/components/footer";
-import { Header } from "#/components/header";
-import { Icons } from "#/components/icons";
-import { Navigation } from "#/components/navigation";
 import { RoleSwitcher } from "#/components/common/role-switcher";
 import { Button } from "#/components/ui/button";
 import {
@@ -46,11 +38,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
-import { APP_ENV, constants } from "#/lib/constants";
 import { cn } from "#/lib/utils";
 import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import type { Session } from "next-auth";
 
 interface NavigationLinkProps {
   scheduleActive: boolean;
@@ -65,9 +56,10 @@ interface NavigationLinkProps {
   hubsActive: boolean;
 }
 
-export function Layout({
+export function LayoutClient({
   children,
   profile,
+  session,
 }: {
   children: React.ReactNode;
   profile:
@@ -76,49 +68,14 @@ export function Layout({
     | CurrentFellow
     | CurrentClinicalLead
     | CurrentOpsUser
-    | CurrentClinicalTeam
-    | CurrentUser
     | CurrentAdminUser
+    | CurrentUser
+    | CurrentClinicalTeam
     | null;
+  session: Session | null;
 }) {
   const pathname = usePathname();
-  const session = useSession();
-
-  return (
-    <LayoutV2
-      userName={session.data?.user.name ?? "N/A"}
-      avatarUrl={session.data?.user.image}
-      pathname={pathname}
-      profile={profile}
-    >
-      {children}
-    </LayoutV2>
-  );
-}
-
-function LayoutV2({
-  children,
-  userName,
-  avatarUrl,
-  pathname,
-  profile,
-}: {
-  children: React.ReactNode;
-  userName: string;
-  avatarUrl?: string | null;
-  pathname: string;
-  profile:
-    | CurrentHubCoordinator
-    | CurrentSupervisor
-    | CurrentFellow
-    | CurrentClinicalLead
-    | CurrentOpsUser
-    | CurrentAdminUser
-    | CurrentUser
-    | CurrentClinicalTeam
-    | null;
-}) {
-  const [mainRoute, subRoute] = pathname.slice(1).split("/"); // get the path under the 'hc' route. fix this when we add other roles
+  const [mainRoute, subRoute] = pathname.slice(1).split("/");
   const schoolsActive = subRoute?.includes("schools");
   const scheduleActive = subRoute?.includes("schedule");
   const supervisorsActive = subRoute?.includes("supervisor");
@@ -126,15 +83,14 @@ function LayoutV2({
   const studentsActive = subRoute?.includes("student");
   const reportingActive = subRoute?.includes("reporting");
   const clinicalActive = subRoute?.includes("clinical");
-  const hubsActive =
-    subRoute?.includes("hubs") || subRoute?.includes("schools");
+  const hubsActive = subRoute?.includes("hubs") || subRoute?.includes("schools");
 
-  const activeColor = "#0085FF";
-  const inactiveColour = "#969696";
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+
+  const userName = session?.user?.name ?? "N/A";
+  const avatarUrl = session?.user?.image ?? null;
 
   useEffect(() => {
     setPopoverOpen(false);
@@ -144,20 +100,20 @@ function LayoutV2({
     return (
       <div className={className}>
         <div className="nav-link">
-          <RoleSwitcher loading={loading} setLoading={setLoading} />
+          <RoleSwitcher
+            loading={loading}
+            setLoading={setLoading}
+            activeMembership={session?.user?.activeMembership ?? null}
+          />
         </div>
         <div className="nav-link">
-          <MembershipSwitcher loading={loading} setLoading={setLoading} />
+          <MembershipSwitcher
+            loading={loading}
+            setLoading={setLoading}
+            memberships={session?.user?.memberships ?? []}
+            activeMembership={session?.user?.activeMembership ?? null}
+          />
         </div>
-        {/* TODO: Implement help feature */}
-        {/* <div className="nav-link">
-          <HelpIcon />
-          <Link href="#">Help</Link>
-        </div> */}
-        {/*TODO: notification counter */}
-        {/* <div className="nav-link hidden lg:flex">
-          <NotificationIcon />
-        </div> */}
         <div className="nav-link hidden w-full lg:flex lg:w-auto">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -200,20 +156,6 @@ function LayoutV2({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div
-          className={`nav-link lg:hidden ${pathname.startsWith("/ops/") ? "hidden" : ""}`}
-          onClick={() => {
-            setIsProfileOpen(true);
-          }}
-        >
-          <PeopleIcon fill="#969696" />
-          <span>My profile</span>
-        </div>
-
-        <div className="nav-link lg:hidden" onClick={() => signOut({ callbackUrl: "/login" })}>
-          <SignOutIcon fill="#969696" />
-          <p>Sign out</p>
-        </div>
       </div>
     );
   };
@@ -253,7 +195,6 @@ function LayoutV2({
                         </div>
                         <div className="nav-link">
                           <NotificationIcon />
-                          {/*TODO: notification counter */}
                         </div>
                       </div>
                     </DropdownMenuLabel>
@@ -338,14 +279,10 @@ function ReportingDropdown({
           <Link href={`/${mainRoute}/reporting`}>Expenses</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={`/${mainRoute}/reporting/school-reports`}>
-            School Reports
-          </Link>
+          <Link href={`/${mainRoute}/reporting/school-reports`}>School Reports</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href={`/${mainRoute}/reporting/fellow-reports`}>
-            Fellow Reports
-          </Link>
+          <Link href={`/${mainRoute}/reporting/fellow-reports`}>Fellow Reports</Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -372,10 +309,7 @@ function getCurrentUserNavigationLinks(
   // Admin links
   if (mainRoute === "admin") {
     links.push(
-      <div
-        className={`tab-link ${cn(scheduleActive && "active")}`}
-        key="admin-schedule"
-      >
+      <div className={`tab-link ${cn(scheduleActive && "active")}`} key="admin-schedule">
         <CalendarIcon />
         <Link href={`/${mainRoute}/schedule`}>Schedule</Link>
       </div>,
@@ -386,24 +320,15 @@ function getCurrentUserNavigationLinks(
         <Building2 className="h-4 w-4" strokeWidth={3} />
         <Link href={`/${mainRoute}/hubs`}>Hubs</Link>
       </div>,
-      <div
-        className={`tab-link ${cn(supervisorsActive && "active")}`}
-        key="admin-supervisors"
-      >
+      <div className={`tab-link ${cn(supervisorsActive && "active")}`} key="admin-supervisors">
         <PeopleIcon />
         <Link href={`/${mainRoute}/supervisors`}>Supervisors</Link>
       </div>,
-      <div
-        className={`tab-link ${cn(fellowsActive && "active")}`}
-        key="admin-fellows"
-      >
+      <div className={`tab-link ${cn(fellowsActive && "active")}`} key="admin-fellows">
         <PeopleIconAlternate />
         <Link href={`/${mainRoute}/fellows`}>Fellows</Link>
       </div>,
-      <div
-        className={`tab-link ${cn(studentsActive && "active")}`}
-        key="admin-students"
-      >
+      <div className={`tab-link ${cn(studentsActive && "active")}`} key="admin-students">
         <GraduationCapIcon />
         <Link href={`/${mainRoute}/students`}>Students</Link>
       </div>,

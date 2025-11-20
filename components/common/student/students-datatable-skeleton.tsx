@@ -47,7 +47,7 @@ export default function StudentsDatatableSkeleton({ role }: { role: ImplementerR
         Stream: false,
         "Class/Form": false,
         "Date added": false,
-        checkbox: false
+        checkbox: false,
       }}
     />
   );

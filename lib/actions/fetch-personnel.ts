@@ -2,11 +2,9 @@
 
 import { ImplementerRole } from "@prisma/client";
 import { JWTMembership } from "#/app/api/auth/[...nextauth]/route";
-import { CurrentAdminUser, getCurrentUser } from "#/app/auth";
+import { getCurrentUser } from "#/app/auth";
 import type { Personnel } from "#/lib/types/personnel";
 import { db } from "#/lib/db";
-import { Personnel } from "#/lib/types/personnel";
-import { ImplementerRole } from "@prisma/client";
 
 export async function fetchPersonnel() {
   const supervisors: Personnel[] = (
@@ -303,9 +301,7 @@ export async function fetchImplementerPersonnel(membership: JWTMembership) {
   return { personnel, activePersonnelId };
 }
 
-export type ImplementerPersonnel = Awaited<
-  ReturnType<typeof fetchImplementerPersonnel>
->;
+export type ImplementerPersonnel = Awaited<ReturnType<typeof fetchImplementerPersonnel>>;
 
 export async function fetchPersonnelMemberships(membership: JWTMembership) {
   const user = await getCurrentUser();
@@ -320,7 +316,7 @@ export async function fetchPersonnelMemberships(membership: JWTMembership) {
     include: {
       implementer: true,
     },
-    distinct: ['implementerId'],
+    distinct: ["implementerId"],
   });
   return memberships;
 }

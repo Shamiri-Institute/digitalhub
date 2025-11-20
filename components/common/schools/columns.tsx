@@ -7,9 +7,6 @@ import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-num
 import SchoolTableDropdown from "#/components/common/schools/school-table-dropdown";
 import { Badge } from "#/components/ui/badge";
 import { sessionDisplayName } from "#/lib/utils";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import { format, isAfter } from "date-fns";
 import { Dispatch, SetStateAction } from "react";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
@@ -190,13 +187,7 @@ export const columns = ({
     },
     {
       id: "button",
-      cell: ({ row }) => (
-        <SchoolTableDropdown
-          schoolRow={row.original}
-          role={role}
-          state={state}
-        />
-      ),
+      cell: ({ row }) => <SchoolTableDropdown schoolRow={row.original} role={role} state={state} />,
       enableHiding: false,
     },
   ];

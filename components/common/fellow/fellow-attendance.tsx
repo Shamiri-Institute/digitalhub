@@ -1,4 +1,4 @@
-import type { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
+import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { CheckCheck, InfoIcon } from "lucide-react";
@@ -289,11 +289,13 @@ export function FellowAttendanceDataTable({
         rowSelectionDescription="fellows"
         enableRowSelection={enableRowSelection}
         onRowSelectionChange={setSelectedRows}
-        renderTableActions={!overrideColumns && role === ImplementerRole.HUB_COORDINATOR && renderTableActions()}
+        renderTableActions={
+          !overrideColumns && role === ImplementerRole.HUB_COORDINATOR && renderTableActions()
+        }
         columnVisibilityState={{
           checkbox: role === ImplementerRole.ADMIN ? false : true,
           button: role === ImplementerRole.ADMIN ? false : true,
-            "Group Type": false,
+          "Group Type": false,
         }}
       />
       <MarkAttendance

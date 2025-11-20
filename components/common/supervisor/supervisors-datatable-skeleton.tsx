@@ -6,11 +6,7 @@ import { Skeleton } from "#/components/ui/skeleton";
 import { ImplementerRole } from "@prisma/client";
 import { ColumnDef } from "@tanstack/react-table";
 
-export default function SupervisorsDatatableSkeleton({
-  role,
-}: {
-  role: ImplementerRole;
-}) {
+export default function SupervisorsDatatableSkeleton({ role }: { role: ImplementerRole }) {
   const loadingColumns = columns({
     setMarkAttendanceDialog: () => {},
     setSupervisor: () => {},
@@ -24,9 +20,7 @@ export default function SupervisorsDatatableSkeleton({
         header: renderSkeleton ? column : "",
         id: column,
         cell: () => {
-          return renderSkeleton ? (
-            <Skeleton className="h-5 w-full bg-gray-200" />
-          ) : null;
+          return renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null;
         },
       };
     });
@@ -50,4 +44,4 @@ export default function SupervisorsDatatableSkeleton({
       }}
     />
   );
-} 
+}

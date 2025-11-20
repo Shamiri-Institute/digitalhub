@@ -1,14 +1,12 @@
 "use client";
 
 import { useGSAP } from "@gsap/react";
-import type { Prisma } from "@prisma/client";
 import { format } from "date-fns";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { parsePhoneNumber } from "libphonenumber-js";
 import Image from "next/image";
 import Link from "next/link";
-import { useContext, useRef } from "react";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import SessionsOccurredWidget from "#/components/common/schools/sessions-occurred-widget";
 import { Icons } from "#/components/icons";
@@ -19,26 +17,15 @@ import {
   AccordionTrigger,
 } from "#/components/ui/accordion";
 import { Skeleton } from "#/components/ui/skeleton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "#/components/ui/tooltip";
-import { fetchSchool, SchoolData } from "#/lib/actions/school";
+import { Tooltip, TooltipContent, TooltipTrigger } from "#/components/ui/tooltip";
+import { fetchSchool, type SchoolData } from "#/lib/actions/school";
 import { cn, getSchoolInitials } from "#/lib/utils";
 import LocationIcon from "#/public/icons/location-pin-icon.svg";
 import MailIcon from "#/public/icons/mail-icon.svg";
 import PhoneIcon from "#/public/icons/telephone-icon.svg";
-import { useGSAP } from "@gsap/react";
-import { ImplementerRole } from "@prisma/client";
-import { format } from "date-fns";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { parsePhoneNumber } from "libphonenumber-js";
-import Image from "next/image";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import type { ImplementerRole } from "@prisma/client";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -125,20 +112,16 @@ export default function SchoolLeftPanel({
                 {getSchoolInitials(school?.schoolName ?? "")}
               </div>
               <h2 className="text-xl font-semibold text-black lg:text-left lg:text-[28px]">
-                {loading ? (
-                  <Skeleton className="h-6 w-32" />
-                ) : (
-                  school?.schoolName
-                )}
+                {loading ? <Skeleton className="h-6 w-32" /> : school?.schoolName}
               </h2>
             </div>
           </AccordionTrigger>
           <AccordionContent className="flex flex-col gap-5 pt-6">
             <div className="min-h-[15vh] flex items-center justify-center">
-            <SessionsOccurredWidget
-              types={school?.hub?.sessions}
-              sessions={school?.interventionSessions ?? []}
-            />
+              <SessionsOccurredWidget
+                types={school?.hub?.sessions}
+                sessions={school?.interventionSessions ?? []}
+              />
             </div>
             <div className="flex justify-center px-4">
               <CountWidget
@@ -355,8 +338,7 @@ export default function SchoolLeftPanel({
                       ) : null}
                     </div>
                   </AccordionTrigger>
-                  {school?.schoolDropoutHistory &&
-                  school?.schoolDropoutHistory.length > 0 ? (
+                  {school?.schoolDropoutHistory && school?.schoolDropoutHistory.length > 0 ? (
                     <AccordionContent className="pt-4 text-sm font-medium leading-5">
                       {school?.schoolDropoutHistory.map((history) => {
                         return (

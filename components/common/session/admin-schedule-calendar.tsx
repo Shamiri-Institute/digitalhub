@@ -7,24 +7,21 @@ import {
   ImplementerFellowRating,
   ImplementerSupervisor,
 } from "#/lib/actions/implementer";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { useSession } from "next-auth/react";
+import { ImplementerRole, type Prisma } from "@prisma/client";
 import { useEffect, useState } from "react";
 import { ScheduleCalendar } from "./schedule-calendar";
+import type { CurrentAdminUser } from "#/app/auth";
 
-export function AdminScheduleCalendar() {
-  const { data: session } = useSession();
-  const implementerId = session?.user?.activeMembership?.implementerId;
-  const role = session?.user?.activeMembership?.role;
-  const [hubSessionTypes, setHubSessionTypes] = useState<
-    Prisma.SessionNameGetPayload<{}>[]
-  >([]);
+export function AdminScheduleCalendar({ adminUser }: { adminUser: CurrentAdminUser }) {
+  const implementerId = adminUser?.user.membership?.implementerId;
+  const role = adminUser?.user.membership?.role;
+  const [hubSessionTypes, setHubSessionTypes] = useState<Prisma.SessionNameGetPayload<{}>[]>([]);
   const [supervisors, setSupervisors] = useState<ImplementerSupervisor[]>([]);
   const [fellowRatings, setFellowRatings] = useState<ImplementerFellowRating[]>([]);
 
   useEffect(() => {
     const fetchSessionTypes = async () => {
-      if (!implementerId || !role) return;
+      if (!implementerId || !role || adminUser === null) return;
 
       const response = await Promise.all([
         fetchImplementerSessionTypes(implementerId),
@@ -37,7 +34,7 @@ export function AdminScheduleCalendar() {
     };
 
     fetchSessionTypes();
-  }, [implementerId, role]);
+  }, [implementerId, role, adminUser]);
 
   return (
     <ScheduleCalendar

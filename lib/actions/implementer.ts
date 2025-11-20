@@ -201,11 +201,11 @@ export async function fetchImplementerFellowRatings(implementerId: string) {
 
   try {
     const fellowRatings = await db.$queryRaw<
-    {
-      id: string;
-      averageRating: number;
-    }[]
-  >`SELECT
+      {
+        id: string;
+        averageRating: number;
+      }[]
+    >`SELECT
   fel.id,
   (AVG(wfr.behaviour_rating) + AVG(wfr.dressing_and_grooming_rating) + AVG(wfr.program_delivery_rating) + AVG(wfr.punctuality_rating)) / 4 AS "averageRating"
   FROM

@@ -60,7 +60,5 @@ export default async function StudentsPage({
     },
   });
 
-  return (
-    <StudentsDatatable students={students} role={admin?.user.membership.role!} /> 
-  );
+  return <StudentsDatatable students={students} role={admin?.user.membership.role!} />;
 }

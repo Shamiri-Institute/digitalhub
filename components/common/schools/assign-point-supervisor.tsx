@@ -2,11 +2,14 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Prisma } from "@prisma/client";
-import { useContext, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { AssignPointSupervisorSchema } from "#/app/(platform)/hc/schemas";
-import { assignSchoolPointSupervisor, revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import {
+  assignSchoolPointSupervisor,
+  revalidatePageAction,
+} from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
 import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
@@ -27,12 +30,7 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Prisma } from "@prisma/client";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { SchoolsTableData } from "./columns";
+import type { SchoolsTableData } from "./columns";
 import { usePathname } from "next/navigation";
 
 export default function AssignPointSupervisor({

@@ -49,10 +49,7 @@ export const columns: ColumnDef<HubsWithSchools>[] = [
     id: "checkbox",
     cell: ({ row }) => {
       return (
-        <button
-          onClick={row.getToggleExpandedHandler()}
-          className="cursor-pointer px-4 py-2"
-        >
+        <button onClick={row.getToggleExpandedHandler()} className="cursor-pointer px-4 py-2">
           {row.getIsExpanded() ? (
             <ChevronUp className="h-4 w-4" />
           ) : (
@@ -90,9 +87,7 @@ export const columns: ColumnDef<HubsWithSchools>[] = [
     id: "Hub coordinator phone number",
     cell: ({ row }) => {
       return row.original.coordinators.length > 0
-        ? RenderParsedPhoneNumber(
-            row.original.coordinators[0]?.cellNumber ?? undefined,
-          )
+        ? RenderParsedPhoneNumber(row.original.coordinators[0]?.cellNumber ?? undefined)
         : "";
     },
   },

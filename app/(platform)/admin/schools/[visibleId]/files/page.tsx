@@ -16,7 +16,5 @@ export default async function SchoolFilesPage({
     },
   });
 
-  return (
-    <SchoolFilesDatatable data={schoolFiles} schoolId={visibleId} />
-  );
+  return <SchoolFilesDatatable data={schoolFiles} schoolId={visibleId} />;
 }

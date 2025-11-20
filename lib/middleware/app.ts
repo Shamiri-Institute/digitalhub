@@ -116,7 +116,8 @@ export default async function AppMiddleware(req: NextRequest) {
     }
     if (ifSupervisorAndHcRoute(session, path)) {
       return NextResponse.redirect(new URL("/", req.url));
-    } else if (ifAdminUserAndUnprefixedPath(session, path)) {
+    }
+    if (ifAdminUserAndUnprefixedPath(session, path)) {
       return NextResponse.redirect(new URL("/admin", req.url));
     }
   }
@@ -159,8 +160,5 @@ function ifClinicalTeamUserAndUnprefixedPath(session: JWT | null, path: string) 
 }
 
 function ifAdminUserAndUnprefixedPath(session: JWT | null, path: string) {
-  return (
-    session?.activeMembership?.role === ImplementerRole.ADMIN &&
-    !path.startsWith("/admin")
-  );
+  return session?.activeMembership?.role === ImplementerRole.ADMIN && !path.startsWith("/admin");
 }

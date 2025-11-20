@@ -60,7 +60,6 @@ export default function SessionRatings({
   supervisorId,
   supervisors,
   role,
-  sessions,
 }: {
   selectedSession: Session;
   open: boolean;

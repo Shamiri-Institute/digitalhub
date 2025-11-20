@@ -28,7 +28,11 @@ export default function FilterToggle({
     <div className="flex shrink-0 items-center gap-4">
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" disabled={true} className="flex items-center justify-center hover:bg-secondary hover:shadow-inner text-base">
+          <Button
+            variant="outline"
+            disabled={true}
+            className="flex items-center justify-center hover:bg-secondary hover:shadow-inner text-base"
+          >
             <div className="flex items-center gap-2 text-shamiri-text-dark-grey hover:text-black">
               <span>Filter by</span>
               {/*To use later*/}

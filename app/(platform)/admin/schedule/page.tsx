@@ -15,9 +15,9 @@ export default async function AdminSchedulePage() {
   return (
     <div className="flex h-full w-full flex-col">
       <div className="container w-full grow bg-white py-10">
-        <AdminScheduleHeader />
+        <AdminScheduleHeader adminUser={admin} />
         <Separator className="my-5 bg-[#E8E8E8]" />
-        <AdminScheduleCalendar />
+        <AdminScheduleCalendar adminUser={admin} />
       </div>
       <PageFooter />
     </div>

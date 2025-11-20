@@ -49,18 +49,16 @@ export default function StudentsDataTableMenu({
         >
           {state.role === ImplementerRole.ADMIN ? "View information" : "Edit information"}
         </DropdownMenuItem>
-        {
-          state.role !== ImplementerRole.ADMIN && (
-            <DropdownMenuItem
-              onClick={() => {
-                state.setStudent(student);
-                state.setMarkAttendanceDialog(true);
-              }}
-            >
-                Mark student attendance
-              </DropdownMenuItem>
-        )
-        }
+        {state.role !== ImplementerRole.ADMIN && (
+          <DropdownMenuItem
+            onClick={() => {
+              state.setStudent(student);
+              state.setMarkAttendanceDialog(true);
+            }}
+          >
+            Mark student attendance
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onClick={() => {
             state.setStudent(student);
@@ -77,32 +75,30 @@ export default function StudentsDataTableMenu({
         >
           View attendance history
         </DropdownMenuItem>
-        {
-          state.role !== ImplementerRole.ADMIN && (
-            <>
+        {state.role !== ImplementerRole.ADMIN && (
+          <>
             <DropdownMenuItem
-          onClick={() => {
-            state.setStudent(student);
-            state.setReportingNotesDialog(true);
-          }}
-        >
-          Reporting notes
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            state.setStudent(student);
-            state.setDropoutDialog(true);
-          }}
-        >
-          {student.droppedOut ? (
-            <div className="text-shamiri-red">Undo drop out</div>
-          ) : (
-            <div className="text-shamiri-red">Drop-out student</div>
-          )}
-        </DropdownMenuItem>
-        </>
-        )
-        }
+              onClick={() => {
+                state.setStudent(student);
+                state.setReportingNotesDialog(true);
+              }}
+            >
+              Reporting notes
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setStudent(student);
+                state.setDropoutDialog(true);
+              }}
+            >
+              {student.droppedOut ? (
+                <div className="text-shamiri-red">Undo drop out</div>
+              ) : (
+                <div className="text-shamiri-red">Drop-out student</div>
+              )}
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

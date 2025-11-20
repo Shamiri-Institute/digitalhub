@@ -40,6 +40,11 @@ export default async function SupervisorsPage({
     },
   });
   return (
-    <SupervisorsDataTable supervisors={supervisors} visibleId={visibleId} role={coordinator?.user.membership.role!} school={school ?? null}/>
+    <SupervisorsDataTable
+      supervisors={supervisors}
+      visibleId={visibleId}
+      role={coordinator?.user.membership.role!}
+      school={school ?? null}
+    />
   );
 }

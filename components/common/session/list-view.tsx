@@ -93,14 +93,7 @@ export function ListView({
       setSessionGroups(Object.keys(groupedSessions).sort());
     };
     fetchSessions();
-  }, [
-    filters,
-    sessions,
-    state.timeZone,
-    state.visibleRange.end,
-    state.visibleRange.start,
-    today,
-  ]);
+  }, [filters, sessions, state.timeZone, state.visibleRange.end, state.visibleRange.start, today]);
 
   return (
     <div className="relative">

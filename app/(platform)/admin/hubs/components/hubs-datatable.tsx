@@ -14,9 +14,7 @@ export default function HubsDataTable() {
   const { data: session } = useSession();
   const [hubs, setHubs] = useState<HubsWithSchools[]>([]);
   const [loading, setLoading] = useState(true);
-  const implementerIds = session?.user?.memberships?.map(
-    (membership) => membership.implementerId,
-  );
+  const implementerIds = session?.user?.memberships?.map((membership) => membership.implementerId);
   const role = session?.user?.activeMembership?.role;
   const activeMembership = session?.user?.activeMembership;
 
@@ -30,8 +28,7 @@ export default function HubsDataTable() {
       } catch (error) {
         console.error("Error fetching hubs:", error);
         toast({
-          description:
-            "Something went wrong while fetching hubs. Please try again later",
+          description: "Something went wrong while fetching hubs. Please try again later",
           variant: "destructive",
         });
       } finally {
@@ -51,9 +48,7 @@ export default function HubsDataTable() {
           header: renderSkeleton ? column : "",
           id: column,
           cell: () => {
-            return renderSkeleton ? (
-              <Skeleton className="h-5 w-full bg-gray-200" />
-            ) : null;
+            return renderSkeleton ? <Skeleton className="h-5 w-full bg-gray-200" /> : null;
           },
         };
       });

@@ -210,7 +210,7 @@ export default function StudentDetailsForm({
                             Student name <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input {...field} disabled={mode === "view"}/>
+                            <Input {...field} disabled={mode === "view"} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -223,7 +223,7 @@ export default function StudentDetailsForm({
                         <FormItem>
                           <FormLabel>Contact number</FormLabel>
                           <FormControl>
-                            <Input {...field} type="tel" disabled={mode === "view"}/>
+                            <Input {...field} type="tel" disabled={mode === "view"} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -292,7 +292,7 @@ export default function StudentDetailsForm({
                             Admission number <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input {...field} disabled={mode === "view"}/>
+                            <Input {...field} disabled={mode === "view"} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -307,7 +307,7 @@ export default function StudentDetailsForm({
                             Class/form <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input {...field} type="text" disabled={mode === "view"}/>
+                            <Input {...field} type="text" disabled={mode === "view"} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -322,7 +322,7 @@ export default function StudentDetailsForm({
                             Stream <span className="text-shamiri-light-red">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input {...field} disabled={mode === "view"}/>
+                            <Input {...field} disabled={mode === "view"} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -333,7 +333,11 @@ export default function StudentDetailsForm({
                       name="id"
                       render={({ field }) => (
                         <FormItem>
-                          <Input type="hidden" defaultValue={field.value} disabled={mode === "view"}/>
+                          <Input
+                            type="hidden"
+                            defaultValue={field.value}
+                            disabled={mode === "view"}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -352,18 +356,16 @@ export default function StudentDetailsForm({
                 >
                   {mode === "view" ? "Done" : "Cancel"}
                 </Button>
-                {
-                  mode !== "view" && (
-                    <Button
-                      variant="brand"
-                      type="submit"
-                      disabled={form.formState.isSubmitting}
-                      loading={form.formState.isSubmitting}
-                    >
-                      {mode === "edit" ? "Update & save" : "Submit"}
-                    </Button>
-                  )
-                }
+                {mode !== "view" && (
+                  <Button
+                    variant="brand"
+                    type="submit"
+                    disabled={form.formState.isSubmitting}
+                    loading={form.formState.isSubmitting}
+                  >
+                    {mode === "edit" ? "Update & save" : "Submit"}
+                  </Button>
+                )}
               </DialogFooter>
             </form>
           </Form>

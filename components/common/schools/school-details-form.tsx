@@ -39,10 +39,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-  AddSchoolSchema,
-  EditSchoolSchema,
-} from "../../../app/(platform)/hc/schemas";
+import { AddSchoolSchema, EditSchoolSchema } from "../../../app/(platform)/hc/schemas";
 import {
   addSchool,
   editSchoolInformation,
@@ -91,9 +88,7 @@ export default function SchoolDetailsForm({
       schoolDemographics: school?.schoolDemographics as
         | (typeof SCHOOL_DEMOGRAPHICS)[number]
         | undefined,
-      schoolCounty: school?.schoolCounty as
-        | (typeof KENYAN_COUNTIES)[number]["name"]
-        | undefined,
+      schoolCounty: school?.schoolCounty as (typeof KENYAN_COUNTIES)[number]["name"] | undefined,
       schoolSubCounty: school?.schoolSubCounty ?? undefined,
       schoolName: school?.schoolName ?? "",
       boardingDay: school?.boardingDay as (typeof BOARDING_DAY_TYPES)[number] | undefined,
@@ -126,8 +121,7 @@ export default function SchoolDetailsForm({
       if (!response.success) {
         toast({
           variant: "destructive",
-          description:
-            response.message ?? "Something went wrong, please try again",
+          description: response.message ?? "Something went wrong, please try again",
         });
         return;
       }

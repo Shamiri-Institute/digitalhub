@@ -498,9 +498,12 @@ export async function selectPersonnel({
   if (!user) {
     return null;
   }
-  const { membership } = user;
+  const { activeMembership } = user.session.user;
+  if (!activeMembership) {
+    return null;
+  }
   await db.implementerMember.update({
-    where: { id: membership.id },
+    where: { id: activeMembership.id },
     data: { identifier, role },
   });
 }

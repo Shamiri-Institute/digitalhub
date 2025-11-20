@@ -60,16 +60,21 @@ export async function fetchHubSchools() {
   const allowedRoles: ImplementerRole[] = [
     ImplementerRole.HUB_COORDINATOR,
     ImplementerRole.SUPERVISOR,
-    ImplementerRole.FELLOW
+    ImplementerRole.FELLOW,
   ];
-  
+
   if (!allowedRoles.includes(role)) {
     throw new Error("Unauthorized");
   }
 
-  const hubId = role === ImplementerRole.HUB_COORDINATOR
-    ? ('assignedHubId' in user ? user.assignedHubId : null)
-    : ('hubId' in user ? user.hubId : null);
+  const hubId =
+    role === ImplementerRole.HUB_COORDINATOR
+      ? "assignedHubId" in user
+        ? user.assignedHubId
+        : null
+      : "hubId" in user
+        ? user.hubId
+        : null;
 
   if (!hubId) {
     throw new Error("Personnel has no assigned hub");

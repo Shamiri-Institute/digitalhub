@@ -39,16 +39,17 @@ export function GroupsDatatableMenu({
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {state.role === ImplementerRole.HUB_COORDINATOR || state.role === ImplementerRole.SUPERVISOR && (
-          <DropdownMenuItem
-            onClick={() => {
-              state.setGroup(group);
-              state.setLeaderDialog(true);
-            }}
-          >
-            Replace fellow
-          </DropdownMenuItem>
-        )}
+        {state.role === ImplementerRole.HUB_COORDINATOR ||
+          (state.role === ImplementerRole.SUPERVISOR && (
+            <DropdownMenuItem
+              onClick={() => {
+                state.setGroup(group);
+                state.setLeaderDialog(true);
+              }}
+            >
+              Replace fellow
+            </DropdownMenuItem>
+          ))}
         <DropdownMenuItem
           onClick={() => {
             state.setGroup(group);
@@ -65,17 +66,18 @@ export function GroupsDatatableMenu({
         >
           View student group evaluation
         </DropdownMenuItem>
-        {state.role === ImplementerRole.HUB_COORDINATOR || state.role === ImplementerRole.SUPERVISOR && (
-          <DropdownMenuItem
-            className="text-shamiri-red"
-            onClick={() => {
-              state.setGroup(group);
-              state.setArchiveDialog(true);
-            }}
-          >
-            Archive group
-          </DropdownMenuItem>
-        )}
+        {state.role === ImplementerRole.HUB_COORDINATOR ||
+          (state.role === ImplementerRole.SUPERVISOR && (
+            <DropdownMenuItem
+              className="text-shamiri-red"
+              onClick={() => {
+                state.setGroup(group);
+                state.setArchiveDialog(true);
+              }}
+            >
+              Archive group
+            </DropdownMenuItem>
+          ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
