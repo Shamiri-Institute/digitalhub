@@ -3,11 +3,7 @@ import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
 
-export default async function StudentsPage({
-  params,
-}: {
-  params: Promise<{ visibleId: string }>;
-}) {
+export default async function StudentsPage({ params }: { params: Promise<{ visibleId: string }> }) {
   const { visibleId } = await params;
   const hc = await currentHubCoordinator();
   if (!hc) {

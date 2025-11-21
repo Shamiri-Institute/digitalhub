@@ -4,11 +4,7 @@ import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { db } from "#/lib/db";
 
-export default async function FellowsPage({
-  params,
-}: {
-  params: Promise<{ visibleId: string }>;
-}) {
+export default async function FellowsPage({ params }: { params: Promise<{ visibleId: string }> }) {
   const { visibleId } = await params;
   const supervisor = await currentSupervisor();
   if (supervisor === null) {

@@ -3,14 +3,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { format } from "date-fns";
-import { isValidPhoneNumber } from "libphonenumber-js";
-import { Plus } from "lucide-react";
+import parsePhoneNumberFromString, { isValidPhoneNumber } from "libphonenumber-js";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
-import { createNewSupervisor } from "#/app/(platform)/hc/supervisors/actions";
+import { updateSupervisorDetails } from "#/app/(platform)/hc/supervisors/actions";
+import type { SupervisorsData } from "#/app/(platform)/hc/supervisors/components/columns";
+import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
@@ -20,7 +21,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "#/components/ui/dialog";
 import {
   Form,
@@ -44,43 +44,75 @@ import { toast } from "#/components/ui/use-toast";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { GENDER_OPTIONS } from "#/lib/constants";
 import { cn } from "#/lib/utils";
-import { AddNewSupervisorSchema } from "../../schemas";
+import { EditSupervisorSchema } from "../../schemas";
 
-export default function AddNewSupervisor() {
+export default function SupervisorDetailsForm({
+  supervisor,
+  open,
+  onOpenChange,
+  mode = "edit",
+}: {
+  supervisor: SupervisorsData | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  mode?: "view" | "edit";
+}) {
   const counties = KENYAN_COUNTIES.map((county) => county.name);
-  const [isOpen, setIsOpen] = useState<boolean>(false);
   const pathname = usePathname();
-
-  const form = useForm<z.infer<typeof AddNewSupervisorSchema>>({
-    resolver: zodResolver(AddNewSupervisorSchema),
+  const form = useForm<z.infer<typeof EditSupervisorSchema>>({
+    resolver: zodResolver(EditSupervisorSchema),
   });
 
   const countyWatcher = form.watch("county");
+  const isViewMode = mode === "view";
 
   useEffect(() => {
-    form.setValue("subCounty", "");
-  }, [countyWatcher]);
-
-  useEffect(() => {
-    form.reset();
-  }, [isOpen]);
-
-  const onSubmit = async (data: z.infer<typeof AddNewSupervisorSchema>) => {
-    const response = await createNewSupervisor(data);
-    if (!response.success) {
-      toast({
-        variant: "destructive",
-        description: response.message ?? "Something went wrong during submission, please try again",
-      });
-      return;
+    if (form.formState.dirtyFields.county && !isViewMode) {
+      form.setValue("subCounty", "");
     }
+  }, [countyWatcher, form, isViewMode]);
 
-    revalidatePageAction(pathname);
-    toast({
-      description: response.message,
-    });
-    form.reset();
-    setIsOpen(false);
+  useEffect(() => {
+    if (open && supervisor) {
+      const defaultValues = {
+        supervisorId: supervisor?.id ?? undefined,
+        supervisorName: supervisor?.supervisorName ?? undefined,
+        personalEmail: supervisor?.personalEmail ?? undefined,
+        cellNumber: supervisor?.cellNumber ?? undefined,
+        county: supervisor?.county ?? undefined,
+        subCounty: supervisor?.subCounty ?? undefined,
+        idNumber: supervisor?.idNumber ?? undefined,
+        gender: supervisor?.gender ?? undefined,
+        dateOfBirth: supervisor?.dateOfBirth ?? undefined,
+        mpesaNumber: supervisor?.mpesaNumber ?? undefined,
+        mpesaName: supervisor?.mpesaName ?? undefined,
+      };
+
+      // TODO: fix TS issue with assigning string to enum type
+      // @ts-ignore
+      form.reset(defaultValues);
+    }
+  }, [open, supervisor, form]);
+
+  const onSubmit = async (data: z.infer<typeof EditSupervisorSchema>) => {
+    if (supervisor) {
+      const response = await updateSupervisorDetails(data);
+      if (!response.success) {
+        toast({
+          variant: "destructive",
+          title: "Submission error",
+          description:
+            response.message ?? "Something went wrong during submission, please try again",
+        });
+        return;
+      }
+
+      revalidatePageAction(pathname);
+      toast({
+        description: response.message,
+      });
+      onOpenChange(false);
+    }
   };
 
   const validatePhoneNumber = (field: keyof typeof form.formState.defaultValues, value: string) => {
@@ -94,25 +126,27 @@ export default function AddNewSupervisor() {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="brand"
-          onClick={() => {
-            setIsOpen(true);
-          }}
-          className="flex gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add supervisor
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-2/5 max-w-none">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle className="text-xl">Add new supervisor</DialogTitle>
+              <DialogTitle className="text-xl">
+                {isViewMode ? "View supervisor information" : "Edit supervisor information"}
+              </DialogTitle>
             </DialogHeader>
+            <div className="pb-2 pt-4">
+              <DialogAlertWidget separator={true}>
+                <div className="flex items-center gap-2">
+                  <span>{supervisor?.supervisorName}</span>
+                  <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
+                  <span>
+                    {supervisor?.cellNumber &&
+                      parsePhoneNumberFromString(supervisor?.cellNumber, "KE")?.formatNational()}
+                  </span>
+                </div>
+              </DialogAlertWidget>
+            </div>
             <div className="space-y-6">
               <div className="flex flex-col">
                 <div className="col-span-2 py-2">
@@ -128,10 +162,11 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem className="col-span-2">
                         <FormLabel>
-                          Full name <span className="text-shamiri-light-red">*</span>
+                          Full name{" "}
+                          {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input {...field} disabled={isViewMode} readOnly={isViewMode} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -143,17 +178,24 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Phone number <span className="text-shamiri-light-red">*</span>
+                          Phone number{" "}
+                          {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            onBlur={(e) => {
-                              validatePhoneNumber(
-                                "cellNumber" as keyof typeof form.formState.defaultValues,
-                                e.target.value,
-                              );
-                            }}
+                            disabled={isViewMode}
+                            readOnly={isViewMode}
+                            onBlur={
+                              !isViewMode
+                                ? (e) => {
+                                    validatePhoneNumber(
+                                      "cellNumber" as keyof typeof form.formState.defaultValues,
+                                      e.target.value,
+                                    );
+                                  }
+                                : undefined
+                            }
                             type="tel"
                           />
                         </FormControl>
@@ -167,10 +209,16 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Email address <span className="text-shamiri-light-red">*</span>
+                          Email address{" "}
+                          {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" />
+                          <Input
+                            {...field}
+                            disabled={isViewMode}
+                            readOnly={isViewMode}
+                            type="email"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -182,10 +230,16 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          National ID <span className="text-shamiri-light-red">*</span>
+                          National ID{" "}
+                          {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" />
+                          <Input
+                            {...field}
+                            disabled={isViewMode}
+                            readOnly={isViewMode}
+                            type="text"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -197,12 +251,13 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Gender <span className="text-shamiri-light-red">*</span>
+                          Gender {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                           defaultValue={field.value}
+                          disabled={isViewMode}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -227,12 +282,14 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Date of birth <span className="text-shamiri-light-red">*</span>
+                          Date of birth{" "}
+                          {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <Button
                               variant={"outline"}
+                              disabled={isViewMode}
                               className={cn(
                                 "mt-1.5 w-full justify-start px-3 text-left font-normal",
                                 !field.value && "text-muted-foreground",
@@ -246,14 +303,16 @@ export default function AddNewSupervisor() {
                               )}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={field.onChange}
-                              initialFocus
-                            />
-                          </PopoverContent>
+                          {!isViewMode && (
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          )}
                         </Popover>
                         <FormMessage />
                       </FormItem>
@@ -265,12 +324,13 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          County <span className="text-shamiri-light-red">*</span>
+                          County {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                           defaultValue={field.value}
+                          disabled={isViewMode}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -299,12 +359,14 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Sub-county <span className="text-shamiri-light-red">*</span>
+                          Sub-county{" "}
+                          {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                           defaultValue={field.value}
+                          disabled={isViewMode}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -347,10 +409,16 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Full name <span className="text-shamiri-light-red">*</span>
+                          Full name{" "}
+                          {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <FormControl>
-                          <Input {...field} type="tel" />
+                          <Input
+                            {...field}
+                            disabled={isViewMode}
+                            readOnly={isViewMode}
+                            type="text"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -362,20 +430,42 @@ export default function AddNewSupervisor() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          M-Pesa number <span className="text-shamiri-light-red">*</span>
+                          M-Pesa number{" "}
+                          {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
-                            onBlur={(e) => {
-                              validatePhoneNumber(
-                                "mpesaNumber" as keyof typeof form.formState.defaultValues,
-                                e.target.value,
-                              );
-                            }}
+                            disabled={isViewMode}
+                            readOnly={isViewMode}
+                            onBlur={
+                              !isViewMode
+                                ? (e) => {
+                                    validatePhoneNumber(
+                                      "mpesaNumber" as keyof typeof form.formState.defaultValues,
+                                      e.target.value,
+                                    );
+                                  }
+                                : undefined
+                            }
                             type="tel"
                           />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="supervisorId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Input
+                          id="supervisorId"
+                          name="supervisorId"
+                          type="hidden"
+                          value={field.value}
+                        />
                         <FormMessage />
                       </FormItem>
                     )}
@@ -386,23 +476,25 @@ export default function AddNewSupervisor() {
             <Separator className="my-6" />
             <DialogFooter className="flex justify-end gap-2">
               <Button
-                variant="ghost"
+                variant={isViewMode ? "brand" : "ghost"}
                 type="button"
-                className="text-base font-semibold leading-6 text-shamiri-new-blue hover:text-shamiri-new-blue"
+                className="text-base font-semibold leading-6"
                 onClick={() => {
-                  setIsOpen(false);
+                  onOpenChange(false);
                 }}
               >
-                Cancel
+                {isViewMode ? "Close" : "Cancel"}
               </Button>
-              <Button
-                className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
-                type="submit"
-                disabled={form.formState.isSubmitting}
-                loading={form.formState.isSubmitting}
-              >
-                Save
-              </Button>
+              {!isViewMode && (
+                <Button
+                  className="flex items-center gap-2 bg-shamiri-new-blue text-base font-semibold leading-6 text-white"
+                  type="submit"
+                  disabled={form.formState.isSubmitting}
+                  loading={form.formState.isSubmitting}
+                >
+                  Update & Save
+                </Button>
+              )}
             </DialogFooter>
           </form>
         </Form>

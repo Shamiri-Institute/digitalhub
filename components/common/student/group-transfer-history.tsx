@@ -7,7 +7,13 @@ import type { Dispatch, SetStateAction } from "react";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { sessionDisplayName } from "#/lib/utils";
 
 export default function GroupTransferHistory({

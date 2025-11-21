@@ -8,5 +8,7 @@ export default async function Loading() {
   if (session === null) {
     await signOut({ callbackUrl: "/login" });
   }
-  return <GroupsDatatableSkeleton role={session?.user.activeMembership?.role ?? ImplementerRole.ADMIN} />;
+  return (
+    <GroupsDatatableSkeleton role={session?.user.activeMembership?.role ?? ImplementerRole.ADMIN} />
+  );
 }

@@ -14,7 +14,13 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { StudentGroupEvaluationSchema } from "#/components/common/group/schema";
 import RatingStarsInput from "#/components/common/rating-stars-input";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,

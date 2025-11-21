@@ -4,11 +4,7 @@ import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
 
-export default async function FellowsPage({
-  params,
-}: {
-  params: Promise<{ visibleId: string }>;
-}) {
+export default async function FellowsPage({ params }: { params: Promise<{ visibleId: string }> }) {
   const { visibleId } = await params;
   const hc = await currentHubCoordinator();
   if (!hc) {

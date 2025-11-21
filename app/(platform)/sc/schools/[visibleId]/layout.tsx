@@ -1,5 +1,5 @@
 import { signOut } from "next-auth/react";
-import type React from "react"; 
+import type React from "react";
 import { currentSupervisor } from "#/app/auth";
 import SchoolLeftPanel from "#/components/common/schools/school-left-panel";
 import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";

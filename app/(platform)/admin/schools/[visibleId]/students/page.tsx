@@ -4,11 +4,7 @@ import { db } from "#/lib/db";
 import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 
-export default async function StudentsPage({
-  params,
-}: {
-  params: Promise<{ visibleId: string }>;
-}) {
+export default async function StudentsPage({ params }: { params: Promise<{ visibleId: string }> }) {
   const { visibleId } = await params;
   const admin = await currentAdminUser();
   if (admin === null) {
@@ -66,5 +62,10 @@ export default async function StudentsPage({
     },
   });
 
-  return <StudentsDatatable students={students} role={admin?.session?.user.activeMembership?.role ?? ImplementerRole.ADMIN} />;
+  return (
+    <StudentsDatatable
+      students={students}
+      role={admin?.session?.user.activeMembership?.role ?? ImplementerRole.ADMIN}
+    />
+  );
 }

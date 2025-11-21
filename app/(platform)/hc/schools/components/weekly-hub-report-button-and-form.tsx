@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
 import {
@@ -131,8 +132,10 @@ export default function WeeklyHubReportButtonAndForm({
         className="max-h-[90vh] overflow-y-auto"
         data-testid="weekly-hub-report-dialog"
       >
-        <DialogHeader className="text-xl font-semibold leading-7">
-          Submit weekly hub report
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold leading-7">
+            Submit weekly hub report
+          </DialogTitle>
         </DialogHeader>
         <Separator />
         <Form {...form}>

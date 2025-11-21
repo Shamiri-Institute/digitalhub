@@ -3,11 +3,7 @@ import { currentFellow } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
 
-export default async function StudentsPage({
-  params,
-}: {
-  params: Promise<{ visibleId: string }>;
-}) {
+export default async function StudentsPage({ params }: { params: Promise<{ visibleId: string }> }) {
   const { visibleId } = await params;
   const fellow = await currentFellow();
   if (fellow === null) {

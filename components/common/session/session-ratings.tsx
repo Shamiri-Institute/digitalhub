@@ -42,7 +42,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitSessionRatings } from "#/lib/actions/session/session";
-import { cn, sessionDisplayName } from "#/lib/utils"
+import { cn, sessionDisplayName } from "#/lib/utils";
 
 export default function SessionRatings({
   selectedSession,

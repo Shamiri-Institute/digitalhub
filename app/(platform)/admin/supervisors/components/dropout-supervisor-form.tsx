@@ -94,7 +94,7 @@ export default function DropoutSupervisor({
       <Dialog open={dropoutDialog} onOpenChange={setDropoutDialog}>
         <DialogContent className="p-5 text-base font-medium leading-6">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Drop out supervisor</DialogTitle>
+            <h2 className="text-lg font-bold">Drop out supervisor</h2>
           </DialogHeader>
           {children}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
