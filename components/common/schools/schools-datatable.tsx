@@ -9,6 +9,7 @@ import SchoolsDataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
 import { ImplementerRole, Supervisor } from "@prisma/client";
+import { VisibilityState } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
@@ -48,6 +49,7 @@ export default function SchoolsDatatable({
   disablePagination = false,
   isSubComponent = false,
   className,
+  columnVisibilityState,
 }: {
   role: ImplementerRole;
   schools: SchoolsTableData[];
@@ -55,6 +57,7 @@ export default function SchoolsDatatable({
   disablePagination?: boolean;
   isSubComponent?: boolean;
   className?: string;
+  columnVisibilityState?: VisibilityState;
 }) {
   const [editDialog, setEditDialog] = useState(false);
   const [school, setSchool] = useState<SchoolsTableData | null>(null);
@@ -104,13 +107,16 @@ export default function SchoolsDatatable({
         emptyStateMessage="No schools found for this hub"
         className={cn("data-table bg-white lg:mt-4", className)}
         columnVisibilityState={{
-          "School ID": false,
-          "Sub - county": false,
-          "Point teacher": false,
-          "Point teacher phone no.": false,
-          "Point teacher email": false,
-          "Point supervisor phone no.": false,
-          "Point supervisor email": false,
+          ...columnVisibilityState,
+          ...{
+            "School ID": false,
+            "Sub - county": false,
+            "Point teacher": false,
+            "Point teacher phone no.": false,
+            "Point teacher email": false,
+            "Point supervisor phone no.": false,
+            "Point supervisor email": false,
+          },
         }}
         renderTableActions={renderTableActions()}
         disablePagination={disablePagination}

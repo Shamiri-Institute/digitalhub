@@ -10,7 +10,13 @@ import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogPortal } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPortal,
+} from "#/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,

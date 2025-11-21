@@ -1,7 +1,13 @@
 "use client";
 
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { Input } from "#/components/ui/input";
 import { Separator } from "#/components/ui/separator";
 import { format } from "date-fns";
@@ -25,7 +31,7 @@ export default function HubCoordinatorProfileDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-2/5 max-w-none">
         <DialogHeader>
-          <span className="text-xl">View hub coordinator</span>
+          <DialogTitle className="text-xl">View hub coordinator</DialogTitle>
         </DialogHeader>
         {children}
         <div className="space-y-6">

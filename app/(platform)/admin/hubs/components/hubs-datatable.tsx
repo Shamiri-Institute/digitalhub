@@ -5,10 +5,10 @@ import DataTable from "#/components/data-table";
 import { Skeleton } from "#/components/ui/skeleton";
 import { toast } from "#/components/ui/use-toast";
 import { fetchImplementerHubs } from "#/lib/actions/implementer";
-import { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { columns, HubsWithSchools } from "./columns";
+import { columns, type HubsWithSchools } from "./columns";
 
 export default function HubsDataTable() {
   const { data: session } = useSession();
@@ -80,6 +80,12 @@ export default function HubsDataTable() {
               disablePagination={true}
               isSubComponent={true}
               className="lg:mt-0"
+              columnVisibilityState={{
+                County: false,
+                "Date added": false,
+                "Expected number of students": false,
+                "Type": false,
+              }}
             />
           );
         }}

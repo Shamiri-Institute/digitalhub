@@ -152,51 +152,49 @@ export default function DataTable<TData, TValue>({
             </div>
           )}
         </div>
-        {!isSubComponent && (
-          <div className="lg:min-w-2/3 flex flex-wrap items-center justify-end gap-3 py-2 lg:flex-wrap-reverse lg:py-0">
-            {!disableSearch && (
-              <div className="relative mr-1 lg:mr-0">
-                <Icons.search
-                  className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground"
-                  strokeWidth={1.75}
-                />
-                <Input
-                  onChange={(e) => table.setGlobalFilter(String(e.target.value))}
-                  placeholder="Search..."
-                  className="w-64 bg-white pl-10"
-                />
-              </div>
-            )}
-            {renderTableActions}
-            {editColumns && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex gap-1 bg-white">
-                    <Icons.settings className="h-4 w-4 text-shamiri-text-grey" />
-                    <span>Edit columns</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align={"end"}>
-                  {table
-                    .getAllColumns()
-                    .filter((col) => col.getCanHide())
-                    .map((col) => (
-                      <DropdownMenuCheckboxItem
-                        key={col.id}
-                        checked={col.getIsVisible()}
-                        onCheckedChange={(val) => col.toggleVisibility(!!val)}
-                        onSelect={(e) => {
-                          e.preventDefault();
-                        }}
-                      >
-                        {col.id}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-        )}
+        <div className="lg:min-w-2/3 flex flex-wrap items-center justify-end gap-3 py-2 lg:flex-wrap-reverse lg:py-0">
+          {!disableSearch && (
+            <div className="relative mr-1 lg:mr-0">
+              <Icons.search
+                className="absolute inset-y-0 left-3 my-auto h-4 w-4 text-muted-foreground"
+                strokeWidth={1.75}
+              />
+              <Input
+                onChange={(e) => table.setGlobalFilter(String(e.target.value))}
+                placeholder="Search..."
+                className="w-64 bg-white pl-10"
+              />
+            </div>
+          )}
+          {renderTableActions}
+          {editColumns && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex gap-1 bg-white">
+                  <Icons.settings className="h-4 w-4 text-shamiri-text-grey" />
+                  <span>Edit columns</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align={"end"}>
+                {table
+                  .getAllColumns()
+                  .filter((col) => col.getCanHide())
+                  .map((col) => (
+                    <DropdownMenuCheckboxItem
+                      key={col.id}
+                      checked={col.getIsVisible()}
+                      onCheckedChange={(val) => col.toggleVisibility(!!val)}
+                      onSelect={(e) => {
+                        e.preventDefault();
+                      }}
+                    >
+                      {col.id}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
       <div
         className={cn(
