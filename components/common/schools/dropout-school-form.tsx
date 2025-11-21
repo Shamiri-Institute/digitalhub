@@ -3,7 +3,13 @@ import { dropoutSchool, revalidatePageAction } from "#/app/(platform)/hc/schools
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -86,7 +92,7 @@ export function DropoutSchool({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="p-5 text-base font-medium leading-6">
           <DialogHeader>
-            <h2>Drop out school</h2>
+            <DialogTitle>Drop out school</DialogTitle>
           </DialogHeader>
           <DialogAlertWidget label={school?.schoolName} />
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -153,7 +159,7 @@ export function DropoutSchool({
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <DialogContent className="p-5">
           <DialogHeader>
-            <h2>Confirm drop out</h2>
+            <DialogTitle>Confirm drop out</DialogTitle>
             <DialogAlertWidget label={school?.schoolName} />
           </DialogHeader>
           <div className="space-y-4">

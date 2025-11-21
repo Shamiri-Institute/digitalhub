@@ -5,10 +5,11 @@ import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
 
 export default async function FellowsPage({
-  params: { visibleId },
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const { visibleId } = await params;
   const hc = await currentHubCoordinator();
   if (!hc) {
     await signOut({ callbackUrl: "/login" });

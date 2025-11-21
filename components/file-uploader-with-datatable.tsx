@@ -168,7 +168,9 @@ export default function FileUploaderWithDataTable({
           </Button>
         </DialogTrigger>
         <DialogContent>
-          <DialogHeader className="text-xl font-semibold leading-7">Upload {type} csv</DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold leading-7">Upload {type} csv</DialogTitle>
+          </DialogHeader>
           <FileUploaderWithDrop
             label="Upload csv file"
             onChange={handleFileUpload}

@@ -8,7 +8,7 @@ import type { SchoolStudentTableData } from "#/components/common/student/columns
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,7 +44,7 @@ export default function AttendanceHistory({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="lg:w-3/5 lg:max-w-none">
         <DialogHeader>
-          <h2 className="text-xl font-bold">Student session attendance history</h2>
+          <DialogTitle className="text-xl font-bold">Student session attendance history</DialogTitle>
         </DialogHeader>
         {children}
         <DataTable

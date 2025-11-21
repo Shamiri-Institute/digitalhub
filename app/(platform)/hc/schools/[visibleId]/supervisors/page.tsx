@@ -3,14 +3,15 @@ import SupervisorsDataTable from "#/components/common/supervisor/supervisors-dat
 import { db } from "#/lib/db";
 
 export default async function SupervisorsPage({
-  params: { visibleId },
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const { visibleId } = await params;
   const coordinator = await currentHubCoordinator();
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: coordinator?.assignedHubId,
+      hubId: coordinator?.profile?.assignedHub?.id ?? null,
     },
     include: {
       assignedSchools: true,
@@ -39,11 +40,14 @@ export default async function SupervisorsPage({
       interventionSessions: true,
     },
   });
+  if (!coordinator?.session?.user.activeMembership?.role) {
+    return <div>Invalid role</div>;
+  }
+
   return (
     <SupervisorsDataTable
       supervisors={supervisors}
-      visibleId={visibleId}
-      role={coordinator?.user.membership.role!}
+      role={coordinator.session.user.activeMembership.role}
       school={school ?? null}
     />
   );

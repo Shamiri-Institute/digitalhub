@@ -3,7 +3,13 @@ import { useState } from "react";
 import { revalidatePageAction, undoDropoutSchool } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { toast } from "#/components/ui/use-toast";
 import { SchoolsTableData } from "./columns";
 import { usePathname } from "next/navigation";
@@ -42,7 +48,7 @@ export function UndoDropoutSchool({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="p-5 text-base font-medium leading-6">
         <DialogHeader>
-          <h2>Undo school dropout?</h2>
+          <DialogTitle>Undo school dropout?</DialogTitle>
         </DialogHeader>
         <DialogAlertWidget label={school?.schoolName} />
         <DialogFooter className="flex justify-end">

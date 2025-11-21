@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import { ImplementerRole, type Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { columns, type SchoolGroupDataTableData } from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";

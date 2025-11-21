@@ -7,7 +7,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import { sessionDisplayName } from "#/lib/utils";
 
 export default function GroupTransferHistory({
@@ -62,7 +62,7 @@ export default function GroupTransferHistory({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="lg:w-3/5 lg:max-w-none">
         <DialogHeader>
-          <h2 className="text-xl font-bold">View group transfer history</h2>
+          <DialogTitle className="text-xl font-bold">View group transfer history</DialogTitle>
         </DialogHeader>
         {children}
         <DataTable

@@ -84,7 +84,7 @@ export default function HubsDataTable() {
                 County: false,
                 "Date added": false,
                 "Expected number of students": false,
-                "Type": false,
+                Type: false,
               }}
             />
           );

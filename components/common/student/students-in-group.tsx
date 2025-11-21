@@ -1,16 +1,19 @@
 "use client";
 
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import { ImplementerRole, type Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import React, { type Dispatch, type SetStateAction } from "react";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
-import React, { Dispatch, SetStateAction } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 
 export default function StudentsInGroup({
   children,
@@ -45,7 +48,7 @@ export default function StudentsInGroup({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="lg:w-2/3 lg:max-w-none">
           <DialogHeader>
-            <h2 className="text-xl font-bold">Students in group</h2>
+            <DialogTitle className="text-xl font-bold">Students in group</DialogTitle>
           </DialogHeader>
           {children}
           <DataTable

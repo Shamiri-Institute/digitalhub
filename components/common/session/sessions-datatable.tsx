@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import * as React from "react";
 import { useState } from "react";
 import SupervisorAttendance, {
-  SupervisorAttendanceTableData,
+  type SupervisorAttendanceTableData,
 } from "#/components/common/supervisor/supervisor-attendance";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
@@ -112,11 +112,10 @@ export default function SessionsDatatable({
           />
           {session.schoolId !== null && session.school && (
             <SessionRatings
-              sessions={sessions}
               open={ratingsDialog}
               onOpenChange={setRatingsDialog}
               mode={
-                role === ImplementerRole.HUB_COORDINATOR
+                role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
                   ? "view"
                   : role === ImplementerRole.SUPERVISOR
                     ? "add"

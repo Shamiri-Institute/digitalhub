@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 
-export default function AdminSchoolsPage({
-  params: { visibleId },
+export default async function AdminSchoolsPage({
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const { visibleId } = await params;
   redirect(`/admin/schools/${visibleId}/supervisors`);
 }

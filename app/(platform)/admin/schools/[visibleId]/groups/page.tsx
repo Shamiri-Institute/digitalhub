@@ -1,18 +1,18 @@
-import { currentAdminUser, currentHubCoordinator } from "#/app/auth";
-import { SchoolGroupDataTableData } from "#/components/common/group/columns";
+import { currentAdminUser } from "#/app/auth";
+import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
-import GroupsTableSkeleton from "#/components/common/group/groups-datatable-skeleton";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
-import { Suspense } from "react";
 
 export default async function GroupsPage({
-  params: { visibleId },
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const { visibleId } = await params;
   const admin = await currentAdminUser();
-  if (!admin) {
+  if (admin === null) {
     await signOut({ callbackUrl: "/login" });
   }
 
@@ -109,7 +109,7 @@ export default async function GroupsPage({
       data={data}
       school={school}
       supervisors={supervisors}
-      role={admin?.user.membership.role!}
+      role={admin?.session?.user.activeMembership?.role ?? ImplementerRole.ADMIN}
     />
   );
 }

@@ -13,7 +13,13 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -124,13 +130,13 @@ export default function FellowDetailsForm({
             className={cn(mode === "view" ? "form-view-mode" : "")}
           >
             <DialogHeader>
-              <span className="text-xl">
+              <DialogTitle className="text-xl">
                 {mode === "edit"
                   ? "Edit fellow information"
                   : mode === "view"
                     ? "View fellow information"
                     : "Add new fellow"}
-              </span>
+              </DialogTitle>
             </DialogHeader>
             {mode !== "add" && fellow && (
               <div className="pb-2 pt-4">

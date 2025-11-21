@@ -1,6 +1,6 @@
 "use client";
 
-import { type ImplementerRole, Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import AssignFellowSupervisorDialog from "#/components/common/fellow/assign-fellow-supervisor-dialog";
@@ -92,7 +92,7 @@ export default function FellowsDatatable({
         emptyStateMessage="No fellows associated with this school"
         renderTableActions={!hideActions && renderTableActions()}
         columnVisibilityState={{
-          checkbox: role === ImplementerRole.HUB_COORDINATOR ? true : false,
+          checkbox: role === ImplementerRole.HUB_COORDINATOR,
           Supervisor: false,
         }}
       />

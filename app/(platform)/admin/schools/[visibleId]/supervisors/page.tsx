@@ -1,13 +1,15 @@
 import { currentAdminUser } from "#/app/auth";
 import SupervisorsDataTable from "#/components/common/supervisor/supervisors-datatable";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 
 export default async function SupervisorsPage({
-  params: { visibleId },
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const { visibleId } = await params;
   const admin = await currentAdminUser();
   if (admin === null) {
     await signOut({ callbackUrl: "/login" });
@@ -51,9 +53,8 @@ export default async function SupervisorsPage({
   return (
     <SupervisorsDataTable
       supervisors={supervisors}
-      visibleId={visibleId}
       school={school ?? null}
-      role={admin?.user.membership.role!}
+      role={admin?.session?.user.activeMembership?.role ?? ImplementerRole.ADMIN}
     />
   );
 }

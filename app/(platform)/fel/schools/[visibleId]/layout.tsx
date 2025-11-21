@@ -1,5 +1,6 @@
 import { currentFellow } from "#/app/auth";
 import type { SchoolsTableData } from "#/components/common/schools/columns";
+import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
 import SchoolLeftPanel from "#/components/common/schools/school-left-panel";
 import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";
 import PageFooter from "#/components/ui/page-footer";
@@ -11,11 +12,12 @@ import SchoolsNav from "../../../../../components/common/schools/schools-nav";
 
 export default async function SchoolViewLayout({
   children,
-  params: { visibleId },
+  params,
 }: {
   children: React.ReactNode;
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const { visibleId } = await params;
   const school = await db.school.findFirst({
     where: {
       visibleId,

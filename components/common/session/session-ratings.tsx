@@ -13,9 +13,15 @@ import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import RatingStarsInput from "#/components/common/rating-stars-input";
 import { SessionRatingsSchema } from "#/components/common/session/schema";
-import { Session, SessionsContext } from "#/components/common/session/sessions-provider";
+import { type Session, SessionsContext } from "#/components/common/session/sessions-provider";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -36,20 +42,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { submitSessionRatings } from "#/lib/actions/session/session";
-import { cn, sessionDisplayName } from "#/lib/utils";
-import type { Session } from "./sessions-provider";
-
-export { useSession } from "next-auth/react";
-
-type FormInput = {
-  section: string;
-  description?: string;
-  fields: {
-    label?: string;
-    name: string;
-  }[];
-  commentsInputName: string;
-};
+import { cn, sessionDisplayName } from "#/lib/utils"
 
 export default function SessionRatings({
   selectedSession,
@@ -156,7 +149,7 @@ export default function SessionRatings({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-2/5 max-w-none p-5 text-base font-medium leading-6">
         <DialogHeader>
-          <h2 className="text-xl font-bold">Weekly session report</h2>
+          <DialogTitle className="text-xl font-bold">Weekly session report</DialogTitle>
         </DialogHeader>
         {children}
         {mode === "view" && sessionRatings.length === 0 ? (

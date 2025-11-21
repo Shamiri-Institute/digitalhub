@@ -14,7 +14,7 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { StudentGroupEvaluationSchema } from "#/components/common/group/schema";
 import RatingStarsInput from "#/components/common/rating-stars-input";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -208,7 +208,7 @@ export default function StudentGroupEvaluation({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="p-5 text-base font-medium leading-6 lg:w-2/5 lg:max-w-none">
           <DialogHeader>
-            <h2 className="text-xl font-bold">Student group evaluation</h2>
+            <DialogTitle className="text-xl font-bold">Student group evaluation</DialogTitle>
           </DialogHeader>
           {children}
           {mode === "view" && evaluations.length === 0 ? (

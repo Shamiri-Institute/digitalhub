@@ -1,13 +1,15 @@
-import { currentAdminUser, currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentAdminUser } from "#/app/auth";
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 
 export default async function SchoolSessionsPage({
-  params: { visibleId },
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const { visibleId } = await params;
   const admin = await currentAdminUser();
   if (admin === null) {
     await signOut({ callbackUrl: "/login" });
@@ -89,7 +91,7 @@ export default async function SchoolSessionsPage({
       sessions={school?.interventionSessions ?? []}
       supervisors={supervisors}
       fellowRatings={fellowRatings}
-      role={admin?.user.membership.role!}
+      role={admin?.session?.user.activeMembership?.role ?? ImplementerRole.ADMIN}
     />
   );
 }

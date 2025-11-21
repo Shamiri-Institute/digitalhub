@@ -7,10 +7,11 @@ import GroupsTableSkeleton from "#/components/common/group/groups-datatable-skel
 import { db } from "#/lib/db";
 
 export default async function GroupsPage({
-  params: { visibleId },
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const { visibleId } = await params;
   const hc = await currentHubCoordinator();
   if (!hc) {
     await signOut({ callbackUrl: "/login" });

@@ -4,10 +4,11 @@ import SessionsDatatable from "#/components/common/session/sessions-datatable";
 import { db } from "#/lib/db";
 
 export default async function SchoolSessionsPage({
-  params: { visibleId },
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const { visibleId } = await params;
   const coordinator = await currentHubCoordinator();
   if (coordinator === null) {
     await signOut({ callbackUrl: "/login" });

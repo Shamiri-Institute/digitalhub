@@ -149,9 +149,6 @@ export function SessionDetail({
     durationLabel: "",
   });
 
-  const searchParams = useSearchParams();
-  const mode = searchParams.get("mode") ?? undefined;
-
   const { session } = state;
 
   useEffect(() => {
@@ -312,8 +309,8 @@ export function SessionDropDown({
             )}
             <DropdownMenuItem
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setSupervisorAttendanceDialog && state.setSupervisorAttendanceDialog(true);
+                state.setSession?.(session);
+                state.setSupervisorAttendanceDialog?.(true);
               }}
               disabled={session.status === "Cancelled" || !session.occurred}
             >
@@ -321,8 +318,8 @@ export function SessionDropDown({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setFellowAttendanceDialog && state.setFellowAttendanceDialog(true);
+                state.setSession?.(session);
+                state.setFellowAttendanceDialog?.(true);
               }}
               disabled={session.status === "Cancelled" || !session.occurred}
             >
@@ -335,8 +332,8 @@ export function SessionDropDown({
                 session.sessionRatings.length === 0
               }
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setRatingsDialog && state.setRatingsDialog(true);
+                state.setSession?.(session);
+                state.setRatingsDialog?.(true);
               }}
             >
               Weekly session report
@@ -347,8 +344,8 @@ export function SessionDropDown({
           <>
             <DropdownMenuItem
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setSupervisorAttendanceDialog && state.setSupervisorAttendanceDialog(true);
+                state.setSession?.(session);
+                state.setSupervisorAttendanceDialog?.(true);
               }}
               disabled={session.status === "Cancelled" || !session.occurred}
             >
@@ -356,8 +353,8 @@ export function SessionDropDown({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setStudentAttendanceDialog && state.setStudentAttendanceDialog(true);
+                state.setSession?.(session);
+                state.setStudentAttendanceDialog?.(true);
               }}
               disabled={
                 session.status === "Cancelled" ||
@@ -373,8 +370,8 @@ export function SessionDropDown({
           <>
             <DropdownMenuItem
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setFellowAttendanceDialog && state.setFellowAttendanceDialog(true);
+                state.setSession?.(session);
+                state.setFellowAttendanceDialog?.(true);
               }}
               disabled={
                 session.status === "Cancelled" ||
@@ -395,8 +392,8 @@ export function SessionDropDown({
                     session.school?.assignedSupervisorId !== supervisorId)
                 }
                 onClick={() => {
-                  state.setSession && state.setSession(session);
-                  state.setRatingsDialog && state.setRatingsDialog(true);
+                  state.setSession?.(session);
+                  state.setRatingsDialog?.(true);
                 }}
               >
                 Weekly session report
@@ -404,8 +401,8 @@ export function SessionDropDown({
             )}
             <DropdownMenuItem
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setFellowAttendanceDialog && state.setFellowAttendanceDialog(true);
+                state.setSession?.(session);
+                state.setFellowAttendanceDialog?.(true);
               }}
               disabled={
                 session.status === "Cancelled" ||
@@ -421,8 +418,8 @@ export function SessionDropDown({
           <>
             <DropdownMenuItem
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setSessionOccurrenceDialog && state.setSessionOccurrenceDialog(true);
+                state.setSession?.(session);
+                state.setSessionOccurrenceDialog?.(true);
               }}
               disabled={
                 session.status === "Cancelled" ||
@@ -435,8 +432,8 @@ export function SessionDropDown({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setRescheduleSessionDialog && state.setRescheduleSessionDialog(true);
+                state.setSession?.(session);
+                state.setRescheduleSessionDialog?.(true);
               }}
               disabled={
                 session.occurred ||
@@ -448,8 +445,8 @@ export function SessionDropDown({
             <DropdownMenuItem
               className="text-shamiri-light-red"
               onClick={() => {
-                state.setSession && state.setSession(session);
-                state.setCancelSessionDialog && state.setCancelSessionDialog(true);
+                state.setSession?.(session);
+                state.setCancelSessionDialog?.(true);
               }}
               disabled={
                 session.status === "Cancelled" ||
@@ -464,8 +461,8 @@ export function SessionDropDown({
         {role === ImplementerRole.FELLOW ? (
           <DropdownMenuItem
             onClick={() => {
-              state.setSession && state.setSession(session);
-              state.setStudentAttendanceDialog && state.setStudentAttendanceDialog(true);
+              state.setSession?.(session);
+              state.setStudentAttendanceDialog?.(true);
             }}
             disabled={
               session.status === "Cancelled" ||

@@ -4,10 +4,11 @@ import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
 
 export default async function StudentsPage({
-  params: { visibleId },
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const { visibleId } = await params;
   const fellow = await currentFellow();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });

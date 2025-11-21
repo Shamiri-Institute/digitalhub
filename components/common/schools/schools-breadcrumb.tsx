@@ -87,14 +87,15 @@ export default function SchoolsBreadcrumb() {
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-x-5 text-shamiri-text-dark-grey">
-        <div
+        <button
+          type="button"
           className="flex cursor-pointer items-center justify-center rounded-lg border p-3 hover:text-shamiri-new-blue hover:drop-shadow active:scale-95"
           onClick={() => {
             router.back();
           }}
         >
           <Icons.arrowLeft className="h-4 w-4" />
-        </div>
+        </button>
         <div className="flex items-center gap-2 text-gray-400">
           <Link
             href={
@@ -169,7 +170,9 @@ export default function SchoolsBreadcrumb() {
         </div>
       </div>
       <div className="hidden lg:flex">
-        <div
+        <button
+          type="button"
+          disabled={schoolIndex === 0}
           className={cn(
             "arrow-button rounded-l-lg",
             schoolIndex === 0 ? "pointer-events-none opacity-50" : "",
@@ -181,8 +184,10 @@ export default function SchoolsBreadcrumb() {
           }}
         >
           <Icons.arrowUp className="h-4 w-4" />
-        </div>
-        <div
+        </button>
+        <button
+          type="button"
+          disabled={schoolIndex === schools.length - 1}
           className={cn(
             "arrow-button rounded-r-lg",
             schoolIndex === schools.length - 1 ? "pointer-events-none opacity-50" : "",
@@ -194,7 +199,7 @@ export default function SchoolsBreadcrumb() {
           }}
         >
           <Icons.arrowDown className="h-4 w-4" />
-        </div>
+        </button>
       </div>
     </div>
   );

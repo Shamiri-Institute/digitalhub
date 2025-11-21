@@ -12,7 +12,7 @@ import {
 } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -81,11 +81,11 @@ export default function AssignPointSupervisor({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <span className="text-xl">
+          <DialogTitle className="text-xl">
             {school?.assignedSupervisorId !== null
               ? "Change point supervisor"
               : "Assign point supervisor"}
-          </span>
+          </DialogTitle>
         </DialogHeader>
         <DialogAlertWidget label={school?.schoolName} />
         <Form {...form}>

@@ -4,7 +4,13 @@ import type { SchoolsTableData } from "#/components/common/schools/columns";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -168,9 +174,9 @@ export default function SchoolDetailsForm({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <span className="text-xl">
+              <DialogTitle className="text-xl">
                 {isEditing ? "Edit school information" : "Add new school"}
-              </span>
+              </DialogTitle>
             </DialogHeader>
             {isEditing && (
               <div className="pb-2 pt-4">

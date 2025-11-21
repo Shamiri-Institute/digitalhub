@@ -1,15 +1,17 @@
 import { currentAdminUser } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 
 export default async function StudentsPage({
-  params: { visibleId },
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const { visibleId } = await params;
   const admin = await currentAdminUser();
-  if (!admin) {
+  if (admin === null) {
     await signOut({ callbackUrl: "/login" });
   }
 
@@ -27,7 +29,11 @@ export default async function StudentsPage({
       },
       studentAttendances: {
         include: {
-          session: true,
+          session: {
+            include: {
+              session: true,
+            },
+          },
           group: true,
         },
       },
@@ -60,5 +66,5 @@ export default async function StudentsPage({
     },
   });
 
-  return <StudentsDatatable students={students} role={admin?.user.membership.role!} />;
+  return <StudentsDatatable students={students} role={admin?.session?.user.activeMembership?.role ?? ImplementerRole.ADMIN} />;
 }

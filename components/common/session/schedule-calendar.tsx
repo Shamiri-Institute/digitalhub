@@ -36,6 +36,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogPortal,
+  DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
@@ -273,7 +274,7 @@ function CreateSessionButton({
       <DialogPortal>
         <DialogContent>
           <DialogHeader className="border-b">
-            <span className="pb-4 text-xl font-bold">Schedule a session</span>
+            <DialogTitle className="pb-4 text-xl font-bold">Schedule a session</DialogTitle>
           </DialogHeader>
           <ScheduleNewSession
             toggleDialog={setDialogOpen}
@@ -409,7 +410,7 @@ function CalendarView({
               setRescheduleSessionDialog,
               setCancelSessionDialog,
             }}
-            fellowId={fellow?.id}
+            fellowId={fellow?.profile.id}
           />
         );
       case "week":

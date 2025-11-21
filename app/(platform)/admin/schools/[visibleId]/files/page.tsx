@@ -1,14 +1,20 @@
-import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
+import { currentAdminUser } from "#/app/auth";
 import SchoolFilesDatatable from "#/components/common/files/files-datatable";
 import { db } from "#/lib/db";
-import { Suspense } from "react";
+import { signOut } from "next-auth/react";
 
 export default async function SchoolFilesPage({
-  params: { visibleId },
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
-  const schoolFiles = db.schoolDocuments.findMany({
+  const { visibleId } = await params;
+  const admin = await currentAdminUser();
+  if (admin === null) {
+    await signOut({ callbackUrl: "/login" });
+  }
+
+  const schoolFiles = await db.schoolDocuments.findMany({
     where: {
       school: {
         visibleId,

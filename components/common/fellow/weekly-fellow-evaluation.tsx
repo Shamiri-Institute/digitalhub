@@ -14,7 +14,7 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { WeeklyFellowEvaluationSchema } from "#/components/common/fellow/schema";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -142,7 +142,7 @@ export default function WeeklyFellowEvaluation({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="w-2/5 max-w-none p-5 text-base font-medium leading-6">
           <DialogHeader>
-            <h2 className="text-lg font-bold">Weekly fellow evaluation</h2>
+            <DialogTitle className="text-lg font-bold">Weekly fellow evaluation</DialogTitle>
           </DialogHeader>
           {children}
           {mode === "view" && evaluations.length === 0 ? (

@@ -12,7 +12,13 @@ import type { SchoolStudentTableData } from "#/components/common/student/columns
 import { StudentDetailsSchema } from "#/components/common/student/schemas";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -185,13 +191,13 @@ export default function StudentDetailsForm({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent>
           <DialogHeader>
-            <h2 className="text-xl font-bold">
+            <DialogTitle className="text-xl font-bold">
               {mode === "view"
                 ? "View student information"
                 : mode === "edit"
                   ? "Edit student information"
                   : "Add student to group"}
-            </h2>
+            </DialogTitle>
           </DialogHeader>
           {children}
           <Form {...form}>
@@ -374,7 +380,7 @@ export default function StudentDetailsForm({
       <Dialog open={transferDialog} onOpenChange={setTransferDialog}>
         <DialogContent className="lg:w-3/5 lg:max-w-none">
           <DialogHeader>
-            <h2 className="text-xl font-bold">Confirm transfer student</h2>
+            <DialogTitle className="text-xl font-bold">Confirm transfer student</DialogTitle>
           </DialogHeader>
           <DialogAlertWidget>
             <div className="flex flex-wrap items-center gap-2">

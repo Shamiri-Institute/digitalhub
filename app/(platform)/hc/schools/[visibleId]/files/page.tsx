@@ -4,11 +4,12 @@ import SchoolFilesDatatable from "#/components/common/files/files-datatable";
 import { db } from "#/lib/db";
 
 export default async function SchoolFilesPage({
-  params: { visibleId },
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
-  const schoolFiles = db.schoolDocuments.findMany({
+  const { visibleId } = await params;
+  const schoolFiles = await db.schoolDocuments.findMany({
     where: {
       school: {
         visibleId,

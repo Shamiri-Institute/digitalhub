@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import type { z } from "zod";
@@ -20,11 +20,9 @@ import { markStudentAttendance } from "#/lib/actions/student";
 export default function StudentsDatatable({
   students,
   role,
-  fellowId,
 }: {
   students: SchoolStudentTableData[];
   role: ImplementerRole;
-  fellowId?: string;
 }) {
   const pathname = usePathname();
   const [editDialog, setEditDialog] = useState<boolean>(false);

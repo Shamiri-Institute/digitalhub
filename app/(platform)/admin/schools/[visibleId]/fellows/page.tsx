@@ -1,14 +1,16 @@
 import { currentAdminUser } from "#/app/auth";
-import { SchoolFellowTableData } from "#/components/common/fellow/columns";
+import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 
 export default async function FellowsPage({
-  params: { visibleId },
+  params,
 }: {
-  params: { visibleId: string };
+  params: Promise<{ visibleId: string }>;
 }) {
+  const { visibleId } = await params;
   const admin = await currentAdminUser();
   if (!admin) {
     await signOut({ callbackUrl: "/login" });
@@ -108,7 +110,7 @@ export default async function FellowsPage({
       fellows={data}
       supervisors={supervisors}
       schoolId={school.id}
-      role={admin?.user.membership.role!}
+      role={admin?.session?.user.activeMembership?.role ?? ImplementerRole.ADMIN}
       hideActions={true}
       attendances={school.fellowAttendances}
     />

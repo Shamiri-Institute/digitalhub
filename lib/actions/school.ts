@@ -1,12 +1,12 @@
 "use server";
 
-import { getCurrentPersonnel, getCurrentUser } from "#/app/auth";
+import { getCurrentPersonnel, getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
 import { ImplementerRole } from "@prisma/client";
 
 export async function fetchSchool(visibleId: string) {
-  const user = await getCurrentUser();
-  if (user === null) {
+  const session = await getCurrentUserSession();
+  if (session === null) {
     throw new Error("Unauthorized");
   }
 

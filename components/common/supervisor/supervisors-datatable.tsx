@@ -1,8 +1,5 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
-import type { Row } from "@tanstack/react-table";
-import parsePhoneNumberFromString from "libphonenumber-js";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
 import { columns, type SupervisorsData } from "#/components/common/supervisor/columns";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
@@ -21,14 +18,12 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { markManySupervisorAttendance, markSupervisorAttendance } from "#/lib/actions/supervisor";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { Row } from "@tanstack/react-table";
+import { ImplementerRole, type Prisma } from "@prisma/client";
+import type { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
-import { Dispatch, SetStateAction, useContext, useEffect, useState } from "react";
 
 export default function SupervisorsDataTable({
   supervisors,
-  visibleId,
   role,
   school,
 }: {
@@ -43,7 +38,6 @@ export default function SupervisorsDataTable({
       };
     };
   }>[];
-  visibleId: string;
   role: ImplementerRole;
   school: Prisma.SchoolGetPayload<{
     include: {
@@ -102,8 +96,8 @@ export default function SupervisorsDataTable({
           Gender: false,
           "Phone number": false,
           Status: false,
-          checkbox: role === ImplementerRole.HUB_COORDINATOR ? true : false,
-          button: role === ImplementerRole.HUB_COORDINATOR ? true : false,
+          checkbox: role === ImplementerRole.HUB_COORDINATOR,
+          button: role === ImplementerRole.HUB_COORDINATOR,
         }}
         renderTableActions={renderTableActions()}
         enableRowSelection={(row: Row<SupervisorsData>) =>
