@@ -297,7 +297,7 @@ export default function DataTable<TData, TValue>({
         </Table>
       </div>
       {!disablePagination && (
-        <div className="flex flex-col gap-4 py-3 lg:flex-row lg:items-center lg:justify-between lg:gap-2">
+        <div className="flex flex-col gap-4 py-3 px-0.5 lg:flex-row lg:items-center lg:justify-between lg:gap-2">
           <div className="flex flex-col items-center gap-2 lg:flex-row">
             <div className="flex items-center gap-2">
               <button
@@ -377,7 +377,7 @@ export default function DataTable<TData, TValue>({
                   table.setPageSize(Number(value));
                 }}
               >
-                <SelectTrigger className="text-sm">
+                <SelectTrigger className="text-sm bg-white">
                   <SelectValue placeholder="Pick rows" />
                 </SelectTrigger>
                 <SelectContent>

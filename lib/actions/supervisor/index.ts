@@ -2,7 +2,7 @@
 
 import type { z } from "zod";
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator, getCurrentUserSession } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
@@ -13,8 +13,8 @@ async function checkAuth() {
     throw new Error("The session has not been authenticated");
   }
 
-  const user = await getCurrentUser();
-  return { hubCoordinator, user };
+  const user = await getCurrentUserSession();
+  return { hubCoordinator, user: user?.user };
 }
 
 export async function markSupervisorAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
