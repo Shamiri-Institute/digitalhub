@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -99,11 +99,12 @@ export default function MainFellowsDatatable({
           setUploadQualificationDialog,
           setViewComplaintsDialog,
           setDropOutDialog,
+          role,
         )}
         data={fellows}
         className={"data-table data-table-action bg-white lg:mt-4"}
         emptyStateMessage="No fellows associated with this hub"
-        renderTableActions={renderTableActions()}
+        renderTableActions={role === ImplementerRole.ADMIN ? undefined : renderTableActions()}
         columnVisibilityState={{
           Email: false,
           Gender: false,
@@ -137,7 +138,7 @@ export default function MainFellowsDatatable({
             fellow={fellow}
             open={editDialog}
             onOpenChange={setEditDialog}
-            mode={"edit"}
+            mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
           />
           <UploadFellowContract
             fellow={fellow}
