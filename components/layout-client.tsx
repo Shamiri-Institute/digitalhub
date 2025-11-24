@@ -410,7 +410,7 @@ function getCurrentUserNavigationLinks(
   }
 
   // Add reporting to all roles except for fellows AND clinical leads
-  if (mainRoute !== "fel" && mainRoute !== "cl" && mainRoute !== "ct") {
+  if (mainRoute !== "fel" && mainRoute !== "cl" && mainRoute !== "ct" && mainRoute !== "admin") {
     links.push(
       <div className={`tab-link ${reportingActive ? "active" : ""}`} key="report">
         <ReportingDropdown
