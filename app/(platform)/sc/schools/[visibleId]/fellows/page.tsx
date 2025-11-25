@@ -3,6 +3,7 @@ import { currentSupervisor } from "#/app/auth";
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 
 export default async function FellowsPage({ params }: { params: Promise<{ visibleId: string }> }) {
   const { visibleId } = await params;
@@ -38,7 +39,7 @@ export default async function FellowsPage({ params }: { params: Promise<{ visibl
     }),
     await db.supervisor.findMany({
       where: {
-        hubId: supervisor?.hubId as string,
+        hubId: supervisor?.profile?.hubId,
       },
       include: {
         fellows: true,
@@ -106,7 +107,7 @@ export default async function FellowsPage({ params }: { params: Promise<{ visibl
       fellows={data}
       supervisors={supervisors}
       schoolId={school.id}
-      role={supervisor?.user.membership.role!}
+      role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
       attendances={school.fellowAttendances}
     />
   );

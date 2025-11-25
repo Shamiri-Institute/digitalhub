@@ -2,6 +2,7 @@ import { signOut } from "next-auth/react";
 import { currentSupervisor } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 
 export default async function StudentsPage({ params }: { params: Promise<{ visibleId: string }> }) {
   const { visibleId } = await params;
@@ -56,5 +57,10 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
     },
   });
 
-  return <StudentsDatatable students={students} role={supervisor?.user.membership.role!} />;
+  return (
+    <StudentsDatatable
+      students={students}
+      role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
+    />
+  );
 }

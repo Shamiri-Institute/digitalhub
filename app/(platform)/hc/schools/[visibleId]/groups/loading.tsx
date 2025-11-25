@@ -1,5 +1,5 @@
 import { getCurrentUserSession } from "#/app/auth";
-import FellowsDatatableSkeleton from "#/components/common/fellow/fellows-datatable-skeleton";
+import GroupsDatatableSkeleton from "#/components/common/group/groups-datatable-skeleton";
 import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 
@@ -9,7 +9,7 @@ export default async function Loading() {
     await signOut({ callbackUrl: "/login" });
   }
   return (
-    <FellowsDatatableSkeleton
+    <GroupsDatatableSkeleton
       role={userSession?.user.activeMembership?.role ?? ImplementerRole.HUB_COORDINATOR}
     />
   );

@@ -29,9 +29,14 @@ import {
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
+import { useEffect, useState } from "react";
 import { DropoutSchoolSchema } from "../../../app/(platform)/hc/schemas";
-import { SchoolsTableData } from "./columns";
+import type { SchoolsTableData } from "./columns";
 import { usePathname } from "next/navigation";
+import type { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { InfoIcon } from "lucide-react";
 
 export function DropoutSchool({
   school,
@@ -79,7 +84,7 @@ export function DropoutSchool({
     setConfirmDialogOpen(true);
   };
 
-  const [confirmDialogOpen, setConfirmDialogOpen] = React.useState<boolean>(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false);
 
   useEffect(() => {
     form.reset({

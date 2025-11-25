@@ -5,12 +5,13 @@ import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
+import { signOut } from "next-auth/react";
+import { ImplementerRole } from "@prisma/client";
 
 export default async function SchoolsPage() {
   const fellow = await currentFellow();
-
-  if (!fellow) {
-    redirect("/login");
+  if (fellow === null) {
+    await signOut({ callbackUrl: "/login" });
   }
 
   return (
@@ -23,12 +24,15 @@ export default async function SchoolsPage() {
               {
                 title: "Sessions",
                 count:
-                  fellow?.groups.reduce((a, b) => a + b.school._count.interventionSessions, 0) || 0,
+                  fellow?.profile.groups.reduce(
+                    (a, b) => a + b.school._count.interventionSessions,
+                    0,
+                  ) || 0,
               },
-              { title: "Groups", count: fellow?.groups.length || 0 },
+              { title: "Groups", count: fellow?.profile.groups.length || 0 },
               {
                 title: "Students",
-                count: fellow?.groups.reduce((a, b) => a + b._count.students, 0) || 0,
+                count: fellow?.profile.groups.reduce((a, b) => a + b._count.students, 0) || 0,
               },
             ]}
           />
@@ -41,7 +45,10 @@ export default async function SchoolsPage() {
         {/*    <SchoolsFilterToggle schools={data} />*/}
         {/*  </div>*/}
         {/*</div>*/}
-        <SchoolsDatatable role={fellow.user.membership.role} />
+        <SchoolsDatatable
+          role={fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW}
+          schools={fellow?.profile.hub?.schools ?? []}
+        />
       </div>
       <PageFooter />
     </div>

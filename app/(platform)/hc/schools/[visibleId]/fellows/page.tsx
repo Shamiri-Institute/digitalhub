@@ -1,7 +1,8 @@
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 
 export default async function FellowsPage({ params }: { params: Promise<{ visibleId: string }> }) {
@@ -11,7 +12,7 @@ export default async function FellowsPage({ params }: { params: Promise<{ visibl
     await signOut({ callbackUrl: "/login" });
   }
 
-  const user = await getCurrentUser();
+  const assignedHubId = hc?.profile?.assignedHubId;
 
   const school = await db.school.findFirstOrThrow({
     where: {
@@ -95,7 +96,7 @@ export default async function FellowsPage({ params }: { params: Promise<{ visibl
 
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: hc?.assignedHubId as string,
+      hubId: assignedHubId,
     },
     include: {
       fellows: true,
@@ -107,7 +108,7 @@ export default async function FellowsPage({ params }: { params: Promise<{ visibl
       fellows={data}
       supervisors={supervisors}
       schoolId={school.id}
-      role={user?.membership.role!}
+      role={hc?.session?.user.activeMembership?.role ?? ImplementerRole.HUB_COORDINATOR}
       hideActions={true}
       attendances={school.fellowAttendances}
     />

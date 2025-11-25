@@ -2,6 +2,7 @@ import { signOut } from "next-auth/react";
 import { currentFellow } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 
 export default async function StudentsPage({ params }: { params: Promise<{ visibleId: string }> }) {
   const { visibleId } = await params;
@@ -16,7 +17,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
         visibleId,
       },
       assignedGroup: {
-        leaderId: fellow?.id,
+        leaderId: fellow?.profile?.id,
         school: {
           visibleId,
         },
@@ -67,8 +68,7 @@ export default async function StudentsPage({ params }: { params: Promise<{ visib
   return (
     <StudentsDatatable
       students={students}
-      role={fellow?.user.membership.role!}
-      fellowId={fellow?.id}
+      role={fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW}
     />
   );
 }

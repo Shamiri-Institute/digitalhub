@@ -2,6 +2,7 @@ import { signOut } from "next-auth/react";
 import { currentSupervisor } from "#/app/auth";
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 
 export default async function SchoolSessionsPage({
   params,
@@ -47,7 +48,7 @@ export default async function SchoolSessionsPage({
     }),
     await db.supervisor.findMany({
       where: {
-        hubId: supervisor?.hubId as string,
+        hubId: supervisor?.profile?.hubId,
       },
       include: {
         supervisorAttendances: {
@@ -75,7 +76,7 @@ export default async function SchoolSessionsPage({
     FROM
     fellows fel
     LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
-    WHERE fel.hub_id=${supervisor!.hubId}
+    WHERE fel.hub_id=${supervisor?.profile?.hubId}
     GROUP BY fel.id`,
   ]);
 
@@ -84,8 +85,8 @@ export default async function SchoolSessionsPage({
       sessions={data[0]}
       supervisors={data[1]}
       fellowRatings={data[2]}
-      role={supervisor?.user?.membership.role!}
-      supervisorId={supervisor?.id}
+      role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
+      supervisorId={supervisor?.profile?.id}
     />
   );
 }

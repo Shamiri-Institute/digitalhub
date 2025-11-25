@@ -3,6 +3,7 @@ import { currentSupervisor } from "#/app/auth";
 import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 
 export default async function GroupsPage({ params }: { params: Promise<{ visibleId: string }> }) {
   const { visibleId } = await params;
@@ -80,7 +81,7 @@ export default async function GroupsPage({ params }: { params: Promise<{ visible
 
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: supervisor?.hubId as string,
+      hubId: supervisor?.profile?.hubId,
     },
     include: {
       fellows: true,
@@ -105,7 +106,7 @@ export default async function GroupsPage({ params }: { params: Promise<{ visible
       data={data}
       school={school}
       supervisors={supervisors}
-      role={supervisor?.user.membership.role!}
+      role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
     />
   );
 }

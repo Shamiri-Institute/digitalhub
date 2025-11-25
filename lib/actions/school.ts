@@ -56,25 +56,25 @@ export async function fetchHubSchools() {
     throw new Error("Unauthorized");
   }
 
-  const role = user.user.membership.role;
+  const role = user.session.user.activeMembership?.role;
   const allowedRoles: ImplementerRole[] = [
     ImplementerRole.HUB_COORDINATOR,
     ImplementerRole.SUPERVISOR,
     ImplementerRole.FELLOW,
   ];
 
-  if (!allowedRoles.includes(role)) {
+  if (!role || !allowedRoles.includes(role)) {
     throw new Error("Unauthorized");
   }
 
-  const hubId =
-    role === ImplementerRole.HUB_COORDINATOR
-      ? "assignedHubId" in user
-        ? user.assignedHubId
-        : null
-      : "hubId" in user
-        ? user.hubId
-        : null;
+  let hubId: string | null = null;
+  if (role === ImplementerRole.HUB_COORDINATOR) {
+    const profile = user.profile as { assignedHubId?: string | null } | null;
+    hubId = profile?.assignedHubId ?? null;
+  } else {
+    const profile = user.profile as { hubId?: string | null } | null;
+    hubId = profile?.hubId ?? null;
+  }
 
   if (!hubId) {
     throw new Error("Personnel has no assigned hub");
@@ -83,7 +83,7 @@ export async function fetchHubSchools() {
   try {
     const schools = await db.school.findMany({
       where: {
-        hub: { id: hubId },
+        hubId: hubId,
       },
       select: {
         visibleId: true,

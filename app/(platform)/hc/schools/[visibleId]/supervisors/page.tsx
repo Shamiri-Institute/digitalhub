@@ -1,6 +1,7 @@
 import { currentHubCoordinator } from "#/app/auth";
 import SupervisorsDataTable from "#/components/common/supervisor/supervisors-datatable";
 import { db } from "#/lib/db";
+import { signOut } from "next-auth/react";
 
 export default async function SupervisorsPage({
   params,
@@ -9,9 +10,12 @@ export default async function SupervisorsPage({
 }) {
   const { visibleId } = await params;
   const coordinator = await currentHubCoordinator();
+  if (coordinator === null) {
+    await signOut({ callbackUrl: "/login" });
+  }
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: coordinator?.profile?.assignedHub?.id ?? null,
+      hubId: coordinator?.profile?.assignedHubId ?? null,
     },
     include: {
       assignedSchools: true,

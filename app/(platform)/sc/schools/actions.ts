@@ -3,7 +3,7 @@
 import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import type { z } from "zod";
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 import {
   AssignPointSupervisorSchema,
@@ -26,6 +26,7 @@ export async function fetchSchoolData(hubId: string) {
       interventionSessions: {
         include: {
           sessionRatings: true,
+          session: true,
         },
       },
       students: {

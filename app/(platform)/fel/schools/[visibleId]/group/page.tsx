@@ -3,6 +3,7 @@ import { currentFellow } from "#/app/auth";
 import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 
 export default async function GroupsPage({ params }: { params: Promise<{ visibleId: string }> }) {
   const { visibleId } = await params;
@@ -31,7 +32,7 @@ export default async function GroupsPage({ params }: { params: Promise<{ visible
       LEFT JOIN supervisors sup ON fel.supervisor_id = sup.id
       LEFT JOIN intervention_group_reports intgr ON intg.id = intgr.group_id
   WHERE
-      sch.visible_id = ${visibleId} AND fel.id = ${fellow?.id}
+      sch.visible_id = ${visibleId} AND fel.id = ${fellow?.profile?.id}
   GROUP BY
       intg.id,
       fel.fellow_name,
@@ -91,5 +92,11 @@ export default async function GroupsPage({ params }: { params: Promise<{ visible
     },
   });
 
-  return <GroupsDataTable data={data} school={school} role={fellow?.user?.membership.role!} />;
+  return (
+    <GroupsDataTable
+      data={data}
+      school={school}
+      role={fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW}
+    />
+  );
 }
