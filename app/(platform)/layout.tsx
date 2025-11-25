@@ -3,9 +3,12 @@ import { LayoutClient } from "#/components/layout-client";
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
   const userSession = await getCurrentPersonnel();
-
+  console.log("userSession", userSession);
   return (
-    <LayoutClient session={userSession?.session ?? null} profile={userSession?.profile ?? null}>
+    <LayoutClient
+      session={userSession?.session ?? null}
+      profile={userSession ?? null}
+    >
       {children}
     </LayoutClient>
   );

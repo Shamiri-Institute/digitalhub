@@ -263,6 +263,30 @@ export async function fetchImplementerPersonnel(membership: JWTMembership) {
     project: cl.assignedHub?.project?.name,
   }));
 
+  const clinicalTeams: Personnel[] = (
+    await db.clinicalTeam.findMany({
+      orderBy: { name: "asc" },
+      where: {
+        id: {
+          in: implementerMembers.map((member) => member.identifier || ""),
+        },
+      },
+      include: {
+        assignedHub: {
+          include: {
+            project: true,
+          },
+        },
+      },
+    })
+  ).map((ct) => ({
+    id: ct.id,
+    role: ImplementerRole.CLINICAL_TEAM,
+    label: `${ct.name}`,
+    hub: ct.assignedHub?.hubName,
+    project: ct.assignedHub?.project?.name,
+  }));
+
   const opsUsers: Personnel[] = (
     await db.opsUser.findMany({
       orderBy: { name: "asc" },
@@ -294,6 +318,7 @@ export async function fetchImplementerPersonnel(membership: JWTMembership) {
     ...fellows,
     ...clinicalLeads,
     ...opsUsers,
+    ...clinicalTeams,
   ];
 
   const activePersonnelId = membership.identifier || "";

@@ -12,7 +12,7 @@ import { ClinicalCaseNotes } from "@prisma/client";
 
 export const columns: ColumnDef<HubClinicalCases>[] = [
   {
-    id: "button",
+    id: "expand",
     cell: ({ row }) => {
       return (
         <button

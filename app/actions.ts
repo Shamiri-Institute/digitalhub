@@ -502,10 +502,12 @@ export async function selectPersonnel({
   if (!activeMembership) {
     return null;
   }
-  await db.implementerMember.update({
-    where: { id: activeMembership.id },
+  const data = await db.implementerMember.update({
+    where: { id: activeMembership.id, implementerId: activeMembership.implementerId },
     data: { identifier, role },
   });
+  console.log("updated personnel role", data);
+  return { success: true };
 }
 
 export async function updateLoggedInSupervisorDetails(

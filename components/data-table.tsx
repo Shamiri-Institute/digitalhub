@@ -233,7 +233,8 @@ export default function DataTable<TData, TValue>({
                         ? "py-3"
                         : "py-2",
                       header.column.columnDef.id === "button" ||
-                        header.column.columnDef.id === "checkbox"
+                        header.column.columnDef.id === "checkbox" ||
+                        header.column.columnDef.id === "expand"
                         ? "action-cell"
                         : null,
                     )}
@@ -265,7 +266,8 @@ export default function DataTable<TData, TValue>({
                         className={cn(
                           "truncate border-y border-l first:border-l-0",
                           cell.column.columnDef.id === "button" ||
-                            cell.column.columnDef.id === "checkbox"
+                            cell.column.columnDef.id === "checkbox" ||
+                            cell.column.columnDef.id === "expand"
                             ? "relative cursor-pointer border-l-0 !p-0"
                             : "!px-4 py-2",
                         )}

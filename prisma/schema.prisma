@@ -182,6 +182,8 @@ enum ApprovalStatus {
 
 model ImplementerMember {
   id            Int             @id @default(autoincrement())
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
   implementerId String          @map("implementer_id") @db.VarChar(255)
   implementer   Implementer     @relation(fields: [implementerId], references: [id])
   userId        String          @map("user_id") @db.VarChar(255)
@@ -1507,7 +1509,7 @@ model ClinicalFollowUpTreatmentPlan {
   id                                      String                @id @default(cuid())
   createdAt                               DateTime              @default(now()) @map("created_at") @db.Timestamptz()
   updatedAt                               DateTime              @updatedAt @map("updated_at") @db.Timestamptz()
-  currentORSScore                         Int?                   @map("current_ors_score")
+  currentORSScore                         Int?                  @map("current_ors_score")
   plannedSessions                         Int                   @map("planned_sessions")
   sessionFrequency                        String                @map("session_frequency")
   plannedTreatmentIntervention            String[]              @map("planned_treatment_intervention")

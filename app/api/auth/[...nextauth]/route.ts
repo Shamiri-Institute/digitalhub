@@ -106,6 +106,10 @@ export const authOptions: AuthOptions = {
               implementer: true,
               role: true,
               identifier: true,
+              updatedAt: true,
+            },
+            orderBy: {
+              updatedAt: "desc",
             },
           },
         },
@@ -125,7 +129,12 @@ export const authOptions: AuthOptions = {
 
       // Use token data if available (for updates), otherwise use database data
       const memberships: JWTMembership[] = token.memberships || parseMembershipsForJWT(user);
-      const activeMembership: JWTMembership | undefined = token.activeMembership || memberships[0];
+      // Select the most recently updated membership if no active membership is set
+      const activeMembership: JWTMembership | undefined =
+        token.activeMembership ||
+        (memberships.length > 0
+          ? memberships.sort((a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0))[0]
+          : undefined);
 
       const sessionUser: SessionUser = {
         id: token.sub || null,
@@ -139,7 +148,7 @@ export const authOptions: AuthOptions = {
       session.user = sessionUser;
       return session;
     },
-    jwt: async ({ token, user, account, trigger, session }) => {
+    jwt: async ({ token, user, account: _account, trigger, session }) => {
       if (trigger === "signIn" && user?.email) {
         // First get the user by email
         const currentUser = await db.user.findUnique({
@@ -160,7 +169,7 @@ export const authOptions: AuthOptions = {
         // Update token.sub to match the found user's ID
         token.sub = currentUser.id;
 
-        // Now get the memberships using the user's ID
+        // Now get the memberships using the user's ID, ordered by most recently updated
         const memberships = await db.implementerMember.findMany({
           where: {
             userId: currentUser.id,
@@ -173,6 +182,9 @@ export const authOptions: AuthOptions = {
               },
             },
           },
+          orderBy: {
+            updatedAt: "desc",
+          },
         });
 
         console.log("memberships", memberships, currentUser);
@@ -184,10 +196,13 @@ export const authOptions: AuthOptions = {
             implementerName: m.implementer.implementerName,
             role: m.role,
             identifier: m.identifier,
+            updatedAt: m.updatedAt,
           }));
 
           token.memberships = processedMemberships;
-          token.activeMembership = processedMemberships[0];
+          token.activeMembership =
+            token.activeMembership ||
+            (processedMemberships.length > 0 ? processedMemberships[0] : undefined);
         }
       } else if (trigger === "update" && session?.user) {
         token.activeMembership = session.user.activeMembership;
@@ -207,6 +222,7 @@ function parseMembershipsForJWT(
           implementer: true;
           role: true;
           identifier: true;
+          updatedAt: true;
         };
       };
     };
@@ -218,6 +234,7 @@ function parseMembershipsForJWT(
     implementerName: m.implementer.implementerName,
     role: m.role,
     identifier: m.identifier,
+    updatedAt: m.updatedAt,
   }));
 }
 
@@ -240,4 +257,5 @@ export interface JWTMembership {
   implementerName: string;
   role: ImplementerRole;
   identifier: string | null;
+  updatedAt?: Date;
 }
