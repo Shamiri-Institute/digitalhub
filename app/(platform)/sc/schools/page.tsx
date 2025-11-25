@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import { currentSupervisor } from "#/app/auth";
@@ -7,7 +8,6 @@ import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
 import { fetchHubSupervisors, fetchSchoolData } from "./actions";
-import { ImplementerRole } from "@prisma/client";
 
 export default async function SchoolsPage() {
   const supervisor = await currentSupervisor();

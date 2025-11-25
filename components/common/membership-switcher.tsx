@@ -1,5 +1,10 @@
 "use client";
 
+import type { ImplementerRole } from "@prisma/client";
+import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useState } from "react";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Button } from "#/components/ui/button";
 import {
@@ -12,11 +17,6 @@ import {
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import { cn } from "#/lib/utils";
-import type { ImplementerRole } from "@prisma/client";
-import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
-import { useSession } from "next-auth/react";
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
 
 interface JWTMembership {
   id: number;

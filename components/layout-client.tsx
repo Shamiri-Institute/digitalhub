@@ -10,12 +10,14 @@ import {
   SchoolIcon,
   SignOutIcon,
 } from "components/icons";
+import { Building2, Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, Menu } from "lucide-react";
+import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
+import type { CurrentPersonnel } from "#/app/auth";
 import { MembershipSwitcher } from "#/components/common/membership-switcher";
 import { ProfileDialog } from "#/components/common/profile/profile-dialog";
 import { RoleSwitcher } from "#/components/common/role-switcher";
@@ -31,8 +33,6 @@ import {
 import { cn } from "#/lib/utils";
 import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import type { Session } from "next-auth";
-import { CurrentPersonnel } from "#/app/auth";
 
 interface NavigationLinkProps {
   scheduleActive: boolean;

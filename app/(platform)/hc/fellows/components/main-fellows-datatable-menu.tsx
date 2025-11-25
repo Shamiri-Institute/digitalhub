@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import { Icons } from "#/components/icons";
@@ -9,7 +10,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { ImplementerRole } from "@prisma/client";
 
 export default function MainFellowsDatatableMenu({
   fellow,

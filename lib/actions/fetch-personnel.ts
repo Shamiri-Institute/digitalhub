@@ -1,10 +1,10 @@
 "use server";
 
 import { ImplementerRole } from "@prisma/client";
-import { JWTMembership } from "#/app/api/auth/[...nextauth]/route";
+import type { JWTMembership } from "#/app/api/auth/[...nextauth]/route";
 import { getCurrentUserSession } from "#/app/auth";
-import type { Personnel } from "#/lib/types/personnel";
 import { db } from "#/lib/db";
+import type { Personnel } from "#/lib/types/personnel";
 
 export async function fetchPersonnel() {
   const supervisors: Personnel[] = (

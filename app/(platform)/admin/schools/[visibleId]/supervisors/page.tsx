@@ -1,8 +1,8 @@
+import { ImplementerRole } from "@prisma/client";
+import { signOut } from "next-auth/react";
 import { currentAdminUser } from "#/app/auth";
 import SupervisorsDataTable from "#/components/common/supervisor/supervisors-datatable";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
-import { signOut } from "next-auth/react";
 
 export default async function SupervisorsPage({
   params,

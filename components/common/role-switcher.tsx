@@ -1,5 +1,10 @@
 "use client";
 
+import type { ImplementerRole } from "@prisma/client";
+import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
+import { Filter } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { selectPersonnel } from "#/app/actions";
 import { Button } from "#/components/ui/button";
 import {
@@ -10,24 +15,19 @@ import {
   CommandItem,
   CommandSeparator,
 } from "#/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
   fetchImplementerPersonnel,
   type ImplementerPersonnel,
 } from "#/lib/actions/fetch-personnel";
 import type { Personnel } from "#/lib/types/personnel";
 import { cn } from "#/lib/utils";
-import type { ImplementerRole } from "@prisma/client";
-import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
-import { Filter } from "lucide-react";
-import { signOut } from "next-auth/react";
-import { useEffect, useState } from "react";
 
 interface JWTMembership {
   id: number;

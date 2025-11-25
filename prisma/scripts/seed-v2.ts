@@ -1,12 +1,12 @@
 import { faker } from "@faker-js/faker";
 import {
+  type AdminUser,
   type ClinicalLead,
   type ClinicalTeam,
   type Fellow,
   type Hub,
   type HubCoordinator,
   type Implementer,
-  type AdminUser,
   ImplementerRole,
   type OpsUser,
   type Prisma,

@@ -1,6 +1,6 @@
-import { currentHubCoordinator } from "#/app/auth";
 import { signOut } from "next-auth/react";
 import type React from "react";
+import { currentHubCoordinator } from "#/app/auth";
 
 export default async function SchoolsLayout({ children }: { children: React.ReactNode }) {
   const coordinator = await currentHubCoordinator();

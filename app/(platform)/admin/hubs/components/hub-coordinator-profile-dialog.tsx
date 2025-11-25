@@ -1,5 +1,7 @@
 "use client";
 
+import { format } from "date-fns";
+import parsePhoneNumberFromString from "libphonenumber-js";
 import { Button } from "#/components/ui/button";
 import {
   Dialog,
@@ -10,9 +12,7 @@ import {
 } from "#/components/ui/dialog";
 import { Input } from "#/components/ui/input";
 import { Separator } from "#/components/ui/separator";
-import { format } from "date-fns";
-import parsePhoneNumberFromString from "libphonenumber-js";
-import { HubsWithSchools } from "./columns";
+import type { HubsWithSchools } from "./columns";
 
 interface HubCoordinatorProfileDialogProps {
   open: boolean;

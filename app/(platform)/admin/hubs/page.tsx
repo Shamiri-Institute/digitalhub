@@ -1,8 +1,8 @@
+import { signOut } from "next-auth/react";
 import { currentAdminUser } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { signOut } from "next-auth/react";
 import HubsDataTable from "./components/hubs-datatable";
 
 export default async function HubsPage() {

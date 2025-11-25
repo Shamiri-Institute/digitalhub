@@ -1,3 +1,5 @@
+import { ImplementerRole } from "@prisma/client";
+import { signOut } from "next-auth/react";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import MainFellowsDatatable from "#/app/(platform)/hc/fellows/components/main-fellows-datatable";
 import { currentAdminUser } from "#/app/auth";
@@ -5,8 +7,6 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
-import { ImplementerRole } from "@prisma/client";
 
 export default async function FellowPage() {
   const admin = await currentAdminUser();

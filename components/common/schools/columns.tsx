@@ -3,11 +3,11 @@
 import type { ImplementerRole, Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
+import type { Dispatch, SetStateAction } from "react";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import SchoolTableDropdown from "#/components/common/schools/school-table-dropdown";
 import { Badge } from "#/components/ui/badge";
 import { sessionDisplayName } from "#/lib/utils";
-import { Dispatch, SetStateAction } from "react";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
   include: {

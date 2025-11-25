@@ -1,4 +1,4 @@
-import { ImplementerRole } from "@prisma/client";
+import type { ImplementerRole } from "@prisma/client";
 
 export type Personnel = {
   id: string;

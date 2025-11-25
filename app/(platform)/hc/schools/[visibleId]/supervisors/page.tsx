@@ -1,7 +1,7 @@
+import { signOut } from "next-auth/react";
 import { currentHubCoordinator } from "#/app/auth";
 import SupervisorsDataTable from "#/components/common/supervisor/supervisors-datatable";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
 
 export default async function SupervisorsPage(props: { params: Promise<{ visibleId: string }> }) {
   const params = await props.params;

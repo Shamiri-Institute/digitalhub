@@ -1,4 +1,5 @@
 "use client";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { revalidatePageAction, undoDropoutSchool } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -11,8 +12,7 @@ import {
   DialogTitle,
 } from "#/components/ui/dialog";
 import { toast } from "#/components/ui/use-toast";
-import { SchoolsTableData } from "./columns";
-import { usePathname } from "next/navigation";
+import type { SchoolsTableData } from "./columns";
 
 export function UndoDropoutSchool({
   school,

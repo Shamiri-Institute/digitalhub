@@ -1,8 +1,8 @@
-import { Separator } from "#/components/ui/separator";
+import { signOut } from "next-auth/react";
 
 import { currentAdminUser } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
-import { signOut } from "next-auth/react";
+import { Separator } from "#/components/ui/separator";
 import { AdminScheduleCalendar } from "../../../../components/common/session/admin-schedule-calendar";
 import { AdminScheduleHeader } from "../../../../components/common/session/admin-schedule-header";
 

@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { currentHubCoordinator } from "#/app/auth";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
@@ -15,7 +16,6 @@ import {
 } from "./actions";
 import ChartArea from "./components/chart-area";
 import WeeklyHubReportButtonAndForm from "./components/weekly-hub-report-button-and-form";
-import { ImplementerRole } from "@prisma/client";
 
 export default async function SchoolsPage(props: {
   searchParams?: Promise<{

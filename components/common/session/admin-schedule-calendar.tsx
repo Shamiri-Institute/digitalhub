@@ -1,16 +1,16 @@
 "use client";
 
+import { ImplementerRole, type Prisma } from "@prisma/client";
+import { useEffect, useState } from "react";
+import type { CurrentAdminUser } from "#/app/auth";
 import {
   fetchImplementerFellowRatings,
   fetchImplementerSessionTypes,
   fetchImplementerSupervisors,
-  ImplementerFellowRating,
-  ImplementerSupervisor,
+  type ImplementerFellowRating,
+  type ImplementerSupervisor,
 } from "#/lib/actions/implementer";
-import { ImplementerRole, type Prisma } from "@prisma/client";
-import { useEffect, useState } from "react";
 import { ScheduleCalendar } from "./schedule-calendar";
-import type { CurrentAdminUser } from "#/app/auth";
 
 export function AdminScheduleCalendar({ adminUser }: { adminUser: CurrentAdminUser }) {
   const implementerId = adminUser?.session.user.activeMembership?.implementerId;

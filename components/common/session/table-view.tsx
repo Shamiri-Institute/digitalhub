@@ -5,11 +5,6 @@ import { addDays, format, isBefore, isWithinInterval } from "date-fns";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
 import { useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
-import {
-  SupervisorAttendanceDataTable,
-  SupervisorAttendanceDataTableMenu,
-  type SupervisorAttendanceTableData,
-} from "#/components/common/supervisor/supervisor-attendance";
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import {
@@ -20,6 +15,11 @@ import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-m
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { useTitle } from "#/components/common/session/title-provider";
+import {
+  SupervisorAttendanceDataTable,
+  SupervisorAttendanceDataTableMenu,
+  type SupervisorAttendanceTableData,
+} from "#/components/common/supervisor/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { getCalendarDate } from "#/lib/date-utils";

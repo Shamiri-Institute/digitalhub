@@ -1,9 +1,9 @@
 "use client";
 
-import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
-import { Prisma } from "@prisma/client";
-import { ColumnDef } from "@tanstack/react-table";
+import type { Prisma } from "@prisma/client";
+import type { ColumnDef } from "@tanstack/react-table";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import HubDatatableMenu from "./hub-datatable-menu";
 
 export type HubsWithSchools = Prisma.HubGetPayload<{

@@ -1,6 +1,6 @@
-import { currentAdminUser } from "#/app/auth";
 import { signOut } from "next-auth/react";
-import React from "react";
+import type React from "react";
+import { currentAdminUser } from "#/app/auth";
 
 export default async function SchoolsLayout({ children }: { children: React.ReactNode }) {
   const admin = await currentAdminUser();

@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import type React from "react";
 import { currentFellow } from "#/app/auth";
@@ -6,7 +7,6 @@ import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import SchoolsNav from "../../../../../components/common/schools/schools-nav";
-import { ImplementerRole } from "@prisma/client";
 
 export default async function SchoolViewLayout({ children }: { children: React.ReactNode }) {
   const fellow = await currentFellow();

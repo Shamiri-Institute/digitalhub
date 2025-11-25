@@ -1,9 +1,9 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { currentSupervisor } from "#/app/auth";
 import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
 
 export default async function GroupsPage(props: { params: Promise<{ visibleId: string }> }) {
   const params = await props.params;

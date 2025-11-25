@@ -1,12 +1,12 @@
+import { ImplementerRole } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { signOut } from "next-auth/react";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import { currentFellow } from "#/app/auth";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
-import { signOut } from "next-auth/react";
-import { ImplementerRole } from "@prisma/client";
 
 export default async function SchoolsPage() {
   const fellow = await currentFellow();

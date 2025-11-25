@@ -1,9 +1,8 @@
+import { ImplementerRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
-
 import { authOptions } from "#/app/api/auth/[...nextauth]/route";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
 
 export type CurrentHubCoordinator = Awaited<ReturnType<typeof currentHubCoordinator>>;
 

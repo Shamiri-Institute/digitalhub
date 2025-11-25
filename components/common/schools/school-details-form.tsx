@@ -1,4 +1,12 @@
 "use client";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { isValidPhoneNumber } from "libphonenumber-js";
+import { Loader2 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import type { SchoolsTableData } from "#/components/common/schools/columns";
 import { Icons } from "#/components/icons";
@@ -37,14 +45,6 @@ import {
   SCHOOL_TYPES,
 } from "#/lib/app-constants/constants";
 import { cn } from "#/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { isValidPhoneNumber } from "libphonenumber-js";
-import { Loader2 } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { AddSchoolSchema, EditSchoolSchema } from "../../../app/(platform)/hc/schemas";
 import {
   addSchool,

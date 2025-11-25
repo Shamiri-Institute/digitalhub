@@ -1,3 +1,4 @@
+import { signOut } from "next-auth/react";
 import { currentAdminUser } from "#/app/auth";
 import HubStudentClinicalDataCharts from "#/components/charts/student-clinical-charts";
 import HubStudentDemographicsCharts from "#/components/charts/student-demographics-charts";
@@ -7,7 +8,6 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { signOut } from "next-auth/react";
 
 export default async function StudentsPage() {
   const admin = await currentAdminUser();

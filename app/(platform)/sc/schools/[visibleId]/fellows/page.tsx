@@ -1,9 +1,9 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { currentSupervisor } from "#/app/auth";
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
 
 export default async function FellowsPage(props: { params: Promise<{ visibleId: string }> }) {
   const params = await props.params;

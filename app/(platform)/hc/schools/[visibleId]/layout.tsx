@@ -1,12 +1,12 @@
+import { ImplementerRole } from "@prisma/client";
+import { signOut } from "next-auth/react";
+import type React from "react";
 import { currentHubCoordinator } from "#/app/auth";
 import SchoolLeftPanel from "#/components/common/schools/school-left-panel";
 import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
-import { signOut } from "next-auth/react";
-import type React from "react";
 import SchoolsNav from "../../../../../components/common/schools/schools-nav";
-import { ImplementerRole } from "@prisma/client";
 
 export default async function SchoolViewLayout({ children }: { children: React.ReactNode }) {
   const hubCoordinator = await currentHubCoordinator();

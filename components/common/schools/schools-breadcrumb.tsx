@@ -1,5 +1,12 @@
 "use client";
 
+import { ImplementerRole, type Prisma } from "@prisma/client";
+import { CheckIcon } from "@radix-ui/react-icons";
+import { ChevronsUpDown } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { Icons } from "#/components/icons";
 import {
@@ -13,13 +20,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover
 import { fetchImplementerSchools } from "#/lib/actions/implementer";
 import { fetchHubSchools } from "#/lib/actions/school";
 import { cn } from "#/lib/utils";
-import { ImplementerRole, Prisma } from "@prisma/client";
-import { CheckIcon } from "@radix-ui/react-icons";
-import { ChevronsUpDown } from "lucide-react";
-import { useSession } from "next-auth/react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
 type School = Prisma.SchoolGetPayload<{
   select: {
@@ -106,7 +106,7 @@ export default function SchoolsBreadcrumb() {
                   : role === "FELLOW"
                     ? "/fel/schools"
                     : role === "ADMIN"
-                      ? `/admin/hubs`
+                      ? "/admin/hubs"
                       : "#"
             }
             className="hover:text-shamiri-new-blue"

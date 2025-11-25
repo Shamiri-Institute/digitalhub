@@ -1,7 +1,7 @@
 "use server";
 
 import { currentAdminUser } from "#/app/auth";
-import { JWTMembership } from "#/lib/actions/fetch-personnel";
+import type { JWTMembership } from "#/lib/actions/fetch-personnel";
 import { db } from "#/lib/db";
 
 export async function fetchImplementerStats(implementerId: string) {

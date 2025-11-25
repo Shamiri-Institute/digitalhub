@@ -1,6 +1,6 @@
 "use client";
 
-import { ImplementerRole, Prisma } from "@prisma/client";
+import { ImplementerRole, type Prisma } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";

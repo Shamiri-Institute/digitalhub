@@ -1,8 +1,8 @@
+import { ImplementerRole } from "@prisma/client";
+import { signOut } from "next-auth/react";
 import { currentAdminUser } from "#/app/auth";
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
-import { signOut } from "next-auth/react";
 
 export default async function SchoolSessionsPage({
   params,

@@ -1,7 +1,7 @@
 "use client";
-import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
-import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 
 type TabType = {
   name: string;

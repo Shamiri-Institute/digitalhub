@@ -1,4 +1,4 @@
-import { ImplementerRole, Prisma, SessionStatus } from "@prisma/client";
+import { ImplementerRole, type Prisma, type SessionStatus } from "@prisma/client";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { CheckCheck, InfoIcon } from "lucide-react";
@@ -21,8 +21,8 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
   DialogPortal,
+  DialogTitle,
 } from "#/components/ui/dialog";
 import {
   Form,

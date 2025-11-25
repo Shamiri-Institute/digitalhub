@@ -1,8 +1,8 @@
 "use server";
 
+import { ImplementerRole } from "@prisma/client";
 import { getCurrentPersonnel, getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
 
 export async function fetchSchool(visibleId: string) {
   const session = await getCurrentUserSession();

@@ -1,17 +1,17 @@
 "use client";
 
+import type { ImplementerRole, Supervisor } from "@prisma/client";
+import type { VisibilityState } from "@tanstack/react-table";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
-import { columns, SchoolsTableData } from "#/components/common/schools/columns";
+import { columns, type SchoolsTableData } from "#/components/common/schools/columns";
 import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
 import SchoolDetailsForm from "#/components/common/schools/school-details-form";
 import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
 import SchoolsDataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { cn } from "#/lib/utils";
-import { ImplementerRole, Supervisor } from "@prisma/client";
-import { VisibilityState } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
-import { useState } from "react";
 
 const schoolsCSVHeaders = [
   "school_name",

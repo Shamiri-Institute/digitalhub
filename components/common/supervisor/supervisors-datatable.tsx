@@ -1,11 +1,14 @@
 "use client";
 
+import { ImplementerRole, type Prisma } from "@prisma/client";
+import type { Row } from "@tanstack/react-table";
+import parsePhoneNumberFromString from "libphonenumber-js";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
-import { columns, type SupervisorsData } from "#/components/common/supervisor/columns";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { MarkAttendance } from "#/components/common/mark-attendance";
+import { columns, type SupervisorsData } from "#/components/common/supervisor/columns";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
@@ -18,9 +21,6 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { markManySupervisorAttendance, markSupervisorAttendance } from "#/lib/actions/supervisor";
-import { ImplementerRole, type Prisma } from "@prisma/client";
-import type { Row } from "@tanstack/react-table";
-import parsePhoneNumberFromString from "libphonenumber-js";
 
 export default function SupervisorsDataTable({
   supervisors,

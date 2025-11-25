@@ -1,8 +1,8 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { currentHubCoordinator } from "#/app/auth";
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
 
 export default async function SchoolSessionsPage(props: {
   params: Promise<{ visibleId: string }>;

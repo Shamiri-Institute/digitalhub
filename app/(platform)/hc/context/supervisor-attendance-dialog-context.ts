@@ -1,6 +1,6 @@
 import { createContext, type Dispatch, type SetStateAction } from "react";
-import type { SupervisorAttendanceTableData } from "#/components/common/supervisor/supervisor-attendance";
 import type { Session } from "#/components/common/session/sessions-provider";
+import type { SupervisorAttendanceTableData } from "#/components/common/supervisor/supervisor-attendance";
 
 type SupervisorAttendanceContextData = {
   isOpen: boolean;

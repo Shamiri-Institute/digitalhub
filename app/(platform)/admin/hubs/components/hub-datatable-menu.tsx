@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Icons } from "#/components/icons";
 import {
@@ -8,8 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
-import { useState } from "react";
-import { HubsWithSchools } from "./columns";
+import type { HubsWithSchools } from "./columns";
 import HubCoordinatorProfileDialog from "./hub-coordinator-profile-dialog";
 
 interface HubDatatableMenuProps {

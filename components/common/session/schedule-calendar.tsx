@@ -13,7 +13,6 @@ import { useCalendar, useLocale } from "react-aria";
 import type { CalendarGridProps, CalendarProps } from "react-aria-components";
 import { type CalendarState, useCalendarState } from "react-stately";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
-import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import {
   type DateRangeType,
   type Filters,
@@ -29,6 +28,7 @@ import { ScheduleNewSession } from "#/components/common/session/schedule-new-ses
 import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
 import StudentAttendance from "#/components/common/student/student-attendance";
+import SupervisorAttendance from "#/components/common/supervisor/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import {

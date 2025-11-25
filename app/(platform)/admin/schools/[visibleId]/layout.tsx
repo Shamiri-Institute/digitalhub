@@ -1,11 +1,11 @@
+import { signOut } from "next-auth/react";
+import type React from "react";
 import { currentAdminUser } from "#/app/auth";
 import SchoolLeftPanel from "#/components/common/schools/school-left-panel";
 import SchoolsBreadcrumb from "#/components/common/schools/schools-breadcrumb";
 import SchoolsNav from "#/components/common/schools/schools-nav";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
-import { signOut } from "next-auth/react";
-import React from "react";
 
 export default async function SchoolViewLayout({ children }: { children: React.ReactNode }) {
   const admin = await currentAdminUser();
