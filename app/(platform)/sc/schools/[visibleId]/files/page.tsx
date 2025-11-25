@@ -3,12 +3,11 @@ import { currentSupervisor } from "#/app/auth";
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
 
-export default async function SchoolFilesPage({
-  params,
-}: {
-  params: Promise<{ visibleId: string }>;
-}) {
-  const { visibleId } = await params;
+export default async function SchoolFilesPage(props: { params: Promise<{ visibleId: string }> }) {
+  const params = await props.params;
+
+  const { visibleId } = params;
+
   const supervisor = await currentSupervisor();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });

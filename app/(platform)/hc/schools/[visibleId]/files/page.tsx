@@ -3,17 +3,14 @@ import { currentHubCoordinator } from "#/app/auth";
 import { signOut } from "next-auth/react";
 import { db } from "#/lib/db";
 
-export default async function SchoolFilesPage({
-  params,
-}: {
-  params: Promise<{ visibleId: string }>;
-}) {
+export default async function SchoolFilesPage(props: { params: Promise<{ visibleId: string }> }) {
+  const params = await props.params;
   const hc = await currentHubCoordinator();
   if (!hc) {
     await signOut({ callbackUrl: "/login" });
   }
 
-  const { visibleId } = await params;
+  const { visibleId } = params;
   const schoolFiles = await db.schoolDocuments.findMany({
     where: {
       school: {

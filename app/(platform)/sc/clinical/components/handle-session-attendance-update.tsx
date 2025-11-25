@@ -1,7 +1,6 @@
 "use client";
 
 import type { Row } from "@tanstack/react-table";
-import { revalidatePath } from "next/cache";
 import { useState } from "react";
 import { updateClinicalSessionAttendance } from "#/app/(platform)/sc/clinical/action";
 import type { AttendanceRecord } from "#/app/(platform)/sc/clinical/components/columns";
@@ -40,11 +39,6 @@ export default function HandleSessionAttendanceUpdate({
       const response = await updateClinicalSessionAttendance(row.original.sessionId, status);
       if (response.success) {
         toast({ description: response.message });
-        if (userRole === "CLINICAL_LEAD") {
-          revalidatePath("/cl/clinical");
-        } else {
-          revalidatePath("/sc/clinical");
-        }
         setIsOpen(false);
       } else {
         toast({ variant: "destructive", description: response.message });

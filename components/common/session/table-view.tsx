@@ -287,7 +287,7 @@ export function TableView({
   role: ImplementerRole;
   supervisorId?: string;
 }) {
-  const [selectedDay, setSelectedDay] = useState<CalendarDate>(state.value);
+  const [selectedDay, setSelectedDay] = useState<CalendarDate | null>(state.value);
   const weekDays = state.getDatesInWeek(0);
   const { setTitle } = useTitle();
   const dayFormatter = useDateFormatter({
@@ -306,6 +306,7 @@ export function TableView({
   const { sessions } = useContext(SessionsContext);
 
   useEffect(() => {
+    if (!selectedDay) return;
     const start = selectedDay.toDate(state.timeZone);
     const end = addDays(selectedDay.toDate(state.timeZone), 1);
     const activeSessions = sessions.filter((session) => {
@@ -415,8 +416,10 @@ export function TableView({
         <ToggleGroup
           type="single"
           className="form-toggle"
-          defaultValue={format(selectedDay.toDate(state.timeZone), "yyyy-MM-dd")}
-          value={format(selectedDay.toDate(state.timeZone), "yyyy-MM-dd")}
+          defaultValue={
+            selectedDay ? format(selectedDay.toDate(state.timeZone), "yyyy-MM-dd") : undefined
+          }
+          value={selectedDay ? format(selectedDay.toDate(state.timeZone), "yyyy-MM-dd") : undefined}
           onValueChange={(value) => {
             if (value) setSelectedDay(getCalendarDate(new Date(value)));
           }}

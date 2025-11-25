@@ -3,12 +3,11 @@ import { currentFellow } from "#/app/auth";
 import SchoolFilesDatatable from "#/components/common/files/files-datatable";
 import { db } from "#/lib/db";
 
-export default async function SchoolFilesPage({
-  params,
-}: {
-  params: Promise<{ visibleId: string }>;
-}) {
-  const { visibleId } = await params;
+export default async function SchoolFilesPage(props: { params: Promise<{ visibleId: string }> }) {
+  const params = await props.params;
+
+  const { visibleId } = params;
+
   const fellow = await currentFellow();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });

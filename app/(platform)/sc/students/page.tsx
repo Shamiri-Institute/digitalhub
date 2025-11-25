@@ -10,7 +10,7 @@ import { db } from "#/lib/db";
 export default async function SupervisorStudentsPage({
   searchParams,
 }: {
-  searchParams: Record<"fellowId" | "schoolId", string>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const supervisor = await currentSupervisor();
 
@@ -91,7 +91,7 @@ export default async function SupervisorStudentsPage({
       },
     }),
     db.clinicalScreeningInfo.groupBy({
-      by: ["initialReferredFrom"],
+      by: ["initialReferredFromSpecified"],
       where: {
         OR: [
           {

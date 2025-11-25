@@ -258,7 +258,7 @@ function ReportingDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         <DropdownMenuItem asChild>
-          <Link href={`/${mainRoute}/reporting`}>Expenses</Link>
+          <Link href={`/${mainRoute}/reporting/expenses/fellows`}>Expenses</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={`/${mainRoute}/reporting/school-reports`}>School Reports</Link>
@@ -266,6 +266,14 @@ function ReportingDropdown({
         <DropdownMenuItem asChild>
           <Link href={`/${mainRoute}/reporting/fellow-reports`}>Fellow Reports</Link>
         </DropdownMenuItem>
+        {mainRoute === "sc" ? (
+          <Link
+            className="block px-4 py-2 hover:bg-gray-200"
+            href={`/${mainRoute}/reporting/monitoring-and-evaluation`}
+          >
+            Monitoring and Evaluation Report
+          </Link>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

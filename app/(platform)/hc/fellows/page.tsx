@@ -68,6 +68,11 @@ export default async function FellowPage() {
     return values[0].map((fellow) => {
       return {
         ...fellow,
+        groupCount: Number(fellow.groupCount),
+        averageRating:
+          fellow.averageRating !== null && fellow.averageRating !== undefined
+            ? Number(fellow.averageRating)
+            : null,
         complaints: values[1].filter((_complaints) => {
           return _complaints.fellowId === fellow.id;
         }),

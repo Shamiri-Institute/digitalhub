@@ -4,8 +4,11 @@ import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
 import { ImplementerRole } from "@prisma/client";
 
-export default async function StudentsPage({ params }: { params: Promise<{ visibleId: string }> }) {
-  const { visibleId } = await params;
+export default async function StudentsPage(props: { params: Promise<{ visibleId: string }> }) {
+  const params = await props.params;
+
+  const { visibleId } = params;
+
   const hc = await currentHubCoordinator();
   if (!hc) {
     await signOut({ callbackUrl: "/login" });

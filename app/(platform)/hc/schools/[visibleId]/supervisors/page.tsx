@@ -3,12 +3,11 @@ import SupervisorsDataTable from "#/components/common/supervisor/supervisors-dat
 import { db } from "#/lib/db";
 import { signOut } from "next-auth/react";
 
-export default async function SupervisorsPage({
-  params,
-}: {
-  params: Promise<{ visibleId: string }>;
-}) {
-  const { visibleId } = await params;
+export default async function SupervisorsPage(props: { params: Promise<{ visibleId: string }> }) {
+  const params = await props.params;
+
+  const { visibleId } = params;
+
   const coordinator = await currentHubCoordinator();
   if (coordinator === null) {
     await signOut({ callbackUrl: "/login" });

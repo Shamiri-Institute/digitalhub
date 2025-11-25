@@ -5,8 +5,11 @@ import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
 import { db } from "#/lib/db";
 import { ImplementerRole } from "@prisma/client";
 
-export default async function FellowsPage({ params }: { params: Promise<{ visibleId: string }> }) {
-  const { visibleId } = await params;
+export default async function FellowsPage(props: { params: Promise<{ visibleId: string }> }) {
+  const params = await props.params;
+
+  const { visibleId } = params;
+
   const supervisor = await currentSupervisor();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });

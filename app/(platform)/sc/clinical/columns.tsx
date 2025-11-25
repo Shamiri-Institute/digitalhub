@@ -6,13 +6,13 @@ import Image from "next/image";
 import type { ClinicalCases } from "#/app/(platform)/sc/clinical/action";
 import ClinicalCaseActionsDropdownMenu from "#/components/common/clinical/clinical-case-actions-dropdown";
 import { Icons } from "#/components/icons";
+import { Badge } from "#/components/ui/badge";
 import ArrowDownIcon from "#/public/icons/arrow-drop-down.svg";
 import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
-import { Badge } from "#/components/ui/badge";
 
 export const columns: ColumnDef<ClinicalCases>[] = [
   {
-    id: "button",
+    id: "checkbox",
     cell: ({ row }) => {
       return (
         <button
@@ -65,16 +65,22 @@ export const columns: ColumnDef<ClinicalCases>[] = [
   {
     accessorKey: "dateAdded",
     header: "Date added",
-    cell: ({ row }) => format(new Date(row.original.dateAdded || ""), "dd MMM yyyy"),
+    cell: ({ row }) => {
+      const date = row.original.dateAdded;
+      if (!date) return "N/A";
+      const parsed = new Date(date);
+      if (isNaN(parsed.getTime())) return "N/A";
+      return format(parsed, "dd MMM yyyy");
+    },
   },
   {
     accessorKey: "caseStatus",
     header: "Case Status",
     cell: ({ row }) => {
-      const riskLevel = row.original.risk || "N/A";
+      const caseStatus = row.original.caseStatus;
       return (
-        <Badge variant={colors[riskLevel || "shamiri-green"]} className="uppercase">
-          {riskLevel}
+        <Badge variant={colors[caseStatus || "shamiri-green"]} className="uppercase">
+          {caseStatus}
         </Badge>
       );
     },

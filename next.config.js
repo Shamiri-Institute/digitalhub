@@ -2,9 +2,6 @@ const { withSentryConfig } = require("@sentry/nextjs");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    instrumentationHook: true,
-  },
   images: {
     domains: ["lh3.googleusercontent.com"],
   },

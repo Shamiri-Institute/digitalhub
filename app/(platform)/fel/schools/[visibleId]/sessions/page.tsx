@@ -4,12 +4,13 @@ import SessionsDatatable from "#/components/common/session/sessions-datatable";
 import { db } from "#/lib/db";
 import { ImplementerRole } from "@prisma/client";
 
-export default async function SchoolSessionsPage({
-  params,
-}: {
+export default async function SchoolSessionsPage(props: {
   params: Promise<{ visibleId: string }>;
 }) {
-  const { visibleId } = await params;
+  const params = await props.params;
+
+  const { visibleId } = params;
+
   const fellow = await currentFellow();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });

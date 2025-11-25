@@ -4,8 +4,11 @@ import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
 import { ImplementerRole } from "@prisma/client";
 
-export default async function StudentsPage({ params }: { params: Promise<{ visibleId: string }> }) {
-  const { visibleId } = await params;
+export default async function StudentsPage(props: { params: Promise<{ visibleId: string }> }) {
+  const params = await props.params;
+
+  const { visibleId } = params;
+
   const supervisor = await currentSupervisor();
   if (supervisor === null) {
     await signOut({ callbackUrl: "/login" });
