@@ -607,11 +607,7 @@ async function createHubCoordinators(
   return db.hubCoordinator.findMany();
 }
 
-async function createSupervisors(
-  hubs: Hub[],
-  emails: Set<string>,
-  n = 6,
-) {
+async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
   console.log("creating supervisors");
   const supervisors: Prisma.SupervisorCreateManyInput[] = [];
 

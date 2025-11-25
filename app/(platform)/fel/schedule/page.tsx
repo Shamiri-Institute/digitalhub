@@ -20,7 +20,10 @@ export default async function FellowSchedulePage() {
             {
               title: "Sessions",
               count:
-                fellow?.profile.groups.reduce((a, b) => a + b.school._count.interventionSessions, 0) || 0,
+                fellow?.profile.groups.reduce(
+                  (a, b) => a + b.school._count.interventionSessions,
+                  0,
+                ) || 0,
             },
             { title: "Groups", count: fellow?.profile.groups.length || 0 },
             {

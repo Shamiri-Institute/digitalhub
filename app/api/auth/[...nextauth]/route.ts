@@ -133,7 +133,9 @@ export const authOptions: AuthOptions = {
       const activeMembership: JWTMembership | undefined =
         token.activeMembership ||
         (memberships.length > 0
-          ? memberships.sort((a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0))[0]
+          ? memberships.sort(
+              (a, b) => (b.updatedAt?.getTime() ?? 0) - (a.updatedAt?.getTime() ?? 0),
+            )[0]
           : undefined);
 
       const sessionUser: SessionUser = {
