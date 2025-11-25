@@ -415,7 +415,7 @@ async function createAdminUsers(implementers: Implementer[], emails: Set<string>
   const implementerAdmins = implementers.map((implementer) => ({
     id: objectId("user"),
     email: implementer.pointPersonEmail,
-    adminName: `Admin(${implementer.implementerName})`,
+    adminName: `Admin (${implementer.implementerName})`,
     implementers: [implementer.id],
   }));
 

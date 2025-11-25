@@ -12,6 +12,12 @@ import {
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
 import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "#/components/ui/dropdown-menu";
+import {
   fetchImplementerPersonnel,
   type ImplementerPersonnel,
 } from "#/lib/actions/fetch-personnel";
@@ -19,6 +25,7 @@ import type { Personnel } from "#/lib/types/personnel";
 import { cn } from "#/lib/utils";
 import type { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
+import { Filter } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -41,6 +48,7 @@ export function RoleSwitcher({
 }) {
   const [open, setOpen] = useState(false);
   const [implementerMembers, setImplementerMembers] = useState<ImplementerPersonnel | null>(null);
+  const [selectedRoles, setSelectedRoles] = useState<Set<ImplementerRole>>(new Set());
 
   useEffect(() => {
     const fetchImplementerMembers = async () => {
@@ -66,13 +74,37 @@ export function RoleSwitcher({
     }
   };
 
+  // Get unique roles from personnel
+  const availableRoles: ImplementerRole[] = implementerMembers?.personnel
+    ? Array.from(new Set(implementerMembers.personnel.map((member) => member.role))).sort()
+    : [];
+
+  // Filter personnel based on selected roles
+  const filteredPersonnel = implementerMembers?.personnel
+    ? selectedRoles.size === 0
+      ? implementerMembers.personnel
+      : implementerMembers.personnel.filter((member) => selectedRoles.has(member.role))
+    : [];
+
+  const handleRoleToggle = (role: ImplementerRole) => {
+    setSelectedRoles((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(role)) {
+        newSet.delete(role);
+      } else {
+        newSet.add(role);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           aria-expanded={open}
-          className="-mt-1 w-full min-w-[250px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
+          className="-mt-1 w-full min-w-[300px] justify-between bg-white px-2 text-left filter disabled:pointer-events-none disabled:grayscale"
           disabled={loading || !activeMembership}
         >
           <div className="flex flex-col items-start">
@@ -105,13 +137,39 @@ export function RoleSwitcher({
             select member to impersonate
           </span>
           <CommandSeparator />
-          <CommandInput
-            placeholder={`Search ${implementerMembers?.personnel?.length} members...`}
-            className="h-9"
-          />
+          <div className="relative">
+            <CommandInput
+              placeholder={`Search ${filteredPersonnel.length} members...`}
+              className="h-9 w-full"
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild className="absolute right-1 top-0.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-muted p-0"
+                  aria-label="Filter by role"
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side="right" className="w-48">
+                {availableRoles.map((role) => (
+                  <DropdownMenuCheckboxItem
+                    key={role}
+                    checked={selectedRoles.has(role)}
+                    onCheckedChange={() => handleRoleToggle(role)}
+                    className="capitalize"
+                  >
+                    {role.replace("_", " ").toLowerCase()}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           <CommandEmpty>No members found.</CommandEmpty>
           <CommandGroup className="max-h-[300px] overflow-y-scroll">
-            {implementerMembers?.personnel?.map((member) => (
+            {filteredPersonnel.map((member) => (
               <CommandItem
                 key={member.id}
                 value={`${member.role.replace("_", " ")} ${member.label} ${member.hub}`}
