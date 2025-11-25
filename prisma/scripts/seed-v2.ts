@@ -219,7 +219,7 @@ function createImplementers() {
         pointPersonEmail: "team@shamiri.institute",
         countyOfOperation: "Nairobi",
       },
-      ...generateImplementers(4),
+      ...generateImplementers(2),
     ],
   });
 }
@@ -298,7 +298,6 @@ function createHubs(projects: Project[], implementers: Implementer[]) {
 
 async function createCoreUsers(
   implementers: Implementer[],
-  hubs: Hub[],
   supervisors: Supervisor[],
   hubCoordinators: HubCoordinator[],
   fellows: Fellow[],
@@ -331,18 +330,8 @@ async function createCoreUsers(
     },
     {
       id: objectId("user"),
-      email: "ichami.etyang@shamiri.institute",
-      role: ImplementerRole.CLINICAL_TEAM,
-    },
-    {
-      id: objectId("user"),
       email: "mmbone@shamiri.institute",
       role: ImplementerRole.SUPERVISOR,
-    },
-    {
-      id: objectId("user"),
-      email: "abdulghani.noor@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
     },
     {
       id: objectId("user"),
@@ -407,77 +396,13 @@ async function createCoreUsers(
   await db.implementerMember.createMany({
     data: membershipData.flat(),
   });
-
-  const county = faker.helpers.arrayElement(KENYAN_COUNTIES);
-  const subCounty = faker.helpers.arrayElement(county.sub_counties);
-
-  const supervisorRecords = userData
-    .filter((user) => user.role === "SUPERVISOR")
-    .map((user) => {
-      return {
-        id: objectId("supervisor"),
-        implementerId: faker.helpers.arrayElement(implementers).id,
-        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
-        supervisorName: faker.person.fullName(),
-        supervisorEmail: faker.internet.email(),
-        county: county.name,
-        subCounty: subCounty,
-        bankName: faker.company.name(),
-        bankBranch: faker.location.county(),
-        bankAccountNumber: faker.finance.accountNumber(),
-        bankAccountName: faker.person.fullName(),
-        kra: faker.finance.accountNumber(),
-        nhif: faker.finance.accountNumber(),
-        dateOfBirth: faker.date.birthdate(),
-        cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-        mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-        gender: faker.person.sex(),
-        idNumber: faker.string.alpha({ casing: "upper", length: 8 }),
-        hubId: faker.helpers.arrayElement(hubs).id,
-      };
-    });
-
-  const hubCoordinatorRecords = userData
-    .filter((user) => user.role === "HUB_COORDINATOR")
-    .map((user) => {
-      return {
-        id: objectId("hubcoordinator"),
-        implementerId: faker.helpers.arrayElement(implementers).id,
-        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
-        coordinatorName: faker.person.fullName(),
-        coordinatorEmail: faker.internet.email(),
-        county: county.name,
-        subCounty: subCounty,
-        bankName: faker.company.name(),
-        bankBranch: faker.location.county(),
-        bankAccountNumber: faker.finance.accountNumber(),
-        bankAccountName: faker.person.fullName(),
-        kra: faker.finance.accountNumber(),
-        nhif: faker.finance.accountNumber(),
-        dateOfBirth: faker.date.birthdate(),
-        cellNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-        mpesaNumber: faker.helpers.fromRegExp("2547[1-9]{8}"),
-        gender: faker.person.sexType(),
-        idNumber: faker.string.alpha({ casing: "upper", length: 8 }),
-        assignedHubId: faker.helpers.arrayElement(hubs).id,
-      };
-    });
-
-  return Promise.all([
-    db.hubCoordinator.createManyAndReturn({
-      data: hubCoordinatorRecords,
-    }),
-    db.supervisor.createManyAndReturn({
-      data: supervisorRecords,
-    }),
-  ]);
 }
 
 async function createAdminUsers(implementers: Implementer[], emails: Set<string>) {
   console.log("creating admin users");
 
   // create admin user for all implementers
-  const adminUsers = [
+  const superAdmin = [
     {
       id: objectId("user"),
       email: "admin@shamiri.institute",
@@ -487,14 +412,14 @@ async function createAdminUsers(implementers: Implementer[], emails: Set<string>
   ];
 
   // create admin per implementer
-  const userData = implementers.map((implementer) => ({
+  const implementerAdmins = implementers.map((implementer) => ({
     id: objectId("user"),
     email: implementer.pointPersonEmail,
-    adminName: implementer.implementerName,
+    adminName: `Admin(${implementer.implementerName})`,
     implementers: [implementer.id],
   }));
 
-  const adminData = [...userData, ...adminUsers];
+  const adminData = [...implementerAdmins, ...superAdmin];
 
   // create admin profiles
   const createdAdminUsers = await db.adminUser.createManyAndReturn({
@@ -684,9 +609,8 @@ async function createHubCoordinators(
 
 async function createSupervisors(
   hubs: Hub[],
-  n = 6,
-  implementers: Implementer[],
   emails: Set<string>,
+  n = 6,
 ) {
   console.log("creating supervisors");
   const supervisors: Prisma.SupervisorCreateManyInput[] = [];
@@ -695,7 +619,7 @@ async function createSupervisors(
   const staticHub = hubs[0];
   const staticSupervisors = [
     {
-      id: objectId("supervisor"),
+      id: objectId("user"),
       visibleId: "SUPERVISOR1",
       supervisorName: "Martin Ødegaard",
       supervisorEmail: "martin.odegaard@test.com",
@@ -716,7 +640,7 @@ async function createSupervisors(
       idNumber: "12345678",
     },
     {
-      id: objectId("supervisor"),
+      id: objectId("user"),
       visibleId: "SUPERVISOR2",
       supervisorName: "Declan Rice",
       supervisorEmail: "declan.rice@test.com",
@@ -737,7 +661,7 @@ async function createSupervisors(
       idNumber: "23456789",
     },
     {
-      id: objectId("supervisor"),
+      id: objectId("user"),
       visibleId: "SUPERVISOR3",
       supervisorName: "William Saliba",
       supervisorEmail: "william.saliba@test.com",
@@ -855,7 +779,7 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
   // Add static operations user for static hub
   const staticHub = hubs[0];
   const staticOps = {
-    id: objectId("user"),
+    id: objectId("opsuser"),
     email: "kai.havertz@test.com",
     implementerId: staticHub!.implementerId,
     name: "Kai Havertz",
@@ -906,7 +830,10 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
   return db.opsUser.createManyAndReturn({
     data: operations.map((ops) => ({
       id: membershipData.find((x) => x.userId === ops.id)?.identifier!,
-      ...ops,
+      email: ops.email,
+      name: ops.name,
+      implementerId: ops.implementerId,
+      cellPhone: ops.cellPhone,
     })),
   });
 }
@@ -968,7 +895,10 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
   return db.clinicalLead.createManyAndReturn({
     data: clinicalLeads.map((clinicalLead) => ({
       id: membershipData.find((x) => x.userId === clinicalLead.id)?.identifier!,
-      ...clinicalLead,
+      clinicalLeadName: clinicalLead.clinicalLeadName,
+      clinicalLeadEmail: clinicalLead.clinicalLeadEmail,
+      assignedHubId: clinicalLead.assignedHubId,
+      implementerId: clinicalLead.implementerId,
     })),
   });
 }
@@ -1550,8 +1480,7 @@ async function main() {
   const admins = await createAdminUsers(implementers, userEmailSet);
   const hubs = await createHubs(projects, implementers);
   const hubCoordinators = await createHubCoordinators(hubs, implementers, userEmailSet);
-  const supervisors = await createSupervisors(hubs, 6, implementers, userEmailSet);
-
+  const supervisors = await createSupervisors(hubs, userEmailSet, 6);
   const clinicalLeads = await createClinicalLeads(hubs, userEmailSet);
   const clinicalTeam = await createClinicalTeam(hubs, implementers);
   const operations = await createOperations(hubs, userEmailSet);
@@ -1559,7 +1488,6 @@ async function main() {
 
   await createCoreUsers(
     implementers,
-    hubs,
     supervisors,
     hubCoordinators,
     fellows,
