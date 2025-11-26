@@ -344,12 +344,11 @@ export async function updateSupervisorDetails(data: z.infer<typeof EditSuperviso
 
 export async function createNewSupervisor(data: z.infer<typeof AddNewSupervisorSchema>) {
   try {
-      const hc = await currentHubCoordinator();
+    const hc = await currentHubCoordinator();
 
     if (!hc) {
       throw new Error("The session has not been authenticated");
     }
-
 
     const assignedHub = hc.profile?.assignedHub;
     if (!assignedHub) {

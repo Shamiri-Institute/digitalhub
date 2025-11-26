@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { Suspense } from "react";
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
@@ -9,10 +10,9 @@ import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
 
 export default async function FellowPage() {
-  const hc = await currentHubCoordinator()
+  const hc = await currentHubCoordinator();
   if (!hc) {
     return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
@@ -107,7 +107,9 @@ export default async function FellowPage() {
         <Separator />
 
         <Suspense fallback={<GraphLoadingIndicator />}>
-          <FellowsChartsWrapper coordinator={{ assignedHubId: hc.profile?.assignedHubId ?? null }} />
+          <FellowsChartsWrapper
+            coordinator={{ assignedHubId: hc.profile?.assignedHubId ?? null }}
+          />
         </Suspense>
         <MainFellowsDatatable
           fellows={data}

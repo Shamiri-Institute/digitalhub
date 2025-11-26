@@ -1,9 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { db } from "#/lib/db";
-import { getCurrentPersonnel } from "#/app/auth";
 import { ImplementerRole } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import { getCurrentPersonnel } from "#/app/auth";
+import { db } from "#/lib/db";
 
 export type FellowComplaintsType = Awaited<ReturnType<typeof loadFellowComplaints>>[number];
 

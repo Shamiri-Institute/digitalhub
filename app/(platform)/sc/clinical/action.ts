@@ -1,11 +1,11 @@
 "use server";
 
+import { ImplementerRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import type { EditStudentInfoFormValues } from "#/app/(platform)/sc/clinical/components/view-edit-student-info";
 import { currentSupervisor, getCurrentPersonnel } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
 
 export type ClinicalCases = Awaited<ReturnType<typeof getClinicalCases>>[number];
 
@@ -166,7 +166,7 @@ export async function updateClinicalSessionAttendance(
     throw new Error("User not found");
   }
 
-  const role = user.session.user.activeMembership?.role
+  const role = user.session.user.activeMembership?.role;
   if (!role || (role !== ImplementerRole.CLINICAL_LEAD && role !== ImplementerRole.SUPERVISOR)) {
     throw new Error("You are not authorized to update clinical session attendance");
   }
@@ -693,9 +693,7 @@ export async function createClinicalCaseNotes(data: {
       },
     });
 
-    revalidatePath(
-      `${role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical"}`,
-    );
+    revalidatePath(`${role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical"}`);
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -741,9 +739,7 @@ export async function updateClinicalCaseAttendance(data: {
       },
     });
 
-    revalidatePath(
-      `${role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical"}`,
-    );
+    revalidatePath(`${role === ImplementerRole.CLINICAL_LEAD ? "/cl/clinical" : "/sc/clinical"}`);
     return { success: true };
   } catch (error) {
     console.error(error);

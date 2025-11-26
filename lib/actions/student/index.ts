@@ -30,7 +30,6 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
       throw new Error("The session has not been authenticated");
     }
 
-
     const {
       id,
       studentName,
@@ -123,7 +122,6 @@ export async function markStudentAttendance(data: z.infer<typeof MarkAttendanceS
     if (!userId) {
       throw new Error("The session has not been authenticated");
     }
-
 
     const { id, sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 

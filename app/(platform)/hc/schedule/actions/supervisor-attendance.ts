@@ -1,8 +1,8 @@
 "use server";
 
+import { ImplementerRole } from "@prisma/client";
 import { getCurrentPersonnel } from "#/app/auth";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
 
 export async function markManySupervisorAttendance(ids: string[], attended: boolean | null) {
   const user = await getCurrentPersonnel();

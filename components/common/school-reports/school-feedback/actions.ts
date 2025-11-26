@@ -1,9 +1,9 @@
 "use server";
 
+import { ImplementerRole } from "@prisma/client";
 import { getCurrentPersonnel } from "#/app/auth";
 import type { SchoolFeedbackFormValues } from "#/components/common/school-reports/school-feedback/view-edit-school-feedback";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
 
 export async function editSchoolFeedback(
   userId: string,
@@ -12,7 +12,10 @@ export async function editSchoolFeedback(
 ) {
   try {
     const user = await getCurrentPersonnel();
-    if (user?.session?.user.id !== userId && user?.session?.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR) {
+    if (
+      user?.session?.user.id !== userId &&
+      user?.session?.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR
+    ) {
       return {
         message: "You are not authorized to edit this feedback",
         success: false,

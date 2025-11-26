@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import type { FellowsData } from "#/app/(platform)/sc/actions";
 import { currentFellow } from "#/app/auth";
@@ -7,7 +8,6 @@ import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
 
 export default async function FellowsPage() {
   const fellow = await currentFellow();

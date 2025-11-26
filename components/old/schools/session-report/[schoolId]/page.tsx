@@ -54,7 +54,9 @@ export default async function ReportDetails(props: {
     },
   });
 
-  const schoolNotAssigned = supervisor.profile?.assignedSchools?.every((school) => school.id !== schoolId);
+  const schoolNotAssigned = supervisor.profile?.assignedSchools?.every(
+    (school) => school.id !== schoolId,
+  );
   const pointSupervisor = session?.school?.assignedSupervisor ?? undefined;
   const schoolName = session?.school?.schoolName ?? "";
 
@@ -76,8 +78,9 @@ export default async function ReportDetails(props: {
 
   // Session rating by the currently logged in supervisor if previously created
   const supervisorSessionRating =
-    session.sessionRatings?.find((sessionRating) => sessionRating.supervisorId === supervisor.profile?.id) ??
-    null;
+    session.sessionRatings?.find(
+      (sessionRating) => sessionRating.supervisorId === supervisor.profile?.id,
+    ) ?? null;
 
   // Weekly report comments by point supervisor
   const pointSupervisorSessionNotes = session.sessionNotes?.filter(
@@ -108,7 +111,7 @@ export default async function ReportDetails(props: {
       />
       <SessionRater
         revalidatePath={revalidatePath}
-        sessionId={session.id}  
+        sessionId={session.id}
         supervisorId={supervisor.profile?.id}
         ratings={{
           studentBehavior: supervisorSessionRating?.studentBehaviorRating ?? 0,

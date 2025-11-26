@@ -12,7 +12,11 @@ import { getSchoolInitials } from "#/lib/utils";
 async function checkAuth() {
   const user = await getCurrentPersonnel();
 
-  if (!user || (user.session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR && user.session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)) {
+  if (
+    !user ||
+    (user.session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR &&
+      user.session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)
+  ) {
     throw new Error("The session has not been authenticated");
   }
 

@@ -1,14 +1,19 @@
 "use server";
 
+import { ImplementerRole } from "@prisma/client";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
-import { ImplementerRole } from "@prisma/client";
 
 export async function removeUploadedSchoolFile(documentId: string) {
   try {
     const session = await getCurrentUserSession();
 
-    if (!session || !session.user.id || (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR && session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)) {
+    if (
+      !session ||
+      !session.user.id ||
+      (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR &&
+        session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)
+    ) {
       throw new Error("The session has not been authenticated");
     }
 
@@ -31,7 +36,12 @@ export async function updateUploadedSchoolFile(documentId: string, fileName: str
   try {
     const session = await getCurrentUserSession();
 
-    if (!session || !session.user.id || (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR && session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)) {
+    if (
+      !session ||
+      !session.user.id ||
+      (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR &&
+        session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)
+    ) {
       throw new Error("The session has not been authenticated");
     }
 
@@ -62,7 +72,12 @@ export async function addUploadedSchoolDocs(data: {
   try {
     const session = await getCurrentUserSession();
 
-    if (!session || !session.user.id || (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR && session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)) {
+    if (
+      !session ||
+      !session.user.id ||
+      (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR &&
+        session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)
+    ) {
       throw new Error("The session has not been authenticated");
     }
 

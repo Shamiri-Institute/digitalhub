@@ -100,10 +100,9 @@ export async function markManySupervisorAttendance(
 ) {
   const auth = await checkAuth();
   const userId = auth.session.user.id;
-    if (!userId) {
-      throw new Error("The session has not been authenticated");
-    }
-
+  if (!userId) {
+    throw new Error("The session has not been authenticated");
+  }
 
   const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
