@@ -3,7 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { addDays, differenceInSeconds, eachMonthOfInterval, format, isEqual } from "date-fns";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import CountdownTimer from "#/app/(platform)/hc/components/countdown-timer";
@@ -56,11 +56,11 @@ export default function MonthlySupervisorEvaluation({
   children: React.ReactNode;
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
-  project: Prisma.ProjectGetPayload<{}> | null;
-  evaluations: Prisma.MonthlySupervisorEvaluationGetPayload<{}>[];
+  project: Prisma.ProjectGetPayload<Record<string, never>> | null;
+  evaluations: Prisma.MonthlySupervisorEvaluationGetPayload<Record<string, never>>[];
 }) {
   const [existingEvaluation, setExistingEvaluation] = useState<
-    Prisma.MonthlySupervisorEvaluationGetPayload<{}> | undefined
+    Prisma.MonthlySupervisorEvaluationGetPayload<Record<string, never>> | undefined
   >();
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
   const pathname = usePathname();
@@ -179,27 +179,30 @@ export default function MonthlySupervisorEvaluation({
     },
   ];
 
-  const defaultValues = {
-    supervisorId,
-    respectfulness: undefined,
-    attitude: undefined,
-    collaboration: undefined,
-    reliability: undefined,
-    identificationOfIssues: undefined,
-    leadership: undefined,
-    communicationStyle: undefined,
-    conflictResolution: undefined,
-    adaptability: undefined,
-    recognitionAndFeedback: undefined,
-    decisionMaking: undefined,
-    fellowRecruitmentEffectiveness: undefined,
-    fellowTrainingEffectiveness: undefined,
-    programLogisticsCoordination: undefined,
-    programSessionAttendance: undefined,
-    workplaceDemeanorComments: undefined,
-    managementStyleComments: undefined,
-    programExecutionComments: undefined,
-  };
+  const defaultValues = useMemo(
+    () => ({
+      supervisorId,
+      respectfulness: undefined,
+      attitude: undefined,
+      collaboration: undefined,
+      reliability: undefined,
+      identificationOfIssues: undefined,
+      leadership: undefined,
+      communicationStyle: undefined,
+      conflictResolution: undefined,
+      adaptability: undefined,
+      recognitionAndFeedback: undefined,
+      decisionMaking: undefined,
+      fellowRecruitmentEffectiveness: undefined,
+      fellowTrainingEffectiveness: undefined,
+      programLogisticsCoordination: undefined,
+      programSessionAttendance: undefined,
+      workplaceDemeanorComments: undefined,
+      managementStyleComments: undefined,
+      programExecutionComments: undefined,
+    }),
+    [supervisorId],
+  );
 
   const months =
     project !== null && project.actualStartDate !== null
@@ -225,12 +228,14 @@ export default function MonthlySupervisorEvaluation({
     });
   };
 
+  const { reset } = form;
+
   useEffect(() => {
     if (!isOpen) {
       setExistingEvaluation(undefined);
-      form.reset(defaultValues);
+      reset(defaultValues);
     }
-  }, [supervisorId, isOpen]);
+  }, [isOpen, defaultValues, reset]);
 
   useEffect(() => {
     if (existingEvaluation) {
@@ -472,21 +477,29 @@ function RatingStarsInput({
     >
       <div className="rating-stars flex flex-row-reverse gap-1 py-2">
         {Array.from(Array(5).keys()).map((index) => {
+          const ratingValue = 5 - index;
           return (
-            <span
-              key={index.toString()}
+            <button
+              key={ratingValue}
+              type="button"
               className={cn(
                 "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-shamiri-light-orange active:scale-[1.25] peer-hover:text-shamiri-light-orange",
-                value && value >= 5 - index
+                value && value >= ratingValue
                   ? "text-shamiri-light-orange"
                   : "text-shamiri-light-grey",
               )}
               onClick={() => {
-                onChange(5 - index);
+                onChange(ratingValue);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onChange(ratingValue);
+                }
               }}
             >
               <Icons.starRating className="h-full w-full" />
-            </span>
+            </button>
           );
         })}
       </div>

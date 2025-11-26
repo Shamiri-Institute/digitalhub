@@ -87,7 +87,7 @@ export default function DropoutSupervisor({
     form.reset({
       supervisorId,
     });
-  }, [supervisorId, dropoutDialog]);
+  }, [supervisorId, form]);
 
   return (
     <Form {...form}>

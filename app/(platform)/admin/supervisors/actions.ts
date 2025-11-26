@@ -116,12 +116,15 @@ export async function submitSupervisorComplaint(data: z.infer<typeof SubmitCompl
     }
 
     const parsedData = SubmitComplaintSchema.parse(data);
+    if (!hubCoordinator.id) {
+      throw new Error("Hub coordinator ID is missing");
+    }
     const result = await db.supervisorComplaints.create({
       data: {
         supervisorId: parsedData.supervisorId,
         complaint: parsedData.complaint,
         comments: parsedData.comments,
-        hubCoordinatorId: hubCoordinator.id!,
+        hubCoordinatorId: hubCoordinator.id,
         projectId: CURRENT_PROJECT_ID,
       },
     });
@@ -469,10 +472,13 @@ export async function submitMonthlySupervisorEvaluation(
       },
     });
     if (match === null) {
+      if (!hc.id) {
+        throw new Error("Hub coordinator ID is missing");
+      }
       await db.monthlySupervisorEvaluation.create({
         data: {
           supervisorId,
-          hubCoordinatorId: hc.id!,
+          hubCoordinatorId: hc.id,
           projectId: CURRENT_PROJECT_ID,
           month,
           respectfulness,

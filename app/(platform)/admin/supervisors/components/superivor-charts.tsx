@@ -82,9 +82,9 @@ export default function SupervisorCharts({
                 >
                   {dropoutData.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
-                {dropoutData.map((reason, index) => (
+                {dropoutData.map((reason) => (
                   <Cell
-                    key={index}
+                    key={reason.name}
                     // @ts-ignore
                     fill={SCHOOL_DROPOUT_REASONS_MAPPING[reason.name]}
                   />
@@ -113,7 +113,7 @@ export default function SupervisorCharts({
                   className="text text-2xl font-semibold leading-8"
                   fill="#fffff"
                 >
-                  {supervisorDataCompletenessPercentage.find((d) => (d.name = "actual"))?.value +
+                  {supervisorDataCompletenessPercentage.find((d) => d.name === "actual")?.value +
                     "%"}
                 </Label>
                 {supervisorDataCompletenessPercentage.map(({ name }) => (

@@ -331,7 +331,7 @@ function RatingStarsInput({
       <div className="rating-stars flex flex-row-reverse gap-1 py-2">
         {Array.from(Array(5).keys()).map((index) => {
           return (
-            <span
+            <button
               key={index.toString()}
               className={cn(
                 "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-shamiri-light-orange active:scale-[1.25] peer-hover:text-shamiri-light-orange",
@@ -342,9 +342,10 @@ function RatingStarsInput({
               onClick={() => {
                 onChange(5 - index);
               }}
+              type="button"
             >
               <Icons.starRating className="h-full w-full" />
-            </span>
+            </button>
           );
         })}
       </div>

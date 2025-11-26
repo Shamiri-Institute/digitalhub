@@ -333,8 +333,8 @@ export function DataTableDialog({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         {errorMessages.length > 0 &&
-          errorMessages.map((message, index) => (
-            <DialogAlertWidget variant="destructive" key={index} label={message} />
+          errorMessages.map((message) => (
+            <DialogAlertWidget variant="destructive" key={message} label={message} />
           ))}
         <div className="mt-4">
           <DataTable

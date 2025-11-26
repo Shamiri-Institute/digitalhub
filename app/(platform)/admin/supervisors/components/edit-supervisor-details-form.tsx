@@ -49,12 +49,14 @@ export default function EditSupervisorDetails() {
   });
 
   const countyWatcher = form.watch("county");
+  const { setValue } = form;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: countyWatcher is needed to trigger when county changes
   useEffect(() => {
     if (form.formState.dirtyFields.county) {
-      form.setValue("subCounty", "");
+      setValue("subCounty", "");
     }
-  }, [countyWatcher, form]);
+  }, [countyWatcher, setValue, form.formState.dirtyFields.county]);
 
   useEffect(() => {
     if (context.editDialog) {

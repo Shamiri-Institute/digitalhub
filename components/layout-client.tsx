@@ -267,12 +267,11 @@ function ReportingDropdown({
           <Link href={`/${mainRoute}/reporting/fellow-reports`}>Fellow Reports</Link>
         </DropdownMenuItem>
         {mainRoute === "sc" ? (
-          <Link
-            className="block px-4 py-2 hover:bg-gray-200"
-            href={`/${mainRoute}/reporting/monitoring-and-evaluation`}
-          >
-            Monitoring and Evaluation Report
-          </Link>
+          <DropdownMenuItem asChild>
+            <Link href={`/${mainRoute}/reporting/monitoring-and-evaluation`}>
+              Monitoring and Evaluation
+            </Link>
+          </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>

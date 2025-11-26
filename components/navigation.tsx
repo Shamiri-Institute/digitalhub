@@ -90,7 +90,7 @@ export function Navigation({ className, ...props }: React.ComponentPropsWithoutR
 function AdminNavigation() {
   return (
     <nav>
-      <ul role="list" className="space-y-0">
+      <ul className="space-y-0">
         <NavItem href="/" Icon={Icons.home}>
           Home
         </NavItem>
@@ -140,7 +140,7 @@ const supervisorNavigationItems: NavigationItem[] = [
 function SupervisorNavigation() {
   return (
     <nav className="flex-1 lg:pt-6">
-      <ul role="list" className="space-y-2">
+      <ul className="space-y-2">
         {supervisorNavigationItems.map((item) => (
           <NavItem key={item.path} href={item.path} Icon={item.Icon}>
             {item.title}
@@ -172,7 +172,7 @@ const hubCoordinatorNavigationItems: NavigationItem[] = [
 function HubCoordinatorNavigation() {
   return (
     <nav className="flex-1 lg:pt-6">
-      <ul role="list" className="space-y-2">
+      <ul className="space-y-2">
         {hubCoordinatorNavigationItems.map((item) => (
           <NavItem key={item.path} href={item.path} Icon={item.Icon}>
             {item.title}
@@ -190,7 +190,7 @@ const operationsNavigationItems: NavigationItem[] = [
 function OperationsNavigation() {
   return (
     <nav className="flex-1 lg:pt-6">
-      <ul role="list" className="space-y-2">
+      <ul className="space-y-2">
         {operationsNavigationItems.map((item) => (
           <NavItem key={item.path} href={item.path} Icon={item.Icon}>
             {item.title}

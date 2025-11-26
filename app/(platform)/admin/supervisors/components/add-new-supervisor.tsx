@@ -56,14 +56,17 @@ export default function AddNewSupervisor() {
   });
 
   const countyWatcher = form.watch("county");
+  const { setValue, reset } = form;
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: countyWatcher is needed to trigger when county changes
   useEffect(() => {
-    form.setValue("subCounty", "");
-  }, [countyWatcher]);
+    setValue("subCounty", "");
+  }, [countyWatcher, setValue]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: isOpen is needed to reset form when dialog opens/closes
   useEffect(() => {
-    form.reset();
-  }, [isOpen]);
+    reset();
+  }, [isOpen, reset]);
 
   const onSubmit = async (data: z.infer<typeof AddNewSupervisorSchema>) => {
     const response = await createNewSupervisor(data);

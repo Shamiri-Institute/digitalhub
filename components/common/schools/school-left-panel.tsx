@@ -148,7 +148,8 @@ export default function SchoolLeftPanel({
                     <div className="flex w-full justify-between gap-2 text-base">
                       <span>Contact details</span>
                       {!school?.droppedOut && role === "HUB_COORDINATOR" && (
-                        <span
+                        <button
+                          type="button"
                           className="accordion-button"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -156,7 +157,7 @@ export default function SchoolLeftPanel({
                           }}
                         >
                           Edit
-                        </span>
+                        </button>
                       )}
                     </div>
                   </AccordionTrigger>
@@ -246,7 +247,8 @@ export default function SchoolLeftPanel({
                     <div className="flex w-full justify-between gap-2 text-base">
                       <span>Information</span>
                       {!school?.droppedOut && role === "HUB_COORDINATOR" && (
-                        <span
+                        <button
+                          type="button"
                           className="accordion-button"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -254,7 +256,7 @@ export default function SchoolLeftPanel({
                           }}
                         >
                           Edit
-                        </span>
+                        </button>
                       )}
                     </div>
                   </AccordionTrigger>
@@ -315,7 +317,8 @@ export default function SchoolLeftPanel({
                       <span>Dropout History</span>
                       {role === "HUB_COORDINATOR" ? (
                         school?.droppedOut ? (
-                          <span
+                          <button
+                            type="button"
                             className="accordion-button"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -323,9 +326,10 @@ export default function SchoolLeftPanel({
                             }}
                           >
                             Undo dropout
-                          </span>
+                          </button>
                         ) : (
-                          <span
+                          <button
+                            type="button"
                             className="accordion-button"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -333,7 +337,7 @@ export default function SchoolLeftPanel({
                             }}
                           >
                             Dropout
-                          </span>
+                          </button>
                         )
                       ) : null}
                     </div>

@@ -1,10 +1,14 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import { format } from "date-fns";
 import type { z } from "zod";
 import { FellowDetailsSchema, MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
-import { currentHubCoordinator, currentSupervisor, getCurrentUser } from "#/app/auth";
+import {
+  type CurrentHubCoordinator,
+  type CurrentSupervisor,
+  getCurrentPersonnel,
+} from "#/app/auth";
 import {
   DropoutFellowSchema,
   WeeklyFellowEvaluationSchema,
@@ -15,20 +19,41 @@ import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
 async function checkAuth() {
-  const hubCoordinator = await currentHubCoordinator();
-  const supervisor = await currentSupervisor();
-
-  if (!hubCoordinator && !supervisor) {
+  const personnel = await getCurrentPersonnel();
+  if (!personnel) {
     throw new Error("The session has not been authenticated");
   }
 
-  const user = await getCurrentUser();
-  return { hubCoordinator, supervisor, user };
+  return personnel;
 }
 
 export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSchema>) {
   try {
-    const { hubCoordinator, supervisor } = await checkAuth();
+    const { profile, session } = await checkAuth();
+
+    const role = session.user.activeMembership?.role;
+    if (!role) {
+      return {
+        success: false,
+        message: "Something went wrong. Missing role information",
+      };
+    }
+
+    if (role !== ImplementerRole.SUPERVISOR && role !== ImplementerRole.HUB_COORDINATOR) {
+      return {
+        success: false,
+        message: "User is not authorised to perform this action",
+      };
+    }
+
+    const implementerId = session.user.activeMembership?.implementerId;
+
+    if (!implementerId) {
+      return {
+        success: false,
+        message: "Something went wrong. Missing implementer information",
+      };
+    }
 
     const {
       id,
@@ -46,7 +71,6 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
     } = FellowDetailsSchema.parse(data);
 
     if (mode === "edit") {
-      // Get the fellow's user ID
       const fellowMember = await db.implementerMember.findFirst({
         where: {
           identifier: id,
@@ -114,7 +138,7 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
         message: `Successfully updated details for ${fellowName}`,
       };
     }
-    if (mode === "add" && (hubCoordinator || supervisor)) {
+    if (mode === "add") {
       // Check if email already exists
       const existingUser = await db.user.findFirst({
         where: {
@@ -134,15 +158,16 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
         }
       }
 
-      const implementerId =
-        hubCoordinator?.user?.membership.implementerId ??
-        supervisor?.user?.membership.implementerId;
-      const hubId = supervisor?.hubId ?? hubCoordinator?.assignedHubId;
-      if (!implementerId || !hubId) {
-        return {
-          success: false,
-          message: "Something went wrong. Missing implementer or hub information",
-        };
+      let hubId: string | undefined;
+      let supervisorId: string | undefined;
+
+      if (role === ImplementerRole.HUB_COORDINATOR && profile) {
+        const hc = profile as NonNullable<CurrentHubCoordinator>["profile"];
+        hubId = hc?.assignedHub?.id ?? undefined;
+      } else if (role === ImplementerRole.SUPERVISOR && profile) {
+        const supervisor = profile as NonNullable<CurrentSupervisor>["profile"];
+        supervisorId = supervisor?.id ?? undefined;
+        hubId = supervisor?.hubId ?? undefined;
       }
 
       await db.$transaction(async (tx) => {
@@ -150,7 +175,7 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
           data: {
             id: objectId("fellow"),
             hubId,
-            supervisorId: supervisor?.id,
+            supervisorId,
             implementerId,
             fellowName,
             fellowEmail,
@@ -193,10 +218,7 @@ export async function submitFellowDetails(data: z.infer<typeof FellowDetailsSche
     }
     return {
       success: false,
-      message:
-        hubCoordinator === null && supervisor === null
-          ? "User is not authorised to perform this action"
-          : "Something went wrong",
+      message: "Something went wrong while trying to add fellow details",
     };
   } catch (err) {
     console.error(err);
@@ -216,7 +238,22 @@ export async function submitWeeklyFellowEvaluation(
   data: z.infer<typeof WeeklyFellowEvaluationSchema>,
 ) {
   try {
-    const { supervisor } = await checkAuth();
+    const { profile, session } = await checkAuth();
+
+    const role = session.user.activeMembership?.role;
+    if (!role) {
+      return {
+        success: false,
+        message: "Something went wrong. Missing role information",
+      };
+    }
+
+    if (role === ImplementerRole.SUPERVISOR) {
+      return {
+        success: false,
+        message: "Something went wrong. User is not authorised to perform this action",
+      };
+    }
 
     const {
       fellowId,
@@ -232,18 +269,18 @@ export async function submitWeeklyFellowEvaluation(
       week,
     } = WeeklyFellowEvaluationSchema.parse(data);
 
-    if (mode === "add" && supervisor) {
+    if (mode === "add") {
       const fellow = await db.fellow.findUniqueOrThrow({
         where: {
           id: fellowId,
         },
       });
 
-      if (fellow.supervisorId === supervisor.id) {
+      if (fellow.supervisorId === profile?.id) {
         const previousEvaluation = await db.weeklyFellowRatings.findFirst({
           where: {
             fellowId,
-            supervisorId: supervisor.id,
+            supervisorId: profile?.id,
             week: new Date(week),
           },
         });
@@ -261,7 +298,7 @@ export async function submitWeeklyFellowEvaluation(
               programDeliveryRating,
               dressingAndGroomingNotes,
               dressingAndGroomingRating,
-              supervisorId: supervisor.id,
+              supervisorId: profile?.id,
             },
           });
           return {
@@ -296,10 +333,7 @@ export async function submitWeeklyFellowEvaluation(
     }
     return {
       success: false,
-      message:
-        supervisor === null
-          ? "User is not authorised to perform this action"
-          : "Something went wrong",
+      message: "Something went wrong while trying to submit fellow's weekly evaluation",
     };
   } catch (err) {
     console.error(err);
@@ -412,7 +446,24 @@ export async function dropoutFellow(data: z.infer<typeof DropoutFellowSchema>) {
 
 export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
-    const auth = await checkAuth();
+    const { profile, session: userSession } = await checkAuth();
+    if (!userSession) {
+      return {
+        success: false,
+        message: "Something went wrong. Missing user information",
+      };
+    }
+
+    const role = userSession.user.activeMembership?.role;
+    if (
+      !role ||
+      (role !== ImplementerRole.SUPERVISOR && role !== ImplementerRole.HUB_COORDINATOR)
+    ) {
+      return {
+        success: false,
+        message: "User is not authorised to perform this action",
+      };
+    }
 
     const { id, sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
@@ -489,11 +540,15 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
             (!existingPayout && attendanceStatus) ||
             (existingPayout && existingPayout.reason !== reason)
           ) {
+            if (!userSession.user.id) {
+              throw new Error("User ID is required to create payout statement");
+            }
+
             await tx.payoutStatements.create({
               data: {
                 fellowId: fellow.id,
                 fellowAttendanceId: attendance.id,
-                createdBy: auth.user!.user.id,
+                createdBy: userSession.user.id,
                 amount,
                 reason,
                 mpesaNumber: fellow.mpesaNumber,
@@ -511,7 +566,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
             id: attendance.id,
           },
           data: {
-            markedBy: auth.user!.user.id,
+            markedBy: userSession.user.id,
             fellowId: fellow.id,
             absenceReason: attendanceStatus === false ? absenceReason : null,
             absenceComments: attendanceStatus === false ? comments : null,
@@ -524,7 +579,7 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
           message: `Successfully updated attendance for ${fellow.fellowName}`,
         };
       }
-      let groupId;
+      let groupId: string | undefined;
       if (session.schoolId) {
         const group = await tx.interventionGroup.findFirst({
           where: {
@@ -570,21 +625,22 @@ export async function markFellowAttendance(data: z.infer<typeof MarkAttendanceSc
           sessionId,
           absenceReason,
           absenceComments: comments,
-          markedBy: auth.user!.user.id,
+          markedBy: userSession.user.id,
           attended: attendanceStatus,
-          PayoutStatements: attendanceStatus
-            ? {
-                create: [
-                  {
-                    fellowId: fellow.id,
-                    createdBy: auth.user!.user.id,
-                    amount: session.session?.amount,
-                    reason: "MARK_SESSION_ATTENDANCE",
-                    mpesaNumber: fellow.mpesaNumber,
-                  },
-                ],
-              }
-            : undefined,
+          PayoutStatements:
+            attendanceStatus && userSession.user.id
+              ? {
+                  create: [
+                    {
+                      fellowId: fellow.id,
+                      createdBy: userSession.user.id,
+                      amount: session.session?.amount ?? 0,
+                      reason: "MARK_SESSION_ATTENDANCE",
+                      mpesaNumber: fellow.mpesaNumber,
+                    },
+                  ],
+                }
+              : undefined,
         },
       });
       return {
@@ -606,7 +662,24 @@ export async function markManyFellowAttendance(
   data: z.infer<typeof MarkAttendanceSchema>,
 ) {
   try {
-    const auth = await checkAuth();
+    const { profile, session: userSession } = await checkAuth();
+    if (!userSession) {
+      return {
+        success: false,
+        message: "Something went wrong. Missing user information",
+      };
+    }
+
+    const role = userSession.user.activeMembership?.role;
+    if (
+      !role ||
+      (role !== ImplementerRole.SUPERVISOR && role !== ImplementerRole.HUB_COORDINATOR)
+    ) {
+      return {
+        success: false,
+        message: "User is not authorised to perform this action",
+      };
+    }
 
     const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
@@ -632,7 +705,7 @@ export async function markManyFellowAttendance(
 
       const attendanceStatus =
         attended === "attended" ? true : attended === "missed" ? false : null;
-      const amount = session.session?.amount!;
+      const amount = session.session?.amount ?? 0;
 
       // update existing attendances
       const attendances = await tx.fellowAttendance.findMany({
@@ -679,12 +752,13 @@ export async function markManyFellowAttendance(
         if (
           ((existingPayouts.length === 0 && attendanceStatus) ||
             (existingPayouts.length !== 0 && existingPayouts[0]?.reason !== reason)) &&
-          amount
+          amount &&
+          userSession.user.id
         ) {
           payout = {
             fellowId: attendance.fellow.id,
             fellowAttendanceId: attendance.id,
-            createdBy: auth.user!.user.id,
+            createdBy: userSession.user.id,
             amount: _amount,
             reason,
             mpesaNumber: attendance.fellow.mpesaNumber,
@@ -783,7 +857,7 @@ export async function markManyFellowAttendance(
             absenceReason: attendanceStatus === false ? absenceReason : null,
             absenceComments: attendanceStatus === false ? comments : null,
             sessionId,
-            markedBy: auth.user!.user.id,
+            markedBy: userSession.user.id,
             attended: attendanceStatus,
           },
         };
@@ -796,12 +870,13 @@ export async function markManyFellowAttendance(
         },
       });
 
-      if (attendanceStatus) {
+      if (attendanceStatus && userSession.user.id) {
+        const userId = userSession.user.id;
         const payoutData = newAttendances.map((attendance) => {
           return {
             fellowId: attendance.fellow.id,
             fellowAttendanceId: attendance.id,
-            createdBy: auth.user!.user.id,
+            createdBy: userId,
             amount: amount,
             reason: "MARK_SESSION_ATTENDANCE",
             mpesaNumber: attendance.fellow.mpesaNumber,
@@ -829,7 +904,13 @@ export async function markManyFellowAttendance(
 
 export async function submitFellowComplaint(data: z.infer<typeof SubmitComplaintSchema>) {
   try {
-    const { user } = await checkAuth();
+    const { session: userSession } = await checkAuth();
+    if (!userSession) {
+      return {
+        success: false,
+        message: "Something went wrong. Missing user information",
+      };
+    }
 
     const { id, complaint, comments } = SubmitComplaintSchema.parse(data);
     const result = await db.fellowComplaints.create({
@@ -837,7 +918,7 @@ export async function submitFellowComplaint(data: z.infer<typeof SubmitComplaint
         fellowId: id,
         complaint,
         comments,
-        createdBy: user!.user.id,
+        createdBy: userSession.user.id,
       },
     });
 

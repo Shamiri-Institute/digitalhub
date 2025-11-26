@@ -7,7 +7,7 @@ import * as React from "react";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 
-export default function Error({
+export default function AppError({
   error,
   reset,
 }: {
