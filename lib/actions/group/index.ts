@@ -1,8 +1,8 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
+import { ImplementerRole, Prisma } from "@prisma/client";
 import type { z } from "zod";
-import { currentHubCoordinator, currentSupervisor, getCurrentUser } from "#/app/auth";
+import { getCurrentPersonnel } from "#/app/auth";
 import { CreateGroupSchema, StudentGroupEvaluationSchema } from "#/components/common/group/schema";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
@@ -10,15 +10,13 @@ import { db } from "#/lib/db";
 import { getSchoolInitials } from "#/lib/utils";
 
 async function checkAuth() {
-  const hubCoordinator = await currentHubCoordinator();
-  const supervisor = await currentSupervisor();
+  const user = await getCurrentPersonnel();
 
-  if (!hubCoordinator && !supervisor) {
+  if (!user || (user.session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR && user.session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)) {
     throw new Error("The session has not been authenticated");
   }
 
-  const user = await getCurrentUser();
-  return { hubCoordinator, supervisor, user };
+  return user;
 }
 
 export async function archiveInterventionGroup(groupId: string) {
@@ -47,11 +45,18 @@ export async function archiveInterventionGroup(groupId: string) {
 
 export async function createInterventionGroup(data: z.infer<typeof CreateGroupSchema>) {
   try {
-    const { hubCoordinator, supervisor } = await checkAuth();
+    await checkAuth();
     const { schoolId, fellowId } = CreateGroupSchema.parse(data);
     const school = await db.school.findFirstOrThrow({
       where: {
         id: schoolId,
+      },
+      include: {
+        hub: {
+          select: {
+            projectId: true,
+          },
+        },
       },
     });
     const groupCount = await db.interventionGroup.count({
@@ -63,10 +68,7 @@ export async function createInterventionGroup(data: z.infer<typeof CreateGroupSc
         id: objectId("group"),
         leaderId: fellowId,
         schoolId,
-        projectId:
-          hubCoordinator?.assignedHub?.projectId ??
-          supervisor?.hub?.projectId ??
-          CURRENT_PROJECT_ID,
+        projectId: school.hub?.projectId ?? CURRENT_PROJECT_ID,
         groupName: `${getSchoolInitials(school.schoolName)}_${groupCount + 1}`,
       },
     });

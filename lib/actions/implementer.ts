@@ -1,7 +1,7 @@
 "use server";
 
 import { currentAdminUser } from "#/app/auth";
-import type { JWTMembership } from "#/lib/actions/fetch-personnel";
+import type { JWTMembership } from "#/app/api/auth/[...nextauth]/route";
 import { db } from "#/lib/db";
 
 export async function fetchImplementerStats(implementerId: string) {

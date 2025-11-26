@@ -15,7 +15,7 @@ export default async function SupervisorsPage() {
   const coordinator = await currentHubCoordinator();
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: coordinator?.assignedHubId,
+      hubId: coordinator?.profile?.assignedHubId,
     },
     include: {
       assignedSchools: true,
@@ -36,7 +36,8 @@ export default async function SupervisorsPage() {
     return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
 
-  if (!coordinator.assignedHubId) {
+  const assignedHubId = coordinator.profile?.assignedHubId;
+  if (!assignedHubId) {
     return <div>Hub coordinator has no assigned hub</div>;
   }
 
@@ -49,14 +50,14 @@ export default async function SupervisorsPage() {
           <div className="flex gap-3">{/* search filters go here */}</div>
           <div className="flex items-center gap-3">
             <WeeklyHubTeamMeetingForm
-              hubCoordinatorId={coordinator?.id!}
-              hubId={coordinator?.assignedHubId}
+              hubCoordinatorId={coordinator?.profile?.id!}
+              hubId={assignedHubId}
             />
           </div>
         </div>
 
         <Suspense fallback={<GraphLoadingIndicator />}>
-          <SupervisorChartsWrapper coordinator={{ assignedHubId: coordinator?.assignedHubId }} />
+          <SupervisorChartsWrapper coordinator={{ assignedHubId }} />
         </Suspense>
 
         <Separator />

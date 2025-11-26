@@ -471,6 +471,7 @@ export function TableView({
           overrideColumns={supervisorAttendanceColumns}
           data={supervisorAttendances}
           emptyStateMessage={"No sessions scheduled on this day."}
+          role={role}
         />
       )}
       {roleToggle === "fellows" && (
@@ -490,6 +491,7 @@ export function TableView({
               row.original.processedAt === null
             );
           }}
+          role={role}
         />
       )}
     </div>

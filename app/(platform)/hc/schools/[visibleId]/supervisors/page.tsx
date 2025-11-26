@@ -40,7 +40,11 @@ export default async function SupervisorsPage(props: { params: Promise<{ visible
       visibleId,
     },
     include: {
-      interventionSessions: true,
+      interventionSessions: {
+        include: {
+          session: true,
+        },
+      },
     },
   });
   if (!coordinator?.session?.user.activeMembership?.role) {

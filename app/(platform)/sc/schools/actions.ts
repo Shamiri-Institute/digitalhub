@@ -127,9 +127,8 @@ export async function fetchDropoutReasons(hubId: string) {
 export async function dropoutSchool(schoolId: string, dropoutReason: string) {
   try {
     const hubCoordinator = await currentHubCoordinator();
-    const user = await getCurrentUser();
 
-    if (!hubCoordinator || !user) {
+    if (!hubCoordinator || !hubCoordinator.session?.user.id) {
       throw new Error("The session has not been authenticated");
     }
 
@@ -144,7 +143,7 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
             {
               dropoutReason: data.dropoutReason,
               droppedOut: true,
-              userId: user.user.id,
+              userId: hubCoordinator.session?.user.id,
             },
           ],
         },
@@ -176,9 +175,8 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
 export async function undoDropoutSchool(schoolId: string) {
   try {
     const hubCoordinator = await currentHubCoordinator();
-    const user = await getCurrentUser();
 
-    if (!hubCoordinator || !user) {
+    if (!hubCoordinator || !hubCoordinator.session?.user.id) {
       throw new Error("The session has not been authenticated");
     }
 
@@ -192,7 +190,7 @@ export async function undoDropoutSchool(schoolId: string) {
             {
               dropoutReason: null,
               droppedOut: false,
-              userId: user.user.id,
+              userId: hubCoordinator.session?.user.id,
             },
           ],
         },

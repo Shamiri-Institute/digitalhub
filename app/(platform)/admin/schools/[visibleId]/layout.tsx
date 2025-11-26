@@ -16,7 +16,7 @@ export default async function SchoolViewLayout({ children }: { children: React.R
   return (
     <div className="flex h-full bg-white">
       <div className="hidden lg:flex lg:w-1/4">
-        <SchoolLeftPanel open={true} role={admin?.user?.membership?.role} />
+        <SchoolLeftPanel open={true} role={admin?.session?.user.activeMembership?.role} />
       </div>
       <div className="flex flex-1 flex-col">
         <div className="container w-full grow space-y-5 pb-6 pl-6 pr-8 pt-5">

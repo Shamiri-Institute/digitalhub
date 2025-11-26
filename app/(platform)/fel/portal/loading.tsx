@@ -4,6 +4,7 @@ import FellowSchoolsDatatableSkeleton from "#/components/common/fellow/fellow-sc
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
+import { ImplementerRole } from "@prisma/client";
 
 export default async function TableSkeleton() {
   const fellow = await currentFellow();
@@ -16,7 +17,7 @@ export default async function TableSkeleton() {
       <div className="container w-full grow space-y-3 py-10">
         <PageHeading title="Fellow Portal" />
         <Separator />
-        <FellowSchoolsDatatableSkeleton role={fellow?.user.membership.role!} />
+        <FellowSchoolsDatatableSkeleton role={fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW} />
       </div>
       <PageFooter />
     </div>

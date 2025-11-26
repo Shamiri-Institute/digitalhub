@@ -7,6 +7,7 @@ import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 
 export default async function FellowsPage() {
   const fellow = await currentFellow();
@@ -16,7 +17,7 @@ export default async function FellowsPage() {
 
   const fellowData = await db.fellow.findFirst({
     where: {
-      id: fellow?.id,
+      id: fellow?.profile.id,
     },
     include: {
       fellowAttendances: {
@@ -118,7 +119,7 @@ export default async function FellowsPage() {
             } as FellowsData,
           ]}
           project={project ?? undefined}
-          role={fellow!.user.membership.role}
+          role={fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW}
         />
       </div>
       <PageFooter />

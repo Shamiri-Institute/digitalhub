@@ -10,7 +10,7 @@ import {
   SubmitComplaintSchema,
   WeeklyHubTeamMeetingSchema,
 } from "#/app/(platform)/hc/schemas";
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
@@ -39,11 +39,11 @@ export async function submitWeeklyTeamMeeting(data: z.infer<typeof WeeklyHubTeam
 
 async function checkAuth() {
   const hubCoordinator = await currentHubCoordinator();
-  const user = await getCurrentUser();
 
-  if (!hubCoordinator || !user) {
+  if (!hubCoordinator) {
     throw new Error("The session has not been authenticated");
   }
+  return hubCoordinator;
 }
 
 export async function dropoutSupervisor(supervisorId: string, dropoutReason: string) {
@@ -108,12 +108,7 @@ export async function undropSupervisor(supervisorId: string) {
 
 export async function submitSupervisorComplaint(data: z.infer<typeof SubmitComplaintSchema>) {
   try {
-    const hubCoordinator = await currentHubCoordinator();
-    const user = await getCurrentUser();
-
-    if (!hubCoordinator || !user) {
-      throw new Error("The session has not been authenticated");
-    }
+    const hubCoordinator = await checkAuth();
 
     const parsedData = SubmitComplaintSchema.parse(data);
     const result = await db.supervisorComplaints.create({
@@ -121,7 +116,7 @@ export async function submitSupervisorComplaint(data: z.infer<typeof SubmitCompl
         supervisorId: parsedData.supervisorId,
         complaint: parsedData.complaint,
         comments: parsedData.comments,
-        hubCoordinatorId: hubCoordinator.id!,
+        hubCoordinatorId: hubCoordinator.profile?.id!,
         projectId: CURRENT_PROJECT_ID,
       },
     });
@@ -349,19 +344,19 @@ export async function updateSupervisorDetails(data: z.infer<typeof EditSuperviso
 
 export async function createNewSupervisor(data: z.infer<typeof AddNewSupervisorSchema>) {
   try {
-    const hc = await currentHubCoordinator();
-    const user = await getCurrentUser();
+      const hc = await currentHubCoordinator();
 
-    if (!hc || !user) {
+    if (!hc) {
       throw new Error("The session has not been authenticated");
     }
 
-    if (!hc.assignedHub) {
+
+    const assignedHub = hc.profile?.assignedHub;
+    if (!assignedHub) {
       throw new Error("Hub coordinator has no assigned hub");
     }
 
     const parsedData = AddNewSupervisorSchema.parse(data);
-    const assignedHub = hc.assignedHub;
 
     // Check if email already exists
     const existingUser = await db.user.findUnique({
@@ -432,9 +427,8 @@ export async function submitMonthlySupervisorEvaluation(
 ) {
   try {
     const hc = await currentHubCoordinator();
-    const user = await getCurrentUser();
 
-    if (!hc || !user) {
+    if (!hc) {
       throw new Error("The session has not been authenticated");
     }
 
@@ -472,7 +466,7 @@ export async function submitMonthlySupervisorEvaluation(
       await db.monthlySupervisorEvaluation.create({
         data: {
           supervisorId,
-          hubCoordinatorId: hc.id!,
+          hubCoordinatorId: hc.profile?.id!,
           projectId: CURRENT_PROJECT_ID,
           month,
           respectfulness,

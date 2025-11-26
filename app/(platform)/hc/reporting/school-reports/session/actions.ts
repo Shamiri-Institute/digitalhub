@@ -7,13 +7,13 @@ import { db } from "#/lib/db";
 export async function loadSessionReport() {
   const hubCoordinator = await currentHubCoordinator();
 
-  if (!hubCoordinator?.assignedHubId) {
+  if (!hubCoordinator?.profile?.assignedHubId) {
     throw new Error("Hub coordinator has no assigned hub");
   }
 
   const schools = await db.school.findMany({
     where: {
-      hubId: hubCoordinator.assignedHubId,
+      hubId: hubCoordinator.profile?.assignedHubId,
     },
     include: {
       interventionSessions: {

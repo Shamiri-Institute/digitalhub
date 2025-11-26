@@ -1,6 +1,6 @@
 import { signOut } from "next-auth/react";
 import { fetchSchoolData } from "#/app/(platform)/hc/schools/actions";
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import PageFooter from "#/components/ui/page-footer";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";

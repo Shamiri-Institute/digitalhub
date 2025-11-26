@@ -20,7 +20,11 @@ export default async function SupervisorsPage({
       visibleId,
     },
     include: {
-      interventionSessions: true,
+      interventionSessions: {
+        include: {
+          session: true,
+        },
+      },
     },
   });
 

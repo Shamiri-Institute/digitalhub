@@ -3,16 +3,16 @@ import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-
 import type { MainFellowTableData } from "#/app/(platform)/hc/fellows/components/columns";
 import FellowsChartsWrapper from "#/app/(platform)/hc/fellows/components/fellows-charts-wrapper";
 import MainFellowsDatatable from "#/app/(platform)/hc/fellows/components/main-fellows-datatable";
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 
 export default async function FellowPage() {
-  const hc = await currentHubCoordinator();
-  const user = await getCurrentUser();
+  const hc = await currentHubCoordinator()
   if (!hc) {
     return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
@@ -40,14 +40,14 @@ export default async function FellowPage() {
         fellows f
           LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
           LEFT JOIN intervention_groups ig ON f.id = ig.leader_id
-      WHERE f.hub_id =${hc.assignedHubId}
+      WHERE f.hub_id =${hc.profile?.assignedHubId}
       GROUP BY
         f.id
   `,
     await db.fellowComplaints.findMany({
       where: {
         fellow: {
-          hubId: hc.assignedHubId,
+          hubId: hc.profile?.assignedHubId,
         },
       },
       include: {
@@ -57,7 +57,7 @@ export default async function FellowPage() {
     await db.interventionGroup.findMany({
       where: {
         leader: {
-          hubId: hc.assignedHubId,
+          hubId: hc.profile?.assignedHubId,
         },
       },
       include: {
@@ -85,7 +85,7 @@ export default async function FellowPage() {
 
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: hc?.assignedHubId as string,
+      hubId: hc?.profile?.assignedHubId,
     },
     include: {
       fellows: true,
@@ -95,7 +95,7 @@ export default async function FellowPage() {
   const weeklyFellowEvaluations = await db.weeklyFellowRatings.findMany({
     where: {
       fellow: {
-        hubId: hc?.assignedHubId as string,
+        hubId: hc?.profile?.assignedHubId,
       },
     },
   });
@@ -107,13 +107,13 @@ export default async function FellowPage() {
         <Separator />
 
         <Suspense fallback={<GraphLoadingIndicator />}>
-          <FellowsChartsWrapper coordinator={{ assignedHubId: hc.assignedHubId ?? null }} />
+          <FellowsChartsWrapper coordinator={{ assignedHubId: hc.profile?.assignedHubId ?? null }} />
         </Suspense>
         <MainFellowsDatatable
           fellows={data}
           supervisors={supervisors}
           weeklyEvaluations={weeklyFellowEvaluations}
-          role={user?.membership.role!}
+          role={hc.session?.user.activeMembership?.role ?? ImplementerRole.HUB_COORDINATOR}
         />
       </div>
       <PageFooter />

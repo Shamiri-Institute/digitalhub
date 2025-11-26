@@ -4,6 +4,7 @@ import { currentSupervisor } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 import FellowSchoolsDatatable from "../../../../components/common/fellow/fellow-schools-datatable";
+import { ImplementerRole } from "@prisma/client";
 
 export default async function FellowsPage() {
   const supervisor = await currentSupervisor();
@@ -11,7 +12,7 @@ export default async function FellowsPage() {
     await signOut({ callbackUrl: "/login" });
   }
 
-  if (!supervisor?.hubId) {
+  if (!supervisor?.profile?.hubId) {
     return <div>Supervisor has no assigned hub</div>;
   }
 
@@ -28,7 +29,7 @@ export default async function FellowsPage() {
       <FellowSchoolsDatatable
         fellows={fellows}
         project={project ?? undefined}
-        role={supervisor!.user.membership.role}
+        role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
       />
     </div>
   );

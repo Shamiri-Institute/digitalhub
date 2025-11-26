@@ -24,7 +24,12 @@ async function checkAuth() {
 export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSchema>) {
   // TODO: Add db transactions
   try {
-    const user = await checkAuth();
+    const auth = await checkAuth();
+    const userId = auth.session.user.id;
+    if (!userId) {
+      throw new Error("The session has not been authenticated");
+    }
+
 
     const {
       id,
@@ -91,7 +96,7 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
         form: Number(form),
         stream,
         assignedGroupId,
-        implementerId: user.implementerId,
+        implementerId: auth.session.user.activeMembership?.implementerId,
         fellowId: group.leader.id,
         supervisorId: group.leader.supervisor?.id,
       },
@@ -114,6 +119,11 @@ export async function submitStudentDetails(data: z.infer<typeof StudentDetailsSc
 export async function markStudentAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
     const auth = await checkAuth();
+    const userId = auth.session.user.id;
+    if (!userId) {
+      throw new Error("The session has not been authenticated");
+    }
+
 
     const { id, sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
@@ -163,11 +173,11 @@ export async function markStudentAttendance(data: z.infer<typeof MarkAttendanceS
           sessionId,
           groupId: student.assignedGroup.id,
           fellowId: student.assignedGroup.leaderId,
-          markedBy: auth.user.user.id,
+          markedBy: userId,
           attended: attended === "attended" ? true : attended === "missed" ? false : null,
         },
         update: {
-          markedBy: auth.user.user.id,
+          markedBy: userId,
           studentId: student.id,
           absenceReason,
           comments,
@@ -199,6 +209,11 @@ export async function markManyStudentsAttendance(
 ) {
   try {
     const auth = await checkAuth();
+    const userId = auth.session.user.id;
+    if (!userId) {
+      throw new Error("The session has not been authenticated");
+    }
+
     const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
     const session = await db.interventionSession.findUniqueOrThrow({
@@ -261,7 +276,7 @@ export async function markManyStudentsAttendance(
           sessionId,
           groupId: student.assignedGroup.id,
           fellowId: student.assignedGroup.leaderId,
-          markedBy: auth.user.user.id,
+          markedBy: userId,
           attended: status,
         });
       });
@@ -279,7 +294,7 @@ export async function markManyStudentsAttendance(
           sessionId,
         },
         data: {
-          markedBy: auth.user.user.id,
+          markedBy: userId,
           absenceReason: status === null || status ? null : absenceReason,
           comments: status === null || status ? null : comments,
           attended: status,
@@ -337,6 +352,10 @@ export async function submitStudentReportingNotes(
 ) {
   try {
     const auth = await checkAuth();
+    const userId = auth.session.user.id;
+    if (!userId) {
+      throw new Error("The session has not been authenticated");
+    }
 
     const { studentId, notes } = StudentReportingNotesSchema.parse(data);
 
@@ -344,7 +363,7 @@ export async function submitStudentReportingNotes(
       data: {
         studentId,
         notes,
-        addedBy: auth.user!.user.id,
+        addedBy: userId,
       },
     });
     return {

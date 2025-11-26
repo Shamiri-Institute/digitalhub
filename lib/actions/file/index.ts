@@ -1,13 +1,14 @@
 "use server";
 
-import { getCurrentUser } from "#/app/auth";
+import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
+import { ImplementerRole } from "@prisma/client";
 
 export async function removeUploadedSchoolFile(documentId: string) {
   try {
-    const user = await getCurrentUser();
+    const session = await getCurrentUserSession();
 
-    if (!user) {
+    if (!session || !session.user.id || (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR && session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)) {
       throw new Error("The session has not been authenticated");
     }
 
@@ -28,9 +29,9 @@ export async function removeUploadedSchoolFile(documentId: string) {
 
 export async function updateUploadedSchoolFile(documentId: string, fileName: string) {
   try {
-    const user = await getCurrentUser();
+    const session = await getCurrentUserSession();
 
-    if (!user) {
+    if (!session || !session.user.id || (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR && session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)) {
       throw new Error("The session has not been authenticated");
     }
 
@@ -59,9 +60,9 @@ export async function addUploadedSchoolDocs(data: {
   type: string;
 }) {
   try {
-    const user = await getCurrentUser();
+    const session = await getCurrentUserSession();
 
-    if (!user) {
+    if (!session || !session.user.id || (session.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR && session.user.activeMembership?.role !== ImplementerRole.SUPERVISOR)) {
       throw new Error("The session has not been authenticated");
     }
 
@@ -79,7 +80,7 @@ export async function addUploadedSchoolDocs(data: {
         fileName: data.fileName,
         link: data.link,
         schoolId: school.id,
-        uploadedBy: user.user.id,
+        uploadedBy: session.user.id,
         type: data.type,
       },
     });

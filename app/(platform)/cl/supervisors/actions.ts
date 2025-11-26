@@ -37,7 +37,7 @@ export async function getSupervisorClinicalCasesData() {
       LEFT JOIN
         "clinical_session_attendance" csa ON csi.id = csa."caseId" AND csa."supervisor_id" = s.id
       WHERE 
-        s."hub_id" = ${clinicalLead.assignedHubId}
+        s."hub_id" = ${clinicalLead.profile.assignedHubId}
         AND s."archived_at" IS NULL
       GROUP BY 
         s.id, s."supervisor_name"

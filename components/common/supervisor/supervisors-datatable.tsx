@@ -41,7 +41,11 @@ export default function SupervisorsDataTable({
   role: ImplementerRole;
   school: Prisma.SchoolGetPayload<{
     include: {
-      interventionSessions: true;
+      interventionSessions: {
+        include: {
+          session: true;
+        };
+      };
     };
   }> | null;
 }) {

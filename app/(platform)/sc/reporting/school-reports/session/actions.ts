@@ -41,7 +41,7 @@ export async function loadSessionReport() {
 
     const sessions = await db.interventionSessionRating.findMany({
       where: {
-        supervisorId: supervisor.id,
+        supervisorId: supervisor.profile?.id,
       },
       include: {
         session: {

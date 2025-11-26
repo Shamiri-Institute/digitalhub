@@ -429,7 +429,7 @@ function CalendarView({
               setRescheduleSessionDialog,
               setCancelSessionDialog,
             }}
-            fellowId={fellow?.id}
+            fellowId={fellow?.profile.id}
           />
         ) : (
           <div>Loading...</div>
@@ -450,7 +450,7 @@ function CalendarView({
               setCancelSessionDialog,
             }}
             supervisorId={supervisorId}
-            fellowId={fellow?.id}
+            fellowId={fellow?.profile.id}
           />
         ) : (
           <div>Loading...</div>
@@ -471,7 +471,7 @@ function CalendarView({
               setRescheduleSessionDialog,
               setCancelSessionDialog,
             }}
-            fellowId={fellow?.id}
+            fellowId={fellow?.profile.id}
           />
         );
       case "table":
@@ -546,7 +546,7 @@ function CalendarView({
         role={role}
         session={session}
         fellows={supervisors?.find((supervisor) => supervisor.id === supervisorId)?.fellows ?? []}
-        fellowId={fellow?.id}
+        fellowId={fellow?.profile.id}
       />
       {session?.session?.sessionType === "INTERVENTION" && session?.schoolId && (
         <SessionRatings

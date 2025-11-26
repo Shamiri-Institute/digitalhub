@@ -83,7 +83,7 @@ export default async function StudentsPage() {
       },
     }),
     db.clinicalScreeningInfo.groupBy({
-      by: ["initialReferredFrom"],
+      by: ["initialReferredFromSpecified"],
       where: {
         OR: [
           {

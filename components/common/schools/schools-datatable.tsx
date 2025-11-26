@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole, Supervisor } from "@prisma/client";
+import { ImplementerRole, Supervisor } from "@prisma/client";
 import type { VisibilityState } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -67,9 +67,9 @@ export default function SchoolsDatatable({
 
   const renderTableActions = () => {
     return (
-      role === "HUB_COORDINATOR" && (
+      role === ImplementerRole.HUB_COORDINATOR && (
         <>
-          <SchoolDetailsForm />
+          <SchoolDetailsForm school={school} open={editDialog} setOpen={setEditDialog} />
           <Button
             className="flex gap-1"
             onClick={() => {

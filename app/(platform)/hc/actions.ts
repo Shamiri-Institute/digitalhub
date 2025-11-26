@@ -8,7 +8,7 @@ import { HubCoordinatorSchema } from "./schemas";
 export async function updateHubCoordinatorProfile(formData: z.infer<typeof HubCoordinatorSchema>) {
   try {
     const user = await currentHubCoordinator();
-    if (!user?.id) {
+    if (!user?.profile?.id) {
       return { success: false, message: "Unauthorized" };
     }
 
@@ -20,7 +20,7 @@ export async function updateHubCoordinatorProfile(formData: z.infer<typeof HubCo
     }
 
     const updated = await db.hubCoordinator.update({
-      where: { id: user.id },
+      where: { id: user.profile.id },
       data: {
         coordinatorEmail: data.coordinatorEmail,
         coordinatorName: data.coordinatorName,
