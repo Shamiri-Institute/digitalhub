@@ -31,7 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "#/components/ui/dropdown-menu";
 import { cn } from "#/lib/utils";
-import ArrowDropdown from "../public/icons/arrow-drop-down.svg";
+import ArrowDropdown from "#/public/icons/arrow-drop-down.svg";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface NavigationLinkProps {

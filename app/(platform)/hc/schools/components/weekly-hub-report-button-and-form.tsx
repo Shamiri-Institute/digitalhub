@@ -36,7 +36,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import AddCircleOutlined from "../../../../../public/icons/add-circle-outline.svg";
+import AddCircleOutlined from "#/public/icons/add-circle-outline.svg";
 import { WeeklyHubReportSchema } from "../../schemas";
 import { submitWeeklyHubReport } from "../actions";
 
