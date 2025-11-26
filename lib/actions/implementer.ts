@@ -1,6 +1,6 @@
 "use server";
 
-import type { JWTMembership } from "#/app/api/auth/[...nextauth]/route";
+import type { JWTMembership } from "#/lib/auth-options";
 import { currentAdminUser } from "#/app/auth";
 import { db } from "#/lib/db";
 

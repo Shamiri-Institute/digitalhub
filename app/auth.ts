@@ -1,6 +1,6 @@
 import { ImplementerRole } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { authOptions } from "#/app/api/auth/[...nextauth]/route";
+import { authOptions } from "#/lib/auth-options";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 

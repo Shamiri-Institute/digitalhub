@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Figtree, Inter } from "next/font/google";
 import { getServerSession } from "next-auth";
-import { authOptions } from "#/app/api/auth/[...nextauth]/route";
+import { authOptions } from "#/lib/auth-options";
 
 import { Providers } from "#/components/providers";
 import { cn } from "#/lib/utils";

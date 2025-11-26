@@ -1,7 +1,7 @@
 "use server";
 
 import { ImplementerRole } from "@prisma/client";
-import type { JWTMembership } from "#/app/api/auth/[...nextauth]/route";
+import type { JWTMembership } from "#/lib/auth-options";
 import { getCurrentUserSession } from "#/app/auth";
 import { db } from "#/lib/db";
 import type { Personnel } from "#/lib/types/personnel";
