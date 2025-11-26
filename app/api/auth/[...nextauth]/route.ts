@@ -198,7 +198,7 @@ export const authOptions: AuthOptions = {
             implementerName: m.implementer.implementerName,
             role: m.role,
             identifier: m.identifier,
-            updatedAt: m.updatedAt,
+            updatedAt: m.updatedAt ?? undefined,
           }));
 
           token.memberships = processedMemberships;
@@ -236,7 +236,7 @@ function parseMembershipsForJWT(
     implementerName: m.implementer.implementerName,
     role: m.role,
     identifier: m.identifier,
-    updatedAt: m.updatedAt,
+    updatedAt: m.updatedAt ?? undefined,
   }));
 }
 

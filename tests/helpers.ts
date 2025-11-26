@@ -49,7 +49,7 @@ export async function generateSessionToken(email: string) {
     implementerName: m.implementer.implementerName,
     role: m.role,
     identifier: m.identifier,
-    updatedAt: m.updatedAt,
+    updatedAt: m.updatedAt ?? undefined,
   }));
 
   const jwtPayload: JWT = {
