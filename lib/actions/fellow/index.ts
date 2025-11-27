@@ -248,7 +248,7 @@ export async function submitWeeklyFellowEvaluation(
       };
     }
 
-    if (role === ImplementerRole.SUPERVISOR) {
+    if (role !== ImplementerRole.SUPERVISOR) {
       return {
         success: false,
         message: "Something went wrong. User is not authorised to perform this action",
