@@ -32,6 +32,10 @@ export async function currentHubCoordinator() {
     },
   });
 
+  if (!hubCoordinator) {
+    return null;
+  }
+
   return { profile: hubCoordinator, session };
 }
 
