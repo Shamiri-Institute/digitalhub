@@ -14,8 +14,8 @@ export const FellowSchema = z.object({
   county: z.string().optional(),
   subCounty: z.string().optional(),
   dateOfBirth: z.coerce.date({
-    required_error: "Please enter the fellow's date of birth",
-  }),
+      error: (issue) => issue.input === undefined ? "Please enter the fellow's date of birth" : undefined
+}),
   gender: stringValidation("Please enter the fellow's gender."),
   idNumber: z.string().optional(),
 });
@@ -23,16 +23,26 @@ export const FellowSchema = z.object({
 export type FellowSchema = z.infer<typeof FellowSchema>;
 
 export const WeeklyFellowRatingSchema = z.object({
-  week: z.coerce.date({ required_error: "Please select a week" }),
+  week: z.coerce.date({
+      error: (issue) => issue.input === undefined ? "Please select a week" : undefined
+}),
   behaviourNotes: stringValidation("Please input behaviour notes"),
   programDeliveryNotes: stringValidation("Please input program delivery notes"),
   dressingAndGroomingNotes: stringValidation("Please input dressing and grooming notes"),
   punctualityNotes: stringValidation("Please input punctuality notes"),
   fellowId: stringValidation(),
-  behaviourRating: z.number().min(1, { message: "Please input a rating " }),
-  programDeliveryRating: z.number().min(1, { message: "Please input a rating " }),
-  dressingAndGroomingRating: z.number().min(1, { message: "Please input a rating " }),
-  punctualityRating: z.number().min(1, { message: "Please input a rating " }),
+  behaviourRating: z.number().min(1, {
+      error: "Please input a rating "
+}),
+  programDeliveryRating: z.number().min(1, {
+      error: "Please input a rating "
+}),
+  dressingAndGroomingRating: z.number().min(1, {
+      error: "Please input a rating "
+}),
+  punctualityRating: z.number().min(1, {
+      error: "Please input a rating "
+}),
 });
 
 export type WeeklyFellowRatingSchema = z.infer<typeof WeeklyFellowRatingSchema>;
@@ -40,8 +50,8 @@ export type WeeklyFellowRatingSchema = z.infer<typeof WeeklyFellowRatingSchema>;
 export const DropoutFellowSchema = z.object({
   fellowId: stringValidation("Fellow id is required"),
   dropoutReason: z.enum(FELLOW_DROP_OUT_REASONS, {
-    required_error: "Please select a dropout reason",
-  }),
+      error: (issue) => issue.input === undefined ? "Please select a dropout reason" : undefined
+}),
   replacementFellowId: stringValidation("Please select a replacement fellow"),
   replacementSupervisorId: stringValidation("Please select a supervisor"),
 });
@@ -49,7 +59,7 @@ export const DropoutFellowSchema = z.object({
 export type DropoutFellowSchema = z.infer<typeof DropoutFellowSchema>;
 
 export const SupervisorSchema = z.object({
-  supervisorEmail: z.string().email(),
+  supervisorEmail: z.email(),
   supervisorName: z.string().min(1),
   idNumber: z.string().min(1),
   cellNumber: z.string().min(1),

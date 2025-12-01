@@ -25,8 +25,8 @@ import { updateUploadedSchoolFile } from "#/lib/actions/file";
 
 const FormSchema = z.object({
   fileName: z.string({
-    required_error: "Please enter the file name",
-  }),
+      error: (issue) => issue.input === undefined ? "Please enter the file name" : undefined
+}),
 });
 
 export default function RenameUploadedFile({

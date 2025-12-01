@@ -15,9 +15,7 @@ import { stringValidation } from "#/lib/utils";
 export const DropoutSchoolSchema = z.object({
   schoolId: stringValidation("Missing school ID"),
   dropoutReason: z.enum([SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)], {
-    errorMap: (_issue, _ctx) => ({
-      message: "Please select one of the supplied school dropout reason options",
-    }),
+    error: (_issue, _ctx) => "Please select one of the supplied school dropout reason options",
   }),
 });
 
@@ -27,9 +25,7 @@ export const DropoutSupervisorSchema = z.object({
   dropoutReason: z.enum(
     [SUPERVISOR_DROP_OUT_REASONS[0]!, ...SUPERVISOR_DROP_OUT_REASONS.slice(1)],
     {
-      errorMap: (_issue, _ctx) => ({
-        message: "Please select one of the supplied supervisor dropout reason options",
-      }),
+      error: (_issue, _ctx) => "Please select one of the supplied supervisor dropout reason options",
     },
   ),
 });
@@ -40,16 +36,14 @@ export const DropoutStudentSchema = z
     mode: z.enum(["dropout", "undo"]),
     dropoutReason: z
       .enum([STUDENT_DROPOUT_REASONS[0]!, ...STUDENT_DROPOUT_REASONS.slice(1)], {
-        errorMap: (_issue, _ctx) => ({
-          message: "Please select one of the supplied student dropout reason options",
-        }),
+        error: (_issue, _ctx) => "Please select one of the supplied student dropout reason options",
       })
       .optional(),
   })
   .superRefine((val, ctx) => {
     if (val.dropoutReason === undefined && val.mode === "dropout") {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Please select reason for drop out.",
         fatal: true,
         path: ["dropoutReason"],
@@ -65,39 +59,39 @@ export const SubmitComplaintSchema = z.object({
   comments: stringValidation().optional(),
   // TODO: Replace with complaint types array
   complaint: z.enum([SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)], {
-    errorMap: (_issue, _ctx) => ({
-      message: "Please select a complaint",
-    }),
+    error: (_issue, _ctx) => "Please select a complaint",
   }),
 });
 
 export const WeeklyHubReportSchema = z.object({
   hubId: stringValidation("Missing hub ID"),
   submittedBy: stringValidation("Missing hub coordinator ID"),
-  week: z.coerce.date({ required_error: "Please select a week" }),
+  week: z.coerce.date({
+      error: (issue) => issue.input === undefined ? "Please select a week" : undefined
+}),
   recommendations: stringValidation("Please input recommendations"),
   schoolRelatedIssuesAndObservations: stringValidation(),
   schoolRelatedIssuesAndObservationRating: z
     .number({
-      required_error: "Please provide a rating",
+        error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
     })
     .min(1),
   supervisorRelatedIssuesAndObservations: stringValidation(),
   supervisorRelatedIssuesAndObservationsRating: z
     .number({
-      required_error: "Please provide a rating",
+        error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
     })
     .min(1),
   fellowRelatedIssuesAndObservations: stringValidation(),
   fellowRelatedIssuesAndObservationsRating: z
     .number({
-      required_error: "Please provide a rating",
+        error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
     })
     .min(1),
   hubRelatedIssuesAndObservations: stringValidation(),
   hubRelatedIssuesAndObservationsRating: z
     .number({
-      required_error: "Please provide a rating",
+        error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
     })
     .min(1),
   successes: stringValidation(),
@@ -106,52 +100,54 @@ export const WeeklyHubReportSchema = z.object({
 
 export const MonthlySupervisorEvaluationSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
-  month: z.coerce.date({ required_error: "Please select a month" }),
+  month: z.coerce.date({
+      error: (issue) => issue.input === undefined ? "Please select a month" : undefined
+}),
   respectfulness: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   attitude: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   collaboration: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   reliability: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   identificationOfIssues: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   leadership: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   communicationStyle: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   conflictResolution: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   adaptability: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   recognitionAndFeedback: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   decisionMaking: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   fellowRecruitmentEffectiveness: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   fellowTrainingEffectiveness: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   programLogisticsCoordination: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   programSessionAttendance: z.number({
-    required_error: "Please provide a rating",
-  }),
+      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
+}),
   workplaceDemeanorComments: z.string().optional(),
   managementStyleComments: z.string().optional(),
   programExecutionComments: z.string().optional(),
@@ -164,35 +160,29 @@ const BaseSchoolSchema = z.object({
   schoolName: z.string().min(1, "School name is required"),
   schoolType: z
     .enum(SCHOOL_TYPES, {
-      invalid_type_error: "Please pick a valid option",
+        error: (issue) => issue.input === undefined ? undefined : "Please pick a valid option"
     })
     .optional(),
-  schoolEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+  schoolEmail: z.email("Invalid email").optional().or(z.literal("")),
   schoolCounty: z
     .enum([counties[0]!, ...counties.slice(1)], {
-      errorMap: (_issue, _ctx) => ({
-        message: "Please select a valid option",
-      }),
+      error: (_issue, _ctx) => "Please select a valid option",
     })
     .optional(),
   schoolSubCounty: z.string().optional(),
   schoolDemographics: z
     .enum(SCHOOL_DEMOGRAPHICS, {
-      errorMap: (_issue, _ctx) => ({
-        message: "Please select a valid option",
-      }),
+      error: (_issue, _ctx) => "Please select a valid option",
     })
     .optional(),
   pointPersonName: z.string().optional(),
   pointPersonPhone: z.string().optional(),
-  pointPersonEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+  pointPersonEmail: z.email("Invalid email").optional().or(z.literal("")),
   principalName: z.string().optional(),
   principalPhone: z.string().optional(),
   boardingDay: z
     .enum(BOARDING_DAY_TYPES, {
-      errorMap: (_issue, _ctx) => ({
-        message: "Please select a valid option",
-      }),
+      error: (_issue, _ctx) => "Please select a valid option",
     })
     .optional(),
 });
@@ -201,8 +191,7 @@ const BaseSchoolSchema = z.object({
 export const AddSchoolSchema = BaseSchoolSchema.extend({
   preSessionDate: z
     .date({
-      required_error: "Please select a date",
-      invalid_type_error: "Please select a date",
+        error: (issue) => issue.input === undefined ? "Please select a date" : "Please select a date"
     })
     .transform((val) => {
       if (!val) {
@@ -217,8 +206,7 @@ export const AddSchoolSchema = BaseSchoolSchema.extend({
 export const EditSchoolSchema = BaseSchoolSchema.extend({
   preSessionDate: z
     .date({
-      required_error: "Please select a date",
-      invalid_type_error: "Please select a date",
+        error: (issue) => issue.input === undefined ? "Please select a date" : "Please select a date"
     })
     .optional()
     .transform((val) => {
@@ -236,48 +224,47 @@ export const SchoolInformationSchema = EditSchoolSchema;
 export const EditSupervisorSchema = z
   .object({
     supervisorName: z.string({
-      required_error: "Please enter the supervisor's name",
+        error: (issue) => issue.input === undefined ? "Please enter the supervisor's name" : undefined
     }),
     supervisorId: stringValidation("SupervisorId is required"),
     idNumber: z.string({
-      required_error: "Please enter the supervisor's ID number",
+        error: (issue) => issue.input === undefined ? "Please enter the supervisor's ID number" : undefined
     }),
     cellNumber: z
-      .string({ required_error: "Please enter the supervisor's phone number" })
-      .refine((val) => isValidPhoneNumber(val, "KE"), {
-        message: "Please enter a valid kenyan phone number",
-      }),
-    mpesaNumber: z
-      .string({ required_error: "Please enter the supervisor's m-pesa number" })
-      .refine((val) => isValidPhoneNumber(val, "KE"), {
-        message: "Please enter a valid kenyan phone number",
-      }),
-    personalEmail: z
       .string({
-        required_error: "Please enter the supervisor's email.",
-      })
-      .email({
-        message: "Please enter a valid email.",
-      }),
+          error: (issue) => issue.input === undefined ? "Please enter the supervisor's phone number" : undefined
+    })
+      .refine((val) => isValidPhoneNumber(val, "KE"), {
+          error: "Please enter a valid kenyan phone number"
+    }),
+    mpesaNumber: z
+      .string({
+          error: (issue) => issue.input === undefined ? "Please enter the supervisor's m-pesa number" : undefined
+    })
+      .refine((val) => isValidPhoneNumber(val, "KE"), {
+          error: "Please enter a valid kenyan phone number"
+    }),
+    personalEmail: z.email({
+              error: "Please enter a valid email."
+        }),
     county: z.enum([counties[0]!, ...counties.slice(1)], {
-      errorMap: (issue, ctx) => ({ message: "Please pick a valid option" }),
+      error: (issue, ctx) => "Please pick a valid option",
     }),
     subCounty: z
       .string({
-        invalid_type_error: "Please pick a valid sub county.",
-        required_error: "Please pick a sub-county",
-      })
+          error: (issue) => issue.input === undefined ? "Please pick a sub-county" : "Please pick a valid sub county."
+    })
       .refine((val) => val !== "", {
-        message: "Please pick a sub-county",
-      }),
+          error: "Please pick a sub-county"
+    }),
     gender: z.string({
-      required_error: "Please enter the supervisor's gender",
+        error: (issue) => issue.input === undefined ? "Please enter the supervisor's gender" : undefined
     }),
     mpesaName: z.string({
-      required_error: "Please enter the supervisor's m-pesa number",
+        error: (issue) => issue.input === undefined ? "Please enter the supervisor's m-pesa number" : undefined
     }),
     dateOfBirth: z.coerce.date({
-      required_error: "Please select a date of birth",
+        error: (issue) => issue.input === undefined ? "Please select a date of birth" : undefined
     }),
   })
   .superRefine((val, ctx) => {
@@ -287,7 +274,7 @@ export const EditSupervisorSchema = z
       !(selectedCounty.sub_counties as readonly string[]).includes(val.subCounty)
     ) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: `${val.subCounty} is not a valid option.`,
         fatal: true,
         path: ["subCounty"],
@@ -299,52 +286,53 @@ export const EditSupervisorSchema = z
 
 export const AddNewSupervisorSchema = z.object({
   supervisorName: z.string({
-    required_error: "Please enter the supervisor's name",
-  }),
+      error: (issue) => issue.input === undefined ? "Please enter the supervisor's name" : undefined
+}),
   idNumber: z.string({
-    required_error: "Please enter the supervisor's ID number",
-  }),
+      error: (issue) => issue.input === undefined ? "Please enter the supervisor's ID number" : undefined
+}),
   cellNumber: z
-    .string({ required_error: "Please enter the supervisor's phone number" })
+    .string({
+        error: (issue) => issue.input === undefined ? "Please enter the supervisor's phone number" : undefined
+    })
     .refine((val) => isValidPhoneNumber(val, "KE"), {
-      message: "Please enter a valid kenyan phone number",
+        error: "Please enter a valid kenyan phone number"
     }),
   mpesaNumber: z
-    .string({ required_error: "Please enter the supervisor's m-pesa number" })
-    .refine((val) => isValidPhoneNumber(val, "KE"), {
-      message: "Please enter a valid kenyan phone number",
-    }),
-  personalEmail: z
     .string({
-      required_error: "Please enter the supervisor's email.",
+        error: (issue) => issue.input === undefined ? "Please enter the supervisor's m-pesa number" : undefined
     })
-    .email({
-      message: "Please enter a valid email.",
+    .refine((val) => isValidPhoneNumber(val, "KE"), {
+        error: "Please enter a valid kenyan phone number"
     }),
+  personalEmail: z.email({
+          error: "Please enter a valid email."
+      }),
   county: z.enum([counties[0]!, ...counties.slice(1)], {
-    errorMap: (issue, ctx) => ({ message: "Please pick a valid option" }),
+    error: (issue, ctx) => "Please pick a valid option",
   }),
   subCounty: z
     .string({
-      invalid_type_error: "Please pick a valid sub county.",
-      required_error: "Please pick a sub-county",
+        error: (issue) => issue.input === undefined ? "Please pick a sub-county" : "Please pick a valid sub county."
     })
     .refine((val) => val !== "", {
-      message: "Please pick a sub-county",
+        error: "Please pick a sub-county"
     }),
-  gender: z.string({ required_error: "Please enter the supervisor's gender" }),
+  gender: z.string({
+      error: (issue) => issue.input === undefined ? "Please enter the supervisor's gender" : undefined
+}),
   mpesaName: z.string({
-    required_error: "Please enter the supervisor's m-pesa number",
-  }),
+      error: (issue) => issue.input === undefined ? "Please enter the supervisor's m-pesa number" : undefined
+}),
   dateOfBirth: z.coerce.date({
-    required_error: "Please select a date of birth",
-  }),
+      error: (issue) => issue.input === undefined ? "Please select a date of birth" : undefined
+}),
 });
 
 export const AssignPointSupervisorSchema = z.object({
   assignedSupervisorId: z.string({
-    required_error: "Please pick a supervisor.",
-  }),
+      error: (issue) => issue.input === undefined ? "Please pick a supervisor." : undefined
+}),
 });
 
 export const MarkSupervisorAttendanceSchema = z
@@ -352,8 +340,8 @@ export const MarkSupervisorAttendanceSchema = z
     supervisorId: z.string(),
     attended: z
       .enum(ATTENDANCE_STATUS, {
-        invalid_type_error: "Please select attendance.",
-      })
+          error: (issue) => issue.input === undefined ? undefined : "Please select attendance."
+    })
       .optional(),
     sessionId: z.string(),
     absenceReason: z.string().optional(),
@@ -364,7 +352,7 @@ export const MarkSupervisorAttendanceSchema = z
     const ids = val.supervisorId.split(",");
     if (val.attended === "missed" && val.absenceReason === undefined && ids.length === 1) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Please add a reason for absence",
         fatal: true,
         path: ["absenceReason"],
@@ -377,7 +365,9 @@ export const MarkSupervisorAttendanceSchema = z
 export const WeeklyHubTeamMeetingSchema = z.object({
   hubId: stringValidation("Missing hub ID"),
   submittedBy: stringValidation("Missing hub coordinator ID"),
-  week: z.coerce.date({ required_error: "Please select a week" }),
+  week: z.coerce.date({
+      error: (issue) => issue.input === undefined ? "Please select a week" : undefined
+}),
   logisticsRelatedIssues: stringValidation(),
   logisticsRelatedIssuesRating: z.number().lte(5),
   relationshipManagement: stringValidation(),
@@ -393,50 +383,49 @@ export const FellowDetailsSchema = z
   .object({
     mode: z.enum(["add", "edit", "view"]),
     fellowName: z.string({
-      required_error: "Please enter the fellow's name",
+        error: (issue) => issue.input === undefined ? "Please enter the fellow's name" : undefined
     }),
     id: z.string().optional(),
     idNumber: z.string({
-      required_error: "Please enter the fellow's ID number",
+        error: (issue) => issue.input === undefined ? "Please enter the fellow's ID number" : undefined
     }),
     cellNumber: z
-      .string({ required_error: "Please enter the fellow's phone number" })
-      .refine((val) => isValidPhoneNumber(val, "KE"), {
-        message: "Please enter a valid kenyan phone number",
-      }),
-    mpesaNumber: z
-      .string({ required_error: "Please enter the fellow's m-pesa number" })
-      .refine((val) => isValidPhoneNumber(val, "KE"), {
-        message: "Please enter a valid kenyan phone number",
-      }),
-    fellowEmail: z
       .string({
-        required_error: "Please enter the fellow's email.",
-      })
-      .email({
-        message: "Please enter a valid email.",
-      }),
+          error: (issue) => issue.input === undefined ? "Please enter the fellow's phone number" : undefined
+    })
+      .refine((val) => isValidPhoneNumber(val, "KE"), {
+          error: "Please enter a valid kenyan phone number"
+    }),
+    mpesaNumber: z
+      .string({
+          error: (issue) => issue.input === undefined ? "Please enter the fellow's m-pesa number" : undefined
+    })
+      .refine((val) => isValidPhoneNumber(val, "KE"), {
+          error: "Please enter a valid kenyan phone number"
+    }),
+    fellowEmail: z.email({
+              error: "Please enter a valid email."
+        }),
     county: z
       .enum([counties[0]!, ...counties.slice(1)], {
-        errorMap: (issue, ctx) => ({ message: "Please pick a valid option" }),
+        error: (issue, ctx) => "Please pick a valid option",
       })
       .optional(),
     subCounty: z
       .string({
-        invalid_type_error: "Please pick a valid sub county.",
-        required_error: "Please pick a sub-county",
-      })
+          error: (issue) => issue.input === undefined ? "Please pick a sub-county" : "Please pick a valid sub county."
+    })
       .refine((val) => val !== "", {
-        message: "Please pick a sub-county",
-      }),
+          error: "Please pick a sub-county"
+    }),
     gender: z.string({
-      required_error: "Please enter the fellow's gender",
+        error: (issue) => issue.input === undefined ? "Please enter the fellow's gender" : undefined
     }),
     mpesaName: z.string({
-      required_error: "Please enter the fellow's m-pesa number",
+        error: (issue) => issue.input === undefined ? "Please enter the fellow's m-pesa number" : undefined
     }),
     dateOfBirth: z.coerce.date({
-      required_error: "Please select a date of birth",
+        error: (issue) => issue.input === undefined ? "Please select a date of birth" : undefined
     }),
   })
   .superRefine((val, ctx) => {
@@ -446,7 +435,7 @@ export const FellowDetailsSchema = z
       !(selectedCounty.sub_counties as readonly string[]).includes(val.subCounty)
     ) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: `${val.subCounty} is not a valid option.`,
         fatal: true,
         path: ["subCounty"],
@@ -457,7 +446,7 @@ export const FellowDetailsSchema = z
 
     if (val.mode === "edit" && val.id === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Fellow Id is required.",
         fatal: true,
         path: ["id"],
@@ -468,7 +457,7 @@ export const FellowDetailsSchema = z
 
     if (val.county === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Please pick a county.",
         fatal: true,
         path: ["county"],
@@ -482,9 +471,7 @@ export const MarkAttendanceSchema = z
   .object({
     id: z.string().optional(),
     attended: z.enum(ATTENDANCE_STATUS, {
-      errorMap: (issue, _ctx) => ({
-        message: "Please mark attendance",
-      }),
+      error: (issue, _ctx) => "Please mark attendance",
     }),
     sessionId: stringValidation("session ID is required"),
     absenceReason: z.string().optional(),
@@ -494,7 +481,7 @@ export const MarkAttendanceSchema = z
   .superRefine((val, ctx) => {
     if (val.attended === "missed" && val.absenceReason === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Please select reason for absence.",
         fatal: true,
         path: ["absenceReason"],
@@ -505,7 +492,7 @@ export const MarkAttendanceSchema = z
 
     if (!val.bulkMode && val.id === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "ID is required",
         fatal: true,
         path: ["id"],
@@ -521,7 +508,7 @@ export const StudentReportingNotesSchema = z.object({
 });
 
 export const HubCoordinatorSchema = z.object({
-  coordinatorEmail: z.string().email(),
+  coordinatorEmail: z.email(),
   coordinatorName: z.string(),
   idNumber: z.string(),
   cellNumber: z.string(),

@@ -6,27 +6,27 @@ export const ReportFellowComplaintSchema = z.object({
   mpesaNumber: stringValidation("Please confirm the Mpesa number"),
   mpesaName: stringValidation("Please enter the fellow's MPESA name."),
   noOfTrainingSessions: z.coerce.number({
-    required_error: "Please enter the no of training sessions",
-  }),
+      error: (issue) => issue.input === undefined ? "Please enter the no of training sessions" : undefined
+}),
 
   noOfSupervisionSessions: z.coerce.number({
-    required_error: "Please enter the no of supervision sessions",
-  }),
+      error: (issue) => issue.input === undefined ? "Please enter the no of supervision sessions" : undefined
+}),
   noOfPreSessions: z.coerce.number({
-    required_error: "Please enter the no of pre sessions",
-  }),
+      error: (issue) => issue.input === undefined ? "Please enter the no of pre sessions" : undefined
+}),
   noOfMainSessions: z.coerce.number({
-    required_error: "Please enter the no of main sessions",
-  }),
+      error: (issue) => issue.input === undefined ? "Please enter the no of main sessions" : undefined
+}),
   noOfSpecialSessions: z.coerce.number({
-    required_error: "Please enter the no of special sessions",
-  }),
+      error: (issue) => issue.input === undefined ? "Please enter the no of special sessions" : undefined
+}),
   paidAmount: z.coerce.number({
-    required_error: "Please enter the paid amount",
-  }),
+      error: (issue) => issue.input === undefined ? "Please enter the paid amount" : undefined
+}),
   confirmedAmountReceived: z.coerce.number({
-    required_error: "Please enter the confirmed amount received",
-  }),
+      error: (issue) => issue.input === undefined ? "Please enter the confirmed amount received" : undefined
+}),
   reasonForComplaint: stringValidation("Please enter the complaint reason"),
   comments: stringValidation("Please enter additional comments"),
   reasonForAccepting: stringValidation("Please enter the reason for accepting"),

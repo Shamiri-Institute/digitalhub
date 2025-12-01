@@ -7,15 +7,15 @@ export const StudentDetailsSchema = z
     id: z.string().optional(),
     mode: z.enum(["add", "edit", "view"]),
     studentName: z.string({
-      required_error: "Please enter the student's name",
+        error: (issue) => issue.input === undefined ? "Please enter the student's name" : undefined
     }),
     form: stringValidation("Please enter the student's class").refine(
       (val) => {
         return !isNaN(Number(val)) && val.trim() !== "";
       },
       {
-        message: "Please enter a valid value",
-      },
+          error: "Please enter a valid value"
+    },
     ),
     stream: stringValidation("Please enter the student's stream"),
     gender: stringValidation("Please select the student's gender"),
@@ -29,8 +29,8 @@ export const StudentDetailsSchema = z
         return !isNaN(year) && val.trim() !== "" && year >= 1900 && year <= currentYear;
       },
       {
-        message: "Please enter a valid year between 1900 and current year",
-      },
+          error: "Please enter a valid year between 1900 and current year"
+    },
     ),
     phoneNumber: z
       .string()
@@ -41,14 +41,14 @@ export const StudentDetailsSchema = z
           return isValidPhoneNumber(val, "KE");
         },
         {
-          message: "Please enter a valid kenyan phone number",
+            error: "Please enter a valid kenyan phone number"
         },
       ),
   })
   .superRefine((val, ctx) => {
     if (val.mode === "edit" && val.id === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Student Id is required.",
         fatal: true,
         path: ["id"],
@@ -59,7 +59,7 @@ export const StudentDetailsSchema = z
 
     if (val.mode === "add" && val.admissionNumber === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: `Please enter the student's admission number.`,
         fatal: true,
         path: ["admissionNumber"],
@@ -70,7 +70,7 @@ export const StudentDetailsSchema = z
 
     if (val.mode === "add" && val.schoolId === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "School Id is required.",
         fatal: true,
         path: ["schoolId"],
@@ -81,7 +81,7 @@ export const StudentDetailsSchema = z
 
     if (val.mode === "add" && val.assignedGroupId === undefined) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         message: "Group Id is required.",
         fatal: true,
         path: ["assignedGroupId"],
