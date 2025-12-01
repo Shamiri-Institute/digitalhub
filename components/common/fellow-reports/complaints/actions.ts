@@ -1,7 +1,8 @@
 "use server";
 
+import { ImplementerRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { getCurrentUser } from "#/app/auth";
+import { getCurrentPersonnel } from "#/app/auth";
 import { db } from "#/lib/db";
 
 export type FellowComplaintsType = Awaited<ReturnType<typeof loadFellowComplaints>>[number];
@@ -67,11 +68,11 @@ export async function loadFellowComplaints() {
 
 export async function editFellowComplaint(complaintId: string, complaint: string) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const user = await getCurrentPersonnel();
+    if (user && user?.session?.user.activeMembership?.role !== ImplementerRole.HUB_COORDINATOR) {
       return {
-        message: "Unauthorized",
         success: false,
+        message: "You are not authorized to perform this action",
       };
     }
 

@@ -168,7 +168,9 @@ export default function FileUploaderWithDataTable({
           </Button>
         </DialogTrigger>
         <DialogContent>
-          <DialogHeader className="text-xl font-semibold leading-7">Upload {type} csv</DialogHeader>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold leading-7">Upload {type} csv</DialogTitle>
+          </DialogHeader>
           <FileUploaderWithDrop
             label="Upload csv file"
             onChange={handleFileUpload}
@@ -331,8 +333,8 @@ export function DataTableDialog({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         {errorMessages.length > 0 &&
-          errorMessages.map((message, index) => (
-            <DialogAlertWidget variant="destructive" key={index} label={message} />
+          errorMessages.map((message) => (
+            <DialogAlertWidget variant="destructive" key={message} label={message} />
           ))}
         <div className="mt-4">
           <DataTable

@@ -3,10 +3,10 @@
 import type { ImplementerRole, Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { format, isAfter } from "date-fns";
+import type { Dispatch, SetStateAction } from "react";
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import SchoolTableDropdown from "#/components/common/schools/school-table-dropdown";
 import { Badge } from "#/components/ui/badge";
-import { Checkbox } from "#/components/ui/checkbox";
 import { sessionDisplayName } from "#/lib/utils";
 
 export type SchoolsTableData = Prisma.SchoolGetPayload<{
@@ -31,40 +31,25 @@ export type SchoolsTableData = Prisma.SchoolGetPayload<{
   };
 }>;
 
-export const columns = ({ role }: { role: ImplementerRole }): ColumnDef<SchoolsTableData>[] => {
+export const columns = ({
+  role,
+  state,
+}: {
+  role: ImplementerRole;
+  state: {
+    editDialog: boolean;
+    setEditDialog: Dispatch<SetStateAction<boolean>>;
+    pointSupervisorDialog: boolean;
+    setPointSupervisorDialog: Dispatch<SetStateAction<boolean>>;
+    schoolDropOutDialog: boolean;
+    setSchoolDropOutDialog: Dispatch<SetStateAction<boolean>>;
+    undoDropOutDialog: boolean;
+    setUndoDropOutDialog: Dispatch<SetStateAction<boolean>>;
+    school: SchoolsTableData | null;
+    setSchool: Dispatch<SetStateAction<SchoolsTableData | null>>;
+  };
+}): ColumnDef<SchoolsTableData>[] => {
   const defaultColumns: ColumnDef<SchoolsTableData>[] = [
-    {
-      id: "checkbox",
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
-          aria-label="Select all"
-          className={
-            "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-          }
-        />
-      ),
-      cell: ({ row }) => {
-        return (
-          <div className="flex items-center justify-center">
-            <Checkbox
-              checked={row.getIsSelected()}
-              onCheckedChange={(val) => row.toggleSelected(!!val)}
-              aria-label="Select row"
-              className={
-                "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-              }
-            />
-          </div>
-        );
-      },
-      enableSorting: false,
-      enableHiding: false,
-    },
     {
       accessorKey: "schoolName",
       header: "School name",
@@ -202,7 +187,7 @@ export const columns = ({ role }: { role: ImplementerRole }): ColumnDef<SchoolsT
     },
     {
       id: "button",
-      cell: ({ row }) => <SchoolTableDropdown schoolRow={row.original} role={role} />,
+      cell: ({ row }) => <SchoolTableDropdown schoolRow={row.original} role={role} state={state} />,
       enableHiding: false,
     },
   ];

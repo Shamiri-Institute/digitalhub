@@ -33,7 +33,7 @@ export function WeekView({
   supervisorId?: string;
   fellowId?: string;
 }) {
-  const headerRowRef: any = useRef(null);
+  const headerRowRef = useRef<HTMLTableElement>(null);
   const { gridProps, headerProps } = useCalendarGrid({ weekdayStyle: "long" }, state);
 
   const startDate = state.visibleRange.start;
@@ -103,14 +103,14 @@ export function WeekView({
                 .map((date, i) =>
                   date ? (
                     <WeekCalendarHeaderCell
-                      key={i}
+                      key={date.toString()}
                       colIdx={i}
                       date={date}
                       state={state}
                       dayFormatter={dayFormatter}
                     />
                   ) : (
-                    <td key={i} />
+                    <td key={`empty-header-${state.visibleRange.start.toString()}-${i}`} />
                   ),
                 )}
             </tr>
@@ -118,8 +118,8 @@ export function WeekView({
         </table>
         <table {...gridProps} className="schedule-table rounded-b-[0.4375rem]">
           <tbody className="w-full">
-            {hours.map((hour, rowIdx) => (
-              <tr key={rowIdx} className="table-row w-full divide-x divide-grey-border">
+            {hours.map((hour) => (
+              <tr key={`hour-${hour}`} className="table-row w-full divide-x divide-grey-border">
                 <td
                   className={cn(
                     "time-cell truncate",
@@ -135,9 +135,8 @@ export function WeekView({
                   .map((date, colIdx) =>
                     date ? (
                       <WeekCalendarCell
-                        key={colIdx}
+                        key={`${date.toString()}-${hour}`}
                         colIdx={colIdx}
-                        rowIdx={rowIdx}
                         hour={hour}
                         date={date}
                         state={state}
@@ -147,7 +146,7 @@ export function WeekView({
                         supervisorId={supervisorId}
                       />
                     ) : (
-                      <td key={colIdx} />
+                      <td key={`empty-${state.visibleRange.start.toString()}-${colIdx}-${hour}`} />
                     ),
                   )}
               </tr>
@@ -167,7 +166,7 @@ function WeekCalendarHeaderCell({
 }: {
   date: CalendarDate;
   state: CalendarState;
-  dayFormatter: any;
+  dayFormatter: Intl.DateTimeFormat;
   colIdx: number;
 }) {
   const { sessions } = useSessions({ date });
@@ -195,7 +194,6 @@ function WeekCalendarHeaderCell({
 }
 
 function WeekCalendarCell({
-  rowIdx,
   colIdx,
   hour,
   date,
@@ -205,7 +203,6 @@ function WeekCalendarCell({
   fellowId,
   supervisorId,
 }: {
-  rowIdx: number;
   colIdx: number;
   hour: number;
   date: CalendarDate;
@@ -225,15 +222,11 @@ function WeekCalendarCell({
   supervisorId?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const {
-    cellProps,
-    buttonProps,
-    isSelected,
-    isOutsideVisibleRange,
-    isDisabled,
-    isUnavailable,
-    formattedDate,
-  } = useCalendarCell({ date }, state, ref);
+  const { cellProps, buttonProps, isSelected, isDisabled, isUnavailable } = useCalendarCell(
+    { date },
+    state,
+    ref,
+  );
 
   const { sessions } = useSessions({ date, hour });
 
@@ -250,7 +243,7 @@ function WeekCalendarCell({
       >
         <div
           className={cn(
-            "flex flex-col gap-[8px] overflow-y-auto",
+            "flex flex-col gap-[8px]",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
             "h-full lg:h-[85px] xl:h-[112px]",
             "border-t border-grey-border",

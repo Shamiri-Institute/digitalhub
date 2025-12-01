@@ -1,30 +1,31 @@
 "use server";
 
+import { ImplementerRole } from "@prisma/client";
 import type { z } from "zod";
-import { getCurrentUser } from "#/app/auth";
+import { getCurrentUserSession } from "#/app/auth";
 import type { ProfileSchema } from "#/components/profile/schema";
 import { db } from "#/lib/db";
 
 export async function updateSupervisorProfile(data: z.infer<typeof ProfileSchema>) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const session = await getCurrentUserSession();
+    if (!session) {
+      return {
+        success: false,
+        message: "User not authenticated",
+      };
+    }
+    const role = session.user.activeMembership?.role;
+    if (role !== ImplementerRole.SUPERVISOR) {
       return {
         success: false,
         message: "User not authenticated",
       };
     }
 
-    if (!user.membership.identifier) {
-      return {
-        success: false,
-        message: "User profile not found",
-      };
-    }
-
     const supervisor = await db.supervisor.findFirst({
       where: {
-        id: user.membership.identifier,
+        id: session.user.activeMembership?.identifier ?? undefined,
       },
     });
 
@@ -71,24 +72,25 @@ export async function updateSupervisorProfile(data: z.infer<typeof ProfileSchema
 
 export async function updateHubCoordinatorProfile(data: z.infer<typeof ProfileSchema>) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const session = await getCurrentUserSession();
+    if (!session) {
       return {
         success: false,
         message: "User not authenticated",
       };
     }
 
-    if (!user.membership.identifier) {
+    const role = session.user.activeMembership?.role;
+    if (role !== ImplementerRole.HUB_COORDINATOR) {
       return {
         success: false,
-        message: "User profile not found",
+        message: "User not authenticated",
       };
     }
 
     const coordinator = await db.hubCoordinator.findFirst({
       where: {
-        id: user.membership.identifier,
+        id: session.user.activeMembership?.identifier ?? undefined,
       },
     });
 
@@ -135,24 +137,24 @@ export async function updateHubCoordinatorProfile(data: z.infer<typeof ProfileSc
 
 export async function updateFellowProfile(data: z.infer<typeof ProfileSchema>) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const session = await getCurrentUserSession();
+    if (!session) {
+      return {
+        success: false,
+        message: "User not authenticated",
+      };
+    }
+    const role = session.user.activeMembership?.role;
+    if (role !== ImplementerRole.FELLOW) {
       return {
         success: false,
         message: "User not authenticated",
       };
     }
 
-    if (!user.membership.identifier) {
-      return {
-        success: false,
-        message: "User profile not found",
-      };
-    }
-
     const fellow = await db.fellow.findFirst({
       where: {
-        id: user.membership.identifier,
+        id: session.user.activeMembership?.identifier ?? undefined,
       },
     });
 
@@ -195,24 +197,25 @@ export async function updateFellowProfile(data: z.infer<typeof ProfileSchema>) {
 
 export async function updateClinicalLeadProfile(data: z.infer<typeof ProfileSchema>) {
   try {
-    const user = await getCurrentUser();
-    if (!user) {
+    const session = await getCurrentUserSession();
+    if (!session) {
       return {
         success: false,
         message: "User not authenticated",
       };
     }
 
-    if (!user.membership.identifier) {
+    const role = session.user.activeMembership?.role;
+    if (role !== ImplementerRole.CLINICAL_LEAD) {
       return {
         success: false,
-        message: "User profile not found",
+        message: "User not authenticated",
       };
     }
 
     const clinicalLead = await db.clinicalLead.findFirst({
       where: {
-        id: user.membership.identifier,
+        id: session.user.activeMembership?.identifier ?? undefined,
       },
     });
 

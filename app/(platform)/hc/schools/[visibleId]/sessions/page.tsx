@@ -1,5 +1,6 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
 import { db } from "#/lib/db";
 
@@ -14,8 +15,8 @@ export default async function SchoolSessionsPage(props: {
   if (coordinator === null) {
     await signOut({ callbackUrl: "/login" });
   }
+  const assignedHubId = coordinator?.profile?.assignedHubId;
 
-  const user = await getCurrentUser();
   const data = await Promise.all([
     await db.interventionSession.findMany({
       where: {
@@ -52,7 +53,7 @@ export default async function SchoolSessionsPage(props: {
     }),
     await db.supervisor.findMany({
       where: {
-        hubId: coordinator?.assignedHubId as string,
+        hubId: assignedHubId,
       },
       include: {
         supervisorAttendances: {
@@ -80,7 +81,7 @@ export default async function SchoolSessionsPage(props: {
     FROM
     fellows fel
     LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
-    WHERE fel.hub_id=${coordinator!.assignedHubId}
+    WHERE fel.hub_id=${assignedHubId}
     GROUP BY fel.id`,
   ]);
 
@@ -89,7 +90,7 @@ export default async function SchoolSessionsPage(props: {
       sessions={data[0]}
       supervisors={data[1]}
       fellowRatings={data[2]}
-      role={user?.membership.role!}
+      role={coordinator?.session?.user.activeMembership?.role ?? ImplementerRole.HUB_COORDINATOR}
     />
   );
 }

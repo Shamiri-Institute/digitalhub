@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 
-import type { SessionUser } from "#/app/api/auth/[...nextauth]/route";
+import type { SessionUser } from "#/lib/auth-options";
 import type { db } from "#/lib/db";
 import { Model } from "#/models";
 

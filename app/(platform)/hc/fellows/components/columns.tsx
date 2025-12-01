@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import { ImplementerRole, type Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";
@@ -49,6 +49,7 @@ export const columns = (
   setUploadQualificationDialog: Dispatch<SetStateAction<boolean>>,
   setViewComplaintsDialog: Dispatch<SetStateAction<boolean>>,
   setDropOutDialog: Dispatch<SetStateAction<boolean>>,
+  role: ImplementerRole,
 ): ColumnDef<MainFellowTableData>[] => {
   return [
     {
@@ -152,6 +153,7 @@ export const columns = (
             fellowId={row.original.id}
             supervisorId={row.original.supervisorId}
             supervisors={supervisors}
+            disabled={role === ImplementerRole.ADMIN}
           />
         </div>
       ),
@@ -189,6 +191,7 @@ export const columns = (
           setUploadQualificationDialog={setUploadQualificationDialog}
           setViewComplaintsDialog={setViewComplaintsDialog}
           setDropOutDialog={setDropOutDialog}
+          role={role}
         />
       ),
       enableHiding: false,

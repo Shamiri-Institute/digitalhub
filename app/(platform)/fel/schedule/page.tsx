@@ -20,22 +20,25 @@ export default async function FellowSchedulePage() {
             {
               title: "Sessions",
               count:
-                fellow?.groups.reduce((a, b) => a + b.school._count.interventionSessions, 0) || 0,
+                fellow?.profile.groups.reduce(
+                  (a, b) => a + b.school._count.interventionSessions,
+                  0,
+                ) || 0,
             },
-            { title: "Groups", count: fellow?.groups.length || 0 },
+            { title: "Groups", count: fellow?.profile.groups.length || 0 },
             {
               title: "Students",
-              count: fellow?.groups.reduce((a, b) => a + b._count.students, 0) || 0,
+              count: fellow?.profile.groups.reduce((a, b) => a + b._count.students, 0) || 0,
             },
           ]}
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
         <ScheduleCalendar
-          hubId={fellow?.hubId!}
+          hubId={fellow?.profile.hubId!}
           aria-label="Session schedule"
-          schools={fellow?.hub?.schools ?? []}
-          role={fellow?.user.membership.role!}
-          hubSessionTypes={fellow?.hub?.sessions}
+          schools={fellow?.profile.hub?.schools ?? []}
+          role={fellow?.session.user.activeMembership?.role!}
+          hubSessionTypes={fellow?.profile.hub?.sessions}
           fellow={fellow}
         />
       </div>

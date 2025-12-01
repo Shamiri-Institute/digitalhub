@@ -13,7 +13,13 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Calendar } from "#/components/ui/calendar";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -124,13 +130,13 @@ export default function FellowDetailsForm({
             className={cn(mode === "view" ? "form-view-mode" : "")}
           >
             <DialogHeader>
-              <span className="text-xl">
+              <DialogTitle className="text-xl">
                 {mode === "edit"
                   ? "Edit fellow information"
                   : mode === "view"
                     ? "View fellow information"
                     : "Add new fellow"}
-              </span>
+              </DialogTitle>
             </DialogHeader>
             {mode !== "add" && fellow && (
               <div className="pb-2 pt-4">
@@ -162,7 +168,8 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem className="col-span-2">
                         <FormLabel>
-                          Full name <span className="text-shamiri-light-red">*</span>
+                          Full name{" "}
+                          {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <FormControl>
                           <Input {...field} />
@@ -178,7 +185,8 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Phone number <span className="text-shamiri-light-red">*</span>
+                          Phone number{" "}
+                          {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
@@ -194,7 +202,8 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Email address <span className="text-shamiri-light-red">*</span>
+                          Email address{" "}
+                          {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
@@ -210,7 +219,8 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          National ID <span className="text-shamiri-light-red">*</span>
+                          National ID{" "}
+                          {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
@@ -225,7 +235,8 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Gender <span className="text-shamiri-light-red">*</span>
+                          Gender{" "}
+                          {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -256,7 +267,8 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Date of birth <span className="text-shamiri-light-red">*</span>
+                          Date of birth{" "}
+                          {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         {mode !== "view" ? (
                           <Popover>
@@ -306,7 +318,8 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          County <span className="text-shamiri-light-red">*</span>
+                          County{" "}
+                          {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -341,7 +354,8 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Sub-county <span className="text-shamiri-light-red">*</span>
+                          Sub-county{" "}
+                          {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <Select
                           onValueChange={field.onChange}
@@ -393,7 +407,8 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Full name <span className="text-shamiri-light-red">*</span>
+                          Full name{" "}
+                          {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />
@@ -409,7 +424,8 @@ export default function FellowDetailsForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          M-Pesa number <span className="text-shamiri-light-red">*</span>
+                          M-Pesa number{" "}
+                          {mode !== "view" && <span className="text-shamiri-light-red">*</span>}
                         </FormLabel>
                         <FormControl>
                           <Input {...field} type="tel" />

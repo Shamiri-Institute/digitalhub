@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { currentFellow } from "#/app/auth";
 import SessionsDatatable from "#/components/common/session/sessions-datatable";
@@ -49,8 +50,8 @@ export default async function SchoolSessionsPage(props: {
   return (
     <SessionsDatatable
       sessions={sessions}
-      role={fellow?.user?.membership.role!}
-      fellowId={fellow?.id}
+      role={fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW}
+      fellowId={fellow?.profile?.id}
     />
   );
 }

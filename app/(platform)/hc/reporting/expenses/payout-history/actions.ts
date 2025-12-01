@@ -40,7 +40,7 @@ export async function loadHubPayoutHistory(): Promise<HubPayoutHistoryType[]> {
         SUM(amount) as total_amount
       FROM payout_statements ps
       WHERE fellow_id IN (
-        SELECT id FROM fellows WHERE hub_id = ${hubCoordinator.assignedHubId}
+        SELECT id FROM fellows WHERE hub_id = ${hubCoordinator.profile?.assignedHubId}
       )
       AND executed_at IS NOT NULL
       GROUP BY executed_at
@@ -71,7 +71,7 @@ export async function loadHubPayoutHistory(): Promise<HubPayoutHistoryType[]> {
         INNER JOIN hubs h ON h.id = f.hub_id
         INNER JOIN supervisors s ON s.id = f.supervisor_id
         WHERE ps.executed_at = ${payout.dateAdded}
-        AND f.hub_id = ${hubCoordinator.assignedHubId}
+        AND f.hub_id = ${hubCoordinator.profile?.assignedHubId}
         GROUP BY f.id, f.fellow_name, h.hub_name, s.supervisor_name, ps.mpesa_number
         ORDER BY f.fellow_name ASC;
       `;

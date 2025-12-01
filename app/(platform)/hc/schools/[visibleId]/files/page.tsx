@@ -1,14 +1,17 @@
-import { Suspense } from "react";
-import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
+import { signOut } from "next-auth/react";
+import { currentHubCoordinator } from "#/app/auth";
 import SchoolFilesDatatable from "#/components/common/files/files-datatable";
 import { db } from "#/lib/db";
 
 export default async function SchoolFilesPage(props: { params: Promise<{ visibleId: string }> }) {
   const params = await props.params;
+  const hc = await currentHubCoordinator();
+  if (!hc) {
+    await signOut({ callbackUrl: "/login" });
+  }
 
   const { visibleId } = params;
-
-  const schoolFiles = db.schoolDocuments.findMany({
+  const schoolFiles = await db.schoolDocuments.findMany({
     where: {
       school: {
         visibleId,
@@ -16,9 +19,5 @@ export default async function SchoolFilesPage(props: { params: Promise<{ visible
     },
   });
 
-  return (
-    <Suspense fallback={<Loading />}>
-      <SchoolFilesDatatable data={schoolFiles} schoolId={visibleId} />
-    </Suspense>
-  );
+  return <SchoolFilesDatatable data={schoolFiles} schoolId={visibleId} />;
 }

@@ -1,7 +1,11 @@
 import { getCurrentPersonnel } from "#/app/auth";
-import { Layout } from "#/components/layout";
+import { LayoutClient } from "#/components/layout-client";
 
 export default async function PlatformLayout({ children }: { children: React.ReactNode }) {
-  const profile = await getCurrentPersonnel();
-  return <Layout profile={profile}>{children}</Layout>;
+  const userSession = await getCurrentPersonnel();
+  return (
+    <LayoutClient session={userSession?.session ?? null} profile={userSession ?? null}>
+      {children}
+    </LayoutClient>
+  );
 }

@@ -92,7 +92,7 @@ export function MonthView({
             <tr>
               {weekDays.map((day, index) => (
                 <th
-                  key={index}
+                  key={day}
                   className={cn({
                     "bg-background-secondary": index === 0 || index === 6,
                   })}
@@ -112,7 +112,7 @@ export function MonthView({
                   .map((date, i) =>
                     date ? (
                       <MonthCalendarCell
-                        key={i}
+                        key={date.toString()}
                         state={state}
                         date={date}
                         weekend={isWeekend(date, "en-US")}
@@ -122,7 +122,7 @@ export function MonthView({
                         supervisorId={props.supervisorId}
                       />
                     ) : (
-                      <td key={i} />
+                      <td key={i.toString()} />
                     ),
                   )}
               </tr>
@@ -160,7 +160,7 @@ export function MonthCalendarCell({
   fellowId?: string;
   supervisorId?: string;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLButtonElement>(null);
   const {
     cellProps,
     buttonProps,
@@ -180,7 +180,8 @@ export function MonthCalendarCell({
         "bg-background-secondary": weekend,
       })}
     >
-      <div
+      <button
+        type="button"
         {...buttonProps}
         ref={ref}
         className={cn("h-full w-full transition ease-in-out", {
@@ -195,7 +196,7 @@ export function MonthCalendarCell({
       >
         <div
           className={cn(
-            "flex flex-col gap-[8px] overflow-y-auto",
+            "flex flex-col gap-[8px]",
             "px-[10px] py-[4px] xl:px-[16px] xl:py-[8px]",
             "h-full lg:h-[120px] xl:h-[144px]",
           )}
@@ -221,7 +222,7 @@ export function MonthCalendarCell({
             supervisorId={supervisorId}
           />
         </div>
-      </div>
+      </button>
     </td>
   );
 }

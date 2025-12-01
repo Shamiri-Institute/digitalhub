@@ -279,7 +279,7 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
         csi.general_presenting_issues_other_specified_baseline as "generalPresentingIssuesOtherSpecifiedBaseline",
         csi.general_presenting_issues_other_specified_endpoint as "generalPresentingIssuesOtherSpecifiedEndpoint",
         csi."clinicalLeadId" as "clinicalLeadId",
-        CASE WHEN csi."clinicalLeadId" = ${clinicalTeam.id} THEN true ELSE false END as "isClinicalLeadCase",
+        CASE WHEN csi."clinicalLeadId" = ${clinicalTeam.profile.id} THEN true ELSE false END as "isClinicalLeadCase",
         CASE WHEN csfp.id IS NOT NULL THEN true ELSE false END as "treatmentPlan",
         CASE WHEN EXISTS (
           SELECT 1 FROM "clinical_case_notes" ccn 

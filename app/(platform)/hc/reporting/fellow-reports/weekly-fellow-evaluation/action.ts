@@ -1,20 +1,21 @@
 "use server";
 
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import type { WeeklyFellowEvaluation } from "#/components/common/fellow-reports/weekly-fellow-evaluation/types";
 import { db } from "#/lib/db";
 
 export async function loadHubWeeklyFellowEvaluation(): Promise<WeeklyFellowEvaluation[]> {
   try {
     const hubCoordinator = await currentHubCoordinator();
-    const hubCoordinatorUser = await getCurrentUser();
-    if (!hubCoordinator) {
+    if (!hubCoordinator || !hubCoordinator.session?.user.id) {
       throw new Error("Hub Coordinator not found");
     }
 
+    const userId = hubCoordinator.session.user.id;
+
     const fellows = await db.fellow.findMany({
       where: {
-        hubId: hubCoordinator?.assignedHubId,
+        hubId: hubCoordinator.profile?.assignedHubId,
       },
       include: {
         weeklyFellowRatings: true,
@@ -45,7 +46,7 @@ export async function loadHubWeeklyFellowEvaluation(): Promise<WeeklyFellowEvalu
           dressingGroomingNotes: rating.dressingAndGroomingNotes,
           attendancePunctuality: rating.punctualityRating ?? 0,
           attendancePunctualityNotes: rating.punctualityNotes,
-          userId: hubCoordinatorUser?.user.id ?? "",
+          userId,
         })),
       };
     });

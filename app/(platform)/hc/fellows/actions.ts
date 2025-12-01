@@ -1,6 +1,6 @@
 "use server";
 
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import { db } from "#/lib/db";
 
 async function checkAuth() {
@@ -110,9 +110,9 @@ export async function addUploadedFellowDocs(data: {
   fellowId: string;
   type: string;
 }) {
-  const user = await getCurrentUser();
-
-  if (!user) {
+  const user = await currentHubCoordinator();
+  const userId = user?.session?.user.id;
+  if (!user || !userId) {
     throw new Error("The session has not been authenticated");
   }
 
@@ -122,7 +122,7 @@ export async function addUploadedFellowDocs(data: {
         fileName: data.fileName,
         link: data.link,
         fellowId: data.fellowId,
-        uploadedBy: user.user.id,
+        uploadedBy: userId,
         type: data.type,
       },
     });

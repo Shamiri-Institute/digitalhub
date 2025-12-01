@@ -16,7 +16,7 @@ import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
 import { Checkbox } from "#/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -139,13 +139,13 @@ export default function StudentAttendance({
     <Dialog open={isOpen} onOpenChange={setIsOpen} modal={true}>
       <DialogContent className="lg:w-3/4 lg:max-w-none">
         <DialogHeader>
-          <span className="text-xl font-bold">
+          <DialogTitle className="text-xl font-bold">
             {role === "HUB_COORDINATOR"
               ? "View student attendance"
               : role === "SUPERVISOR" || role === "FELLOW"
                 ? "Mark student attendance"
                 : null}
-          </span>
+          </DialogTitle>
         </DialogHeader>
         {session && (
           <SessionDetail state={{ session }} layout={"compact"} withDropdown={false} role={role} />

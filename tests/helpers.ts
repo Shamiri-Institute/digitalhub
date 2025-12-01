@@ -29,25 +29,44 @@ export const PersonnelFixtures = {
 export async function generateSessionToken(email: string) {
   const user = await db.user.findUniqueOrThrow({
     where: { email },
-    include: { memberships: true },
+    include: {
+      memberships: {
+        include: {
+          implementer: {
+            select: {
+              id: true,
+              implementerName: true,
+            },
+          },
+        },
+      },
+    },
   });
+
+  const processedMemberships = user.memberships.map((m) => ({
+    id: m.id,
+    implementerId: m.implementerId,
+    implementerName: m.implementer.implementerName,
+    role: m.role,
+    identifier: m.identifier,
+    updatedAt: m.updatedAt ?? undefined,
+  }));
 
   const jwtPayload: JWT = {
     name: user.name,
     email: user.email,
     picture: null,
     sub: user.id,
-    activeMembership: user.memberships[0],
-    memberships: user.memberships.map((m) => ({
-      id: m.id,
-      implementerId: m.implementerId,
-      role: m.role,
-      identifier: m.identifier,
-    })),
+    activeMembership: processedMemberships[0],
+    memberships: processedMemberships,
   };
 
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    throw new Error("NEXTAUTH_SECRET is not set");
+  }
   return await encode({
     token: jwtPayload,
-    secret: process.env.NEXTAUTH_SECRET!,
+    secret,
   });
 }

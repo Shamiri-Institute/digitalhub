@@ -5,7 +5,7 @@ import { stringValidation } from "#/lib/utils";
 export const StudentDetailsSchema = z
   .object({
     id: z.string().optional(),
-    mode: z.enum(["add", "edit"]),
+    mode: z.enum(["add", "edit", "view"]),
     studentName: z.string({
       required_error: "Please enter the student's name",
     }),

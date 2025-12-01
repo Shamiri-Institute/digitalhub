@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { currentHubCoordinator } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
@@ -64,5 +65,10 @@ export default async function StudentsPage(props: { params: Promise<{ visibleId:
     },
   });
 
-  return <StudentsDatatable students={students} role={hc?.user.membership.role!} />;
+  return (
+    <StudentsDatatable
+      students={students}
+      role={hc?.session?.user.activeMembership?.role ?? ImplementerRole.HUB_COORDINATOR}
+    />
+  );
 }

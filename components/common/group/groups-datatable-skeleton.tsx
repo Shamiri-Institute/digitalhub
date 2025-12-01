@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import { ImplementerRole, type Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { columns, type SchoolGroupDataTableData } from "#/components/common/group/columns";
 import CreateGroup from "#/components/common/group/create-group";
@@ -35,7 +35,7 @@ export default function GroupsDatatableSkeleton({
     });
 
   const renderTableActions = () => {
-    return role !== "FELLOW" ? (
+    return role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.SUPERVISOR ? (
       <CreateGroup
         supervisors={[]}
         school={
@@ -60,6 +60,7 @@ export default function GroupsDatatableSkeleton({
       className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
       renderTableActions={renderTableActions()}
+      columnVisibilityState={{ "Active Status": false }}
     />
   );
 }

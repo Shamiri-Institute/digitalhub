@@ -3,7 +3,13 @@ import { type Dispatch, type SetStateAction, useState } from "react";
 import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { undropSupervisor } from "#/app/(platform)/hc/supervisors/actions";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { toast } from "#/components/ui/use-toast";
 
 export default function UndropSupervisor({
@@ -44,7 +50,7 @@ export default function UndropSupervisor({
     <Dialog open={undropDialog} onOpenChange={setUndropDialog}>
       <DialogContent className="p-5 text-base font-medium leading-6">
         <DialogHeader>
-          <h2 className="text-lg font-bold">Undo drop out supervisor?</h2>
+          <DialogTitle className="text-lg font-bold">Undo drop out supervisor?</DialogTitle>
         </DialogHeader>
         {children}
         <div className="space-y-5">

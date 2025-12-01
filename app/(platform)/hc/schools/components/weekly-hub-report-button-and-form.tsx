@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
 import {
@@ -35,7 +36,7 @@ import { Separator } from "#/components/ui/separator";
 import { Textarea } from "#/components/ui/textarea";
 import { toast } from "#/components/ui/use-toast";
 import { cn } from "#/lib/utils";
-import AddCircleOutlined from "../../../../../public/icons/add-circle-outline.svg";
+import AddCircleOutlined from "#/public/icons/add-circle-outline.svg";
 import { WeeklyHubReportSchema } from "../../schemas";
 import { submitWeeklyHubReport } from "../actions";
 
@@ -131,8 +132,10 @@ export default function WeeklyHubReportButtonAndForm({
         className="max-h-[90vh] overflow-y-auto"
         data-testid="weekly-hub-report-dialog"
       >
-        <DialogHeader className="text-xl font-semibold leading-7">
-          Submit weekly hub report
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold leading-7">
+            Submit weekly hub report
+          </DialogTitle>
         </DialogHeader>
         <Separator />
         <Form {...form}>
@@ -328,7 +331,7 @@ function RatingStarsInput({
       <div className="rating-stars flex flex-row-reverse gap-1 py-2">
         {Array.from(Array(5).keys()).map((index) => {
           return (
-            <span
+            <button
               key={index.toString()}
               className={cn(
                 "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-shamiri-light-orange active:scale-[1.25] peer-hover:text-shamiri-light-orange",
@@ -339,9 +342,10 @@ function RatingStarsInput({
               onClick={() => {
                 onChange(5 - index);
               }}
+              type="button"
             >
               <Icons.starRating className="h-full w-full" />
-            </span>
+            </button>
           );
         })}
       </div>

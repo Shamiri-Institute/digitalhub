@@ -58,7 +58,7 @@ export default function HubStudentDemographicsCharts({
                 </Label>
                 {formatedStudentsGroupedByForm.map((val, index) => (
                   <Cell
-                    key={index}
+                    key={val.form}
                     fill={studentsGroupByColors[index % studentsGroupByColors.length]}
                   />
                 ))}
@@ -83,7 +83,7 @@ export default function HubStudentDemographicsCharts({
                 fill="#8884d8"
               >
                 {formatedStudentsGroupedByAge.map((val, index) => (
-                  <Cell key={index} fill={randomColors[index]} />
+                  <Cell key={val.age} fill={randomColors[index]} />
                 ))}
               </Pie>
               <Tooltip
@@ -117,7 +117,7 @@ export default function HubStudentDemographicsCharts({
                 </Label>
                 {formatedStudentsGroupedByAge.map((val, index) => (
                   <Cell
-                    key={index}
+                    key={val.age}
                     fill={studentsGroupByColors[index % studentsGroupByColors.length]}
                   />
                 ))}

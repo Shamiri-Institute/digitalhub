@@ -114,7 +114,7 @@ export function DayView({
       <table className="schedule-table rounded-b-[0.4375rem]">
         <tbody>
           {hours.map((hour, rowIdx) => (
-            <tr key={rowIdx}>
+            <tr key={hour}>
               <td
                 className={cn(
                   "time-cell truncate",

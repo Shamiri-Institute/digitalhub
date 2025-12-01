@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { currentSupervisor } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
@@ -59,5 +60,10 @@ export default async function StudentsPage(props: { params: Promise<{ visibleId:
     },
   });
 
-  return <StudentsDatatable students={students} role={supervisor?.user.membership.role!} />;
+  return (
+    <StudentsDatatable
+      students={students}
+      role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
+    />
+  );
 }

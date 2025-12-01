@@ -50,37 +50,6 @@ export const columns = (state: {
   supervisorId?: string;
 }): ColumnDef<SessionData>[] => [
   {
-    id: "checkbox",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
-        aria-label="Select all"
-        className={
-          "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-        }
-      />
-    ),
-    cell: ({ row }) => {
-      return (
-        <div className="flex items-center justify-center">
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(val) => row.toggleSelected(!!val)}
-            aria-label="Select row"
-            className={
-              "h-5 w-5 border-shamiri-light-grey bg-white data-[state=checked]:bg-shamiri-new-blue"
-            }
-          />
-        </div>
-      );
-    },
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
     header: "Date of attendance",
     id: "Date of attendance",
     cell: ({ row }) => {

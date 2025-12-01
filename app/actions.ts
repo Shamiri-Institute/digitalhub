@@ -10,7 +10,7 @@ import type {
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { getCurrentUser } from "#/app/auth";
+import { getCurrentUserSession } from "#/app/auth";
 import { InviteUserCommand } from "#/commands/invite-user";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { objectId } from "#/lib/crypto";
@@ -145,8 +145,8 @@ export async function markStudentAttendance({
         },
       });
     } else {
-      const user = await getCurrentUser();
-      if (user !== null) {
+      const session = await getCurrentUserSession();
+      if (session !== null) {
         attendance = await db.studentAttendance.create({
           data: {
             projectId: CURRENT_PROJECT_ID,
@@ -154,7 +154,7 @@ export async function markStudentAttendance({
             schoolId: school.id,
             sessionId: interventionSession.id,
             attended: attendanceBoolean,
-            markedBy: user.user.id,
+            markedBy: session.user.id,
             groupId: groupId,
             fellowId,
           },
@@ -494,15 +494,20 @@ export async function selectPersonnel({
   role: ImplementerRole;
 }) {
   console.log("updating personnel role", { identifier, role });
-  const user = await getCurrentUser();
-  if (!user) {
+  const session = await getCurrentUserSession();
+  if (!session) {
     return null;
   }
-  const { membership } = user;
-  await db.implementerMember.update({
-    where: { id: membership.id },
+  const { activeMembership } = session.user;
+  if (!activeMembership) {
+    return null;
+  }
+  const data = await db.implementerMember.update({
+    where: { id: activeMembership.id, implementerId: activeMembership.implementerId },
     data: { identifier, role },
   });
+  console.log("updated personnel role", data);
+  return { success: true };
 }
 
 export async function updateLoggedInSupervisorDetails(

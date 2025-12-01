@@ -13,7 +13,13 @@ import { submitMonthlySupervisorEvaluation } from "#/app/(platform)/hc/superviso
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -51,6 +57,7 @@ export default function MonthlySupervisorEvaluation({
   setIsOpen,
   project,
   evaluations,
+  mode = "edit",
 }: {
   supervisorId?: string;
   children: React.ReactNode;
@@ -58,15 +65,38 @@ export default function MonthlySupervisorEvaluation({
   setIsOpen: Dispatch<SetStateAction<boolean>>;
   project: Prisma.ProjectGetPayload<{}> | null;
   evaluations: Prisma.MonthlySupervisorEvaluationGetPayload<{}>[];
+  mode?: "view" | "edit";
 }) {
   const [existingEvaluation, setExistingEvaluation] = useState<
     Prisma.MonthlySupervisorEvaluationGetPayload<{}> | undefined
   >();
   const [updateWindowDuration, setUpdateWindowDuration] = useState<number>(0);
   const pathname = usePathname();
+  const isViewMode = mode === "view";
 
   const form = useForm<z.infer<typeof MonthlySupervisorEvaluationSchema>>({
     resolver: zodResolver(MonthlySupervisorEvaluationSchema),
+    defaultValues: {
+      supervisorId: supervisorId ?? "",
+      respectfulness: undefined,
+      attitude: undefined,
+      collaboration: undefined,
+      reliability: undefined,
+      identificationOfIssues: undefined,
+      leadership: undefined,
+      communicationStyle: undefined,
+      conflictResolution: undefined,
+      adaptability: undefined,
+      recognitionAndFeedback: undefined,
+      decisionMaking: undefined,
+      fellowRecruitmentEffectiveness: undefined,
+      fellowTrainingEffectiveness: undefined,
+      programLogisticsCoordination: undefined,
+      programSessionAttendance: undefined,
+      workplaceDemeanorComments: undefined,
+      managementStyleComments: undefined,
+      programExecutionComments: undefined,
+    },
   });
 
   const formInputs: FormInput[] = [
@@ -229,8 +259,14 @@ export default function MonthlySupervisorEvaluation({
     if (!isOpen) {
       setExistingEvaluation(undefined);
       form.reset(defaultValues);
+    } else if (isOpen && isViewMode && evaluations.length > 0) {
+      // Auto-select first evaluation month in view mode
+      const firstEvaluation = evaluations[0];
+      if (firstEvaluation) {
+        updateFormValues(format(firstEvaluation.month, "yyyy-MM-dd"));
+      }
     }
-  }, [supervisorId, isOpen]);
+  }, [supervisorId, isOpen, isViewMode, evaluations]);
 
   useEffect(() => {
     if (existingEvaluation) {
@@ -301,7 +337,9 @@ export default function MonthlySupervisorEvaluation({
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="w-2/5 max-w-none p-5 text-base font-medium leading-6">
           <DialogHeader>
-            <h2 className="text-lg font-bold">Monthly supervisor evaluation</h2>
+            <DialogTitle className="text-lg font-bold">
+              {isViewMode ? "View supervisor evaluations" : "Monthly supervisor evaluation"}
+            </DialogTitle>
           </DialogHeader>
           {children}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -311,9 +349,10 @@ export default function MonthlySupervisorEvaluation({
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <FormLabel>
-                    Select month <span className="text-shamiri-light-red">*</span>
+                    Select month {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                   </FormLabel>
                   <Select
+                    value={field.value ? format(field.value, "yyyy-MM-dd") : undefined}
                     onValueChange={(value) => {
                       field.onChange(new Date(value));
                       updateFormValues(value);
@@ -354,7 +393,12 @@ export default function MonthlySupervisorEvaluation({
               name="supervisorId"
               render={({ field }) => (
                 <FormItem>
-                  <Input id="supervisorId" name="supervisorId" type="hidden" value={field.value} />
+                  <Input
+                    id="supervisorId"
+                    name="supervisorId"
+                    type="hidden"
+                    value={field.value ?? ""}
+                  />
                   <FormMessage />
                 </FormItem>
               )}
@@ -366,7 +410,7 @@ export default function MonthlySupervisorEvaluation({
                   <div key={input.section} className="flex flex-col space-y-2 py-4">
                     <div>
                       <span className="text-bold text-lg">{input.section}</span>{" "}
-                      <span className="text-shamiri-light-red">*</span>
+                      {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                     </div>
                     <div className="flex flex-col space-y-3 text-sm">
                       {input.fields.map((inputField) => (
@@ -378,7 +422,7 @@ export default function MonthlySupervisorEvaluation({
                             <FormItem className="flex flex-col space-y-2">
                               <FormLabel>
                                 <span>{inputField.label}</span>{" "}
-                                <span className="text-shamiri-light-red">*</span>
+                                {!isViewMode && <span className="text-shamiri-light-red">*</span>}
                               </FormLabel>
                               <span className="text-shamiri-text-grey">
                                 {inputField.description}
@@ -386,7 +430,9 @@ export default function MonthlySupervisorEvaluation({
                               <RatingStarsInput
                                 value={field.value}
                                 onChange={field.onChange}
-                                disabled={existingEvaluation && updateWindowDuration === 0}
+                                disabled={
+                                  isViewMode || (existingEvaluation && updateWindowDuration === 0)
+                                }
                               />
                             </FormItem>
                           )}
@@ -395,17 +441,23 @@ export default function MonthlySupervisorEvaluation({
                       <FormField
                         control={form.control}
                         name={input.commentsInputName as keyof typeof form.formState.defaultValues}
-                        disabled={existingEvaluation && updateWindowDuration <= 0}
+                        disabled={isViewMode || (existingEvaluation && updateWindowDuration <= 0)}
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
                               <Textarea
                                 className="resize-none"
                                 {...field}
+                                disabled={
+                                  isViewMode || (existingEvaluation && updateWindowDuration <= 0)
+                                }
+                                readOnly={isViewMode}
                                 placeholder={
-                                  existingEvaluation && updateWindowDuration <= 0
+                                  isViewMode
                                     ? ""
-                                    : "Type additional comments"
+                                    : existingEvaluation && updateWindowDuration <= 0
+                                      ? ""
+                                      : "Type additional comments"
                                 }
                               />
                             </FormControl>
@@ -418,31 +470,48 @@ export default function MonthlySupervisorEvaluation({
                 );
               })}
             </div>
-            {(existingEvaluation === undefined ||
-              (existingEvaluation && updateWindowDuration >= 0)) && (
+            {!isViewMode &&
+              (existingEvaluation === undefined ||
+                (existingEvaluation && updateWindowDuration >= 0)) && (
+                <div className="space-y-5">
+                  <Separator />
+                  <DialogFooter className="flex justify-end">
+                    <Button
+                      className=""
+                      variant="ghost"
+                      type="button"
+                      onClick={() => {
+                        setIsOpen(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="brand"
+                      type="submit"
+                      disabled={
+                        form.formState.isSubmitting ||
+                        (existingEvaluation && updateWindowDuration < 0)
+                      }
+                      loading={form.formState.isSubmitting}
+                    >
+                      {existingEvaluation ? "Update & save" : "Submit"}
+                    </Button>
+                  </DialogFooter>
+                </div>
+              )}
+            {isViewMode && (
               <div className="space-y-5">
                 <Separator />
                 <DialogFooter className="flex justify-end">
                   <Button
-                    className=""
-                    variant="ghost"
+                    variant="brand"
                     type="button"
                     onClick={() => {
                       setIsOpen(false);
                     }}
                   >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="brand"
-                    type="submit"
-                    disabled={
-                      form.formState.isSubmitting ||
-                      (existingEvaluation && updateWindowDuration < 0)
-                    }
-                    loading={form.formState.isSubmitting}
-                  >
-                    {existingEvaluation ? "Update & save" : "Submit"}
+                    Close
                   </Button>
                 </DialogFooter>
               </div>
@@ -472,9 +541,22 @@ function RatingStarsInput({
     >
       <div className="rating-stars flex flex-row-reverse gap-1 py-2">
         {Array.from(Array(5).keys()).map((index) => {
-          return (
+          return disabled ? (
             <span
               key={index.toString()}
+              className={cn(
+                "peer relative h-5 w-5 shrink transition ease-in",
+                value && value >= 5 - index
+                  ? "text-shamiri-light-orange"
+                  : "text-shamiri-light-grey",
+              )}
+            >
+              <Icons.starRating className="h-full w-full" />
+            </span>
+          ) : (
+            <button
+              key={index.toString()}
+              type="button"
               className={cn(
                 "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-shamiri-light-orange active:scale-[1.25] peer-hover:text-shamiri-light-orange",
                 value && value >= 5 - index
@@ -486,7 +568,7 @@ function RatingStarsInput({
               }}
             >
               <Icons.starRating className="h-full w-full" />
-            </span>
+            </button>
           );
         })}
       </div>

@@ -11,11 +11,11 @@ export async function loadSchoolFeedback() {
       throw new Error("The session has not been authenticated");
     }
 
-    const { hub } = supervisor;
+    const { profile } = supervisor;
 
     const schools = await db.school.findMany({
       where: {
-        hubId: hub?.id,
+        hubId: profile?.hubId,
       },
       include: {
         schoolFeedbacks: {

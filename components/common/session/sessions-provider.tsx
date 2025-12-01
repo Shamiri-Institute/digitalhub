@@ -1,5 +1,5 @@
 import { type CalendarDate, isSameDay } from "@internationalized/date";
-import type { Prisma } from "@prisma/client";
+import { ImplementerRole, type Prisma } from "@prisma/client";
 import {
   createContext,
   type Dispatch,
@@ -56,26 +56,35 @@ export type Session = Prisma.InterventionSessionGetPayload<{
 export function SessionsProvider({
   children,
   hubId,
+  implementerId,
   filters,
+  role,
 }: PropsWithChildren<{
-  hubId: string;
+  hubId?: string;
+  implementerId?: string;
   filters: Filters;
+  role: ImplementerRole;
 }>) {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchSessions = async () => {
-    const fetchedSessions = await fetchInterventionSessions({
-      hubId,
-      filters,
-    });
-    setSessions(fetchedSessions);
-    setLoading(false);
+    if ((role === ImplementerRole.ADMIN && implementerId) || role !== ImplementerRole.ADMIN) {
+      setLoading(true);
+      const fetchedSessions = await fetchInterventionSessions({
+        hubId,
+        implementerId,
+        role,
+        filters,
+      });
+      setSessions(fetchedSessions);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchSessions();
-  }, [hubId, filters]);
+  }, [hubId, filters, implementerId, role]);
 
   const refresh = () => {
     return fetchSessions();
