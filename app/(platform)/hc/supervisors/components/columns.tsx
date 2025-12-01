@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { ImplementerRole, Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parsePhoneNumber } from "libphonenumber-js";
 import DataTableRatingStars from "#/app/(platform)/hc/components/datatable-rating-stars";
@@ -27,7 +27,23 @@ export type SupervisorsData = Prisma.SupervisorGetPayload<{
   };
 }>;
 
-export const columns: ColumnDef<SupervisorsData>[] = [
+export const columns = ({
+  onSupervisorSelect,
+  onEditDialogOpen,
+  onEvaluationDialogOpen,
+  onComplaintDialogOpen,
+  onDropoutDialogOpen,
+  onUndropDialogOpen,
+  role,
+}: {
+  onSupervisorSelect: (supervisor: SupervisorsData) => void;
+  onEditDialogOpen: () => void;
+  onEvaluationDialogOpen: () => void;
+  onComplaintDialogOpen: () => void;
+  onDropoutDialogOpen: () => void;
+  onUndropDialogOpen: () => void;
+  role: ImplementerRole;
+}): ColumnDef<SupervisorsData>[] => [
   {
     id: "checkbox",
     header: ({ table }) => (
@@ -190,7 +206,18 @@ export const columns: ColumnDef<SupervisorsData>[] = [
   },
   {
     id: "button",
-    cell: ({ row }) => <AllSupervisorsDataTableMenu supervisor={row.original} />,
+    cell: ({ row }) => (
+      <AllSupervisorsDataTableMenu
+        supervisor={row.original}
+        onSupervisorSelect={onSupervisorSelect}
+        onEditDialogOpen={onEditDialogOpen}
+        onEvaluationDialogOpen={onEvaluationDialogOpen}
+        onComplaintDialogOpen={onComplaintDialogOpen}
+        onDropoutDialogOpen={onDropoutDialogOpen}
+        onUndropDialogOpen={onUndropDialogOpen}
+        role={role}
+      />
+    ),
     enableHiding: false,
   },
 ];

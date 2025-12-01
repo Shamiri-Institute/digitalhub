@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { utcToZonedTime, zonedTimeToUtc } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
 import type { z } from "zod";
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 import { getSchoolInitials } from "#/lib/utils";
@@ -190,11 +190,17 @@ export async function fetchDropoutReasons(hubId: string, schoolId?: string) {
 export async function dropoutSchool(schoolId: string, dropoutReason: string) {
   try {
     const hubCoordinator = await currentHubCoordinator();
-    const user = await getCurrentUser();
 
-    if (!hubCoordinator || !user) {
+    if (
+      !hubCoordinator ||
+      !hubCoordinator.profile ||
+      !hubCoordinator.session ||
+      !hubCoordinator.session.user.id
+    ) {
       throw new Error("The session has not been authenticated");
     }
+
+    const userId = hubCoordinator.session.user.id as string;
 
     const data = DropoutSchoolSchema.parse({ schoolId, dropoutReason });
     const result = await db.school.update({
@@ -207,7 +213,7 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
             {
               dropoutReason: data.dropoutReason,
               droppedOut: true,
-              userId: user.user.id,
+              userId,
             },
           ],
         },
@@ -239,9 +245,8 @@ export async function dropoutSchool(schoolId: string, dropoutReason: string) {
 export async function undoDropoutSchool(schoolId: string) {
   try {
     const hubCoordinator = await currentHubCoordinator();
-    const user = await getCurrentUser();
 
-    if (!hubCoordinator || !user) {
+    if (!hubCoordinator) {
       throw new Error("The session has not been authenticated");
     }
 
@@ -255,7 +260,7 @@ export async function undoDropoutSchool(schoolId: string) {
             {
               dropoutReason: null,
               droppedOut: false,
-              userId: user.user.id,
+              userId: hubCoordinator.session.user.id as string,
             },
           ],
         },
@@ -517,11 +522,11 @@ export async function assignSchoolPointSupervisor(
 export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<AddSchoolResponse> {
   try {
     const hubCoordinator = await currentHubCoordinator();
-    if (!hubCoordinator?.assignedHubId) {
+    if (!hubCoordinator) {
       throw new Error("User not authorized to perform this function");
     }
 
-    const hubId = hubCoordinator.assignedHubId;
+    const hubId = hubCoordinator.profile?.assignedHubId;
     const parsedData = AddSchoolSchema.parse(data);
 
     // Get available fellows for the pre-session date
@@ -639,7 +644,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
           groupName: `${schoolNamePrefix} ${i + 1}`,
           schoolId: school.id,
           leaderId: leader.id,
-          projectId: hubCoordinator.assignedHub?.projectId ?? "",
+          projectId: hubCoordinator.profile?.assignedHub?.projectId ?? "",
         });
       }
 
@@ -652,7 +657,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
       // Create intervention sessions
       const sessionNames = await tx.sessionName.findMany({
         where: {
-          hubId,
+          hubId: hubCoordinator.profile?.assignedHubId ?? undefined,
           sessionType: sessionTypes.INTERVENTION,
         },
       });
@@ -672,7 +677,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
           schoolId: school.id,
           occurred: false,
           yearOfImplementation: new Date().getFullYear(),
-          projectId: hubCoordinator.assignedHub?.projectId || undefined,
+          projectId: hubCoordinator.profile?.assignedHub?.projectId || undefined,
           hubId,
         });
 

@@ -1,17 +1,15 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
-import type { Row } from "@tanstack/react-table";
+import { ImplementerRole, type Prisma } from "@prisma/client";
 import parsePhoneNumberFromString from "libphonenumber-js";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import AddNewSupervisor from "#/app/(platform)/hc/supervisors/components/add-new-supervisor";
 import { columns, type SupervisorsData } from "#/app/(platform)/hc/supervisors/components/columns";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
-import { default as EditSupervisorDetails } from "#/app/(platform)/hc/supervisors/components/edit-supervisor-details-form";
 import MonthlySupervisorEvaluation from "#/app/(platform)/hc/supervisors/components/monthly-supervisor-evaluation";
 import SubmitComplaint from "#/app/(platform)/hc/supervisors/components/submit-complaint";
+import SupervisorDetailsForm from "#/app/(platform)/hc/supervisors/components/supervisor-details-form";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
-import { SupervisorContext } from "#/app/(platform)/hc/supervisors/context/supervisor-context";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
@@ -26,9 +24,7 @@ import {
 
 export default function MainSupervisorsDataTable({
   supervisors,
-  hubId,
-  implementerId,
-  projectId,
+  role,
 }: {
   supervisors: Prisma.SupervisorGetPayload<{
     include: {
@@ -42,22 +38,24 @@ export default function MainSupervisorsDataTable({
       monthlySupervisorEvaluation: true;
     };
   }>[];
-  hubId: string;
-  implementerId: string;
-  projectId: string;
+  role: ImplementerRole;
 }) {
-  const [selectedRows, setSelectedRows] = useState<SupervisorsData[]>([]);
-  const context = useContext(SupervisorContext);
+  const [supervisor, setSupervisor] = useState<SupervisorsData | null>(null);
+  const [dropoutDialog, setDropoutDialog] = useState<boolean>(false);
+  const [undropDialog, setUndropDialog] = useState<boolean>(false);
+  const [complaintDialog, setComplaintDialog] = useState<boolean>(false);
+  const [evaluationDialog, setEvaluationDialog] = useState<boolean>(false);
+  const [editDialog, setEditDialog] = useState<boolean>(false);
 
   const renderDialogAlert = () => {
     return (
       <DialogAlertWidget>
         <div className="flex items-center gap-2">
-          <span>{context.supervisor?.supervisorName}</span>
+          <span>{supervisor?.supervisorName}</span>
           <span className="h-1 w-1 rounded-full bg-shamiri-new-blue">{""}</span>
           <span>
-            {context.supervisor?.cellNumber &&
-              parsePhoneNumberFromString(context.supervisor?.cellNumber, "KE")?.formatNational()}
+            {supervisor?.cellNumber &&
+              parsePhoneNumberFromString(supervisor?.cellNumber, "KE")?.formatNational()}
           </span>
         </div>
       </DialogAlertWidget>
@@ -65,81 +63,99 @@ export default function MainSupervisorsDataTable({
   };
 
   const renderTableActions = () => {
-    return (
+    return role === ImplementerRole.HUB_COORDINATOR ? (
       <div className="flex items-center gap-3">
         <AddNewSupervisor />
       </div>
-    );
+    ) : null;
   };
 
   return (
     <div>
       <DataTable
         data={supervisors}
-        columns={columns}
+        columns={columns({
+          onSupervisorSelect: setSupervisor,
+          onEditDialogOpen: () => setEditDialog(true),
+          onEvaluationDialogOpen: () => setEvaluationDialog(true),
+          onComplaintDialogOpen: () => setComplaintDialog(true),
+          onDropoutDialogOpen: () => setDropoutDialog(true),
+          onUndropDialogOpen: () => setUndropDialog(true),
+          role,
+        })}
         className={"data-table data-table-action bg-white lg:mt-4"}
         emptyStateMessage="No supervisors found for this hub"
         columnVisibilityState={{
-          // checkbox: !schoolContext.school?.droppedOut ?? null,
-          // button: !schoolContext.school?.droppedOut ?? null,
+          checkbox: false,
           Gender: false,
           Status: false,
           county: false,
           subCounty: false,
         }}
         renderTableActions={renderTableActions()}
-        enableRowSelection={(row: Row<SupervisorsData>) =>
-          row.original.droppedOut === null || !row.original.droppedOut
-        }
-        rowSelectionDescription={"supervisors"}
-        onRowSelectionChange={setSelectedRows as () => {}}
       />
-      <EditSupervisorDetails />
+      <SupervisorDetailsForm
+        supervisor={supervisor}
+        open={editDialog}
+        onOpenChange={setEditDialog}
+        mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
+      />
       <DropoutSupervisor
-        supervisorId={context.supervisor !== null ? context.supervisor.id : undefined}
-        setDropoutDialog={context.setDropoutDialog}
-        dropoutDialog={context.dropoutDialog}
+        supervisorId={supervisor !== null ? supervisor.id : undefined}
+        setDropoutDialog={setDropoutDialog}
+        dropoutDialog={dropoutDialog}
       >
         {renderDialogAlert()}
       </DropoutSupervisor>
       <UndropSupervisor
-        supervisorId={context.supervisor !== null ? context.supervisor.id : undefined}
-        setUndropDialog={context.setUndropDialog}
-        undropDialog={context.undropDialog}
+        supervisorId={supervisor !== null ? supervisor.id : undefined}
+        setUndropDialog={setUndropDialog}
+        undropDialog={undropDialog}
       >
         {renderDialogAlert()}
       </UndropSupervisor>
       <SubmitComplaint
-        supervisorId={context.supervisor !== null ? context.supervisor.id : undefined}
-        setIsOpen={context.setComplaintDialog}
-        isOpen={context.complaintDialog}
+        supervisorId={supervisor !== null ? supervisor.id : undefined}
+        setIsOpen={setComplaintDialog}
+        isOpen={complaintDialog}
       >
         {renderDialogAlert()}
       </SubmitComplaint>
       <MonthlySupervisorEvaluation
-        supervisorId={context.supervisor !== null ? context.supervisor.id : undefined}
-        setIsOpen={context.setEvaluationDialog}
-        isOpen={context.evaluationDialog}
-        project={context.supervisor?.hub?.project ?? null}
-        evaluations={context.supervisor?.monthlySupervisorEvaluation ?? []}
+        supervisorId={supervisor !== null ? supervisor.id : undefined}
+        setIsOpen={setEvaluationDialog}
+        isOpen={evaluationDialog}
+        project={supervisor?.hub?.project ?? null}
+        evaluations={supervisor?.monthlySupervisorEvaluation ?? []}
+        mode={role === ImplementerRole.ADMIN ? "view" : "edit"}
       >
         {renderDialogAlert()}
       </MonthlySupervisorEvaluation>
-      <EditSupervisorDetails />
     </div>
   );
 }
 
-export function AllSupervisorsDataTableMenu({ supervisor }: { supervisor: SupervisorsData }) {
-  const context = useContext(SupervisorContext);
+export function AllSupervisorsDataTableMenu({
+  supervisor,
+  onSupervisorSelect,
+  onEditDialogOpen,
+  onEvaluationDialogOpen,
+  onComplaintDialogOpen,
+  onDropoutDialogOpen,
+  onUndropDialogOpen,
+  role,
+}: {
+  supervisor: SupervisorsData;
+  onSupervisorSelect: (supervisor: SupervisorsData) => void;
+  onEditDialogOpen: () => void;
+  onEvaluationDialogOpen: () => void;
+  onComplaintDialogOpen: () => void;
+  onDropoutDialogOpen: () => void;
+  onUndropDialogOpen: () => void;
+  role: ImplementerRole;
+}) {
   return (
-    <DropdownMenu
-      onOpenChange={(value) => {
-        if (value) {
-          context.setSupervisor(supervisor);
-        }
-      }}
-    >
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <div className="absolute inset-0 border-l bg-white">
           <div className="flex h-full w-full items-center justify-center">
@@ -152,47 +168,79 @@ export function AllSupervisorsDataTableMenu({ supervisor }: { supervisor: Superv
           <span className="text-xs font-medium uppercase text-shamiri-text-grey">Actions</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-          onClick={() => {
-            context.setEditDialog(true);
-          }}
-        >
-          Edit supervisor information
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-          onClick={() => {
-            context.setEvaluationDialog(true);
-          }}
-        >
-          Monthly supervisor evaluation
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
-          onClick={() => {
-            context.setComplaintDialog(true);
-          }}
-        >
-          Submit complaint
-        </DropdownMenuItem>
-        <DropdownMenuItem>Overall supervisor evaluation</DropdownMenuItem>
-        {supervisor.droppedOut === null || !supervisor.droppedOut ? (
-          <DropdownMenuItem
-            onClick={() => {
-              context.setDropoutDialog(true);
-            }}
-          >
-            <div className="text-shamiri-red">Drop out supervisor</div>
-          </DropdownMenuItem>
+        {role === ImplementerRole.ADMIN ? (
+          <>
+            <DropdownMenuItem
+              disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+              onClick={() => {
+                onSupervisorSelect(supervisor);
+                onEditDialogOpen();
+              }}
+            >
+              View supervisor information
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+              onClick={() => {
+                onSupervisorSelect(supervisor);
+                onEvaluationDialogOpen();
+              }}
+            >
+              View supervisor evaluations
+            </DropdownMenuItem>
+            <DropdownMenuItem disabled>View complaints</DropdownMenuItem>
+          </>
         ) : (
-          <DropdownMenuItem
-            onClick={() => {
-              context.setUndropDialog(true);
-            }}
-          >
-            <div>Undo drop out</div>
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem
+              disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+              onClick={() => {
+                onSupervisorSelect(supervisor);
+                onEditDialogOpen();
+              }}
+            >
+              Edit supervisor information
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+              onClick={() => {
+                onSupervisorSelect(supervisor);
+                onEvaluationDialogOpen();
+              }}
+            >
+              Monthly supervisor evaluation
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={supervisor.droppedOut !== null && supervisor.droppedOut}
+              onClick={() => {
+                onSupervisorSelect(supervisor);
+                onComplaintDialogOpen();
+              }}
+            >
+              Submit complaint
+            </DropdownMenuItem>
+            {/* TODO: Add overall supervisor evaluation */}
+            <DropdownMenuItem disabled>Overall supervisor evaluation</DropdownMenuItem>
+            {supervisor.droppedOut === null || !supervisor.droppedOut ? (
+              <DropdownMenuItem
+                onClick={() => {
+                  onSupervisorSelect(supervisor);
+                  onDropoutDialogOpen();
+                }}
+              >
+                <div className="text-shamiri-red">Drop out supervisor</div>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                onClick={() => {
+                  onSupervisorSelect(supervisor);
+                  onUndropDialogOpen();
+                }}
+              >
+                <div>Undo drop out</div>
+              </DropdownMenuItem>
+            )}
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

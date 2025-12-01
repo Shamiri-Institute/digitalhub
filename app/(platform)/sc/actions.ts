@@ -17,7 +17,7 @@ export async function loadFellowsData() {
 
   const fellows = await db.fellow.findMany({
     where: {
-      supervisorId: supervisor.id,
+      supervisorId: supervisor.profile?.id,
     },
     include: {
       fellowAttendances: {
@@ -88,14 +88,14 @@ export async function loadFellowsData() {
       FROM
         fellows f
           LEFT JOIN weekly_fellow_ratings wfr ON f.id = wfr.fellow_id
-      WHERE f.hub_id =${supervisor.hubId}
+      WHERE f.hub_id =${supervisor.profile?.hubId}
       GROUP BY
         f.id
   `;
 
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: supervisor.hubId,
+      hubId: supervisor.profile?.hubId,
     },
     include: {
       fellows: { select: { id: true, fellowName: true } },
@@ -167,7 +167,7 @@ export async function submitWeeklyFellowRating(data: WeeklyFellowRatingSchema) {
     await db.weeklyFellowRatings.create({
       data: {
         ...parsedData,
-        supervisorId: supervisor.id,
+        supervisorId: supervisor.profile?.id,
       },
     });
 
@@ -275,7 +275,7 @@ export async function dropoutFellowWithReason(
 export async function updateSupervisorProfile(formData: z.infer<typeof SupervisorSchema>) {
   try {
     const user = await currentSupervisor();
-    if (!user?.id) {
+    if (!user?.session.user.id) {
       return { success: false, message: "Unauthorized" };
     }
 
@@ -287,7 +287,7 @@ export async function updateSupervisorProfile(formData: z.infer<typeof Superviso
     }
 
     const updated = await db.supervisor.update({
-      where: { id: user.id },
+      where: { id: user.session.user.id },
       data: {
         supervisorEmail: data.supervisorEmail,
         supervisorName: data.supervisorName,

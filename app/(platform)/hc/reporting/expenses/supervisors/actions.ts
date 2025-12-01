@@ -20,7 +20,7 @@ export async function loadHubSupervisorExpenses() {
   const supervisorsExpenses = await db.reimbursementRequest.findMany({
     where: {
       supervisor: {
-        hubId: hubCoordinator.assignedHubId,
+        hubId: hubCoordinator.profile?.assignedHubId,
       },
     },
     include: {
@@ -53,7 +53,7 @@ export async function loadHubSupervisorExpenses() {
       destination: "N/A",
       amount: expense.amount,
       status: expense.status,
-      hubCoordinatorName: hubCoordinator.coordinatorName,
+      hubCoordinatorName: hubCoordinator.profile?.coordinatorName,
       mpesaName: expense.mpesaName,
       mpesaNumber: expense.mpesaNumber,
     };
@@ -68,7 +68,7 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
       await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
-    if (name !== hubCoordinator.coordinatorName) {
+    if (name !== hubCoordinator.profile?.coordinatorName) {
       return {
         success: false,
         message: "Please enter the correct name",
@@ -96,7 +96,7 @@ export async function getSupervisorsInHub() {
   const hubCoordinator = await currentHubCoordinator();
   return await db.supervisor.findMany({
     where: {
-      hubId: hubCoordinator?.assignedHubId!,
+      hubId: hubCoordinator?.profile?.assignedHubId,
     },
   });
 }
@@ -152,12 +152,16 @@ export async function addSupervisorExpense({
       throw new Error("Unauthorised user");
     }
 
+    if (!hubCoordinator.profile?.assignedHubId) {
+      throw new Error("Hub coordinator has no assigned hub");
+    }
+
     await db.reimbursementRequest.create({
       data: {
         id: objectId("reimb"),
         supervisorId: data.supervisor,
-        hubId: hubCoordinator.assignedHubId!,
-        hubCoordinatorId: hubCoordinator.id,
+        hubId: hubCoordinator.profile?.assignedHubId,
+        hubCoordinatorId: hubCoordinator.profile?.id,
         incurredAt: new Date(data.week),
         amount: Number.parseInt(data.totalAmount),
         kind: data.expenseType,

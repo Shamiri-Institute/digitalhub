@@ -15,14 +15,12 @@ import { cn, sessionDisplayName } from "#/lib/utils";
 
 export function ListView({
   state,
-  hubId,
   role,
   dialogState,
   supervisorId,
   fellowId,
 }: {
   state: CalendarState;
-  hubId: string;
   role: ImplementerRole;
   dialogState: {
     setSession: Dispatch<SetStateAction<Session | null>>;
@@ -95,15 +93,7 @@ export function ListView({
       setSessionGroups(Object.keys(groupedSessions).sort());
     };
     fetchSessions();
-  }, [
-    filters,
-    sessions,
-    hubId,
-    state.timeZone,
-    state.visibleRange.end,
-    state.visibleRange.start,
-    today,
-  ]);
+  }, [filters, sessions, state.timeZone, state.visibleRange.end, state.visibleRange.start, today]);
 
   return (
     <div className="relative">

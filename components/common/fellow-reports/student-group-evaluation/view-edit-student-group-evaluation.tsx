@@ -101,9 +101,11 @@ export default function ViewEditStudentGroupEvaluation({
         </DialogHeader>
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <div className="mb-2">
-            <label className="text-sm font-medium">Session</label>
+            <label htmlFor="session" className="text-sm font-medium">
+              Session
+            </label>
             <Select disabled value={studentGroupEvaluation.session?.toString() ?? ""}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full" id="session">
                 <SelectValue placeholder="Session" />
               </SelectTrigger>
               <SelectContent>
@@ -115,20 +117,20 @@ export default function ViewEditStudentGroupEvaluation({
           </div>
 
           <div>
-            <label className="text-sm font-medium">
+            <label htmlFor="cooperation" className="text-sm font-medium">
               Rate cooperation (1-very bad to 5-very good){" "}
               <span className="text-shamiri-light-red">*</span>
             </label>
-            <div className="my-1">
+            <div className="my-1" id="cooperation">
               <DataTableRatingStars rating={studentGroupEvaluation.cooperation ?? 0} />
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium">
+            <label htmlFor="engagement" className="text-sm font-medium">
               Rate engagement (1-very bad to 5-very good){" "}
               <span className="text-shamiri-light-red">*</span>
             </label>
-            <div className="my-1">
+            <div className="my-1" id="engagement">
               <DataTableRatingStars rating={studentGroupEvaluation.engagement ?? 0} />
             </div>
           </div>

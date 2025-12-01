@@ -2,7 +2,7 @@
 
 import type { z } from "zod";
 import { MarkAttendanceSchema } from "#/app/(platform)/hc/schemas";
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { currentHubCoordinator, getCurrentUserSession } from "#/app/auth";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
@@ -13,13 +13,16 @@ async function checkAuth() {
     throw new Error("The session has not been authenticated");
   }
 
-  const user = await getCurrentUser();
-  return { hubCoordinator, user };
+  return hubCoordinator;
 }
 
 export async function markSupervisorAttendance(data: z.infer<typeof MarkAttendanceSchema>) {
   try {
     const auth = await checkAuth();
+    const userId = auth.session.user.id;
+    if (!userId) {
+      throw new Error("The session has not been authenticated");
+    }
 
     const { id, sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
     const supervisor = await db.supervisor.findUniqueOrThrow({
@@ -44,7 +47,7 @@ export async function markSupervisorAttendance(data: z.infer<typeof MarkAttendan
             id: attendance.id,
           },
           data: {
-            markedBy: auth.user!.user.id,
+            markedBy: userId,
             supervisorId: id,
             absenceReason: attendanceStatus === false ? absenceReason : null,
             absenceComments: attendanceStatus === false ? comments : null,
@@ -69,7 +72,7 @@ export async function markSupervisorAttendance(data: z.infer<typeof MarkAttendan
           sessionId,
           absenceReason,
           absenceComments: comments,
-          markedBy: auth.user!.user.id,
+          markedBy: userId,
           attended: attended === "attended" ? true : attended === "missed" ? false : null,
         },
       });
@@ -96,6 +99,10 @@ export async function markManySupervisorAttendance(
   data: z.infer<typeof MarkAttendanceSchema>,
 ) {
   const auth = await checkAuth();
+  const userId = auth.session.user.id;
+  if (!userId) {
+    throw new Error("The session has not been authenticated");
+  }
 
   const { sessionId, absenceReason, attended, comments } = MarkAttendanceSchema.parse(data);
 
@@ -122,7 +129,7 @@ export async function markManySupervisorAttendance(
             id: attendance.id,
           },
           data: {
-            markedBy: auth.user!.user.id,
+            markedBy: userId,
             supervisorId,
             absenceReason: attendanceStatus === false ? absenceReason : null,
             absenceComments: attendanceStatus === false ? comments : null,
@@ -138,7 +145,7 @@ export async function markManySupervisorAttendance(
             absenceReason,
             absenceComments: comments,
             sessionId,
-            markedBy: auth.user!.user.id,
+            markedBy: userId,
             attended: attended === "attended" ? true : attended === "missed" ? false : null,
           },
         });

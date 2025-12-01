@@ -19,6 +19,7 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
 import {
@@ -110,7 +111,7 @@ export default function AddNewSupervisor() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <span className="text-xl">Add new supervisor</span>
+              <DialogTitle className="text-xl">Add new supervisor</DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
               <div className="flex flex-col">

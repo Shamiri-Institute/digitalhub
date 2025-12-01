@@ -14,7 +14,7 @@ export default async function SchoolFilesPage(props: { params: Promise<{ visible
   }
 
   //TODO: Filter files for fellow only
-  const schoolFiles = db.schoolDocuments.findMany({
+  const schoolFiles = await db.schoolDocuments.findMany({
     where: {
       school: {
         visibleId,

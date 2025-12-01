@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { loadFellowsData } from "#/app/(platform)/sc/actions";
 import { currentSupervisor } from "#/app/auth";
@@ -11,7 +12,7 @@ export default async function FellowsPage() {
     await signOut({ callbackUrl: "/login" });
   }
 
-  if (!supervisor?.hubId) {
+  if (!supervisor?.profile?.hubId) {
     return <div>Supervisor has no assigned hub</div>;
   }
 
@@ -28,7 +29,7 @@ export default async function FellowsPage() {
       <FellowSchoolsDatatable
         fellows={fellows}
         project={project ?? undefined}
-        role={supervisor!.user.membership.role}
+        role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
       />
     </div>
   );

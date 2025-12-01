@@ -19,10 +19,12 @@ export default function AssignFellowSupervisorSelect({
   fellowId,
   supervisorId,
   supervisors,
+  disabled = false,
 }: {
   fellowId: string;
   supervisorId: string | null;
   supervisors: Prisma.SupervisorGetPayload<{}>[];
+  disabled?: boolean;
 }) {
   const pathname = usePathname();
   const [selectedSupervisor, setSelectedSupervisor] = useState(supervisorId);
@@ -57,30 +59,34 @@ export default function AssignFellowSupervisorSelect({
 
   return (
     <div className="flex">
-      <Select onValueChange={setSelectedSupervisor} value={selectedSupervisor ?? undefined}>
-        <SelectTrigger
-          className={cn(
-            "h-auto gap-1 px-2 py-0.5",
-            supervisorId !== null
-              ? "border-shamiri-light-blue bg-blue-bg text-shamiri-new-blue"
-              : "border-shamiri-red bg-red-bg text-shamiri-light-red",
-            loading
-              ? "pointer-events-none border-shamiri-light-grey bg-background-secondary text-shamiri-text-dark-grey focus:ring-shamiri-light-grey"
-              : "pointer-events-auto",
-          )}
-        >
-          <SelectValue placeholder="Select a supervisor" />
-        </SelectTrigger>
-        <SelectContent>
-          {supervisors.map((supervisor) => {
-            return (
-              <SelectItem key={supervisor.id} value={supervisor.id}>
-                {supervisor.supervisorName}
-              </SelectItem>
-            );
-          })}
-        </SelectContent>
-      </Select>
+      {disabled ? (
+        supervisors.find((supervisor) => supervisor.id === selectedSupervisor)?.supervisorName
+      ) : (
+        <Select onValueChange={setSelectedSupervisor} value={selectedSupervisor ?? undefined}>
+          <SelectTrigger
+            className={cn(
+              "h-auto gap-1 px-2 py-0.5",
+              supervisorId !== null
+                ? "border-shamiri-light-blue bg-blue-bg text-shamiri-new-blue"
+                : "border-shamiri-red bg-red-bg text-shamiri-light-red",
+              loading
+                ? "pointer-events-none border-shamiri-light-grey bg-background-secondary text-shamiri-text-dark-grey focus:ring-shamiri-light-grey"
+                : "pointer-events-auto",
+            )}
+          >
+            <SelectValue placeholder="Select a supervisor" />
+          </SelectTrigger>
+          <SelectContent>
+            {supervisors.map((supervisor) => {
+              return (
+                <SelectItem key={supervisor.id} value={supervisor.id}>
+                  {supervisor.supervisorName}
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   );
 }

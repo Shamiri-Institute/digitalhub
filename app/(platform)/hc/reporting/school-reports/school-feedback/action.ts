@@ -11,7 +11,7 @@ export async function loadHubSchoolFeedback() {
       throw new Error("The session has not been authenticated");
     }
 
-    const { assignedHubId } = hubCoordinator;
+    const assignedHubId = hubCoordinator.profile?.assignedHubId;
 
     const schools = await db.school.findMany({
       where: {
