@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { currentSupervisor } from "#/app/auth";
 import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
@@ -83,7 +84,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
 
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: supervisor?.hubId as string,
+      hubId: supervisor?.profile?.hubId,
     },
     include: {
       fellows: true,
@@ -108,7 +109,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
       data={data}
       school={school}
       supervisors={supervisors}
-      role={supervisor?.user.membership.role!}
+      role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
     />
   );
 }

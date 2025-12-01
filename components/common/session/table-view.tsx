@@ -5,11 +5,6 @@ import { addDays, format, isBefore, isWithinInterval } from "date-fns";
 import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
 import { useDateFormatter } from "react-aria";
 import type { CalendarState } from "react-stately";
-import {
-  SupervisorAttendanceDataTable,
-  SupervisorAttendanceDataTableMenu,
-  type SupervisorAttendanceTableData,
-} from "#/app/(platform)/hc/components/supervisor-attendance";
 import { FiltersContext } from "#/app/(platform)/hc/schedule/context/filters-context";
 import AttendanceStatusWidget from "#/components/common/attendance-status-widget";
 import {
@@ -20,6 +15,11 @@ import FellowAttendanceMenu from "#/components/common/fellow/fellow-attendance-m
 import RenderParsedPhoneNumber from "#/components/common/render-parsed-phone-number";
 import { SessionsContext } from "#/components/common/session/sessions-provider";
 import { useTitle } from "#/components/common/session/title-provider";
+import {
+  SupervisorAttendanceDataTable,
+  SupervisorAttendanceDataTableMenu,
+  type SupervisorAttendanceTableData,
+} from "#/components/common/supervisor/supervisor-attendance";
 import { Icons } from "#/components/icons";
 import { ToggleGroup, ToggleGroupItem } from "#/components/ui/toggle-group";
 import { getCalendarDate } from "#/lib/date-utils";
@@ -263,13 +263,11 @@ const renderSessionTypeAndStatus = (
 
 export function TableView({
   state,
-  hubId,
   supervisors,
   role,
   supervisorId,
 }: {
   state: CalendarState;
-  hubId: string;
   supervisors?: Prisma.SupervisorGetPayload<{
     include: {
       supervisorAttendances: {
@@ -393,7 +391,7 @@ export function TableView({
     });
     setSupervisorAttendances(attendances.filter((x) => x !== undefined).flat());
     setFellowAttendances(_fellowAttendances);
-  }, [hubId, selectedDay, roleToggle, filters, sessions, supervisors, state]);
+  }, [selectedDay, roleToggle, filters, sessions, supervisors, state]);
 
   useEffect(() => {
     setTitle(
@@ -473,6 +471,7 @@ export function TableView({
           overrideColumns={supervisorAttendanceColumns}
           data={supervisorAttendances}
           emptyStateMessage={"No sessions scheduled on this day."}
+          role={role}
         />
       )}
       {roleToggle === "fellows" && (
@@ -492,6 +491,7 @@ export function TableView({
               row.original.processedAt === null
             );
           }}
+          role={role}
         />
       )}
     </div>

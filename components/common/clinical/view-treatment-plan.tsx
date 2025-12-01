@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 
 interface TreatmentPlan {
@@ -39,9 +45,7 @@ export function ViewTreatmentPlan({ children, treatmentPlan, pseudonym }: ViewTr
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <div onClick={() => setOpen(true)} className="cursor-pointer">
-        {children}
-      </div>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Treatment Plan - {pseudonym}</DialogTitle>
@@ -83,8 +87,8 @@ export function ViewTreatmentPlan({ children, treatmentPlan, pseudonym }: ViewTr
                       <strong>Planned Treatment Interventions:</strong>
                     </p>
                     <ul className="ml-4 mt-1 list-disc text-sm">
-                      {treatmentPlan.plannedTreatmentIntervention.map((intervention, index) => (
-                        <li key={index}>{intervention}</li>
+                      {treatmentPlan.plannedTreatmentIntervention.map((intervention) => (
+                        <li key={intervention}>{intervention}</li>
                       ))}
                     </ul>
                   </div>

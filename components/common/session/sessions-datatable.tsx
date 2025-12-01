@@ -4,9 +4,6 @@ import { ImplementerRole, type Prisma } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 import { useState } from "react";
-import SupervisorAttendance, {
-  type SupervisorAttendanceTableData,
-} from "#/app/(platform)/hc/components/supervisor-attendance";
 import { MarkSessionOccurrence } from "#/app/(platform)/sc/schedule/components/mark-session-occurrence";
 import FellowAttendance from "#/components/common/fellow/fellow-attendance";
 import CancelSession from "#/components/common/session/cancel-session";
@@ -16,6 +13,9 @@ import { SessionDetail } from "#/components/common/session/session-list";
 import SessionRatings from "#/components/common/session/session-ratings";
 import type { Session } from "#/components/common/session/sessions-provider";
 import StudentAttendance from "#/components/common/student/student-attendance";
+import SupervisorAttendance, {
+  type SupervisorAttendanceTableData,
+} from "#/components/common/supervisor/supervisor-attendance";
 import DataTable from "#/components/data-table";
 
 export default function SessionsDatatable({
@@ -115,7 +115,7 @@ export default function SessionsDatatable({
               open={ratingsDialog}
               onOpenChange={setRatingsDialog}
               mode={
-                role === ImplementerRole.HUB_COORDINATOR
+                role === ImplementerRole.HUB_COORDINATOR || role === ImplementerRole.ADMIN
                   ? "view"
                   : role === ImplementerRole.SUPERVISOR
                     ? "add"

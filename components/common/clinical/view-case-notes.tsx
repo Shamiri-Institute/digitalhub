@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "#/components/ui/dialog";
 import { Separator } from "#/components/ui/separator";
 
 interface CaseNote {
@@ -34,9 +40,7 @@ export function ViewCaseNotes({ children, caseNotes, pseudonym }: ViewCaseNotesP
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <div onClick={() => setOpen(true)} className="cursor-pointer">
-        {children}
-      </div>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Case Notes - {pseudonym}</DialogTitle>
@@ -79,8 +83,8 @@ export function ViewCaseNotes({ children, caseNotes, pseudonym }: ViewCaseNotesP
                         <strong>Treatment Interventions:</strong>
                       </p>
                       <ul className="ml-4 mt-1 list-disc text-sm">
-                        {note.treatmentInterventions.map((intervention, index) => (
-                          <li key={index}>{intervention}</li>
+                        {note.treatmentInterventions.map((intervention) => (
+                          <li key={intervention}>{intervention}</li>
                         ))}
                       </ul>
                     </div>

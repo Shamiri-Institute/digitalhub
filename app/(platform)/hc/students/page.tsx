@@ -35,21 +35,21 @@ export default async function StudentsPage() {
     db.student.count({
       where: {
         school: {
-          hubId: hubCoordinator.assignedHubId,
+          hubId: hubCoordinator.profile?.assignedHubId,
         },
       },
     }),
     db.interventionSession.count({
       where: {
         school: {
-          hubId: hubCoordinator.assignedHubId,
+          hubId: hubCoordinator.profile?.assignedHubId,
         },
       },
     }),
     db.clinicalScreeningInfo.findMany({
       where: {
         currentSupervisor: {
-          hubId: hubCoordinator.assignedHubId,
+          hubId: hubCoordinator.profile?.assignedHubId,
         },
       },
     }),
@@ -57,7 +57,7 @@ export default async function StudentsPage() {
       where: {
         case: {
           currentSupervisor: {
-            hubId: hubCoordinator.assignedHubId,
+            hubId: hubCoordinator.profile?.assignedHubId,
           },
         },
       },
@@ -67,7 +67,7 @@ export default async function StudentsPage() {
       where: {
         case: {
           currentSupervisor: {
-            hubId: hubCoordinator.assignedHubId,
+            hubId: hubCoordinator.profile?.assignedHubId,
           },
         },
       },
@@ -79,7 +79,7 @@ export default async function StudentsPage() {
       by: ["currentSupervisorId"],
       where: {
         currentSupervisor: {
-          hubId: hubCoordinator.assignedHubId,
+          hubId: hubCoordinator.profile?.assignedHubId,
         },
       },
       _count: {
@@ -92,11 +92,11 @@ export default async function StudentsPage() {
         OR: [
           {
             currentSupervisor: {
-              hubId: hubCoordinator.assignedHubId,
+              hubId: hubCoordinator.profile?.assignedHubId,
             },
           },
           {
-            clinicalLeadId: hubCoordinator.assignedHubId,
+            clinicalLeadId: hubCoordinator.profile?.assignedHubId,
           },
         ],
       },
@@ -108,7 +108,7 @@ export default async function StudentsPage() {
       by: ["age", "gender", "form"],
       where: {
         school: {
-          hubId: hubCoordinator.assignedHubId,
+          hubId: hubCoordinator.profile?.assignedHubId,
         },
       },
       _count: {
@@ -119,7 +119,7 @@ export default async function StudentsPage() {
       by: ["sessionType"],
       where: {
         school: {
-          hubId: hubCoordinator.assignedHubId,
+          hubId: hubCoordinator.profile?.assignedHubId,
         },
       },
       _count: {
@@ -130,7 +130,7 @@ export default async function StudentsPage() {
       by: ["dropOutReason"],
       where: {
         school: {
-          hubId: hubCoordinator.assignedHubId,
+          hubId: hubCoordinator.profile?.assignedHubId,
         },
         droppedOut: true,
       },
@@ -182,7 +182,7 @@ export default async function StudentsPage() {
 
       <Separator />
 
-      <StudentsFilterTab hubCoordinatorId={hubCoordinator.id!} />
+      <StudentsFilterTab hubCoordinatorId={hubCoordinator.profile?.id!} />
 
       <StudentsStats
         totalNumberOfStudentsInHub={totalNumberOfStudentsInHub}

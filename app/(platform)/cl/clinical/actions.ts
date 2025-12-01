@@ -27,7 +27,7 @@ export async function getClinicalCasesData() {
   const clinicalLead = await currentClinicalLead();
   if (!clinicalLead) throw new Error("Unauthorized");
 
-  const hubId = clinicalLead.assignedHubId;
+  const hubId = clinicalLead.profile.assignedHubId;
 
   type StatusResult = { name: string; value: bigint };
   type SupervisorResult = { id: string; value: bigint };
@@ -46,7 +46,7 @@ export async function getClinicalCasesData() {
         COUNT(*) as value
       FROM "clinical_screening_info" csi
       LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
-      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
+      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.profile.id})
       GROUP BY "case_status"
     `,
 
@@ -63,7 +63,7 @@ export async function getClinicalCasesData() {
         COUNT(*) as value
       FROM "clinical_screening_info" csi
       LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
-      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
+      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.profile.id})
       GROUP BY COALESCE(
         (SELECT ccn.risk_level 
          FROM "clinical_case_notes" ccn 
@@ -81,7 +81,7 @@ export async function getClinicalCasesData() {
       FROM "clinical_session_attendance" csa
       JOIN "clinical_screening_info" csi ON csa."caseId" = csi.id
       LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
-      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
+      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.profile.id})
       GROUP BY session
     `,
 
@@ -91,7 +91,7 @@ export async function getClinicalCasesData() {
         COUNT(*) as value
       FROM "clinical_screening_info" csi
       LEFT JOIN "supervisors" s ON csi."current_supervisor_id" = s.id
-      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.id})
+      WHERE (s."hub_id" = ${hubId} OR csi."clinicalLeadId" = ${clinicalLead.profile.id})
       GROUP BY COALESCE(csi."current_supervisor_id", 'CLINICAL_LEAD')
     `,
 
@@ -270,7 +270,7 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
         csi.general_presenting_issues_other_specified_baseline as "generalPresentingIssuesOtherSpecifiedBaseline",
         csi.general_presenting_issues_other_specified_endpoint as "generalPresentingIssuesOtherSpecifiedEndpoint",
         csi."clinicalLeadId" as "clinicalLeadId",
-        CASE WHEN csi."clinicalLeadId" = ${clinicalLead.id} THEN true ELSE false END as "isClinicalLeadCase",
+        CASE WHEN csi."clinicalLeadId" = ${clinicalLead.profile.id} THEN true ELSE false END as "isClinicalLeadCase",
         CASE WHEN csfp.id IS NOT NULL THEN true ELSE false END as "treatmentPlan",
         CASE WHEN EXISTS (
           SELECT 1 FROM "clinical_case_notes" ccn 
@@ -313,7 +313,7 @@ export async function getClinicalCasesInHub(): Promise<HubClinicalCases[]> {
       LEFT JOIN
         treatment_plan tp ON csi.id = tp.case_id
       WHERE 
-        (s."hub_id" = ${clinicalLead.assignedHubId})
+        (s."hub_id" = ${clinicalLead.profile.assignedHubId})
       ORDER BY 
         csi.id DESC
     `;
@@ -331,7 +331,7 @@ export async function getSchoolsInClinicalLeadHub() {
   const [schools, supervisorsInHub, fellowsInProject, hubs] = await Promise.all([
     db.school.findMany({
       where: {
-        hubId: clinicalLead?.assignedHubId,
+        hubId: clinicalLead?.profile.assignedHubId,
       },
       include: {
         students: true,
@@ -350,7 +350,7 @@ export async function getSchoolsInClinicalLeadHub() {
     }),
     db.supervisor.findMany({
       where: {
-        hubId: clinicalLead?.assignedHubId,
+        hubId: clinicalLead?.profile.assignedHubId,
       },
     }),
     db.fellow.findMany({
@@ -382,7 +382,7 @@ export async function getSchoolsInClinicalLeadHub() {
     schools,
     supervisorsInHub,
     fellowsInProject,
-    currentClinicalLeadId: clinicalLead?.id,
+    currentClinicalLeadId: clinicalLead?.profile.id,
     hubs,
   };
 }
@@ -396,7 +396,7 @@ export async function getClinicalCasesCreatedByClinicalLead() {
 
   const cases = await db.clinicalScreeningInfo.findMany({
     where: {
-      clinicalLeadId: clinicalLead?.id,
+      clinicalLeadId: clinicalLead?.profile.id,
     },
     include: {
       student: {
@@ -443,7 +443,7 @@ export async function getClinicalCasesCreatedByClinicalLead() {
       risk: riskLevel,
       age,
       referralFrom: caseInfo.referredFrom || caseInfo.initialReferredFromSpecified || "Unknown",
-      hubId: clinicalLead?.assignedHubId,
+      hubId: clinicalLead?.profile.assignedHubId,
       flagged: caseInfo.flagged,
       flaggedReason: caseInfo.flaggedReason,
       sessionAttendanceHistory: formattedSessions,

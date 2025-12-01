@@ -115,7 +115,7 @@ export default function HubStudentClinicalDataCharts({
               </Label>
               {caseStatusCounts.map((entry, index) => (
                 <Cell
-                  key={`cell-${index}`}
+                  key={entry.name}
                   fill={
                     sumOfCases === 0
                       ? "#e5e7eb"
@@ -174,7 +174,7 @@ export default function HubStudentClinicalDataCharts({
               </Label>
               {filteredByInitialReferredFrom.map((entry, index) => (
                 <Cell
-                  key={`cell-${index}`}
+                  key={entry.initialReferredFrom}
                   fill={clinicalCasesColors[index % clinicalCasesColors.length]}
                 />
               ))}
