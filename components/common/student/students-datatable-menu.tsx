@@ -1,4 +1,4 @@
-import type { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Icons } from "#/components/icons";
@@ -30,7 +30,7 @@ export default function StudentsDataTableMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="absolute inset-0 border-l bg-white">
+        <div className="absolute inset-0 border-l">
           <div className="flex h-full w-full items-center justify-center">
             <Icons.moreHorizontal className="h-5 w-5 text-shamiri-text-grey" />
           </div>
@@ -47,16 +47,18 @@ export default function StudentsDataTableMenu({
             state.setEditDialog(true);
           }}
         >
-          Edit information
+          {state.role === ImplementerRole.ADMIN ? "View information" : "Edit information"}
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            state.setStudent(student);
-            state.setMarkAttendanceDialog(true);
-          }}
-        >
-          Mark student attendance
-        </DropdownMenuItem>
+        {state.role !== ImplementerRole.ADMIN && (
+          <DropdownMenuItem
+            onClick={() => {
+              state.setStudent(student);
+              state.setMarkAttendanceDialog(true);
+            }}
+          >
+            Mark student attendance
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onClick={() => {
             state.setStudent(student);
@@ -73,26 +75,30 @@ export default function StudentsDataTableMenu({
         >
           View attendance history
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            state.setStudent(student);
-            state.setReportingNotesDialog(true);
-          }}
-        >
-          Reporting notes
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            state.setStudent(student);
-            state.setDropoutDialog(true);
-          }}
-        >
-          {student.droppedOut ? (
-            <div className="text-shamiri-red">Undo drop out</div>
-          ) : (
-            <div className="text-shamiri-red">Drop-out student</div>
-          )}
-        </DropdownMenuItem>
+        {state.role !== ImplementerRole.ADMIN && (
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setStudent(student);
+                state.setReportingNotesDialog(true);
+              }}
+            >
+              Reporting notes
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                state.setStudent(student);
+                state.setDropoutDialog(true);
+              }}
+            >
+              {student.droppedOut ? (
+                <div className="text-shamiri-red">Undo drop out</div>
+              ) : (
+                <div className="text-shamiri-red">Drop-out student</div>
+              )}
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

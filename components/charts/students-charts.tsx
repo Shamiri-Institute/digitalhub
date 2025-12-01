@@ -107,7 +107,7 @@ export default function HubStudentsDetailsCharts({
                   {formatedStudentsDropOutReasons.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
                 {formatedStudentsDropOutReasons.map((reason, index) => (
-                  <Cell key={index} fill={randomColors[index]} />
+                  <Cell key={reason.name} fill={randomColors[index]} />
                 ))}
               </Pie>
               <Tooltip />

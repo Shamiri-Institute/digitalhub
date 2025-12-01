@@ -11,7 +11,7 @@ import ArrowUpIcon from "#/public/icons/arrow-up-icon.svg";
 
 export const columns: ColumnDef<HubClinicalCases>[] = [
   {
-    id: "checkbox",
+    id: "expand",
     cell: ({ row }) => {
       return (
         <button

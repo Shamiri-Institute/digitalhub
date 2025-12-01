@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { currentFellow } from "#/app/auth";
 import FellowSchoolsDatatableSkeleton from "#/components/common/fellow/fellow-schools-datatable-skeleton";
@@ -16,7 +17,9 @@ export default async function TableSkeleton() {
       <div className="container w-full grow space-y-3 py-10">
         <PageHeading title="Fellow Portal" />
         <Separator />
-        <FellowSchoolsDatatableSkeleton role={fellow?.user.membership.role!} />
+        <FellowSchoolsDatatableSkeleton
+          role={fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW}
+        />
       </div>
       <PageFooter />
     </div>

@@ -1,13 +1,11 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { currentFellow } from "#/app/auth";
 import StudentsDatatable from "#/components/common/student/students-datatable";
 import { db } from "#/lib/db";
 
-export default async function StudentsPage(props: { params: Promise<{ visibleId: string }> }) {
-  const params = await props.params;
-
-  const { visibleId } = params;
-
+export default async function StudentsPage({ params }: { params: Promise<{ visibleId: string }> }) {
+  const { visibleId } = await params;
   const fellow = await currentFellow();
   if (fellow === null) {
     await signOut({ callbackUrl: "/login" });
@@ -19,7 +17,7 @@ export default async function StudentsPage(props: { params: Promise<{ visibleId:
         visibleId,
       },
       assignedGroup: {
-        leaderId: fellow?.id,
+        leaderId: fellow?.profile?.id,
         school: {
           visibleId,
         },
@@ -70,8 +68,7 @@ export default async function StudentsPage(props: { params: Promise<{ visibleId:
   return (
     <StudentsDatatable
       students={students}
-      role={fellow?.user.membership.role!}
-      fellowId={fellow?.id}
+      role={fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW}
     />
   );
 }

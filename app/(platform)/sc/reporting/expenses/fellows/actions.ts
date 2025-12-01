@@ -17,7 +17,7 @@ export async function loadSupervisorFellowAttendance() {
 
   const fellows = await db.fellow.findMany({
     where: {
-      supervisorId: currentSupervisorData.id,
+      supervisorId: currentSupervisorData.profile?.id,
     },
     include: {
       hub: {

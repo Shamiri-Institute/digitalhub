@@ -18,7 +18,7 @@ export async function loadSupervisorExpenses() {
   const supervisorsExpenses = await db.reimbursementRequest.findMany({
     where: {
       supervisor: {
-        hubId: supervisor.hubId,
+        hubId: supervisor.profile?.hubId,
       },
     },
     include: {
@@ -67,7 +67,7 @@ export async function deleteSupervisorExpenseRequest({ id, name }: { id: string;
       await signOut({ callbackUrl: "/login" });
       throw new Error("Unauthorised user");
     }
-    if (name !== supervisor.supervisorName) {
+    if (name !== supervisor.profile?.supervisorName) {
       return {
         success: false,
         message: "Please enter the correct name",
@@ -95,7 +95,7 @@ export async function getSupervisorsInHub() {
   const hubCoordinator = await currentHubCoordinator();
   return await db.supervisor.findMany({
     where: {
-      hubId: hubCoordinator?.assignedHubId!,
+      hubId: hubCoordinator?.profile?.assignedHubId!,
     },
   });
 }
@@ -155,8 +155,8 @@ export async function addSupervisorExpense({
       data: {
         id: objectId("reimb"),
         supervisorId: data.supervisor,
-        hubId: hubCoordinator.assignedHubId!,
-        hubCoordinatorId: hubCoordinator.id,
+        hubId: hubCoordinator.profile?.assignedHubId!,
+        hubCoordinatorId: hubCoordinator.profile?.id!,
         incurredAt: new Date(data.week),
         amount: Number.parseInt(data.totalAmount),
         kind: data.expenseType,

@@ -18,7 +18,7 @@ export async function loadOpsHubsPaymentComplaints() {
 
   const fellows = await db.fellow.findMany({
     where: {
-      implementerId: opsUser.implementerId,
+      implementerId: opsUser.session.user.activeMembership?.implementerId,
     },
     include: {
       hub: {

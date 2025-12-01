@@ -18,7 +18,7 @@ export async function loadFellowPaymentComplaints() {
 
   const fellows = await db.fellow.findMany({
     where: {
-      supervisorId: supervisor.id,
+      supervisorId: supervisor.profile?.id,
     },
     include: {
       hub: {

@@ -93,7 +93,9 @@ export default function ViewEditFellowComplaints({
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">
           <div className="mb-4 grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium">Date of Complaint</label>
+              <label htmlFor="date" className="text-sm font-medium">
+                Date of Complaint
+              </label>
               <p className="text-gray-600">{fellowComplaints.date}</p>
             </div>
           </div>

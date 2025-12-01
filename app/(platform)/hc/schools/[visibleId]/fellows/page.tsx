@@ -1,10 +1,8 @@
-import { Suspense } from "react";
-import Loading from "#/app/(platform)/hc/schools/[visibleId]/loading";
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
+import { ImplementerRole } from "@prisma/client";
+import { signOut } from "next-auth/react";
+import { currentHubCoordinator } from "#/app/auth";
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
-import FellowInfoContextProvider from "#/components/common/fellow/fellow-info-context-provider";
 import FellowsDatatable from "#/components/common/fellow/fellows-datatable";
-import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
 import { db } from "#/lib/db";
 
 export default async function FellowsPage(props: { params: Promise<{ visibleId: string }> }) {
@@ -14,10 +12,10 @@ export default async function FellowsPage(props: { params: Promise<{ visibleId: 
 
   const hc = await currentHubCoordinator();
   if (!hc) {
-    return <InvalidPersonnelRole userRole="hub-coordinator" />;
+    await signOut({ callbackUrl: "/login" });
   }
 
-  const user = await getCurrentUser();
+  const assignedHubId = hc?.profile?.assignedHubId;
 
   const school = await db.school.findFirstOrThrow({
     where: {
@@ -101,7 +99,7 @@ export default async function FellowsPage(props: { params: Promise<{ visibleId: 
 
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: hc?.assignedHubId as string,
+      hubId: assignedHubId,
     },
     include: {
       fellows: true,
@@ -109,17 +107,13 @@ export default async function FellowsPage(props: { params: Promise<{ visibleId: 
   });
 
   return (
-    <FellowInfoContextProvider>
-      <Suspense fallback={<Loading />}>
-        <FellowsDatatable
-          fellows={data}
-          supervisors={supervisors}
-          schoolId={school.id}
-          role={user?.membership.role!}
-          hideActions={true}
-          attendances={school.fellowAttendances}
-        />
-      </Suspense>
-    </FellowInfoContextProvider>
+    <FellowsDatatable
+      fellows={data}
+      supervisors={supervisors}
+      schoolId={school.id}
+      role={hc?.session?.user.activeMembership?.role ?? ImplementerRole.HUB_COORDINATOR}
+      hideActions={true}
+      attendances={school.fellowAttendances}
+    />
   );
 }

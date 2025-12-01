@@ -61,8 +61,11 @@ export default function ViewGeneralPresentingIssues({
       </div>
 
       <div className="space-y-2">
-        <label className="text-sm font-medium">Other Issues</label>
+        <label className="text-sm font-medium" htmlFor="other-issues">
+          Other Issues
+        </label>
         <Textarea
+          id="other-issues"
           placeholder="Describe any other presenting issues..."
           className="min-h-[100px]"
           value={

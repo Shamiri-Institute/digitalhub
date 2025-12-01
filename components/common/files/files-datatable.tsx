@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { useState } from "react";
 import { fileColumns, type SchoolFilesTableData } from "#/components/common/files/columns";
 import { RemoveUploadedFile } from "#/components/common/files/delete-file-modal";
 import UploadFileDialogue from "#/components/common/files/files-upload-dialogue";
@@ -13,10 +13,10 @@ export default function SchoolFilesDatatable({
   data,
   schoolId,
 }: {
-  data: Promise<SchoolFilesTableData[]>;
+  data: SchoolFilesTableData[];
   schoolId: string;
 }) {
-  const schoolFiles = use(data);
+  const schoolFiles = data;
   const [renameDialog, setRenameDialog] = useState<boolean>(false);
   const [deleteDialog, setDeleteDialog] = useState<boolean>(false);
   const [file, setFile] = useState<SchoolFilesTableData | null>(null);

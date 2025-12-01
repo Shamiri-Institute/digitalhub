@@ -1,17 +1,13 @@
+import { ImplementerRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
-import { currentSupervisor, getCurrentUser } from "#/app/auth";
-import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
-import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
-import SchoolDetailsForm from "#/components/common/schools/school-details-form";
-import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
+import { currentSupervisor } from "#/app/auth";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
-import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
 import { Separator } from "#/components/ui/separator";
 import { db } from "#/lib/db";
-import { fetchHubSupervisors } from "./actions";
+import { fetchHubSupervisors, fetchSchoolData } from "./actions";
 
 export default async function SchoolsPage() {
   const supervisor = await currentSupervisor();
@@ -19,12 +15,16 @@ export default async function SchoolsPage() {
   if (!supervisor) {
     redirect("/login");
   }
+  const hubId = supervisor?.profile?.hubId;
+  if (!hubId) {
+    return <div>Supervisor has no assigned hub</div>;
+  }
 
-  const user = await getCurrentUser();
-  const [supervisors, schoolsStats] = await Promise.all([
-    fetchHubSupervisors({
+  const [data, supervisors, schoolsStats] = await Promise.all([
+    await fetchSchoolData(supervisor?.profile?.hubId!),
+    await fetchHubSupervisors({
       where: {
-        hubId: supervisor?.hubId as string,
+        hubId: supervisor?.profile?.hubId,
       },
     }),
     await db.$queryRaw<
@@ -48,7 +48,7 @@ export default async function SchoolsPage() {
         students c ON sch.id = c.school_id AND c.is_clinical_case=TRUE
     LEFT JOIN 
         fellows f ON h.id = f.hub_id
-        WHERE h.id=${supervisor!.hubId}
+        WHERE h.id=${supervisor?.profile?.hubId}
     GROUP BY 
         h.id, h.hub_name`,
   ]);
@@ -83,13 +83,11 @@ export default async function SchoolsPage() {
         {/*    <SchoolsFilterToggle schools={data} />*/}
         {/*  </div>*/}
         {/*</div>*/}
-        <SchoolInfoProvider>
-          <SchoolsDatatable role={supervisor.user.membership.role} />
-          <SchoolDetailsForm />
-          <AssignPointSupervisor supervisors={supervisors} />
-          <DropoutSchool />
-          <UndoDropoutSchool />
-        </SchoolInfoProvider>
+        <SchoolsDatatable
+          role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
+          schools={data}
+          supervisors={supervisors}
+        />
       </div>
       <PageFooter />
     </div>

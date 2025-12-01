@@ -34,7 +34,7 @@ export default function SessionsDatatableSkeleton({ role }: { role: ImplementerR
     <DataTable
       columns={loadingColumns as ColumnDef<SessionData>[]}
       data={
-        Array.from(Array(10).keys()).map(() => {
+        Array.from(Array(5).keys()).map(() => {
           return {};
         }) as SessionData[]
       }

@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Hub coordinator not found." }, { status: 404 });
     }
 
-    const hubId = hc.assignedHubId ?? (formData.get("hubId") as string);
-    const implementerId = hc.implementerId ?? (formData.get("implementerId") as string);
+    const hubId = hc.profile?.assignedHubId ?? (formData.get("hubId") as string);
+    const implementerId = hc.profile?.implementerId ?? (formData.get("implementerId") as string);
     const buffer = await file.arrayBuffer();
     const fileBuffer = Buffer.from(buffer);
 

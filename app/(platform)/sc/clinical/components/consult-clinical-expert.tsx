@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "#/components/ui/dialog";
 import {
@@ -98,7 +99,7 @@ export default function ConsultClinicalExpert({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="z-10 max-h-[90%] min-w-max overflow-x-auto bg-white p-5">
         <DialogHeader className="bg-white">
-          <h2>Consult clinical expert</h2>
+          <DialogTitle>Consult clinical expert</DialogTitle>
         </DialogHeader>
         <DialogAlertWidget label={`${clinicalCase.pseudonym}`} separator={true} />
         <div className="min-w-max overflow-x-auto overflow-y-scroll px-[0.4rem]">

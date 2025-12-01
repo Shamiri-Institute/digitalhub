@@ -42,10 +42,12 @@ export default function StudentsDatatableSkeleton({ role }: { role: ImplementerR
       columnVisibilityState={{
         Gender: false,
         "Contact no.": false,
+        "Shamiri ID": false,
         "Admission number": false,
         Stream: false,
         "Class/Form": false,
         "Date added": false,
+        checkbox: false,
       }}
     />
   );

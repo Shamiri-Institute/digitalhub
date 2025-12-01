@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import type { FellowsData } from "#/app/(platform)/sc/actions";
 import { currentFellow } from "#/app/auth";
@@ -16,7 +17,7 @@ export default async function FellowsPage() {
 
   const fellowData = await db.fellow.findFirst({
     where: {
-      id: fellow?.id,
+      id: fellow?.profile.id,
     },
     include: {
       fellowAttendances: {
@@ -118,7 +119,7 @@ export default async function FellowsPage() {
             } as FellowsData,
           ]}
           project={project ?? undefined}
-          role={fellow!.user.membership.role}
+          role={fellow?.session?.user.activeMembership?.role ?? ImplementerRole.FELLOW}
         />
       </div>
       <PageFooter />

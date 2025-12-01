@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import GraphLoadingIndicator from "#/app/(platform)/hc/components/graph-loading-indicator";
 import MainSupervisorsDataTable from "#/app/(platform)/hc/supervisors/components/main-supervisors-datatable";
 import SupervisorChartsWrapper from "#/app/(platform)/hc/supervisors/components/supervisor-charts-container";
-import SupervisorProvider from "#/app/(platform)/hc/supervisors/components/supervisor-provider";
 import WeeklyHubTeamMeetingForm from "#/app/(platform)/hc/supervisors/components/weekly-hub-team-meeting";
 import { currentHubCoordinator } from "#/app/auth";
 import { InvalidPersonnelRole } from "#/components/common/invalid-personnel-role";
@@ -16,7 +15,7 @@ export default async function SupervisorsPage() {
   const coordinator = await currentHubCoordinator();
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: coordinator?.assignedHubId,
+      hubId: coordinator?.profile?.assignedHubId,
     },
     include: {
       assignedSchools: true,
@@ -37,7 +36,8 @@ export default async function SupervisorsPage() {
     return <InvalidPersonnelRole userRole="hub-coordinator" />;
   }
 
-  if (!coordinator.assignedHubId) {
+  const assignedHubId = coordinator.profile?.assignedHubId;
+  if (!assignedHubId) {
     return <div>Hub coordinator has no assigned hub</div>;
   }
 
@@ -50,26 +50,22 @@ export default async function SupervisorsPage() {
           <div className="flex gap-3">{/* search filters go here */}</div>
           <div className="flex items-center gap-3">
             <WeeklyHubTeamMeetingForm
-              hubCoordinatorId={coordinator?.id!}
-              hubId={coordinator?.assignedHubId}
+              hubCoordinatorId={coordinator?.profile?.id!}
+              hubId={assignedHubId}
             />
           </div>
         </div>
 
         <Suspense fallback={<GraphLoadingIndicator />}>
-          <SupervisorChartsWrapper coordinator={{ assignedHubId: coordinator?.assignedHubId }} />
+          <SupervisorChartsWrapper coordinator={{ assignedHubId }} />
         </Suspense>
 
         <Separator />
 
-        <SupervisorProvider>
-          <MainSupervisorsDataTable
-            supervisors={supervisors}
-            hubId={coordinator.assignedHubId}
-            implementerId={coordinator.implementerId!}
-            projectId={coordinator.assignedHub?.projectId!}
-          />
-        </SupervisorProvider>
+        <MainSupervisorsDataTable
+          supervisors={supervisors}
+          role={coordinator.session.user.activeMembership?.role ?? "HUB_COORDINATOR"}
+        />
       </div>
       <PageFooter />
     </div>

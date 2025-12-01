@@ -1,7 +1,8 @@
 "use server";
 
+import { ImplementerRole } from "@prisma/client";
 import type { z } from "zod";
-import { currentHubCoordinator, currentSupervisor, getCurrentUser } from "#/app/auth";
+import { getCurrentPersonnel } from "#/app/auth";
 import {
   MarkSessionOccurrenceSchema,
   RescheduleSessionSchema,
@@ -12,15 +13,15 @@ import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
 
 async function checkAuth() {
-  const hubCoordinator = await currentHubCoordinator();
-  const supervisor = await currentSupervisor();
-
-  if (!hubCoordinator && !supervisor) {
-    throw new Error("The session has not been authenticated");
+  const personnel = await getCurrentPersonnel();
+  const role = personnel?.session?.user.activeMembership?.role;
+  if (
+    !personnel ||
+    (role !== ImplementerRole.HUB_COORDINATOR && role !== ImplementerRole.SUPERVISOR)
+  ) {
+    throw new Error("User not authenticated");
   }
-
-  const user = await getCurrentUser();
-  return { hubCoordinator, supervisor, user };
+  return personnel;
 }
 
 export async function createNewSession(data: z.infer<typeof ScheduleNewSessionSchema>) {
@@ -112,7 +113,10 @@ export async function cancelSession(id: string) {
       },
     });
 
-    if (session.school?.assignedSupervisorId !== user.supervisor?.id && !user.hubCoordinator) {
+    if (
+      user.session.user.activeMembership?.role === ImplementerRole.SUPERVISOR &&
+      session.school?.assignedSupervisorId !== user.profile?.id
+    ) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
 
@@ -150,7 +154,10 @@ export async function rescheduleSession(id: string, data: z.infer<typeof Resched
       },
     });
 
-    if (session.school?.assignedSupervisorId !== user.supervisor?.id && !user.hubCoordinator) {
+    if (
+      user.session.user.activeMembership?.role === ImplementerRole.SUPERVISOR &&
+      session.school?.assignedSupervisorId !== user.profile?.id
+    ) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
 
@@ -185,16 +192,21 @@ export async function submitQualitativeFeedback({
   sessionId: string;
 }) {
   try {
-    const { user } = await checkAuth();
-    if (!user) {
+    const user = await checkAuth();
+    if (!user || !user.session.user.id) {
       return { success: false, message: "User not found" };
+    }
+
+    const role = user.session.user.activeMembership?.role;
+    if (role !== ImplementerRole.SUPERVISOR) {
+      throw new Error("User not authorized to perform this action");
     }
 
     await db.sessionComment.create({
       data: {
         sessionId,
         content: notes,
-        userId: user.user.id,
+        userId: user.session.user.id,
       },
     });
     return { success: true, message: "Notes submitted successfully" };
@@ -206,8 +218,17 @@ export async function submitQualitativeFeedback({
 
 export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSchema>) {
   try {
-    const { supervisor } = await checkAuth();
-    if (!supervisor) {
+    const user = await checkAuth();
+    if (!user || !user.session.user.id) {
+      return { success: false, message: "User not found" };
+    }
+
+    const role = user.session.user.activeMembership?.role;
+    if (role !== ImplementerRole.SUPERVISOR) {
+      throw new Error("User not authorized to perform this action");
+    }
+
+    if (!user.profile?.id) {
       return { success: false, message: "Supervisor not found" };
     }
 
@@ -229,7 +250,7 @@ export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSc
       },
     });
 
-    if (session.school?.assignedSupervisorId !== supervisor.id) {
+    if (session.school?.assignedSupervisorId !== user.profile?.id) {
       throw new Error(`You are not assigned to ${session.school?.schoolName}`);
     }
 
@@ -237,13 +258,13 @@ export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSc
       where: {
         ratingBySessionIdAndSupervisorId: {
           sessionId,
-          supervisorId: supervisor.id,
+          supervisorId: user.profile?.id,
         },
       },
       create: {
         id: objectId("isr"),
         sessionId,
-        supervisorId: supervisor.id,
+        supervisorId: user.profile?.id,
         studentBehaviorRating,
         workloadRating,
         adminSupportRating,
@@ -254,7 +275,7 @@ export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSc
       },
       update: {
         sessionId,
-        supervisorId: supervisor.id,
+        supervisorId: user.profile?.id,
         studentBehaviorRating,
         workloadRating,
         adminSupportRating,
@@ -280,9 +301,20 @@ export async function submitSessionRatings(data: z.infer<typeof SessionRatingsSc
 
 export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccurrenceSchema>) {
   try {
-    const auth = await checkAuth();
-    if (!auth.supervisor && !auth.hubCoordinator) {
-      throw new Error("Something went wrong. User is not authorized.");
+    const user = await checkAuth();
+    if (!user || !user.session.user.id) {
+      return { success: false, message: "User not found" };
+    }
+
+    const role = user.session.user.activeMembership?.role;
+    if (!user.profile?.id) {
+      return {
+        success: false,
+        message:
+          role === ImplementerRole.SUPERVISOR
+            ? "Supervisor not found"
+            : "Hub coordinator not found",
+      };
     }
 
     const parsedData = MarkSessionOccurrenceSchema.parse(data);
@@ -304,8 +336,8 @@ export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccu
     if (
       session.session &&
       schoolSessionTypes.includes(session.session?.sessionType) &&
-      session.school?.assignedSupervisorId !== auth.supervisor?.id &&
-      !auth.hubCoordinator
+      session.school?.assignedSupervisorId !== user.profile?.id &&
+      role === ImplementerRole.SUPERVISOR
     ) {
       throw new Error(
         `Something went wrong. You are not assigned to ${session.school?.schoolName}`,
@@ -314,7 +346,7 @@ export async function markSessionOccurrence(data: z.infer<typeof MarkSessionOccu
     if (
       session.session &&
       venueSessionTypes.includes(session.session?.sessionType) &&
-      !auth.hubCoordinator
+      role === ImplementerRole.SUPERVISOR
     ) {
       throw new Error("Something went wrong. You are not authorized to perform this action.");
     }

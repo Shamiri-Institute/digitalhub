@@ -75,13 +75,14 @@ export default async function ReportDetails(props: {
 
   // Session rating by the currently logged in supervisor if previously created
   const supervisorSessionRating =
-    session.sessionRatings?.find((sessionRating) => sessionRating.supervisorId === supervisor.id) ??
-    null;
+    session.sessionRatings?.find(
+      (sessionRating) => sessionRating.supervisorId === supervisor.profile?.id,
+    ) ?? null;
 
   // Weekly report comments by point supervisor
   const pointSupervisorSessionNotes = session.sessionNotes?.filter(
     (sessionNote) =>
-      sessionNote.supervisorId === supervisor.id &&
+      sessionNote.supervisorId === supervisor.profile?.id &&
       ["positive-highlights", "reported-challenges", "recommendations"].includes(sessionNote.kind),
   );
 
@@ -108,7 +109,7 @@ export default async function ReportDetails(props: {
       <SessionRater
         revalidatePath={revalidatePath}
         sessionId={session.id}
-        supervisorId={supervisor.id}
+        supervisorId={supervisor.profile?.id}
         ratings={{
           studentBehavior: supervisorSessionRating?.studentBehaviorRating ?? 0,
           adminSupport: supervisorSessionRating?.adminSupportRating ?? 0,
@@ -118,14 +119,14 @@ export default async function ReportDetails(props: {
       <WeeklyReportForm
         revalidatePath={revalidatePath}
         sessionId={session.id}
-        supervisorId={supervisor.id}
-        pointSupervisor={supervisor}
+        supervisorId={supervisor.profile?.id}
+        pointSupervisor={supervisor.profile}
         notes={pointSupervisorSessionNotes}
       />
       <SessionNotes
         revalidatePath={revalidatePath}
         sessionId={session.id}
-        supervisorId={supervisor.id}
+        supervisorId={supervisor.profile?.id}
         notes={allSupervisorSessionAddedNotes}
       />
     </div>

@@ -235,7 +235,7 @@ export async function confirmPayoutAction(executedAt: Date) {
         },
         data: {
           confirmedAt: currentTime,
-          confirmedBy: opsUser.user.user.id,
+          confirmedBy: opsUser.session.user.id,
         },
       });
 

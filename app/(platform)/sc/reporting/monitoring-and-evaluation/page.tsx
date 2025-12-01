@@ -11,7 +11,8 @@ export default async function MonitoringAndEvaluationPage() {
     return <div>Access denied</div>;
   }
 
-  if (!supervisor.hub) {
+  const profile = supervisor.profile;
+  if (!profile?.hub) {
     return <div>Configuration error: Supervisor hub not found</div>;
   }
 
@@ -22,8 +23,8 @@ export default async function MonitoringAndEvaluationPage() {
   const payload = {
     resource: { dashboard: 64 },
     params: {
-      hub: [supervisor.hub.hubName],
-      supervisor: [supervisor.supervisorName],
+      hub: [profile.hub.hubName],
+      supervisor: [profile.supervisorName],
     },
     exp: Math.round(Date.now() / 1000) + 10 * 60, // 10 minute expiration
   };
@@ -32,7 +33,12 @@ export default async function MonitoringAndEvaluationPage() {
   const iframeUrl = `${METABASE_SITE_URL}/embed/dashboard/${token}#bordered=true&titled=true`;
   return (
     <div className="h-full w-full">
-      <iframe src={iframeUrl} className="h-full w-full border-0" allowTransparency />
+      <iframe
+        src={iframeUrl}
+        className="h-full w-full border-0"
+        allowTransparency
+        title="Monitoring and Evaluation"
+      />
     </div>
   );
 }

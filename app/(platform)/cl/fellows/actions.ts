@@ -37,7 +37,7 @@ export async function getFellowClinicalCasesData() {
       LEFT JOIN
         "intervention_groups" ig ON f.id = ig."leader_id"
       WHERE 
-        f."hub_id" = ${clinicalLead.assignedHubId}
+        f."hub_id" = ${clinicalLead.profile.assignedHubId}
         AND f."archived_at" IS NULL
       GROUP BY 
         f.id, f."fellow_name", f."cell_number", s."supervisor_name"

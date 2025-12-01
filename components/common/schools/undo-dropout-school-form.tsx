@@ -1,22 +1,34 @@
 "use client";
-import { useContext, useState } from "react";
-import { undoDropoutSchool } from "#/app/(platform)/hc/schools/actions";
-import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
-import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { revalidatePageAction, undoDropoutSchool } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import { toast } from "#/components/ui/use-toast";
+import type { SchoolsTableData } from "./columns";
 
-export function UndoDropoutSchool() {
-  const context = useContext(SchoolInfoContext);
-  const schoolsContext = useContext(SchoolsDataContext);
+export function UndoDropoutSchool({
+  school,
+  open,
+  setOpen,
+}: {
+  school: SchoolsTableData | null;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) {
   const [loading, setLoading] = useState(false);
-
+  const pathname = usePathname();
   async function undoDropout() {
     setLoading(true);
-    if (context.school) {
-      const response = await undoDropoutSchool(context.school.id);
+    if (school) {
+      const response = await undoDropoutSchool(school.id);
       if (!response.success) {
         toast({
           description: response.message ?? "Something went wrong, please try again",
@@ -25,32 +37,25 @@ export function UndoDropoutSchool() {
         return;
       }
 
-      const copiedSchools = [...schoolsContext.schools];
-      const index = copiedSchools.findIndex((_school) => _school.id === context.school?.id);
-      if (index !== -1) {
-        copiedSchools[index]!.dropoutReason = response.data?.dropoutReason ?? null;
-        copiedSchools[index]!.droppedOutAt = response.data?.droppedOutAt ?? null;
-        copiedSchools[index]!.droppedOut = response.data?.droppedOut ?? false;
-        schoolsContext.setSchools(copiedSchools);
-      }
       toast({ description: response.message });
+      await revalidatePageAction(pathname);
       setLoading(false);
-      context.setUndoDropOutDialog(false);
+      setOpen(false);
     }
   }
 
   return (
-    <Dialog open={context.undoDropOutDialog} onOpenChange={context.setUndoDropOutDialog}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="p-5 text-base font-medium leading-6">
         <DialogHeader>
-          <h2>Undo school dropout?</h2>
+          <DialogTitle>Undo school dropout?</DialogTitle>
         </DialogHeader>
-        <DialogAlertWidget label={context.school?.schoolName} />
+        <DialogAlertWidget label={school?.schoolName} />
         <DialogFooter className="flex justify-end">
           <Button
             variant="ghost"
             onClick={() => {
-              context.setUndoDropOutDialog(false);
+              setOpen(false);
             }}
           >
             Cancel

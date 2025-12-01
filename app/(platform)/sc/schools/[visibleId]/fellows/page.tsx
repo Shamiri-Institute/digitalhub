@@ -1,3 +1,4 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
 import { currentSupervisor } from "#/app/auth";
 import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
@@ -41,7 +42,7 @@ export default async function FellowsPage(props: { params: Promise<{ visibleId: 
     }),
     await db.supervisor.findMany({
       where: {
-        hubId: supervisor?.hubId as string,
+        hubId: supervisor?.profile?.hubId,
       },
       include: {
         fellows: true,
@@ -109,7 +110,7 @@ export default async function FellowsPage(props: { params: Promise<{ visibleId: 
       fellows={data}
       supervisors={supervisors}
       schoolId={school.id}
-      role={supervisor?.user.membership.role!}
+      role={supervisor?.session?.user.activeMembership?.role ?? ImplementerRole.SUPERVISOR}
       attendances={school.fellowAttendances}
     />
   );
