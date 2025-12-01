@@ -12,7 +12,13 @@ import type { SchoolFellowTableData } from "#/components/common/fellow/columns";
 import DataTable from "#/components/data-table";
 import { Badge } from "#/components/ui/badge";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 
 import FellowAttendanceGetPayload = Prisma.FellowAttendanceGetPayload;
 
@@ -46,7 +52,7 @@ export default function AttendanceHistory({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="lg:w-3/4 lg:max-w-none">
         <DialogHeader>
-          <h2 className="text-xl font-bold">Session attendance history</h2>
+          <DialogTitle className="text-xl font-bold">Session attendance history</DialogTitle>
         </DialogHeader>
         {children}
         <DataTable

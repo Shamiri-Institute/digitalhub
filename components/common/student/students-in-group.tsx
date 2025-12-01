@@ -1,13 +1,19 @@
 "use client";
 
-import type { ImplementerRole, Prisma } from "@prisma/client";
+import { ImplementerRole, type Prisma } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import React, { type Dispatch, type SetStateAction } from "react";
 import StudentDetailsForm from "#/components/common/student/student-details-form";
 import DataTable from "#/components/data-table";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 
 export default function StudentsInGroup({
   children,
@@ -42,7 +48,7 @@ export default function StudentsInGroup({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="lg:w-2/3 lg:max-w-none">
           <DialogHeader>
-            <h2 className="text-xl font-bold">Students in group</h2>
+            <DialogTitle className="text-xl font-bold">Students in group</DialogTitle>
           </DialogHeader>
           {children}
           <DataTable
@@ -54,28 +60,32 @@ export default function StudentsInGroup({
             }}
             className="data-table lg:mt-4"
           />
-          <DialogFooter className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              type="button"
-              className="text-shamiri-new-blue hover:text-shamiri-new-blue"
-              onClick={() => {
-                onOpenChange(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="brand"
-              onClick={() => {
-                setAddStudentDialog(true);
-              }}
-              className="flex items-center gap-2"
-            >
-              <Icons.plusCircle className="h-4 w-4" />
-              Add Student
-            </Button>
-          </DialogFooter>
+          {role === ImplementerRole.HUB_COORDINATOR ||
+            role === ImplementerRole.SUPERVISOR ||
+            (role === ImplementerRole.FELLOW && (
+              <DialogFooter className="flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  type="button"
+                  className="text-shamiri-new-blue hover:text-shamiri-new-blue"
+                  onClick={() => {
+                    onOpenChange(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="brand"
+                  onClick={() => {
+                    setAddStudentDialog(true);
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Icons.plusCircle className="h-4 w-4" />
+                  Add Student
+                </Button>
+              </DialogFooter>
+            ))}
         </DialogContent>
       </Dialog>
       <StudentDetailsForm

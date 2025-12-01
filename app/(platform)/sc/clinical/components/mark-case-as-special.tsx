@@ -6,7 +6,13 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { flagClinicalCaseForFollowUp } from "#/app/actions";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "#/components/ui/dialog";
 import { Form, FormField } from "#/components/ui/form";
 import { Label } from "#/components/ui/label";
 import { Separator } from "#/components/ui/separator";
@@ -81,9 +87,9 @@ export default function MarkCaseAsSpecial({
             className="overflow-hidden text-ellipsis"
           >
             <DialogHeader className="space-y-0 px-6 py-4">
-              <div className="flex items-center gap-2">
-                <span className="text-base font-medium">Reason for Flagging Clinical Case</span>
-              </div>
+              <DialogTitle className="text-base font-medium">
+                Reason for Flagging Clinical Case
+              </DialogTitle>
             </DialogHeader>
             <Separator />
 

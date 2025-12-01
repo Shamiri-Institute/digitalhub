@@ -1,11 +1,7 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
-import { currentHubCoordinator, getCurrentUser } from "#/app/auth";
-import AssignPointSupervisor from "#/components/common/schools/assign-point-supervisor";
-import { DropoutSchool } from "#/components/common/schools/dropout-school-form";
-import SchoolDetailsForm from "#/components/common/schools/school-details-form";
-import SchoolInfoProvider from "#/components/common/schools/school-info-provider";
+import { currentHubCoordinator } from "#/app/auth";
 import SchoolsDatatable from "#/components/common/schools/schools-datatable";
-import { UndoDropoutSchool } from "#/components/common/schools/undo-dropout-school-form";
 import { SearchCommand } from "#/components/search-command";
 import PageFooter from "#/components/ui/page-footer";
 import PageHeading from "#/components/ui/page-heading";
@@ -34,11 +30,10 @@ export default async function SchoolsPage(props: {
   if (hubCoordinator === null) {
     await signOut({ callbackUrl: "/login" });
   }
-  if (!hubCoordinator?.assignedHubId) {
+  const assignedHubId = hubCoordinator?.profile?.assignedHubId;
+  if (!assignedHubId) {
     return <div>Hub coordinator has no assigned hub</div>;
   }
-
-  const user = await getCurrentUser();
 
   const [
     data,
@@ -48,14 +43,14 @@ export default async function SchoolsPage(props: {
     schoolAttendanceData,
     supervisors,
   ] = await Promise.all([
-    await fetchSchoolData(hubCoordinator?.assignedHubId as string),
-    await fetchDropoutReasons(hubCoordinator?.assignedHubId as string, queryAsSchoolId),
-    await fetchSchoolDataCompletenessData(hubCoordinator?.assignedHubId as string, queryAsSchoolId),
-    await fetchSessionRatingAverages(hubCoordinator?.assignedHubId as string, queryAsSchoolId),
-    await fetchSchoolAttendances(hubCoordinator?.assignedHubId as string, queryAsSchoolId),
+    await fetchSchoolData(assignedHubId),
+    await fetchDropoutReasons(assignedHubId, queryAsSchoolId),
+    await fetchSchoolDataCompletenessData(assignedHubId, queryAsSchoolId),
+    await fetchSessionRatingAverages(assignedHubId, queryAsSchoolId),
+    await fetchSchoolAttendances(assignedHubId, queryAsSchoolId),
     await fetchHubSupervisors({
       where: {
-        hubId: hubCoordinator?.assignedHubId as string,
+        hubId: assignedHubId,
       },
     }),
   ]);
@@ -72,10 +67,10 @@ export default async function SchoolsPage(props: {
           </div>
           <div className="flex items-center gap-3">
             <WeeklyHubReportButtonAndForm
-              hubCoordinatorId={hubCoordinator?.id as string}
-              hubId={hubCoordinator?.assignedHubId as string}
+              hubCoordinatorId={hubCoordinator?.profile?.id as string}
+              hubId={assignedHubId}
             />
-            {/* TODO: dispaly options button */}
+            {/* TODO: display options button */}
           </div>
         </div>
         <ChartArea
@@ -85,13 +80,13 @@ export default async function SchoolsPage(props: {
           schoolAttendances={schoolAttendanceData}
         />
         <Separator />
-        <SchoolInfoProvider>
-          <SchoolsDatatable role={user?.membership.role!} />
-          <SchoolDetailsForm />
-          <AssignPointSupervisor supervisors={supervisors} />
-          <DropoutSchool />
-          <UndoDropoutSchool />
-        </SchoolInfoProvider>
+        <SchoolsDatatable
+          role={
+            hubCoordinator?.session.user.activeMembership?.role ?? ImplementerRole.HUB_COORDINATOR
+          }
+          schools={data}
+          supervisors={supervisors}
+        />
       </div>
       <PageFooter />
     </div>

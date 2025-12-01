@@ -1,16 +1,21 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InfoIcon } from "lucide-react";
-import React, { useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
-import { dropoutSchool } from "#/app/(platform)/hc/schools/actions";
-import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
-import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
+import { dropoutSchool, revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -31,13 +36,20 @@ import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
 import { SCHOOL_DROPOUT_REASONS } from "#/lib/app-constants/constants";
 import { DropoutSchoolSchema } from "../../../app/(platform)/hc/schemas";
+import type { SchoolsTableData } from "./columns";
 
-export function DropoutSchool() {
-  const context = useContext(SchoolInfoContext);
-  const schoolsContext = useContext(SchoolsDataContext);
+export function DropoutSchool({
+  school,
+  open,
+  setOpen,
+}: {
+  school: SchoolsTableData | null;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) {
   const [formData, setFormData] = useState<z.infer<typeof DropoutSchoolSchema>>();
   const [loading, setLoading] = useState(false);
-
+  const pathname = usePathname();
   const form = useForm<z.infer<typeof DropoutSchoolSchema>>({
     resolver: zodResolver(DropoutSchoolSchema),
   });
@@ -53,14 +65,7 @@ export function DropoutSchool() {
         return;
       }
 
-      const copiedSchools = [...schoolsContext.schools];
-      const index = copiedSchools.findIndex((_school) => _school.id === context.school?.id);
-      if (index !== -1 && formData) {
-        copiedSchools[index]!.dropoutReason = formData?.dropoutReason;
-        copiedSchools[index]!.droppedOutAt = new Date();
-        copiedSchools[index]!.droppedOut = response.data?.droppedOut ?? true;
-        schoolsContext.setSchools(copiedSchools);
-      }
+      await revalidatePageAction(pathname);
       toast({
         description: response.message,
       });
@@ -71,30 +76,30 @@ export function DropoutSchool() {
   }
 
   const onSubmit = (data: z.infer<typeof DropoutSchoolSchema>) => {
-    if (!context.school) {
+    if (!school) {
       return;
     }
     setFormData(data);
-    context.setSchoolDropOutDialog(false);
+    setOpen(false);
     setConfirmDialogOpen(true);
   };
 
-  const [confirmDialogOpen, setConfirmDialogOpen] = React.useState<boolean>(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState<boolean>(false);
 
   useEffect(() => {
     form.reset({
-      schoolId: context.school?.id,
+      schoolId: school?.id,
     });
-  }, [context.school?.id, context.schoolDropOutDialog, form]);
+  }, [school?.id, open, form]);
 
   return (
     <Form {...form}>
-      <Dialog open={context.schoolDropOutDialog} onOpenChange={context.setSchoolDropOutDialog}>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="p-5 text-base font-medium leading-6">
           <DialogHeader>
-            <h2>Drop out school</h2>
+            <DialogTitle>Drop out school</DialogTitle>
           </DialogHeader>
-          <DialogAlertWidget label={context.school?.schoolName} />
+          <DialogAlertWidget label={school?.schoolName} />
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
@@ -138,7 +143,7 @@ export function DropoutSchool() {
                 className="text-shamiri-light-red hover:bg-red-bg"
                 variant="ghost"
                 onClick={() => {
-                  context.setSchoolDropOutDialog(false);
+                  setOpen(false);
                 }}
               >
                 Cancel
@@ -159,8 +164,8 @@ export function DropoutSchool() {
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <DialogContent className="p-5">
           <DialogHeader>
-            <h2>Confirm drop out</h2>
-            <DialogAlertWidget label={context.school?.schoolName} />
+            <DialogTitle>Confirm drop out</DialogTitle>
+            <DialogAlertWidget label={school?.schoolName} />
           </DialogHeader>
           <div className="space-y-4">
             <h3>Are you sure?</h3>
@@ -179,7 +184,7 @@ export function DropoutSchool() {
               variant="ghost"
               onClick={() => {
                 setConfirmDialogOpen(false);
-                context.setSchoolDropOutDialog(true);
+                setOpen(true);
               }}
             >
               Cancel

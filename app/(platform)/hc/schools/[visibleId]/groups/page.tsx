@@ -1,9 +1,8 @@
+import { ImplementerRole } from "@prisma/client";
 import { signOut } from "next-auth/react";
-import { Suspense } from "react";
 import { currentHubCoordinator } from "#/app/auth";
 import type { SchoolGroupDataTableData } from "#/components/common/group/columns";
 import GroupsDataTable from "#/components/common/group/groups-datatable";
-import GroupsTableSkeleton from "#/components/common/group/groups-datatable-skeleton";
 import { db } from "#/lib/db";
 
 export default async function GroupsPage(props: { params: Promise<{ visibleId: string }> }) {
@@ -15,6 +14,8 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
   if (!hc) {
     await signOut({ callbackUrl: "/login" });
   }
+
+  const assignedHubId = hc?.profile?.assignedHubId;
 
   const data = await Promise.all([
     await db.$queryRaw<Omit<SchoolGroupDataTableData, "students">[]>`
@@ -85,7 +86,7 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
 
   const supervisors = await db.supervisor.findMany({
     where: {
-      hubId: hc?.assignedHubId as string,
+      hubId: assignedHubId,
     },
     include: {
       fellows: true,
@@ -106,13 +107,11 @@ export default async function GroupsPage(props: { params: Promise<{ visibleId: s
   });
 
   return (
-    <Suspense fallback={<GroupsTableSkeleton role={hc?.user.membership.role!} />}>
-      <GroupsDataTable
-        data={data}
-        school={school}
-        supervisors={supervisors}
-        role={hc?.user.membership.role!}
-      />
-    </Suspense>
+    <GroupsDataTable
+      data={data}
+      school={school}
+      supervisors={supervisors}
+      role={hc?.session?.user.activeMembership?.role ?? ImplementerRole.HUB_COORDINATOR}
+    />
   );
 }
