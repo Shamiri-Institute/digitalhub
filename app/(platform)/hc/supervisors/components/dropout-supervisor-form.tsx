@@ -9,7 +9,13 @@ import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import { dropoutSupervisor } from "#/app/(platform)/hc/supervisors/actions";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -88,7 +94,7 @@ export default function DropoutSupervisor({
       <Dialog open={dropoutDialog} onOpenChange={setDropoutDialog}>
         <DialogContent className="p-5 text-base font-medium leading-6">
           <DialogHeader>
-            <h2 className="text-lg font-bold">Drop out supervisor</h2>
+            <DialogTitle className="text-lg font-bold">Drop out supervisor</DialogTitle>
           </DialogHeader>
           {children}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -156,7 +162,7 @@ export default function DropoutSupervisor({
       <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <DialogContent className="p-5">
           <DialogHeader>
-            <h2 className="text-lg font-bold">Confirm drop out</h2>
+            <DialogTitle className="text-lg font-bold">Confirm drop out</DialogTitle>
           </DialogHeader>
           {children}
           <div className="space-y-4">

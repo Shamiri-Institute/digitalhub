@@ -13,20 +13,20 @@ export async function getOverallStudentsDataBreakdown() {
       SELECT COUNT(*) as count 
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
-      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
     `,
       db.$queryRaw<[{ count: bigint }]>`
       SELECT COUNT(*) as count 
       FROM intervention_sessions ins
       JOIN session_names sn ON ins.session_id = sn.id
-      WHERE sn.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sn.hub_id = ${clinicalLead.profile.assignedHubId}
     `,
       db.$queryRaw<[{ count: bigint }]>`
       SELECT COUNT(*) as count 
       FROM clinical_screening_info csi
       JOIN students sts ON sts.id = csi.student_id
       JOIN schools sc ON sts.school_id = sc.id
-      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
     `,
       db.$queryRaw<[{ count: bigint }]>`
       SELECT COUNT(*) as count 
@@ -34,7 +34,7 @@ export async function getOverallStudentsDataBreakdown() {
       JOIN clinical_screening_info csi ON csi.id = cs."caseId"
       JOIN students sts ON sts.id = csi.student_id
       JOIN schools sc ON sts.school_id = sc.id
-      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
     `,
     ]);
 
@@ -60,7 +60,7 @@ export async function getStudentsDataBreakdown() {
       JOIN schools sc ON s.school_id = sc.id
       JOIN intervention_sessions ins ON ins.id = sa.session_id
       JOIN session_names sn ON sn.id = ins.session_id
-      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
       AND sa.attended = true
       GROUP BY sn.session_name
       ORDER BY sn.session_name ASC
@@ -70,7 +70,7 @@ export async function getStudentsDataBreakdown() {
       SELECT drop_out_reason as reason, COUNT(*) as count
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
-      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
       AND drop_out_reason IS NOT NULL
       GROUP BY drop_out_reason
       ORDER BY count DESC
@@ -81,13 +81,13 @@ export async function getStudentsDataBreakdown() {
         SELECT COUNT(*) as total
         FROM students s
         JOIN schools sc ON s.school_id = sc.id
-        WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+        WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
       ),
       incomplete_students_data AS (
         SELECT COUNT(*) as incomplete
         FROM students s
         JOIN schools sc ON s.school_id = sc.id
-        WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+        WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
         AND (
           s.student_name IS NULL
           OR s.gender IS NULL
@@ -118,7 +118,7 @@ export async function getStudentsDataBreakdown() {
       FROM intervention_session_ratings isr
       JOIN intervention_sessions ins ON ins.id = isr.session_id
       JOIN session_names sn ON sn.id = ins.session_id
-      WHERE sn.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sn.hub_id = ${clinicalLead.profile.assignedHubId}
       GROUP BY sn.session_name
       ORDER BY sn.session_name ASC
     `,
@@ -152,7 +152,7 @@ export async function clinicalSessionsDataBreakdown() {
       FROM clinical_screening_info csi
       JOIN students s ON s.id = csi.student_id
       JOIN schools sc ON s.school_id = sc.id
-      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
       GROUP BY case_status
       ORDER BY count DESC
     `,
@@ -163,7 +163,7 @@ export async function clinicalSessionsDataBreakdown() {
       JOIN clinical_screening_info csi ON csi.id = csa."caseId"
       JOIN students s ON s.id = csi.student_id
       JOIN schools sc ON s.school_id = sc.id
-      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
       GROUP BY session
       ORDER BY count DESC
     `,
@@ -173,7 +173,7 @@ export async function clinicalSessionsDataBreakdown() {
       FROM clinical_screening_info csi
       JOIN students s ON s.id = csi.student_id
       JOIN supervisors sp ON sp.id = csi.current_supervisor_id
-      WHERE sp.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sp.hub_id = ${clinicalLead.profile.assignedHubId}
       GROUP BY sp.supervisor_name
       ORDER BY count DESC
     `,
@@ -183,7 +183,7 @@ export async function clinicalSessionsDataBreakdown() {
       FROM clinical_screening_info csi
       JOIN students s ON s.id = csi.student_id
       JOIN schools sc ON s.school_id = sc.id
-      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
       GROUP BY initial_referred_from_specified
       ORDER BY count DESC
     `,
@@ -218,7 +218,7 @@ export async function getStudentsStatsBreakdown() {
       SELECT form, COUNT(*) as count 
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
-      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
       GROUP BY form
       ORDER BY form ASC
     `,
@@ -232,7 +232,7 @@ export async function getStudentsStatsBreakdown() {
         COUNT(*) as count
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
-      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
       GROUP BY 
         CASE 
           WHEN year_of_birth IS NULL THEN NULL
@@ -245,7 +245,7 @@ export async function getStudentsStatsBreakdown() {
       SELECT gender, COUNT(*) as count 
       FROM students s
       JOIN schools sc ON s.school_id = sc.id
-      WHERE sc.hub_id = ${clinicalLead.assignedHubId}
+      WHERE sc.hub_id = ${clinicalLead.profile.assignedHubId}
       GROUP BY gender
       ORDER BY gender ASC
     `,

@@ -32,12 +32,7 @@ export function Combobox({
     <div className="rounded-md border border-zinc-200/60 bg-white px-1.5 py-2">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            variant="base"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between px-2"
-          >
+          <Button variant="base" aria-expanded={open} className="w-full justify-between px-2">
             <span className="text-left text-base">
               {activeItemId
                 ? items.find((item) => item.id === activeItemId)?.label

@@ -930,13 +930,15 @@ async function seedDatabase() {
           }
 
           for (const group of Object.values(school.groups)) {
+            const fellow = await db.fellow.findFirstOrThrow({
+              where: { visibleId: group.groupFellowVisibleId },
+            });
             await db.interventionGroup.create({
               data: {
                 id: group.id,
                 groupName: group.groupName,
                 leader: {
-                  // TODO: Replace visible id value with id
-                  connect: { id: group.groupFellowVisibleId },
+                  connect: { id: fellow.id },
                 },
                 project: {
                   connect: { id: createdProject.id },
@@ -949,6 +951,9 @@ async function seedDatabase() {
           }
 
           for (const student of Object.values(school.students)) {
+            const fellow = await db.fellow.findFirstOrThrow({
+              where: { visibleId: student.fellowVisibleId },
+            });
             await db.student.create({
               data: {
                 id: student.id,
@@ -959,10 +964,7 @@ async function seedDatabase() {
                 gender: student.gender,
                 condition: student.condition,
                 fellow: {
-                  connect: {
-                    // TODO: Replace visible id value with id
-                    id: student.fellowVisibleId,
-                  },
+                  connect: { id: fellow.id },
                 },
                 school: {
                   connect: { id: createdSchool.id },

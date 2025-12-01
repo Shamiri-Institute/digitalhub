@@ -2,16 +2,18 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Prisma } from "@prisma/client";
-import { useContext, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { AssignPointSupervisorSchema } from "#/app/(platform)/hc/schemas";
-import { assignSchoolPointSupervisor } from "#/app/(platform)/hc/schools/actions";
-import { SchoolInfoContext } from "#/app/(platform)/hc/schools/context/school-info-context";
-import { SchoolsDataContext } from "#/app/(platform)/hc/schools/context/schools-data-context";
+import {
+  assignSchoolPointSupervisor,
+  revalidatePageAction,
+} from "#/app/(platform)/hc/schools/actions";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -29,27 +31,33 @@ import {
 } from "#/components/ui/select";
 import { Separator } from "#/components/ui/separator";
 import { toast } from "#/components/ui/use-toast";
+import type { SchoolsTableData } from "./columns";
 
 export default function AssignPointSupervisor({
   supervisors,
+  open,
+  setOpen,
+  school,
 }: {
   supervisors: Prisma.SupervisorGetPayload<{}>[];
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  school: SchoolsTableData | null;
 }) {
-  const context = useContext(SchoolInfoContext);
-  const schoolsContext = useContext(SchoolsDataContext);
+  const pathname = usePathname();
   const form = useForm<z.infer<typeof AssignPointSupervisorSchema>>({
     resolver: zodResolver(AssignPointSupervisorSchema),
   });
 
   useEffect(() => {
     form.reset({
-      assignedSupervisorId: context.school?.assignedSupervisorId ?? undefined,
+      assignedSupervisorId: school?.assignedSupervisorId ?? undefined,
     });
-  }, [context.pointSupervisorDialog]);
+  }, [open, school, form]);
 
   const onSubmit = async (data: z.infer<typeof AssignPointSupervisorSchema>) => {
-    if (context.school) {
-      const response = await assignSchoolPointSupervisor(context.school?.id, data);
+    if (school) {
+      const response = await assignSchoolPointSupervisor(school.id, data);
 
       if (!response.success) {
         toast({
@@ -59,35 +67,27 @@ export default function AssignPointSupervisor({
         return;
       }
 
-      const copiedSchools = [...schoolsContext.schools];
-      const index = copiedSchools.findIndex((_school) => _school.id === context.school?.id);
-      if (index !== -1) {
-        copiedSchools[index]!.assignedSupervisorId = data.assignedSupervisorId;
-        copiedSchools[index]!.assignedSupervisor =
-          supervisors.find((supervisor) => supervisor.id === data.assignedSupervisorId) ?? null;
-        schoolsContext.setSchools(copiedSchools);
-      }
-
       toast({
         description: response.message,
       });
 
+      await revalidatePageAction(pathname);
       form.reset();
-      context.setPointSupervisorDialog(false);
+      setOpen(false);
     }
   };
 
   return (
-    <Dialog open={context.pointSupervisorDialog} onOpenChange={context.setPointSupervisorDialog}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <span className="text-xl">
-            {context.school?.assignedSupervisorId !== null
+          <DialogTitle className="text-xl">
+            {school?.assignedSupervisorId !== null
               ? "Change point supervisor"
               : "Assign point supervisor"}
-          </span>
+          </DialogTitle>
         </DialogHeader>
-        <DialogAlertWidget label={context.school?.schoolName} />
+        <DialogAlertWidget label={school?.schoolName} />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="space-y-6">
@@ -124,7 +124,7 @@ export default function AssignPointSupervisor({
                 variant="ghost"
                 type="button"
                 onClick={() => {
-                  context.setPointSupervisorDialog(false);
+                  setOpen(false);
                 }}
               >
                 Cancel

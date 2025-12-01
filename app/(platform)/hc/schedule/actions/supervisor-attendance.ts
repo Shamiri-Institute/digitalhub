@@ -1,11 +1,18 @@
 "use server";
 
-import { getCurrentUser } from "#/app/auth";
+import { ImplementerRole } from "@prisma/client";
+import { getCurrentPersonnel } from "#/app/auth";
 import { db } from "#/lib/db";
 
 export async function markManySupervisorAttendance(ids: string[], attended: boolean | null) {
-  const user = getCurrentUser();
-  if (user === null) return { success: false, message: "Unauthenticated user." };
+  const user = await getCurrentPersonnel();
+  if (!user) {
+    return { success: false, message: "Unauthenticated user." };
+  }
+  const role = user.session.user.activeMembership?.role;
+  if (!role || role !== ImplementerRole.HUB_COORDINATOR) {
+    return { success: false, message: "Unauthorized user." };
+  }
 
   try {
     const data = await db.supervisorAttendance.updateMany({

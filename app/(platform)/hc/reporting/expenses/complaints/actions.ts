@@ -16,7 +16,7 @@ export async function loadHubPaymentComplaints() {
 
   const fellows = await db.fellow.findMany({
     where: {
-      hubId: hubCoordinator.assignedHubId,
+      hubId: hubCoordinator.profile?.assignedHubId,
     },
     include: {
       hub: {

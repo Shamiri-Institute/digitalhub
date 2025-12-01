@@ -123,7 +123,7 @@ export default function ReferClinicalCase({
 
   const onSubmit = async (data: ComplaintFormValues) => {
     try {
-      let response;
+      let response: { success: boolean; message?: string };
       if (data.referTo === "Clinical Lead") {
         response = await referClinicalCaseToClinicalLead({
           caseId: clinicalCase.id,
@@ -135,9 +135,7 @@ export default function ReferClinicalCase({
           referredTo: data.referTo,
           referredToPerson: selectedClinicalLead?.name ?? "",
         });
-      }
-
-      if (data.referTo === "Supervisor") {
+      } else if (data.referTo === "Supervisor") {
         response = await referClinicalCaseToSupervisor({
           caseId: clinicalCase.id,
           supervisorName: currentSupervisor?.name ?? "",
@@ -150,9 +148,11 @@ export default function ReferClinicalCase({
           referralReason: data.referralReason,
           referredTo: data.referTo,
         });
+      } else {
+        response = { success: false, message: "Invalid referral type" };
       }
 
-      if (response?.success) {
+      if (response.success) {
         toast({
           title: "Success",
           description: "Clinical case referred successfully",

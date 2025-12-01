@@ -1,7 +1,7 @@
 import type React from "react";
 import type { Dispatch, SetStateAction } from "react";
 import SchoolFilesUploader from "#/components/common/files/upload-file";
-import { Dialog, DialogContent, DialogHeader } from "#/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "#/components/ui/dialog";
 
 export default function UploadFileDialogue({
   schoolId,
@@ -23,7 +23,7 @@ export default function UploadFileDialogue({
       {children}
       <DialogContent className="lg:w-2/5 lg:max-w-none">
         <DialogHeader>
-          <span className="text-xl">Upload file</span>
+          <DialogTitle className="text-xl">Upload file</DialogTitle>
         </DialogHeader>
         <SchoolFilesUploader schoolId={schoolId} onClose={onOpenChange} />
       </DialogContent>

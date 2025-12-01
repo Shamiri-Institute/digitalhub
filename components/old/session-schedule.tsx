@@ -142,7 +142,8 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
           {daysOfWeek.map(({ date, dayOfMonth, dayName, isAnchorDay }) => {
             const hasSessions = sortedSessions.some((session) => isSameDay(session.date, date));
             return (
-              <div
+              <button
+                type="button"
                 key={dayOfMonth}
                 className={cn(
                   "relative flex cursor-pointer flex-col items-center gap-px rounded-t-md pb-2.5 pt-1 text-left",
@@ -170,7 +171,7 @@ export function SessionSchedule({ sessions }: { sessions: SessionEvent[] }) {
                 >
                   {dayName}
                 </span>
-              </div>
+              </button>
             );
           })}
         </div>

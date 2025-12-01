@@ -9,7 +9,13 @@ import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
 import type { SchoolStudentTableData } from "#/components/common/student/columns";
 import { Alert, AlertTitle } from "#/components/ui/alert";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -101,11 +107,9 @@ export default function StudentDropoutForm({
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="p-5 text-base font-medium leading-6">
           <DialogHeader>
-            {student.droppedOut ? (
-              <h2 className="text-lg font-bold">Undo student drop out?</h2>
-            ) : (
-              <h2 className="text-lg font-bold">Drop out student</h2>
-            )}
+            <DialogTitle className="text-lg font-bold">
+              {student.droppedOut ? "Undo student drop out?" : "Drop out student"}
+            </DialogTitle>
           </DialogHeader>
           {children}
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -169,7 +173,7 @@ export default function StudentDropoutForm({
       <Dialog open={confirmDialog} onOpenChange={setConfirmDialog}>
         <DialogContent className="p-5">
           <DialogHeader>
-            <h2 className="text-lg font-bold">Confirm drop out</h2>
+            <DialogTitle className="text-lg font-bold">Confirm drop out</DialogTitle>
           </DialogHeader>
           {children}
           <div className="space-y-4">

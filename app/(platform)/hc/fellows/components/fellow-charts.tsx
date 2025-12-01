@@ -89,7 +89,7 @@ export default function FellowsCharts({
                   {dropoutData.reduce((acc, val) => acc + val.value, 0)}
                 </Label>
                 {dropoutData.map((reason, index) => (
-                  <Cell key={index} fill={randomColors[index]} />
+                  <Cell key={reason.name} fill={randomColors[index]} />
                 ))}
               </Pie>
               <Tooltip />

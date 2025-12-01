@@ -1,6 +1,6 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { columns, type SchoolFellowTableData } from "#/components/common/fellow/columns";
 import { BatchUploadDownloadFellow } from "#/components/common/fellow/upload-csv";
@@ -46,6 +46,10 @@ export default function FellowsDatatableSkeleton({ role }: { role: ImplementerRo
       className="data-table data-table-action lg:mt-4"
       emptyStateMessage=""
       renderTableActions={renderTableActions()}
+      columnVisibilityState={{
+        checkbox: role === ImplementerRole.HUB_COORDINATOR,
+        Supervisor: false,
+      }}
     />
   );
 }

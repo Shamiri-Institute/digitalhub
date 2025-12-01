@@ -14,7 +14,13 @@ import DialogAlertWidget from "#/components/common/dialog-alert-widget";
 import { WeeklyFellowEvaluationSchema } from "#/components/common/fellow/schema";
 import { Icons } from "#/components/icons";
 import { Button } from "#/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader } from "#/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -142,7 +148,7 @@ export default function WeeklyFellowEvaluation({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="w-2/5 max-w-none p-5 text-base font-medium leading-6">
           <DialogHeader>
-            <h2 className="text-lg font-bold">Weekly fellow evaluation</h2>
+            <DialogTitle className="text-lg font-bold">Weekly fellow evaluation</DialogTitle>
           </DialogHeader>
           {children}
           {mode === "view" && evaluations.length === 0 ? (
@@ -485,7 +491,8 @@ function RatingStarsInput({
       <div className="rating-stars flex flex-row-reverse gap-1 py-2">
         {Array.from(Array(5).keys()).map((index) => {
           return (
-            <span
+            <button
+              type="button"
               key={index.toString()}
               className={cn(
                 "peer relative h-5 w-5 shrink cursor-pointer transition ease-in hover:text-shamiri-light-orange active:scale-[1.25] peer-hover:text-shamiri-light-orange",
@@ -498,7 +505,7 @@ function RatingStarsInput({
               }}
             >
               <Icons.starRating className="h-full w-full" />
-            </span>
+            </button>
           );
         })}
       </div>

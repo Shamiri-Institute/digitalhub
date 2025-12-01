@@ -35,11 +35,11 @@ export default function StudentsStatsBreakdown({
                   position="center"
                   className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {studentsStats.formStats.reduce((acc: number, val: any) => acc + val.value, 0)}
+                  {studentsStats.formStats.reduce((acc: number, val) => acc + val.value, 0)}
                 </Label>
-                {studentsStats.formStats.map((val: any, index: number) => (
+                {studentsStats.formStats.map((val, index: number) => (
                   <Cell
-                    key={index}
+                    key={val.form}
                     fill={studentsGroupByColors[index % studentsGroupByColors.length]}
                   />
                 ))}
@@ -63,8 +63,8 @@ export default function StudentsStatsBreakdown({
                 innerRadius={70}
                 fill="#8884d8"
               >
-                {studentsStats.ageStats.map((val: any, index: number) => (
-                  <Cell key={index} fill={randomColors[index]} />
+                {studentsStats.ageStats.map((val, index: number) => (
+                  <Cell key={val.age} fill={randomColors[index]} />
                 ))}
               </Pie>
               <Tooltip
@@ -94,11 +94,11 @@ export default function StudentsStatsBreakdown({
                   position="center"
                   className="text-2xl font-semibold leading-8 text-shamiri-black"
                 >
-                  {studentsStats.genderStats.reduce((acc: number, val: any) => acc + val.value, 0)}
+                  {studentsStats.genderStats.reduce((acc: number, val) => acc + val.value, 0)}
                 </Label>
                 {studentsStats.genderStats.map((val, index) => (
                   <Cell
-                    key={index}
+                    key={val.gender}
                     fill={studentsGroupByColors[index % studentsGroupByColors.length]}
                   />
                 ))}
