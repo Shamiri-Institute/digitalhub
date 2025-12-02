@@ -82,19 +82,10 @@ export function LayoutClient({
     return (
       <div className={className}>
         <div className="nav-link">
-          <RoleSwitcher
-            loading={loading}
-            setLoading={setLoading}
-            activeMembership={session?.user?.activeMembership ?? null}
-          />
+          <RoleSwitcher loading={loading} setLoading={setLoading} session={session} />
         </div>
         <div className="nav-link">
-          <MembershipSwitcher
-            loading={loading}
-            setLoading={setLoading}
-            memberships={session?.user?.memberships ?? []}
-            activeMembership={session?.user?.activeMembership ?? null}
-          />
+          <MembershipSwitcher loading={loading} setLoading={setLoading} session={session} />
         </div>
         <div className="nav-link hidden w-full lg:flex lg:w-auto">
           <DropdownMenu>
