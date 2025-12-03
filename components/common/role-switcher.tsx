@@ -57,7 +57,7 @@ export function RoleSwitcher({
   }, [activeMembership]);
 
   // Only display in development environments
-  const isDevelopment = process.env.NODE_PUBLIC_ENV === "development";
+  const isDevelopment = process.env.NEXT_PUBLIC_ENV === "development";
   if (!isDevelopment) {
     return null;
   }
