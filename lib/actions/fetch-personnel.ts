@@ -345,3 +345,12 @@ export async function fetchPersonnelMemberships(membership: JWTMembership) {
   });
   return memberships;
 }
+
+export async function isAdminUserByEmail(email: string) {
+  const adminUser = await db.adminUser.findFirst({
+    where: {
+      email,
+    },
+  });
+  return adminUser !== null;
+}
