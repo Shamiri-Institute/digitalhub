@@ -590,7 +590,7 @@ function NavigationButtons({
   nextProps: AriaButtonProps;
 }) {
   return (
-    <div className="inline-flex shrink-0 divide-x divide-gray-300 overflow-auto rounded-xl border border-gray-300 shadow-sm">
+    <div className="inline-flex shrink-0 divide-x divide-gray-300 overflow-auto rounded-lg border border-gray-300 shadow-sm">
       <NavigationButton aria-label="Previous Month" {...prevProps}>
         <Icons.chevronLeft className="h-5 w-5" />
       </NavigationButton>
