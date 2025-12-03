@@ -1,11 +1,10 @@
 "use client";
 
-import type { ImplementerRole } from "@prisma/client";
+import { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
-import { usePathname, useRouter } from "next/navigation";
+import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
-import { revalidatePageAction } from "#/app/(platform)/hc/schools/actions";
+import { useEffect, useState } from "react";
 import { Button } from "#/components/ui/button";
 import {
   Command,
@@ -16,6 +15,7 @@ import {
   CommandSeparator,
 } from "#/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "#/components/ui/popover";
+import { isAdminUserByEmail } from "#/lib/actions/fetch-personnel";
 import { cn } from "#/lib/utils";
 
 interface JWTMembership {
@@ -29,39 +29,44 @@ interface JWTMembership {
 export function MembershipSwitcher({
   loading,
   setLoading,
-  memberships,
-  activeMembership,
+  session,
 }: {
   loading: boolean;
   setLoading: (loading: boolean) => void;
-  memberships: JWTMembership[];
-  activeMembership: JWTMembership | null;
+  session: Session | null;
 }) {
-  const pathname = usePathname();
   const { update } = useSession();
   const [open, setOpen] = useState(false);
-  const router = useRouter();
+  const activeMembership = session?.user?.activeMembership ?? null;
+  const memberships = session?.user?.memberships ?? [];
+  const [isAdminUser, setIsAdminUser] = useState(activeMembership?.role === ImplementerRole.ADMIN);
 
-  // console.log(memberships);
-  // console.log(activeMembership);
+  useEffect(() => {
+    const checkIsAdminUser = async () => {
+      const checkIsAdminUser = await isAdminUserByEmail(session?.user?.email ?? "");
+      if (checkIsAdminUser) {
+        setIsAdminUser(true);
+      }
+    };
+    checkIsAdminUser();
+    console.log(session);
+  }, [session]);
+
+  if (!isAdminUser) {
+    return null;
+  }
 
   const handleMembershipChange = async (membership: JWTMembership) => {
     if (activeMembership?.id === membership.id) return;
 
     setLoading(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
       await update({
         user: {
           activeMembership: membership,
         },
       });
-
-      if (pathname.includes("/schools")) {
-        router.push("/admin/hubs");
-      } else {
-        revalidatePageAction(pathname);
-      }
+      window.location.reload();
     } catch (error) {
       console.error("Failed to switch membership:", error);
     } finally {
