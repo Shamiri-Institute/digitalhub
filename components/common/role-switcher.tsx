@@ -3,6 +3,7 @@
 import type { ImplementerRole } from "@prisma/client";
 import { CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
 import { Filter } from "lucide-react";
+import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { selectPersonnel } from "#/app/actions";
@@ -29,26 +30,20 @@ import {
 import type { Personnel } from "#/lib/types/personnel";
 import { cn } from "#/lib/utils";
 
-interface JWTMembership {
-  id: number;
-  implementerId: string;
-  implementerName: string;
-  role: ImplementerRole;
-  identifier: string | null;
-}
-
 export function RoleSwitcher({
   loading,
   setLoading,
-  activeMembership,
+  session,
 }: {
   loading: boolean;
   setLoading: (loading: boolean) => void;
-  activeMembership: JWTMembership | null;
+  session: Session | null;
 }) {
   const [open, setOpen] = useState(false);
   const [implementerMembers, setImplementerMembers] = useState<ImplementerPersonnel | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<Set<ImplementerRole>>(new Set());
+
+  const activeMembership = session?.user?.activeMembership ?? null;
 
   useEffect(() => {
     const fetchImplementerMembers = async () => {
@@ -56,17 +51,27 @@ export function RoleSwitcher({
         return;
       }
       const implementerMembers = await fetchImplementerPersonnel(activeMembership);
-
       setImplementerMembers(implementerMembers);
     };
     fetchImplementerMembers();
   }, [activeMembership]);
 
+  // Only display in development environments
+  const isDevelopment = process.env.NODE_PUBLIC_ENV === "development";
+  if (!isDevelopment) {
+    return null;
+  }
+
   const handleRoleChange = async (member: Personnel) => {
     setLoading(true);
     try {
-      await selectPersonnel({ identifier: member.id, role: member.role });
-      signOut({ callbackUrl: "/login" });
+      const data = await selectPersonnel({ identifier: member.id, role: member.role });
+
+      if (!data) {
+        throw new Error("Failed to update personnel");
+      }
+
+      await signOut({ callbackUrl: "/login" });
     } catch (error) {
       console.error("Failed to switch role:", error);
     } finally {
@@ -74,12 +79,10 @@ export function RoleSwitcher({
     }
   };
 
-  // Get unique roles from personnel
   const availableRoles: ImplementerRole[] = implementerMembers?.personnel
     ? Array.from(new Set(implementerMembers.personnel.map((member) => member.role))).sort()
     : [];
 
-  // Filter personnel based on selected roles
   const filteredPersonnel = implementerMembers?.personnel
     ? selectedRoles.size === 0
       ? implementerMembers.personnel
@@ -147,7 +150,12 @@ export function RoleSwitcher({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-muted p-0"
+                  className={cn(
+                    "h-8 w-8 p-0",
+                    selectedRoles.size > 0
+                      ? "text-shamiri-new-blue"
+                      : "text-muted-foreground hover:text-shamiri-new-blue",
+                  )}
                   aria-label="Filter by role"
                 >
                   <Filter className="h-3.5 w-3.5" />
