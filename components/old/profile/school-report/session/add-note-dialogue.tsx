@@ -14,8 +14,8 @@ import { toast } from "#/components/ui/use-toast";
 
 const FormSchema = z.object({
   content: z.string({
-      error: (issue) => issue.input === undefined ? "Please enter the note" : undefined
-}),
+    error: (issue) => (issue.input === undefined ? "Please enter the note" : undefined),
+  }),
 });
 
 export function AddNoteDialog({

@@ -6,15 +6,9 @@ export const SessionRatingsSchema = z.object({
   mode: z.enum(["add", "view"]),
   ratingId: z.string().optional(),
   sessionId: stringValidation("Session ID required"),
-  studentBehaviorRating: z.number({
-      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
-}).min(1).max(5),
-  adminSupportRating: z.number({
-      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
-}).min(1).max(5),
-  workloadRating: z.number({
-      error: (issue) => issue.input === undefined ? "Please provide a rating" : undefined
-}).min(1).max(5),
+  studentBehaviorRating: z.number({ error: "Please provide a rating" }).min(1).max(5),
+  adminSupportRating: z.number({ error: "Please provide a rating" }).min(1).max(5),
+  workloadRating: z.number({ error: "Please provide a rating" }).min(1).max(5),
   positiveHighlights: z.string().optional(),
   challenges: z.string().optional(),
   recommendations: z.string().optional(),
@@ -27,16 +21,12 @@ export const ScheduleNewSessionSchema = z
     sessionType: z.enum(SESSION_NAME_TYPES),
     schoolId: z.string().optional(),
     venue: z.string().optional(),
-    sessionDate: z
-      .date({
-          error: (issue) => issue.input === undefined ? "Please select a date" : "Please select a date"
-    })
-      .transform((val) => {
-        if (!val) {
-          throw new Error("Please select a date");
-        }
-        return val;
-      }),
+    sessionDate: z.date({ error: "Please select a date" }).transform((val) => {
+      if (!val) {
+        throw new Error("Please select a date");
+      }
+      return val;
+    }),
     sessionStartTime: stringValidation("Please select a start time"),
   })
   .superRefine((val, ctx) => {
@@ -73,14 +63,12 @@ export const ScheduleNewSessionSchema = z
 
 export const MarkSessionOccurrenceSchema = z.object({
   occurrence: z.enum(OCCURRENCE_STATUS, {
-    error: (issue, _ctx) => "Please mark occurrence",
+    error: "Please mark occurrence",
   }),
   sessionId: stringValidation("session ID is required"),
 });
 
 export const RescheduleSessionSchema = z.object({
-  sessionDate: z.coerce.date({
-      error: (issue) => issue.input === undefined ? "Please select a date" : undefined
-}),
+  sessionDate: z.coerce.date({ error: "Please select a date" }),
   sessionStartTime: stringValidation("Please select a start time"),
 });

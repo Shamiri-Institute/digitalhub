@@ -38,11 +38,13 @@ const organization = {
 
 const FormSchema = z.object({
   emails: z.string({
-      error: (issue) => issue.input === undefined ? "Please select the email(s) to invite." : undefined
-}),
+    error: (issue) =>
+      issue.input === undefined ? "Please select the email(s) to invite." : undefined,
+  }),
   role: z.string({
-      error: (issue) => issue.input === undefined ? "Please select the role to invite as." : undefined
-}),
+    error: (issue) =>
+      issue.input === undefined ? "Please select the role to invite as." : undefined,
+  }),
 });
 
 const initialState = {

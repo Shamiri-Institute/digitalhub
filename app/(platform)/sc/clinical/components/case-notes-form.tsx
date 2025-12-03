@@ -51,8 +51,8 @@ const CaseReportSchema = z.object({
   presentingIssues: stringValidation("Presenting issues are required"),
   orsAssessment: z.string().optional(),
   riskLevel: z.enum(riskLevels, {
-      error: (issue) => issue.input === undefined ? "Risk level is required" : undefined
-}),
+    error: (issue) => (issue.input === undefined ? "Risk level is required" : undefined),
+  }),
   necessaryConditions: z.string().optional(),
   treatmentInterventions: z.array(z.string()).min(1, "Select at least one intervention"),
   otherIntervention: z.string().optional(),

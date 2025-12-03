@@ -14,14 +14,16 @@ import { useToast } from "#/components/ui/use-toast";
 
 const FormSchema = z.object({
   positiveHighlights: z.string({
-      error: (issue) => issue.input === undefined ? "Please enter the positive highlights." : undefined
-}),
+    error: (issue) =>
+      issue.input === undefined ? "Please enter the positive highlights." : undefined,
+  }),
   reportedChallenges: z.string({
-      error: (issue) => issue.input === undefined ? "Please enter the reported challenges." : undefined
-}),
+    error: (issue) =>
+      issue.input === undefined ? "Please enter the reported challenges." : undefined,
+  }),
   recommendations: z.string({
-      error: (issue) => issue.input === undefined ? "Please enter the recommendations." : undefined
-}),
+    error: (issue) => (issue.input === undefined ? "Please enter the recommendations." : undefined),
+  }),
 });
 
 export function WeeklyReportForm({

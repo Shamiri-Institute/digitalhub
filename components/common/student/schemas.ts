@@ -6,16 +6,14 @@ export const StudentDetailsSchema = z
   .object({
     id: z.string().optional(),
     mode: z.enum(["add", "edit", "view"]),
-    studentName: z.string({
-        error: (issue) => issue.input === undefined ? "Please enter the student's name" : undefined
-    }),
+    studentName: z.string({ error: "Please enter the student's name" }),
     form: stringValidation("Please enter the student's class").refine(
       (val) => {
         return !isNaN(Number(val)) && val.trim() !== "";
       },
       {
-          error: "Please enter a valid value"
-    },
+        error: "Please enter a valid value",
+      },
     ),
     stream: stringValidation("Please enter the student's stream"),
     gender: stringValidation("Please select the student's gender"),
@@ -29,8 +27,8 @@ export const StudentDetailsSchema = z
         return !isNaN(year) && val.trim() !== "" && year >= 1900 && year <= currentYear;
       },
       {
-          error: "Please enter a valid year between 1900 and current year"
-    },
+        error: "Please enter a valid year between 1900 and current year",
+      },
     ),
     phoneNumber: z
       .string()
@@ -41,7 +39,7 @@ export const StudentDetailsSchema = z
           return isValidPhoneNumber(val, "KE");
         },
         {
-            error: "Please enter a valid kenyan phone number"
+          error: "Please enter a valid kenyan phone number",
         },
       ),
   })

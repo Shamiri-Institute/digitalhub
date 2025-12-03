@@ -40,8 +40,8 @@ const terminationReasons = [
 const CaseTerminationSchema = z.object({
   sessionId: stringValidation("Session is required"),
   terminationReason: z.enum(terminationReasons, {
-      error: (issue) => issue.input === undefined ? "Termination reason is required" : undefined
-}),
+    error: (issue) => (issue.input === undefined ? "Termination reason is required" : undefined),
+  }),
   terminationExplanation: stringValidation("Termination explanation is required"),
 });
 

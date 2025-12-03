@@ -53,7 +53,11 @@ export const ProfileSchema = z
       const mpesaResult = mpesaFieldsSchema.safeParse(data);
       if (!mpesaResult.success) {
         mpesaResult.error.issues.forEach((issue) => {
-          ctx.addIssue(issue);
+          ctx.addIssue({
+            code: "custom",
+            message: issue.message,
+            path: issue.path,
+          });
         });
       }
     }
@@ -62,7 +66,11 @@ export const ProfileSchema = z
       const bankResult = bankFieldsSchema.safeParse(data);
       if (!bankResult.success) {
         bankResult.error.issues.forEach((issue) => {
-          ctx.addIssue(issue);
+          ctx.addIssue({
+            code: "custom",
+            message: issue.message,
+            path: issue.path,
+          });
         });
       }
     }

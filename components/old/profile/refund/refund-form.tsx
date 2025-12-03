@@ -39,39 +39,43 @@ const ACCEPTED_FILE_TYPES = [
 export const FormSchema = z.object({
   receiptDate: z
     .date({
-        error: (issue) => issue.input === undefined ? "Please enter the date of the receipt." : undefined
+      error: (issue) =>
+        issue.input === undefined ? "Please enter the date of the receipt." : undefined,
     })
     .optional(),
   mpesaName: z.string({
-      error: (issue) => issue.input === undefined ? "Please enter the fellow's MPESA name." : undefined
-}),
+    error: (issue) =>
+      issue.input === undefined ? "Please enter the fellow's MPESA name." : undefined,
+  }),
   mpesaNumber: z
     .string({
-        error: (issue) => issue.input === undefined ? "Please enter the fellow's MPESA number." : undefined
+      error: (issue) =>
+        issue.input === undefined ? "Please enter the fellow's MPESA number." : undefined,
     })
     .refine((val) => isValidPhoneNumber(val, "KE"), {
-        error: "Please enter a valid Kenyan phone number (e.g. 0712345678)."
+      error: "Please enter a valid Kenyan phone number (e.g. 0712345678).",
     }),
   session: z.string({
-      error: (issue) => issue.input === undefined ? "Please select a session." : undefined
-}),
+    error: (issue) => (issue.input === undefined ? "Please select a session." : undefined),
+  }),
   reason: z.string({
-      error: (issue) => issue.input === undefined ? "Please select a reason." : undefined
-}),
+    error: (issue) => (issue.input === undefined ? "Please select a reason." : undefined),
+  }),
   destination: z.string({
-      error: (issue) => issue.input === undefined ? "Please select a destination." : undefined
-}),
+    error: (issue) => (issue.input === undefined ? "Please select a destination." : undefined),
+  }),
   amount: z.string({
-      error: (issue) => issue.input === undefined ? "Please enter the total amount used." : undefined
-}),
+    error: (issue) =>
+      issue.input === undefined ? "Please enter the total amount used." : undefined,
+  }),
   receiptFileKey: z
     .string({
-        error: (issue) => issue.input === undefined ? "Please upload a receipt file." : undefined
+      error: (issue) => (issue.input === undefined ? "Please upload a receipt file." : undefined),
     })
     .min(3, "Please upload a receipt file"),
   school: z.string({
-      error: (issue) => issue.input === undefined ? "Please select a school." : undefined
-}),
+    error: (issue) => (issue.input === undefined ? "Please select a school." : undefined),
+  }),
 });
 
 export function RefundForm({ supervisorId, hubId }: { supervisorId: string; hubId: string }) {
