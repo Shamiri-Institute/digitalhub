@@ -36,8 +36,8 @@ export default function SchoolLeftPanel({
   open?: boolean;
   role?: ImplementerRole;
 }) {
-  const panelRef: any = useRef(null);
-  const [loading, setLoading] = useState(!role ? true : false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(!role);
   const [school, setSchool] = useState<SchoolData | null>(null);
   const { visibleId } = useParams();
 
@@ -147,18 +147,6 @@ export default function SchoolLeftPanel({
                   <AccordionTrigger className="border-b">
                     <div className="flex w-full justify-between gap-2 text-base">
                       <span>Contact details</span>
-                      {!school?.droppedOut && role === "HUB_COORDINATOR" && (
-                        <button
-                          type="button"
-                          className="accordion-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // schoolContext.setEditDialog(true);
-                          }}
-                        >
-                          Edit
-                        </button>
-                      )}
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="space-y-3 pt-4">
@@ -246,18 +234,6 @@ export default function SchoolLeftPanel({
                   <AccordionTrigger className="border-b">
                     <div className="flex w-full justify-between gap-2 text-base">
                       <span>Information</span>
-                      {!school?.droppedOut && role === "HUB_COORDINATOR" && (
-                        <button
-                          type="button"
-                          className="accordion-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            // schoolContext.setEditDialog(true);
-                          }}
-                        >
-                          Edit
-                        </button>
-                      )}
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="space-y-3 pt-4 text-sm font-medium leading-5">
@@ -315,31 +291,6 @@ export default function SchoolLeftPanel({
                   <AccordionTrigger className="border-b">
                     <div className="flex w-full justify-between gap-2 text-base">
                       <span>Dropout History</span>
-                      {role === "HUB_COORDINATOR" ? (
-                        school?.droppedOut ? (
-                          <button
-                            type="button"
-                            className="accordion-button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // schoolContext.setUndoDropOutDialog(true);
-                            }}
-                          >
-                            Undo dropout
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="accordion-button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // schoolContext.setSchoolDropOutDialog(true);
-                            }}
-                          >
-                            Dropout
-                          </button>
-                        )
-                      ) : null}
                     </div>
                   </AccordionTrigger>
                   {school?.schoolDropoutHistory && school?.schoolDropoutHistory.length > 0 ? (
