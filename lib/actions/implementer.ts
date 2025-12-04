@@ -2,6 +2,7 @@
 
 import { currentAdminUser } from "#/app/auth";
 import type { JWTMembership } from "#/lib/auth-options";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 import { db } from "#/lib/db";
 
 export async function fetchImplementerStats(implementerId: string) {
@@ -26,7 +27,9 @@ export async function fetchImplementerStats(implementerId: string) {
       LEFT JOIN schools sch ON h.id = sch.hub_id
       LEFT JOIN students stu ON sch.id = stu.school_id
     WHERE
-      h.implementer_id = ${implementerId}`;
+      h.implementer_id = ${implementerId}
+      AND h.project_id = ${CURRENT_PROJECT_ID}
+      `;
 
     return { success: true, data: stats[0] };
   } catch (error) {
@@ -46,6 +49,7 @@ export async function fetchImplementerSessionTypes(implementerId: string) {
       where: {
         hub: {
           implementerId: implementerId,
+          projectId: CURRENT_PROJECT_ID,
         },
       },
       distinct: ["sessionName"],
@@ -71,6 +75,7 @@ export async function fetchImplementerHubs(activeMembership: JWTMembership) {
     const hubs = await db.hub.findMany({
       where: {
         implementerId: activeMembership.implementerId,
+        projectId: CURRENT_PROJECT_ID,
       },
       include: {
         schools: {
@@ -131,6 +136,7 @@ export async function fetchImplementerSchools(implementerId: string) {
       where: {
         hub: {
           implementerId: implementerId,
+          projectId: CURRENT_PROJECT_ID,
         },
       },
       select: {
@@ -162,7 +168,8 @@ export async function fetchImplementerSupervisors(implementerId: string) {
       where: {
         hub: {
           implementerId: implementerId,
-        },
+          projectId: CURRENT_PROJECT_ID,
+          },
       },
       include: {
         supervisorAttendances: {
@@ -213,6 +220,7 @@ export async function fetchImplementerFellowRatings(implementerId: string) {
   LEFT JOIN weekly_fellow_ratings wfr ON fel.id = wfr.fellow_id
   LEFT JOIN hubs h ON h.id = fel.hub_id
   WHERE h.implementer_id=${implementerId}
+  AND h.project_id = ${CURRENT_PROJECT_ID}
   GROUP BY fel.id`;
     return { success: true, data: fellowRatings };
   } catch (error) {

@@ -16,7 +16,7 @@ export const APP_HOSTNAMES = new Set([
 export const NEXT_PUBLIC_ENV = validate(process.env.NEXT_PUBLIC_ENV);
 export const APP_ENV = process.env.APP_ENV || "production";
 
-export const CURRENT_PROJECT_ID = "2025_Project_1";
+export const CURRENT_PROJECT_ID = process.env.NEXT_PUBLIC_CURRENT_PROJECT_ID || "2025_Project_1";
 
 export const constants = z
   .object({

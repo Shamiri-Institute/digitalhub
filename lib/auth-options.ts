@@ -6,6 +6,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
 
 import { db } from "#/lib/db";
+import { CURRENT_PROJECT_ID } from "#/lib/constants";
 
 const config = z
   .object({
@@ -144,6 +145,15 @@ export const authOptions: AuthOptions = {
             select: { file: true },
           },
           memberships: {
+            where: {
+              implementer: {
+                hubs: {
+                  some: {
+                    projectId: CURRENT_PROJECT_ID,
+                  },
+                },
+              },
+            },
             select: {
               id: true,
               implementer: true,
@@ -214,10 +224,17 @@ export const authOptions: AuthOptions = {
         // Update token.sub to match the found user's ID
         token.sub = currentUser.id;
 
-        // Now get the memberships using the user's ID, ordered by most recently updated
+        // Now get the memberships using the user's ID, filtered to only include implementers with hubs in the current project
         const memberships = await db.implementerMember.findMany({
           where: {
             userId: currentUser.id,
+            implementer: {
+              hubs: {
+                some: {
+                  projectId: CURRENT_PROJECT_ID,
+                },
+              },
+            },
           },
           include: {
             implementer: {
@@ -231,8 +248,6 @@ export const authOptions: AuthOptions = {
             updatedAt: "desc",
           },
         });
-
-        console.log("memberships", memberships, currentUser);
 
         if (memberships.length > 0) {
           const processedMemberships = memberships.map((m) => ({
