@@ -49,6 +49,7 @@ METABASE_SECRET_KEY="your-metabase-secret-key" # Secret key for signing Metabase
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 NEXT_PUBLIC_ENV="development"
 APP_ENV="development"
+NEXT_PUBLIC_CURRENT_PROJECT_ID="[YEAR]_Project_[PHASE]" # Required: Project ID for filtering all queries and authentication
 
 # Email Sending
 SEND_EMAILS="0" # Set to 1 to enable email sending
