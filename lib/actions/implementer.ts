@@ -169,7 +169,7 @@ export async function fetchImplementerSupervisors(implementerId: string) {
         hub: {
           implementerId: implementerId,
           projectId: CURRENT_PROJECT_ID,
-          },
+        },
       },
       include: {
         supervisorAttendances: {

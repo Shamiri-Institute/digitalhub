@@ -15,7 +15,7 @@ import {
   type Supervisor,
   sessionTypes,
 } from "@prisma/client";
-import { isBefore, startOfMonth } from "date-fns";
+import { isBefore, startOfMonth, startOfYear, setMonth, setDate } from "date-fns";
 import { zonedTimeToUtc } from "date-fns-tz";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
@@ -227,16 +227,24 @@ function createImplementers() {
 function createProjects() {
   console.log("creating projects");
   const projects = [];
+  const currentYear = new Date().getFullYear();
+  const yearStart = startOfYear(new Date(currentYear, 0, 1));
 
-  for (let i = 0; i < 4; i++) {
-    projects.push({
-      id: objectId("proj"),
-      visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
-      name: faker.company.name(),
-      actualStartDate: startOfMonth(new Date()),
-      actualEndDate: startOfMonth(new Date()),
-    });
-  }
+  projects.push({
+    id: `${currentYear}_Project_1`,
+    visibleId: `${currentYear}_Project_1`,
+    name: faker.company.name(),
+    actualStartDate: setDate(setMonth(yearStart, 0), 1), // January 1st
+    actualEndDate: setDate(setMonth(yearStart, 3), 30), // April 30th
+  });
+
+  projects.push({
+    id: `${currentYear}_Project_2`,
+    visibleId: `${currentYear}_Project_2`,
+    name: faker.company.name(),
+    actualStartDate: setDate(setMonth(yearStart, 4), 1), // May 1st
+    actualEndDate: setDate(setMonth(yearStart, 7), 31), // August 31st
+  });
 
   return db.project.createManyAndReturn({
     data: projects,
@@ -247,13 +255,27 @@ function createProjectImplementers(projects: Project[], implementers: Implemente
   console.log("creating project implementers");
   const projectImplementers = [];
 
-  const minLength = Math.min(projects.length, implementers.length);
+  for (const implementer of implementers) {
+    // Shamiri Institute implementes all projects
+    if (implementer.visibleId === "SHA") {
+      for (const project of projects) {
+        projectImplementers.push({
+          projectId: project.id,
+          implementerId: implementer.id,
+        });
+      }
+    } else {
+      // Other implementers: randomly assign to 1-3 projects
+      const numProjects = faker.number.int({ min: 1, max: Math.min(3, projects.length) });
+      const selectedProjects = faker.helpers.arrayElements(projects, numProjects);
 
-  for (let i = 0; i < minLength; i++) {
-    projectImplementers.push({
-      projectId: projects[i]?.id as string,
-      implementerId: implementers[i]?.id as string,
-    });
+      for (const project of selectedProjects) {
+        projectImplementers.push({
+          projectId: project.id,
+          implementerId: implementer.id,
+        });
+      }
+    }
   }
 
   return db.projectImplementer.createManyAndReturn({
@@ -261,33 +283,62 @@ function createProjectImplementers(projects: Project[], implementers: Implemente
   });
 }
 
-function createHubs(projects: Project[], implementers: Implementer[]) {
+type ProjectImplementer = Awaited<ReturnType<typeof createProjectImplementers>>;
+
+function createHubs(
+  projects: Project[],
+  implementers: Implementer[],
+  projectImplementers: ProjectImplementer,
+) {
   console.log("creating hubs");
   const hubs = [];
-  const minLength = Math.min(projects.length, implementers.length);
+
+  // Create a map of implementer-project relationships for quick lookup
+  const implementerProjectMap = new Map<string, Set<string>>();
+  for (const pi of projectImplementers) {
+    if (!implementerProjectMap.has(pi.implementerId)) {
+      implementerProjectMap.set(pi.implementerId, new Set());
+    }
+    implementerProjectMap.get(pi.implementerId)?.add(pi.projectId);
+  }
 
   // Add static hub first
-  const staticHub = {
-    id: objectId("hub"),
-    visibleId: "ARSENAL1",
-    hubName: "Arsenal Hub",
-    projectId: projects[0]?.id as string,
-    implementerId: implementers[0]?.id as string,
-  };
-  hubs.push(staticHub);
+  const firstImplementer = implementers[0];
+  const firstProject = projects[0];
+  if (firstImplementer && firstProject) {
+    const staticHub = {
+      id: objectId("hub"),
+      visibleId: "ARSENAL1",
+      hubName: "Arsenal Hub",
+      projectId: firstProject.id,
+      implementerId: firstImplementer.id,
+    };
+    hubs.push(staticHub);
+  }
 
-  // Continue with dynamic hubs
-  for (let i = 0; i < minLength; i++) {
-    const numHubs = faker.number.int({ min: 3, max: 6 });
+  // Create hubs for each implementer-project combination
+  for (const implementer of implementers) {
+    const implementerProjects = implementerProjectMap.get(implementer.id);
 
-    for (let j = 0; j < numHubs; j++) {
-      hubs.push({
-        id: objectId("hub"),
-        visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
-        hubName: faker.company.name(),
-        projectId: projects[i]?.id as string,
-        implementerId: implementers[i]?.id as string,
-      });
+    if (!implementerProjects || implementerProjects.size === 0) {
+      continue;
+    }
+
+    for (const projectId of Array.from(implementerProjects)) {
+      const numHubs =
+        implementer.visibleId === "SHA"
+          ? faker.number.int({ min: 4, max: 8 }) // Shamiri Institute implements all projects, so it should have more hubs
+          : faker.number.int({ min: 1, max: 3 });
+
+      for (let j = 0; j < numHubs; j++) {
+        hubs.push({
+          id: objectId("hub"),
+          visibleId: faker.string.alpha({ casing: "upper", length: 6 }),
+          hubName: faker.company.name(),
+          projectId: projectId,
+          implementerId: implementer.id,
+        });
+      }
     }
   }
 
@@ -404,52 +455,54 @@ async function createCoreUsers(
 }
 
 async function createAdminUsers(implementers: Implementer[], emails: Set<string>) {
-  console.log("creating admin users");
-
-  // create admin user for all implementers
-  const superAdmin = [
+  console.log("creating core users as admin users");
+  const users = [
     {
-      id: objectId("user"),
-      email: "admin@shamiri.institute",
-      adminName: "Super Admin",
-      implementers: implementers.map((implementer) => implementer.id),
+      name: "Benny H. Otieno",
+      email: "benny@shamiri.institute",
+    },
+    {
+      name: "Shadrack Lilan",
+      email: "shadrack.lilan@shamiri.institute",
+    },
+    {
+      name: "Davis Wambugu",
+      email: "wambugu.davis@shamiri.institute",
+    },
+    {
+      name: "Stanley George",
+      email: "stanley.george@shamiri.institute",
+    },
+    {
+      name: "Brandon Mochama",
+      email: "brandon.mochama@shamiri.institute",
     },
   ];
 
-  // create admin per implementer
-  const implementerAdmins = implementers.map((implementer) => ({
-    id: objectId("user"),
-    email: implementer.pointPersonEmail,
-    adminName: `Admin (${implementer.implementerName})`,
-    implementers: [implementer.id],
-  }));
-
-  const adminData = [...implementerAdmins, ...superAdmin];
-
   // create admin profiles
   const createdAdminUsers = await db.adminUser.createManyAndReturn({
-    data: adminData.map((user) => ({
+    data: users.map((user) => ({
       id: objectId("admin"),
       email: user.email,
-      adminName: user.adminName,
-    })) as Prisma.AdminUserCreateManyInput[],
+      adminName: user.name,
+    })),
   });
 
   const createdUsers = await db.user.createManyAndReturn({
-    data: adminData.map((user) => ({
-      id: user.id,
+    data: users.map((user) => ({
+      id: objectId("user"),
       email: user.email,
-      name: user.adminName,
+      name: user.name,
     })),
   });
 
   // Create membership records
-  const membershipData = adminData.map((user) => {
-    return user.implementers.map((implementer) => ({
+  const membershipData = createdUsers.map((user) => {
+    return implementers.map((implementer) => ({
       userId: user.id,
-      implementerId: implementer,
+      implementerId: implementer.id,
       role: ImplementerRole.ADMIN,
-      identifier: createdAdminUsers.find((u) => u.email === user.email)?.id!,
+      identifier: createdAdminUsers.find((u) => u.email === user.email)?.id ?? null,
     }));
   });
 
@@ -458,16 +511,16 @@ async function createAdminUsers(implementers: Implementer[], emails: Set<string>
   });
 
   // Add admin emails to set
-  createdUsers.forEach((user) => emails.add(user.email!));
+  createdUsers.forEach((user) => {
+    if (user.email) {
+      emails.add(user.email);
+    }
+  });
 
   return createdAdminUsers;
 }
 
-async function createHubCoordinators(
-  hubs: Hub[],
-  implementers: Implementer[],
-  emails: Set<string>,
-) {
+async function createHubCoordinators(hubs: Hub[], emails: Set<string>) {
   console.log("creating hub coordinators");
   const hubCoordinators = [];
 
@@ -1474,29 +1527,29 @@ async function main() {
 
   const [projects, implementers] = await Promise.all([createProjects(), createImplementers()]);
 
-  await createProjectImplementers(projects, implementers);
+  const projectImplementers = await createProjectImplementers(projects, implementers);
 
   const userEmailSet = new Set<string>();
 
   const admins = await createAdminUsers(implementers, userEmailSet);
-  const hubs = await createHubs(projects, implementers);
-  const hubCoordinators = await createHubCoordinators(hubs, implementers, userEmailSet);
+  const hubs = await createHubs(projects, implementers, projectImplementers);
+  const hubCoordinators = await createHubCoordinators(hubs, userEmailSet);
   const supervisors = await createSupervisors(hubs, userEmailSet, 6);
   const clinicalLeads = await createClinicalLeads(hubs, userEmailSet);
   const clinicalTeam = await createClinicalTeam(hubs, implementers);
   const operations = await createOperations(hubs, userEmailSet);
   const fellows = await createFellows(supervisors, userEmailSet);
 
-  await createCoreUsers(
-    implementers,
-    supervisors,
-    hubCoordinators,
-    fellows,
-    clinicalLeads,
-    operations,
-    clinicalTeam,
-    admins,
-  );
+  // await createCoreUsers(
+  //   implementers,
+  //   supervisors,
+  //   hubCoordinators,
+  //   fellows,
+  //   clinicalLeads,
+  //   operations,
+  //   clinicalTeam,
+  //   admins,
+  // );
 
   const schools = await createSchools(hubs, supervisors);
   await createInterventionGroups(schools, fellows);

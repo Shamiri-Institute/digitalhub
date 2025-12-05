@@ -198,11 +198,32 @@ export const hubSessionTypes: SessionType[] = [
 ];
 
 async function main() {
-  const hubs = await db.hub.findMany({
+  const project = await db.project.findUnique({
     where: {
-      projectId: CURRENT_PROJECT_ID,
+      id: CURRENT_PROJECT_ID,
     },
   });
+
+  if (!project) {
+    console.warn(
+      `Project with id "${CURRENT_PROJECT_ID}" not found. Skipping session name generation.`,
+    );
+    return;
+  }
+
+  const hubs = await db.hub.findMany({
+    where: {
+      projectId: project.id,
+    },
+  });
+
+  if (hubs.length === 0) {
+    console.warn(
+      `No hubs found for project "${CURRENT_PROJECT_ID}". Skipping session name generation.`,
+    );
+    return;
+  }
+
   const sessions = hubs.map((hub) => {
     return hubSessionTypes.map((sessionType) => {
       return {
@@ -222,4 +243,13 @@ async function main() {
   });
 }
 
-main();
+// Only run main() if this file is executed directly, not when imported
+// This prevents the function from running when the file is imported for hubSessionTypes
+const isMainModule =
+  process.argv[1]?.endsWith("generate-session-names.ts") ||
+  process.argv[1]?.endsWith("generate-session-names.js") ||
+  process.argv[1]?.includes("generate-session-names");
+
+if (isMainModule) {
+  main().catch(console.error);
+}
