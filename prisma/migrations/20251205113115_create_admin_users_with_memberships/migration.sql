@@ -25,7 +25,7 @@ WITH admin_users_data AS (
     ('shadrack.lilan@shamiri.institute', 'Shadrack Lilan'),
     ('stanley.george@shamiri.institute', 'Stanley George'),
     ('brandon.mochama@shamiri.institute', 'Brandon Mochama'),
-    ('benny@shamiri.institute', 'Benny H. Otieno'),
+    ('benny@shamiri.institute', 'Benny H. Otieno')
     -- Add more admin users as needed (remove trailing comma from last entry)
   ) AS t(email, name)
 ),
