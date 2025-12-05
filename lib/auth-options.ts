@@ -4,9 +4,8 @@ import { addBreadcrumb } from "@sentry/nextjs";
 import type { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { z } from "zod";
-
-import { db } from "#/lib/db";
 import { CURRENT_PROJECT_ID } from "#/lib/constants";
+import { db } from "#/lib/db";
 
 const config = z
   .object({

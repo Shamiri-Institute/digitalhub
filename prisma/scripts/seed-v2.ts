@@ -15,7 +15,7 @@ import {
   type Supervisor,
   sessionTypes,
 } from "@prisma/client";
-import { isBefore, startOfMonth, startOfYear, setMonth, setDate } from "date-fns";
+import { isBefore, setDate, setMonth, startOfMonth, startOfYear } from "date-fns";
 import { zonedTimeToUtc } from "date-fns-tz";
 import { KENYAN_COUNTIES } from "#/lib/app-constants/constants";
 import { objectId } from "#/lib/crypto";
