@@ -24,7 +24,11 @@ WITH admin_users_data AS (
     ('shadrack.lilan@shamiri.institute', 'Shadrack Lilan'),
     ('stanley.george@shamiri.institute', 'Stanley George'),
     ('brandon.mochama@shamiri.institute', 'Brandon Mochama'),
-    ('benny@shamiri.institute', 'Benny H. Otieno')
+    ('benny@shamiri.institute', 'Benny H. Otieno'),
+    ('mmbone@shamiri.institute', 'Wendy Mmbone'),
+    ('rachael.kilonzo@shamiri.institute', 'Rachael Kilonzo'),
+    ('baseke@shamiri.institute', 'Rosine Baseke'),
+    ('faith.kamau@shamiri.institute', 'Faith Kamau')
   ) AS t(email, name)
 ),
 
