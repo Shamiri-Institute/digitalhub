@@ -21,8 +21,11 @@ WITH admin_users_data AS (
   FROM (VALUES
     -- Add your admin users here
     -- Format: ('email@example.com', 'Admin Name'),
-    ('davis@email.com', 'Davis Test'),
-    ('shadrack@email.com', 'Shadrack Test')
+    ('wambugu.davis@shamiri.institute', 'Davis Wambugu'),
+    ('shadrack.lilan@shamiri.institute', 'Shadrack Lilan'),
+    ('stanley.george@shamiri.institute', 'Stanley George'),
+    ('brandon.mochama@shamiri.institute', 'Brandon Mochama'),
+    ('benny@shamiri.institute', 'Benny H. Otieno'),
     -- Add more admin users as needed (remove trailing comma from last entry)
   ) AS t(email, name)
 ),
@@ -34,7 +37,7 @@ implementer_ids AS (
   WHERE visible_id IN (
     -- Specify implementer visible_ids here
     -- Format: 'SHA', 'IMP_1', etc.
-    'SHA'  -- Example: Shamiri Institute
+    'Imp_1'  -- Example: Shamiri Institute
     -- Add more implementer visible_ids as needed
   )
 ),
