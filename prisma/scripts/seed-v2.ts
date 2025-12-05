@@ -347,113 +347,6 @@ function createHubs(
   });
 }
 
-async function createCoreUsers(
-  implementers: Implementer[],
-  supervisors: Supervisor[],
-  hubCoordinators: HubCoordinator[],
-  fellows: Fellow[],
-  clinicalLeads: ClinicalLead[],
-  operations: OpsUser[],
-  clinicalTeam: ClinicalTeam,
-  admins: AdminUser[],
-) {
-  console.log("creating core users");
-  const userData = [
-    {
-      id: objectId("user"),
-      email: "benny@shamiri.institute",
-      role: ImplementerRole.OPERATIONS,
-    },
-    {
-      id: objectId("user"),
-      email: "shadrack.lilan@shamiri.institute",
-      role: ImplementerRole.SUPERVISOR,
-    },
-    {
-      id: objectId("user"),
-      email: "wambugu.davis@shamiri.institute",
-      role: ImplementerRole.ADMIN,
-    },
-    {
-      id: objectId("user"),
-      email: "stanley.george@shamiri.institute",
-      role: ImplementerRole.CLINICAL_LEAD,
-    },
-    {
-      id: objectId("user"),
-      email: "mmbone@shamiri.institute",
-      role: ImplementerRole.SUPERVISOR,
-    },
-    {
-      id: objectId("user"),
-      email: "abdulghani.noor@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      id: objectId("user"),
-      email: "kahuria@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      id: objectId("user"),
-      email: "nickson.mugambi@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      id: objectId("user"),
-      email: "okoth@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
-    },
-    {
-      id: objectId("user"),
-      email: "marie.odhiambo@shamiri.institute",
-      role: ImplementerRole.HUB_COORDINATOR,
-    },
-  ];
-
-  const users = await db.user.createManyAndReturn({
-    data: userData.map(({ id, email }) => ({
-      id,
-      email,
-    })),
-  });
-
-  const membershipData = users.map((user) => {
-    const role = userData.find((u) => u.id === user.id)?.role as ImplementerRole;
-    if (role === ImplementerRole.ADMIN) {
-      return implementers.flatMap((implementer) => ({
-        userId: user.id,
-        implementerId: implementer.id,
-        role,
-        identifier: admins.find((admin) => admin.email === "admin@shamiri.institute")?.id,
-      }));
-    }
-    return {
-      userId: user.id,
-      implementerId: faker.helpers.arrayElement(implementers).id,
-      role,
-      identifier:
-        role === "HUB_COORDINATOR"
-          ? faker.helpers.arrayElement(hubCoordinators).id
-          : role === "SUPERVISOR"
-            ? faker.helpers.arrayElement(supervisors).id
-            : role === "FELLOW"
-              ? faker.helpers.arrayElement(fellows).id
-              : role === "CLINICAL_LEAD"
-                ? faker.helpers.arrayElement(clinicalLeads).id
-                : role === "OPERATIONS"
-                  ? faker.helpers.arrayElement(operations).id
-                  : role === "CLINICAL_TEAM"
-                    ? clinicalTeam.id
-                    : null,
-    };
-  });
-
-  await db.implementerMember.createMany({
-    data: membershipData.flat(),
-  });
-}
-
 async function createAdminUsers(implementers: Implementer[], emails: Set<string>) {
   console.log("creating core users as admin users");
   const users = [
@@ -1539,17 +1432,6 @@ async function main() {
   const clinicalTeam = await createClinicalTeam(hubs, implementers);
   const operations = await createOperations(hubs, userEmailSet);
   const fellows = await createFellows(supervisors, userEmailSet);
-
-  // await createCoreUsers(
-  //   implementers,
-  //   supervisors,
-  //   hubCoordinators,
-  //   fellows,
-  //   clinicalLeads,
-  //   operations,
-  //   clinicalTeam,
-  //   admins,
-  // );
 
   const schools = await createSchools(hubs, supervisors);
   await createInterventionGroups(schools, fellows);
