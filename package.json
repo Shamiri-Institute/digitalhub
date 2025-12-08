@@ -6,7 +6,7 @@
     "node": ">=22.x"
   },
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "vercel:build": "prisma generate && prisma migrate deploy && next build",
     "vercel:testing:build": "prisma generate && prisma migrate reset --force && prisma migrate deploy && npm run db:seed && next build",
