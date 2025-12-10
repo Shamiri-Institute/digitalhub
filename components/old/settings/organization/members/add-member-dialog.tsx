@@ -38,10 +38,12 @@ const organization = {
 
 const FormSchema = z.object({
   emails: z.string({
-    required_error: "Please select the email(s) to invite.",
+    error: (issue) =>
+      issue.input === undefined ? "Please select the email(s) to invite." : undefined,
   }),
   role: z.string({
-    required_error: "Please select the role to invite as.",
+    error: (issue) =>
+      issue.input === undefined ? "Please select the role to invite as." : undefined,
   }),
 });
 
