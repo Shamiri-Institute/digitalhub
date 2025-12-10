@@ -15,7 +15,7 @@ export const config = {
   ],
 };
 
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   // ensure we allow /monitoring endpoint used by vercel and we bypass /<role>/reporting/monitoring-and-evaluation for other authenticated functions
   if (
     request.nextUrl.pathname.includes("monitoring") &&
