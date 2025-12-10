@@ -14,14 +14,14 @@ export const BaseProfileSchema = z.object({
 });
 
 export const SupervisorProfileSchema = BaseProfileSchema.extend({
-  supervisorEmail: z.string().email(),
+  supervisorEmail: z.email(),
   supervisorName: z.string().min(1),
 });
 
 export type SupervisorType = z.infer<typeof SupervisorProfileSchema>;
 
 export const HubCoordinatorProfileSchema = BaseProfileSchema.extend({
-  coordinatorEmail: z.string().email(),
+  coordinatorEmail: z.email(),
   coordinatorName: z.string().min(1),
 });
 

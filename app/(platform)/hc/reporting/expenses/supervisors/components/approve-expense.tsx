@@ -30,7 +30,7 @@ import { toast } from "#/components/ui/use-toast";
 
 export const ConfirmReversalSchema = z.object({
   amount: z.coerce.number({
-    required_error: "Please enter the amount",
+    error: (issue) => (issue.input === undefined ? "Please enter the amount" : undefined),
   }),
 });
 export default function HCApproveSupervisorExpense({

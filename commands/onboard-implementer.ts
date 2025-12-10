@@ -75,7 +75,7 @@ export class OnboardimplementerCommand extends Command<
   private validate(input: OnboardimplementerInput) {
     const schema = z.object({
       name: z.string().min(1).max(255),
-      contactEmail: z.string().email(),
+      contactEmail: z.email(),
     });
 
     return schema.parse(input);

@@ -41,7 +41,7 @@ export async function updateHubCoordinatorProfile(formData: z.infer<typeof HubCo
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.errors,
+        errors: error.issues,
         message: "Validation Error",
       };
     }

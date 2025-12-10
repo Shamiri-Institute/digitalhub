@@ -32,7 +32,7 @@ export class OnboardUserCommand extends Command<OnboardUserInput, OnboardUserOut
   protected async perform(input: OnboardUserInput) {
     const validInput = z
       .object({
-        email: z.string().email(),
+        email: z.email(),
         name: z.string().min(1).max(100),
         implementerId: z.string(),
         inviterId: z.string(),
