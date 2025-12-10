@@ -111,7 +111,10 @@ export default async function HubCoordinatorSchedulePage() {
           aria-label="Session schedule"
           schools={schools}
           supervisors={supervisors}
-          fellowRatings={fellowRatings}
+          fellowRatings={fellowRatings.map((rating) => ({
+            ...rating,
+            averageRating: Number(rating.averageRating),
+          }))}
           role={coordinator?.session.user.activeMembership?.role!}
           hubSessionTypes={hubSessionTypes}
         />
