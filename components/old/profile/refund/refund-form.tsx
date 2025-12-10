@@ -39,38 +39,42 @@ const ACCEPTED_FILE_TYPES = [
 export const FormSchema = z.object({
   receiptDate: z
     .date({
-      required_error: "Please enter the date of the receipt.",
+      error: (issue) =>
+        issue.input === undefined ? "Please enter the date of the receipt." : undefined,
     })
     .optional(),
   mpesaName: z.string({
-    required_error: "Please enter the fellow's MPESA name.",
+    error: (issue) =>
+      issue.input === undefined ? "Please enter the fellow's MPESA name." : undefined,
   }),
   mpesaNumber: z
     .string({
-      required_error: "Please enter the fellow's MPESA number.",
+      error: (issue) =>
+        issue.input === undefined ? "Please enter the fellow's MPESA number." : undefined,
     })
     .refine((val) => isValidPhoneNumber(val, "KE"), {
-      message: "Please enter a valid Kenyan phone number (e.g. 0712345678).",
+      error: "Please enter a valid Kenyan phone number (e.g. 0712345678).",
     }),
   session: z.string({
-    required_error: "Please select a session.",
+    error: (issue) => (issue.input === undefined ? "Please select a session." : undefined),
   }),
   reason: z.string({
-    required_error: "Please select a reason.",
+    error: (issue) => (issue.input === undefined ? "Please select a reason." : undefined),
   }),
   destination: z.string({
-    required_error: "Please select a destination.",
+    error: (issue) => (issue.input === undefined ? "Please select a destination." : undefined),
   }),
   amount: z.string({
-    required_error: "Please enter the total amount used.",
+    error: (issue) =>
+      issue.input === undefined ? "Please enter the total amount used." : undefined,
   }),
   receiptFileKey: z
     .string({
-      required_error: "Please upload a receipt file.",
+      error: (issue) => (issue.input === undefined ? "Please upload a receipt file." : undefined),
     })
     .min(3, "Please upload a receipt file"),
   school: z.string({
-    required_error: "Please select a school.",
+    error: (issue) => (issue.input === undefined ? "Please select a school." : undefined),
   }),
 });
 

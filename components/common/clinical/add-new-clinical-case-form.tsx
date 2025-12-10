@@ -38,7 +38,7 @@ const formSchema = z.object({
   studentName: stringValidation("Student name is required"),
   pseudonym: stringValidation("Pseudonym is required"),
   admissionNumber: z.number().min(1, "Admission number is required"),
-  yearOfBirth: z.date({ required_error: "Year of birth is required" }),
+  yearOfBirth: z.date("Year of birth is required"),
   gender: z.enum(GENDER_OPTIONS),
   classForm: stringValidation("Class/Form is required"),
   stream: z.string().optional(),

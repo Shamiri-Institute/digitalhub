@@ -308,7 +308,7 @@ export async function updateSupervisorProfile(formData: z.infer<typeof Superviso
     if (error instanceof z.ZodError) {
       return {
         success: false,
-        errors: error.errors,
+        errors: error.issues,
         message: "Validation Error",
       };
     }

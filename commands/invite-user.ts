@@ -30,7 +30,7 @@ export class InviteUserCommand extends Command<
   protected async perform(input: InviteUserInput) {
     const { email, implementerId, inviterId, roleId } = z
       .object({
-        email: z.string().email(),
+        email: z.email(),
         implementerId: z.string(),
         inviterId: z.string(),
         roleId: z.string(),

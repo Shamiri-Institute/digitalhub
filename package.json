@@ -114,7 +114,7 @@
     "tailwind-merge": "^1.14.0",
     "tsx": "^4.7.0",
     "typeid-js": "^0.3.0",
-    "zod": "^3.23.8",
+    "zod": "^4.1.13",
     "zustand": "^4.4.1"
   },
   "devDependencies": {
