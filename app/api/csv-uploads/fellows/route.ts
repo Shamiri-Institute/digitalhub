@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import * as fastCsv from "fast-csv";
 import { type NextRequest, NextResponse } from "next/server";
-import { Readable } from "stream";
+import { Readable } from "node:stream";
 import { currentHubCoordinator } from "#/app/auth";
 import { objectId } from "#/lib/crypto";
 import { db } from "#/lib/db";
