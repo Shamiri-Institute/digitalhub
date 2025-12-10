@@ -103,7 +103,10 @@ export default async function SupervisorSchedulePage() {
           aria-label="Session schedule"
           schools={schools}
           supervisors={supervisors}
-          fellowRatings={fellowRatings}
+          fellowRatings={fellowRatings.map((rating) => ({
+            ...rating,
+            averageRating: Number(rating.averageRating),
+          }))}
           role={supervisor?.session.user.activeMembership?.role!}
           supervisorId={supervisor?.profile.id}
           hubSessionTypes={hubSessionTypes}
