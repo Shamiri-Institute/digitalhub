@@ -34,10 +34,10 @@ export default async function FellowSchedulePage() {
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
         <ScheduleCalendar
-          hubId={fellow?.profile.hubId!}
+          hubId={fellow?.profile.hubId ?? ""}
           aria-label="Session schedule"
           schools={fellow?.profile.hub?.schools ?? []}
-          role={fellow?.session.user.activeMembership?.role!}
+          role={fellow?.session.user.activeMembership?.role ?? "FELLOW"}
           hubSessionTypes={fellow?.profile.hub?.sessions}
           fellow={fellow}
         />

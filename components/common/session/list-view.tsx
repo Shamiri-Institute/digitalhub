@@ -186,7 +186,7 @@ export function ListView({
                         <td className="h-auto!">
                           <div className="flex items-center gap-5">
                             <span className="whitespace-nowrap opacity-70">{time}</span>
-                            <span className="">{sessionDisplayName(session.sessionType!)}</span>
+                            <span className="">{sessionDisplayName(session.sessionType ?? "")}</span>
                             <span className="whitespace-nowrap opacity-50">
                               {session.school?.schoolName}
                             </span>

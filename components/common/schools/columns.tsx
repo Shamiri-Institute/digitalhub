@@ -124,11 +124,12 @@ export const columns = ({
             return a.sessionDate.getTime() - b.sessionDate.getTime();
           });
 
-        if (upcomingSessions.length > 0) {
+        const firstUpcoming = upcomingSessions[0];
+        if (firstUpcoming) {
           return (
-            sessionDisplayName(upcomingSessions[0]!.session?.sessionName) +
+            sessionDisplayName(firstUpcoming.session?.sessionName) +
             " - " +
-            format(upcomingSessions[0]!.sessionDate, "dd MMM yyyy")
+            format(firstUpcoming.sessionDate, "dd MMM yyyy")
           );
         }
         return null;
@@ -152,8 +153,7 @@ export const columns = ({
           if (recent && recent.sessionRatings.length > 0) {
             return (
               <Badge variant="shamiri-green">
-                {sessionDisplayName(sessions[sessions.length - 1]!.session?.sessionName) +
-                  " - Report submitted"}
+                {sessionDisplayName(recent.session?.sessionName) + " - Report submitted"}
               </Badge>
             );
           }

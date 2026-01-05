@@ -589,7 +589,7 @@ export async function addSchool(data: z.infer<typeof AddSchoolSchema>): Promise<
         data: {
           id: objectId("sch"),
           visibleId: objectId("sch"),
-          schoolName: parsedData.schoolName!,
+          schoolName: parsedData.schoolName,
           schoolType: parsedData.schoolType,
           schoolEmail: parsedData.schoolEmail,
           schoolCounty: parsedData.schoolCounty,

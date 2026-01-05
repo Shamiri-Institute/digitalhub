@@ -71,11 +71,11 @@ export default function FileUploader({
     formData.append("file", fileContent, selectedFile.name);
 
     if (metadata) {
-      formData.append("schoolVisibleId", metadata?.schoolVisibleId!);
+      formData.append("schoolVisibleId", metadata?.schoolVisibleId ?? "");
       formData.append("hubId", metadata.hubId ?? "");
       formData.append("implementerId", metadata.implementerId ?? "");
       formData.append("projectId", metadata.projectId ?? "");
-      formData.append("urlPath", metadata.urlPath!);
+      formData.append("urlPath", metadata.urlPath ?? "");
     }
 
     try {
@@ -91,7 +91,7 @@ export default function FileUploader({
       if (resp.ok) {
         toast({ title: "File uploaded successfully", variant: "default" });
         setDialogOpen(false);
-        revalidatePageAction(metadata?.urlPath!);
+        revalidatePageAction(metadata?.urlPath ?? "");
       } else {
         setError(true);
         toast({ title: data.error, variant: "destructive" });
