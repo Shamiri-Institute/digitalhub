@@ -15,7 +15,7 @@ export function parseRelativeDate(relativeDate: string): Date {
   }
   const amount = Number.parseInt(amountStr, 10);
 
-  if (isNaN(amount)) {
+  if (Number.isNaN(amount)) {
     throw new Error("Invalid amount in relative date");
   }
 
