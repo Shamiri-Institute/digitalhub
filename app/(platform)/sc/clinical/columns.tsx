@@ -69,7 +69,7 @@ export const columns: ColumnDef<ClinicalCases>[] = [
       const date = row.original.dateAdded;
       if (!date) return "N/A";
       const parsed = new Date(date);
-      if (isNaN(parsed.getTime())) return "N/A";
+      if (Number.isNaN(parsed.getTime())) return "N/A";
       return format(parsed, "dd MMM yyyy");
     },
   },
