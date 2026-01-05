@@ -27,7 +27,7 @@ export async function sendEmailWithAttachment(input: SendRawEmailCommandInput) {
   return await sendWithRetry(() => ses.sendRawEmail(input));
 }
 
-async function sendWithRetry(sendFunction: () => Promise<any>, retries = MAX_RETRIES) {
+async function sendWithRetry<T>(sendFunction: () => Promise<T>, retries = MAX_RETRIES): Promise<T | undefined> {
   let attempt = 0;
   while (attempt < retries) {
     try {

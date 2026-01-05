@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { PayoutStatements } from "@prisma/client";
 import { useState } from "react";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import {
@@ -14,7 +14,7 @@ import {
 export default function FellowPayoutFilterToggle({
   payout,
 }: {
-  payout: Prisma.PayoutStatementsGetPayload<{}>[];
+  payout: PayoutStatements[];
 }) {
   const [open, setOpen] = useState(false);
   const [filterIsActive] = useState(false);

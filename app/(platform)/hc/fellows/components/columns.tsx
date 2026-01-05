@@ -1,6 +1,6 @@
 "use client";
 
-import { ImplementerRole, type Prisma } from "@prisma/client";
+import { ImplementerRole, type Prisma, type Supervisor } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 import { ParseError, parsePhoneNumberWithError } from "libphonenumber-js";
 import type { Dispatch, SetStateAction } from "react";
@@ -40,7 +40,7 @@ export type MainFellowTableData = {
 };
 
 export const columns = (
-  supervisors: Prisma.SupervisorGetPayload<{}>[],
+  supervisors: Supervisor[],
   setFellow: Dispatch<SetStateAction<MainFellowTableData | null>>,
   setEditDialog: Dispatch<SetStateAction<boolean>>,
   setWeeklyEvaluationDialog: Dispatch<SetStateAction<boolean>>,

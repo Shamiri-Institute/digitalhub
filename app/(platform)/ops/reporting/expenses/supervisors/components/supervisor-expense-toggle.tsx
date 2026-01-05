@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { Supervisor } from "@prisma/client";
 import { useState } from "react";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import {
@@ -14,7 +14,7 @@ import {
 export default function SupervisorFilterToggle({
   supervisors,
 }: {
-  supervisors: Prisma.SupervisorGetPayload<{}>[];
+  supervisors: Supervisor[];
 }) {
   const [open, setOpen] = useState(false);
   const [filterIsActive] = useState(false);

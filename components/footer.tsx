@@ -39,7 +39,7 @@ function PageLink({
 
 function PageNavigation() {
   const pathname = usePathname();
-  const allPages = navigation.flatMap((group) => group.links);
+  const allPages = navigation.flatMap((group) => group.links ?? []);
   const currentPageIndex = allPages.findIndex((page) => page.href === pathname);
 
   if (currentPageIndex === -1) {

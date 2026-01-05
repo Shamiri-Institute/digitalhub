@@ -1,6 +1,6 @@
 "use client";
 
-import { ImplementerRole, type Prisma } from "@prisma/client";
+import { ImplementerRole, type SessionName } from "@prisma/client";
 import { useEffect, useState } from "react";
 import type { CurrentAdminUser } from "#/app/auth";
 import {
@@ -15,7 +15,7 @@ import { ScheduleCalendar } from "./schedule-calendar";
 export function AdminScheduleCalendar({ adminUser }: { adminUser: CurrentAdminUser }) {
   const implementerId = adminUser?.session.user.activeMembership?.implementerId;
   const role = adminUser?.session.user.activeMembership?.role;
-  const [hubSessionTypes, setHubSessionTypes] = useState<Prisma.SessionNameGetPayload<{}>[]>([]);
+  const [hubSessionTypes, setHubSessionTypes] = useState<SessionName[]>([]);
   const [supervisors, setSupervisors] = useState<ImplementerSupervisor[]>([]);
   const [fellowRatings, setFellowRatings] = useState<ImplementerFellowRating[]>([]);
 

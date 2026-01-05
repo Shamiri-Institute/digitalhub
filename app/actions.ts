@@ -19,7 +19,10 @@ import { getHighestValue } from "#/lib/utils";
 import { EditFellowSchema } from "#/lib/validators";
 import type { AttendanceStatus, SessionLabel, SessionNumber } from "#/types/app";
 
-export async function inviteUserToImplementer(prevState: any, formData: any) {
+export async function inviteUserToImplementer(
+  prevState: { message: string } | null,
+  formData: FormData,
+) {
   try {
     const data = z
       .object({
@@ -287,7 +290,7 @@ export async function submitTransportReimbursementRequest(data: {
 
 export async function updateInterventionOccurrenceDate(
   data: Pick<OccurrenceData, "sessionDate" | "sessionType" | "schoolId">,
-): Promise<{ success: boolean; result?: any; error?: string }> {
+): Promise<{ success: boolean; result?: { id: string }; error?: string }> {
   try {
     const interventionSession = await db.interventionSession.findFirst({
       where: {
@@ -995,7 +998,7 @@ export async function updateClinicalCaseEmergencyPresentingIssue(data: {
 
     const combinedPresentingIssues = {
       // ...(emergencyPresentingIssues as { [k: string]: string }),
-      ...(emergencyPresentingIssues as Record<string, any>),
+      ...(emergencyPresentingIssues as Record<string, string>),
       ...data.presentingIssues,
     };
 

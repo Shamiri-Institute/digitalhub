@@ -1,6 +1,6 @@
 "use client";
 
-import { type Prisma, SessionStatus } from "@prisma/client";
+import { SessionStatus, type Student } from "@prisma/client";
 import { useState } from "react";
 import FilterToggle from "#/app/(platform)/hc/components/filter-toggle";
 import { DropdownMenuCheckboxItem, DropdownMenuLabel } from "#/components/ui/dropdown-menu";
@@ -16,12 +16,10 @@ import { SESSION_TYPES } from "#/lib/app-constants/constants";
 export default function StudentsFilterToggle({
   students,
 }: {
-  students: Prisma.StudentGetPayload<{}>[];
+  students: Student[];
 }) {
   const [open, setOpen] = useState(false);
-  const [selectedStudents, setSelectedStudents] = useState<Prisma.StudentGetPayload<{}> | null>(
-    null,
-  );
+  const [selectedStudents, setSelectedStudents] = useState<Student | null>(null);
   const [filterIsActive] = useState(false);
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import { createCalendar, type DateValue, getLocalTimeZone, today } from "@internationalized/date";
-import { ImplementerRole, type Prisma, SessionStatus } from "@prisma/client";
+import { ImplementerRole, type Prisma, type School, type SessionName, SessionStatus } from "@prisma/client";
 import type { AriaButtonProps } from "@react-aria/button";
 import { useButton } from "@react-aria/button";
 import { useFocusRing } from "@react-aria/focus";
@@ -54,7 +54,7 @@ import { WeekView } from "./week-view";
 type ScheduleCalendarProps = CalendarProps<DateValue> & {
   hubId?: string;
   implementerId?: string;
-  schools: Prisma.SchoolGetPayload<{}>[];
+  schools: School[];
   supervisors?: Prisma.SupervisorGetPayload<{
     include: {
       supervisorAttendances: {
@@ -78,7 +78,7 @@ type ScheduleCalendarProps = CalendarProps<DateValue> & {
   role: ImplementerRole;
   supervisorId?: string;
   fellow?: CurrentFellow;
-  hubSessionTypes?: Prisma.SessionNameGetPayload<{}>[];
+  hubSessionTypes?: SessionName[];
 };
 
 export function ScheduleCalendar(props: ScheduleCalendarProps) {
@@ -258,8 +258,8 @@ function CreateSessionButton({
 }: {
   open: boolean;
   setDialogOpen: Dispatch<SetStateAction<boolean>>;
-  schools: Prisma.SchoolGetPayload<{}>[];
-  hubSessionTypes?: Prisma.SessionNameGetPayload<{}>[];
+  schools: School[];
+  hubSessionTypes?: SessionName[];
   role: ImplementerRole;
 }) {
   const { loading } = useSessions({});
@@ -623,7 +623,7 @@ function NavigationButton({ children, ...props }: { children: React.ReactNode })
 function ScheduleFilterToggle({
   sessionFilters,
 }: {
-  sessionFilters: Prisma.SessionNameGetPayload<{}>[];
+  sessionFilters: SessionName[];
 }) {
   const [open, setOpen] = useState(false);
   const { filters, setFilters } = useContext(FiltersContext);

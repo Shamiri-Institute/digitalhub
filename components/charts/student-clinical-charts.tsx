@@ -1,6 +1,6 @@
 "use client";
 
-import type { Prisma } from "@prisma/client";
+import type { ClinicalScreeningInfo, ClinicalSessionAttendance, Prisma } from "@prisma/client";
 import {
   Bar,
   BarChart,
@@ -27,8 +27,8 @@ export default function HubStudentClinicalDataCharts({
   clinicalCasesBySupervisors,
   hubClinicalSessionsByInitialReferredFrom,
 }: {
-  hubClinicalCases: Prisma.ClinicalScreeningInfoGetPayload<{}>[];
-  hubClinicalSessions: Prisma.ClinicalSessionAttendanceGetPayload<{}>[];
+  hubClinicalCases: ClinicalScreeningInfo[];
+  hubClinicalSessions: ClinicalSessionAttendance[];
   hubClinicalSessionsBySession: (Prisma.PickEnumerable<
     Prisma.ClinicalSessionAttendanceGroupByOutputType,
     "session"[]

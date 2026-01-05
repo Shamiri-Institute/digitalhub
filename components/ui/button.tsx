@@ -56,7 +56,9 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       return (
         <Slot ref={ref} {...props}>
           {React.Children.map(
+            // biome-ignore lint/suspicious/noExplicitAny: React.Children.map requires ReactElement<any> for proper child iteration
             children as React.ReactElement<any>,
+            // biome-ignore lint/suspicious/noExplicitAny: cloneElement requires any for props access
             (child: React.ReactElement<any>) => {
               return React.cloneElement(child, {
                 className: cn(buttonVariants({ variant, size }), className),
