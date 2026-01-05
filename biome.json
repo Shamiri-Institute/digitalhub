@@ -33,6 +33,9 @@
       "a11y": {
         "noSvgWithoutTitle": "off"
       },
+      "suspicious": {
+        "noGlobalIsNan": "error"
+      },
       "style": {
         "noInferrableTypes": "error",
         "noNonNullAssertion": "error",

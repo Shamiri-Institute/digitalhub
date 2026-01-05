@@ -15,7 +15,7 @@ export async function updateHubCoordinatorProfile(formData: z.infer<typeof HubCo
     const data = HubCoordinatorSchema.parse(formData);
 
     const dateValue = data.dateOfBirth ? new Date(data.dateOfBirth) : null;
-    if (dateValue && isNaN(dateValue.getTime())) {
+    if (dateValue && Number.isNaN(dateValue.getTime())) {
       return { success: false, message: "Invalid date format" };
     }
 
