@@ -183,7 +183,7 @@ export function SessionDetail({
         {" "}
         <div
           className={cn(
-            "w-full select-none rounded-[0.25rem] border transition-all duration-75 ease-in-out",
+            "w-full select-none rounded-lg border transition-all duration-75 ease-in-out",
             { "absolute left-0 top-0": isCompact },
             {
               "group px-2 py-1 hover:z-50 hover:w-auto hover:drop-shadow-md":

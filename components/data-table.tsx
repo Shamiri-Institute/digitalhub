@@ -224,7 +224,7 @@ export default function DataTable<TData, TValue>({
                     key={header.id}
                     id={header.id}
                     className={cn(
-                      "min-w-[80px] bg-background-secondary/50 !px-4 text-sm font-semibold leading-5 text-shamiri-text-grey lg:w-full",
+                      "min-w-[80px] bg-background-secondary/50 px-4! text-sm font-semibold leading-5 text-shamiri-text-grey lg:w-full",
                       header.column.columnDef.id !== "checkbox" && "truncate",
                       ["actions", "select"].includes(
                         //@ts-ignore
@@ -268,8 +268,8 @@ export default function DataTable<TData, TValue>({
                           cell.column.columnDef.id === "button" ||
                             cell.column.columnDef.id === "checkbox" ||
                             cell.column.columnDef.id === "expand"
-                            ? "relative cursor-pointer border-l-0 !p-0"
-                            : "!px-4 py-2",
+                            ? "relative cursor-pointer border-l-0 p-0!"
+                            : "px-4! py-2",
                         )}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}

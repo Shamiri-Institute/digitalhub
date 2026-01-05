@@ -451,13 +451,13 @@ export const columns = (state: {
           {row.original.processedAt && (
             <Tooltip>
               <TooltipTrigger>
-                <div className="flex items-center rounded-[0.25rem] border border-green-border bg-green-bg px-1.5 py-1.5">
+                <div className="flex items-center rounded-lg border border-green-border bg-green-bg px-1.5 py-1.5">
                   <div className="flex items-center gap-1 text-green-base">
                     <CheckCheck className="h-3 w-3" strokeWidth={2.5} />
                   </div>
                 </div>
               </TooltipTrigger>
-              <TooltipContent className="border bg-background-secondary text-foreground drop-shadow">
+              <TooltipContent className="border bg-background-secondary text-foreground drop-shadow-sm">
                 <div className="px-2 py-1 text-sm">
                   Processed on {format(row.original.processedAt, "dd-MM-yyyy HH:mm a")}
                 </div>
@@ -527,7 +527,7 @@ export const columns = (state: {
       const type = row.original.groupType;
       return (
         type && (
-          <Badge variant={type === "TREATMENT" ? "default" : "outline"} className="capitalize">
+          <Badge variant={type === "TREATMENT" ? "default" : "outline-solid"} className="capitalize">
             {type?.toLowerCase()}
           </Badge>
         )

@@ -120,8 +120,8 @@ export function ListView({
                 <tr className="bg-background-secondary">
                   <td
                     className={cn(
-                      "!h-auto",
-                      groupDate === today ? "border-b !border-b-shamiri-new-blue" : "",
+                      "h-auto!",
+                      groupDate === today ? "border-b border-b-shamiri-new-blue!" : "",
                     )}
                     colSpan={3}
                   >
@@ -171,7 +171,7 @@ export function ListView({
 
                     return (
                       <tr key={session.id}>
-                        <td className="action-cell !h-auto">
+                        <td className="action-cell h-auto!">
                           <div className="flex items-center justify-center">
                             <Checkbox
                               checked={undefined}
@@ -183,7 +183,7 @@ export function ListView({
                             />
                           </div>
                         </td>
-                        <td className="!h-auto">
+                        <td className="h-auto!">
                           <div className="flex items-center gap-5">
                             <span className="whitespace-nowrap opacity-70">{time}</span>
                             <span className="">{sessionDisplayName(session.sessionType!)}</span>
@@ -192,7 +192,7 @@ export function ListView({
                             </span>
                             <div
                               className={cn(
-                                "shrink-0 select-none rounded-[0.25rem] border px-1.5 py-0.5",
+                                "shrink-0 select-none rounded-lg border px-1.5 py-0.5",
                                 {
                                   "border-green-border": completed,
                                   "border-blue-border": !completed,
@@ -242,7 +242,7 @@ export function ListView({
                             </div>
                           </div>
                         </td>
-                        <td className="action-cell relative !h-auto cursor-pointer">
+                        <td className="action-cell relative h-auto! cursor-pointer">
                           <SessionDropDown
                             state={{
                               session,
