@@ -6,7 +6,7 @@ export default async function StudentsFilterTab({
 }: {
   hubCoordinatorId: string;
 }) {
-  const studentsInHub = await db.student.findMany({
+  const _studentsInHub = await db.student.findMany({
     where: {
       school: {
         hubId: hubCoordinatorId,

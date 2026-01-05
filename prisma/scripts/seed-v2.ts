@@ -469,7 +469,7 @@ async function createHubCoordinators(
   emails: Set<string>,
 ) {
   console.log("creating hub coordinators");
-  const hubCoordinators = [];
+  const _hubCoordinators = [];
 
   // Add two static hub coordinators for the static hub
   const staticHub = hubs[0];
@@ -525,7 +525,7 @@ async function createHubCoordinators(
   }));
 
   // Create users in database
-  const createdUsers = await db.user.createManyAndReturn({
+  const _createdUsers = await db.user.createManyAndReturn({
     data: staticUsers,
   });
 
@@ -1510,11 +1510,11 @@ async function main() {
       hub: true,
     },
   });
-  const students = await createStudentsForSchools(schoolsWithGroupsAndFellows);
+  const _students = await createStudentsForSchools(schoolsWithGroupsAndFellows);
   const { interventionSessionsNames } = await createSessionNames(hubs);
 
   // TODO: question, should we also dynamically mark attendance for fellows in these sessions?
-  const interventionSessions = await createInterventionSessionsForSchools(
+  const _interventionSessions = await createInterventionSessionsForSchools(
     schoolsWithGroupsAndFellows,
     interventionSessionsNames,
   );
