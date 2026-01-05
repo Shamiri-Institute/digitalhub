@@ -52,7 +52,7 @@ export default function SupervisorsDataTable({
   const [batchMode, setBatchMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<SupervisorsData>[]>([]);
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
-  const [selectedSession, _setSelectedSession] = useState<string>();
+  const [selectedSession] = useState<string>();
   const [supervisor, setSupervisor] = useState<SupervisorsData | null>(null);
 
   useEffect(() => {
