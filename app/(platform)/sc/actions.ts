@@ -282,7 +282,7 @@ export async function updateSupervisorProfile(formData: z.infer<typeof Superviso
     const data = SupervisorSchema.parse(formData);
 
     const dateValue = data.dateOfBirth ? new Date(data.dateOfBirth) : null;
-    if (dateValue && isNaN(dateValue.getTime())) {
+    if (dateValue && Number.isNaN(dateValue.getTime())) {
       return { success: false, message: "Invalid date format" };
     }
 

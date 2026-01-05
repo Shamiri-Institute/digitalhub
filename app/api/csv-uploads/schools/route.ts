@@ -313,5 +313,5 @@ function parseDate(dateString: string | undefined): Date | null {
   const [_, month, day, year] = match;
   const parsedDate = new Date(`${year}-${month}-${day}`);
 
-  return isNaN(parsedDate.getTime()) ? null : parsedDate;
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
 }

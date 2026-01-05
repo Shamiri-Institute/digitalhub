@@ -9,7 +9,7 @@ export const StudentDetailsSchema = z
     studentName: z.string({ error: "Please enter the student's name" }),
     form: stringValidation("Please enter the student's class").refine(
       (val) => {
-        return !isNaN(Number(val)) && val.trim() !== "";
+        return !Number.isNaN(Number(val)) && val.trim() !== "";
       },
       {
         error: "Please enter a valid value",
@@ -24,7 +24,7 @@ export const StudentDetailsSchema = z
       (val) => {
         const year = Number(val);
         const currentYear = new Date().getFullYear();
-        return !isNaN(year) && val.trim() !== "" && year >= 1900 && year <= currentYear;
+        return !Number.isNaN(year) && val.trim() !== "" && year >= 1900 && year <= currentYear;
       },
       {
         error: "Please enter a valid year between 1900 and current year",
