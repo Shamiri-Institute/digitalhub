@@ -7,7 +7,6 @@ import type { Dispatch, SetStateAction } from "react";
 import { SessionDropDown } from "#/components/common/session/session-list";
 import type { Session } from "#/components/common/session/sessions-provider";
 import { Icons } from "#/components/icons";
-import { Checkbox } from "#/components/ui/checkbox";
 import { cn, sessionDisplayName } from "#/lib/utils";
 
 export type SessionData = Prisma.InterventionSessionGetPayload<{

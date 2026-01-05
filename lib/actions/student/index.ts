@@ -415,7 +415,7 @@ export async function transferStudentToGroup(id: string, groupId: string) {
       success: true,
       message: `Successfully transferred ${student.studentName} to group ${student.assignedGroup?.groupName}`,
     };
-  } catch (error: unknown) {
+  } catch (_error: unknown) {
     return { error: "Something went wrong while adding student to the group." };
   }
 }

@@ -51,16 +51,16 @@ export default function SessionsDatatable({
   fellowId?: string;
   supervisorId?: string;
 }) {
-  const pathname = usePathname();
-  const [_sessions, setSessions] = useState(sessions);
+  const _pathname = usePathname();
+  const [_sessions, _setSessions] = useState(sessions);
   const [supervisorAttendanceDialog, setSupervisorAttendanceDialog] = React.useState(false);
   const [fellowAttendanceDialog, setFellowAttendanceDialog] = React.useState(false);
   const [cancelSessionDialog, setCancelSessionDialog] = React.useState(false);
   const [rescheduleSessionDialog, setRescheduleSessionDialog] = React.useState(false);
   const [session, setSession] = React.useState<Session | null>(null);
   const [ratingsDialog, setRatingsDialog] = useState<boolean>(false);
-  const [markAttendanceDialog, setMarkAttendanceDialog] = React.useState(false);
-  const [supervisorAttendance, setSupervisorAttendance] =
+  const [_markAttendanceDialog, _setMarkAttendanceDialog] = React.useState(false);
+  const [_supervisorAttendance, _setSupervisorAttendance] =
     React.useState<SupervisorAttendanceTableData | null>(null);
   const [studentAttendanceDialog, setStudentAttendanceDialog] = React.useState(false);
   const [sessionOccurrenceDialog, setSessionOccurrenceDialog] = useState<boolean>(false);

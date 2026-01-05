@@ -3,7 +3,7 @@
 import { ImplementerRole, type Prisma } from "@prisma/client";
 import type { Row } from "@tanstack/react-table";
 import parsePhoneNumberFromString from "libphonenumber-js";
-import { type Dispatch, type SetStateAction, useContext, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 import DropoutSupervisor from "#/app/(platform)/hc/supervisors/components/dropout-supervisor-form";
 import UndropSupervisor from "#/app/(platform)/hc/supervisors/components/undrop-supervisor-form";
 import DialogAlertWidget from "#/components/common/dialog-alert-widget";
@@ -52,7 +52,7 @@ export default function SupervisorsDataTable({
   const [batchMode, setBatchMode] = useState<boolean>(false);
   const [selectedRows, setSelectedRows] = useState<Row<SupervisorsData>[]>([]);
   const [markAttendanceDialog, setMarkAttendanceDialog] = useState<boolean>(false);
-  const [selectedSession, setSelectedSession] = useState<string>();
+  const [selectedSession, _setSelectedSession] = useState<string>();
   const [supervisor, setSupervisor] = useState<SupervisorsData | null>(null);
 
   useEffect(() => {

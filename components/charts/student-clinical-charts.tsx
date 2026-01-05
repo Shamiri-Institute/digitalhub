@@ -17,7 +17,6 @@ import {
 } from "recharts";
 import {
   clinicalCasesColors,
-  clinicaldataValue,
   possibleSessions,
 } from "#/components/charts/constants";
 import ChartCard from "#/components/ui/chart-card";

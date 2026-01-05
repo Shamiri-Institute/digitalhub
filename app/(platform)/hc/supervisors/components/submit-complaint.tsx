@@ -45,7 +45,7 @@ export default function SubmitComplaint({
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  const pathname = usePathname();
+  const _pathname = usePathname();
 
   const form = useForm<z.infer<typeof SubmitComplaintSchema>>({
     resolver: zodResolver(SubmitComplaintSchema),

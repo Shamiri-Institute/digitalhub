@@ -17,7 +17,7 @@ export default function FellowPayoutFilterToggle({
   payout: Prisma.PayoutStatementsGetPayload<{}>[];
 }) {
   const [open, setOpen] = useState(false);
-  const [filterIsActive, setFilterIsActive] = useState(false);
+  const [filterIsActive, _setFilterIsActive] = useState(false);
 
   return (
     <FilterToggle

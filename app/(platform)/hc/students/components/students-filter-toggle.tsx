@@ -22,7 +22,7 @@ export default function StudentsFilterToggle({
   const [selectedStudents, setSelectedStudents] = useState<Prisma.StudentGetPayload<{}> | null>(
     null,
   );
-  const [filterIsActive, setFilterIsActive] = useState(false);
+  const [filterIsActive, _setFilterIsActive] = useState(false);
 
   return (
     <FilterToggle

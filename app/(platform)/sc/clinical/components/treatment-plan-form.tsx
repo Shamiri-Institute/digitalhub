@@ -102,7 +102,7 @@ export default function TreatmentPlanForm({
       }
       setDialogOpen(false);
       form.reset();
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "Something went wrong, please try again",
         variant: "destructive",
