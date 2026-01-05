@@ -82,7 +82,7 @@ export default function ConfirmReversalFellows({
         />
         <div className="min-w-max overflow-x-auto overflow-y-scroll">
           <h2 className="mb-4 text-black">Are you sure ?</h2>
-          <div className="w-[31rem]">
+          <div className="w-124">
             <DialogAlertWidget
               variant="destructive"
               label={`Once this change has been made it is irreversible and will need you to contact support in order to modify. Note that the amount due will be deducted from the fellow’s next pay and if the fellow doesn’t have any upcoming payments due the amount will be deducted from ${expense?.fellowName}’s next salary.`}

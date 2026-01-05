@@ -5,7 +5,7 @@ export default function AttendanceStatusWidget({ attended }: { attended: boolean
   return (
     <div
       className={cn(
-        "flex items-center rounded-[0.25rem] border px-1.5 py-0.5",
+        "flex items-center rounded-lg border px-1.5 py-0.5",
         {
           "border-green-border": attended,
           "border-red-border": !attended,

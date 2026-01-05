@@ -85,7 +85,7 @@ export default function RequestRepaymentFellows({
         <DialogAlertWidget
           label={`${expense?.fellowName} - ${expense?.session} - ${expense.schoolVenue}`}
         />
-        <div className="w-[31rem]">
+        <div className="w-124">
           <DialogAlertWidget
             label={`This action cannot be reversed. Note that the amount due will be deducted from ${expense?.fellowName}’s next salary.`}
             variant={"destructive"}

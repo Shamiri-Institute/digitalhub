@@ -9,7 +9,7 @@ export default function ChartSkeleton() {
         </CardTitle>
       </CardHeader>
       <CardContent className="h-[275px] pt-6">
-        <div className="max-w-sm animate-pulse rounded border border-gray-200 p-4 shadow dark:border-gray-700 md:p-6">
+        <div className="max-w-sm animate-pulse rounded border border-gray-200 p-4 shadow-sm dark:border-gray-700 md:p-6">
           <div className="mt-4 flex items-baseline">
             <div className="h-[80%] w-full rounded-t-lg bg-gray-200 dark:bg-gray-700" />
             <div className="ms-6 h-20 w-full rounded-t-lg bg-gray-200 dark:bg-gray-700" />

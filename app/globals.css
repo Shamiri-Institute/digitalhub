@@ -1,6 +1,407 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+  @media (width >= --theme(--breakpoint-xs)) {
+    max-width: none;
+  }
+}
+
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-muted-green: hsl(var(--muted-green));
+  --color-muted-yellow: hsl(var(--muted-yellow));
+  --color-muted-pink: hsl(var(--muted-pink));
+  --color-muted-sky: hsl(var(--muted-sky));
+
+  --color-brand: hsl(var(--brand));
+  --color-brand-foreground: hsl(var(--brand-foreground));
+
+  --color-background-secondary: #f7f7f7;
+  --color-shamiri-light-red: #e92c2c;
+  --color-shamiri-light-red-background-base: #ff3b3b;
+  --color-shamiri-blue: #0474bc;
+  --color-shamiri-new-blue: #0085ff;
+  --color-shamiri-new-light-blue: #e5f3ff;
+  --color-shamiri-new-lighter-blue: #cce7ff;
+  --color-shamiri-blue-darker: #045e96;
+  --color-shamiri-light-blue: #b0d5ea;
+  --color-shamiri-dark-blue: #002244;
+  --color-shamiri-text-grey: #969696;
+  --color-shamiri-text-dark-grey: #585757;
+  --color-shamiri-light-grey: #e8e8e8;
+  --color-shamiri-graph-green: #00ba34;
+  --color-shamiri-graph-yellow: #facc15;
+  --color-shamiri-graph-purple: #8b2ce9;
+  --color-shamiri-red: #de5e68;
+  --color-shamiri-black: #1c1c1c;
+  --color-shamiri-light-green: #e5f8eb;
+  --color-shamiri-green: #00ba34;
+  --color-shamiri-border-green: #ccf1d6;
+  --color-shamiri-light-orange: #f98600;
+  --color-canvas: hsl(var(--canvas));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-active-card: hsl(var(--active-card));
+  --color-active-card-foreground: hsl(var(--active-card-foreground));
+  --color-active-card-foreground-accent: hsl(var(--active-card-foreground-accent));
+
+  --color-grey: rgba(173, 173, 173, 1);
+  --color-grey-c3: rgba(150, 150, 150, 1);
+  --color-grey-border: rgba(232, 232, 232, 1);
+  --color-grey-bg: rgba(252, 252, 252, 1);
+  --color-green-border: rgba(204, 241, 214, 1);
+  --color-green-bg: rgba(229, 248, 235, 1);
+  --color-green-base: rgba(0, 186, 52, 1);
+  --color-blue-border: rgba(204, 231, 255, 1);
+  --color-blue-bg: rgba(229, 243, 255, 1);
+  --color-blue-base: rgba(0, 133, 255, 1);
+  --color-red-border: hsl(359, 85%, 90%);
+  --color-red-bg: hsla(0, 100%, 62%, 0.1);
+  --color-red-base: hsla(0, 81%, 54%, 1);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  --z-index-100: 100;
+
+  --breakpoint-xs: 375px;
+
+  --shadow-inner-2: 6px 0 6px 0 rgba(0, 0, 0, 0.06) inset, -6px 0 6px 0 rgba(0, 0, 0, 0.1) inset;
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility no-scrollbar {
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+@utility nav-link {
+  @apply flex cursor-pointer gap-2 px-4 py-3 transition ease-in-out lg:px-0 lg:py-0;
+
+  & svg {
+    @apply text-shamiri-text-grey;
+  }
+
+  &:hover {
+    @apply text-shamiri-new-blue;
+  }
+
+  &:hover svg {
+    @apply text-shamiri-new-blue;
+  }
+}
+
+@utility tab-link {
+  border-bottom-width: 3px;
+  @apply flex gap-2 whitespace-nowrap border-transparent py-2 transition ease-in-out;
+
+  & svg {
+    @apply shrink-0 text-shamiri-text-grey transition ease-in-out;
+  }
+
+  &.active {
+    @apply border-shamiri-new-blue text-shamiri-new-blue;
+  }
+
+  &:hover {
+    @apply border-shamiri-new-blue text-shamiri-new-blue;
+  }
+
+  &.active svg {
+    @apply text-shamiri-new-blue;
+  }
+
+  &:hover svg {
+    @apply text-shamiri-new-blue;
+  }
+}
+
+@utility active {
+  &.tab-link {
+    @apply border-shamiri-new-blue text-shamiri-new-blue;
+  }
+
+  &.tab-link svg {
+    @apply text-shamiri-new-blue;
+  }
+
+  &.pagination {
+    @apply bg-shamiri-new-blue text-white;
+  }
+}
+
+@utility schedule-table {
+  @apply w-full table-fixed border-separate overflow-hidden border border-grey-border bg-white [border-spacing:0];
+
+  & tr {
+    @apply divide-x divide-grey-border;
+  }
+
+  & th {
+    @apply w-[150px] px-4 py-3 text-left lg:w-full;
+  }
+
+  & td {
+    @apply h-[150px] w-[150px] border-t border-grey-border p-0 lg:h-full lg:w-full;
+  }
+
+  &.padded td {
+    @apply px-4 py-3;
+  }
+
+  & td.time-cell {
+    @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
+  }
+
+  & th.time-cell {
+    @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
+  }
+
+  & tbody:first-child tr:first-child td {
+    @apply border-t-0!;
+  }
+}
+
+@utility padded {
+  &.schedule-table td {
+    @apply px-4 py-3;
+  }
+}
+
+@utility time-cell {
+  .schedule-table &td {
+    @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
+  }
+
+  .schedule-table &th {
+    @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
+  }
+}
+
+@utility data-table {
+  @apply border-separate border-spacing-0 rounded border border-grey-border lg:table-fixed;
+
+  & tbody tr {
+    @apply transition ease-in-out;
+  }
+
+  & tbody td {
+    @apply transition ease-in-out;
+  }
+}
+
+@utility action-cell {
+  @apply w-[50px]! min-w-[50px]! max-w-[60px]!;
+}
+
+@utility form-toggle {
+  @apply mt-1.5 justify-start rounded-md border bg-background-secondary text-shamiri-text-dark-grey;
+
+  & .form-toggle-button {
+    @apply flex-1 text-base transition ease-in-out;
+  }
+
+  & .form-toggle-button[data-state="on"] {
+    @apply border bg-white text-black drop-shadow-xl;
+  }
+}
+
+@utility form-toggle-button {
+  .form-toggle & {
+    @apply flex-1 text-base transition ease-in-out;
+  }
+
+  .form-toggle &[data-state="on"] {
+    @apply border bg-white text-black drop-shadow-xl;
+  }
+}
+
+@utility arrow-button {
+  @apply flex cursor-pointer items-center justify-center border px-3 py-1.5 text-shamiri-text-dark-grey hover:text-shamiri-new-blue hover:drop-shadow-sm active:scale-95;
+}
+
+@utility accordion-button {
+  @apply cursor-pointer rounded-md px-3 py-1.5 text-sm text-shamiri-new-blue hover:bg-accent active:scale-95;
+}
+
+@utility custom-radio {
+  @apply h-20! w-full! rounded-lg! bg-background-secondary! transition! ease-in! data-[state=checked]:border-2! data-[state=checked]:bg-white!;
+
+  & svg {
+    @apply hidden;
+  }
+
+  .custom-indicator:has(+ &button[data-state="checked"]) .indicator {
+    @apply border-4;
+  }
+
+  .custom-indicator:has(+ &button[data-state="checked"]) .indicator.green {
+    @apply border-shamiri-green;
+  }
+
+  .custom-indicator:has(+ &button[data-state="checked"]) .indicator.red {
+    @apply border-shamiri-red;
+  }
+
+  .custom-indicator:has(+ &button[data-state="checked"]) .indicator.blue {
+    @apply border-shamiri-new-blue;
+  }
+}
+
+@utility custom-indicator {
+  &:has(+ button.custom-radio[data-state="checked"]) .indicator {
+    @apply border-4;
+  }
+
+  &:has(+ button.custom-radio[data-state="checked"]) .indicator.green {
+    @apply border-shamiri-green;
+  }
+
+  &:has(+ button.custom-radio[data-state="checked"]) .indicator.red {
+    @apply border-shamiri-red;
+  }
+
+  &:has(+ button.custom-radio[data-state="checked"]) .indicator.blue {
+    @apply border-shamiri-new-blue;
+  }
+}
+
+@utility indicator {
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) & {
+    @apply border-4;
+  }
+
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) &.green {
+    @apply border-shamiri-green;
+  }
+
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) &.red {
+    @apply border-shamiri-red;
+  }
+
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) &.blue {
+    @apply border-shamiri-new-blue;
+  }
+}
+
+@utility green {
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) &.indicator {
+    @apply border-shamiri-green;
+  }
+}
+
+@utility red {
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) &.indicator {
+    @apply border-shamiri-red;
+  }
+}
+
+@utility blue {
+  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) &.indicator {
+    @apply border-shamiri-new-blue;
+  }
+}
+
+@utility pagination {
+  @apply flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border shadow-sm transition ease-in-out hover:bg-shamiri-new-blue hover:text-white;
+
+  &.active {
+    @apply bg-shamiri-new-blue text-white;
+  }
+
+  &:disabled {
+    @apply pointer-events-none shadow-none hover:bg-transparent hover:text-black;
+  }
+}
+
+@utility transparent-number-arrows {
+  &::-webkit-outer-spin-button {
+    opacity: 0;
+  }
+
+  &::-webkit-inner-spin-button {
+    opacity: 0;
+  }
+  -moz-appearance: textfield; /* hides in Firefox */
+}
 
 @layer base {
   :root {
@@ -64,19 +465,6 @@
   }
 }
 
-@layer utilities {
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Hide scrollbar for IE, Edge and Firefox */
-  .no-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-  }
-}
-
 /* adjustments for react-aria */
 /* TODO: make more specific to avoid collisions with non react-aria tables */
 @layer base {
@@ -112,146 +500,7 @@
 }
 
 @layer components {
-  .nav-link {
-    @apply flex cursor-pointer gap-2 px-4 py-3 transition ease-in-out lg:px-0 lg:py-0;
-  }
-
-  .nav-link svg {
-    @apply text-shamiri-text-grey;
-  }
-
-  .nav-link:hover,
-  .nav-link:hover svg {
-    @apply text-shamiri-new-blue;
-  }
-
-  .tab-link {
-    border-bottom-width: 3px;
-    @apply flex gap-2 whitespace-nowrap border-transparent py-2 transition ease-in-out;
-  }
-
-  .tab-link svg {
-    @apply shrink-0 text-shamiri-text-grey transition ease-in-out;
-  }
-
-  .tab-link.active,
-  .tab-link:hover {
-    @apply border-shamiri-new-blue text-shamiri-new-blue;
-  }
-
-  .tab-link.active svg,
-  .tab-link:hover svg {
-    @apply text-shamiri-new-blue;
-  }
-
-  .schedule-table {
-    @apply w-full table-fixed border-separate overflow-hidden border border-grey-border bg-white [border-spacing:0];
-  }
-
-  .schedule-table tr {
-    @apply divide-x divide-grey-border;
-  }
-
-  .schedule-table th {
-    @apply w-[150px] px-4 py-3 text-left lg:w-full;
-  }
-
-  .schedule-table td {
-    @apply h-[150px] w-[150px] border-t border-grey-border p-0 lg:h-full lg:w-full;
-  }
-
-  .schedule-table.padded td {
-    @apply px-4 py-3;
-  }
-
-  .schedule-table td.time-cell,
-  .schedule-table th.time-cell {
-    @apply w-[103px] bg-background-secondary px-4 py-3 text-grey-c3;
-  }
-
-  .schedule-table tbody:first-child tr:first-child td {
-    @apply border-t-0 !important;
-  }
-
-  .data-table {
-    @apply border-separate border-spacing-0 rounded border border-grey-border lg:table-fixed;
-  }
-
-  .data-table tbody tr,
-  .data-table tbody td {
-    @apply transition ease-in-out;
-  }
-
-  .action-cell {
-    @apply w-[50px] min-w-[50px] max-w-[60px] !important;
-  }
-
-  .form-toggle {
-    @apply mt-1.5 justify-start rounded-md border bg-background-secondary text-shamiri-text-dark-grey;
-  }
-
-  .form-toggle .form-toggle-button {
-    @apply flex-1 text-base transition ease-in-out;
-  }
-
-  .form-toggle .form-toggle-button[data-state="on"] {
-    @apply border bg-white text-black drop-shadow-xl;
-  }
-
-  .arrow-button {
-    @apply flex cursor-pointer items-center justify-center border px-3 py-1.5 text-shamiri-text-dark-grey hover:text-shamiri-new-blue hover:drop-shadow active:scale-95;
-  }
-
-  .accordion-button {
-    @apply cursor-pointer rounded-md px-3 py-1.5 text-sm text-shamiri-new-blue hover:bg-accent active:scale-95;
-  }
-
-  .custom-radio {
-    @apply h-20 w-full rounded-lg bg-background-secondary transition ease-in data-[state=checked]:border-[2px] data-[state=checked]:bg-white !important;
-  }
-
-  .custom-radio svg {
-    @apply hidden;
-  }
-
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator {
-    @apply border-4;
-  }
-
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator.green {
-    @apply border-shamiri-green;
-  }
-
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator.red {
-    @apply border-shamiri-red;
-  }
-
-  .custom-indicator:has(+ button.custom-radio[data-state="checked"]) .indicator.blue {
-    @apply border-shamiri-new-blue;
-  }
-
-  .pagination {
-    @apply flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border shadow transition ease-in-out hover:bg-shamiri-new-blue hover:text-white;
-  }
-
-  .pagination.active {
-    @apply bg-shamiri-new-blue text-white;
-  }
-
-  .pagination:disabled {
-    @apply pointer-events-none shadow-none hover:bg-transparent hover:text-black;
-  }
-
-  .transparent-number-arrows::-webkit-outer-spin-button,
-  .transparent-number-arrows::-webkit-inner-spin-button {
-    opacity: 0;
-  }
-
-  .transparent-number-arrows {
-    -moz-appearance: textfield; /* hides in Firefox */
-  }
-
   #sentry-feedback {
-    @apply z-[1];
+    @apply z-1;
   }
 }

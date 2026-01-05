@@ -54,7 +54,7 @@ type BadgeVariant =
   | "shamiri-green"
   | "default"
   | "secondary"
-  | "outline";
+  | "outline-solid";
 
 const colors: Record<string, BadgeVariant> = {
   Active: "shamiri-green",

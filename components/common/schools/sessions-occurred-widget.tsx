@@ -39,7 +39,7 @@ export default function SessionsOccurredWidget({
             <div
               key={sessionType.sessionName}
               className={cn(
-                "select-none rounded-[0.25rem] border px-1.5 py-0.5",
+                "select-none rounded-lg border px-1.5 py-0.5",
                 {
                   "border-green-border": occurredStatus,
                   "border-blue-border": !occurredStatus,
