@@ -213,7 +213,9 @@ export function MarkAttendance({
                             return (
                               <SelectItem key={session.id} value={session.id}>
                                 <div className="flex items-center gap-2">
-                                  <span>{sessionDisplayName(session.session?.sessionName ?? "")}</span>
+                                  <span>
+                                    {sessionDisplayName(session.session?.sessionName ?? "")}
+                                  </span>
                                   <span>-</span>
                                   <span>
                                     {format(new Date(session.sessionDate), "dd MMM yyyy")}

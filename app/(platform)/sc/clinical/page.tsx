@@ -28,7 +28,10 @@ export default async function ClinicalPage() {
           <div className="flex flex-col items-center justify-between space-y-3">
             <ClinicalCasesStats />
             <Separator />
-            <CasesReferredToMe cases={referredCases} currentSupervisorId={currentSupervisorId ?? ""} />
+            <CasesReferredToMe
+              cases={referredCases}
+              currentSupervisorId={currentSupervisorId ?? ""}
+            />
             <ClinicalCasesTable
               cases={cases}
               schools={schools}

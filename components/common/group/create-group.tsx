@@ -182,7 +182,8 @@ export default function CreateGroup({
                           <SelectContent className="max-h-[200px]">
                             {supervisorWatcher !== undefined
                               ? supervisors
-                                  .find((supervisor) => supervisorWatcher === supervisor.id)?.fellows.map((fellow) => {
+                                  .find((supervisor) => supervisorWatcher === supervisor.id)
+                                  ?.fellows.map((fellow) => {
                                     return (
                                       <SelectItem key={fellow.id} value={fellow.id}>
                                         {fellow.fellowName}
@@ -191,7 +192,8 @@ export default function CreateGroup({
                                   })
                               : []}
                             {supervisorWatcher !== undefined &&
-                            supervisors.find((supervisor) => supervisorWatcher === supervisor.id)?.fellows.length === 0 ? (
+                            supervisors.find((supervisor) => supervisorWatcher === supervisor.id)
+                              ?.fellows.length === 0 ? (
                               <SelectItem value={" "} disabled={true}>
                                 Supervisor has no fellows assigned.
                               </SelectItem>
