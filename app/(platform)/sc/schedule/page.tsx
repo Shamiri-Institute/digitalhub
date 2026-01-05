@@ -99,7 +99,7 @@ export default async function SupervisorSchedulePage() {
         />
         <Separator className="my-5 bg-[#E8E8E8]" />
         <ScheduleCalendar
-          hubId={supervisor?.profile.hubId!}
+          hubId={supervisor?.profile.hubId ?? ""}
           aria-label="Session schedule"
           schools={schools}
           supervisors={supervisors}
@@ -107,7 +107,7 @@ export default async function SupervisorSchedulePage() {
             ...rating,
             averageRating: Number(rating.averageRating),
           }))}
-          role={supervisor?.session.user.activeMembership?.role!}
+          role={supervisor?.session.user.activeMembership?.role ?? "SUPERVISOR"}
           supervisorId={supervisor?.profile.id}
           hubSessionTypes={hubSessionTypes}
         />

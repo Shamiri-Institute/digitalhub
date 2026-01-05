@@ -75,7 +75,9 @@ export default function SchoolsNav() {
         onValueChange={(value) => {
           if (value) {
             const tab = options.find((tab) => tab.name === value);
-            router.push(tab!.href);
+            if (tab) {
+              router.push(tab.href);
+            }
           }
         }}
       >

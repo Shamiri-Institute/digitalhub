@@ -30,7 +30,7 @@ export const DropoutFellowSchema = z
     fellowId: stringValidation("Missing fellow ID"),
     mode: z.enum(["dropout", "undo"]),
     dropoutReason: z
-      .enum([FELLOW_DROP_OUT_REASONS[0]!, ...FELLOW_DROP_OUT_REASONS.slice(1)], {
+      .enum(FELLOW_DROP_OUT_REASONS as unknown as [string, ...string[]], {
         error: "Please select one of the supplied fellow dropout reason options",
       })
       .optional(),

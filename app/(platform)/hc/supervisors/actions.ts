@@ -116,7 +116,7 @@ export async function submitSupervisorComplaint(data: z.infer<typeof SubmitCompl
         supervisorId: parsedData.supervisorId,
         complaint: parsedData.complaint,
         comments: parsedData.comments,
-        hubCoordinatorId: hubCoordinator.profile?.id!,
+        hubCoordinatorId: hubCoordinator.profile?.id ?? "",
         projectId: CURRENT_PROJECT_ID,
       },
     });
@@ -465,7 +465,7 @@ export async function submitMonthlySupervisorEvaluation(
       await db.monthlySupervisorEvaluation.create({
         data: {
           supervisorId,
-          hubCoordinatorId: hc.profile?.id!,
+          hubCoordinatorId: hc.profile?.id ?? "",
           projectId: CURRENT_PROJECT_ID,
           month,
           respectfulness,
