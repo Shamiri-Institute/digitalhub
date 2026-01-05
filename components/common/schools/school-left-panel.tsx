@@ -363,7 +363,7 @@ export default function SchoolLeftPanel({
                                   </TooltipTrigger>
                                   <TooltipContent
                                     align="start"
-                                    className="border bg-white text-shamiri-black drop-shadow"
+                                    className="border bg-white text-shamiri-black drop-shadow-sm"
                                   >
                                     {history.dropoutReason && (
                                       <p className="text-sm">

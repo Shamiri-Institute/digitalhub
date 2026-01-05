@@ -185,7 +185,7 @@ export function MonthCalendarCell({
         {...buttonProps}
         ref={ref}
         className={cn("h-full w-full transition ease-in-out", {
-          "outline outline-2 outline-shamiri-new-blue": isSameDay(date, state.focusedDate),
+          "outline-solid outline-2 outline-shamiri-new-blue": isSameDay(date, state.focusedDate),
           selected: isSelected,
           disabled: isDisabled,
           unavailable: isUnavailable,
