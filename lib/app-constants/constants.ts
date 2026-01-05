@@ -1,18 +1,23 @@
-// @ts-nocheck
-import { config } from "#/tailwind.config";
+// Color values from design system (previously in tailwind.config.ts)
+const COLORS = {
+  "shamiri-graph-purple": "#8b2ce9",
+  "shamiri-light-red": "#e92c2c",
+  "shamiri-graph-yellow": "#facc15",
+  "shamiri-graph-green": "#00ba34",
+  "shamiri-new-blue": "#0085ff",
+} as const;
 
 export const SCHOOL_DROPOUT_REASONS_MAPPING = {
-  "lack of understanding of the program and the timelines":
-    config.theme?.extend?.colors["shamiri-graph-purple"],
-  "poor communication": config.theme?.extend?.colors["shamiri-light-red"],
-  "lack of commitment": config.theme?.extend?.colors["shamiri-graph-yellow"],
-  "prioritizing school activities": config.theme?.extend?.colors["shamiri-graph-green"],
+  "lack of understanding of the program and the timelines": COLORS["shamiri-graph-purple"],
+  "poor communication": COLORS["shamiri-light-red"],
+  "lack of commitment": COLORS["shamiri-graph-yellow"],
+  "prioritizing school activities": COLORS["shamiri-graph-green"],
 } as const;
 
 export const SCHOOL_DROPOUT_REASONS = Object.keys(SCHOOL_DROPOUT_REASONS_MAPPING) as string[];
 
 export const SCHOOL_DATA_COMPLETENESS_COLOR_MAPPING = {
-  actual: config.theme?.extend?.colors["shamiri-new-blue"],
+  actual: COLORS["shamiri-new-blue"],
   difference: "#E5F3FF",
 };
 

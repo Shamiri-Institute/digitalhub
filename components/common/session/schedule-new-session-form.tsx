@@ -287,7 +287,7 @@ export function ScheduleNewSession({
                       <div className="flex flex-col gap-2">
                         <span className="text-sm">Pick a start time</span>
                         <div className="flex items-center gap-2 py-2">
-                          <div className="relative w-[4rem]">
+                          <div className="relative w-16">
                             <Input
                               type="number"
                               onChange={(e) => {
@@ -303,7 +303,7 @@ export function ScheduleNewSession({
                             </div>
                           </div>
                           <span>:</span>
-                          <div className="relative w-[4rem]">
+                          <div className="relative w-16">
                             <Input
                               type="number"
                               onChange={(e) => {
@@ -325,11 +325,11 @@ export function ScheduleNewSession({
                             defaultValue={time}
                           >
                             <FormControl>
-                              <SelectTrigger className="w-[4rem]">
+                              <SelectTrigger className="w-16">
                                 <SelectValue />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="min-w-[4rem]">
+                            <SelectContent className="min-w-16">
                               {["AM", "PM"].map((time) => {
                                 return (
                                   <SelectItem key={time} value={time}>

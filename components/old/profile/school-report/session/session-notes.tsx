@@ -33,7 +33,7 @@ export function SessionNotes({
       {notes.length > 0 &&
         notes.map((note) => {
           return (
-            <div key={note.id} className="my-4 grid grid-cols-[3fr,7fr] gap-2 pl-2 pr-8">
+            <div key={note.id} className="my-4 grid grid-cols-[3fr_7fr] gap-2 pl-2 pr-8">
               <div>
                 <h3 className="ml-6 mt-4 text-sm font-semibold text-muted-foreground">
                   {note.supervisor.supervisorName}

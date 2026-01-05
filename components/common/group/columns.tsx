@@ -87,7 +87,10 @@ export const columns = (state: {
       cell: ({ row }) => {
         const type = row.original.groupType;
         return (
-          <Badge variant={type === "TREATMENT" ? "default" : "outline"} className="capitalize">
+          <Badge
+            variant={type === "TREATMENT" ? "default" : "outline-solid"}
+            className="capitalize"
+          >
             {type.toLowerCase()}
           </Badge>
         );
