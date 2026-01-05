@@ -449,7 +449,7 @@ async function createAdminUsers(implementers: Implementer[], emails: Set<string>
       userId: user.id,
       implementerId: implementer,
       role: ImplementerRole.ADMIN,
-      identifier: createdAdminUsers.find((u) => u.email === user.email)?.id!,
+      identifier: createdAdminUsers.find((u) => u.email === user.email)?.id ?? "",
     }));
   });
 
@@ -458,7 +458,7 @@ async function createAdminUsers(implementers: Implementer[], emails: Set<string>
   });
 
   // Add admin emails to set
-  createdUsers.forEach((user) => emails.add(user.email!));
+  createdUsers.forEach((user) => emails.add(user.email ?? ""));
 
   return createdAdminUsers;
 }
@@ -479,8 +479,8 @@ async function createHubCoordinators(
       visibleId: "HC_ARTETA",
       coordinatorName: "Mikel Arteta",
       coordinatorEmail: "mikel.arteta@test.com",
-      implementerId: staticHub!.implementerId,
-      assignedHubId: staticHub!.id,
+      implementerId: staticHub?.implementerId ?? "",
+      assignedHubId: staticHub?.id ?? "",
       county: "Nairobi",
       subCounty: "Westlands",
       bankName: "Arsenal Bank",
@@ -500,8 +500,8 @@ async function createHubCoordinators(
       visibleId: "HC_GASPAR",
       coordinatorName: "Edu Gaspar",
       coordinatorEmail: "edu.gaspar@test.com",
-      implementerId: staticHub!.implementerId,
-      assignedHubId: staticHub!.id,
+      implementerId: staticHub?.implementerId ?? "",
+      assignedHubId: staticHub?.id ?? "",
       county: "Nairobi",
       subCounty: "Westlands",
       bankName: "Arsenal Bank",
@@ -532,9 +532,9 @@ async function createHubCoordinators(
   // Create membership records for static coordinators
   const staticMembershipData = staticUsers.map((user, index) => ({
     userId: user.id,
-    implementerId: staticHub!.implementerId,
+    implementerId: staticHub?.implementerId ?? "",
     role: ImplementerRole.HUB_COORDINATOR,
-    identifier: staticCoordinators[index]!.id,
+    identifier: staticCoordinators[index]?.id ?? "",
   }));
 
   await db.implementerMember.createMany({
@@ -624,8 +624,8 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
       visibleId: "SUPERVISOR1",
       supervisorName: "Martin Ødegaard",
       supervisorEmail: "martin.odegaard@test.com",
-      hubId: staticHub!.id,
-      implementerId: staticHub!.implementerId,
+      hubId: staticHub?.id ?? "",
+      implementerId: staticHub?.implementerId ?? "",
       county: "Nairobi",
       subCounty: "Westlands",
       bankName: "Arsenal Bank",
@@ -645,8 +645,8 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
       visibleId: "SUPERVISOR2",
       supervisorName: "Declan Rice",
       supervisorEmail: "declan.rice@test.com",
-      hubId: staticHub!.id,
-      implementerId: staticHub!.implementerId,
+      hubId: staticHub?.id ?? "",
+      implementerId: staticHub?.implementerId ?? "",
       county: "Nairobi",
       subCounty: "Westlands",
       bankName: "Arsenal Bank",
@@ -666,8 +666,8 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
       visibleId: "SUPERVISOR3",
       supervisorName: "William Saliba",
       supervisorEmail: "william.saliba@test.com",
-      hubId: staticHub!.id,
-      implementerId: staticHub!.implementerId,
+      hubId: staticHub?.id ?? "",
+      implementerId: staticHub?.implementerId ?? "",
       county: "Nairobi",
       subCounty: "Westlands",
       bankName: "Arsenal Bank",
@@ -719,7 +719,7 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
 
   const membershipData = createSupervisors.map((user) => ({
     userId: user.id,
-    implementerId: supervisors.find((supervisor) => supervisor.id === user.id)?.implementerId!,
+    implementerId: supervisors.find((supervisor) => supervisor.id === user.id)?.implementerId ?? "",
     role: ImplementerRole.SUPERVISOR,
     identifier: objectId("supervisor"),
   }));
@@ -735,7 +735,7 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
       // Return the static supervisor data as-is
       const { id: _id, ...rest } = _user;
       return {
-        id: membershipData.find((x) => x.userId === _user.id)?.identifier!,
+        id: membershipData.find((x) => x.userId === _user.id)?.identifier ?? "",
         ...rest,
       };
     }
@@ -746,7 +746,7 @@ async function createSupervisors(hubs: Hub[], emails: Set<string>, n = 6) {
     const gender = faker.person.sexType();
 
     return {
-      id: membershipData.find((x) => x.userId === _user.id)?.identifier!,
+      id: membershipData.find((x) => x.userId === _user.id)?.identifier ?? "",
       implementerId: _user.implementerId,
       visibleId: _user.visibleId || faker.string.alpha({ casing: "upper", length: 6 }),
       supervisorName: faker.person.fullName(),
@@ -782,7 +782,7 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
   const staticOps = {
     id: objectId("opsuser"),
     email: "kai.havertz@test.com",
-    implementerId: staticHub!.implementerId,
+    implementerId: staticHub?.implementerId ?? "",
     name: "Kai Havertz",
     cellPhone: "254712345678",
   };
@@ -819,7 +819,7 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
 
   const membershipData = createdOperations.map((ops) => ({
     userId: ops.id,
-    implementerId: operations.find((x) => x.id === ops.id)?.implementerId!,
+    implementerId: operations.find((x) => x.id === ops.id)?.implementerId ?? "",
     role: ImplementerRole.OPERATIONS,
     identifier: objectId("opsuser"),
   }));
@@ -830,7 +830,7 @@ async function createOperations(hubs: Hub[], emails: Set<string>) {
 
   return db.opsUser.createManyAndReturn({
     data: operations.map((ops) => ({
-      id: membershipData.find((x) => x.userId === ops.id)?.identifier!,
+      id: membershipData.find((x) => x.userId === ops.id)?.identifier ?? "",
       email: ops.email,
       name: ops.name,
       implementerId: ops.implementerId,
@@ -849,8 +849,8 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
     id: objectId("user"),
     clinicalLeadEmail: "ben.white@test.com",
     clinicalLeadName: "Ben White",
-    implementerId: staticHub!.implementerId,
-    assignedHubId: staticHub!.id,
+    implementerId: staticHub?.implementerId ?? "",
+    assignedHubId: staticHub?.id ?? "",
   };
   clinicalLeads.push(staticClinicalLead);
   emails.add(staticClinicalLead.clinicalLeadEmail);
@@ -883,8 +883,8 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
 
   const membershipData = createClinicalLeads.map((user) => ({
     userId: user.id,
-    implementerId: clinicalLeads.find((clinicalLead) => clinicalLead.id === user.id)
-      ?.implementerId!,
+    implementerId:
+      clinicalLeads.find((clinicalLead) => clinicalLead.id === user.id)?.implementerId ?? "",
     role: ImplementerRole.CLINICAL_LEAD,
     identifier: objectId("clinicallead"),
   }));
@@ -895,7 +895,7 @@ async function createClinicalLeads(hubs: Hub[], emails: Set<string>) {
 
   return db.clinicalLead.createManyAndReturn({
     data: clinicalLeads.map((clinicalLead) => ({
-      id: membershipData.find((x) => x.userId === clinicalLead.id)?.identifier!,
+      id: membershipData.find((x) => x.userId === clinicalLead.id)?.identifier ?? "",
       clinicalLeadName: clinicalLead.clinicalLeadName,
       clinicalLeadEmail: clinicalLead.clinicalLeadEmail,
       assignedHubId: clinicalLead.assignedHubId,
@@ -957,9 +957,9 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
       visibleId: "FELLOW1",
       fellowName: "Bukayo Saka",
       fellowEmail: "bukayo.saka@test.com",
-      supervisorId: staticSupervisors[0]!.id,
-      hubId: staticSupervisors[0]!.hubId,
-      implementerId: staticSupervisors[0]!.implementerId,
+      supervisorId: staticSupervisors[0]?.id,
+      hubId: staticSupervisors[0]?.hubId,
+      implementerId: staticSupervisors[0]?.implementerId,
       mpesaName: "Bukayo Saka",
       mpesaNumber: "254712345678",
       cellNumber: "254712345678",
@@ -974,9 +974,9 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
       visibleId: "FELLOW2",
       fellowName: "Gabriel Martinelli",
       fellowEmail: "gabriel.martinelli@test.com",
-      supervisorId: staticSupervisors[1]!.id,
-      hubId: staticSupervisors[1]!.hubId,
-      implementerId: staticSupervisors[1]!.implementerId,
+      supervisorId: staticSupervisors[1]?.id,
+      hubId: staticSupervisors[1]?.hubId,
+      implementerId: staticSupervisors[1]?.implementerId,
       mpesaName: "Gabriel Martinelli",
       mpesaNumber: "254723456789",
       cellNumber: "254723456789",
@@ -991,9 +991,9 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
       visibleId: "FELLOW3",
       fellowName: "Gabriel Jesus",
       fellowEmail: "gabriel.jesus@test.com",
-      supervisorId: staticSupervisors[2]!.id,
-      hubId: staticSupervisors[2]!.hubId,
-      implementerId: staticSupervisors[2]!.implementerId,
+      supervisorId: staticSupervisors[2]?.id,
+      hubId: staticSupervisors[2]?.hubId,
+      implementerId: staticSupervisors[2]?.implementerId,
       mpesaName: "Gabriel Jesus",
       mpesaNumber: "254734567890",
       cellNumber: "254734567890",
@@ -1058,7 +1058,7 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
 
   const membershipData = createFellows.map((user) => ({
     userId: user.id,
-    implementerId: fellows.find((fellow) => fellow.id === user.id)?.implementerId!,
+    implementerId: fellows.find((fellow) => fellow.id === user.id)?.implementerId ?? "",
     role: ImplementerRole.FELLOW,
     identifier: objectId("fellow"),
   }));
@@ -1071,7 +1071,7 @@ async function createFellows(supervisors: Supervisor[], emails: Set<string>) {
     data: fellows.map((fellow) => {
       const { id, ..._fellow } = fellow;
       return {
-        id: membershipData.find((fellow) => fellow.userId === id)?.identifier!,
+        id: membershipData.find((fellow) => fellow.userId === id)?.identifier ?? "",
         ..._fellow,
       };
     }),
@@ -1090,7 +1090,7 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
       id: objectId("sch"),
       visibleId: "ARSENAL_SCH",
       schoolName: "Emirates Academy",
-      hubId: staticHub!.id,
+      hubId: staticHub?.id ?? "",
       schoolType: "National",
       schoolEmail: "Gabriel.academy@test.com",
       schoolCounty: "Nairobi",
@@ -1104,13 +1104,13 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
       droppedOut: false,
       dropoutReason: null,
       droppedOutAt: null,
-      assignedSupervisorId: supervisors.find((s) => s.visibleId === "SUPERVISOR1")!.id,
+      assignedSupervisorId: supervisors.find((s) => s.visibleId === "SUPERVISOR1")?.id,
     },
     {
       id: objectId("sch"),
       visibleId: "SOBHA_SCH",
       schoolName: "Sobha Academy",
-      hubId: staticHub!.id,
+      hubId: staticHub?.id ?? "",
       schoolType: "National",
       schoolEmail: "sobha.academy@test.com",
       schoolCounty: "Nairobi",
@@ -1124,7 +1124,7 @@ async function createSchools(hubs: Hub[], supervisors: Supervisor[]) {
       droppedOut: false,
       dropoutReason: null,
       droppedOutAt: null,
-      assignedSupervisorId: supervisors.find((s) => s.visibleId === "SUPERVISOR2")!.id,
+      assignedSupervisorId: supervisors.find((s) => s.visibleId === "SUPERVISOR2")?.id,
     },
   );
 
@@ -1191,9 +1191,9 @@ async function createInterventionGroups(schools: SchoolCreationResult, fellows: 
     interventionGroups.push({
       id: objectId("group"),
       groupName: `Group ${index + 1}`,
-      schoolId: staticSchool!.id,
+      schoolId: staticSchool?.id ?? "",
       leaderId: fellow.id,
-      projectId: staticSchool!.hub?.projectId as string,
+      projectId: staticSchool?.hub?.projectId as string,
       groupType: Math.random() > 0.95 ? "TREATMENT" : "CONTROL",
     });
   });
@@ -1273,7 +1273,7 @@ async function createStudentsForSchools(
 
   // Add static students for static school
   const staticSchool = schools[0];
-  const staticGroups = staticSchool!.interventionGroups;
+  const staticGroups = staticSchool?.interventionGroups ?? [];
 
   // Create 30 static students (10 for each group)
   staticGroups.forEach((group, groupIndex) => {
@@ -1283,7 +1283,7 @@ async function createStudentsForSchools(
         visibleId: `STATIC_STU_${groupIndex + 1}_${i + 1}`,
         studentName: `Student ${groupIndex + 1}.${i + 1}`,
         admissionNumber: `ADM_${groupIndex + 1}_${i + 1}`,
-        schoolId: staticSchool!.id,
+        schoolId: staticSchool?.id,
         assignedGroupId: group.id,
         gender: i % 2 === 0 ? "Male" : "Female",
         yearOfBirth: 2008, // Fixed birth year for static students
@@ -1368,7 +1368,7 @@ async function createInterventionSessionsForSchools(
   // Create static sessions for static school
   const staticSchool = schools[0];
   const staticSessionNames = interventionSessionNames.filter(
-    (sn) => sn.hubId === staticSchool!.hub?.id,
+    (sn) => sn.hubId === staticSchool?.hub?.id,
   );
 
   // Start from a fixed date for static sessions
@@ -1389,11 +1389,11 @@ async function createInterventionSessionsForSchools(
       status: "Scheduled",
       sessionType: sessionName.sessionName,
       sessionId: sessionName.id,
-      schoolId: staticSchool!.id,
+      schoolId: staticSchool?.id,
       occurred: isBefore(staticDate, new Date()),
       yearOfImplementation: 2024,
-      projectId: staticSchool!.hub?.projectId || undefined,
-      hubId: staticSchool!.hubId,
+      projectId: staticSchool?.hub?.projectId || undefined,
+      hubId: staticSchool?.hubId,
     });
 
     // Move to next week for next static session
@@ -1428,7 +1428,7 @@ async function createInterventionSessionsForSchools(
       while (
         Array.from(fellowIds).some((fellowId) => {
           const fellowDates = fellowSessionDates.get(fellowId);
-          return fellowDates?.has(currentDate.toISOString().split("T")[0]!);
+          return fellowDates?.has(currentDate.toISOString().split("T")[0] ?? "");
         })
       ) {
         // If conflict exists, move to next day
@@ -1454,7 +1454,7 @@ async function createInterventionSessionsForSchools(
         if (!fellowSessionDates.has(fellow.id)) {
           fellowSessionDates.set(fellow.id, new Set());
         }
-        fellowSessionDates.get(fellow.id)?.add(currentDate.toISOString().split("T")[0]!);
+        fellowSessionDates.get(fellow.id)?.add(currentDate.toISOString().split("T")[0] ?? "");
       });
 
       // Move to next week for next session

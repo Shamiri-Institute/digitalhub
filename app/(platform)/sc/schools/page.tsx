@@ -21,7 +21,7 @@ export default async function SchoolsPage() {
   }
 
   const [data, supervisors, schoolsStats] = await Promise.all([
-    await fetchSchoolData(supervisor?.profile?.hubId!),
+    await fetchSchoolData(hubId),
     await fetchHubSupervisors({
       where: {
         hubId: supervisor?.profile?.hubId,

@@ -74,7 +74,7 @@ export default function ViewMarkClinicalSessions({
         supervisorId: currentcase?.currentSupervisorId || null,
         caseId: currentcase.id,
         session: session,
-        dateOfSession: dates[session]!,
+        dateOfSession: dates[session] ?? new Date(),
         attendanceStatus: status,
         role: userRole,
         clinicalLeadId: currentcase?.clinicalLeadId || null,
@@ -147,11 +147,10 @@ export default function ViewMarkClinicalSessions({
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dates[sessionType.key] ? (
-                        format(dates[sessionType.key]!, "dd MMM yyyy")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
+                      {(() => {
+                        const date = dates[sessionType.key];
+                        return date ? format(date, "dd MMM yyyy") : <span>Pick a date</span>;
+                      })()}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">

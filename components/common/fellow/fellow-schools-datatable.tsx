@@ -219,7 +219,7 @@ export default function FellowSchoolsDatatable({
                 id: attendance.fellowId,
                 attended: attendance.attended ?? null,
                 absenceReason: attendance.absenceReason ?? null,
-                sessionId: attendance.sessionId!,
+                sessionId: attendance.sessionId ?? "",
                 schoolId: attendance.schoolId ?? null,
                 comments: attendance.absenceComments,
               };

@@ -133,9 +133,14 @@ export default function StudentGroupEvaluation({
     },
   ];
   const _evaluation = evaluations
-    .filter((evaluation) => evaluation.session !== undefined && evaluation.session !== null)
+    .filter(
+      (
+        evaluation,
+      ): evaluation is typeof evaluation & { session: NonNullable<typeof evaluation.session> } =>
+        evaluation.session !== undefined && evaluation.session !== null,
+    )
     .sort((a, b) => {
-      return b.session!.sessionDate.getTime() - a.session!.sessionDate.getTime();
+      return b.session.sessionDate.getTime() - a.session.sessionDate.getTime();
     })[0];
   const [existingEvaluation, setExistingEvaluation] = useState<
     | Prisma.InterventionGroupReportGetPayload<{

@@ -773,7 +773,10 @@ export async function markManyFellowAttendance(
       });
 
       await tx.payoutStatements.createMany({
-        data: data.filter((attendance) => attendance.payout !== undefined).map((x) => x.payout!),
+        data: data
+          .filter((attendance) => attendance.payout !== undefined)
+          .map((x) => x.payout)
+          .filter((payout): payout is NonNullable<typeof payout> => payout !== undefined),
       });
 
       await tx.fellowAttendance.updateMany({

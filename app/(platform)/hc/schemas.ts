@@ -14,7 +14,7 @@ import { stringValidation } from "#/lib/utils";
 
 export const DropoutSchoolSchema = z.object({
   schoolId: stringValidation("Missing school ID"),
-  dropoutReason: z.enum([SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)], {
+  dropoutReason: z.enum(SCHOOL_DROPOUT_REASONS as [string, ...string[]], {
     error: "Please select one of the supplied school dropout reason options",
   }),
 });
@@ -22,12 +22,9 @@ export const DropoutSchoolSchema = z.object({
 export const DropoutSupervisorSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
   // TODO: Replace dropout reasons with supervisor specific options
-  dropoutReason: z.enum(
-    [SUPERVISOR_DROP_OUT_REASONS[0]!, ...SUPERVISOR_DROP_OUT_REASONS.slice(1)],
-    {
-      error: "Please select one of the supplied supervisor dropout reason options",
-    },
-  ),
+  dropoutReason: z.enum(SUPERVISOR_DROP_OUT_REASONS as unknown as [string, ...string[]], {
+    error: "Please select one of the supplied supervisor dropout reason options",
+  }),
 });
 
 export const DropoutStudentSchema = z
@@ -35,7 +32,7 @@ export const DropoutStudentSchema = z
     studentId: stringValidation("Missing student ID"),
     mode: z.enum(["dropout", "undo"]),
     dropoutReason: z
-      .enum([STUDENT_DROPOUT_REASONS[0]!, ...STUDENT_DROPOUT_REASONS.slice(1)], {
+      .enum(STUDENT_DROPOUT_REASONS as unknown as [string, ...string[]], {
         error: "Please select one of the supplied student dropout reason options",
       })
       .optional(),
@@ -58,7 +55,7 @@ export const SubmitComplaintSchema = z.object({
   supervisorId: stringValidation("Missing supervisor ID"),
   comments: stringValidation().optional(),
   // TODO: Replace with complaint types array
-  complaint: z.enum([SCHOOL_DROPOUT_REASONS[0]!, ...SCHOOL_DROPOUT_REASONS.slice(1)], {
+  complaint: z.enum(SCHOOL_DROPOUT_REASONS as [string, ...string[]], {
     error: "Please select a complaint",
   }),
 });
@@ -105,7 +102,7 @@ export const MonthlySupervisorEvaluationSchema = z.object({
   programExecutionComments: z.string().optional(),
 });
 
-const counties = KENYAN_COUNTIES.map((county) => county.name);
+const counties = KENYAN_COUNTIES.map((county) => county.name) as [string, ...string[]];
 
 // Base schema with common fields
 const BaseSchoolSchema = z.object({
@@ -113,7 +110,7 @@ const BaseSchoolSchema = z.object({
   schoolType: z.enum(SCHOOL_TYPES, { error: "Please pick a valid option" }).optional(),
   schoolEmail: z.email("Invalid email").optional().or(z.literal("")),
   schoolCounty: z
-    .enum([counties[0]!, ...counties.slice(1)], {
+    .enum(counties, {
       error: "Please select a valid option",
     })
     .optional(),
@@ -179,7 +176,7 @@ export const EditSupervisorSchema = z
         error: "Please enter a valid kenyan phone number",
       }),
     personalEmail: z.email({ error: "Please enter a valid email." }),
-    county: z.enum([counties[0]!, ...counties.slice(1)], {
+    county: z.enum(counties, {
       error: "Please pick a valid option",
     }),
     subCounty: z.string({ error: "Please pick a sub-county" }).refine((val) => val !== "", {
@@ -220,7 +217,7 @@ export const AddNewSupervisorSchema = z.object({
       error: "Please enter a valid kenyan phone number",
     }),
   personalEmail: z.email({ error: "Please enter a valid email." }),
-  county: z.enum([counties[0]!, ...counties.slice(1)], {
+  county: z.enum(counties, {
     error: "Please pick a valid option",
   }),
   subCounty: z.string({ error: "Please pick a sub-county" }).refine((val) => val !== "", {
@@ -291,7 +288,7 @@ export const FellowDetailsSchema = z
       }),
     fellowEmail: z.email({ error: "Please enter a valid email." }),
     county: z
-      .enum([counties[0]!, ...counties.slice(1)], {
+      .enum(counties, {
         error: "Please pick a valid option",
       })
       .optional(),
