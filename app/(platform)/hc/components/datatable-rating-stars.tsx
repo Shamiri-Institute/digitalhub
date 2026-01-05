@@ -13,7 +13,7 @@ export default function DataTableRatingStars({ rating }: { rating: number }) {
             </div>
           );
         })}
-        {!isNaN(rating) && (
+        {!Number.isNaN(rating) && (
           <div className="absolute inset-0 flex items-center gap-1 text-shamiri-light-orange">
             {Array.from(Array(Math.floor(rating)).keys()).map((index) => {
               return <Icons.starRating key={index} className="h-5 w-5" />;
@@ -32,7 +32,7 @@ export default function DataTableRatingStars({ rating }: { rating: number }) {
           </div>
         )}
       </div>
-      <div className="text-shamiri-text-grey">{isNaN(rating) ? "0.0" : rounded}</div>
+      <div className="text-shamiri-text-grey">{Number.isNaN(rating) ? "0.0" : rounded}</div>
     </div>
   );
 }
