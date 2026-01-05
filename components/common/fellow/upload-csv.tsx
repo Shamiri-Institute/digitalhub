@@ -10,7 +10,7 @@ export function BatchUploadDownloadFellow({
   disabled?: boolean;
   role: ImplementerRole;
 }) {
-  const handleFellowCSVDownload = async () => {
+  const _handleFellowCSVDownload = async () => {
     // todo: touch base with Wendy to discuss the columns
   };
 

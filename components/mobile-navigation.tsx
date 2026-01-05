@@ -17,7 +17,7 @@ function MenuIcon(props: React.ComponentPropsWithoutRef<"svg">) {
   );
 }
 
-function XIcon(props: React.ComponentPropsWithoutRef<"svg">) {
+function _XIcon(props: React.ComponentPropsWithoutRef<"svg">) {
   return (
     <svg viewBox="0 0 10 9" fill="none" strokeLinecap="round" aria-hidden="true" {...props}>
       <path d="m1.5 1 7 7M8.5 1l-7 7" />
@@ -47,7 +47,7 @@ function MobileNavigationDialog({
     }
   }, [pathname, searchParams, close, initialPathname, initialSearchParams]);
 
-  function onClickDialog(event: React.MouseEvent<HTMLDivElement>) {
+  function _onClickDialog(event: React.MouseEvent<HTMLDivElement>) {
     if (!(event.target instanceof HTMLElement)) {
       return;
     }

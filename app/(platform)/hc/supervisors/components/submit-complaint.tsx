@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { usePathname } from "next/navigation";
 import { type Dispatch, type SetStateAction, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -45,8 +44,6 @@ export default function SubmitComplaint({
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
 }) {
-  const pathname = usePathname();
-
   const form = useForm<z.infer<typeof SubmitComplaintSchema>>({
     resolver: zodResolver(SubmitComplaintSchema),
   });

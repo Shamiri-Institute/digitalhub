@@ -1,5 +1,4 @@
 import { ImplementerRole } from "@prisma/client";
-import { redirect } from "next/navigation";
 import { signOut } from "next-auth/react";
 import CountWidget from "#/app/(platform)/hc/components/count-widget";
 import { currentFellow } from "#/app/auth";

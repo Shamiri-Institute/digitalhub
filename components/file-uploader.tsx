@@ -40,7 +40,7 @@ export default function FileUploader({
   const [open, setDialogOpen] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState(false);
+  const [_error, setError] = useState(false);
 
   const { toast } = useToast();
 

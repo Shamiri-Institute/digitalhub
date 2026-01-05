@@ -19,7 +19,7 @@ export default async function SupervisorStudentsPage({
   }
 
   const [
-    schools, // TODO: use this to provide filter options
+    _schools, // TODO: use this to provide filter options
     totalNumberOfStudentsInHub,
     totalGroupSessions,
     hubClinicalCases,

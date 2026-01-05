@@ -17,18 +17,6 @@ import DataTable from "#/components/data-table";
 import { Button } from "#/components/ui/button";
 import { DialogTrigger } from "#/components/ui/dialog";
 
-const fellowCSVHeaders = [
-  "fellow_name",
-  "cell_no",
-  "email",
-  "mpesa_name",
-  "mpesa_number",
-  "id_number",
-  "gender",
-  "county",
-  "sub_county",
-];
-
 export default function MainFellowsDatatable({
   fellows,
   supervisors,
@@ -51,18 +39,6 @@ export default function MainFellowsDatatable({
   const [weeklyEvaluationDialog, setWeeklyEvaluationDialog] = useState(false);
   const [viewComplaintsDialog, setViewComplaintsDialog] = useState(false);
   const [dropOutDialog, setDropOutDialog] = useState(false);
-
-  const downloadFellowsCsvTemplate = () => {
-    // biome-ignore lint/style/useTemplate: need for proper formatting for csv data type download
-    const csvContent = "data:text/csv;charset=utf-8," + fellowCSVHeaders.join(",") + "\n";
-    const encodedUri = encodeURI(csvContent);
-
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "fellows-upload-template.csv");
-    document.body.appendChild(link);
-    link.click();
-  };
 
   const renderTableActions = () => {
     return (

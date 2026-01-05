@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectTrigger, SelectValue } from "#/components/
 
 export default function ComplaintsFilterToggle() {
   const [open, setOpen] = useState(false);
-  const [filterIsActive, setFilterIsActive] = useState(false);
+  const [filterIsActive] = useState(false);
 
   // TODO: Implement the filter functionality when doing the hc flow-wide filter refactor
   return (

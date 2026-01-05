@@ -178,7 +178,7 @@ export default function CaseNotesForm({
       }
       setDialogOpen(false);
       form.reset();
-    } catch (error) {
+    } catch {
       toast({
         title: "Something went wrong, please try again",
         variant: "destructive",
