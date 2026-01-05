@@ -26,7 +26,7 @@ export async function GET(
     });
 
     return NextResponse.json(implementer);
-  } catch (_error) {
+  } catch {
     return NextResponse.json({
       status: 404,
       error: "Implementer not found.",

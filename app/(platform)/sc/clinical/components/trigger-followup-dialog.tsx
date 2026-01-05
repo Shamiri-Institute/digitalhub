@@ -37,7 +37,7 @@ export default function TriggerFollowupDialog({ children, caseId }: TriggerFollo
           variant: "destructive",
         });
       }
-    } catch (_error) {
+    } catch {
       toast({
         title: "Failed to update case status",
         variant: "destructive",

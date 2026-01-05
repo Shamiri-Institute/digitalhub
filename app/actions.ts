@@ -50,7 +50,7 @@ export async function inviteUserToImplementer(prevState: any, formData: any) {
     revalidatePath("/admin/implementer/members");
 
     return { message: "success" };
-  } catch (_e) {
+  } catch {
     return { message: "failed" };
   }
 }
@@ -621,7 +621,7 @@ export async function editFellowDetails(
     });
     revalidatePath("/profile");
     return { success: true };
-  } catch (_e) {
+  } catch {
     return { success: false, error: "Something went wrong" };
   }
 }
@@ -1094,7 +1094,7 @@ export async function flagClinicalCaseForFollowUp(data: {
 
     revalidatePath(`${data.role === "CLINICAL_LEAD" ? "/cl/clinical" : "/sc/clinical"}`);
     return { success: true };
-  } catch (_error) {
+  } catch {
     return { error: "Something went wrong" };
   }
 }

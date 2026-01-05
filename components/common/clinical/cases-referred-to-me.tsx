@@ -57,7 +57,7 @@ export function RefferedCasesTab({
           variant: "default",
           title: "Referred case accepted",
         });
-      } catch (_error) {
+      } catch {
         toast({
           variant: "destructive",
           title: "Error accepting referred case. Please try again",
@@ -73,7 +73,7 @@ export function RefferedCasesTab({
         variant: "default",
         title: "Referred case rejected",
       });
-    } catch (_error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Error rejecting referred case. Please try again",

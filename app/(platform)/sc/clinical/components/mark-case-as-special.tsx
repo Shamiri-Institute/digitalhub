@@ -66,7 +66,7 @@ export default function MarkCaseAsSpecial({
           title: "Error flagging case for follow up. Please try again",
         });
       }
-    } catch (_error) {
+    } catch {
       toast({
         variant: "destructive",
         title: "Error flagging case for follow up. Please try again",
