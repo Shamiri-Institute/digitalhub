@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.9.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.8.0...v1.9.0) (2026-01-05)
+
+
+### Features
+
+* admin platform ([#530](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/530)) ([04cc50d](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/04cc50de838cff906e2babd81dd91c6d1ba1cbd9))
+
+
+### Bug Fixes
+
+* display role switcher only on DEV; display membership switcher for admins only ([#531](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/531)) ([0c9c3bd](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/0c9c3bd3dec78bff179e3b840eeabd98fe2f557a))
+* remove usage of the Decimal type ([#537](https://github.com/Shamiri-Institute/digitalhub-frontend/issues/537)) ([c71c1f3](https://github.com/Shamiri-Institute/digitalhub-frontend/commit/c71c1f3c65b13e5697675bd2f3a52d428d4740d5))
+
 ## [1.8.0](https://github.com/Shamiri-Institute/digitalhub-frontend/compare/v1.7.3...v1.8.0) (2025-09-24)
 
 
