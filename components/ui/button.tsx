@@ -49,7 +49,8 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, loading, children, asChild = false, ...props }, ref) => {
-    const _Comp = asChild ? Slot : "button";
+    // biome-ignore lint/correctness/noUnusedVariables: shadcn library code - keeping original structure
+    const Comp = asChild ? Slot : "button";
 
     if (asChild) {
       return (
