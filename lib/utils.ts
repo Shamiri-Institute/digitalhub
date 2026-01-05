@@ -103,7 +103,7 @@ export function stringValidation(message: string | undefined = "Required*") {
 
 export function mapSessionTypeToSessionNumber(sessionType: string): number {
   if (sessionType[0] === "s" && sessionType.length === 2) {
-    return Number.parseInt(sessionType[1]!);
+    return Number.parseInt(sessionType[1] ?? "0");
   }
 
   throw new Error(`Invalid session type: ${sessionType}`);

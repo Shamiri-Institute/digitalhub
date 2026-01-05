@@ -33,6 +33,7 @@
       },
       "style": {
         "noInferrableTypes": "error",
+        "noNonNullAssertion": "error",
         "noParameterAssign": "error",
         "noUnusedTemplateLiteral": "error",
         "noUselessElse": "error",
